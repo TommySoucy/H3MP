@@ -195,28 +195,40 @@ namespace H3MP
             Write(_value.z);
             Write(_value.w);
         }
-        /// <summary>Adds a H3MP_TrackeItem to the packet.</summary>
-        /// <param name="_value">The H3MP_TrackedItem to add.</param>
-        public void Write(H3MP_TrackedItemData trackedItem)
+        /// <summary>Adds a H3MP_TrackedItemData to the packet.</summary>
+        /// <param name="_value">The H3MP_TrackedItemData to add.</param>
+        public void Write(H3MP_TrackedItemData trackedItem, bool full = false)
         {
             Write(trackedItem.trackedID);
-            Write(trackedItem.localtrackedID);
-            Write(trackedItem.controller);
-            Write(trackedItem.itemID);
-            Write(trackedItem.data.ToString());
             Write(trackedItem.position);
             Write(trackedItem.rotation);
-
-            if(trackedItem.children == null)
+            if(trackedItem.data == null)
             {
                 Write(0);
             }
             else
             {
-                Write(trackedItem.children.Count);
-                foreach(H3MP_TrackedItemData child in trackedItem.children)
+                Write(trackedItem.data.Length);
+                Write(trackedItem.data);
+            }
+            Write(trackedItem.active);
+
+            if (full)
+            {
+                Write(trackedItem.itemID);
+                Write(trackedItem.controller);
+
+                if (trackedItem.children == null)
                 {
-                    Write(child);
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedItem.children.Count);
+                    foreach (H3MP_TrackedItemData child in trackedItem.children)
+                    {
+                        Write(child, true);
+                    }
                 }
             }
         }
@@ -406,27 +418,30 @@ namespace H3MP
             return new Quaternion(ReadFloat(_moveReadPos), ReadFloat(_moveReadPos), ReadFloat(_moveReadPos), ReadFloat(_moveReadPos));
         }
 
-        /// <summary>Reads a H3MP_TrackedItem from the packet.</summary>
+        /// <summary>Reads a H3MP_TrackedItemData from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public H3MP_TrackedItemData ReadTrackedItem(bool _moveReadPos = true)
+        public H3MP_TrackedItemData ReadTrackedItem(bool full = false, bool _moveReadPos = true)
         {
             H3MP_TrackedItemData trackedItem = new H3MP_TrackedItemData();
-            trackedItem.trackedID = ReadInt();
             trackedItem.localtrackedID = ReadInt();
-            trackedItem.controller = ReadInt();
-            trackedItem.active = ReadBool();
-            trackedItem.itemID = ReadString();
-            trackedItem.data = JObject.Parse(ReadString());
             trackedItem.position = ReadVector3();
             trackedItem.rotation = ReadQuaternion();
+            trackedItem.data = ReadBytes(ReadInt());
+            trackedItem.active = ReadBool();
 
-            int childCount = ReadInt();
-            if (childCount > 0)
+            if (full)
             {
-                trackedItem.children = new List<H3MP_TrackedItemData>();
-                for (int i = 0; i < childCount; ++i)
+                trackedItem.itemID = ReadString();
+                trackedItem.controller = ReadInt();
+
+                int childCount = ReadInt();
+                if (childCount > 0)
                 {
-                    trackedItem.children.Add(ReadTrackedItem(_moveReadPos));
+                    trackedItem.children = new List<H3MP_TrackedItemData>();
+                    for (int i = 0; i < childCount; ++i)
+                    {
+                        trackedItem.children.Add(ReadTrackedItem(full, _moveReadPos));
+                    }
                 }
             }
             return trackedItem;

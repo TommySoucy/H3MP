@@ -14,10 +14,12 @@ namespace H3MP
         public int localtrackedID = -1; // This item's index in local items list 
         public int controller = 0; // Client controlling this item, 0 for host
         public bool active;
+        private bool previousActive;
 
         // Data
         public string itemID; // The ID of this item so it can be spawned by clients and host
         public byte[] data; // MOD: This is what you would use to add custom data to items (Meatov dogtags have level, this is where it would be written)
+        public byte[] previousData; 
 
         // State
         public Vector3 position;
@@ -28,6 +30,7 @@ namespace H3MP
 
         public H3MP_TrackedItemData parent; // The item this item is attached to
         public List<H3MP_TrackedItemData> children; // The items attached to this item
+        public int childIndex = -1; // The index of this item in its parent's children list
 
         // MOD: Mods with custom items with custom data that will be used to instantiate them 
         //      should postfix this method to add whatever data they want to object
@@ -40,12 +43,17 @@ namespace H3MP
 
         public void Update(H3MP_TrackedItemData updatedItem)
         {
+            previousPos = position;
+            previousRot = rotation;
             position = updatedItem.position;
             rotation = updatedItem.rotation;
             if (physicalObject != null)
             {
                 physicalObject.transform.position = updatedItem.position;
                 physicalObject.transform.rotation = updatedItem.rotation;
+
+                previousActive = active;
+                active = updatedItem.active;
                 if (active)
                 {
                     if (!physicalObject.gameObject.activeSelf)
@@ -62,27 +70,14 @@ namespace H3MP
                 }
             }
 
-            TODO: do thsi differently, and if there is a trackedID that is in children but not in updatedChildren and vice versa, need to update children to match updated ones
-            if (children != null) {
-                foreach (H3MP_TrackedItemData child in children)
-                {
-                    foreach (H3MP_TrackedItemData updatedChild in updatedItem.children)
-                    {
-                        if (updatedChild.trackedID == child.trackedID)
-                        {
-                            child.Update(updatedChild);
-                            break;
-                        }
-                    }
-                }
-            }
-
             SetData(updatedItem.data);
         }
 
-        public void Update()
+        public bool Update()
         {
-            if(parent == null)
+            previousPos = position;
+            previousRot = rotation;
+            if (parent == null)
             {
                 position = physicalObject.transform.position;
                 rotation = physicalObject.transform.rotation;
@@ -92,22 +87,45 @@ namespace H3MP
                 position = physicalObject.transform.localPosition;
                 rotation = physicalObject.transform.localRotation;
             }
-            if(children != null)
+
+            previousActive = active;
+            active = physicalObject.gameObject.activeInHierarchy;
+
+            return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation) || UpdateData();
+        }
+
+        public bool NeedsUpdate()
+        {
+            return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
+        }
+
+        private bool DataEqual()
+        {
+            if(data == null && previousData == null)
             {
-                foreach(H3MP_TrackedItemData child in children)
+                return false;
+            }
+            if((data == null && previousData != null)||(data != null && previousData == null)||data.Length != previousData.Length)
+            {
+                return true;
+            }
+            for(int i=0; i < data.Length; ++i)
+            {
+                if (data[i] != previousData.Length)
                 {
-                    child.Update();
+                    return true;
                 }
             }
-
-            UpdateData();
+            return false;
         }
 
         // MOD: Mods with custom items with custom data that will be needed to instantiate them 
         //      should postfix this method to update the data based on the physical state of the item
-        private void UpdateData()
+        //      The return value should be set to true if data was modified
+        private bool UpdateData()
         {
-
+            previousData = data;
+            return false;
         }
 
         // MOD: Mods with custom items with custom data that will be needed to instantiate them 
@@ -117,6 +135,7 @@ namespace H3MP
         {
             if (newData != null)
             {
+                previousData = data;
                 data = newData;
             }
         }

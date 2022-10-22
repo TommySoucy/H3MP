@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Valve.VR.InteractionSystem;
 
 namespace H3MP
@@ -22,6 +23,12 @@ namespace H3MP
             H3MP_ClientSend.WelcomeReceived();
 
             H3MP_Client.singleton.udp.Connect(((IPEndPoint)H3MP_Client.singleton.tcp.socket.Client.LocalEndPoint).Port);
+
+            // Just connected, sync if current scene is syncable
+            if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
+            {
+                H3MP_GameManager.SyncTrackedItems();
+            }
         }
 
         public static void SpawnPlayer(H3MP_Packet packet)
@@ -68,17 +75,15 @@ namespace H3MP
         {
             // Reconstruct passed trackedItems from packet
             int count = packet.ReadInt();
-            List<H3MP_TrackedItemData> trackedItems = new List<H3MP_TrackedItemData>();
             for (int i = 0; i < count; ++i)
             {
-                trackedItems.Add(packet.ReadTrackedItem());
+                H3MP_GameManager.UpdateTrackedItems(packet.ReadTrackedItem());
             }
-            H3MP_GameManager.UpdateTrackedItems(trackedItems);
         }
 
         public static void TrackedItem(H3MP_Packet packet)
         {
-            H3MP_Client.AddTrackedItem(packet.ReadTrackedItem());
+            H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true));
         }
 
         public static void AddSyncScene(H3MP_Packet packet)
@@ -87,26 +92,6 @@ namespace H3MP
             string scene = packet.ReadString();
 
             H3MP_GameManager.synchronizedScenes.Add(scene, ID);
-        }
-
-        public static void TakeControl(H3MP_Packet packet)
-        {
-            int trackedID = packet.ReadInt();
-
-            if (H3MP_GameManager.items.ContainsKey(trackedID))
-            {
-                H3MP_TrackedItemData trackedItem = H3MP_GameManager.items[trackedID];
-                FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
-                physObj.StoreAndDestroyRigidbody();
-                H3MP_GameManager.items.Remove(trackedID);
-
-                trackedItem.controller = 0;
-            }
-            else
-            {
-                H3MP_TrackedItemData trackedItem = H3MP_Client.items[trackedID];  
-                trackedItem.controller = 0;
-            }
         }
 
         public static void GiveControl(H3MP_Packet packet)
@@ -120,7 +105,9 @@ namespace H3MP
             {
                 FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
                 physObj.StoreAndDestroyRigidbody();
-                H3MP_GameManager.items.Remove(trackedID);
+                H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
+                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
             }
             trackedItem.controller = controllerID;
         }
@@ -133,10 +120,13 @@ namespace H3MP
 
             if(trackedItem.physicalObject == null)
             {
-                H3MP_Client.items.Remove(trackedID);
+                H3MP_Client.items[trackedID] = null;
+                H3MP_Client.availableItemIndices.Add(trackedID);
                 if (trackedItem.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.items.Remove(trackedID);
+                    H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                    H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
+                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
                 }
             }
             else

@@ -151,20 +151,61 @@ namespace H3MP
 
         public static void TrackedItems()
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItems))
+            int index = 0;
+            while (index < H3MP_Server.items.Length - 1) // TODO: Optimize, keep track of highest used index in global items list so we can stop there right away
             {
-                packet.Write(H3MP_GameManager.items.Count);
-                foreach (KeyValuePair<int, H3MP_TrackedItemData> trackedItem in H3MP_GameManager.items)
+                using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItems))
                 {
-                    if (trackedItem.Value.controller == 0)
-                    {
-                        trackedItem.Value.position = trackedItem.Value.physicalObject.transform.position;
-                        trackedItem.Value.rotation = trackedItem.Value.physicalObject.transform.rotation;
-                    }
-                    packet.Write(trackedItem.Value);
-                }
+                    // Write place holder int at start to hold the count once we know it
+                    packet.Write(0);
 
-                SendUDPDataToAll(packet);
+                    int count = 0;
+                    for (int i = index; i < H3MP_Server.items.Length; ++i)
+                    {
+                        H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
+                        if (trackedItem != null)
+                        {
+                            if(trackedItem.controller == 0)
+                            {
+                                if (trackedItem.Update())
+                                {
+                                    packet.Write(trackedItem);
+
+                                    index = i;
+                                    ++count;
+
+                                    // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                    if (packet.buffer.Count >= 1300)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            else if(trackedItem.NeedsUpdate())
+                            {
+                                packet.Write(trackedItem);
+
+                                index = i;
+                                ++count;
+
+                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                if (packet.buffer.Count >= 1300)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        packet.buffer[i] = countArr[i];
+                    }
+
+                    SendUDPDataToAll(packet);
+                }
             }
         }
 
@@ -172,20 +213,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItem))
             {
-                packet.Write(trackedItem);
-
-                SendTCPDataToAll(packet);
-            }
-        }
-
-        public static void TakeControl(H3MP_TrackedItemData trackedItem)
-        {
-            trackedItem.controller = 0;
-            H3MP_GameManager.items.Add(trackedItem.trackedID, trackedItem);
-
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.takeControl))
-            {
-                packet.Write(trackedItem.trackedID);
+                packet.Write(trackedItem, true);
 
                 SendTCPDataToAll(packet);
             }

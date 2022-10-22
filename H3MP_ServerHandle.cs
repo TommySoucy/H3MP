@@ -74,12 +74,10 @@ namespace H3MP
         {
             // Reconstruct passed trackedItems from packet
             int count = packet.ReadInt();
-            List<H3MP_TrackedItemData> trackedItems = new List<H3MP_TrackedItemData>();
             for(int i=0; i < count; ++i)
             {
-                trackedItems.Add(packet.ReadTrackedItem());
+                H3MP_GameManager.UpdateTrackedItems(packet.ReadTrackedItem());
             }
-            H3MP_GameManager.UpdateTrackedItems(trackedItems);
         }
 
         public static void TakeControl(int clientID, H3MP_Packet packet)
@@ -93,7 +91,9 @@ namespace H3MP
             {
                 FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
                 physObj.StoreAndDestroyRigidbody();
-                H3MP_GameManager.items.Remove(trackedID);
+                H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
+                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
             }
             trackedItem.controller = clientID;
 
@@ -104,17 +104,22 @@ namespace H3MP
         public static void GiveControl(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
+            int newController = packet.ReadInt();
 
+            // Update locally
             H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
+            trackedItem.controller = newController;
 
-            FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
-            physObj.RecoverRigidbody();
-            H3MP_GameManager.items.Add(trackedID, trackedItem);
-
-            trackedItem.controller = 0;
+            if (newController == 0)
+            {
+                FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
+                physObj.RecoverRigidbody();
+                trackedItem.localtrackedID = H3MP_GameManager.items.Count;
+                H3MP_GameManager.items.Add(trackedItem);
+            }
 
             // Send to all other clients
-            H3MP_ServerSend.GiveControl(trackedID, 0);
+            H3MP_ServerSend.GiveControl(trackedID, newController);
         }
 
         public static void DestroyItem(int clientID, H3MP_Packet packet)
@@ -125,10 +130,13 @@ namespace H3MP
 
             if (trackedItem.physicalObject == null)
             {
-                H3MP_Server.items.Remove(trackedID);
+                H3MP_Server.items[trackedID] = null;
+                H3MP_Server.availableItemIndices.Add(trackedID);
                 if (trackedItem.controller == 0)
                 {
-                    H3MP_GameManager.items.Remove(trackedID);
+                    H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                    H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
+                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
                 }
             }
             else
@@ -142,7 +150,7 @@ namespace H3MP
 
         public static void TrackedItem(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem());
+            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true));
         }
     }
 }

@@ -93,16 +93,18 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.items.Count; ++i)
                     {
                         H3MP_TrackedItemData trackedItem = H3MP_GameManager.items[i];
-                        trackedItem.Update();
-                        packet.Write(trackedItem);
-
-                        index = i;
-                        ++count;
-
-                        // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                        if (packet.buffer.Count >= 1300)
+                        if (trackedItem.Update())
                         {
-                            continue;
+                            packet.Write(trackedItem);
+
+                            index = i;
+                            ++count;
+
+                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                            if (packet.buffer.Count >= 1300)
+                            {
+                                break;
+                            }
                         }
                     }
 
@@ -122,37 +124,18 @@ namespace H3MP
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedItem))
             {
-                packet.Write(trackedItem);
+                packet.Write(trackedItem, true);
 
                 SendTCPData(packet);
             }
         }
 
-        public static void TakeControl(H3MP_TrackedItemData trackedItem)
+        public static void GiveControl(int trackedID, int newController)
         {
-            // Send to server
-            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.takeControl))
-            {
-                packet.Write(trackedItem.trackedID);
-
-                SendTCPData(packet);
-            }
-
-            // Update locally
-            trackedItem.controller = H3MP_Client.singleton.ID;
-            H3MP_GameManager.items.Add(trackedItem.trackedID, trackedItem);
-        }
-
-        public static void GiveControl(H3MP_TrackedItemData trackedItem)
-        {
-            // Update locally
-            trackedItem.controller = 0;
-            H3MP_GameManager.items.Remove(trackedItem.trackedID);
-
-            // Send to server
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveControl))
             {
-                packet.Write(trackedItem.trackedID);
+                packet.Write(trackedID);
+                packet.Write(newController);
 
                 SendTCPData(packet);
             }

@@ -239,38 +239,43 @@ namespace H3MP
                 return;
             }
 
-            if (___m_currentInteractable is FVRPhysicalObject)
+            if (preObject == null && ___m_currentInteractable != null)
             {
-                if (preObject == null)
+                // Just started interacing with this item
+                H3MP_TrackedItem trackedItem = ___m_currentInteractable.GetComponent<H3MP_TrackedItem>();
+                if (trackedItem != null && trackedItem.data.controller != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
                 {
-                    if (___m_currentInteractable != null)
+                    if (H3MP_ThreadManager.host)
                     {
-                        H3MP_TrackedItem trackedItem = ___m_currentInteractable.GetComponent<H3MP_TrackedItem>();
-                        if (trackedItem != null)
+                        if (trackedItem.data.controller != 0)
                         {
-                            // This client must take control
-                            if (H3MP_ThreadManager.host && trackedItem.data.controller != 0)
-                            {
-                                // We are host and it is not yet under our control
-                                // Tell client to give up control of the item
-                                H3MP_ServerSend.TakeControl(trackedItem.data);
-                            }
-                            else if (trackedItem.data.controller != H3MP_Client.singleton.ID)
-                            {
-                                // We are a client and item is not yet under our control
-                                H3MP_ClientSend.TakeControl(trackedItem.data);
-                            }
-                            // else, item already in our control
+                            // Take control
+
+                            // Send to all clients
+                            H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+
+                            // Update locally
+                            trackedItem.data.controller = 0;
+                            trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
+                            H3MP_GameManager.items.Add(trackedItem.data);
+                            (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
                         }
                     }
-                }
-                else if (___m_currentInteractable == null)
-                {
-                    H3MP_TrackedItem trackedItem = preObject.GetComponent<H3MP_TrackedItem>();
-                    if (!H3MP_ThreadManager.host && trackedItem.data.controller == H3MP_Client.singleton.ID && 
-                        !H3MP_GameManager.IsControlled(preObject as FVRPhysicalObject))
+                    else
                     {
-                        H3MP_ClientSend.GiveControl(trackedItem.data);
+                        if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                        {
+                            // Take control
+
+                            // Send to all clients
+                            H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+
+                            // Update locally
+                            trackedItem.data.controller = H3MP_Client.singleton.ID;
+                            trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
+                            H3MP_GameManager.items.Add(trackedItem.data);
+                            (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
+                        }
                     }
                 }
             }
@@ -287,30 +292,44 @@ namespace H3MP
                 return;
             }
 
-            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
-            if (trackedItem != null) 
+            if (slot != null)
             {
-                // Item is tracked, must manage control
-                if (slot != null)
+                // Just put this item in a slot
+                H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+                if (trackedItem != null && trackedItem.data.controller != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
                 {
-                    // This client must take control
-                    if (H3MP_ThreadManager.host && trackedItem.data.controller != 0)
+                    if (H3MP_ThreadManager.host)
                     {
-                        // We are host and it is not yet under our control
-                        // Tell client to give up control of the item
-                        H3MP_ServerSend.TakeControl(trackedItem.data);
+                        if (trackedItem.data.controller != 0)
+                        {
+                            // Take control
+
+                            // Send to all clients
+                            H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+
+                            // Update locally
+                            trackedItem.data.controller = 0;
+                            trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
+                            H3MP_GameManager.items.Add(trackedItem.data);
+                            __instance.RecoverRigidbody();
+                        }
                     }
-                    else if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                    else
                     {
-                        // We are a client and item is not yet under our control
-                        H3MP_ClientSend.TakeControl(trackedItem.data);
+                        if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                        {
+                            // Take control
+
+                            // Send to server and all other clients
+                            H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+
+                            // Update locally
+                            trackedItem.data.controller = H3MP_Client.singleton.ID;
+                            trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
+                            H3MP_GameManager.items.Add(trackedItem.data);
+                            __instance.RecoverRigidbody();
+                        }
                     }
-                    // else, item already in our control
-                }
-                else if (H3MP_GameManager.IsControlled(__instance) && !H3MP_ThreadManager.host && trackedItem.data.controller == H3MP_Client.singleton.ID)
-                {
-                    // Controlling, but not otherwise interacting and we are not host, give control to host
-                    H3MP_ClientSend.GiveControl(trackedItem.data);
                 }
             }
         }
