@@ -76,7 +76,7 @@ namespace H3MP
             int count = packet.ReadInt();
             for(int i=0; i < count; ++i)
             {
-                H3MP_GameManager.UpdateTrackedItems(packet.ReadTrackedItem());
+                H3MP_GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
             }
         }
 
@@ -150,7 +150,7 @@ namespace H3MP
 
         public static void TrackedItem(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true));
+            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString());
         }
     }
 }

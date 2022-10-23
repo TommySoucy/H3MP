@@ -334,4 +334,6 @@ namespace H3MP
             }
         }
     }
+
+    TODO: Add patches for things like load mag, eject mag, eject round, etc
 }

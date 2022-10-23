@@ -144,7 +144,7 @@ namespace H3MP
             }
         }
 
-        public static void UpdateTrackedItems(H3MP_TrackedItemData updatedItem)
+        public static void UpdateTrackedItem(H3MP_TrackedItemData updatedItem)
         {
             if(updatedItem.trackedID == -1)
             {
@@ -152,16 +152,33 @@ namespace H3MP
             }
 
             H3MP_TrackedItemData trackedItemData = null;
+            int ID = -1;
             if (H3MP_ThreadManager.host)
             {
-                trackedItemData = H3MP_Server.items[updatedItem.trackedID];
+                if (updatedItem.trackedID < H3MP_Server.items.Length)
+                {
+                    trackedItemData = H3MP_Server.items[updatedItem.trackedID];
+                    ID = 0;
+                }
             }
             else
             {
-                trackedItemData = H3MP_Client.items[updatedItem.trackedID];
+                if (updatedItem.trackedID < H3MP_Client.items.Length)
+                {
+                    trackedItemData = H3MP_Client.items[updatedItem.trackedID];
+                    ID = H3MP_Client.singleton.ID;
+                }
             }
 
-            trackedItemData.Update(updatedItem);
+            if (trackedItemData != null)
+            {
+                // If we take control of an item, we could still receive an updated item from another client
+                // if they haven't received the control update yet, so here we check if this actually needs to update
+                if(trackedItemData.controller != ID)
+                {
+                    trackedItemData.Update(updatedItem);
+                }
+            }
         }
 
         public static void SyncTrackedItems()
@@ -169,10 +186,11 @@ namespace H3MP
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
             // while all other items get destroyed. We will receive any item that the players inside this scene are controlling
-            GameObject[] roots = SceneManager.GetActiveScene().GetRootGameObjects();
+            Scene scene = SceneManager.GetActiveScene();
+            GameObject[] roots = scene.GetRootGameObjects();
             foreach(GameObject root in roots)
             {
-                SyncTrackedItems(root.transform, !OtherPlayersInScene(), null);
+                SyncTrackedItems(root.transform, !OtherPlayersInScene(), null, scene.name);
             }
         }
 
@@ -188,8 +206,12 @@ namespace H3MP
             return false;
         }
 
-        private static void SyncTrackedItems(Transform root, bool controlEverything, H3MP_TrackedItemData parent)
+        private static void SyncTrackedItems(Transform root, bool controlEverything, H3MP_TrackedItemData parent, string scene)
         {
+            // NOTE: When we sync tracked items, we always send the parent before its children, through TCP. This means we are guaranteed 
+            //       that if we receive a full item packet on the server or any client and it has a parent,
+            //       this parent is guaranteed to be in the global list already
+            //       We are later dependent on this fact so if we modify anything here, ensure this remains true
             FVRPhysicalObject physObj = root.GetComponent<FVRPhysicalObject>();
             if (physObj != null)
             {
@@ -201,12 +223,12 @@ namespace H3MP
                         if (H3MP_ThreadManager.host)
                         {
                             // This will also send a packet with the item to be added in the client's global item list
-                            H3MP_Server.AddTrackedItem(trackedItem.data);
+                            H3MP_Server.AddTrackedItem(trackedItem.data, scene);
                         }
                         else
                         {
                             // Tell the server we need to add this item to global tracked items
-                            H3MP_ClientSend.TrackedItem(trackedItem.data);
+                            H3MP_ClientSend.TrackedItem(trackedItem.data, scene);
                         }
 
                         // Add to local list
@@ -215,7 +237,7 @@ namespace H3MP
 
                         foreach (Transform child in root)
                         {
-                            SyncTrackedItems(child, controlEverything, trackedItem.data);
+                            SyncTrackedItems(child, controlEverything, trackedItem.data, scene);
                         }
                     }
                     else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
@@ -228,7 +250,7 @@ namespace H3MP
             {
                 foreach(Transform child in root)
                 {
-                    SyncTrackedItems(child, controlEverything, null);
+                    SyncTrackedItems(child, controlEverything, null, scene);
                 }
             }
         }
@@ -242,13 +264,13 @@ namespace H3MP
 
             if(parent != null)
             {
-                data.parent = parent;
-                if(data.parent.children == null)
+                data.parent = parent.trackedID;
+                if(parent.children == null)
                 {
-                    data.parent.children = new List<H3MP_TrackedItemData>();
+                    parent.children = new List<H3MP_TrackedItemData>();
                 }
-                data.childIndex = data.parent.children.Count;
-                data.parent.children.Add(data);
+                data.childIndex = parent.children.Count;
+                parent.children.Add(data);
             }
             data.itemID = physObj.ObjectWrapper.ItemID;
             data.position = trackedItem.transform.position;

@@ -77,13 +77,13 @@ namespace H3MP
             int count = packet.ReadInt();
             for (int i = 0; i < count; ++i)
             {
-                H3MP_GameManager.UpdateTrackedItems(packet.ReadTrackedItem());
+                H3MP_GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
             }
         }
 
         public static void TrackedItem(H3MP_Packet packet)
         {
-            H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true));
+            H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString());
         }
 
         public static void AddSyncScene(H3MP_Packet packet)
@@ -121,7 +121,6 @@ namespace H3MP
             if(trackedItem.physicalObject == null)
             {
                 H3MP_Client.items[trackedID] = null;
-                H3MP_Client.availableItemIndices.Add(trackedID);
                 if (trackedItem.controller == H3MP_Client.singleton.ID)
                 {
                     H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];

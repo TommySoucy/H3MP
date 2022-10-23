@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Valve.VR.InteractionSystem;
 
 namespace H3MP
@@ -209,11 +210,12 @@ namespace H3MP
             }
         }
 
-        public static void TrackedItem(H3MP_TrackedItemData trackedItem)
+        public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItem))
             {
                 packet.Write(trackedItem, true);
+                packet.Write(scene);
 
                 SendTCPDataToAll(packet);
             }

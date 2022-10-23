@@ -118,7 +118,7 @@ namespace H3MP
             }
         }
 
-        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
+        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene)
         {
             // Adjust items size to acommodate if necessary
             if(availableItemIndices.Count == 0)
@@ -132,8 +132,14 @@ namespace H3MP
 
             items[trackedItem.trackedID] = trackedItem;
 
+            // Instantiate item if it is in the current scene
+            if (scene.Equals(SceneManager.GetActiveScene().name))
+            {
+                AnvilManager.Run(trackedItem.Instantiate());
+            }
+
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedItem(trackedItem);
+            H3MP_ServerSend.TrackedItem(trackedItem, scene);
         }
 
         private static void IncreaseItemsSize()

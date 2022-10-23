@@ -217,19 +217,7 @@ namespace H3MP
             {
                 Write(trackedItem.itemID);
                 Write(trackedItem.controller);
-
-                if (trackedItem.children == null)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedItem.children.Count);
-                    foreach (H3MP_TrackedItemData child in trackedItem.children)
-                    {
-                        Write(child, true);
-                    }
-                }
+                Write(trackedItem.parent);
             }
         }
         #endregion
@@ -433,16 +421,7 @@ namespace H3MP
             {
                 trackedItem.itemID = ReadString();
                 trackedItem.controller = ReadInt();
-
-                int childCount = ReadInt();
-                if (childCount > 0)
-                {
-                    trackedItem.children = new List<H3MP_TrackedItemData>();
-                    for (int i = 0; i < childCount; ++i)
-                    {
-                        trackedItem.children.Add(ReadTrackedItem(full, _moveReadPos));
-                    }
-                }
+                trackedItem.parent = ReadInt();
             }
             return trackedItem;
         }

@@ -1,6 +1,7 @@
-﻿using System;
+﻿using FistVR;
+using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -28,17 +29,50 @@ namespace H3MP
         private Quaternion previousRot;
         public H3MP_TrackedItem physicalObject;
 
-        public H3MP_TrackedItemData parent; // The item this item is attached to
+        public int parent = -1; // The tracked ID of item this item is attached to
         public List<H3MP_TrackedItemData> children; // The items attached to this item
         public int childIndex = -1; // The index of this item in its parent's children list
 
-        // MOD: Mods with custom items with custom data that will be used to instantiate them 
-        //      should postfix this method to add whatever data they want to object
-        public GameObject Instantiate()
+        public IEnumerator Instantiate()
         {
-            TODO
+            GameObject itemPrefab = GetItemPrefab();
+            if(itemPrefab == null)
+            {
+                yield return IM.OD[itemID].GetGameObjectAsync();
+                itemPrefab = IM.OD[itemID].GetGameObject();
+            }
+            if(itemPrefab == null)
+            {
+                Debug.LogError($"Attempted to instantiate {itemID} sent from {controller} but failed to get item prefab.");
+                yield break;
+            }
 
-            SetData();
+            GameObject itemObject = GameObject.Instantiate(itemPrefab);
+            physicalObject = itemObject.AddComponent<H3MP_TrackedItem>();
+            physicalObject.data = this;
+
+            // See Note in H3MP_GameManager.SyncTrackedItems
+            if(parent != -1)
+            {
+                // Add ourselves to the prent's children
+                H3MP_TrackedItemData parentItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[parent];
+                if(parentItem.children == null)
+                {
+                    parentItem.children = new List<H3MP_TrackedItemData>();
+                }
+                childIndex = parentItem.children.Count;
+                parentItem.children.Add(this);
+            }
+
+            // Initially set itself
+            Update(this);
+        }
+
+        // MOD: If a mod keeps its item prefabs in a different location than IM.OD, this is what should be patched to find it
+        //      If this returns null, it will try to find the item in IM.OD
+        private GameObject GetItemPrefab()
+        {
+            return null;
         }
 
         public void Update(H3MP_TrackedItemData updatedItem)
@@ -49,8 +83,16 @@ namespace H3MP
             rotation = updatedItem.rotation;
             if (physicalObject != null)
             {
-                physicalObject.transform.position = updatedItem.position;
-                physicalObject.transform.rotation = updatedItem.rotation;
+                if (parent == -1)
+                {
+                    physicalObject.transform.position = updatedItem.position;
+                    physicalObject.transform.rotation = updatedItem.rotation;
+                }
+                else
+                {
+                    physicalObject.transform.localPosition = updatedItem.position;
+                    physicalObject.transform.localRotation = updatedItem.rotation;
+                }
 
                 previousActive = active;
                 active = updatedItem.active;
@@ -70,14 +112,14 @@ namespace H3MP
                 }
             }
 
-            SetData(updatedItem.data);
+            UpdateData(updatedItem.data);
         }
 
         public bool Update()
         {
             previousPos = position;
             previousRot = rotation;
-            if (parent == null)
+            if (parent == -1)
             {
                 position = physicalObject.transform.position;
                 rotation = physicalObject.transform.rotation;
@@ -119,25 +161,11 @@ namespace H3MP
             return false;
         }
 
-        // MOD: Mods with custom items with custom data that will be needed to instantiate them 
-        //      should postfix this method to update the data based on the physical state of the item
-        //      The return value should be set to true if data was modified
-        private bool UpdateData()
+        private bool UpdateData(byte[] newData = null)
         {
             previousData = data;
-            return false;
-        }
 
-        // MOD: Mods with custom items with custom data that will be needed to instantiate them 
-        //      should postfix this method to add whatever data they want to the data
-        //      or to update the physicalObject depending on newData
-        public void SetData(byte[] newData = null)
-        {
-            if (newData != null)
-            {
-                previousData = data;
-                data = newData;
-            }
+            return physicalObject.UpdateItemData(newData);
         }
     }
 }

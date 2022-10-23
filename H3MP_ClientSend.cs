@@ -120,11 +120,12 @@ namespace H3MP
             }
         }
 
-        public static void TrackedItem(H3MP_TrackedItemData trackedItem)
+        public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedItem))
             {
                 packet.Write(trackedItem, true);
+                packet.Write(scene);
 
                 SendTCPData(packet);
             }
