@@ -151,5 +151,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void ItemParent(int trackedID, int newParentID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.itemParent))
+            {
+                packet.Write(trackedID);
+                packet.Write(newParentID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

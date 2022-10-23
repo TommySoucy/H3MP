@@ -20,7 +20,8 @@ namespace H3MP
         trackedItem,
         takeControl,
         giveControl,
-        destroyItem
+        destroyItem,
+        itemParent
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -34,7 +35,8 @@ namespace H3MP
         trackedItem,
         takeControl,
         giveControl,
-        destroyItem
+        destroyItem,
+        itemParent
     }
 
     public class H3MP_Packet : IDisposable

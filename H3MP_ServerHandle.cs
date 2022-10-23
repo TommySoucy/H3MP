@@ -152,5 +152,16 @@ namespace H3MP
         {
             H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString());
         }
+
+        public static void ItemParent(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int newParentID = packet.ReadInt();
+
+            H3MP_Server.items[trackedID].SetParent(newParentID);
+
+            // Send to all other clients
+            H3MP_ServerSend.ItemParent(trackedID, newParentID, clientID);
+        }
     }
 }

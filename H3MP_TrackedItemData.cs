@@ -32,6 +32,7 @@ namespace H3MP
         public int parent = -1; // The tracked ID of item this item is attached to
         public List<H3MP_TrackedItemData> children; // The items attached to this item
         public int childIndex = -1; // The index of this item in its parent's children list
+        public bool ignoreParentChanged;
 
         public IEnumerator Instantiate()
         {
@@ -139,6 +140,106 @@ namespace H3MP
         public bool NeedsUpdate()
         {
             return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
+        }
+
+        public void SetParent(H3MP_TrackedItemData newParent)
+        {
+            if (newParent == null)
+            {
+                if (parent != -1) // We had parent before, need to unparent
+                {
+                    H3MP_TrackedItemData previousParent = null;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        previousParent = H3MP_Server.items[parent];
+                    }
+                    else
+                    {
+                        previousParent = H3MP_Client.items[parent];
+                    }
+                    previousParent.children[childIndex] = previousParent.children[previousParent.children.Count - 1];
+                    previousParent.children[childIndex].childIndex = childIndex;
+                    previousParent.children.RemoveAt(previousParent.children.Count - 1);
+                    if (previousParent.children.Count == 0)
+                    {
+                        previousParent.children = null;
+                    }
+                    parent = -1;
+                    childIndex = -1;
+
+                    // Physically unparent
+                    if (physicalObject != null)
+                    {
+                        ignoreParentChanged = true;
+                        physicalObject.transform.parent = GetGeneralParent();
+                    }
+                }
+                // Already unparented, nothing changes
+            }
+            else // We have new parent
+            {
+                if (parent != -1) // We had parent before, need to unparent first
+                {
+                    H3MP_TrackedItemData previousParent = null;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        previousParent = H3MP_Server.items[parent];
+                    }
+                    else
+                    {
+                        previousParent = H3MP_Client.items[parent];
+                    }
+                    previousParent.children[childIndex] = previousParent.children[previousParent.children.Count - 1];
+                    previousParent.children[childIndex].childIndex = childIndex;
+                    previousParent.children.RemoveAt(previousParent.children.Count - 1);
+                    if (previousParent.children.Count == 0)
+                    {
+                        previousParent.children = null;
+                    }
+                }
+
+                // Set new parent
+                parent = newParent.trackedID;
+                if (newParent.children == null)
+                {
+                    newParent.children = new List<H3MP_TrackedItemData>();
+                }
+                childIndex = newParent.children.Count;
+                newParent.children.Add(this);
+
+                // Physically parent
+                if (physicalObject != null)
+                {
+                    ignoreParentChanged = true;
+                    physicalObject.transform.parent = newParent.physicalObject.transform;
+                }
+            }
+        }
+
+        public void SetParent(int trackedID)
+        {
+            if (trackedID == -1)
+            {
+                SetParent(null);
+            }
+            else
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    SetParent(H3MP_Server.items[trackedID]);
+                }
+                else
+                {
+                    SetParent(H3MP_Client.items[trackedID]);
+                }
+            }
+        }
+
+        // MOD: When unparented, an item will have its transform's parent set to null
+        //      If you want it to be set to a specific transform, patch this to return the transform you want
+        public Transform GetGeneralParent()
+        {
+            return null;
         }
 
         private bool DataEqual()

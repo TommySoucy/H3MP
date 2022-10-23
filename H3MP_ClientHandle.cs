@@ -134,5 +134,13 @@ namespace H3MP
                 GameObject.Destroy(trackedItem.physicalObject.gameObject);
             }
         }
+
+        public static void ItemParent(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int newParentID = packet.ReadInt();
+
+            H3MP_Client.items[trackedID].SetParent(newParentID);
+        }
     }
 }

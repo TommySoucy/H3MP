@@ -108,8 +108,7 @@ namespace H3MP
         {
             FVRFireArmMagazine asMag = dataObject as FVRFireArmMagazine;
 
-            // TODO Update data about contained rounds and about it attachment state
-
+            TODO Update data about contained rounds and about it attachment state
 
             return false;
         }
@@ -222,13 +221,59 @@ namespace H3MP
 
         private void OnTransformParentChanged()
         {
+            if (data.ignoreParentChanged)
+            {
+                data.ignoreParentChanged = false;
+                return;
+            }
+
             if(data.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
             {
-                TODO: Find trackedItem upwards
-                // If parent changed
-                // Send parent update server/clients
-                // Update global.items[data.parent].children accordingly
-                // Update data.parent accordingly
+                Transform currentParent = transform.parent;
+                H3MP_TrackedItem parentTrackedItem = null;
+                while (currentParent != null)
+                {
+                    parentTrackedItem = currentParent.GetComponent<H3MP_TrackedItem>();
+                    if(parentTrackedItem != null)
+                    {
+                        break;
+                    }
+                }
+                if(parentTrackedItem != null)
+                {
+                    if(parentTrackedItem.data.trackedID != data.parent)
+                    {
+                        // We have a parent trackedItem and it is new
+                        // Update other clients
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                        }
+
+                        // Update local
+                        data.SetParent(parentTrackedItem.data);
+                    }
+                }
+                else if(data.parent != -1)
+                {
+                    // We were detached from current parent
+                    // Update other clients
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                    }
+
+                    // Update locally
+                    data.SetParent(null);
+                }
             }
         }
     }

@@ -248,5 +248,23 @@ namespace H3MP
                 }
             }
         }
+
+        public static void ItemParent(int trackedID, int newParentID, int clientID = -1)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.itemParent))
+            {
+                packet.Write(trackedID);
+                packet.Write(newParentID);
+
+                if (clientID == -1)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

@@ -174,6 +174,7 @@ namespace H3MP
                 { (int)ClientPackets.giveControl, H3MP_ServerHandle.GiveControl },
                 { (int)ClientPackets.destroyItem, H3MP_ServerHandle.DestroyItem },
                 { (int)ClientPackets.trackedItem, H3MP_ServerHandle.TrackedItem },
+                { (int)ClientPackets.trackedItem, H3MP_ServerHandle.ItemParent },
             };
 
             items = new H3MP_TrackedItemData[100];
