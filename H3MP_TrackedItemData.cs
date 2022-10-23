@@ -19,8 +19,48 @@ namespace H3MP
 
         // Data
         public string itemID; // The ID of this item so it can be spawned by clients and host
-        public byte[] data; // MOD: This is what you would use to add custom data to items (Meatov dogtags have level, this is where it would be written)
-        public byte[] previousData; 
+        public byte[] previousData;
+        public byte[] data;
+
+        // Item type specific data strcuture:
+        /**
+         * FVRFireArmMagazine
+         *  0: 
+         *  1: Loaded round count (n)
+         *      0:
+         *      1: Round class
+         *      ...
+         *      n * 2 - 2:
+         *      n * 2 - 1: Round class
+         *  2: Loaded in parent
+         */
+        /**
+         * FVRFireArmClip
+         *  0: 
+         *  1: Loaded round count (n)
+         *      0:
+         *      1: Round class
+         *      ...
+         *      n * 2 - 2:
+         *      n * 2 - 1: Round class
+         *  2: Loaded in parent
+         */
+        /**
+         * Speedloader
+         *  0:
+         *  1: Chamber Round class (-1 for null)
+         *  ...
+         *  Chambers.Count * 2 - 2:
+         *  Chambers.Count * 2 - 1: Round class
+         */
+        /**
+         * FVRFireArm
+         *  0:
+         *  1: Chamber Round class (-1 for null)
+         *  ...
+         *  FChambers.Count * 2 - 2:
+         *  FChambers.Count * 2 - 1: Round class
+         */
 
         // State
         public Vector3 position;
@@ -63,6 +103,19 @@ namespace H3MP
                 }
                 childIndex = parentItem.children.Count;
                 parentItem.children.Add(this);
+
+                // Physically parent
+                ignoreParentChanged = true;
+                itemObject.transform.parent = parentItem.physicalObject.transform;
+
+                // If parented, the position and rotation are relative, so set it now after parenting
+                itemObject.transform.localPosition = position;
+                itemObject.transform.localRotation = rotation;
+            }
+            else
+            {
+                itemObject.transform.position = position;
+                itemObject.transform.rotation = rotation;
             }
 
             // Initially set itself

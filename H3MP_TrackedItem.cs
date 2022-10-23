@@ -15,8 +15,8 @@ namespace H3MP
         // Update
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
         public delegate bool UpdateDataWithGiven(byte[] newData);
-        public UpdateData updateFunc;
-        public UpdateDataWithGiven updateGivenFunc;
+        public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
+        public UpdateDataWithGiven updateGivenFunc; // Update the item's data based on data provided by another client
         public UnityEngine.Object dataObject;
 
         public bool sendDestroy = true; // To prevent feeback loops
@@ -81,7 +81,7 @@ namespace H3MP
         {
             FVRFireArm asFirearm = dataObject as FVRFireArm;
 
-            // TODO Update data about chambers, attachments(?), mag(?), etc.
+            TODO Update data about chambers, attachments(?), mag(?), etc.
 
             return false;
         }
@@ -90,34 +90,88 @@ namespace H3MP
         {
             FVRFireArm asFirearm = dataObject as FVRFireArm;
 
-            // TODO Update data about chambers, attachments(?), mag(?), etc.
+            TODO Update data about chambers, attachments(?), mag(?), etc.
 
             return false;
         }
 
         private bool UpdateMagazine()
         {
+            bool modified = false;
             FVRFireArmMagazine asMag = dataObject as FVRFireArmMagazine;
 
-            // TODO Update data about contained rounds
+            int necessarySize = asMag.m_numRounds * 2 + 3;
 
-            return false;
+            if(data.data == null || data.data.Length < necessarySize)
+            {
+                data.data = new byte[necessarySize];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+            byte preval1 = data.data[1];
+
+            // Write count of loaded rounds
+            BitConverter.GetBytes((short)asMag.m_numRounds).CopyTo(data.data, 0);
+
+            modified |= (preval0 != data.data[0] || preval1 != data.data[1]);
+
+            // Write loaded round classes
+            for (int i=0; i < asMag.m_numRounds; ++i)
+            {
+                preval0 = data.data[i * 2 + 2];
+                preval1 = data.data[i * 2 + 3];
+
+                BitConverter.GetBytes((short)asMag.LoadedRounds[i].LR_Class).CopyTo(data.data, i * 2 + 2);
+
+                modified |= (preval0 != data.data[i * 2 + 2] || preval1 != data.data[i * 2 + 3]);
+            }
+
+            // Write loaded into firearm
+            BitConverter.GetBytes(asMag.FireArm != null).CopyTo(data.data, necessarySize - 1);
+
+            return modified;
         }
 
         private bool UpdateGivenMagazine(byte[] newData)
         {
+            bool modified = false;
             FVRFireArmMagazine asMag = dataObject as FVRFireArmMagazine;
 
-            TODO Update data about contained rounds and about it attachment state
+            if (data.data == null || data.data.Length != newData.Length)
+            {
+                modified = true;
+            }
 
-            return false;
+            asMag.m_numRounds = 0;
+            short numRounds = BitConverter.ToInt16(newData, 0);
+
+            for (int i = 0; i < numRounds; ++i)
+            {
+                int first = i * 2 + 2;
+                FireArmRoundClass newClass = (FireArmRoundClass)BitConverter.ToInt16(newData, first);
+                if(newClass != asMag.LoadedRounds[i].LR_Class)
+                {
+                    asMag.AddRound(newClass, false, false);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            if (modified)
+            {
+                asMag.UpdateBulletDisplay();
+            }
+
+            return modified;
         }
 
         private bool UpdateClip()
         {
             FVRFireArmClip asClip = dataObject as FVRFireArmClip;
 
-            // TODO Update data about contained rounds
+            TODO Update data about contained rounds
 
             return false;
         }
@@ -126,7 +180,7 @@ namespace H3MP
         {
             FVRFireArmClip asClip = dataObject as FVRFireArmClip;
 
-            // TODO Update data about contained rounds
+            TODO Update data about contained rounds
 
             return false;
         }
@@ -135,7 +189,7 @@ namespace H3MP
         {
             Speedloader asSpeedloader = dataObject as Speedloader;
 
-            // TODO Update data about contained rounds
+            TODO Update data about contained rounds
 
             return false;
         }
@@ -144,7 +198,7 @@ namespace H3MP
         {
             Speedloader asSpeedloader = dataObject as Speedloader;
 
-            // TODO Update data about contained rounds
+            TODO Update data about contained rounds
 
             return false;
         }
