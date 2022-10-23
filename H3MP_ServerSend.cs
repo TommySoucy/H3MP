@@ -170,6 +170,23 @@ namespace H3MP
                             {
                                 if (trackedItem.Update())
                                 {
+                                    trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+
+                                    packet.Write(trackedItem);
+
+                                    index = i;
+                                    ++count;
+
+                                    // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                    if (packet.buffer.Count >= 1300)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else if(trackedItem.insuranceCounter > 0)
+                                {
+                                    --trackedItem.insuranceCounter;
+
                                     packet.Write(trackedItem);
 
                                     index = i;
@@ -184,6 +201,23 @@ namespace H3MP
                             }
                             else if(trackedItem.NeedsUpdate())
                             {
+                                trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+
+                                packet.Write(trackedItem);
+
+                                index = i;
+                                ++count;
+
+                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                if (packet.buffer.Count >= 1300)
+                                {
+                                    break;
+                                }
+                            }
+                            else if(trackedItem.insuranceCounter > 0)
+                            {
+                                --trackedItem.insuranceCounter;
+
                                 packet.Write(trackedItem);
 
                                 index = i;

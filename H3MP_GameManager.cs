@@ -174,7 +174,10 @@ namespace H3MP
             {
                 // If we take control of an item, we could still receive an updated item from another client
                 // if they haven't received the control update yet, so here we check if this actually needs to update
-                if(trackedItemData.controller != ID)
+                // AND we don't want to take this update if this is a packet that was sent before the previous update
+                // Since the order is kept as a single byte, it will overflow every 256 packets of this item
+                // Here we consider the update out of order if it is within 128 iterations before the latest
+                if(trackedItemData.controller != ID && (updatedItem.order > trackedItemData.order || trackedItemData.order - updatedItem.order > 128))
                 {
                     trackedItemData.Update(updatedItem);
                 }

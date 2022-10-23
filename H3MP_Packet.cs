@@ -221,6 +221,10 @@ namespace H3MP
                 Write(trackedItem.controller);
                 Write(trackedItem.parent);
             }
+            else
+            {
+                Write(trackedItem.order++);
+            }
         }
         #endregion
 
@@ -424,6 +428,10 @@ namespace H3MP
                 trackedItem.itemID = ReadString();
                 trackedItem.controller = ReadInt();
                 trackedItem.parent = ReadInt();
+            }
+            else
+            {
+                trackedItem.order = ReadByte();
             }
             return trackedItem;
         }
