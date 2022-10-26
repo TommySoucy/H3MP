@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using UnityEngine;
 using Valve.Newtonsoft.Json.Linq;
@@ -58,12 +59,46 @@ namespace H3MP
          *  Chambers.Count * 2 - 1: Round class
          */
         /**
-         * FVRFireArm
+         * ClosedBoltWeapon
+         *  0: m_fireSelectorMode index
+         *  1: m_CamBurst
+         *  2: m_isHammerCocked
+         *  3:
+         *  4: Chamber Round class (-1 for null)
+         */
+        /**
+         * BoltActionRifle
+         *  0: m_fireSelectorMode index
+         *  1: m_isHammerCocked
+         *  2:
+         *  3: Chamber Round class (-1 for null)
+         *  4: CurBoltHandleState
+         *  5: BoltHandle.HandleRot
+         */
+        /**
+         * Handgun
+         *  0: m_fireSelectorMode index
+         *  1: m_CamBurst
+         *  2: m_isHammerCocked
+         *  3:
+         *  4: Chamber Round class (-1 for null)
+         */
+        /**
+         * TubeFedShotgun
+         *  0: m_fireSelectorMode index
+         *  1: m_isHammerCocked
+         *  2:
+         *  3: Chamber Round class (-1 for null)
+         *  4: Bolt.CurPos
+         *  5: Handle.CurPos
+         */
+        /**
+         * Speedloader
          *  0:
-         *  1: Chamber Round class (-1 for null)
+         *  1: Round class
          *  ...
-         *  FChambers.Count * 2 - 2:
-         *  FChambers.Count * 2 - 1: Round class
+         *  Chambers.Count * 2 - 2:
+         *  Chambers.Count * 2 - 1: Round class
          */
 
         // State

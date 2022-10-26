@@ -336,4 +336,5 @@ namespace H3MP
     }
 
     TODO: Add patches for things like load mag, eject mag, eject round, etc
+    TODO: Make sure that the laod and eject patch don't affect mags and clips that are being ejected and loaded by the update funcs, maybe even have it so taht the update funcs dont do that and have it completely controlledb y patches
 }

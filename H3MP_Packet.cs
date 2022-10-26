@@ -214,7 +214,7 @@ namespace H3MP
                 Write(trackedItem.data);
             }
             Write(trackedItem.active);
-
+            TODO Make which data we send dependent on what updated, cause we shouldn't send the entire data array if there was no update in it
             if (full)
             {
                 Write(trackedItem.itemID);
