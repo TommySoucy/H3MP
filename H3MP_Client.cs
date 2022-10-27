@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FistVR;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -310,6 +311,7 @@ namespace H3MP
                 { (int)ServerPackets.destroyItem, H3MP_ClientHandle.DestroyItem },
                 { (int)ServerPackets.trackedItem, H3MP_ClientHandle.TrackedItem },
                 { (int)ServerPackets.itemParent, H3MP_ClientHandle.ItemParent },
+                { (int)ServerPackets.connectSync, H3MP_ClientHandle.ConnectSync },
             };
 
             // All vanilla scenes can be synced by default

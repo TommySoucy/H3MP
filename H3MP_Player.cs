@@ -20,10 +20,10 @@ namespace H3MP
         public Quaternion torsoRot;
         public Vector3 leftHandPos;
         public Quaternion leftHandRot;
-        public int leftHandTrackedID;
         public Vector3 rightHandPos;
         public Quaternion rightHandRot;
-        public int rightHandTrackedID;
+
+        public string scene;
 
         public H3MP_Player(int ID, string username, Vector3 spawnPos)
         {

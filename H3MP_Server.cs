@@ -118,7 +118,7 @@ namespace H3MP
             }
         }
 
-        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene)
+        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int clientID)
         {
             // Adjust items size to acommodate if necessary
             if(availableItemIndices.Count == 0)
@@ -132,14 +132,19 @@ namespace H3MP
 
             items[trackedItem.trackedID] = trackedItem;
 
-            // Instantiate item if it is in the current scene
-            if (scene.Equals(SceneManager.GetActiveScene().name))
+            Debug.Log("Server added tracked item at index: " + trackedItem.trackedID);
+
+            // Instantiate item if it is in the current scene nad not controlled by us
+            if (clientID != 0)
             {
-                AnvilManager.Run(trackedItem.Instantiate());
+                if (scene.Equals(SceneManager.GetActiveScene().name))
+                {
+                    AnvilManager.Run(trackedItem.Instantiate());
+                }
             }
 
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedItem(trackedItem, scene);
+            H3MP_ServerSend.TrackedItem(trackedItem, scene, clientID);
         }
 
         private static void IncreaseItemsSize()
@@ -174,7 +179,7 @@ namespace H3MP
                 { (int)ClientPackets.giveControl, H3MP_ServerHandle.GiveControl },
                 { (int)ClientPackets.destroyItem, H3MP_ServerHandle.DestroyItem },
                 { (int)ClientPackets.trackedItem, H3MP_ServerHandle.TrackedItem },
-                { (int)ClientPackets.trackedItem, H3MP_ServerHandle.ItemParent },
+                { (int)ClientPackets.itemParent, H3MP_ServerHandle.ItemParent },
             };
 
             items = new H3MP_TrackedItemData[100];

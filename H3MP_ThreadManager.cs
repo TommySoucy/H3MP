@@ -76,28 +76,44 @@ namespace H3MP
                     }
                 }
 
-                // Send all trackedItems to all clients
-                H3MP_ServerSend.TrackedItems();
+                // Send all trackedItems to all clients if there are other players in the scene
+                if (H3MP_GameManager.playersInSameScene > 0)
+                {
+                    H3MP_ServerSend.TrackedItems();
 
-                // Also send the host's player state to all clients
-                H3MP_ServerSend.PlayerState(0,
-                                            GM.CurrentPlayerBody.transform.position,
-                                            GM.CurrentPlayerBody.transform.rotation,
-                                            GM.CurrentPlayerBody.headPositionFiltered,
-                                            GM.CurrentPlayerBody.headRotationFiltered,
-                                            GM.CurrentPlayerBody.Torso.position,
-                                            GM.CurrentPlayerBody.Torso.rotation,
-                                            GM.CurrentPlayerBody.LeftHand.position,
-                                            GM.CurrentPlayerBody.LeftHand.rotation,
-                                            H3MP_GameManager.hostLeftHandTrackedID,
-                                            GM.CurrentPlayerBody.RightHand.position,
-                                            GM.CurrentPlayerBody.RightHand.rotation,
-                                            H3MP_GameManager.hostRightHandTrackedID);
+                    // Also send the host's player state to all clients
+                    H3MP_ServerSend.PlayerState(0,
+                                                GM.CurrentPlayerBody.transform.position,
+                                                GM.CurrentPlayerBody.transform.rotation,
+                                                GM.CurrentPlayerBody.headPositionFiltered,
+                                                GM.CurrentPlayerBody.headRotationFiltered,
+                                                GM.CurrentPlayerBody.headPositionFiltered + H3MP_GameManager.torsoOffset,
+                                                GM.CurrentPlayerBody.Torso.rotation,
+                                                GM.CurrentPlayerBody.LeftHand.position,
+                                                GM.CurrentPlayerBody.LeftHand.rotation,
+                                                GM.CurrentPlayerBody.RightHand.position,
+                                                GM.CurrentPlayerBody.RightHand.rotation);
+                }
             }
             else
             {
-                // Send this client's up to date trackedItems to host and all other clients
-                H3MP_ClientSend.TrackedItems();
+                // Send this client's up to date trackedItems to host and all other clients of there are others in the scene
+                if (H3MP_GameManager.playersInSameScene > 0)
+                {
+                    H3MP_ClientSend.TrackedItems();
+
+                    // Also send the player state to all clients
+                    H3MP_ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,
+                                                GM.CurrentPlayerBody.transform.rotation,
+                                                GM.CurrentPlayerBody.headPositionFiltered,
+                                                GM.CurrentPlayerBody.headRotationFiltered,
+                                                GM.CurrentPlayerBody.headPositionFiltered + H3MP_GameManager.torsoOffset,
+                                                GM.CurrentPlayerBody.Torso.rotation,
+                                                GM.CurrentPlayerBody.LeftHand.position,
+                                                GM.CurrentPlayerBody.LeftHand.rotation,
+                                                GM.CurrentPlayerBody.RightHand.position,
+                                                GM.CurrentPlayerBody.RightHand.rotation);
+                }
             }
         }
     }

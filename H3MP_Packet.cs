@@ -12,37 +12,38 @@ namespace H3MP
     public enum ServerPackets
     {
         welcome = 1,
-        spawnPlayer,
-        playerState,
-        playerScene,
-        addSyncScene,
-        trackedItems,
-        trackedItem,
-        takeControl,
-        giveControl,
-        destroyItem,
-        itemParent
+        spawnPlayer = 2,
+        playerState = 3,
+        playerScene = 4,
+        addSyncScene = 5,
+        trackedItems = 6,
+        trackedItem = 7,
+        takeControl = 8,
+        giveControl = 9,
+        destroyItem = 10,
+        itemParent = 11,
+        connectSync = 12
     }
 
     /// <summary>Sent from client to server.</summary>
     public enum ClientPackets
     {
         welcomeReceived = 1,
-        playerState,
-        playerScene,
-        addSyncScene,
-        trackedItems,
-        trackedItem,
-        takeControl,
-        giveControl,
-        destroyItem,
-        itemParent
+        playerState = 2,
+        playerScene = 3,
+        addSyncScene = 4,
+        trackedItems = 5,
+        trackedItem = 6,
+        takeControl = 7,
+        giveControl = 8,
+        destroyItem = 9,
+        itemParent = 10
     }
 
     public class H3MP_Packet : IDisposable
     {
         public List<byte> buffer;
-        private byte[] readableBuffer;
+        public byte[] readableBuffer;
         private int readPos;
 
         /// <summary>Creates a new empty packet (without an ID).</summary>
@@ -204,7 +205,7 @@ namespace H3MP
             Write(trackedItem.trackedID);
             Write(trackedItem.position);
             Write(trackedItem.rotation);
-            if(trackedItem.data == null)
+            if(trackedItem.data == null || trackedItem.data.Length == 0)
             {
                 Write(0);
             }
@@ -214,7 +215,7 @@ namespace H3MP
                 Write(trackedItem.data);
             }
             Write(trackedItem.active);
-            TODO Make which data we send dependent on what updated, cause we shouldn't send the entire data array if there was no update in it
+            //TODO Make which data we send dependent on what updated, cause we shouldn't send the entire data array if there was no update in it
             if (full)
             {
                 Write(trackedItem.itemID);
@@ -417,10 +418,14 @@ namespace H3MP
         public H3MP_TrackedItemData ReadTrackedItem(bool full = false, bool _moveReadPos = true)
         {
             H3MP_TrackedItemData trackedItem = new H3MP_TrackedItemData();
-            trackedItem.localtrackedID = ReadInt();
+            trackedItem.trackedID = ReadInt();
             trackedItem.position = ReadVector3();
             trackedItem.rotation = ReadQuaternion();
-            trackedItem.data = ReadBytes(ReadInt());
+            int dataLength = ReadInt();
+            if (dataLength > 0)
+            {
+                trackedItem.data = ReadBytes(dataLength);
+            }
             trackedItem.active = ReadBool();
 
             if (full)
@@ -433,6 +438,7 @@ namespace H3MP
             {
                 trackedItem.order = ReadByte();
             }
+
             return trackedItem;
         }
         #endregion

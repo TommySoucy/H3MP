@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using UnityEngine;
 using FistVR;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 namespace H3MP
 {
@@ -197,6 +198,7 @@ namespace H3MP
         public void SendIntoGame(string playerName, string scene)
         {
             player = new H3MP_Player(ID, playerName, Vector3.zero);
+            player.scene = scene;
 
             // Spawn this client's player in all connected client but itself
             foreach(H3MP_ServerClient client in H3MP_Server.clients.Values)
@@ -214,16 +216,24 @@ namespace H3MP
             H3MP_GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, player.position, player.rotation);
 
             // Spawn all clients' players in this client
+            bool inControl = true;
             foreach (H3MP_ServerClient client in H3MP_Server.clients.Values)
             {
                 if(client.player != null)
                 {
-                    H3MP_ServerSend.SpawnPlayer(client.ID, player, scene);
+                    H3MP_ServerSend.SpawnPlayer(client.ID, player, client.player.scene);
+                    inControl &= !scene.Equals(client.player.scene);
                 }
             }
 
             // Also spawn host player in this client
-            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), scene, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation);
+            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), SceneManager.GetActiveScene().name, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation);
+            inControl &= !scene.Equals(SceneManager.GetActiveScene().name);
+
+            if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
+            {
+                H3MP_ServerSend.ConnectSync(ID, inControl);
+            }
         }
 
         private void Disconnect()

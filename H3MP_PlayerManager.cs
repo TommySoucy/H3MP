@@ -16,11 +16,7 @@ namespace H3MP
         public Transform head;
         public Transform torso;
         public Transform leftHand;
-        public int leftHandTrackedID;
-        public FVRInteractiveObject leftHandItem;
         public Transform rightHand;
-        public int rightHandTrackedID;
-        public FVRInteractiveObject rightHandItem;
 
         public string scene;
 

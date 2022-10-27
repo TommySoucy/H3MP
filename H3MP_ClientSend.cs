@@ -35,9 +35,9 @@ namespace H3MP
             }
         }
 
-        public static void PlayerState(Vector3 playerPos, Quaternion playerRot, Vector3 headPos, Quaternion headRot, Transform torso,
-                                       Vector3 leftHandPos, Quaternion leftHandRot, int leftHandTrackedID,
-                                       Vector3 rightHandPos, Quaternion rightHandRot, int rightHandTrackedID)
+        public static void PlayerState(Vector3 playerPos, Quaternion playerRot, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
+                                       Vector3 leftHandPos, Quaternion leftHandRot,
+                                       Vector3 rightHandPos, Quaternion rightHandRot)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.playerState))
             {
@@ -45,14 +45,12 @@ namespace H3MP
                 packet.Write(playerRot);
                 packet.Write(headPos);
                 packet.Write(headRot);
-                packet.Write(torso.position);
-                packet.Write(torso.rotation);
+                packet.Write(torsoPos);
+                packet.Write(torsoRot);
                 packet.Write(leftHandPos);
                 packet.Write(leftHandRot);
-                packet.Write(leftHandTrackedID);
                 packet.Write(rightHandPos);
                 packet.Write(rightHandRot);
-                packet.Write(rightHandTrackedID);
 
                 SendUDPData(packet);
             }
@@ -87,9 +85,10 @@ namespace H3MP
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedItems))
                 {
                     // Write place holder int at start to hold the count once we know it
-                    packet.Write(0);
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
 
-                    int count = 0;
+                    short count = 0;
                     for (int i = index; i < H3MP_GameManager.items.Count; ++i)
                     {
                         H3MP_TrackedItemData trackedItem = H3MP_GameManager.items[i];
@@ -99,7 +98,6 @@ namespace H3MP
 
                             packet.Write(trackedItem);
 
-                            index = i;
                             ++count;
 
                             // Limit buffer size to MTU, will send next set of tracked items in separate packet
@@ -114,7 +112,6 @@ namespace H3MP
 
                             packet.Write(trackedItem);
 
-                            index = i;
                             ++count;
 
                             // Limit buffer size to MTU, will send next set of tracked items in separate packet
@@ -123,13 +120,15 @@ namespace H3MP
                                 break;
                             }
                         }
+
+                        index = i;
                     }
 
                     // Write the count to packet
                     byte[] countArr = BitConverter.GetBytes(count);
-                    for(int i=0; i < 4; ++i)
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
                     {
-                        packet.buffer[i] = countArr[i];
+                        packet.buffer[i] = countArr[j];
                     }
 
                     SendUDPData(packet);

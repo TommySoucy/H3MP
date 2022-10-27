@@ -37,9 +37,8 @@ namespace H3MP
 
         public static bool giveControlOfDestroyed;
 
-        // Host hand tracked item IDs
-        public static int hostLeftHandTrackedID;
-        public static int hostRightHandTrackedID;
+        public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
+        public static int playersInSameScene = 0;
 
         //public GameObject localPlayerPrefab;
         public GameObject playerPrefab;
@@ -89,11 +88,15 @@ namespace H3MP
             {
                 playerManager.gameObject.SetActive(false);
             }
+            else
+            {
+                ++playersInSameScene;
+            }
         }
 
         public static void UpdatePlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
-                                             Vector3 leftHandPos, Quaternion leftHandRot, int leftHandTrackedID,
-                                             Vector3 rightHandPos, Quaternion rightHandRot, int rightHandTrackedID)
+                                             Vector3 leftHandPos, Quaternion leftHandRot,
+                                             Vector3 rightHandPos, Quaternion rightHandRot)
         {
             if (!players.ContainsKey(ID))
             {
@@ -127,19 +130,25 @@ namespace H3MP
 
             player.scene = sceneName;
 
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_Server.clients[playerID].player.scene = sceneName;
+            }
+
             if (sceneName.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(sceneName))
             {
                 if (!player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(true);
+                    ++playersInSameScene;
                 }
             }
             else
             {
-                // If activeself, would also imply that the scene is synchronizable
                 if (player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(false);
+                    --playersInSameScene;
                 }
             }
         }
@@ -184,7 +193,7 @@ namespace H3MP
             }
         }
 
-        public static void SyncTrackedItems()
+        public static void SyncTrackedItems(bool init = false, bool inControl = false)
         {
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
@@ -193,7 +202,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach(GameObject root in roots)
             {
-                SyncTrackedItems(root.transform, !OtherPlayersInScene(), null, scene.name);
+                SyncTrackedItems(root.transform, init ? inControl : !OtherPlayersInScene(), null, scene.name);
             }
         }
 
@@ -226,7 +235,7 @@ namespace H3MP
                         if (H3MP_ThreadManager.host)
                         {
                             // This will also send a packet with the item to be added in the client's global item list
-                            H3MP_Server.AddTrackedItem(trackedItem.data, scene);
+                            H3MP_Server.AddTrackedItem(trackedItem.data, scene, 0);
                         }
                         else
                         {
@@ -295,6 +304,12 @@ namespace H3MP
 
         private void OnSceneLoadedVR(bool loading)
         {
+            // Return right away if we don't have server or client running
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
             if (loading) // Just started loading
             {
                 if (OtherPlayersInScene())
@@ -330,6 +345,7 @@ namespace H3MP
                             if (!player.Value.gameObject.activeSelf)
                             {
                                 player.Value.gameObject.SetActive(true);
+                                ++playersInSameScene;
                             }
                         }
                         else
@@ -337,6 +353,7 @@ namespace H3MP
                             if (player.Value.gameObject.activeSelf)
                             {
                                 player.Value.gameObject.SetActive(false);
+                                --playersInSameScene;
                             }
                         }
                     }
@@ -354,6 +371,7 @@ namespace H3MP
                             player.Value.gameObject.SetActive(false);
                         }
                     }
+                    playersInSameScene = 0;
                 }
             }
         }

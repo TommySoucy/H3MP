@@ -23,12 +23,6 @@ namespace H3MP
             H3MP_ClientSend.WelcomeReceived();
 
             H3MP_Client.singleton.udp.Connect(((IPEndPoint)H3MP_Client.singleton.tcp.socket.Client.LocalEndPoint).Port);
-
-            // Just connected, sync if current scene is syncable
-            if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
-            {
-                H3MP_GameManager.SyncTrackedItems();
-            }
         }
 
         public static void SpawnPlayer(H3MP_Packet packet)
@@ -42,6 +36,17 @@ namespace H3MP
             H3MP_GameManager.singleton.SpawnPlayer(ID, username, scene, position, rotation);
         }
 
+        public static void ConnectSync(H3MP_Packet packet)
+        {
+            bool inControl = packet.ReadBool();
+
+            // Just connected, sync if current scene is syncable
+            if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
+            {
+                H3MP_GameManager.SyncTrackedItems(true, inControl);
+            }
+        }
+
         public static void PlayerState(H3MP_Packet packet)
         {
             int ID = packet.ReadInt();
@@ -53,14 +58,12 @@ namespace H3MP
             Quaternion torsoRot = packet.ReadQuaternion();
             Vector3 leftHandPos = packet.ReadVector3();
             Quaternion leftHandRot = packet.ReadQuaternion();
-            int leftHandTrackedID = packet.ReadInt();
             Vector3 rightHandPos = packet.ReadVector3();
             Quaternion rightHandRot = packet.ReadQuaternion();
-            int rightHandTrackedID = packet.ReadInt();
 
             H3MP_GameManager.UpdatePlayerState(ID, position, rotation, headPos, headRot, torsoPos, torsoRot,
-                                               leftHandPos, leftHandRot, leftHandTrackedID,
-                                               rightHandPos, rightHandRot, rightHandTrackedID);
+                                               leftHandPos, leftHandRot,
+                                               rightHandPos, rightHandRot);
         }
 
         public static void PlayerScene(H3MP_Packet packet)
@@ -74,7 +77,7 @@ namespace H3MP
         public static void TrackedItems(H3MP_Packet packet)
         {
             // Reconstruct passed trackedItems from packet
-            int count = packet.ReadInt();
+            int count = packet.ReadShort();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_GameManager.UpdateTrackedItem(packet.ReadTrackedItem());

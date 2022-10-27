@@ -38,14 +38,12 @@ namespace H3MP
             player.torsoRot = packet.ReadQuaternion();
             player.leftHandPos = packet.ReadVector3();
             player.leftHandRot = packet.ReadQuaternion();
-            player.leftHandTrackedID = packet.ReadInt();
             player.rightHandPos = packet.ReadVector3();
             player.rightHandRot = packet.ReadQuaternion();
-            player.rightHandTrackedID = packet.ReadInt();
 
             H3MP_GameManager.UpdatePlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
-                                               player.leftHandPos, player.leftHandRot, player.leftHandTrackedID,
-                                               player.leftHandPos, player.leftHandRot, player.leftHandTrackedID);
+                                               player.leftHandPos, player.leftHandRot,
+                                               player.leftHandPos, player.leftHandRot);
         }
 
         public static void PlayerScene(int clientID, H3MP_Packet packet)
@@ -73,7 +71,7 @@ namespace H3MP
         public static void TrackedItems(int clientID, H3MP_Packet packet)
         {
             // Reconstruct passed trackedItems from packet
-            int count = packet.ReadInt();
+            int count = packet.ReadShort();
             for(int i=0; i < count; ++i)
             {
                 H3MP_GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
@@ -150,7 +148,7 @@ namespace H3MP
 
         public static void TrackedItem(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString());
+            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString(), clientID);
         }
 
         public static void ItemParent(int clientID, H3MP_Packet packet)
