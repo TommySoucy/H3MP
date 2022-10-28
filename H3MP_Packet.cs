@@ -22,7 +22,8 @@ namespace H3MP
         giveControl = 9,
         destroyItem = 10,
         itemParent = 11,
-        connectSync = 12
+        connectSync = 12,
+        weaponFire = 13
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -37,7 +38,8 @@ namespace H3MP
         takeControl = 7,
         giveControl = 8,
         destroyItem = 9,
-        itemParent = 10
+        itemParent = 10,
+        weaponFire = 11
     }
 
     public class H3MP_Packet : IDisposable

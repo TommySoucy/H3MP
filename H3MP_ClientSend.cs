@@ -178,5 +178,15 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void WeaponFire(int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.weaponFire))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

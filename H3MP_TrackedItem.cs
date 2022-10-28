@@ -17,8 +17,10 @@ namespace H3MP
         // Update
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
         public delegate bool UpdateDataWithGiven(byte[] newData);
+        public delegate bool FireFirearm();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
+        public FireFirearm fireFunc; // Fires the corresponding firearm type
         public UnityEngine.Object dataObject;
 
         public bool sendDestroy = true; // To prevent feeback loops
@@ -56,27 +58,35 @@ namespace H3MP
             }
             else if (physObj is ClosedBoltWeapon)
             {
+                ClosedBoltWeapon asCBW = (ClosedBoltWeapon)physObj;
                 updateFunc = UpdateClosedBoltWeapon;
                 updateGivenFunc = UpdateGivenClosedBoltWeapon;
-                dataObject = physObj as ClosedBoltWeapon;
+                dataObject = asCBW;
+                fireFunc = asCBW.Fire;
             }
             else if (physObj is BoltActionRifle)
             {
+                BoltActionRifle asBAR = (BoltActionRifle)physObj;
                 updateFunc = UpdateBoltActionRifle;
                 updateGivenFunc = UpdateGivenBoltActionRifle;
-                dataObject = physObj as BoltActionRifle;
+                dataObject = asBAR;
+                fireFunc = asBAR.Fire;
             }
             else if (physObj is Handgun)
             {
+                Handgun asHandgun = (Handgun)physObj;
                 updateFunc = UpdateHandgun;
                 updateGivenFunc = UpdateGivenHandgun;
-                dataObject = physObj as Handgun;
+                dataObject = asHandgun;
+                fireFunc = asHandgun.Fire;
             }
             else if (physObj is TubeFedShotgun)
             {
+                TubeFedShotgun asTFS = (TubeFedShotgun)physObj;
                 updateFunc = UpdateTubeFedShotgun;
                 updateGivenFunc = UpdateGivenTubeFedShotgun;
-                dataObject = physObj as TubeFedShotgun;
+                dataObject = asTFS;
+                fireFunc = asTFS.Fire;
             }
             /* TODO: All other type of firearms below
             else if (physObj is Revolver)

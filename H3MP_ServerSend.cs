@@ -316,5 +316,22 @@ namespace H3MP
                 }
             }
         }
+
+        public static void WeaponFire(int clientID, int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.weaponFire))
+            {
+                packet.Write(trackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

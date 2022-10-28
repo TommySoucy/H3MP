@@ -180,6 +180,7 @@ namespace H3MP
                 { (int)ClientPackets.destroyItem, H3MP_ServerHandle.DestroyItem },
                 { (int)ClientPackets.trackedItem, H3MP_ServerHandle.TrackedItem },
                 { (int)ClientPackets.itemParent, H3MP_ServerHandle.ItemParent },
+                { (int)ClientPackets.weaponFire, H3MP_ServerHandle.WeaponFire },
             };
 
             items = new H3MP_TrackedItemData[100];

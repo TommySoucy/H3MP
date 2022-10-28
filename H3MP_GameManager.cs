@@ -218,7 +218,7 @@ namespace H3MP
             return false;
         }
 
-        private static void SyncTrackedItems(Transform root, bool controlEverything, H3MP_TrackedItemData parent, string scene)
+        public static void SyncTrackedItems(Transform root, bool controlEverything, H3MP_TrackedItemData parent, string scene)
         {
             // NOTE: When we sync tracked items, we always send the parent before its children, through TCP. This means we are guaranteed 
             //       that if we receive a full item packet on the server or any client and it has a parent,

@@ -312,6 +312,7 @@ namespace H3MP
                 { (int)ServerPackets.trackedItem, H3MP_ClientHandle.TrackedItem },
                 { (int)ServerPackets.itemParent, H3MP_ClientHandle.ItemParent },
                 { (int)ServerPackets.connectSync, H3MP_ClientHandle.ConnectSync },
+                { (int)ServerPackets.weaponFire, H3MP_ClientHandle.WeaponFire },
             };
 
             // All vanilla scenes can be synced by default

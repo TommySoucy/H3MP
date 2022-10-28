@@ -161,5 +161,19 @@ namespace H3MP
             // Send to all other clients
             H3MP_ServerSend.ItemParent(trackedID, newParentID, clientID);
         }
+
+        public static void WeaponFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalObject != null)
+            {
+                H3MP_Server.items[trackedID].physicalObject.fireFunc();
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.WeaponFire(clientID, trackedID);
+        }
     }
 }

@@ -145,5 +145,15 @@ namespace H3MP
 
             H3MP_Client.items[trackedID].SetParent(newParentID);
         }
+
+        public static void WeaponFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID].physicalObject != null)
+            {
+                H3MP_Client.items[trackedID].physicalObject.fireFunc();
+            }
+        }
     }
 }
