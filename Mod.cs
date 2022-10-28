@@ -3,7 +3,9 @@ using FistVR;
 using HarmonyLib;
 using System.IO;
 using System.Reflection;
+using System.Security.Policy;
 using UnityEngine;
+using UnityEngine.Analytics;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
@@ -36,6 +38,8 @@ namespace H3MP
 
         // Live
         public static GameObject managerObject;
+        public static int skipNextFires = 0;
+        public static int skipNextInstantiates = 0;
 
         // Debug
         bool debug;
@@ -159,29 +163,38 @@ namespace H3MP
 
             harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix));
 
+            // ChamberEjectRoundPatch
+            MethodInfo chamberEjectRoundPatchOriginal = typeof(FVRFireArmChamber).GetMethod("EjectRound", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo chamberEjectRoundPatchPrefix = typeof(ChamberEjectRoundPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo chamberEjectRoundPatchPostfix = typeof(ChamberEjectRoundPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(chamberEjectRoundPatchOriginal, new HarmonyMethod(chamberEjectRoundPatchPrefix), new HarmonyMethod(chamberEjectRoundPatchPostfix));
+
             // Internal_CloneSinglePatch
             MethodInfo internal_CloneSinglePatchOriginal = typeof(Object).GetMethod("Internal_CloneSingle", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo internal_CloneSinglePatchPrefix = typeof(Internal_CloneSinglePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo internal_CloneSinglePatchPostfix = typeof(Internal_CloneSinglePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(internal_CloneSinglePatchOriginal, new HarmonyMethod(internal_CloneSinglePatchPrefix));
+            harmony.Patch(internal_CloneSinglePatchOriginal, null, new HarmonyMethod(internal_CloneSinglePatchPostfix));
 
             // Internal_CloneSingleWithParentPatch
             MethodInfo internal_CloneSingleWithParentPatchOriginal = typeof(Object).GetMethod("Internal_CloneSingleWithParent", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_CloneSingleWithParentPatchPrefix = typeof(Internal_CloneSingleWithParentPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo internal_CloneSingleWithParentPatchPostfix = typeof(Internal_CloneSingleWithParentPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(internal_CloneSingleWithParentPatchOriginal, new HarmonyMethod(internal_CloneSingleWithParentPatchPrefix));
+            harmony.Patch(internal_CloneSingleWithParentPatchOriginal, new HarmonyMethod(internal_CloneSingleWithParentPatchPrefix), new HarmonyMethod(internal_CloneSingleWithParentPatchPostfix));
 
             // Internal_InstantiateSinglePatch
             MethodInfo internal_InstantiateSinglePatchOriginal = typeof(Object).GetMethod("Internal_InstantiateSingle", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo internal_InstantiateSinglePatchPrefix = typeof(Internal_InstantiateSinglePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo internal_InstantiateSinglePatchPostfix = typeof(Internal_InstantiateSinglePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(internal_InstantiateSinglePatchOriginal, new HarmonyMethod(internal_InstantiateSinglePatchPrefix));
+            harmony.Patch(internal_InstantiateSinglePatchOriginal, null, new HarmonyMethod(internal_InstantiateSinglePatchPostfix));
 
             // Internal_InstantiateSingleWithParentPatch
             MethodInfo internal_InstantiateSingleWithParentPatchOriginal = typeof(Object).GetMethod("Internal_InstantiateSingleWithParent", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_InstantiateSingleWithParentPatchPrefix = typeof(Internal_InstantiateSingleWithParentPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo internal_InstantiateSingleWithParentPatchPostfix = typeof(Internal_InstantiateSingleWithParentPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(internal_InstantiateSingleWithParentPatchOriginal, new HarmonyMethod(internal_InstantiateSingleWithParentPatchPrefix));
+            harmony.Patch(internal_InstantiateSingleWithParentPatchOriginal, new HarmonyMethod(internal_InstantiateSingleWithParentPatchPrefix), new HarmonyMethod(internal_InstantiateSingleWithParentPatchPostfix));
         }
 
         private void OnHostClicked()
@@ -285,7 +298,11 @@ namespace H3MP
                             trackedItem.data.controller = 0;
                             trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
-                            (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
+                            // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
+                            //if (trackedItem.data.parent == -1)
+                            //{
+                            //    (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
+                            //}
                         }
                     }
                     else
@@ -301,7 +318,11 @@ namespace H3MP
                             trackedItem.data.controller = H3MP_Client.singleton.ID;
                             trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
-                            (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
+                            // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
+                            //if (trackedItem.data.parent == -1)
+                            //{
+                            //  (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
+                            //}
                         }
                     }
                 }
@@ -338,7 +359,11 @@ namespace H3MP
                             trackedItem.data.controller = 0;
                             trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
-                            __instance.RecoverRigidbody();
+                            // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
+                            //if (trackedItem.data.parent == -1)
+                            //{
+                            //  __instance.RecoverRigidbody();
+                            //}
                         }
                     }
                     else
@@ -354,7 +379,11 @@ namespace H3MP
                             trackedItem.data.controller = H3MP_Client.singleton.ID;
                             trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
-                            __instance.RecoverRigidbody();
+                            // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
+                            //if (trackedItem.data.parent == -1)
+                            //{
+                            //  __instance.RecoverRigidbody();
+                            //}
                         }
                     }
                 }
@@ -369,6 +398,16 @@ namespace H3MP
     {
         static void Prefix(ref FVRFireArm __instance)
         {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipNextInstantiates;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                return;
+            }
+
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
             {
@@ -395,16 +434,73 @@ namespace H3MP
         }
     }
 
+    // Patches FVRFireArmChamber.EjectRound so we can keep track of when a round is ejected from a chamber
+    class ChamberEjectRoundPatch
+    {
+        static bool track = false;
+
+        static void Prefix(ref FVRFireArmChamber __instance, ref FVRFireArmRound ___m_round, bool ForceCaseLessEject)
+        {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return;
+            }
+
+            // Check if a round would be ejected
+            if(___m_round != null && (!___m_round.IsCaseless || ForceCaseLessEject))
+            {
+                if (__instance.IsSpent)
+                {
+                    // Skip the instantiation of the casing because we don't want to sync these between clients
+                    ++Mod.skipNextInstantiates;
+                }
+                else // We are ejecting a whole round, we want the controller of the chamber's parent tracked item to control the round
+                {
+                    Transform currentParent = __instance.transform;
+                    H3MP_TrackedItem trackedItem = null;
+                    while (currentParent != null)
+                    {
+                        trackedItem = currentParent.GetComponent<H3MP_TrackedItem>();
+                        if(trackedItem != null)
+                        {
+                            break;
+                        }
+                    }
+
+                    // Check if we should control and sync it, if so do it in postfix
+                    if (trackedItem == null || trackedItem.data.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                    {
+                        track = true;
+                    }
+                    else // Round was instantiated from chamber of an item that is controlled by other client
+                    {
+                        // Skip the instantiate on our side, the controller client will instantiate and sync it with us eventually
+                        ++Mod.skipNextInstantiates;
+                    }
+                }
+            }
+        }
+
+        static void Postfix(ref FVRFireArmRound __result)
+        {
+            if (track)
+            {
+                track = false;
+
+                H3MP_GameManager.SyncTrackedItems(__result.transform, true, null, SceneManager.GetActiveScene().name);
+            }
+        }
+    }
+
     // Patches Object.Internal_CloneSingle to keep track of this type of instantiation
     class Internal_CloneSinglePatch
     {
-        public static int skipNextInstantiates = 0;
-
-        static void Prefix(Object data)
+        static void Postfix(ref Object __result)
         {
-            if (skipNextInstantiates > 0)
+            if (Mod.skipNextInstantiates > 0)
             {
-                --skipNextInstantiates;
+                --Mod.skipNextInstantiates;
                 return;
             }
 
@@ -415,9 +511,9 @@ namespace H3MP
             }
 
             // If this is a game object check and sync all physical objects if necessary
-            if (data is GameObject)
+            if (__result is GameObject)
             {
-                H3MP_GameManager.SyncTrackedItems((data as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -425,13 +521,14 @@ namespace H3MP
     // Patches Object.Internal_CloneSingleWithParent to keep track of this type of instantiation
     class Internal_CloneSingleWithParentPatch
     {
-        public static int skipNextInstantiates = 0;
+        static bool track = false;
+        static H3MP_TrackedItemData parentData;
 
         static void Prefix(Object data, Transform parent)
         {
-            if (skipNextInstantiates > 0)
+            if (Mod.skipNextInstantiates > 0)
             {
-                --skipNextInstantiates;
+                --Mod.skipNextInstantiates;
                 return;
             }
 
@@ -440,81 +537,14 @@ namespace H3MP
             {
                 return;
             }
+
 
             // If this is a game object check and sync all physical objects if necessary
             if (data is GameObject)
             {
                 // Check if has tracked parent
                 Transform currentParent = parent;
-                H3MP_TrackedItemData parentData = null;
-                while (parent != null)
-                {
-                    H3MP_TrackedItem trackedItem = parent.GetComponent<H3MP_TrackedItem>();
-                    if(trackedItem != null)
-                    {
-                        parentData = trackedItem.data;
-                        break;
-                    }
-                    currentParent = currentParent.parent;
-                }
-
-                H3MP_GameManager.SyncTrackedItems((data as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
-            }
-        }
-    }
-
-    // Patches Object.Internal_InstantiateSingle to keep track of this type of instantiation
-    class Internal_InstantiateSinglePatch
-    {
-        public static int skipNextInstantiates = 0;
-
-        static void Prefix(Object data)
-        {
-            if (skipNextInstantiates > 0)
-            {
-                --skipNextInstantiates;
-                return;
-            }
-
-            // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
-            {
-                return;
-            }
-
-            // If this is a game object check and sync all physical objects if necessary
-            if (data is GameObject)
-            {
-                H3MP_GameManager.SyncTrackedItems((data as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
-            }
-        }
-    }
-
-    // Patches Object.Internal_InstantiateSingleWithParent to keep track of this type of instantiation
-    class Internal_InstantiateSingleWithParentPatch
-    {
-        public static int skipNextInstantiates = 0;
-
-        static void Prefix(Object data, Transform parent)
-        {
-            if (skipNextInstantiates > 0)
-            {
-                --skipNextInstantiates;
-                return;
-            }
-
-            // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
-            {
-                return;
-            }
-
-            // If this is a game object check and sync all physical objects if necessary
-            if (data is GameObject)
-            {
-                // Check if has tracked parent
-                Transform currentParent = parent;
-                H3MP_TrackedItemData parentData = null;
+                parentData = null;
                 while (parent != null)
                 {
                     H3MP_TrackedItem trackedItem = parent.GetComponent<H3MP_TrackedItem>();
@@ -526,7 +556,95 @@ namespace H3MP
                     currentParent = currentParent.parent;
                 }
 
-                H3MP_GameManager.SyncTrackedItems((data as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
+                // We only want to track this item if no tracked parent or if we control the parent
+                track = parentData == null || parentData.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+            }
+        }
+
+        static void Postfix(ref Object __result, Transform parent)
+        {
+            if (track)
+            {
+                track = false;
+                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
+            }
+        }
+    }
+
+    // Patches Object.Internal_InstantiateSingle to keep track of this type of instantiation
+    class Internal_InstantiateSinglePatch
+    {
+        static void Postfix(ref Object __result)
+        {
+            if (Mod.skipNextInstantiates > 0)
+            {
+                --Mod.skipNextInstantiates;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return;
+            }
+
+            // If this is a game object check and sync all physical objects if necessary
+            if (__result is GameObject)
+            {
+                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
+            }
+        }
+    }
+
+    // Patches Object.Internal_InstantiateSingleWithParent to keep track of this type of instantiation
+    class Internal_InstantiateSingleWithParentPatch
+    {
+        static bool track = false;
+        static H3MP_TrackedItemData parentData;
+
+        static void Prefix(Object data, Transform parent)
+        {
+            if (Mod.skipNextInstantiates > 0)
+            {
+                --Mod.skipNextInstantiates;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return;
+            }
+
+
+            // If this is a game object check and sync all physical objects if necessary
+            if (data is GameObject)
+            {
+                // Check if has tracked parent
+                Transform currentParent = parent;
+                parentData = null;
+                while (parent != null)
+                {
+                    H3MP_TrackedItem trackedItem = parent.GetComponent<H3MP_TrackedItem>();
+                    if (trackedItem != null)
+                    {
+                        parentData = trackedItem.data;
+                        break;
+                    }
+                    currentParent = currentParent.parent;
+                }
+
+                // We only want to track this item if no tracked parent or if we control the parent
+                track = parentData == null || parentData.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+            }
+        }
+
+        static void Postfix(ref Object __result, Transform parent)
+        {
+            if (track)
+            {
+                track = false;
+                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
             }
         }
     }

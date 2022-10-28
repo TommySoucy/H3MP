@@ -181,6 +181,11 @@ namespace H3MP
 
         public static void WeaponFire(int trackedID)
         {
+            // TODO: It may be necessary to also pass the round class 
+            //       This is because when a weapon that is controlled by this client in fired in aanother client, it will use up the projectile in its chamber (if it has one)
+            //       The problem is that if it isn't up to date before it gets fired again, the chamber is now empty but we are still calling fire
+            //       This will either cause error or just not fire the weapon. If we pass the round class, we can ensure that our chamber contains the correct
+            //       class, if anything, before firing
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.weaponFire))
             {
                 packet.Write(trackedID);

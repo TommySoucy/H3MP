@@ -110,8 +110,12 @@ namespace H3MP
 
             if (newController == 0)
             {
-                FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
-                physObj.RecoverRigidbody();
+                // Only want to active rigidbody if not parented to another tracked item
+                if (trackedItem.parent == -1)
+                {
+                    FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
+                    physObj.RecoverRigidbody();
+                }
                 trackedItem.localtrackedID = H3MP_GameManager.items.Count;
                 H3MP_GameManager.items.Add(trackedItem);
             }
@@ -169,6 +173,8 @@ namespace H3MP
             // Update locally
             if (H3MP_Server.items[trackedID].physicalObject != null)
             {
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
                 H3MP_Server.items[trackedID].physicalObject.fireFunc();
             }
 

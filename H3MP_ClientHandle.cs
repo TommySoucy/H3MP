@@ -152,6 +152,8 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalObject != null)
             {
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
                 H3MP_Client.items[trackedID].physicalObject.fireFunc();
             }
         }

@@ -242,13 +242,16 @@ namespace H3MP
                 if (parent != -1) // We had parent before, need to unparent
                 {
                     H3MP_TrackedItemData previousParent = null;
+                    int clientID = -1;
                     if (H3MP_ThreadManager.host)
                     {
                         previousParent = H3MP_Server.items[parent];
+                        clientID = 0;
                     }
                     else
                     {
                         previousParent = H3MP_Client.items[parent];
+                        clientID = H3MP_Client.singleton.ID;
                     }
                     previousParent.children[childIndex] = previousParent.children[previousParent.children.Count - 1];
                     previousParent.children[childIndex].childIndex = childIndex;
@@ -265,6 +268,13 @@ namespace H3MP
                     {
                         ignoreParentChanged = true;
                         physicalObject.transform.parent = GetGeneralParent();
+
+                        // If in control, we want to enable rigidbody
+                        if(controller == clientID)
+                        {
+                            // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
+                            physicalObject.GetComponent<FVRPhysicalObject>().RecoverRigidbody();
+                        }
                     }
                 }
                 // Already unparented, nothing changes
@@ -305,6 +315,13 @@ namespace H3MP
                 {
                     ignoreParentChanged = true;
                     physicalObject.transform.parent = newParent.physicalObject.transform;
+
+                    // If in control, we want to enable rigidbody
+                    if (controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                    {
+                        // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
+                        physicalObject.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+                    }
                 }
             }
         }
