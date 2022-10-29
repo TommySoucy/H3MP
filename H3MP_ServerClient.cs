@@ -8,6 +8,7 @@ using UnityEngine;
 using FistVR;
 using System.IO;
 using UnityEngine.SceneManagement;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -232,6 +233,24 @@ namespace H3MP
 
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
             {
+                // Send to the clients all items that are already synced and controlled by clients in the same scene
+                for(int i=0; i < H3MP_Server.items.Length; ++i)
+                {
+                    // TODO: In client handle for trackedItem we already check if this item is in our scene before instantiating
+                    //       Here we could then ommit this step, but that would mean sending a packet for every item in the game even the 
+                    //       the ones from other scenes, which will be useless to the client
+                    //       Need to check which one would be more efficient, more packets or checking scene twice
+                    //       Could also pass a bool telling the client not to check the scene because its already been checked?
+                    if (H3MP_Server.items[i] != null && 
+                        scene.Equals(H3MP_Server.items[i].controller == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene))
+                    {
+                        Debug.Log("Sending item " + i + " to client " + ID);
+                        H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], scene, ID);
+                    }
+                }
+
+                Debug.Log("Sending order to sync to client: " + ID+" with incontrol: "+inControl);
+                // Tell the client to sync its items
                 H3MP_ServerSend.ConnectSync(ID, inControl);
             }
         }

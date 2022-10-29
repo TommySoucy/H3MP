@@ -1,7 +1,6 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -1188,6 +1187,7 @@ namespace H3MP
 
         private void OnTransformParentChanged()
         {
+            Debug.Log("Tracked item: "+gameObject.name+" parent changed");
             if (data.ignoreParentChanged)
             {
                 data.ignoreParentChanged = false;
@@ -1196,6 +1196,7 @@ namespace H3MP
 
             if(data.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
             {
+                Debug.Log("\tWe are in control");
                 Transform currentParent = transform.parent;
                 H3MP_TrackedItem parentTrackedItem = null;
                 while (currentParent != null)
@@ -1205,11 +1206,14 @@ namespace H3MP
                     {
                         break;
                     }
+                    currentParent = currentParent.parent;
                 }
                 if(parentTrackedItem != null)
                 {
-                    if(parentTrackedItem.data.trackedID != data.parent)
+                    Debug.Log("\t\tItem has tracked item parent");
+                    if (parentTrackedItem.data.trackedID != data.parent)
                     {
+                        Debug.Log("\t\tIt is a new one, sending to other clients");
                         // We have a parent trackedItem and it is new
                         // Update other clients
                         if (H3MP_ThreadManager.host)
@@ -1221,12 +1225,14 @@ namespace H3MP
                             H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
                         }
 
+                        Debug.Log("\t\tUpdating locally");
                         // Update local
-                        data.SetParent(parentTrackedItem.data);
+                        data.SetParent(parentTrackedItem.data, false);
                     }
                 }
                 else if(data.parent != -1)
                 {
+                    Debug.Log("\t\tItem does not have tracked item parent");
                     // We were detached from current parent
                     // Update other clients
                     if (H3MP_ThreadManager.host)
@@ -1239,7 +1245,7 @@ namespace H3MP
                     }
 
                     // Update locally
-                    data.SetParent(null);
+                    data.SetParent(null, false);
                 }
             }
         }

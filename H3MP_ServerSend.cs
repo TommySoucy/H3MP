@@ -271,6 +271,17 @@ namespace H3MP
             }
         }
 
+        public static void TrackedItemSpecific(H3MP_TrackedItemData trackedItem, string scene, int toClientID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItem))
+            {
+                packet.Write(trackedItem, true);
+                packet.Write(scene);
+
+                SendTCPData(toClientID, packet);
+            }
+        }
+
         public static void GiveControl(int trackedID, int clientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.giveControl))

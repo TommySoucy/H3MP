@@ -283,7 +283,7 @@ namespace H3MP
             {
                 // Just started interacing with this item
                 H3MP_TrackedItem trackedItem = ___m_currentInteractable.GetComponent<H3MP_TrackedItem>();
-                if (trackedItem != null && trackedItem.data.controller != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                if (trackedItem != null)
                 {
                     if (H3MP_ThreadManager.host)
                     {
@@ -303,6 +303,10 @@ namespace H3MP
                             //{
                             //    (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
                             //}
+                        }
+                        else
+                        {
+                            Debug.Log("\tAlready in control");
                         }
                     }
                     else

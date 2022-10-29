@@ -127,6 +127,8 @@ namespace H3MP
                 yield break;
             }
 
+            ++Mod.skipNextInstantiates;
+
             GameObject itemObject = GameObject.Instantiate(itemPrefab);
             physicalObject = itemObject.AddComponent<H3MP_TrackedItem>();
             physicalObject.data = this;
@@ -235,7 +237,7 @@ namespace H3MP
             return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
         }
 
-        public void SetParent(H3MP_TrackedItemData newParent)
+        public void SetParent(H3MP_TrackedItemData newParent, bool physicallyParent)
         {
             if (newParent == null)
             {
@@ -263,8 +265,8 @@ namespace H3MP
                     parent = -1;
                     childIndex = -1;
 
-                    // Physically unparent
-                    if (physicalObject != null)
+                    // Physically unparent if necessary
+                    if (physicallyParent && physicalObject != null)
                     {
                         ignoreParentChanged = true;
                         physicalObject.transform.parent = GetGeneralParent();
@@ -311,7 +313,7 @@ namespace H3MP
                 newParent.children.Add(this);
 
                 // Physically parent
-                if (physicalObject != null)
+                if (physicallyParent && physicalObject != null)
                 {
                     ignoreParentChanged = true;
                     physicalObject.transform.parent = newParent.physicalObject.transform;
@@ -330,17 +332,17 @@ namespace H3MP
         {
             if (trackedID == -1)
             {
-                SetParent(null);
+                SetParent(null, true);
             }
             else
             {
                 if (H3MP_ThreadManager.host)
                 {
-                    SetParent(H3MP_Server.items[trackedID]);
+                    SetParent(H3MP_Server.items[trackedID], true);
                 }
                 else
                 {
-                    SetParent(H3MP_Client.items[trackedID]);
+                    SetParent(H3MP_Client.items[trackedID], true);
                 }
             }
         }
@@ -376,7 +378,7 @@ namespace H3MP
         {
             previousData = data;
 
-            return physicalObject.UpdateItemData(newData);
+            return physicalObject == null ? false : physicalObject.UpdateItemData(newData);
         }
     }
 }

@@ -229,6 +229,7 @@ namespace H3MP
             {
                 if (physObj.ObjectWrapper != null)
                 {
+                    Debug.Log("Checking if physobj: " + physObj.name + " is controlled: " + controlEverything + " or " + IsControlled(physObj));
                     if (controlEverything || IsControlled(physObj))
                     {
                         H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
@@ -239,6 +240,7 @@ namespace H3MP
                         }
                         else
                         {
+                            Debug.Log("Sync: sending item " + root.name + " to server to be added as tracked item");
                             // Tell the server we need to add this item to global tracked items
                             H3MP_ClientSend.TrackedItem(trackedItem.data, scene);
                         }

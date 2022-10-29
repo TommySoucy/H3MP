@@ -39,6 +39,7 @@ namespace H3MP
         public static void ConnectSync(H3MP_Packet packet)
         {
             bool inControl = packet.ReadBool();
+            Debug.Log("Client handle connect sync called with inControl: "+inControl);
 
             // Just connected, sync if current scene is syncable
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
