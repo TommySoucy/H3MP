@@ -39,7 +39,6 @@ namespace H3MP
         public static void ConnectSync(H3MP_Packet packet)
         {
             bool inControl = packet.ReadBool();
-            Debug.Log("Client handle connect sync called with inControl: "+inControl);
 
             // Just connected, sync if current scene is syncable
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
@@ -105,13 +104,22 @@ namespace H3MP
 
             H3MP_TrackedItemData trackedItem = H3MP_Client.items[trackedID];
 
-            if (trackedItem.controller == H3MP_Client.singleton.ID)
+            if (trackedItem.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
             {
                 FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
+
+                H3MP_GameManager.EnsureUncontrolled(physObj);
+
                 physObj.StoreAndDestroyRigidbody();
                 H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                 H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
                 H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+            }
+            else if(trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
+            {
+                trackedItem.controller = controllerID;
+                trackedItem.localtrackedID = H3MP_GameManager.items.Count;
+                H3MP_GameManager.items.Add(trackedItem);
             }
             trackedItem.controller = controllerID;
         }

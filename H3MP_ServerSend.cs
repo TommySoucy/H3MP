@@ -139,7 +139,6 @@ namespace H3MP
 
         public static void PlayerScene(int ID, string sceneName)
         {
-            Debug.Log("Server sending player "+ID+" scene: "+sceneName+":\n"+Environment.StackTrace);
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerScene))
             {
                 packet.Write(ID);
@@ -260,14 +259,8 @@ namespace H3MP
                 packet.Write(trackedItem, true);
                 packet.Write(scene);
 
-                if (clientID > 0)
-                {
-                    SendTCPDataToAll(clientID, packet);
-                }
-                else
-                {
-                    SendTCPDataToAll(packet);
-                }
+                // We want to send to all, even the one who requested for the item to be tracked because we need to tell them its tracked ID
+                SendTCPDataToAll(packet);
             }
         }
 
@@ -289,7 +282,7 @@ namespace H3MP
                 packet.Write(trackedID);
                 packet.Write(clientID);
 
-                SendTCPDataToAll(clientID, packet);
+                SendTCPDataToAll(packet);
             }
         }
 

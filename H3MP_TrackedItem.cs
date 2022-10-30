@@ -285,7 +285,7 @@ namespace H3MP
             preval = data.data[1];
 
             // Write camBurst
-            data.data[1] = (byte)typeof(ClosedBoltWeapon).GetField("m_CamBurst").GetValue(asCBW);
+            data.data[1] = (byte)(int)typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asCBW);
 
             modified |= preval != data.data[1];
 
@@ -324,23 +324,23 @@ namespace H3MP
                 modified = true;
 
                 // Set fire select mode
-                typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode").SetValue(asCBW, (int)newData[0]);
+                typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, (int)newData[0]);
 
                 // Set camBurst
-                typeof(ClosedBoltWeapon).GetField("m_CamBurst").SetValue(asCBW, (int)newData[1]);
+                typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, (int)newData[1]);
             }
             else 
             {
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode").SetValue(asCBW, (int)newData[0]);
+                    typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, (int)newData[0]);
                     modified = true;
                 }
                 if (data.data[1] != newData[1])
                 {
                     // Set camBurst
-                    typeof(ClosedBoltWeapon).GetField("m_CamBurst").SetValue(asCBW, (int)newData[1]);
+                    typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, (int)newData[1]);
                     modified = true;
                 }
             }
@@ -350,7 +350,7 @@ namespace H3MP
             {
                 if (asCBW.IsHammerCocked)
                 {
-                    typeof(ClosedBoltWeapon).GetField("m_isHammerCocked").SetValue(asCBW, BitConverter.ToBoolean(newData, 2));
+                    typeof(ClosedBoltWeapon).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, BitConverter.ToBoolean(newData, 2));
                     modified = true;
                 }
             }
@@ -409,14 +409,14 @@ namespace H3MP
             preval = data.data[1];
 
             // Write camBurst
-            data.data[1] = (byte)typeof(ClosedBoltWeapon).GetField("m_CamBurst").GetValue(asHandgun);
+            data.data[1] = (byte)(int)typeof(Handgun).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asHandgun);
 
             modified |= preval != data.data[1];
 
             preval = data.data[2];
 
             // Write hammer state
-            data.data[2] = BitConverter.GetBytes((bool)typeof(Handgun).GetField("m_isHammerCocked").GetValue(asHandgun))[0];
+            data.data[2] = BitConverter.GetBytes((bool)typeof(Handgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asHandgun))[0];
 
             modified |= preval != data.data[2];
 
@@ -424,7 +424,7 @@ namespace H3MP
             byte preval0 = data.data[4];
 
             // Write chambered round class
-            if(asHandgun.Chamber.GetRound() == null)
+            if (asHandgun.Chamber.GetRound() == null)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
@@ -448,28 +448,28 @@ namespace H3MP
                 modified = true;
 
                 // Set fire select mode
-                typeof(Handgun).GetField("m_fireSelectorMode").SetValue(asHandgun, (int)newData[0]);
+                typeof(Handgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asHandgun, (int)newData[0]);
 
                 // Set camBurst
-                typeof(Handgun).GetField("m_CamBurst").SetValue(asHandgun, (int)newData[1]);
+                typeof(Handgun).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asHandgun, (int)newData[1]);
             }
             else 
             {
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(Handgun).GetField("m_fireSelectorMode").SetValue(asHandgun, (int)newData[0]);
+                    typeof(Handgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asHandgun, (int)newData[0]);
                     modified = true;
                 }
                 if (data.data[1] != newData[1])
                 {
                     // Set camBurst
-                    typeof(Handgun).GetField("m_CamBurst").SetValue(asHandgun, (int)newData[1]);
+                    typeof(Handgun).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asHandgun, (int)newData[1]);
                     modified = true;
                 }
             }
 
-            FieldInfo hammerCockedField = typeof(Handgun).GetField("m_isHammerCocked");
+            FieldInfo hammerCockedField = typeof(Handgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance);
             bool isHammerCocked = (bool)hammerCockedField.GetValue(asHandgun);
 
             // Set hammer state
@@ -529,7 +529,7 @@ namespace H3MP
             byte preval = data.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)typeof(TubeFedShotgun).GetField("m_fireSelectorMode").GetValue(asTFS);
+            data.data[0] = (byte)(int)typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asTFS);
 
             modified |= preval != data.data[0];
 
@@ -585,7 +585,7 @@ namespace H3MP
                 modified = true;
 
                 // Set fire select mode
-                typeof(TubeFedShotgun).GetField("m_fireSelectorMode").SetValue(asTFS, (int)newData[0]);
+                typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, (int)newData[0]);
 
                 // Set bolt pos
                 asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
@@ -603,7 +603,7 @@ namespace H3MP
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(TubeFedShotgun).GetField("m_fireSelectorMode").SetValue(asTFS, (int)newData[0]);
+                    typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, (int)newData[0]);
                     modified = true;
                 }
                 if (data.data[4] != newData[4])
@@ -625,7 +625,7 @@ namespace H3MP
             {
                 if (asTFS.IsHammerCocked)
                 {
-                    typeof(TubeFedShotgun).GetField("m_isHammerCocked").SetValue(asTFS, BitConverter.ToBoolean(newData, 1));
+                    typeof(TubeFedShotgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, BitConverter.ToBoolean(newData, 1));
                     modified = true;
                 }
             }
@@ -677,7 +677,7 @@ namespace H3MP
             byte preval = data.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)typeof(BoltActionRifle).GetField("m_fireSelectorMode").GetValue(asBAR);
+            data.data[0] = (byte)(int)typeof(BoltActionRifle).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asBAR);
 
             modified |= preval != data.data[0];
 
@@ -730,7 +730,7 @@ namespace H3MP
                 modified = true;
 
                 // Set fire select mode
-                typeof(BoltActionRifle).GetField("m_fireSelectorMode").SetValue(asBAR, (int)newData[0]);
+                typeof(BoltActionRifle).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asBAR, (int)newData[0]);
 
                 // Set bolt handle state
                 asBAR.LastBoltHandleState = asBAR.CurBoltHandleState;
@@ -745,7 +745,7 @@ namespace H3MP
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(BoltActionRifle).GetField("m_fireSelectorMode").SetValue(asBAR, (int)newData[0]);
+                    typeof(BoltActionRifle).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asBAR, (int)newData[0]);
                     modified = true;
                 }
                 if (data.data[4] != newData[4])
@@ -767,7 +767,7 @@ namespace H3MP
             {
                 if (asBAR.IsHammerCocked)
                 {
-                    typeof(BoltActionRifle).GetField("m_isHammerCocked").SetValue(asBAR, BitConverter.ToBoolean(newData, 1));
+                    typeof(BoltActionRifle).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asBAR, BitConverter.ToBoolean(newData, 1));
                     modified = true;
                 }
             }
@@ -853,6 +853,7 @@ namespace H3MP
                 modified = true;
             }
 
+            int preRoundCount = asMag.m_numRounds;
             asMag.m_numRounds = 0;
             short numRounds = BitConverter.ToInt16(newData, 0);
 
@@ -871,6 +872,8 @@ namespace H3MP
                     modified = true;
                 }
             }
+
+            modified |= preRoundCount != asMag.m_numRounds;
 
             if (modified)
             {
@@ -974,6 +977,7 @@ namespace H3MP
                 modified = true;
             }
 
+            int preRoundCount = asClip.m_numRounds;
             asClip.m_numRounds = 0;
             short numRounds = BitConverter.ToInt16(newData, 0);
 
@@ -992,6 +996,8 @@ namespace H3MP
                     modified = true;
                 }
             }
+
+            modified |= preRoundCount != asClip.m_numRounds;
 
             if (modified)
             {
@@ -1127,11 +1133,17 @@ namespace H3MP
                         int firstPlayerInScene = 0;
                         foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
                         {
-                            firstPlayerInScene = player.Key;
+                            if (player.Value.gameObject.activeSelf)
+                            {
+                                firstPlayerInScene = player.Key;
+                            }
                             break;
                         }
 
                         H3MP_ServerSend.GiveControl(data.trackedID, firstPlayerInScene);
+
+                        // Also change controller locally
+                        data.controller = firstPlayerInScene;
                     }
                 }
                 else
@@ -1144,11 +1156,12 @@ namespace H3MP
                     H3MP_Server.items[data.trackedID] = null;
                     H3MP_Server.availableItemIndices.Add(data.trackedID);
                 }
-                if(data.controller == 0)
+                if(data.localtrackedID != -1)
                 {
                     H3MP_GameManager.items[data.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                     H3MP_GameManager.items[data.localtrackedID].localtrackedID = data.localtrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    data.localtrackedID = -1;
                 }
             }
             else
@@ -1160,11 +1173,17 @@ namespace H3MP
                         int firstPlayerInScene = 0;
                         foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
                         {
-                            firstPlayerInScene = player.Key;
+                            if (player.Value.gameObject.activeSelf)
+                            {
+                                firstPlayerInScene = player.Key;
+                            }
                             break;
                         }
 
                         H3MP_ClientSend.GiveControl(data.trackedID, firstPlayerInScene);
+
+                        // Also change controller locally
+                        data.controller = firstPlayerInScene;
                     }
                 }
                 else
@@ -1176,18 +1195,18 @@ namespace H3MP
 
                     H3MP_Client.items[data.trackedID] = null;
                 }
-                if (data.controller == H3MP_Client.singleton.ID)
+                if (data.localtrackedID != -1)
                 {
                     H3MP_GameManager.items[data.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                     H3MP_GameManager.items[data.localtrackedID].localtrackedID = data.localtrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    data.localtrackedID = -1;
                 }
             }
         }
 
         private void OnTransformParentChanged()
         {
-            Debug.Log("Tracked item: "+gameObject.name+" parent changed");
             if (data.ignoreParentChanged)
             {
                 data.ignoreParentChanged = false;
@@ -1196,7 +1215,6 @@ namespace H3MP
 
             if(data.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
             {
-                Debug.Log("\tWe are in control");
                 Transform currentParent = transform.parent;
                 H3MP_TrackedItem parentTrackedItem = null;
                 while (currentParent != null)
@@ -1210,10 +1228,8 @@ namespace H3MP
                 }
                 if(parentTrackedItem != null)
                 {
-                    Debug.Log("\t\tItem has tracked item parent");
                     if (parentTrackedItem.data.trackedID != data.parent)
                     {
-                        Debug.Log("\t\tIt is a new one, sending to other clients");
                         // We have a parent trackedItem and it is new
                         // Update other clients
                         if (H3MP_ThreadManager.host)
@@ -1225,23 +1241,21 @@ namespace H3MP
                             H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
                         }
 
-                        Debug.Log("\t\tUpdating locally");
                         // Update local
                         data.SetParent(parentTrackedItem.data, false);
                     }
                 }
                 else if(data.parent != -1)
                 {
-                    Debug.Log("\t\tItem does not have tracked item parent");
                     // We were detached from current parent
                     // Update other clients
                     if (H3MP_ThreadManager.host)
                     {
-                        H3MP_ServerSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                        H3MP_ServerSend.ItemParent(data.trackedID, -1);
                     }
                     else
                     {
-                        H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                        H3MP_ClientSend.ItemParent(data.trackedID, -1);
                     }
 
                     // Update locally

@@ -336,13 +336,27 @@ namespace H3MP
                 IncreaseItemsSize(trackedItem.trackedID);
             }
 
-            // Add the item to client global list
-            items[trackedItem.trackedID] = trackedItem;
-
-            // Instantiate item if it is in the current scene
-            if (scene.Equals(SceneManager.GetActiveScene().name))
+            if (trackedItem.controller == H3MP_Client.singleton.ID)
             {
-                AnvilManager.Run(trackedItem.Instantiate());
+                // If we already control the item it is because we are the one who send the item to the server
+                // We just need to update the tracked ID of the item
+                H3MP_GameManager.items[trackedItem.localtrackedID].trackedID = trackedItem.trackedID;
+
+                // Add the item to client global list
+                items[trackedItem.trackedID] = H3MP_GameManager.items[trackedItem.localtrackedID];
+            }
+            else
+            {
+                trackedItem.localtrackedID = -1;
+
+                // Add the item to client global list
+                items[trackedItem.trackedID] = trackedItem;
+
+                // Instantiate item if it is in the current scene
+                if (scene.Equals(SceneManager.GetActiveScene().name))
+                {
+                    AnvilManager.Run(trackedItem.Instantiate());
+                }
             }
         }
 

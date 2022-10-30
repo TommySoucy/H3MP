@@ -133,6 +133,8 @@ namespace H3MP
             if (H3MP_ThreadManager.host)
             {
                 H3MP_Server.clients[playerID].player.scene = sceneName;
+
+                // TODO: Make sure the scene's items are sent to the the client who just joined our scene, if their new scene is our scene
             }
 
             if (sceneName.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(sceneName))
@@ -218,6 +220,21 @@ namespace H3MP
             return false;
         }
 
+        // MOD: When a client takes control of an item that is under our control, we will need to make sure that we are not 
+        //      in control of the item anymore. If your mod patched IsControlled() then it should also patch this to ensure
+        //      that the checks made in IsControlled() are false
+        public static void EnsureUncontrolled(FVRPhysicalObject physObj)
+        {
+            if (physObj.m_hand != null)
+            {
+                physObj.ForceBreakInteraction();
+            }
+            if (physObj.QuickbeltSlot != null)
+            {
+                physObj.SetQuickBeltSlot(null);
+            }
+        }
+
         public static void SyncTrackedItems(Transform root, bool controlEverything, H3MP_TrackedItemData parent, string scene)
         {
             // NOTE: When we sync tracked items, we always send the parent before its children, through TCP. This means we are guaranteed 
@@ -229,34 +246,37 @@ namespace H3MP
             {
                 if (physObj.ObjectWrapper != null)
                 {
-                    Debug.Log("Checking if physobj: " + physObj.name + " is controlled: " + controlEverything + " or " + IsControlled(physObj));
-                    if (controlEverything || IsControlled(physObj))
+                    H3MP_TrackedItem currentTrackedItem = root.GetComponent<H3MP_TrackedItem>();
+                    if (currentTrackedItem == null)
                     {
-                        H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
-                        if (H3MP_ThreadManager.host)
+                        if (controlEverything || IsControlled(physObj))
                         {
-                            // This will also send a packet with the item to be added in the client's global item list
-                            H3MP_Server.AddTrackedItem(trackedItem.data, scene, 0);
-                        }
-                        else
-                        {
-                            Debug.Log("Sync: sending item " + root.name + " to server to be added as tracked item");
-                            // Tell the server we need to add this item to global tracked items
-                            H3MP_ClientSend.TrackedItem(trackedItem.data, scene);
-                        }
+                            H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
+                            if (H3MP_ThreadManager.host)
+                            {
+                                // This will also send a packet with the item to be added in the client's global item list
+                                H3MP_Server.AddTrackedItem(trackedItem.data, scene, 0);
+                            }
+                            else
+                            {
+                                // Tell the server we need to add this item to global tracked items
+                                H3MP_ClientSend.TrackedItem(trackedItem.data, scene);
+                            }
 
-                        // Add to local list
-                        trackedItem.data.localtrackedID = items.Count;
-                        items.Add(trackedItem.data);
-
-                        foreach (Transform child in root)
+                            foreach (Transform child in root)
+                            {
+                                SyncTrackedItems(child, controlEverything, trackedItem.data, scene);
+                            }
+                        }
+                        else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
                         {
-                            SyncTrackedItems(child, controlEverything, trackedItem.data, scene);
+                            Destroy(root.gameObject);
                         }
                     }
-                    else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
+                    else 
                     {
-                        Destroy(root.gameObject);
+                        // It already has tracked item on it, this is possible of we received new item from server before we sync
+                        return;
                     }
                 }
             }
@@ -293,6 +313,10 @@ namespace H3MP
 
             data.controller = H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID;
 
+            // Add to local list
+            data.localtrackedID = items.Count;
+            items.Add(data);
+
             return trackedItem;
         }
 
@@ -314,16 +338,22 @@ namespace H3MP
 
             if (loading) // Just started loading
             {
+                Debug.Log("Just started loading scene");
+
                 if (OtherPlayersInScene())
                 {
                     giveControlOfDestroyed = true;
                 }
+
+                ++Mod.skipAllInstantiates;
             }
             else // Finished loading
             {
+                --Mod.skipAllInstantiates;
                 giveControlOfDestroyed = false;
 
                 Scene loadedScene = SceneManager.GetActiveScene();
+                Debug.Log("Just finished loading scene: "+ loadedScene.name);
 
                 // Send an update to all other clients so they can decide whether they can see this client
                 if (H3MP_ThreadManager.host)
@@ -338,24 +368,24 @@ namespace H3MP
                 }
 
                 // Update players' active state depending on which are in the same scene
+                playersInSameScene = 0;
                 if (synchronizedScenes.ContainsKey(loadedScene.name))
                 {
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                     {
-                        if (player.Value.scene.Equals(loadedScene))
+                        if (player.Value.scene.Equals(loadedScene.name))
                         {
                             if (!player.Value.gameObject.activeSelf)
                             {
                                 player.Value.gameObject.SetActive(true);
-                                ++playersInSameScene;
                             }
+                            ++playersInSameScene;
                         }
                         else
                         {
                             if (player.Value.gameObject.activeSelf)
                             {
                                 player.Value.gameObject.SetActive(false);
-                                --playersInSameScene;
                             }
                         }
                     }
@@ -373,7 +403,6 @@ namespace H3MP
                             player.Value.gameObject.SetActive(false);
                         }
                     }
-                    playersInSameScene = 0;
                 }
             }
         }

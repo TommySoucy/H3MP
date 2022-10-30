@@ -223,6 +223,7 @@ namespace H3MP
                 Write(trackedItem.itemID);
                 Write(trackedItem.controller);
                 Write(trackedItem.parent);
+                Write(trackedItem.localtrackedID);
             }
             else
             {
@@ -435,6 +436,7 @@ namespace H3MP
                 trackedItem.itemID = ReadString();
                 trackedItem.controller = ReadInt();
                 trackedItem.parent = ReadInt();
+                trackedItem.localtrackedID = ReadInt();
             }
             else
             {

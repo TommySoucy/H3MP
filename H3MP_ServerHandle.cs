@@ -56,6 +56,12 @@ namespace H3MP
 
             // Send to all other clients
             H3MP_ServerSend.PlayerScene(player.ID, scene);
+
+            // Send the client all items it needs to instantiate from the scene
+            if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
+            {
+                H3MP_Server.clients[clientID].SendRelevantTrackedItems();
+            }
         }
 
         public static void AddSyncScene(int clientID, H3MP_Packet packet)
@@ -127,14 +133,13 @@ namespace H3MP
         public static void DestroyItem(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-
             H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
 
             if (trackedItem.physicalObject == null)
             {
                 H3MP_Server.items[trackedID] = null;
                 H3MP_Server.availableItemIndices.Add(trackedID);
-                if (trackedItem.controller == 0)
+                if (trackedItem.localtrackedID != -1)
                 {
                     H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                     H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;

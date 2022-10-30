@@ -127,9 +127,14 @@ namespace H3MP
                 yield break;
             }
 
-            ++Mod.skipNextInstantiates;
+            // Here, we can't simply skip the next instantiate
+            // Since Awake() will be called on the object upon instantiation, if the object instantiates something in Awake(), like firearm,
+            // it will consume the skipNextInstantiate, so we instead skipAllInstantiates during the current instantiation
+            //++Mod.skipNextInstantiates;
 
+            ++Mod.skipAllInstantiates;
             GameObject itemObject = GameObject.Instantiate(itemPrefab);
+            --Mod.skipAllInstantiates;
             physicalObject = itemObject.AddComponent<H3MP_TrackedItem>();
             physicalObject.data = this;
 

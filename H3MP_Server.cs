@@ -132,8 +132,6 @@ namespace H3MP
 
             items[trackedItem.trackedID] = trackedItem;
 
-            Debug.Log("Server added tracked item at index: " + trackedItem.trackedID);
-
             // Instantiate item if it is in the current scene nad not controlled by us
             if (clientID != 0)
             {
@@ -145,6 +143,12 @@ namespace H3MP
 
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
             H3MP_ServerSend.TrackedItem(trackedItem, scene, clientID);
+
+            // Update the local tracked ID at the end because we need to send that back to the original client intact
+            if (trackedItem.controller != 0)
+            {
+                trackedItem.localtrackedID = -1;
+            }
         }
 
         private static void IncreaseItemsSize()

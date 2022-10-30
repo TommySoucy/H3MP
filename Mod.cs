@@ -1,8 +1,13 @@
 ﻿using BepInEx;
 using FistVR;
 using HarmonyLib;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.Analytics;
@@ -10,7 +15,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR.InteractionSystem;
-using static H3MP.H3MP_TrackedItem;
 
 namespace H3MP
 {
@@ -39,7 +43,7 @@ namespace H3MP
         // Live
         public static GameObject managerObject;
         public static int skipNextFires = 0;
-        public static int skipNextInstantiates = 0;
+        public static int skipAllInstantiates = 0;
 
         // Debug
         bool debug;
@@ -71,6 +75,10 @@ namespace H3MP
                 else if (Input.GetKeyDown(KeyCode.Keypad2))
                 {
                     LoadConfig();
+                }
+                else if (Input.GetKeyDown(KeyCode.Keypad3))
+                {
+                    SteamVR_LoadLevel.Begin("IndoorRange", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
             }
         }
@@ -160,8 +168,9 @@ namespace H3MP
             // FirePatch
             MethodInfo firePatchOriginal = typeof(FVRFireArm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo firePatchPrefix = typeof(FirePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo firePatchPostfix = typeof(FirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix));
+            harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix));
 
             // ChamberEjectRoundPatch
             MethodInfo chamberEjectRoundPatchOriginal = typeof(FVRFireArmChamber).GetMethod("EjectRound", BindingFlags.Public | BindingFlags.Instance);
@@ -171,30 +180,78 @@ namespace H3MP
             harmony.Patch(chamberEjectRoundPatchOriginal, new HarmonyMethod(chamberEjectRoundPatchPrefix), new HarmonyMethod(chamberEjectRoundPatchPostfix));
 
             // Internal_CloneSinglePatch
-            MethodInfo internal_CloneSinglePatchOriginal = typeof(Object).GetMethod("Internal_CloneSingle", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo internal_CloneSinglePatchOriginal = typeof(UnityEngine.Object).GetMethod("Internal_CloneSingle", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_CloneSinglePatchPostfix = typeof(Internal_CloneSinglePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(internal_CloneSinglePatchOriginal, null, new HarmonyMethod(internal_CloneSinglePatchPostfix));
 
             // Internal_CloneSingleWithParentPatch
-            MethodInfo internal_CloneSingleWithParentPatchOriginal = typeof(Object).GetMethod("Internal_CloneSingleWithParent", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo internal_CloneSingleWithParentPatchOriginal = typeof(UnityEngine.Object).GetMethod("Internal_CloneSingleWithParent", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_CloneSingleWithParentPatchPrefix = typeof(Internal_CloneSingleWithParentPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_CloneSingleWithParentPatchPostfix = typeof(Internal_CloneSingleWithParentPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(internal_CloneSingleWithParentPatchOriginal, new HarmonyMethod(internal_CloneSingleWithParentPatchPrefix), new HarmonyMethod(internal_CloneSingleWithParentPatchPostfix));
 
             // Internal_InstantiateSinglePatch
-            MethodInfo internal_InstantiateSinglePatchOriginal = typeof(Object).GetMethod("Internal_InstantiateSingle", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo internal_InstantiateSinglePatchOriginal = typeof(UnityEngine.Object).GetMethod("Internal_InstantiateSingle", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_InstantiateSinglePatchPostfix = typeof(Internal_InstantiateSinglePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(internal_InstantiateSinglePatchOriginal, null, new HarmonyMethod(internal_InstantiateSinglePatchPostfix));
 
             // Internal_InstantiateSingleWithParentPatch
-            MethodInfo internal_InstantiateSingleWithParentPatchOriginal = typeof(Object).GetMethod("Internal_InstantiateSingleWithParent", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo internal_InstantiateSingleWithParentPatchOriginal = typeof(UnityEngine.Object).GetMethod("Internal_InstantiateSingleWithParent", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_InstantiateSingleWithParentPatchPrefix = typeof(Internal_InstantiateSingleWithParentPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_InstantiateSingleWithParentPatchPostfix = typeof(Internal_InstantiateSingleWithParentPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(internal_InstantiateSingleWithParentPatchOriginal, new HarmonyMethod(internal_InstantiateSingleWithParentPatchPrefix), new HarmonyMethod(internal_InstantiateSingleWithParentPatchPostfix));
+
+            // LoadDefaultSceneRoutinePatch
+            MethodInfo loadDefaultSceneRoutinePatchOriginal = typeof(ItemSpawnerV2).GetMethod("LoadDefaultSceneRoutine", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo loadDefaultSceneRoutinePatchPrefix = typeof(LoadDefaultSceneRoutinePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo loadDefaultSceneRoutinePatchPostfix = typeof(LoadDefaultSceneRoutinePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(loadDefaultSceneRoutinePatchOriginal, new HarmonyMethod(loadDefaultSceneRoutinePatchPrefix), new HarmonyMethod(loadDefaultSceneRoutinePatchPostfix));
+
+            // SpawnObjectsPatch
+            MethodInfo spawnObjectsPatchOriginal = typeof(VaultSystem).GetMethod("SpawnObjects", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo spawnObjectsPatchPrefix = typeof(SpawnObjectsPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(spawnObjectsPatchOriginal, new HarmonyMethod(spawnObjectsPatchPrefix));
+
+            // SpawnVaultFileRoutinePatch
+            MethodInfo spawnVaultFileRoutinePatchOriginal = typeof(VaultSystem).GetMethod("SpawnVaultFileRoutine", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo spawnVaultFileRoutinePatchMoveNext = EnumeratorMoveNext(spawnVaultFileRoutinePatchOriginal);
+            MethodInfo spawnVaultFileRoutinePatchPrefix = typeof(SpawnVaultFileRoutinePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo spawnVaultFileRoutinePatchTranspiler = typeof(SpawnVaultFileRoutinePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo spawnVaultFileRoutinePatchPostfix = typeof(SpawnVaultFileRoutinePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(spawnVaultFileRoutinePatchMoveNext, new HarmonyMethod(spawnVaultFileRoutinePatchPrefix), new HarmonyMethod(spawnVaultFileRoutinePatchPostfix), new HarmonyMethod(spawnVaultFileRoutinePatchTranspiler));
+        }
+
+        // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
+        public static MethodInfo EnumeratorMoveNext(MethodBase method)
+        {
+            if (method is null)
+            {
+                return null;
+            }
+
+            var codes = PatchProcessor.ReadMethodBody(method).Where(pair => pair.Key == OpCodes.Newobj);
+            if (codes.Count() != 1)
+            {
+                return null;
+            }
+            var ctor = codes.First().Value as ConstructorInfo;
+            if (ctor == null)
+            {
+                return null;
+            }
+            var type = ctor.DeclaringType;
+            if (type == null)
+            {
+                return null;
+            }
+            return AccessTools.Method(type, nameof(IEnumerator.MoveNext));
         }
 
         private void OnHostClicked()
@@ -304,10 +361,6 @@ namespace H3MP
                             //    (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
                             //}
                         }
-                        else
-                        {
-                            Debug.Log("\tAlready in control");
-                        }
                     }
                     else
                     {
@@ -404,7 +457,7 @@ namespace H3MP
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
-            ++Mod.skipNextInstantiates;
+            ++Mod.skipAllInstantiates;
 
             if (Mod.skipNextFires > 0)
             {
@@ -436,12 +489,18 @@ namespace H3MP
                 }
             }
         }
+
+        static void Postfix()
+        {
+            --Mod.skipAllInstantiates;
+        }
     }
 
     // Patches FVRFireArmChamber.EjectRound so we can keep track of when a round is ejected from a chamber
     class ChamberEjectRoundPatch
     {
         static bool track = false;
+        static int incrementedSkip = 0;
 
         static void Prefix(ref FVRFireArmChamber __instance, ref FVRFireArmRound ___m_round, bool ForceCaseLessEject)
         {
@@ -451,13 +510,16 @@ namespace H3MP
                 return;
             }
 
+            incrementedSkip = 0;
+
             // Check if a round would be ejected
-            if(___m_round != null && (!___m_round.IsCaseless || ForceCaseLessEject))
+            if (___m_round != null && (!___m_round.IsCaseless || ForceCaseLessEject))
             {
                 if (__instance.IsSpent)
                 {
                     // Skip the instantiation of the casing because we don't want to sync these between clients
-                    ++Mod.skipNextInstantiates;
+                    ++Mod.skipAllInstantiates;
+                    ++incrementedSkip;
                 }
                 else // We are ejecting a whole round, we want the controller of the chamber's parent tracked item to control the round
                 {
@@ -480,7 +542,8 @@ namespace H3MP
                     else // Round was instantiated from chamber of an item that is controlled by other client
                     {
                         // Skip the instantiate on our side, the controller client will instantiate and sync it with us eventually
-                        ++Mod.skipNextInstantiates;
+                        ++Mod.skipAllInstantiates;
+                        ++incrementedSkip;
                     }
                 }
             }
@@ -488,6 +551,11 @@ namespace H3MP
 
         static void Postfix(ref FVRFireArmRound __result)
         {
+            if(incrementedSkip > 0)
+            {
+                Mod.skipAllInstantiates -= incrementedSkip;
+            }
+
             if (track)
             {
                 track = false;
@@ -500,18 +568,32 @@ namespace H3MP
     // Patches Object.Internal_CloneSingle to keep track of this type of instantiation
     class Internal_CloneSinglePatch
     {
-        static void Postfix(ref Object __result)
+        static void Postfix(ref UnityEngine.Object __result)
         {
-            if (Mod.skipNextInstantiates > 0)
+            if (Mod.skipAllInstantiates > 0)
             {
-                --Mod.skipNextInstantiates;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (__result == null || Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
             {
                 return;
+            }
+
+            // If we want to skip the instantiate because this is a scene load vault file being spawned
+            if (SpawnVaultFileRoutinePatch.inSpawnVaultFileRoutineToSkip)
+            {
+                // If not for this the item would be spawned and then synced with other clients below
+                // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
+                // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
+                // because the client that has initialized the scene spawned these and synced them
+                if (H3MP_GameManager.playersInSameScene > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                {
+                    List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
+                    objectsToDestroy.Add(__result);
+                    return;
+                }
             }
 
             // If this is a game object check and sync all physical objects if necessary
@@ -528,20 +610,18 @@ namespace H3MP
         static bool track = false;
         static H3MP_TrackedItemData parentData;
 
-        static void Prefix(Object data, Transform parent)
+        static void Prefix(UnityEngine.Object data, Transform parent)
         {
-            if (Mod.skipNextInstantiates > 0)
+            if (Mod.skipAllInstantiates > 0)
             {
-                --Mod.skipNextInstantiates;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (data == null || Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
             {
                 return;
             }
-
 
             // If this is a game object check and sync all physical objects if necessary
             if (data is GameObject)
@@ -565,8 +645,26 @@ namespace H3MP
             }
         }
 
-        static void Postfix(ref Object __result, Transform parent)
+        static void Postfix(ref UnityEngine.Object __result, Transform parent)
         {
+
+            // If we want to skip the instantiate because this is a scene load vault file being spawned
+            if (SpawnVaultFileRoutinePatch.inSpawnVaultFileRoutineToSkip)
+            {
+                // If not for this the item would be spawned and then synced with other clients below
+                // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
+                // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
+                // because the client that has initialized the scene spawned these and synced them
+                if (H3MP_GameManager.playersInSameScene > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                {
+                    List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
+                    objectsToDestroy.Add(__result);
+
+                    track = false;
+                    return;
+                }
+            }
+
             if (track)
             {
                 track = false;
@@ -578,18 +676,32 @@ namespace H3MP
     // Patches Object.Internal_InstantiateSingle to keep track of this type of instantiation
     class Internal_InstantiateSinglePatch
     {
-        static void Postfix(ref Object __result)
+        static void Postfix(ref UnityEngine.Object __result)
         {
-            if (Mod.skipNextInstantiates > 0)
+            if (Mod.skipAllInstantiates > 0)
             {
-                --Mod.skipNextInstantiates;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (__result == null || Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
             {
                 return;
+            }
+
+            // If we want to skip the instantiate because this is a scene load vault file being spawned
+            if (SpawnVaultFileRoutinePatch.inSpawnVaultFileRoutineToSkip)
+            {
+                // If not for this the item would be spawned and then synced with other clients below
+                // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
+                // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
+                // because the client that has initialized the scene spawned these and synced them
+                if (H3MP_GameManager.playersInSameScene > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                {
+                    List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
+                    objectsToDestroy.Add(__result);
+                    return;
+                }
             }
 
             // If this is a game object check and sync all physical objects if necessary
@@ -606,16 +718,15 @@ namespace H3MP
         static bool track = false;
         static H3MP_TrackedItemData parentData;
 
-        static void Prefix(Object data, Transform parent)
+        static void Prefix(UnityEngine.Object data, Transform parent)
         {
-            if (Mod.skipNextInstantiates > 0)
+            if (Mod.skipAllInstantiates > 0)
             {
-                --Mod.skipNextInstantiates;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (data == null || Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
             {
                 return;
             }
@@ -643,13 +754,138 @@ namespace H3MP
             }
         }
 
-        static void Postfix(ref Object __result, Transform parent)
+        static void Postfix(ref UnityEngine.Object __result, Transform parent)
         {
+            // If we want to skip the instantiate because this is a scene load vault file being spawned
+            if (SpawnVaultFileRoutinePatch.inSpawnVaultFileRoutineToSkip)
+            {
+                // If not for this the item would be spawned and then synced with other clients below
+                // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
+                // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
+                // because the client that has initialized the scene spawned these and synced them
+                if (H3MP_GameManager.playersInSameScene > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                {
+                    List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
+                    objectsToDestroy.Add(__result);
+
+                    track = false;
+                    return;
+                }
+            }
+
             if (track)
             {
                 track = false;
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
             }
+        }
+    }
+
+    // Patches ItemSpawnerV2.LoadDefaultSceneRoutine so we know when we spawn items from vault as part of scene loading
+    class LoadDefaultSceneRoutinePatch
+    {
+        public static bool inLoadDefaultSceneRoutine;
+
+        static void Prefix()
+        {
+            inLoadDefaultSceneRoutine = true;
+        }
+
+        static void Postfix()
+        {
+            inLoadDefaultSceneRoutine = false;
+        }
+    }
+
+    // Patches VaultSystem.SpawnObjects so we can access the vaultfile that was sent from LoadDefaultSceneRoutine
+    class SpawnObjectsPatch
+    {
+        static void Prefix(VaultFile file)
+        {
+            if (LoadDefaultSceneRoutinePatch.inLoadDefaultSceneRoutine)
+            {
+                if(SpawnVaultFileRoutinePatch.filesToSkip == null)
+                {
+                    SpawnVaultFileRoutinePatch.filesToSkip = new List<string>();
+                }
+                SpawnVaultFileRoutinePatch.filesToSkip.Add(file.FileName);
+            }
+        }
+    }
+
+    // Patches VaultSystem.SpawnVaultFileRoutine.MoveNext to keep track of whether we are spawning items as part of scene loading
+    class SpawnVaultFileRoutinePatch
+    {
+        // Use https://github.com/BepInEx/HarmonyX/wiki/Enumerator-patches
+        // to patch the specific moveNext where the instantiate happens
+
+        // In prefix, set a flag true
+        // In postfix set the flag false
+
+        // In between, when instantiate is called in SpawnVaultFileRoutine, in the instantiate patches, we check the flag, if true we skip instantiation
+        // Problem is that this routine is used to spawn objects other than default scene, so these will be skipped too
+
+        // We need another flag to know if this was started by load default scene, because only if it was do we want to skip the insntatiation
+        // We could do this by having a flag set when we call load default scene and when we start the first step of the coroutine we set our own flag and reset 
+        // the load default scene to false. Our own flag tells us we started the coroutine by load default scene
+        // So now we only skip the instantiations specific to the default scene
+
+        public static bool inSpawnVaultFileRoutineToSkip;
+        public static List<string> filesToSkip;
+        public static string currentFile;
+
+        public static Dictionary<string, List<UnityEngine.Object>> routineData = new Dictionary<string, List<UnityEngine.Object>>();
+
+        public static void FinishedRoutine()
+        {
+            if (inSpawnVaultFileRoutineToSkip && routineData.ContainsKey(currentFile))
+            {
+                // Destroy any objects that need to be destroyed and remove the data
+                foreach (UnityEngine.Object obj in routineData[currentFile])
+                {
+                    UnityEngine.Object.Destroy(obj);
+                }
+                routineData.Remove(currentFile);
+            }
+        }
+
+        static void Prefix(ref VaultFile ___f)
+        {
+            if (filesToSkip != null && filesToSkip.Contains(___f.FileName))
+            {
+                inSpawnVaultFileRoutineToSkip = true;
+
+                currentFile = ___f.FileName;
+                if (!routineData.ContainsKey(___f.FileName))
+                {
+                    routineData.Add(___f.FileName, new List<UnityEngine.Object>());
+                }
+            }
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            CodeInstruction toInsert = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SpawnVaultFileRoutinePatch), "FinishedRoutine"));
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stfld && instruction.operand.ToString().Equals("System.Int32 $PC") &&
+                    instructionList[i + 1].opcode == OpCodes.Ldc_I4_0 && instructionList[i + 2].opcode == OpCodes.Ret)
+                {
+                    instructionList.Insert(i + 1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        static void Postfix(ref VaultFile ___f)
+        {
+            inSpawnVaultFileRoutineToSkip = false;
+
         }
     }
 }
