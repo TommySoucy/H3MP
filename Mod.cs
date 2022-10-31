@@ -293,6 +293,21 @@ namespace H3MP
             MethodInfo sosigWeaponDamageablePatchTranspiler = typeof(SosigWeaponDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(sosigWeaponDamageablePatchOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchTranspiler));
+
+            // MeleeParamsDamageablePatch
+            MethodInfo meleeParamsDamageablePatchStabOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("DoStabDamage", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo meleeParamsDamageablePatchStabTranspiler = typeof(MeleeParamsDamageablePatch).GetMethod("StabTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo meleeParamsDamageablePatchTearOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("DoTearOutDamage", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo meleeParamsDamageablePatchTearTranspiler = typeof(MeleeParamsDamageablePatch).GetMethod("TearOutTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo meleeParamsDamageablePatchUpdateOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("FixedUpdate", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo meleeParamsDamageablePatchUpdateTranspiler = typeof(MeleeParamsDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo meleeParamsDamageablePatchCollisionOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo meleeParamsDamageablePatchCollisionTranspiler = typeof(MeleeParamsDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(meleeParamsDamageablePatchStabOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchStabTranspiler));
+            harmony.Patch(meleeParamsDamageablePatchTearOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchTearTranspiler));
+            harmony.Patch(meleeParamsDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchUpdateTranspiler));
+            harmony.Patch(meleeParamsDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchCollisionTranspiler));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -381,6 +396,7 @@ namespace H3MP
         }
     }
 
+    #region Interaction Patches
     // Patches FVRViveHand.CurrentInteractable.set to keep track of item held
     class HandCurrentInteractableSetPatch
     {
@@ -514,7 +530,9 @@ namespace H3MP
             }
         }
     }
+    #endregion
 
+    #region Action Patches
     // Patches FVRFireArm.Fire so we can keep track of when a firearm is fired
     // TODO: This depends on the specific firearm type calling base.Fire() or overriding FVRFireArm.Fire, will need to check if this is true for each type
     //       and if not will have to handle the exceptions accordingly
@@ -562,7 +580,9 @@ namespace H3MP
             --Mod.skipAllInstantiates;
         }
     }
+    #endregion
 
+    #region Instatiation Patches
     // Patches FVRFireArmChamber.EjectRound so we can keep track of when a round is ejected from a chamber
     class ChamberEjectRoundPatch
     {
@@ -979,9 +999,11 @@ namespace H3MP
 
         }
     }
+    #endregion
 
     #region Damageable Patches
     //TODO: Implement damage prevention for these if we are not controller of the cause of damage. These are all classes taht call IFVRDamageable.Damage
+    //TODO: Once done, patch IFVRDamageable to send the damage to other clients
     /*
      * FVRPhysicalObject.MeleeParams
      * SosigWeapon
@@ -1289,15 +1311,35 @@ namespace H3MP
                 H3MP_ControllerReference cr = mb.GetComponent<H3MP_ControllerReference>();
                 if (cr == null)
                 {
-                    // If we don't have a ref to the controller of the item that caused this explosion, let the damage be controlled by the host
-                    if (!H3MP_ThreadManager.host)
+                    H3MP_TrackedItem ti = mb.GetComponent<H3MP_TrackedItem>();
+                    if (ti == null)
                     {
-                        return null;
+                        // If we don't have a ref to the controller of the item that caused this damage, let the damage be controlled by the
+                        // first player we can find in the same scene
+                        // TODO: Keep a dictionary of players using the scene as key
+                        int firstPlayerInScene = 0;
+                        foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                        {
+                            if (player.Value.gameObject.activeSelf)
+                            {
+                                firstPlayerInScene = player.Key;
+                            }
+                            break;
+                        }
+                        if (firstPlayerInScene != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID)) 
+                        {
+                            return null;
+                        }
+                    }
+                    else // We have a ref to the item itself
+                    {
+                        // We only want to let this item do damage if we control it
+                        return (H3MP_ThreadManager.host && ti.controller == 0) || (!H3MP_ThreadManager.host && ti.controller == H3MP_Client.singleton.ID) ? original : null;
                     }
                 }
-                else // We have a ref to the controller of the item that caused this explosion
+                else // We have a ref to the controller of the item that caused this damage
                 {
-                    // We only want to let this projectile do damage if we control the firearm
+                    // We only want to let this item do damage if we control it
                     return (H3MP_ThreadManager.host && cr.controller == 0) || (!H3MP_ThreadManager.host && cr.controller == H3MP_Client.singleton.ID) ? original : null;
                 }
             }
@@ -1345,6 +1387,130 @@ namespace H3MP
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (19)"))
                 {
                     instructionList.InsertRange(i+1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches MeleeParams to ignore latest IFVRDamageable if necessary
+    class MeleeParamsDamageablePatch
+    {
+        // Patches DoStabDamage()
+        static IEnumerable<CodeInstruction> StabTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load meleeparams instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRPhysicalObject.MeleeParams), "m_obj"))); // Load m_obj from instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 9)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 9)); // Set damageable
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (9)"))
+                {
+                    // Skip the first set
+                    if (!found)
+                    {
+                        found = true;
+                        continue;
+                    }
+
+                    instructionList.InsertRange(i+1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches DoTearOutDamage()
+        static IEnumerable<CodeInstruction> TearOutTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load meleeparams instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRPhysicalObject.MeleeParams), "m_obj"))); // Load m_obj from instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 6)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 6)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (6)"))
+                {
+                    instructionList.InsertRange(i+1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches FixedUpdate()
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load meleeparams instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRPhysicalObject.MeleeParams), "m_obj"))); // Load m_obj from instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 14)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 14)); // Set damageable
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (14)"))
+                {
+                    // Skip the first set
+                    if (!found)
+                    {
+                        found = true;
+                        continue;
+                    }
+
+                    instructionList.InsertRange(i + 1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches OnCollisionEnter()
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load meleeparams instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRPhysicalObject.MeleeParams), "m_obj"))); // Load m_obj from instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 18)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 18)); // Set damageable
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (18)"))
+                {
+                    // Skip the first set
+                    if (!found)
+                    {
+                        found = true;
+                        continue;
+                    }
+
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     break;
                 }
