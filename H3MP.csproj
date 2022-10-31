@@ -66,6 +66,7 @@
     <Compile Include="H3MP_Client.cs" />
     <Compile Include="H3MP_ClientHandle.cs" />
     <Compile Include="H3MP_ClientSend.cs" />
+    <Compile Include="H3MP_ControllerReference.cs" />
     <Compile Include="H3MP_GameManager.cs" />
     <Compile Include="H3MP_Player.cs" />
     <Compile Include="H3MP_PlayerManager.cs" />

@@ -15,6 +15,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR.InteractionSystem;
+using static RenderHeads.Media.AVProVideo.MediaPlayer.OptionsApple;
 
 namespace H3MP
 {
@@ -226,6 +227,72 @@ namespace H3MP
             MethodInfo spawnVaultFileRoutinePatchPostfix = typeof(SpawnVaultFileRoutinePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(spawnVaultFileRoutinePatchMoveNext, new HarmonyMethod(spawnVaultFileRoutinePatchPrefix), new HarmonyMethod(spawnVaultFileRoutinePatchPostfix), new HarmonyMethod(spawnVaultFileRoutinePatchTranspiler));
+
+            // ProjectileFirePatch
+            MethodInfo projectileFirePatchOriginal = typeof(BallisticProjectile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(float), typeof(Vector3), typeof(FVRFireArm), typeof(bool) }, null);
+            MethodInfo projectileFirePatchPostfix = typeof(ProjectileFirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(projectileFirePatchOriginal, new HarmonyMethod(projectileFirePatchPostfix));
+
+            // ProjectileDamageablePatch
+            MethodInfo projectileDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo projectileDamageablePatchTranspiler = typeof(ProjectileDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(projectileDamageablePatchOriginal, null, null, new HarmonyMethod(projectileDamageablePatchTranspiler));
+
+            // SubMunitionsDamageablePatch
+            MethodInfo subMunitionsDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("FireSubmunitions", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo subMunitionsDamageablePatchTranspiler = typeof(SubMunitionsDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(subMunitionsDamageablePatchOriginal, null, null, new HarmonyMethod(subMunitionsDamageablePatchTranspiler));
+
+            // ExplosionDamageablePatch
+            MethodInfo explosionDamageablePatchOriginal = typeof(Explosion).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo explosionDamageablePatchTranspiler = typeof(ExplosionDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(explosionDamageablePatchOriginal, null, null, new HarmonyMethod(explosionDamageablePatchTranspiler));
+
+            // GrenadeExplosionDamageablePatch
+            MethodInfo grenadeExplosionDamageablePatchOriginal = typeof(GrenadeExplosion).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo grenadeExplosionDamageablePatchTranspiler = typeof(GrenadeExplosionDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(explosionDamageablePatchOriginal, null, null, new HarmonyMethod(explosionDamageablePatchTranspiler));
+
+            // FlameThrowerDamageablePatch
+            MethodInfo flameThrowerDamageablePatchOriginal = typeof(FlameThrower).GetMethod("AirBlast", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo flameThrowerDamageablePatchTranspiler = typeof(FlameThrowerDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(flameThrowerDamageablePatchOriginal, null, null, new HarmonyMethod(flameThrowerDamageablePatchTranspiler));
+
+            // GrenadeDamageablePatch
+            MethodInfo grenadeDamageablePatchOriginal = typeof(FVRGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo grenadeDamageablePatchTranspiler = typeof(GrenadeDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(grenadeDamageablePatchOriginal, null, null, new HarmonyMethod(grenadeDamageablePatchTranspiler));
+
+            // DemonadeDamageablePatch
+            MethodInfo demonadeDamageablePatchOriginal = typeof(MF2_Demonade).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo demonadeDamageablePatchTranspiler = typeof(DemonadeDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(demonadeDamageablePatchOriginal, null, null, new HarmonyMethod(demonadeDamageablePatchTranspiler));
+
+            // PinnedGrenadeDamageablePatch
+            MethodInfo pinnedGrenadeDamageablePatchOriginal = typeof(PinnedGrenade).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo pinnedGrenadeDamageablePatchTranspiler = typeof(PinnedGrenadeDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(pinnedGrenadeDamageablePatchOriginal, null, null, new HarmonyMethod(pinnedGrenadeDamageablePatchTranspiler));
+
+            // PinnedGrenadeCollisionDamageablePatch
+            MethodInfo pinnedGrenadeCollisionDamageablePatchOriginal = typeof(PinnedGrenade).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo pinnedGrenadeCollisionDamageablePatchTranspiler = typeof(PinnedGrenadeCollisionDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(pinnedGrenadeCollisionDamageablePatchOriginal, null, null, new HarmonyMethod(pinnedGrenadeCollisionDamageablePatchTranspiler));
+
+            // SosigWeaponDamageablePatch
+            MethodInfo sosigWeaponDamageablePatchOriginal = typeof(SosigWeapon).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigWeaponDamageablePatchTranspiler = typeof(SosigWeaponDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigWeaponDamageablePatchOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchTranspiler));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -756,6 +823,12 @@ namespace H3MP
 
         static void Postfix(ref UnityEngine.Object __result, Transform parent)
         {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return;
+            }
+
             // If we want to skip the instantiate because this is a scene load vault file being spawned
             if (SpawnVaultFileRoutinePatch.inSpawnVaultFileRoutineToSkip)
             {
@@ -788,6 +861,12 @@ namespace H3MP
 
         static void Prefix()
         {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return;
+            }
+
             inLoadDefaultSceneRoutine = true;
         }
 
@@ -802,6 +881,12 @@ namespace H3MP
     {
         static void Prefix(VaultFile file)
         {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return;
+            }
+
             if (LoadDefaultSceneRoutinePatch.inLoadDefaultSceneRoutine)
             {
                 if(SpawnVaultFileRoutinePatch.filesToSkip == null)
@@ -851,6 +936,12 @@ namespace H3MP
 
         static void Prefix(ref VaultFile ___f)
         {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return;
+            }
+
             if (filesToSkip != null && filesToSkip.Contains(___f.FileName))
             {
                 inSpawnVaultFileRoutineToSkip = true;
@@ -888,4 +979,378 @@ namespace H3MP
 
         }
     }
+
+    #region Damageable Patches
+    //TODO: Implement damage prevention for these if we are not controller of the cause of damage. These are all classes taht call IFVRDamageable.Damage
+    /*
+     * FVRPhysicalObject.MeleeParams
+     * SosigWeapon
+     * AIMeleeWeapon
+     * 
+     * AutoMeaterBlade
+     * BangSnap
+     * BearTrapInteractiblePiece
+     * Chainsaw
+     * Drill
+     * DropTrapLogs
+     * Flipzo
+     * FVRIgnitable
+     * FVRSparkler
+     * FVRStrikeAnyWhereMatch
+     * HCBBolt
+     * Kabot.KSpkie
+     * MeatCrab
+     * MF2_BearTrapInteractionZone
+     * MG_FlyingHotDogSwarm
+     * MG_JerryTheLemon
+     * Microtorch
+     * PowerUp_Cyclops
+     * RealisticLaserSword
+     * RotrwCharcoal
+     * SlicerBladeMaster
+     * SpinningBladeTrapBase
+     */
+
+    // Patches BallisticProjectile.Fire to keep a reference to the source firearm
+    class ProjectileFirePatch
+    {
+        static void Postfix(ref FVRFireArm ___tempFA, ref FVRFireArm firearm)
+        {
+            ___tempFA = firearm;
+        }
+    }
+
+    // Patches BallisticProjectile.MoveBullet to ignore latest IFVRDamageable if necessary
+    class ProjectileDamageablePatch
+    {
+        public static bool GetActualFlag(bool flag2, FVRFireArm tempFA)
+        {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return flag2;
+            }
+
+            if (flag2)
+            {
+                if (tempFA == null)
+                {
+                    // If we don't have a ref to the firearm that fired this projectile, let the damage be controlled by the host
+                    if (!H3MP_ThreadManager.host)
+                    {
+                        return false;
+                    }
+                }
+                else // We have a ref to the firearm that fired this projectile
+                {
+                    // We only want to let this projectile do damage if we control the firearm
+                    H3MP_TrackedItem trackedItem = tempFA.GetComponent<H3MP_TrackedItem>();
+                    if (trackedItem == null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return (H3MP_ThreadManager.host && trackedItem.data.controller == 0) || (!H3MP_ThreadManager.host && trackedItem.data.controller == H3MP_Client.singleton.ID);
+                    }
+                }
+            }
+            return flag2;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsertFirst = new List<CodeInstruction>();
+            toInsertFirst.Add(new CodeInstruction(OpCodes.Ldloc_S, 14)); // Load flag2
+            toInsertFirst.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load projectile instance
+            toInsertFirst.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BallisticProjectile), "tempFA"))); // Load tempFA from instance
+            toInsertFirst.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ProjectileDamageablePatch), "GetActualFlag"))); // Call GetActualFlag, put return val on stack
+            toInsertFirst.Add(new CodeInstruction(OpCodes.Stloc_S, 14)); // Set flag2
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldc_I4_1 &&
+                    instructionList[i + 1].opcode == OpCodes.Stloc_S && instructionList[i + 1].operand.ToString().Equals("System.Boolean (14)"))
+                {
+                    instructionList.InsertRange(i + 2, toInsertFirst);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches BallisticProjectile.FireSubmunitions to ignore latest IFVRDamageable if necessary
+    class SubMunitionsDamageablePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsertSecond = new List<CodeInstruction>();
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load explosion gameobject
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load projectile instance
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BallisticProjectile), "tempFA"))); // Load tempFA from instance
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("FistVR.Explosion (11)") &&
+                    instructionList[i + 1].opcode == OpCodes.Ldarg_0)
+                {
+                    instructionList.InsertRange(i, toInsertSecond);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches FlameThrower.AirBlast to ignore latest IFVRDamageable if necessary
+    class FlameThrowerDamageablePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load flamethrower instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_0 &&
+                    instructionList[i + 1].opcode == OpCodes.Ldloc_0)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches FVRGrenade.FVRUpdate to ignore latest IFVRDamageable if necessary
+    class GrenadeDamageablePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load grenade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load explosion gameobject
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load grenade instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (4)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches MF2_Demonade.Explode to ignore latest IFVRDamageable if necessary
+    class DemonadeDamageablePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load MF2_Demonade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches PinnedGrenade.FVRUpdate to ignore latest IFVRDamageable if necessary
+    class PinnedGrenadeDamageablePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 5)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (5)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches PinnedGrenade.OnCollisionEnter to ignore latest IFVRDamageable if necessary
+    class PinnedGrenadeCollisionDamageablePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches SosigWeapon.Explode to ignore latest IFVRDamageable if necessary
+    class SosigWeaponDamageablePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load SosigWeapon instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches Explosion.Explode to ignore latest IFVRDamageable if necessary
+    class ExplosionDamageablePatch
+    {
+        public static void AddControllerReference(GameObject dest, GameObject src = null)
+        {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return;
+            }
+
+            GameObject srcToUse = src == null ? dest : src;
+            H3MP_TrackedItem trackedItem = srcToUse.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                H3MP_ControllerReference reference = dest.GetComponent<H3MP_ControllerReference>();
+                if (reference == null)
+                {
+                    reference = dest.AddComponent<H3MP_ControllerReference>();
+                }
+                reference.controller = trackedItem.data.controller;
+            }
+        }
+
+        public static IFVRDamageable GetActualDamageable(MonoBehaviour mb, IFVRDamageable original)
+        {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return original;
+            }
+
+            if (original != null)
+            {
+                H3MP_ControllerReference cr = mb.GetComponent<H3MP_ControllerReference>();
+                if (cr == null)
+                {
+                    // If we don't have a ref to the controller of the item that caused this explosion, let the damage be controlled by the host
+                    if (!H3MP_ThreadManager.host)
+                    {
+                        return null;
+                    }
+                }
+                else // We have a ref to the controller of the item that caused this explosion
+                {
+                    // We only want to let this projectile do damage if we control the firearm
+                    return (H3MP_ThreadManager.host && cr.controller == 0) || (!H3MP_ThreadManager.host && cr.controller == H3MP_Client.singleton.ID) ? original : null;
+                }
+            }
+            return original;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load explosion instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 16)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 16)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (16)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches GrenadeExplosion.Explode to ignore latest IFVRDamageable if necessary
+    class GrenadeExplosionDamageablePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load grenade explosion instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 19)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 16)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (19)"))
+                {
+                    instructionList.InsertRange(i+1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+    #endregion
 }
