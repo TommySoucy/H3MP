@@ -314,6 +314,12 @@ namespace H3MP
             harmony.Patch(meleeParamsDamageablePatchTearOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchTearTranspiler));
             harmony.Patch(meleeParamsDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchUpdateTranspiler));
             harmony.Patch(meleeParamsDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchCollisionTranspiler));
+
+            // AIMeleeDamageablePatch
+            MethodInfo meleeParamsDamageablePatchFireOriginal = typeof(AIMeleeWeapon).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo meleeParamsDamageablePatchFireTranspiler = typeof(AIMeleeDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(meleeParamsDamageablePatchFireOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchFireTranspiler));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1009,10 +1015,9 @@ namespace H3MP
 
     #region Damageable Patches
     //TODO: Implement damage prevention for these if we are not controller of the cause of damage. These are all classes taht call IFVRDamageable.Damage
+    //TODO: Then also check IFVRReceiveDamageable
     //TODO: Once done, patch IFVRDamageable to send the damage to other clients
     /*
-     * AIMeleeWeapon
-     * 
      * AutoMeaterBlade
      * BangSnap
      * BearTrapInteractiblePiece
@@ -1572,6 +1577,31 @@ namespace H3MP
                     instructionList.InsertRange(i + 1, toInsert);
 
                     break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches AIMeleeWeapon to ignore latest IFVRDamageable if necessary
+    class AIMeleeDamageablePatch
+    {
+        // Patches Fire()
+        static IEnumerable<CodeInstruction> FireTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AImeleeweapon instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_3)
+                {
+                    instructionList.InsertRange(i+1, toInsert);
                 }
             }
             return instructionList;
