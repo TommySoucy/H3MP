@@ -326,6 +326,12 @@ namespace H3MP
             MethodInfo autoMeaterBladeDamageablePatchCollisionTranspiler = typeof(AutoMeaterBladeDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(autoMeaterBladeDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(autoMeaterBladeDamageablePatchCollisionTranspiler));
+
+            // BangSnapDamageablePatch
+            MethodInfo bangSnapDamageablePatchCollisionOriginal = typeof(BangSnap).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo bangSnapDamageablePatchCollisionTranspiler = typeof(BangSnapDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(bangSnapDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(bangSnapDamageablePatchCollisionTranspiler));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1024,7 +1030,6 @@ namespace H3MP
     //TODO: Then also check IFVRReceiveDamageable
     //TODO: Once done, patch IFVRDamageable to send the damage to other clients
     /*
-     * BangSnap
      * BearTrapInteractiblePiece
      * Chainsaw
      * Drill
@@ -1639,6 +1644,33 @@ namespace H3MP
                         continue;
                     }
 
+                    instructionList.InsertRange(i+1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches BangSnap to ignore latest IFVRDamageable if necessary
+    class BangSnapDamageablePatch
+    {
+        // Patches OnCollisionEnter()
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load BangSnap instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
                     instructionList.InsertRange(i+1, toInsert);
 
                     break;
