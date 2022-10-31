@@ -290,9 +290,15 @@ namespace H3MP
 
             // SosigWeaponDamageablePatch
             MethodInfo sosigWeaponDamageablePatchOriginal = typeof(SosigWeapon).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo sosigWeaponDamageablePatchTranspiler = typeof(SosigWeaponDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigWeaponDamageablePatchTranspiler = typeof(SosigWeaponDamageablePatch).GetMethod("ExplosionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigWeaponDamageablePatchCollisionOriginal = typeof(SosigWeapon).GetMethod("DoMeleeDamageInCollision", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigWeaponDamageablePatchCollisionTranspiler = typeof(SosigWeaponDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigWeaponDamageablePatchUpdateOriginal = typeof(SosigWeapon).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigWeaponDamageablePatchUpdateTranspiler = typeof(SosigWeaponDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(sosigWeaponDamageablePatchOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchTranspiler));
+            harmony.Patch(sosigWeaponDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchCollisionTranspiler));
+            harmony.Patch(sosigWeaponDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchUpdateTranspiler));
 
             // MeleeParamsDamageablePatch
             MethodInfo meleeParamsDamageablePatchStabOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("DoStabDamage", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1005,8 +1011,6 @@ namespace H3MP
     //TODO: Implement damage prevention for these if we are not controller of the cause of damage. These are all classes taht call IFVRDamageable.Damage
     //TODO: Once done, patch IFVRDamageable to send the damage to other clients
     /*
-     * FVRPhysicalObject.MeleeParams
-     * SosigWeapon
      * AIMeleeWeapon
      * 
      * AutoMeaterBlade
@@ -1254,7 +1258,8 @@ namespace H3MP
     // Patches SosigWeapon.Explode to ignore latest IFVRDamageable if necessary
     class SosigWeaponDamageablePatch
     {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        // Patches Explode()
+        static IEnumerable<CodeInstruction> ExplosionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
@@ -1268,6 +1273,60 @@ namespace H3MP
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches DoMeleeDamageInCollision()
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load SosigWeapon instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_0)
+                {
+                    // Skip the first set
+                    if (!found)
+                    {
+                        found = true;
+                        continue;
+                    }
+
+                    instructionList.InsertRange(i + 1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches Update()
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load SosigWeapon instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_0)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+
+                    break;
                 }
             }
             return instructionList;
@@ -1334,7 +1393,7 @@ namespace H3MP
                     else // We have a ref to the item itself
                     {
                         // We only want to let this item do damage if we control it
-                        return (H3MP_ThreadManager.host && ti.controller == 0) || (!H3MP_ThreadManager.host && ti.controller == H3MP_Client.singleton.ID) ? original : null;
+                        return (H3MP_ThreadManager.host && ti.data.controller == 0) || (!H3MP_ThreadManager.host && ti.data.controller == H3MP_Client.singleton.ID) ? original : null;
                     }
                 }
                 else // We have a ref to the controller of the item that caused this damage
