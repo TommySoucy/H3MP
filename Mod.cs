@@ -320,6 +320,12 @@ namespace H3MP
             MethodInfo meleeParamsDamageablePatchFireTranspiler = typeof(AIMeleeDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(meleeParamsDamageablePatchFireOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchFireTranspiler));
+
+            // AutoMeaterBladeDamageablePatch
+            MethodInfo autoMeaterBladeDamageablePatchCollisionOriginal = typeof(AutoMeaterBlade).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterBladeDamageablePatchCollisionTranspiler = typeof(AutoMeaterBladeDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterBladeDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(autoMeaterBladeDamageablePatchCollisionTranspiler));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1018,7 +1024,6 @@ namespace H3MP
     //TODO: Then also check IFVRReceiveDamageable
     //TODO: Once done, patch IFVRDamageable to send the damage to other clients
     /*
-     * AutoMeaterBlade
      * BangSnap
      * BearTrapInteractiblePiece
      * Chainsaw
@@ -1602,6 +1607,41 @@ namespace H3MP
                 if (instruction.opcode == OpCodes.Stloc_3)
                 {
                     instructionList.InsertRange(i+1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches AutoMeaterBlade to ignore latest IFVRDamageable if necessary
+    class AutoMeaterBladeDamageablePatch
+    {
+        // Patches OnCollisionEnter()
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeaterBlade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 10)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 10)); // Set damageable
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (10)"))
+                {
+                    // Skip first set
+                    if (!found)
+                    {
+                        found = true;
+                        continue;
+                    }
+
+                    instructionList.InsertRange(i+1, toInsert);
+
+                    break;
                 }
             }
             return instructionList;
