@@ -332,6 +332,12 @@ namespace H3MP
             MethodInfo bangSnapDamageablePatchCollisionTranspiler = typeof(BangSnapDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(bangSnapDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(bangSnapDamageablePatchCollisionTranspiler));
+
+            // BearTrapDamageablePatch
+            MethodInfo bangSnapDamageablePatchSnapOriginal = typeof(BearTrapInteractiblePiece).GetMethod("SnapShut", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo bangSnapDamageablePatchSnapTranspiler = typeof(BearTrapDamageablePatch).GetMethod("SnapTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(bangSnapDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(bangSnapDamageablePatchCollisionTranspiler));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1670,6 +1676,33 @@ namespace H3MP
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i+1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches BearTrapInteractiblePiece to ignore latest IFVRDamageable if necessary
+    class BearTrapDamageablePatch
+    {
+        // Patches SnapShut()
+        static IEnumerable<CodeInstruction> SnapTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load BearTrapInteractiblePiece instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 5)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 5)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
                 {
                     instructionList.InsertRange(i+1, toInsert);
 
