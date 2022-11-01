@@ -60,8 +60,10 @@ namespace H3MP
             // Send the client all items it needs to instantiate from the scene
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
             {
+                Debug.Log("Player "+clientID+" joined scene "+ scene);
                 H3MP_Server.clients[clientID].SendRelevantTrackedItems();
             }
+            Debug.Log("Synced with player who just joined scene");
         }
 
         public static void AddSyncScene(int clientID, H3MP_Packet packet)
@@ -134,6 +136,7 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
             H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
+            Debug.Log("Received destroy order for " + trackedItem.itemID);
 
             if (trackedItem.physicalObject == null)
             {

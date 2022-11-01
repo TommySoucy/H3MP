@@ -133,8 +133,6 @@ namespace H3MP
             if (H3MP_ThreadManager.host)
             {
                 H3MP_Server.clients[playerID].player.scene = sceneName;
-
-                // TODO: Make sure the scene's items are sent to the the client who just joined our scene, if their new scene is our scene
             }
 
             if (sceneName.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(sceneName))
@@ -197,6 +195,7 @@ namespace H3MP
 
         public static void SyncTrackedItems(bool init = false, bool inControl = false)
         {
+            Debug.Log("SyncTrackedItems called with init: "+init+", in control: "+inControl+", others: "+OtherPlayersInScene());
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
             // while all other items get destroyed. We will receive any item that the players inside this scene are controlling
@@ -259,6 +258,7 @@ namespace H3MP
                             }
                             else
                             {
+                                Debug.Log("Sending tracked item: "+trackedItem.data.itemID);
                                 // Tell the server we need to add this item to global tracked items
                                 H3MP_ClientSend.TrackedItem(trackedItem.data, scene);
                             }
@@ -390,6 +390,7 @@ namespace H3MP
                         }
                     }
 
+                    Debug.Log("Scene is syncable, and has "+playersInSameScene+" otherp layers in it, syncing");
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
                     SyncTrackedItems();

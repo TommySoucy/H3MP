@@ -120,8 +120,9 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int clientID)
         {
+            Debug.Log("Received order to add tracked item: "+trackedItem.itemID);
             // Adjust items size to acommodate if necessary
-            if(availableItemIndices.Count == 0)
+            if (availableItemIndices.Count == 0)
             {
                 IncreaseItemsSize();
             }

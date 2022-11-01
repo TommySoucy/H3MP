@@ -233,6 +233,7 @@ namespace H3MP
 
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
             {
+                Debug.Log("Player " + ID + " join server in scene " + scene);
                 // Send to the clients all items that are already synced and controlled by clients in the same scene
                 SendRelevantTrackedItems();
 
@@ -243,6 +244,7 @@ namespace H3MP
 
         public void SendRelevantTrackedItems()
         {
+            Debug.Log("Sending relevant tracked items");
             // Send to the clients all items that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.items.Length; ++i)
             {
@@ -254,9 +256,11 @@ namespace H3MP
                 if (H3MP_Server.items[i] != null &&
                     player.scene.Equals(H3MP_Server.items[i].controller == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene))
                 {
+                    Debug.Log("\t"+ H3MP_Server.items[i].itemID);
                     H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], player.scene, ID);
                 }
             }
+            Debug.Log("Rrelevant tracked items sent");
         }
 
         private void Disconnect()

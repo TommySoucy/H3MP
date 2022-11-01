@@ -235,9 +235,9 @@ namespace H3MP
                                     break;
                                 }
                             }
-
-                            index = i;
                         }
+
+                        index = i;
                     }
 
                     // Write the count to packet
