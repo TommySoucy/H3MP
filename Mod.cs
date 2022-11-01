@@ -235,10 +235,10 @@ namespace H3MP
             harmony.Patch(projectileFirePatchOriginal, new HarmonyMethod(projectileFirePatchPostfix));
 
             // ProjectileDamageablePatch
-            MethodInfo projectileDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo projectileDamageablePatchTranspiler = typeof(ProjectileDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo ballisticProjectileDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo ballisticProjectileDamageablePatchTranspiler = typeof(BallisticProjectileDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(projectileDamageablePatchOriginal, null, null, new HarmonyMethod(projectileDamageablePatchTranspiler));
+            harmony.Patch(ballisticProjectileDamageablePatchOriginal, null, null, new HarmonyMethod(ballisticProjectileDamageablePatchTranspiler));
 
             // SubMunitionsDamageablePatch
             MethodInfo subMunitionsDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("FireSubmunitions", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -362,6 +362,105 @@ namespace H3MP
             MethodInfo flipzoDamageablePatchUpdateTranspiler = typeof(FlipzoDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(flipzoDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(flipzoDamageablePatchUpdateTranspiler));
+
+            // IgnitableDamageablePatch
+            MethodInfo ignitableDamageablePatchStartOriginal = typeof(FVRIgnitable).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo ignitableDamageablePatchStartTranspiler = typeof(IgnitableDamageablePatch).GetMethod("StartTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(ignitableDamageablePatchStartOriginal, null, null, new HarmonyMethod(ignitableDamageablePatchStartTranspiler));
+
+            // SparklerDamageablePatch
+            MethodInfo sparklerDamageablePatchCollisionOriginal = typeof(FVRSparkler).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sparklerDamageablePatchCollisionTranspiler = typeof(SparklerDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sparklerDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(sparklerDamageablePatchCollisionTranspiler));
+
+            // MatchDamageablePatch
+            MethodInfo matchDamageablePatchCollisionOriginal = typeof(FVRStrikeAnyWhereMatch).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo matchDamageablePatchCollisionTranspiler = typeof(MatchDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(matchDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(matchDamageablePatchCollisionTranspiler));
+
+            // HCBBoltDamageablePatch
+            MethodInfo HCBBoltDamageablePatchDamageOriginal = typeof(FVRStrikeAnyWhereMatch).GetMethod("DamageOtherThing", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo HCBBoltDamageablePatchDamageTranspiler = typeof(HCBBoltDamageablePatch).GetMethod("DamageOtherTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(HCBBoltDamageablePatchDamageOriginal, null, null, new HarmonyMethod(HCBBoltDamageablePatchDamageTranspiler));
+
+            // KabotDamageablePatch
+            MethodInfo kabotDamageablePatchTickOriginal = typeof(Kabot.KSpike).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo kabotDamageablePatchTickTranspiler = typeof(KabotDamageablePatch).GetMethod("TickTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(kabotDamageablePatchTickOriginal, null, null, new HarmonyMethod(kabotDamageablePatchTickTranspiler));
+
+            // MeatCrabDamageablePatch
+            MethodInfo meatCrabDamageablePatchLungingOriginal = typeof(MeatCrab).GetMethod("Crabdate_Lunging", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo meatCrabDamageablePatchLungingTranspiler = typeof(MeatCrabDamageablePatch).GetMethod("LungingTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo meatCrabDamageablePatchAttachedOriginal = typeof(MeatCrab).GetMethod("Crabdate_Attached", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo meatCrabDamageablePatchAttachedTranspiler = typeof(MeatCrabDamageablePatch).GetMethod("AttachedTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(meatCrabDamageablePatchLungingOriginal, null, null, new HarmonyMethod(meatCrabDamageablePatchLungingTranspiler));
+            harmony.Patch(meatCrabDamageablePatchAttachedOriginal, null, null, new HarmonyMethod(meatCrabDamageablePatchAttachedTranspiler));
+
+            // MF2_BearTrapDamageablePatch
+            MethodInfo MF2_BearTrapDamageablePatchSnapOriginal = typeof(MF2_BearTrapInteractionZone).GetMethod("SnapShut", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo MF2_BearTrapDamageablePatchSnapTranspiler = typeof(MF2_BearTrapDamageablePatch).GetMethod("SnapTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(MF2_BearTrapDamageablePatchSnapOriginal, null, null, new HarmonyMethod(MF2_BearTrapDamageablePatchSnapTranspiler));
+
+            // MG_SwarmDamageablePatch
+            MethodInfo MG_SwarmDamageablePatchFireOriginal = typeof(MG_FlyingHotDogSwarm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo MG_SwarmDamageablePatchFireTranspiler = typeof(MG_SwarmDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(MG_SwarmDamageablePatchFireOriginal, null, null, new HarmonyMethod(MG_SwarmDamageablePatchFireTranspiler));
+
+            // MG_JerryDamageablePatch
+            MethodInfo MG_JerryDamageablePatchFireOriginal = typeof(MG_JerryTheLemon).GetMethod("FireBolt", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo MG_JerryDamageablePatchFireTranspiler = typeof(MG_JerryDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(MG_JerryDamageablePatchFireOriginal, null, null, new HarmonyMethod(MG_JerryDamageablePatchFireTranspiler));
+
+            // MicrotorchDamageablePatch
+            MethodInfo microtorchDamageablePatchUpdateOriginal = typeof(Microtorch).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo microtorchDamageablePatchUpdateTranspiler = typeof(MicrotorchDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(microtorchDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(microtorchDamageablePatchUpdateTranspiler));
+
+            // CyclopsDamageablePatch
+            MethodInfo cyclopsDamageablePatchUpdateOriginal = typeof(PowerUp_Cyclops).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo cyclopsDamageablePatchUpdateTranspiler = typeof(CyclopsDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(cyclopsDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(cyclopsDamageablePatchUpdateTranspiler));
+
+            // LaserSwordDamageablePatch
+            MethodInfo laserSwordDamageablePatchUpdateOriginal = typeof(RealisticLaserSword).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo laserSwordDamageablePatchUpdateTranspiler = typeof(LaserSwordDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(laserSwordDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(laserSwordDamageablePatchUpdateTranspiler));
+
+            // CharcoalDamageablePatch
+            MethodInfo charcoalDamageablePatchCharcoalOriginal = typeof(RotrwCharcoal).GetMethod("DamageBubble", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo charcoalDamageablePatchCharcoalTranspiler = typeof(CharcoalDamageablePatch).GetMethod("BubbleTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(charcoalDamageablePatchCharcoalOriginal, null, null, new HarmonyMethod(charcoalDamageablePatchCharcoalTranspiler));
+
+            // SlicerDamageablePatch
+            MethodInfo slicerDamageablePatchUpdateOriginal = typeof(SlicerBladeMaster).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo slicerDamageablePatchUpdateTranspiler = typeof(SlicerDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(slicerDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(slicerDamageablePatchUpdateTranspiler));
+
+            // SpinningBladeDamageablePatch
+            MethodInfo spinningBladeDamageablePatchCollisionOriginal = typeof(SpinningBladeTrapBase).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo spinningBladeDamageablePatchCollisionTranspiler = typeof(SpinningBladeDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(spinningBladeDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(spinningBladeDamageablePatchCollisionTranspiler));
+
+            // ProjectileDamageablePatch
+            MethodInfo projectileDamageablePatchOriginal = typeof(FVRProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo projectileBladeDamageablePatchTranspiler = typeof(ProjectileDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(projectileDamageablePatchOriginal, null, null, new HarmonyMethod(projectileBladeDamageablePatchTranspiler));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1056,27 +1155,6 @@ namespace H3MP
     #endregion
 
     #region Damageable Patches
-    //TODO: Implement damage prevention for these if we are not controller of the cause of damage. These are all classes taht call IFVRDamageable.Damage
-    //TODO: Then also check IFVRReceiveDamageable
-    //TODO: Once done, patch IFVRDamageable to send the damage to other clients
-    /*
-     * FVRIgnitable
-     * FVRSparkler
-     * FVRStrikeAnyWhereMatch
-     * HCBBolt
-     * Kabot.KSpkie
-     * MeatCrab
-     * MF2_BearTrapInteractionZone
-     * MG_FlyingHotDogSwarm
-     * MG_JerryTheLemon
-     * Microtorch
-     * PowerUp_Cyclops
-     * RealisticLaserSword
-     * RotrwCharcoal
-     * SlicerBladeMaster
-     * SpinningBladeTrapBase
-     */
-
     // Patches BallisticProjectile.Fire to keep a reference to the source firearm
     class ProjectileFirePatch
     {
@@ -1087,7 +1165,7 @@ namespace H3MP
     }
 
     // Patches BallisticProjectile.MoveBullet to ignore latest IFVRDamageable if necessary
-    class ProjectileDamageablePatch
+    class BallisticProjectileDamageablePatch
     {
         public static bool GetActualFlag(bool flag2, FVRFireArm tempFA)
         {
@@ -1131,7 +1209,7 @@ namespace H3MP
             toInsertFirst.Add(new CodeInstruction(OpCodes.Ldloc_S, 14)); // Load flag2
             toInsertFirst.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load projectile instance
             toInsertFirst.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BallisticProjectile), "tempFA"))); // Load tempFA from instance
-            toInsertFirst.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ProjectileDamageablePatch), "GetActualFlag"))); // Call GetActualFlag, put return val on stack
+            toInsertFirst.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BallisticProjectileDamageablePatch), "GetActualFlag"))); // Call GetActualFlag, put return val on stack
             toInsertFirst.Add(new CodeInstruction(OpCodes.Stloc_S, 14)); // Set flag2
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1621,6 +1699,54 @@ namespace H3MP
     // Patches AIMeleeWeapon to ignore latest IFVRDamageable if necessary
     class AIMeleeDamageablePatch
     {
+        public static IFVRReceiveDamageable GetActualReceiveDamageable(MonoBehaviour mb, IFVRReceiveDamageable original)
+        {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            {
+                return original;
+            }
+
+            if (original != null)
+            {
+                H3MP_ControllerReference cr = mb.GetComponent<H3MP_ControllerReference>();
+                if (cr == null)
+                {
+                    H3MP_TrackedItem ti = mb.GetComponent<H3MP_TrackedItem>();
+                    if (ti == null)
+                    {
+                        // If we don't have a ref to the controller of the item that caused this damage, let the damage be controlled by the
+                        // first player we can find in the same scene
+                        // TODO: Keep a dictionary of players using the scene as key
+                        int firstPlayerInScene = 0;
+                        foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                        {
+                            if (player.Value.gameObject.activeSelf)
+                            {
+                                firstPlayerInScene = player.Key;
+                            }
+                            break;
+                        }
+                        if (firstPlayerInScene != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                        {
+                            return null;
+                        }
+                    }
+                    else // We have a ref to the item itself
+                    {
+                        // We only want to let this item do damage if we control it
+                        return (H3MP_ThreadManager.host && ti.data.controller == 0) || (!H3MP_ThreadManager.host && ti.data.controller == H3MP_Client.singleton.ID) ? original : null;
+                    }
+                }
+                else // We have a ref to the controller of the item that caused this damage
+                {
+                    // We only want to let this item do damage if we control it
+                    return (H3MP_ThreadManager.host && cr.controller == 0) || (!H3MP_ThreadManager.host && cr.controller == H3MP_Client.singleton.ID) ? original : null;
+                }
+            }
+            return original;
+        }
+
         // Patches Fire()
         static IEnumerable<CodeInstruction> FireTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
@@ -1630,6 +1756,40 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load damageable
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AImeleeweapon instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load receivedamageable
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AIMeleeDamageablePatch), "GetActualReceiveDamageable"))); // Call GetActualDamageable
+            toInsert0.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set receivedamageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_3)
+                {
+                    instructionList.InsertRange(i+1, toInsert);
+                }
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRReceiveDamageable (4)"))
+                {
+                    instructionList.InsertRange(i+1, toInsert0);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches FVRProjectile to ignore latest IFVRDamageable if necessary
+    class ProjectileDamageablePatch
+    {
+        // Patches MoveBullet()
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRProjectile instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load receivedamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AIMeleeDamageablePatch), "GetActualReceiveDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set receivedamageable
 
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1828,6 +1988,480 @@ namespace H3MP
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (7)"))
                 {
                     instructionList.InsertRange(i+1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches FVRIgnitable to ignore latest IFVRDamageable if necessary
+    class IgnitableDamageablePatch
+    {
+        // Patches Start()
+        static IEnumerable<CodeInstruction> StartTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRIgnitable instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_0)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches FVRSparkler to ignore latest IFVRDamageable if necessary
+    class SparklerDamageablePatch
+    {
+        // Patches OnCollisionEnter()
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRSparkler instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_0)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches FVRStrikeAnyWhereMatch to ignore latest IFVRDamageable if necessary
+    class MatchDamageablePatch
+    {
+        // Patches OnCollisionEnter()
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRStrikeAnyWhereMatch instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_0)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches HCBBolt to ignore latest IFVRDamageable if necessary
+    class HCBBoltDamageablePatch
+    {
+        // Patches DamageOtherThing()
+        static IEnumerable<CodeInstruction> DamageOtherTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRStrikeAnyWhereMatch instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_0)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches Kabot.KSpike to ignore latest IFVRDamageable if necessary
+    class KabotDamageablePatch
+    {
+        // Patches Tick()
+        static IEnumerable<CodeInstruction> TickTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load KSpike instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Kabot.KSpike), "K"))); // Load Kabot
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches MeatCrab to ignore latest IFVRDamageable if necessary
+    class MeatCrabDamageablePatch
+    {
+        // Patches Crabdate_Attached()
+        static IEnumerable<CodeInstruction> AttachedTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load MeatCrab instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches Crabdate_Lunging()
+        static IEnumerable<CodeInstruction> LungingTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load MeatCrab instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 5)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 5)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches MF2_BearTrapInteractionZone to ignore latest IFVRDamageable if necessary
+    class MF2_BearTrapDamageablePatch
+    {
+        // Patches SnapShut()
+        static IEnumerable<CodeInstruction> SnapTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load MF2_BearTrapInteractionZone instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 5)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 5)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches MG_FlyingHotDogSwarm to ignore latest IFVRDamageable if necessary
+    class MG_SwarmDamageablePatch
+    {
+        // Patches FireShot()
+        static IEnumerable<CodeInstruction> FireTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load MG_FlyingHotDogSwarm instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches MG_JerryTheLemon to ignore latest IFVRDamageable if necessary
+    class MG_JerryDamageablePatch
+    {
+        // Patches FireBolt()
+        static IEnumerable<CodeInstruction> FireTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load MG_JerryTheLemon instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_3)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches Microtorch to ignore latest IFVRDamageable if necessary
+    class MicrotorchDamageablePatch
+    {
+        // Patches Update()
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Microtorch instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches PowerUp_Cyclops to ignore latest IFVRDamageable if necessary
+    class CyclopsDamageablePatch
+    {
+        // Patches Update()
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            // Add a local var for damageable
+            il.BeginScope();
+            LocalBuilder localDamageable = il.DeclareLocal(typeof(IFVRDamageable));
+            localDamageable.SetLocalSymInfo("damageable");
+            il.EndScope();
+
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Powerup instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldflda, AccessTools.Field(typeof(PowerUp_Cyclops), "m_hit"))); // Load address of m_hit
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RaycastHit), "get_collider"))); // Call get collider on it
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Collider), "get_attachedRigidbody"))); // Call get attached RB on it
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "get_gameObject"))); // Call get go on it
+            toInsert.Add(CodeInstruction.Call(typeof(GameObject), "GetComponent", null, new Type[] { typeof(IFVRDamageable) })); // Call get damageable on it
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, "damageable")); // Set damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Powerup instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, "damageable")); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, "damageable")); // Set damageable
+
+            bool foundBreak = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Pop)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+
+                if (instruction.opcode == OpCodes.Brfalse)
+                {
+                    // Only apply to second brfalse
+                    if (!foundBreak)
+                    {
+                        foundBreak = true;
+                        continue;
+                    }
+
+                    // Remove getcomponent call lines
+                    instructionList.RemoveRange(i + 1, 6);
+
+                    // Load damageable
+                    instructionList.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_S, "damageable"));
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches RealisticLaserSword to ignore latest IFVRDamageable if necessary
+    class LaserSwordDamageablePatch
+    {
+        // Patches Update()
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            // Add a local var for damageable
+            il.BeginScope();
+            LocalBuilder localDamageable = il.DeclareLocal(typeof(IFVRDamageable));
+            localDamageable.SetLocalSymInfo("damageable");
+            il.EndScope();
+
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load RealisticLaserSword instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldflda, AccessTools.Field(typeof(PowerUp_Cyclops), "m_hit"))); // Load address of m_hit
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RaycastHit), "get_collider"))); // Call get collider on it
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Collider), "get_attachedRigidbody"))); // Call get attached RB on it
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "get_gameObject"))); // Call get go on it
+            toInsert.Add(CodeInstruction.Call(typeof(GameObject), "GetComponent", null, new Type[] { typeof(IFVRDamageable) })); // Call get damageable on it
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, "damageable")); // Set damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load RealisticLaserSword instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, "damageable")); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, "damageable")); // Set damageable
+
+            int foundBreak = 0;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Emit"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+
+                if (instruction.opcode == OpCodes.Brfalse)
+                {
+                    // Only apply to third brfalse
+                    if (foundBreak < 2)
+                    {
+                        ++foundBreak;
+                        continue;
+                    }
+
+                    // Remove getcomponent call lines
+                    instructionList.RemoveRange(i + 1, 6);
+
+                    // Load damageable
+                    instructionList.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_S, "damageable"));
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches RotrwCharcoal to ignore latest IFVRDamageable if necessary
+    class CharcoalDamageablePatch
+    {
+        // Patches DamageBubble()
+        static IEnumerable<CodeInstruction> BubbleTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load RotrwCharcoal instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_3)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches SlicerBladeMaster to ignore latest IFVRDamageable if necessary
+    class SlicerDamageablePatch
+    {
+        // Patches FixedUpdate()
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load SlicerBladeMaster instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load SlicerBladeMaster instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load damageable
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert0.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (4)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches SpinninBladeTrapBase to ignore latest IFVRDamageable if necessary
+    class SpinningBladeDamageablePatch
+    {
+        // Patches OnCollisionEnter()
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load SpinninBladeTrapBase instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
                 }
             }
             return instructionList;
