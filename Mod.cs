@@ -277,13 +277,13 @@ namespace H3MP
             harmony.Patch(demonadeDamageablePatchOriginal, null, null, new HarmonyMethod(demonadeDamageablePatchTranspiler));
 
             // PinnedGrenadeDamageablePatch
-            MethodInfo pinnedGrenadeDamageablePatchOriginal = typeof(PinnedGrenade).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo pinnedGrenadeDamageablePatchTranspiler = typeof(PinnedGrenadeDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo pinnedGrenadeDamageablePatchOriginal = typeof(PinnedGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo pinnedGrenadeDamageablePatchTranspiler = typeof(PinnedGrenadeDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(pinnedGrenadeDamageablePatchOriginal, null, null, new HarmonyMethod(pinnedGrenadeDamageablePatchTranspiler));
 
             // PinnedGrenadeCollisionDamageablePatch
-            MethodInfo pinnedGrenadeCollisionDamageablePatchOriginal = typeof(PinnedGrenade).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo pinnedGrenadeCollisionDamageablePatchOriginal = typeof(PinnedGrenade).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo pinnedGrenadeCollisionDamageablePatchTranspiler = typeof(PinnedGrenadeCollisionDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(pinnedGrenadeCollisionDamageablePatchOriginal, null, null, new HarmonyMethod(pinnedGrenadeCollisionDamageablePatchTranspiler));
@@ -382,7 +382,7 @@ namespace H3MP
             harmony.Patch(matchDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(matchDamageablePatchCollisionTranspiler));
 
             // HCBBoltDamageablePatch
-            MethodInfo HCBBoltDamageablePatchDamageOriginal = typeof(FVRStrikeAnyWhereMatch).GetMethod("DamageOtherThing", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo HCBBoltDamageablePatchDamageOriginal = typeof(HCBBolt).GetMethod("DamageOtherThing", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo HCBBoltDamageablePatchDamageTranspiler = typeof(HCBBoltDamageablePatch).GetMethod("DamageOtherTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(HCBBoltDamageablePatchDamageOriginal, null, null, new HarmonyMethod(HCBBoltDamageablePatchDamageTranspiler));
@@ -394,9 +394,9 @@ namespace H3MP
             harmony.Patch(kabotDamageablePatchTickOriginal, null, null, new HarmonyMethod(kabotDamageablePatchTickTranspiler));
 
             // MeatCrabDamageablePatch
-            MethodInfo meatCrabDamageablePatchLungingOriginal = typeof(MeatCrab).GetMethod("Crabdate_Lunging", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo meatCrabDamageablePatchLungingOriginal = typeof(MeatCrab).GetMethod("Crabdate_Lunging", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo meatCrabDamageablePatchLungingTranspiler = typeof(MeatCrabDamageablePatch).GetMethod("LungingTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo meatCrabDamageablePatchAttachedOriginal = typeof(MeatCrab).GetMethod("Crabdate_Attached", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo meatCrabDamageablePatchAttachedOriginal = typeof(MeatCrab).GetMethod("Crabdate_Attached", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo meatCrabDamageablePatchAttachedTranspiler = typeof(MeatCrabDamageablePatch).GetMethod("AttachedTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(meatCrabDamageablePatchLungingOriginal, null, null, new HarmonyMethod(meatCrabDamageablePatchLungingTranspiler));
@@ -1330,7 +1330,7 @@ namespace H3MP
     // Patches PinnedGrenade.FVRUpdate to ignore latest IFVRDamageable if necessary
     class PinnedGrenadeDamageablePatch
     {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
@@ -1762,16 +1762,35 @@ namespace H3MP
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AIMeleeDamageablePatch), "GetActualReceiveDamageable"))); // Call GetActualDamageable
             toInsert0.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set receivedamageable
 
+            bool skipNext3 = false;
+            bool skipNext4 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_3)
                 {
+                    // Skip the next stloc 3 after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext3)
+                    {
+                        skipNext3 = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i+1, toInsert);
+
+                    skipNext3 = true;
                 }
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRReceiveDamageable (4)"))
                 {
+                    if (skipNext4)
+                    {
+                        skipNext4 = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i+1, toInsert0);
+
+                    skipNext4 = true;
                 }
             }
             return instructionList;
@@ -1791,12 +1810,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AIMeleeDamageablePatch), "GetActualReceiveDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set receivedamageable
 
+            bool skipNext3 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_3)
                 {
+                    // Skip the next stloc 3 after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext3)
+                    {
+                        skipNext3 = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i+1, toInsert);
+
+                    skipNext3 = true;
                 }
             }
             return instructionList;
@@ -1905,12 +1934,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_2)); // Set damageable
 
+            bool skipNext2 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_2)
                 {
+                    // Skip the next stloc 2 after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext2)
+                    {
+                        skipNext2 = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i+1, toInsert);
+
+                    skipNext2 = true;
                 }
             }
             return instructionList;
@@ -1930,12 +1969,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_2)); // Set damageable
 
+            bool skipNext2 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_2)
                 {
+                    // Skip the next stloc 2 after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext2)
+                    {
+                        skipNext2 = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i+1, toInsert);
+
+                    skipNext2 = true;
                 }
             }
             return instructionList;
@@ -1982,12 +2031,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 7)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (7)"))
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i+1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2007,12 +2066,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_0)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2032,12 +2101,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_0)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2057,12 +2136,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_0)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2082,12 +2171,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_0)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2108,12 +2207,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2133,12 +2242,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2154,12 +2273,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 5)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2206,12 +2335,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2231,12 +2370,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_3)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2256,12 +2405,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext)
+                    {
+                        skipNext = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext = true;
                 }
             }
             return instructionList;
@@ -2275,10 +2434,8 @@ namespace H3MP
         static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             // Add a local var for damageable
-            il.BeginScope();
             LocalBuilder localDamageable = il.DeclareLocal(typeof(IFVRDamageable));
             localDamageable.SetLocalSymInfo("damageable");
-            il.EndScope();
 
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
@@ -2287,19 +2444,23 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RaycastHit), "get_collider"))); // Call get collider on it
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Collider), "get_attachedRigidbody"))); // Call get attached RB on it
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "get_gameObject"))); // Call get go on it
-            toInsert.Add(CodeInstruction.Call(typeof(GameObject), "GetComponent", null, new Type[] { typeof(IFVRDamageable) })); // Call get damageable on it
-            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, "damageable")); // Set damageable
+            CodeInstruction newCodeInstruction = CodeInstruction.Call(typeof(GameObject), "GetComponent", null, new Type[] { typeof(IFVRDamageable) });
+            newCodeInstruction.opcode = OpCodes.Callvirt;
+            toInsert.Add(newCodeInstruction); // Call get damageable on it
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Powerup instance
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, "damageable")); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load damageable
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
-            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, "damageable")); // Set damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
 
             bool foundBreak = false;
+            int popIndex = 0;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Pop)
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Emit"))
                 {
+                    popIndex = i;
                     instructionList.InsertRange(i + 1, toInsert);
                 }
 
@@ -2316,7 +2477,7 @@ namespace H3MP
                     instructionList.RemoveRange(i + 1, 6);
 
                     // Load damageable
-                    instructionList.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_S, "damageable"));
+                    instructionList.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_3));
 
                     break;
                 }
@@ -2328,14 +2489,12 @@ namespace H3MP
     // Patches RealisticLaserSword to ignore latest IFVRDamageable if necessary
     class LaserSwordDamageablePatch
     {
-        // Patches Update()
+        // Patches FVRFixedUpdate()
         static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             // Add a local var for damageable
-            il.BeginScope();
             LocalBuilder localDamageable = il.DeclareLocal(typeof(IFVRDamageable));
             localDamageable.SetLocalSymInfo("damageable");
-            il.EndScope();
 
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
@@ -2345,11 +2504,11 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Collider), "get_attachedRigidbody"))); // Call get attached RB on it
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "get_gameObject"))); // Call get go on it
             toInsert.Add(CodeInstruction.Call(typeof(GameObject), "GetComponent", null, new Type[] { typeof(IFVRDamageable) })); // Call get damageable on it
-            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, "damageable")); // Set damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 8)); // Set damageable
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load RealisticLaserSword instance
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, "damageable")); // Load damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load damageable
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
-            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, "damageable")); // Set damageable
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 8)); // Set damageable
 
             int foundBreak = 0;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -2373,7 +2532,7 @@ namespace H3MP
                     instructionList.RemoveRange(i + 1, 6);
 
                     // Load damageable
-                    instructionList.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_S, "damageable"));
+                    instructionList.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_S, 8));
 
                     break;
                 }
@@ -2427,16 +2586,36 @@ namespace H3MP
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert0.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set damageable
 
+            bool skipNext1 = false;
+            bool skipNext4 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext1)
+                    {
+                        skipNext1 = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext1 = true;
                 }
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (4)"))
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext4)
+                    {
+                        skipNext4 = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert0);
+
+                    skipNext4 = true;
                 }
             }
             return instructionList;
@@ -2456,12 +2635,22 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool skipNext1 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
+                    // Skip the next stloc after patching one because we add one ourselves, if we don't skip ours we end up in inf loop
+                    if (skipNext1)
+                    {
+                        skipNext1 = false;
+                        continue;
+                    }
+
                     instructionList.InsertRange(i + 1, toInsert);
+
+                    skipNext1 = true;
                 }
             }
             return instructionList;
