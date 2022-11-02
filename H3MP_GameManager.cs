@@ -380,6 +380,18 @@ namespace H3MP
                                 player.Value.gameObject.SetActive(true);
                             }
                             ++playersInSameScene;
+
+                            if (H3MP_ThreadManager.host)
+                            {
+                                // Instantiate all items controlled by other players in this scene
+                                for (int i = 0; i < H3MP_Server.items.Length; ++i)
+                                {
+                                    if (H3MP_Server.items[i] != null && H3MP_Server.items[i].controller == player.Key)
+                                    {
+                                        AnvilManager.Run(H3MP_Server.items[i].Instantiate());
+                                    }
+                                }
+                            }
                         }
                         else
                         {

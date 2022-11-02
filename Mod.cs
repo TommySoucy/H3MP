@@ -81,6 +81,10 @@ namespace H3MP
                 {
                     SteamVR_LoadLevel.Begin("IndoorRange", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
+                else if (Input.GetKeyDown(KeyCode.Keypad4))
+                {
+                    SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                }
             }
         }
 

@@ -100,6 +100,7 @@ namespace H3MP
                 H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                 H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
                 H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                trackedItem.localtrackedID = -1;
             }
             trackedItem.controller = clientID;
 
@@ -114,9 +115,8 @@ namespace H3MP
 
             // Update locally
             H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
-            trackedItem.controller = newController;
 
-            if (newController == 0)
+            if (trackedItem.controller != 0 && newController == 0)
             {
                 // Only want to active rigidbody if not parented to another tracked item
                 if (trackedItem.parent == -1)
@@ -127,6 +127,16 @@ namespace H3MP
                 trackedItem.localtrackedID = H3MP_GameManager.items.Count;
                 H3MP_GameManager.items.Add(trackedItem);
             }
+            else if(trackedItem.controller == 0 && newController != 0)
+            {
+                FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
+                physObj.StoreAndDestroyRigidbody();
+                H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
+                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                trackedItem.localtrackedID = -1;
+            }
+            trackedItem.controller = newController;
 
             // Send to all other clients
             H3MP_ServerSend.GiveControl(trackedID, newController);
