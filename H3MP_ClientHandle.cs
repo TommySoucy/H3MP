@@ -60,10 +60,19 @@ namespace H3MP
             Quaternion leftHandRot = packet.ReadQuaternion();
             Vector3 rightHandPos = packet.ReadVector3();
             Quaternion rightHandRot = packet.ReadQuaternion();
+            float health = packet.ReadFloat();
+            int maxHealth = packet.ReadInt();
+            short additionalDataLength = packet.ReadShort();
+            byte[] additionalData = null;
+            if (additionalDataLength > 0)
+            {
+                additionalData = packet.ReadBytes(additionalDataLength);
+            }
 
             H3MP_GameManager.UpdatePlayerState(ID, position, rotation, headPos, headRot, torsoPos, torsoRot,
                                                leftHandPos, leftHandRot,
-                                               rightHandPos, rightHandRot);
+                                               rightHandPos, rightHandRot,
+                                               health, maxHealth, additionalData);
         }
 
         public static void PlayerScene(H3MP_Packet packet)
@@ -166,6 +175,14 @@ namespace H3MP
                 ++Mod.skipNextFires;
                 H3MP_Client.items[trackedID].physicalObject.fireFunc();
             }
+        }
+
+        public static void PlayerDamage(H3MP_Packet packet)
+        {
+            H3MP_PlayerHitbox.Part part = (H3MP_PlayerHitbox.Part)packet.ReadByte();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_GameManager.ProcessPlayerDamage(part, damage);
         }
     }
 }

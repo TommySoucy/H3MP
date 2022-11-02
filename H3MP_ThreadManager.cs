@@ -92,7 +92,9 @@ namespace H3MP
                                                 GM.CurrentPlayerBody.LeftHand.position,
                                                 GM.CurrentPlayerBody.LeftHand.rotation,
                                                 GM.CurrentPlayerBody.RightHand.position,
-                                                GM.CurrentPlayerBody.RightHand.rotation);
+                                                GM.CurrentPlayerBody.RightHand.rotation,
+                                                GM.CurrentPlayerBody.Health,
+                                                GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
                 }
             }
             else
@@ -112,7 +114,9 @@ namespace H3MP
                                                 GM.CurrentPlayerBody.LeftHand.position,
                                                 GM.CurrentPlayerBody.LeftHand.rotation,
                                                 GM.CurrentPlayerBody.RightHand.position,
-                                                GM.CurrentPlayerBody.RightHand.rotation);
+                                                GM.CurrentPlayerBody.RightHand.rotation,
+                                                GM.CurrentPlayerBody.Health,
+                                                GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
                 }
             }
         }

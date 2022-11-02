@@ -313,6 +313,7 @@ namespace H3MP
                 { (int)ServerPackets.itemParent, H3MP_ClientHandle.ItemParent },
                 { (int)ServerPackets.connectSync, H3MP_ClientHandle.ConnectSync },
                 { (int)ServerPackets.weaponFire, H3MP_ClientHandle.WeaponFire },
+                { (int)ServerPackets.playerDamage, H3MP_ClientHandle.PlayerDamage },
             };
 
             // All vanilla scenes can be synced by default

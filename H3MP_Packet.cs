@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FistVR;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -23,7 +24,8 @@ namespace H3MP
         destroyItem = 10,
         itemParent = 11,
         connectSync = 12,
-        weaponFire = 13
+        weaponFire = 13,
+        playerDamage = 14
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -39,7 +41,8 @@ namespace H3MP
         giveControl = 8,
         destroyItem = 9,
         itemParent = 10,
-        weaponFire = 11
+        weaponFire = 11,
+        playerDamage = 12
     }
 
     public class H3MP_Packet : IDisposable
@@ -229,6 +232,29 @@ namespace H3MP
             {
                 Write(trackedItem.order++);
             }
+        }
+        /// <summary>Adds a Damage to the packet.</summary>
+        /// <param name="_value">The Damage to add.</param>
+        public void Write(Damage damage)
+        {
+            Write(damage.point);
+            Write(damage.Source_IFF);
+            Write(damage.Source_Point);
+            Write(damage.Dam_Blunt);
+            Write(damage.Dam_Piercing);
+            Write(damage.Dam_Cutting);
+            Write(damage.Dam_TotalKinetic);
+            Write(damage.Dam_Thermal);
+            Write(damage.Dam_Chilling);
+            Write(damage.Dam_EMP);
+            Write(damage.Dam_TotalEnergetic);
+            Write(damage.Dam_Stunning);
+            Write(damage.Dam_Blinding);
+            Write(damage.hitNormal);
+            Write(damage.strikeDir);
+            Write(damage.edgeNormal);
+            Write(damage.damageSize);
+            Write((byte)damage.Class);
         }
         #endregion
 
@@ -444,6 +470,34 @@ namespace H3MP
             }
 
             return trackedItem;
+        }
+
+        /// <summary>Reads a Damage from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public Damage ReadDamage(bool _moveReadPos = true)
+        {
+            Damage damage = new Damage();
+
+            damage.point = ReadVector3();
+            damage.Source_IFF = ReadInt();
+            damage.Source_Point = ReadVector3();
+            damage.Dam_Blunt = ReadFloat();
+            damage.Dam_Piercing = ReadFloat();
+            damage.Dam_Cutting = ReadFloat();
+            damage.Dam_TotalKinetic = ReadFloat();
+            damage.Dam_Thermal = ReadFloat();
+            damage.Dam_Chilling = ReadFloat();
+            damage.Dam_EMP = ReadFloat();
+            damage.Dam_TotalEnergetic = ReadFloat();
+            damage.Dam_Stunning = ReadFloat();
+            damage.Dam_Blinding = ReadFloat();
+            damage.hitNormal = ReadVector3();
+            damage.strikeDir = ReadVector3();
+            damage.edgeNormal = ReadVector3();
+            damage.damageSize = ReadFloat();
+            damage.Class = (Damage.DamageClass)ReadByte();
+
+            return damage;
         }
         #endregion
 

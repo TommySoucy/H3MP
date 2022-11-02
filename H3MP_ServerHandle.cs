@@ -40,10 +40,19 @@ namespace H3MP
             player.leftHandRot = packet.ReadQuaternion();
             player.rightHandPos = packet.ReadVector3();
             player.rightHandRot = packet.ReadQuaternion();
+            player.health = packet.ReadFloat();
+            player.maxHealth = packet.ReadInt();
+            short additionalDataLength = packet.ReadShort();
+            byte[] additionalData = null;
+            if(additionalDataLength > 0)
+            {
+                additionalData = packet.ReadBytes(additionalDataLength);
+            }
 
             H3MP_GameManager.UpdatePlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
                                                player.leftHandPos, player.leftHandRot,
-                                               player.leftHandPos, player.leftHandRot);
+                                               player.leftHandPos, player.leftHandRot,
+                                               player.health, player.maxHealth, additionalData);
         }
 
         public static void PlayerScene(int clientID, H3MP_Packet packet)
@@ -198,6 +207,22 @@ namespace H3MP
 
             // Send to other clients
             H3MP_ServerSend.WeaponFire(clientID, trackedID);
+        }
+
+        public static void PlayerDamage(int clientID, H3MP_Packet packet)
+        {
+            int ID = packet.ReadInt();
+            H3MP_PlayerHitbox.Part part = (H3MP_PlayerHitbox.Part)packet.ReadByte();
+            Damage damage = packet.ReadDamage();
+
+            if (ID == 0)
+            {
+                H3MP_GameManager.ProcessPlayerDamage(part, damage);
+            }
+            else
+            {
+                H3MP_ServerSend.PlayerDamage(ID, (byte)part, damage);
+            }
         }
     }
 }

@@ -39,6 +39,7 @@ namespace H3MP
 
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
         public static int playersInSameScene = 0;
+        public static int playerStateAddtionalDataSize = -1;
 
         //public GameObject localPlayerPrefab;
         public GameObject playerPrefab;
@@ -81,6 +82,7 @@ namespace H3MP
             playerManager.ID = ID;
             playerManager.username = username;
             playerManager.scene = scene;
+            playerManager.usernameLabel.text = username;
             players.Add(ID, playerManager);
 
             // Make sure the player is disabled if not in the same scene
@@ -96,7 +98,8 @@ namespace H3MP
 
         public static void UpdatePlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
                                              Vector3 leftHandPos, Quaternion leftHandRot,
-                                             Vector3 rightHandPos, Quaternion rightHandRot)
+                                             Vector3 rightHandPos, Quaternion rightHandRot,
+                                             float health, int maxHealth, byte[] additionalData)
         {
             if (!players.ContainsKey(ID))
             {
@@ -122,6 +125,12 @@ namespace H3MP
             player.leftHand.transform.rotation = leftHandRot;
             player.rightHand.transform.position = rightHandPos;
             player.rightHand.transform.rotation = rightHandRot;
+            if (player.healthIndicator.gameObject.activeSelf)
+            {
+                player.healthIndicator.text = ((int)health).ToString() + "/" + maxHealth;
+            }
+
+            ProcessAdditionalPlayerData(ID, additionalData);
         }
 
         public static void UpdatePlayerScene(int playerID, string sceneName)
@@ -232,6 +241,22 @@ namespace H3MP
             {
                 physObj.SetQuickBeltSlot(null);
             }
+        }
+
+        // MOD: When player state data gets sent between clients, the sender will call this
+        //      to let mods write any custom data they want to the packet
+        //      This is data you want to have communicated with the other clients about yourself (ex.: scores, health, etc.)
+        //      To ensure compatibility with other mods you should extend the array as necessary and identify your part of the array with a specific 
+        //      code to find it in the array the first time, then keep that index in your mod to always find it in O(1) time later
+        public static void WriteAdditionalPlayerState(byte[] data)
+        {
+
+        }
+
+        // MOD: This is where your mod would read the byte[] of additional player data
+        public static void ProcessAdditionalPlayerData(int playerID, byte[] data)
+        {
+
         }
 
         public static void SyncTrackedItems(Transform root, bool controlEverything, H3MP_TrackedItemData parent, string scene)
@@ -417,6 +442,33 @@ namespace H3MP
                         }
                     }
                 }
+            }
+        }
+
+        // MOD: If you want to process damage differently, you can patch this
+        //      Meatov uses this to apply damage to specific limbs for example
+        public static void ProcessPlayerDamage(H3MP_PlayerHitbox.Part part, Damage damage)
+        {
+            if (part == H3MP_PlayerHitbox.Part.Head)
+            {
+                if (UnityEngine.Random.value < 0.5f)
+                {
+                    GM.CurrentPlayerBody.Hitboxes[0].Damage(damage);
+                }
+                else
+                {
+                    GM.CurrentPlayerBody.Hitboxes[1].Damage(damage);
+                }
+            }
+            else if (part == H3MP_PlayerHitbox.Part.Torso)
+            {
+                GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
+            }
+            else
+            {
+                damage.Dam_TotalEnergetic *= 0.15f;
+                damage.Dam_TotalKinetic *= 0.15f;
+                GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
             }
         }
     }

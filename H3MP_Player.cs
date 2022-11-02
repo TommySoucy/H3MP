@@ -22,6 +22,8 @@ namespace H3MP
         public Quaternion leftHandRot;
         public Vector3 rightHandPos;
         public Quaternion rightHandRot;
+        public float health;
+        public int maxHealth;
 
         public string scene;
 
@@ -35,6 +37,7 @@ namespace H3MP
 
         public void UpdateState()
         {
+            // TODO: Keep track of which scene players are in and which plaer are in each other's scenes so we can send this update only to those
             H3MP_ServerSend.PlayerState(this);
         }
     }

@@ -186,6 +186,7 @@ namespace H3MP
                 { (int)ClientPackets.trackedItem, H3MP_ServerHandle.TrackedItem },
                 { (int)ClientPackets.itemParent, H3MP_ServerHandle.ItemParent },
                 { (int)ClientPackets.weaponFire, H3MP_ServerHandle.WeaponFire },
+                { (int)ClientPackets.playerDamage, H3MP_ServerHandle.PlayerDamage },
             };
 
             items = new H3MP_TrackedItemData[100];

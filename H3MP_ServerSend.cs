@@ -109,15 +109,14 @@ namespace H3MP
         {
             PlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
                         player.leftHandPos, player.leftHandRot,
-                        player.leftHandPos, player.leftHandRot);
-
-            // Also update for host
-            H3MP_GameManager.players[player.ID].UpdateState(player);
+                        player.leftHandPos, player.leftHandRot,
+                        player.health, player.maxHealth);
         }
 
         public static void PlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
                                        Vector3 leftHandPos, Quaternion leftHandRot,
-                                       Vector3 rightHandPos, Quaternion rightHandRot)
+                                       Vector3 rightHandPos, Quaternion rightHandRot,
+                                       float health, int maxHealth)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerState))
             {
@@ -132,6 +131,21 @@ namespace H3MP
                 packet.Write(leftHandRot);
                 packet.Write(rightHandPos);
                 packet.Write(rightHandRot);
+                packet.Write(health);
+                packet.Write(maxHealth);
+                byte[] additionalData = H3MP_GameManager.playerStateAddtionalDataSize == -1 ? null : new byte[H3MP_GameManager.playerStateAddtionalDataSize];
+                H3MP_GameManager.WriteAdditionalPlayerState(additionalData);
+                if (additionalData != null && additionalData.Length > 0)
+                {
+                    H3MP_GameManager.playerStateAddtionalDataSize = additionalData.Length;
+                    packet.Write((short)additionalData.Length);
+                    packet.Write(additionalData);
+                }
+                else
+                {
+                    H3MP_GameManager.playerStateAddtionalDataSize = 0;
+                    packet.Write((short)0);
+                }
 
                 SendUDPDataToAll(ID, packet);
             }
@@ -335,6 +349,17 @@ namespace H3MP
                 {
                     SendTCPDataToAll(clientID, packet);
                 }
+            }
+        }
+
+        public static void PlayerDamage(int clientID, byte part, Damage damage)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerDamage))
+            {
+                packet.Write(part);
+                packet.Write(damage);
+
+                SendTCPData(clientID, packet);
             }
         }
     }

@@ -4,40 +4,59 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace H3MP
 {
-    internal class H3MP_PlayerManager : MonoBehaviour
+    public class H3MP_PlayerManager : MonoBehaviour
     {
         public int ID;
         public string username;
 
         // Player transforms and state data
         public Transform head;
+        public H3MP_PlayerHitbox headHitBox;
         public Transform torso;
+        public H3MP_PlayerHitbox torsoHitBox;
         public Transform leftHand;
+        public H3MP_PlayerHitbox leftHandHitBox;
         public Transform rightHand;
+        public H3MP_PlayerHitbox rightHandHitBox;
+        public H3MP_Billboard overheadDisplayBillboard;
+        public Text usernameLabel;
+        public Text healthIndicator;
 
         public string scene;
 
         private void Awake()
         {
             head = transform.GetChild(0);
+            headHitBox = head.gameObject.AddComponent<H3MP_PlayerHitbox>();
+            headHitBox.part = H3MP_PlayerHitbox.Part.Head;
             torso = transform.GetChild(1);
+            torsoHitBox = torso.gameObject.AddComponent<H3MP_PlayerHitbox>();
+            torsoHitBox.part = H3MP_PlayerHitbox.Part.Torso;
             leftHand = transform.GetChild(2);
+            leftHandHitBox = leftHand.gameObject.AddComponent<H3MP_PlayerHitbox>();
+            leftHandHitBox.part = H3MP_PlayerHitbox.Part.LeftHand;
             rightHand = transform.GetChild(3);
+            rightHandHitBox = rightHand.gameObject.AddComponent<H3MP_PlayerHitbox>();
+            rightHandHitBox.part = H3MP_PlayerHitbox.Part.RightHand;
+            overheadDisplayBillboard = transform.GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<H3MP_Billboard>();
+            usernameLabel = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
+            healthIndicator = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
         }
 
-        public void UpdateState(H3MP_Player playerData)
+        public void Damage(H3MP_PlayerHitbox.Part part, Damage damage)
         {
-            transform.position = playerData.position;
-            transform.rotation = playerData.rotation;
-            head.position = playerData.headPos;
-            head.rotation = playerData.headRot;
-            leftHand.position = playerData.leftHandPos;
-            leftHand.rotation = playerData.leftHandRot;
-            rightHand.position = playerData.rightHandPos;
-            rightHand.rotation = playerData.rightHandRot;
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.PlayerDamage(ID, (byte)part, damage);
+            }
+            else
+            {
+                H3MP_ClientSend.PlayerDamage(ID, (byte)part, damage);
+            }
         }
     }
 }

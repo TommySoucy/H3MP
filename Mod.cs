@@ -135,6 +135,11 @@ namespace H3MP
             H3MPMenuPrefab = assetBundle.LoadAsset<GameObject>("H3MPMenu");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
+        }
+
+        // MOD: If you need to add anything to the player prefab, this is what you should patch to do it
+        public void SetupPlayerPrefab()
+        {
             playerPrefab.AddComponent<H3MP_PlayerManager>();
         }
 
@@ -1159,6 +1164,8 @@ namespace H3MP
     #endregion
 
     #region Damageable Patches
+    // TODO: Patch IFVRDamageable.Damage and have a way to track damageables so we don't need to have a specific TCP call for each
+
     // Patches BallisticProjectile.Fire to keep a reference to the source firearm
     class ProjectileFirePatch
     {
