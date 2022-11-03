@@ -85,6 +85,10 @@ namespace H3MP
                 {
                     SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
+                else if (Input.GetKeyDown(KeyCode.Keypad5))
+                {
+                    SteamVR_LoadLevel.Begin("ProvingGround", false, 0.5f, 0f, 0f, 0f, 1f);
+                }
             }
         }
 
@@ -135,6 +139,7 @@ namespace H3MP
             H3MPMenuPrefab = assetBundle.LoadAsset<GameObject>("H3MPMenu");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
+            SetupPlayerPrefab();
         }
 
         // MOD: If you need to add anything to the player prefab, this is what you should patch to do it

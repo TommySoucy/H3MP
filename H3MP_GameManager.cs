@@ -155,7 +155,7 @@ namespace H3MP
 
                     if(GM.CurrentAIManager != null)
                     {
-                        GM.CurrentAIManager.RegisterAIEntity(player.entity);
+                        GM.CurrentAIManager.RegisterAIEntity(player.headEntity);
                     }
                 }
             }
@@ -168,7 +168,7 @@ namespace H3MP
 
                     if (GM.CurrentAIManager != null)
                     {
-                        GM.CurrentAIManager.DeRegisterAIEntity(player.entity);
+                        GM.CurrentAIManager.DeRegisterAIEntity(player.headEntity);
                     }
                 }
             }
@@ -627,7 +627,7 @@ namespace H3MP
                             // Register player entity to AIManager if we have one in this scene
                             if (GM.CurrentAIManager != null)
                             {
-                                GM.CurrentAIManager.RegisterAIEntity(player.Value.entity);
+                                GM.CurrentAIManager.RegisterAIEntity(player.Value.headEntity);
                             }
                         }
                         else

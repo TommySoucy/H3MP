@@ -16,9 +16,10 @@ namespace H3MP
         // Player transforms and state data
         public Transform head;
         public H3MP_PlayerHitbox headHitBox;
-        public AIEntity entity;
+        public AIEntity headEntity;
         public Transform torso;
         public H3MP_PlayerHitbox torsoHitBox;
+        public AIEntity torsoEntity;
         public Transform leftHand;
         public H3MP_PlayerHitbox leftHandHitBox;
         public Transform rightHand;
@@ -32,10 +33,13 @@ namespace H3MP
         private void Awake()
         {
             head = transform.GetChild(0);
-            entity = head.gameObject.AddComponent<AIEntity>();
+            headEntity = head.gameObject.AddComponent<AIEntity>();
+            headEntity.Beacons = new List<AIEntityIFFBeacon>();
             headHitBox = head.gameObject.AddComponent<H3MP_PlayerHitbox>();
             headHitBox.part = H3MP_PlayerHitbox.Part.Head;
             torso = transform.GetChild(1);
+            torsoEntity = head.gameObject.AddComponent<AIEntity>();
+            torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
             torsoHitBox = torso.gameObject.AddComponent<H3MP_PlayerHitbox>();
             torsoHitBox.part = H3MP_PlayerHitbox.Part.Torso;
             leftHand = transform.GetChild(2);
