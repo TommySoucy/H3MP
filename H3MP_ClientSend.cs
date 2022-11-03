@@ -152,11 +152,81 @@ namespace H3MP
             }
         }
 
+        public static void TrackedSosigs()
+        {
+            int index = 0;
+            while (index < H3MP_GameManager.sosigs.Count - 1)
+            {
+                using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedSosigs))
+                {
+                    // Write place holder int at start to hold the count once we know it
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
+
+                    short count = 0;
+                    for (int i = index; i < H3MP_GameManager.sosigs.Count; ++i)
+                    {
+                        H3MP_TrackedSosigData trackedSosig = H3MP_GameManager.sosigs[i];
+                        if (trackedSosig.Update())
+                        {
+                            trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+
+                            packet.Write(trackedSosig);
+
+                            ++count;
+
+                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                            if (packet.buffer.Count >= 1300)
+                            {
+                                break;
+                            }
+                        }
+                        else if(trackedSosig.insuranceCounter > 0)
+                        {
+                            --trackedSosig.insuranceCounter;
+
+                            packet.Write(trackedSosig);
+
+                            ++count;
+
+                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                            if (packet.buffer.Count >= 1300)
+                            {
+                                break;
+                            }
+                        }
+
+                        index = i;
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                    {
+                        packet.buffer[i] = countArr[j];
+                    }
+
+                    SendUDPData(packet);
+                }
+            }
+        }
+
         public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedItem))
             {
                 packet.Write(trackedItem, true);
+                packet.Write(scene);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene)
+        {
+            using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedSosig))
+            {
+                packet.Write(trackedSosig, true);
                 packet.Write(scene);
 
                 SendTCPData(packet);
@@ -174,9 +244,30 @@ namespace H3MP
             }
         }
 
+        public static void GiveSosigControl(int trackedID, int newController)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveSosigControl))
+            {
+                packet.Write(trackedID);
+                packet.Write(newController);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void DestroyItem(int trackedID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.destroyItem))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void DestroySosig(int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.destroySosig))
             {
                 packet.Write(trackedID);
 
@@ -217,6 +308,63 @@ namespace H3MP
                 packet.Write(clientID);
                 packet.Write(part);
                 packet.Write(damage);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SosigPickUpItem(H3MP_TrackedSosig trackedSosig, int itemTrackedID, bool primaryHand)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigPickupItem))
+            {
+                packet.Write(trackedSosig.data.trackedID);
+                packet.Write(itemTrackedID);
+                packet.Write(primaryHand);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SosigPlaceItemIn(int sosigTrackedID, int slotIndex, int itemTrackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigPlaceItemIn))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write(itemTrackedID);
+                packet.Write(slotIndex);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SosigDropSlot(int sosigTrackedID, int slotIndex)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigDropSlot))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write(slotIndex);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SosigHandDrop(int sosigTrackedID, bool primaryHand)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigHandDrop))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write(primaryHand);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SosigConfigure(int sosigTrackedID, SosigConfigTemplate config)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigConfigure))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write(config);
 
                 SendTCPData(packet);
             }

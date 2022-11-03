@@ -17,7 +17,7 @@ namespace H3MP
         public byte order; // The index of this item's data packet used to ensure we process this data in the correct order
 
         public int trackedID = -1; // This item's unique ID to identify it across systems (index in global items arrays)
-        public int localtrackedID = -1; // This item's index in local items list 
+        public int localTrackedID = -1; // This item's index in local items list 
         public int controller = 0; // Client controlling this item, 0 for host
         public bool active;
         private bool previousActive;
@@ -27,7 +27,7 @@ namespace H3MP
         public byte[] previousData;
         public byte[] data;
 
-        // Item type specific data strcuture:
+        // Item type specific data structure:
         /**
          * FVRFireArmMagazine
          *  0: 
@@ -153,15 +153,6 @@ namespace H3MP
                 // Physically parent
                 ignoreParentChanged = true;
                 itemObject.transform.parent = parentItem.physicalObject.transform;
-
-                // If parented, the position and rotation are relative, so set it now after parenting
-                itemObject.transform.localPosition = position;
-                itemObject.transform.localRotation = rotation;
-            }
-            else
-            {
-                itemObject.transform.position = position;
-                itemObject.transform.rotation = rotation;
             }
 
             // Initially set itself
@@ -191,6 +182,7 @@ namespace H3MP
                 }
                 else
                 {
+                    // If parented, the position and rotation are relative, so set it now after parenting
                     physicalObject.transform.localPosition = updatedItem.position;
                     physicalObject.transform.localRotation = updatedItem.rotation;
                 }

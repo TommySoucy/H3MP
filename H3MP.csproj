@@ -79,6 +79,8 @@
     <Compile Include="H3MP_ThreadManager.cs" />
     <Compile Include="H3MP_TrackedItem.cs" />
     <Compile Include="H3MP_TrackedItemData.cs" />
+    <Compile Include="H3MP_TrackedSosig.cs" />
+    <Compile Include="H3MP_TrackedSosigData.cs" />
     <Compile Include="Mod.cs" />
     <Compile Include="H3MP_Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,9 +1,11 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 using Valve.Newtonsoft.Json.Linq;
+using static Valve.VR.SteamVR_ExternalCamera;
 
 namespace H3MP
 {
@@ -25,7 +27,16 @@ namespace H3MP
         itemParent = 11,
         connectSync = 12,
         weaponFire = 13,
-        playerDamage = 14
+        playerDamage = 14,
+        trackedSosig = 15,
+        trackedSosigs = 16,
+        giveSosigControl = 17,
+        destroySosig = 18,
+        sosigPickUpItem = 19,
+        sosigPlaceItemIn = 20,
+        sosigDropSlot = 21,
+        sosigHandDrop = 22,
+        sosigConfigure = 23
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -42,7 +53,16 @@ namespace H3MP
         destroyItem = 9,
         itemParent = 10,
         weaponFire = 11,
-        playerDamage = 12
+        playerDamage = 12,
+        trackedSosig = 13,
+        trackedSosigs = 14,
+        giveSosigControl = 15,
+        destroySosig = 16,
+        sosigPickupItem = 17,
+        sosigPlaceItemIn = 18,
+        sosigDropSlot = 19,
+        sosigHandDrop = 20,
+        sosigConfigure = 21
     }
 
     public class H3MP_Packet : IDisposable
@@ -194,6 +214,13 @@ namespace H3MP
             Write(_value.y);
             Write(_value.z);
         }
+        /// <summary>Adds a Vector2 to the packet.</summary>
+        /// <param name="_value">The Vector2 to add.</param>
+        public void Write(Vector2 _value)
+        {
+            Write(_value.x);
+            Write(_value.y);
+        }
         /// <summary>Adds a Quaternion to the packet.</summary>
         /// <param name="_value">The Quaternion to add.</param>
         public void Write(Quaternion _value)
@@ -226,7 +253,7 @@ namespace H3MP
                 Write(trackedItem.itemID);
                 Write(trackedItem.controller);
                 Write(trackedItem.parent);
-                Write(trackedItem.localtrackedID);
+                Write(trackedItem.localTrackedID);
             }
             else
             {
@@ -255,6 +282,153 @@ namespace H3MP
             Write(damage.edgeNormal);
             Write(damage.damageSize);
             Write((byte)damage.Class);
+        }
+        /// <summary>Adds a H3MP_TrackedSosigData to the packet.</summary>
+        /// <param name="_value">The H3MP_TrackedSosigData to add.</param>
+        public void Write(H3MP_TrackedSosigData trackedSosig, bool full = false)
+        {
+            Write(trackedSosig.trackedID);
+            Write(trackedSosig.position);
+            Write(trackedSosig.rotation);
+            Write(trackedSosig.active);
+            Write((byte)trackedSosig.IFF);
+            if(trackedSosig.ammoStores != null && trackedSosig.ammoStores.Length > 0)
+            {
+                Write((byte)trackedSosig.ammoStores.Length);
+                for(int i=0; i < trackedSosig.ammoStores.Length; ++i)
+                {
+                    Write(trackedSosig.ammoStores[i]);
+                }
+            }
+            else
+            {
+                Write((byte)0);
+            }
+
+            if (full)
+            {
+                Write(trackedSosig.configTemplate);
+                Write(trackedSosig.controller);
+                Write(trackedSosig.localTrackedID);
+            }
+            else
+            {
+                Write(trackedSosig.order++);
+            }
+        }
+        /// <summary>Adds a SosigConfigTemplate to the packet.</summary>
+        /// <param name="_value">The SosigConfigTemplate to add.</param>
+        public void Write(SosigConfigTemplate config)
+        {
+            Write(config.AppliesDamageResistToIntegrityLoss);
+            Write(config.DoesDropWeaponsOnBallistic);
+            Write(config.TotalMustard);
+            Write(config.BleedDamageMult);
+            Write(config.BleedRateMultiplier);
+            Write(config.BleedVFXIntensity);
+            Write(config.SearchExtentsModifier);
+            Write(config.ShudderThreshold);
+            Write(config.ConfusionThreshold);
+            Write(config.ConfusionMultiplier);
+            Write(config.ConfusionTimeMax);
+            Write(config.StunThreshold);
+            Write(config.StunMultiplier);
+            Write(config.StunTimeMax);
+            Write(config.HasABrain);
+            Write(config.RegistersPassiveThreats);
+            Write(config.CanBeKnockedOut);
+            Write(config.MaxUnconsciousTime);
+            Write(config.AssaultPointOverridesSkirmishPointWhenFurtherThan);
+            Write(config.ViewDistance);
+            Write(config.HearingDistance);
+            Write(config.MaxFOV);
+            Write(config.StateSightRangeMults);
+            Write(config.StateHearingRangeMults);
+            Write(config.StateFOVMults);
+            Write(config.CanPickup_Ranged);
+            Write(config.CanPickup_Melee);
+            Write(config.CanPickup_Other);
+            Write(config.DoesJointBreakKill_Head);
+            Write(config.DoesJointBreakKill_Upper);
+            Write(config.DoesJointBreakKill_Lower);
+            Write(config.DoesSeverKill_Head);
+            Write(config.DoesSeverKill_Upper);
+            Write(config.DoesSeverKill_Lower);
+            Write(config.DoesExplodeKill_Head);
+            Write(config.DoesExplodeKill_Upper);
+            Write(config.DoesExplodeKill_Lower);
+            Write(config.CrawlSpeed);
+            Write(config.SneakSpeed);
+            Write(config.WalkSpeed);
+            Write(config.RunSpeed);
+            Write(config.TurnSpeed);
+            Write(config.MovementRotMagnitude);
+            Write(config.DamMult_Projectile);
+            Write(config.DamMult_Explosive);
+            Write(config.DamMult_Melee);
+            Write(config.DamMult_Piercing);
+            Write(config.DamMult_Blunt);
+            Write(config.DamMult_Cutting);
+            Write(config.DamMult_Thermal);
+            Write(config.DamMult_Chilling);
+            Write(config.DamMult_EMP);
+            Write(config.CanBeSurpressed);
+            Write(config.SuppressionMult);
+            Write(config.CanBeGrabbed);
+            Write(config.CanBeSevered);
+            Write(config.CanBeStabbed);
+            Write(config.MaxJointLimit);
+            if(config.LinkDamageMultipliers == null || config.LinkDamageMultipliers.Count == 0)
+            {
+                Write((byte)0);
+            }
+            else
+            {
+                Write((byte)config.LinkDamageMultipliers.Count);
+                foreach(float f in config.LinkDamageMultipliers)
+                {
+                    Write(f);
+                }
+            }
+            if(config.LinkStaggerMultipliers == null || config.LinkStaggerMultipliers.Count == 0)
+            {
+                Write((byte)0);
+            }
+            else
+            {
+                Write((byte)config.LinkStaggerMultipliers.Count);
+                foreach(float f in config.LinkStaggerMultipliers)
+                {
+                    Write(f);
+                }
+            }
+            if(config.StartingLinkIntegrity == null || config.StartingLinkIntegrity.Count == 0)
+            {
+                Write((byte)0);
+            }
+            else
+            {
+                Write((byte)config.StartingLinkIntegrity.Count);
+                foreach(Vector2 v in config.StartingLinkIntegrity)
+                {
+                    Write(v);
+                }
+            }
+            if (config.StartingChanceBrokenJoint == null || config.StartingChanceBrokenJoint.Count == 0)
+            {
+                Write((byte)0);
+            }
+            else
+            {
+                Write((byte)config.StartingChanceBrokenJoint.Count);
+                foreach (float f in config.StartingChanceBrokenJoint)
+                {
+                    Write(f);
+                }
+            }
+            Write(config.TargetCapacity);
+            Write(config.TargetTrackingTime);
+            Write(config.NoFreshTargetTime);
         }
         #endregion
 
@@ -435,6 +609,13 @@ namespace H3MP
             return new Vector3(ReadFloat(_moveReadPos), ReadFloat(_moveReadPos), ReadFloat(_moveReadPos));
         }
 
+        /// <summary>Reads a Vector2 from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public Vector2 ReadVector2(bool _moveReadPos = true)
+        {
+            return new Vector2(ReadFloat(_moveReadPos), ReadFloat(_moveReadPos));
+        }
+
         /// <summary>Reads a Quaternion from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
         public Quaternion ReadQuaternion(bool _moveReadPos = true)
@@ -462,7 +643,7 @@ namespace H3MP
                 trackedItem.itemID = ReadString();
                 trackedItem.controller = ReadInt();
                 trackedItem.parent = ReadInt();
-                trackedItem.localtrackedID = ReadInt();
+                trackedItem.localTrackedID = ReadInt();
             }
             else
             {
@@ -470,6 +651,148 @@ namespace H3MP
             }
 
             return trackedItem;
+        }
+
+        /// <summary>Reads a H3MP_TrackedSosigData from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public H3MP_TrackedSosigData ReadTrackedSosig(bool full = false, bool _moveReadPos = true)
+        {
+            H3MP_TrackedSosigData trackedSosig = new H3MP_TrackedSosigData();
+
+            trackedSosig.trackedID = ReadInt();
+            trackedSosig.position = ReadVector3();
+            trackedSosig.rotation = ReadQuaternion();
+            trackedSosig.active = ReadBool();
+            trackedSosig.IFF = ReadByte();
+            byte ammoStoreLength = ReadByte();
+            if(ammoStoreLength > 0)
+            {
+                trackedSosig.ammoStores = new int[ammoStoreLength];
+                for(int i=0; i < ammoStoreLength; ++i)
+                {
+                    trackedSosig.ammoStores[i] = ReadInt();
+                }
+            }
+
+            if (full)
+            {
+                trackedSosig.configTemplate = ReadSosigConfig();
+                trackedSosig.controller = ReadInt();
+                trackedSosig.localTrackedID = ReadInt();
+            }
+            else
+            {
+                trackedSosig.order = ReadByte();
+            }
+
+            return trackedSosig;
+        }
+
+        /// <summary>Reads a SosigConfigTemplate from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public SosigConfigTemplate ReadSosigConfig(bool full = false, bool _moveReadPos = true)
+        {
+            SosigConfigTemplate config = ScriptableObject.CreateInstance<SosigConfigTemplate>();
+
+            config.AppliesDamageResistToIntegrityLoss = ReadBool();
+            config.DoesDropWeaponsOnBallistic = ReadBool();
+            config.TotalMustard = ReadFloat();
+            config.BleedDamageMult = ReadFloat();
+            config.BleedRateMultiplier = ReadFloat();
+            config.BleedVFXIntensity = ReadFloat();
+            config.SearchExtentsModifier = ReadFloat();
+            config.ShudderThreshold = ReadFloat();
+            config.ConfusionThreshold = ReadFloat();
+            config.ConfusionMultiplier = ReadFloat();
+            config.ConfusionTimeMax = ReadFloat();
+            config.StunThreshold = ReadFloat();
+            config.StunMultiplier = ReadFloat();
+            config.StunTimeMax = ReadFloat();
+            config.HasABrain = ReadBool();
+            config.RegistersPassiveThreats = ReadBool();
+            config.CanBeKnockedOut = ReadBool();
+            config.MaxUnconsciousTime = ReadFloat();
+            config.AssaultPointOverridesSkirmishPointWhenFurtherThan = ReadFloat();
+            config.ViewDistance = ReadFloat();
+            config.HearingDistance = ReadFloat();
+            config.MaxFOV = ReadFloat();
+            config.StateSightRangeMults = ReadVector3();
+            config.StateHearingRangeMults = ReadVector3();
+            config.StateFOVMults = ReadVector3();
+            config.CanPickup_Ranged = ReadBool();
+            config.CanPickup_Melee = ReadBool();
+            config.CanPickup_Other = ReadBool();
+            config.DoesJointBreakKill_Head = ReadBool();
+            config.DoesJointBreakKill_Upper = ReadBool();
+            config.DoesJointBreakKill_Lower = ReadBool();
+            config.DoesSeverKill_Head = ReadBool();
+            config.DoesSeverKill_Upper = ReadBool();
+            config.DoesSeverKill_Lower = ReadBool();
+            config.DoesExplodeKill_Head = ReadBool();
+            config.DoesExplodeKill_Upper = ReadBool();
+            config.DoesExplodeKill_Lower = ReadBool();
+            config.CrawlSpeed = ReadFloat();
+            config.SneakSpeed = ReadFloat();
+            config.WalkSpeed = ReadFloat();
+            config.RunSpeed = ReadFloat();
+            config.TurnSpeed = ReadFloat();
+            config.MovementRotMagnitude = ReadFloat();
+            config.DamMult_Projectile = ReadFloat();
+            config.DamMult_Explosive = ReadFloat();
+            config.DamMult_Melee = ReadFloat();
+            config.DamMult_Piercing = ReadFloat();
+            config.DamMult_Blunt = ReadFloat();
+            config.DamMult_Cutting = ReadFloat();
+            config.DamMult_Thermal = ReadFloat();
+            config.DamMult_Chilling = ReadFloat();
+            config.DamMult_EMP = ReadFloat();
+            config.CanBeSurpressed = ReadBool();
+            config.SuppressionMult = ReadFloat();
+            config.CanBeGrabbed = ReadBool();
+            config.CanBeSevered = ReadBool();
+            config.CanBeStabbed = ReadBool();
+            config.MaxJointLimit = ReadFloat();
+            byte linkDamMultCount = ReadByte();
+            if (linkDamMultCount > 0)
+            {
+                config.LinkDamageMultipliers = new List<float>();
+                for (int i=0; i < linkDamMultCount; ++i)
+                {
+                    config.LinkDamageMultipliers.Add(ReadFloat());
+                }
+            }
+            byte linkStaggerMultCount = ReadByte();
+            if (linkStaggerMultCount > 0)
+            {
+                config.LinkStaggerMultipliers = new List<float>();
+                for (int i = 0; i < linkStaggerMultCount; ++i)
+                {
+                    config.LinkStaggerMultipliers.Add(ReadFloat());
+                }
+            }
+            byte startLinkIntegCount = ReadByte();
+            if (startLinkIntegCount > 0)
+            {
+                config.StartingLinkIntegrity = new List<Vector2>();
+                for (int i = 0; i < startLinkIntegCount; ++i)
+                {
+                    config.StartingLinkIntegrity.Add(ReadVector2());
+                }
+            }
+            byte startBreakChanceCount = ReadByte();
+            if (startBreakChanceCount > 0)
+            {
+                config.StartingChanceBrokenJoint = new List<float>();
+                for (int i = 0; i < startBreakChanceCount; ++i)
+                {
+                    config.StartingChanceBrokenJoint.Add(ReadFloat());
+                }
+            }
+            config.TargetCapacity = ReadInt();
+            config.TargetTrackingTime = ReadFloat();
+            config.NoFreshTargetTime = ReadFloat();
+
+            return config;
         }
 
         /// <summary>Reads a Damage from the packet.</summary>

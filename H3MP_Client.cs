@@ -44,6 +44,7 @@ namespace H3MP
         private static Dictionary<int, PacketHandler> packetHandlers;
         public static Dictionary<string, int> synchronizedScenes;
         public static H3MP_TrackedItemData[] items; // All tracked items, regardless of whos control they are under
+        public static H3MP_TrackedSosigData[] sosigs; // All tracked items, regardless of whos control they are under
 
         private void Awake()
         {
@@ -314,6 +315,15 @@ namespace H3MP
                 { (int)ServerPackets.connectSync, H3MP_ClientHandle.ConnectSync },
                 { (int)ServerPackets.weaponFire, H3MP_ClientHandle.WeaponFire },
                 { (int)ServerPackets.playerDamage, H3MP_ClientHandle.PlayerDamage },
+                { (int)ServerPackets.trackedSosig, H3MP_ClientHandle.TrackedSosig },
+                { (int)ServerPackets.trackedSosigs, H3MP_ClientHandle.TrackedSosigs },
+                { (int)ServerPackets.giveSosigControl, H3MP_ClientHandle.GiveSosigControl },
+                { (int)ServerPackets.destroySosig, H3MP_ClientHandle.DestroySosig },
+                { (int)ServerPackets.sosigPickUpItem, H3MP_ClientHandle.SosigPickUpItem },
+                { (int)ServerPackets.sosigPlaceItemIn, H3MP_ClientHandle.SosigPlaceItemIn },
+                { (int)ServerPackets.sosigDropSlot, H3MP_ClientHandle.SosigDropSlot },
+                { (int)ServerPackets.sosigHandDrop, H3MP_ClientHandle.SosigHandDrop },
+                { (int)ServerPackets.sosigConfigure, H3MP_ClientHandle.SosigConfigure },
             };
 
             // All vanilla scenes can be synced by default
@@ -325,6 +335,8 @@ namespace H3MP
             }
 
             items = new H3MP_TrackedItemData[100];
+
+            sosigs = new H3MP_TrackedSosigData[100];
 
             Debug.Log("Initialized client");
         }
@@ -341,14 +353,14 @@ namespace H3MP
             {
                 // If we already control the item it is because we are the one who send the item to the server
                 // We just need to update the tracked ID of the item
-                H3MP_GameManager.items[trackedItem.localtrackedID].trackedID = trackedItem.trackedID;
+                H3MP_GameManager.items[trackedItem.localTrackedID].trackedID = trackedItem.trackedID;
 
                 // Add the item to client global list
-                items[trackedItem.trackedID] = H3MP_GameManager.items[trackedItem.localtrackedID];
+                items[trackedItem.trackedID] = H3MP_GameManager.items[trackedItem.localTrackedID];
             }
             else
             {
-                trackedItem.localtrackedID = -1;
+                trackedItem.localTrackedID = -1;
 
                 // Add the item to client global list
                 items[trackedItem.trackedID] = trackedItem;
@@ -357,6 +369,38 @@ namespace H3MP
                 if (scene.Equals(SceneManager.GetActiveScene().name))
                 {
                     AnvilManager.Run(trackedItem.Instantiate());
+                }
+            }
+        }
+
+        public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene)
+        {
+            // Adjust sosigs size to acommodate if necessary
+            if (sosigs.Length <= trackedSosig.trackedID)
+            {
+                IncreaseSosigsSize(trackedSosig.trackedID);
+            }
+
+            if (trackedSosig.controller == H3MP_Client.singleton.ID)
+            {
+                // If we already control the sosig it is because we are the one who sent the sosig to the server
+                // We just need to update the tracked ID of the sosig
+                H3MP_GameManager.sosigs[trackedSosig.localTrackedID].trackedID = trackedSosig.trackedID;
+
+                // Add the sosig to client global list
+                sosigs[trackedSosig.trackedID] = H3MP_GameManager.sosigs[trackedSosig.localTrackedID];
+            }
+            else
+            {
+                trackedSosig.localTrackedID = -1;
+
+                // Add the sosig to client global list
+                sosigs[trackedSosig.trackedID] = trackedSosig;
+
+                // Instantiate sosig if it is in the current scene
+                if (scene.Equals(SceneManager.GetActiveScene().name))
+                {
+                    AnvilManager.Run(trackedSosig.Instantiate());
                 }
             }
         }
@@ -373,6 +417,21 @@ namespace H3MP
             for (int i = 0; i < tempItems.Length; ++i)
             {
                 items[i] = tempItems[i];
+            }
+        }
+
+        private static void IncreaseSosigsSize(int minimum)
+        {
+            int minCapacity = sosigs.Length;
+            while(minCapacity <= minimum)
+            {
+                minCapacity += 100;
+            }
+            H3MP_TrackedSosigData[] tempSosigs = sosigs;
+            sosigs = new H3MP_TrackedSosigData[minCapacity];
+            for (int i = 0; i < tempSosigs.Length; ++i)
+            {
+                sosigs[i] = tempSosigs[i];
             }
         }
 

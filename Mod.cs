@@ -175,12 +175,44 @@ namespace H3MP
 
             harmony.Patch(setQuickBeltSlotPatchOriginal, null, new HarmonyMethod(setQuickBeltSlotPatchPostfix));
 
+            // SosigPickUpPatch
+            MethodInfo sosigPickUpPatchOriginal = typeof(SosigHand).GetMethod("PickUp", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigPickUpPatchPostfix = typeof(SosigPickUpPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigPickUpPatchOriginal, null, new HarmonyMethod(sosigPickUpPatchPostfix));
+
+            // SosigPlaceObjectInPatch
+            MethodInfo sosigPutObjectInPatchOriginal = typeof(SosigInventory.Slot).GetMethod("PlaceObjectIn", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigPutObjectInPatchPostfix = typeof(SosigPlaceObjectInPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigPutObjectInPatchOriginal, null, new HarmonyMethod(sosigPutObjectInPatchPostfix));
+
+            // SosigSlotDetachPatch
+            MethodInfo sosigSlotDetachPatchOriginal = typeof(SosigInventory.Slot).GetMethod("DetachHeldObject", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigSlotDetachPatchPrefix = typeof(SosigSlotDetachPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigSlotDetachPatchOriginal, new HarmonyMethod(sosigSlotDetachPatchPrefix));
+
+            // SosigHandDropPatch
+            MethodInfo sosigHandDropPatchOriginal = typeof(SosigHand).GetMethod("DropHeldObject", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigHandThrowPatchOriginal = typeof(SosigHand).GetMethod("ThrowObject", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigHandDropPatchPrefix = typeof(SosigHandDropPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigHandDropPatchOriginal, new HarmonyMethod(sosigHandDropPatchPrefix));
+            harmony.Patch(sosigHandThrowPatchOriginal, new HarmonyMethod(sosigHandDropPatchPrefix));
+
             // FirePatch
             MethodInfo firePatchOriginal = typeof(FVRFireArm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo firePatchPrefix = typeof(FirePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo firePatchPostfix = typeof(FirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix));
+
+            // SosigConfigurePatch
+            MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigConfigurePatchPrefix = typeof(SosigConfigurePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigConfigurePatchOriginal, new HarmonyMethod(sosigConfigurePatchPrefix));
 
             // ChamberEjectRoundPatch
             MethodInfo chamberEjectRoundPatchOriginal = typeof(FVRFireArmChamber).GetMethod("EjectRound", BindingFlags.Public | BindingFlags.Instance);
@@ -583,7 +615,7 @@ namespace H3MP
 
             if (preObject == null && ___m_currentInteractable != null)
             {
-                // Just started interacing with this item
+                // Just started interacting with this item
                 H3MP_TrackedItem trackedItem = ___m_currentInteractable.GetComponent<H3MP_TrackedItem>();
                 if (trackedItem != null)
                 {
@@ -598,7 +630,7 @@ namespace H3MP
 
                             // Update locally
                             trackedItem.data.controller = 0;
-                            trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
+                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                             // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
                             //if (trackedItem.data.parent == -1)
@@ -618,13 +650,43 @@ namespace H3MP
 
                             // Update locally
                             trackedItem.data.controller = H3MP_Client.singleton.ID;
-                            trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
+                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                             // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
                             //if (trackedItem.data.parent == -1)
                             //{
                             //  (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
                             //}
+                        }
+                    }
+                }
+                else // Although SosigLinks are FVRPhysicalObjects, they don't have an objectWrapper, so they won't be tracked items
+                {
+                    SosigLink sosigLink = ___m_currentInteractable.GetComponent<SosigLink>();
+                    if(sosigLink != null)
+                    {
+                        // We just grabbed a sosig
+                        H3MP_TrackedSosig trackedSosig = sosigLink.S.GetComponent<H3MP_TrackedSosig>();
+                        if(trackedSosig != null && trackedSosig.data.trackedID != -1 && trackedSosig.data.localTrackedID == -1)
+                        {
+                            if (H3MP_ThreadManager.host)
+                            {
+                                H3MP_ServerSend.GiveSosigControl(trackedSosig.data.trackedID, 0);
+
+                                // Update locally
+                                trackedSosig.data.controller = 0;
+                                trackedSosig.data.localTrackedID = H3MP_GameManager.sosigs.Count;
+                                H3MP_GameManager.sosigs.Add(trackedSosig.data);
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.GiveSosigControl(trackedSosig.data.trackedID, H3MP_Client.singleton.ID);
+
+                                // Update locally
+                                trackedSosig.data.controller = H3MP_Client.singleton.ID;
+                                trackedSosig.data.localTrackedID = H3MP_GameManager.sosigs.Count;
+                                H3MP_GameManager.sosigs.Add(trackedSosig.data);
+                            }
                         }
                     }
                 }
@@ -659,7 +721,7 @@ namespace H3MP
 
                             // Update locally
                             trackedItem.data.controller = 0;
-                            trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
+                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                             // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
                             //if (trackedItem.data.parent == -1)
@@ -679,7 +741,7 @@ namespace H3MP
 
                             // Update locally
                             trackedItem.data.controller = H3MP_Client.singleton.ID;
-                            trackedItem.data.localtrackedID = H3MP_GameManager.items.Count;
+                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                             // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
                             //if (trackedItem.data.parent == -1)
@@ -688,6 +750,212 @@ namespace H3MP
                             //}
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // Patches SosigHand.PickUp so we can keep track of item control
+    class SosigPickUpPatch
+    {
+        static void Postfix(ref SosigHand __instance, SosigWeapon o)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = o.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller != 0)
+                    {
+                        // Take control
+
+                        // Send to all clients
+                        H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+
+                        // Update locally
+                        trackedItem.data.controller = 0;
+                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem.data);
+                        // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
+                        //if (trackedItem.data.parent == -1)
+                        //{
+                        //  __instance.RecoverRigidbody();
+                        //}
+                        bool primaryHand = __instance == __instance.S.Hand_Primary;
+                        H3MP_ServerSend.SosigPickUpItem(__instance.S.GetComponent<H3MP_TrackedSosig>().data.trackedID, trackedItem.data.trackedID, primaryHand);
+                    }
+                }
+                else
+                {
+                    if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                    {
+                        // Take control
+
+                        // Send to server and all other clients
+                        H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+
+                        // Update locally
+                        trackedItem.data.controller = H3MP_Client.singleton.ID;
+                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem.data);
+                        // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
+                        //if (trackedItem.data.parent == -1)
+                        //{
+                        //  __instance.RecoverRigidbody();
+                        //}
+                        bool primaryHand = __instance == __instance.S.Hand_Primary;
+                        H3MP_ClientSend.SosigPickUpItem(__instance.S.GetComponent<H3MP_TrackedSosig>(), trackedItem.data.trackedID, primaryHand);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches SosigInventory.Slot.PlaceObjectIn so we can keep track of item control
+    class SosigPlaceObjectInPatch
+    {
+        static void Postfix(ref SosigInventory.Slot __instance, SosigWeapon o)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = o.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller != 0)
+                    {
+                        // Take control
+
+                        // Send to all clients
+                        H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+
+                        // Update locally
+                        trackedItem.data.controller = 0;
+                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem.data);
+                        // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
+                        //if (trackedItem.data.parent == -1)
+                        //{
+                        //  __instance.RecoverRigidbody();
+                        //}
+                        int slotIndex = 0;
+                        for(int i=0; i< __instance.I.Slots.Count; ++i)
+                        {
+                            if (__instance.I.Slots[i] == __instance)
+                            {
+                                slotIndex = i;
+                                break;
+                            }
+                        }
+                        H3MP_ServerSend.SosigPlaceItemIn(__instance.I.S.GetComponent<H3MP_TrackedSosig>().data.trackedID, slotIndex, trackedItem.data.trackedID);
+                    }
+                }
+                else
+                {
+                    if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                    {
+                        // Take control
+
+                        // Send to server and all other clients
+                        H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+
+                        // Update locally
+                        trackedItem.data.controller = H3MP_Client.singleton.ID;
+                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem.data);
+                        // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
+                        //if (trackedItem.data.parent == -1)
+                        //{
+                        //  __instance.RecoverRigidbody();
+                        //}
+                        int slotIndex = 0;
+                        for (int i = 0; i < __instance.I.Slots.Count; ++i)
+                        {
+                            if (__instance.I.Slots[i] == __instance)
+                            {
+                                slotIndex = i;
+                                break;
+                            }
+                        }
+                        H3MP_ClientSend.SosigPlaceItemIn(__instance.I.S.GetComponent<H3MP_TrackedSosig>().data.trackedID, slotIndex, trackedItem.data.trackedID);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches SosigInventory.Slot.DetachHeldObject so we can keep track of item control
+    class SosigSlotDetachPatch
+    {
+        static void Prefix(ref SosigInventory.Slot __instance)
+        {
+            if (Mod.managerObject == null || !__instance.IsHoldingObject)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = __instance.I.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.trackedID != -1)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    int slotIndex = 0;
+                    for (int i = 0; i < __instance.I.Slots.Count; ++i)
+                    {
+                        if (__instance.I.Slots[i] == __instance)
+                        {
+                            slotIndex = i;
+                            break;
+                        }
+                    }
+                    H3MP_ServerSend.SosigDropSlot(trackedSosig.data.trackedID, slotIndex);
+                }
+                else
+                {
+                    int slotIndex = 0;
+                    for (int i = 0; i < __instance.I.Slots.Count; ++i)
+                    {
+                        if (__instance.I.Slots[i] == __instance)
+                        {
+                            slotIndex = i;
+                            break;
+                        }
+                    }
+                    H3MP_ClientSend.SosigDropSlot(trackedSosig.data.trackedID, slotIndex);
+                }
+            }
+        }
+    }
+
+    // Patches SosigHand.DropHeldObject AND SosigHand.ThrowObject so we can keep track of item control
+    class SosigHandDropPatch
+    {
+        static void Prefix(ref SosigHand __instance)
+        {
+            if (Mod.managerObject == null || !__instance.IsHoldingObject)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.trackedID != -1)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigHandDrop(trackedSosig.data.trackedID, __instance.S.Hand_Primary == __instance);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigHandDrop(trackedSosig.data.trackedID, __instance.S.Hand_Primary == __instance);
                 }
             }
         }
@@ -720,7 +988,7 @@ namespace H3MP
 
             // Get tracked item
             H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
-            if(trackedItem != null)
+            if (trackedItem != null)
             {
                 // Send the fire action to other clients only if we control it
                 if (H3MP_ThreadManager.host)
@@ -730,7 +998,7 @@ namespace H3MP
                         H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID);
                     }
                 }
-                else if(trackedItem.data.controller == H3MP_Client.singleton.ID)
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
                     H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID);
                 }
@@ -740,6 +1008,34 @@ namespace H3MP
         static void Postfix()
         {
             --Mod.skipAllInstantiates;
+        }
+    }
+
+    // Patches Sosig.Configure to keep a reference to the config template
+    class SosigConfigurePatch
+    {
+        static void Prefix(ref Sosig __instance, SosigConfigTemplate t)
+        {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = __instance.GetComponent<H3MP_TrackedSosig>();
+            if(trackedSosig != null)
+            {
+                trackedSosig.data.configTemplate = t;
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigConfigure(trackedSosig.data.trackedID, t);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigConfigure(trackedSosig.data.trackedID, t);
+                }
+            }
         }
     }
     #endregion
@@ -848,6 +1144,7 @@ namespace H3MP
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
+                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
             }
         }
@@ -917,6 +1214,7 @@ namespace H3MP
             if (track)
             {
                 track = false;
+                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
             }
         }
@@ -956,6 +1254,7 @@ namespace H3MP
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
+                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
             }
         }
@@ -1031,6 +1330,7 @@ namespace H3MP
             if (track)
             {
                 track = false;
+                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
             }
         }

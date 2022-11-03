@@ -43,6 +43,7 @@ namespace H3MP
             // Just connected, sync if current scene is syncable
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
             {
+                H3MP_GameManager.SyncTrackedSosigs(true, inControl);
                 H3MP_GameManager.SyncTrackedItems(true, inControl);
             }
         }
@@ -93,9 +94,24 @@ namespace H3MP
             }
         }
 
+        public static void TrackedSosigs(H3MP_Packet packet)
+        {
+            // Reconstruct passed trackedItems from packet
+            int count = packet.ReadShort();
+            for (int i = 0; i < count; ++i)
+            {
+                H3MP_GameManager.UpdateTrackedSosig(packet.ReadTrackedSosig());
+            }
+        }
+
         public static void TrackedItem(H3MP_Packet packet)
         {
             H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString());
+        }
+
+        public static void TrackedSosig(H3MP_Packet packet)
+        {
+            H3MP_Client.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString());
         }
 
         public static void AddSyncScene(H3MP_Packet packet)
@@ -120,18 +136,48 @@ namespace H3MP
                 H3MP_GameManager.EnsureUncontrolled(physObj);
 
                 physObj.StoreAndDestroyRigidbody();
-                H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
+                H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
                 H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                trackedItem.localtrackedID = -1;
+                trackedItem.localTrackedID = -1;
             }
             else if(trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
             {
                 trackedItem.controller = controllerID;
-                trackedItem.localtrackedID = H3MP_GameManager.items.Count;
+                trackedItem.localTrackedID = H3MP_GameManager.items.Count;
                 H3MP_GameManager.items.Add(trackedItem);
             }
             trackedItem.controller = controllerID;
+        }
+
+        public static void GiveSosigControl(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int controllerID = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[trackedID];
+
+            if (trackedSosig.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
+            {
+                Sosig sosig = trackedSosig.physicalObject.physicalSosig;
+
+                GM.CurrentAIManager.DeRegisterAIEntity(sosig.E);
+
+                H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
+                H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                trackedSosig.localTrackedID = -1;
+            }
+            else if(trackedSosig.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
+            {
+                trackedSosig.controller = controllerID;
+                trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
+                H3MP_GameManager.sosigs.Add(trackedSosig);
+
+                Sosig sosig = trackedSosig.physicalObject.physicalSosig;
+                GM.CurrentAIManager.RegisterAIEntity(sosig.E);
+            }
+            trackedSosig.controller = controllerID;
         }
 
         public static void DestroyItem(H3MP_Packet packet)
@@ -145,8 +191,8 @@ namespace H3MP
                 H3MP_Client.items[trackedID] = null;
                 if (trackedItem.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.items[trackedItem.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[trackedItem.localtrackedID].localtrackedID = trackedItem.localtrackedID;
+                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
                 }
             }
@@ -154,6 +200,29 @@ namespace H3MP
             {
                 trackedItem.physicalObject.sendDestroy = false;
                 GameObject.Destroy(trackedItem.physicalObject.gameObject);
+            }
+        }
+
+        public static void DestroySosig(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[trackedID];
+
+            if(trackedSosig.physicalObject == null)
+            {
+                H3MP_Client.items[trackedID] = null;
+                if (trackedSosig.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
+                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                }
+            }
+            else
+            {
+                trackedSosig.physicalObject.sendDestroy = false;
+                GameObject.Destroy(trackedSosig.physicalObject.gameObject);
             }
         }
 
@@ -183,6 +252,83 @@ namespace H3MP
             Damage damage = packet.ReadDamage();
 
             H3MP_GameManager.ProcessPlayerDamage(part, damage);
+        }
+
+        public static void SosigPickUpItem(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            int itemTrackedID = packet.ReadInt();
+            bool primaryHand = packet.ReadBool();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if(trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                if (primaryHand)
+                {
+                    trackedSosig.physicalObject.physicalSosig.Hand_Primary.PickUp(H3MP_Client.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+                }
+                else
+                {
+                    trackedSosig.physicalObject.physicalSosig.Hand_Secondary.PickUp(H3MP_Client.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+                }
+            }
+        }
+
+        public static void SosigPlaceItemIn(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            int itemTrackedID = packet.ReadInt();
+            int slotIndex = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if(trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Client.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+            }
+        }
+
+        public static void SosigDropSlot(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            int slotIndex = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if(trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].DetachHeldObject();
+            }
+        }
+
+        public static void SosigHandDrop(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            bool primaryHand = packet.ReadBool();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if(trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                if (primaryHand)
+                {
+                    trackedSosig.physicalObject.physicalSosig.Hand_Primary.DropHeldObject();
+                }
+                else
+                {
+                    trackedSosig.physicalObject.physicalSosig.Hand_Secondary.DropHeldObject();
+                }
+            }
+        }
+
+        public static void SosigConfigure(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            SosigConfigTemplate config = packet.ReadSosigConfig();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                trackedSosig.configTemplate = config;
+                trackedSosig.physicalObject.physicalSosig.Configure(config);
+            }
         }
     }
 }

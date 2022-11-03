@@ -16,6 +16,8 @@ namespace H3MP
         public static Dictionary<int, PacketHandler> packetHandlers;
         public static H3MP_TrackedItemData[] items; // All tracked items, regardless of whos control they are under
         public static List<int> availableItemIndices;
+        public static H3MP_TrackedSosigData[] sosigs; // All tracked items, regardless of whos control they are under
+        public static List<int> availableSosigIndices;
 
         public static TcpListener tcpListener;
         public static UdpClient udpListener;
@@ -40,6 +42,7 @@ namespace H3MP
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
             {
                 H3MP_GameManager.SyncTrackedItems();
+                H3MP_GameManager.SyncTrackedSosigs();
             }
         }
 
@@ -148,7 +151,41 @@ namespace H3MP
             // Update the local tracked ID at the end because we need to send that back to the original client intact
             if (trackedItem.controller != 0)
             {
-                trackedItem.localtrackedID = -1;
+                trackedItem.localTrackedID = -1;
+            }
+        }
+
+        public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int clientID)
+        {
+            Debug.Log("Received order to add tracked sosig");
+            // Adjust sosigs size to acommodate if necessary
+            if (availableSosigIndices.Count == 0)
+            {
+                IncreaseSosigsSize();
+            }
+
+            // Add it to server global list
+            trackedSosig.trackedID = availableSosigIndices[availableSosigIndices.Count - 1];
+            availableSosigIndices.RemoveAt(availableSosigIndices.Count - 1);
+
+            sosigs[trackedSosig.trackedID] = trackedSosig;
+
+            // Instantiate sosig if it is in the current scene and not controlled by us
+            if (clientID != 0)
+            {
+                if (scene.Equals(SceneManager.GetActiveScene().name))
+                {
+                    AnvilManager.Run(trackedSosig.Instantiate());
+                }
+            }
+
+            // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
+            H3MP_ServerSend.TrackedSosig(trackedSosig, scene, clientID);
+
+            // Update the local tracked ID at the end because we need to send that back to the original client intact
+            if (trackedSosig.controller != 0)
+            {
+                trackedSosig.localTrackedID = -1;
             }
         }
 
@@ -163,6 +200,20 @@ namespace H3MP
             for(int i=tempItems.Length; i < items.Length; ++i)
             {
                 availableItemIndices.Add(i);
+            }
+        }
+
+        private static void IncreaseSosigsSize()
+        {
+            H3MP_TrackedSosigData[] tempSosigs = sosigs;
+            sosigs = new H3MP_TrackedSosigData[tempSosigs.Length + 100];
+            for(int i=0; i< tempSosigs.Length;++i)
+            {
+                sosigs[i] = tempSosigs[i];
+            }
+            for(int i= tempSosigs.Length; i < sosigs.Length; ++i)
+            {
+                availableSosigIndices.Add(i);
             }
         }
 
@@ -187,10 +238,30 @@ namespace H3MP
                 { (int)ClientPackets.itemParent, H3MP_ServerHandle.ItemParent },
                 { (int)ClientPackets.weaponFire, H3MP_ServerHandle.WeaponFire },
                 { (int)ClientPackets.playerDamage, H3MP_ServerHandle.PlayerDamage },
+                { (int)ClientPackets.trackedSosig, H3MP_ServerHandle.TrackedSosig },
+                { (int)ClientPackets.giveSosigControl, H3MP_ServerHandle.GiveSosigControl },
+                { (int)ClientPackets.destroySosig, H3MP_ServerHandle.DestroySosig },
+                { (int)ClientPackets.sosigPickupItem, H3MP_ServerHandle.SosigPickUpItem },
+                { (int)ClientPackets.sosigPlaceItemIn, H3MP_ServerHandle.SosigPlaceItemIn },
+                { (int)ClientPackets.sosigDropSlot, H3MP_ServerHandle.SosigDropSlot },
+                { (int)ClientPackets.sosigHandDrop, H3MP_ServerHandle.SosigHandDrop },
+                { (int)ClientPackets.sosigConfigure, H3MP_ServerHandle.SosigConfigure },
             };
 
             items = new H3MP_TrackedItemData[100];
             availableItemIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9,
+                                                     10,11,12,13,14,15,16,17,18,19,
+                                                     20,21,22,23,24,25,26,27,28,29,
+                                                     30,31,32,33,34,35,36,37,38,39,
+                                                     40,41,42,43,44,45,46,47,48,49,
+                                                     50,51,52,53,54,55,56,57,58,59,
+                                                     60,61,62,63,64,65,66,67,68,69,
+                                                     70,71,72,73,74,75,76,77,78,79,
+                                                     80,81,82,83,84,85,86,87,88,89,
+                                                     90,91,92,93,94,95,96,97,98,99};
+
+            sosigs = new H3MP_TrackedSosigData[100];
+            availableSosigIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9,
                                                      10,11,12,13,14,15,16,17,18,19,
                                                      20,21,22,23,24,25,26,27,28,29,
                                                      30,31,32,33,34,35,36,37,38,39,

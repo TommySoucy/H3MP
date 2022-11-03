@@ -80,6 +80,7 @@ namespace H3MP
                 if (H3MP_GameManager.playersInSameScene > 0)
                 {
                     H3MP_ServerSend.TrackedItems();
+                    H3MP_ServerSend.TrackedSosigs();
 
                     // Also send the host's player state to all clients
                     H3MP_ServerSend.PlayerState(0,
@@ -103,6 +104,7 @@ namespace H3MP
                 if (H3MP_GameManager.playersInSameScene > 0)
                 {
                     H3MP_ClientSend.TrackedItems();
+                    H3MP_ClientSend.TrackedSosigs();
 
                     // Also send the player state to all clients
                     H3MP_ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,

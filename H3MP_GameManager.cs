@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -33,6 +34,7 @@ namespace H3MP
 
         public static Dictionary<int, H3MP_PlayerManager> players = new Dictionary<int, H3MP_PlayerManager>();
         public static List<H3MP_TrackedItemData> items = new List<H3MP_TrackedItemData>(); // Tracked items under control of this gameManager
+        public static List<H3MP_TrackedSosigData> sosigs = new List<H3MP_TrackedSosigData>(); // Tracked sosigs under control of this gameManager
         public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
 
         public static bool giveControlOfDestroyed;
@@ -150,6 +152,11 @@ namespace H3MP
                 {
                     player.gameObject.SetActive(true);
                     ++playersInSameScene;
+
+                    if(GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(player.entity);
+                    }
                 }
             }
             else
@@ -158,6 +165,11 @@ namespace H3MP
                 {
                     player.gameObject.SetActive(false);
                     --playersInSameScene;
+
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.DeRegisterAIEntity(player.entity);
+                    }
                 }
             }
         }
@@ -202,6 +214,46 @@ namespace H3MP
             }
         }
 
+        public static void UpdateTrackedSosig(H3MP_TrackedSosigData updatedSosig)
+        {
+            if(updatedSosig.trackedID == -1)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosigData trackedSosigData = null;
+            int ID = -1;
+            if (H3MP_ThreadManager.host)
+            {
+                if (updatedSosig.trackedID < H3MP_Server.sosigs.Length)
+                {
+                    trackedSosigData = H3MP_Server.sosigs[updatedSosig.trackedID];
+                    ID = 0;
+                }
+            }
+            else
+            {
+                if (updatedSosig.trackedID < H3MP_Client.sosigs.Length)
+                {
+                    trackedSosigData = H3MP_Client.sosigs[updatedSosig.trackedID];
+                    ID = H3MP_Client.singleton.ID;
+                }
+            }
+
+            if (trackedSosigData != null)
+            {
+                // If we take control of a sosig, we could still receive an updated item from another client
+                // if they haven't received the control update yet, so here we check if this actually needs to update
+                // AND we don't want to take this update if this is a packet that was sent before the previous update
+                // Since the order is kept as a single byte, it will overflow every 256 packets of this sosig
+                // Here we consider the update out of order if it is within 128 iterations before the latest
+                if(trackedSosigData.controller != ID && (updatedSosig.order > trackedSosigData.order || trackedSosigData.order - updatedSosig.order > 128))
+                {
+                    trackedSosigData.Update(updatedSosig);
+                }
+            }
+        }
+
         public static void SyncTrackedItems(bool init = false, bool inControl = false)
         {
             Debug.Log("SyncTrackedItems called with init: "+init+", in control: "+inControl+", others: "+OtherPlayersInScene());
@@ -214,6 +266,246 @@ namespace H3MP
             {
                 SyncTrackedItems(root.transform, init ? inControl : !OtherPlayersInScene(), null, scene.name);
             }
+        }
+
+        public static void SyncTrackedItems(Transform root, bool controlEverything, H3MP_TrackedItemData parent, string scene)
+        {
+            // NOTE: When we sync tracked items, we always send the parent before its children, through TCP. This means we are guaranteed 
+            //       that if we receive a full item packet on the server or any client and it has a parent,
+            //       this parent is guaranteed to be in the global list already
+            //       We are later dependent on this fact so if we modify anything here, ensure this remains true
+            FVRPhysicalObject physObj = root.GetComponent<FVRPhysicalObject>();
+            if (physObj != null)
+            {
+                if (physObj.ObjectWrapper != null)
+                {
+                    H3MP_TrackedItem currentTrackedItem = root.GetComponent<H3MP_TrackedItem>();
+                    if (currentTrackedItem == null)
+                    {
+                        if (controlEverything || IsControlled(physObj))
+                        {
+                            H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
+                            if (H3MP_ThreadManager.host)
+                            {
+                                // This will also send a packet with the item to be added in the client's global item list
+                                H3MP_Server.AddTrackedItem(trackedItem.data, scene, 0);
+                            }
+                            else
+                            {
+                                Debug.Log("Sending tracked item: " + trackedItem.data.itemID);
+                                // Tell the server we need to add this item to global tracked items
+                                H3MP_ClientSend.TrackedItem(trackedItem.data, scene);
+                            }
+
+                            foreach (Transform child in root)
+                            {
+                                SyncTrackedItems(child, controlEverything, trackedItem.data, scene);
+                            }
+                        }
+                        else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
+                        {
+                            Destroy(root.gameObject);
+                        }
+                    }
+                    else
+                    {
+                        // It already has tracked item on it, this is possible of we received new item from server before we sync
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                foreach (Transform child in root)
+                {
+                    SyncTrackedItems(child, controlEverything, null, scene);
+                }
+            }
+        }
+
+        private static H3MP_TrackedItem MakeItemTracked(FVRPhysicalObject physObj, H3MP_TrackedItemData parent)
+        {
+            H3MP_TrackedItem trackedItem = physObj.gameObject.AddComponent<H3MP_TrackedItem>();
+            H3MP_TrackedItemData data = new H3MP_TrackedItemData();
+            trackedItem.data = data;
+            data.physicalObject = trackedItem;
+
+            if (parent != null)
+            {
+                data.parent = parent.trackedID;
+                if (parent.children == null)
+                {
+                    parent.children = new List<H3MP_TrackedItemData>();
+                }
+                data.childIndex = parent.children.Count;
+                parent.children.Add(data);
+            }
+            data.itemID = physObj.ObjectWrapper.ItemID;
+            data.position = trackedItem.transform.position;
+            data.rotation = trackedItem.transform.rotation;
+            data.active = trackedItem.gameObject.activeInHierarchy;
+
+            data.controller = H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID;
+
+            // Add to local list
+            data.localTrackedID = items.Count;
+            items.Add(data);
+
+            return trackedItem;
+        }
+
+        public static void SyncTrackedSosigs(bool init = false, bool inControl = false)
+        {
+            Debug.Log("SyncTrackedSosigs called with init: " + init + ", in control: " + inControl + ", others: " + OtherPlayersInScene());
+            // When we sync our current scene, if we are alone, we sync and take control of all sosigs
+            Scene scene = SceneManager.GetActiveScene();
+            GameObject[] roots = scene.GetRootGameObjects();
+            foreach (GameObject root in roots)
+            {
+                SyncTrackedSosigs(root.transform, init ? inControl : !OtherPlayersInScene(), scene.name);
+            }
+        }
+
+        public static void SyncTrackedSosigs(Transform root, bool controlEverything, string scene)
+        {
+            Sosig sosigScript = root.GetComponent<Sosig>();
+            if (sosigScript != null)
+            {
+                H3MP_TrackedSosig trackedSosig = root.GetComponent<H3MP_TrackedSosig>();
+                if (trackedSosig == null)
+                {
+                    if (controlEverything)
+                    {
+                        trackedSosig = MakeSosigTracked(sosigScript);
+                        if (H3MP_ThreadManager.host)
+                        {
+                            // This will also send a packet with the sosig to be added in the client's global sosig list
+                            H3MP_ServerSend.TrackedSosig(trackedSosig.data, scene, 0);
+                        }
+                        else
+                        {
+                            Debug.Log("Sending tracked sosig");
+                            // Tell the server we need to add this item to global tracked items
+                            H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene);
+                        }
+
+                        foreach (Transform child in root)
+                        {
+                            SyncTrackedSosigs(child, controlEverything, scene);
+                        }
+                    }
+                    else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
+                    {
+                        Destroy(root.gameObject);
+                    }
+                }
+                else
+                {
+                    // It already has tracked item on it, this is possible of we received new sosig from server before we sync
+                    return;
+                }
+            }
+            else
+            {
+                foreach (Transform child in root)
+                {
+                    SyncTrackedSosigs(child, controlEverything, scene);
+                }
+            }
+        }
+
+        private static H3MP_TrackedSosig MakeSosigTracked(Sosig sosigScript)
+        {
+            H3MP_TrackedSosig trackedSosig = sosigScript.gameObject.AddComponent<H3MP_TrackedSosig>();
+            H3MP_TrackedSosigData data = new H3MP_TrackedSosigData();
+            trackedSosig.data = data;
+            data.physicalObject = trackedSosig;
+
+            data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
+            data.configTemplate.AppliesDamageResistToIntegrityLoss =sosigScript.AppliesDamageResistToIntegrityLoss;
+            data.configTemplate.DoesDropWeaponsOnBallistic =sosigScript.DoesDropWeaponsOnBallistic;
+            data.configTemplate.TotalMustard = (float)typeof(Sosig).GetField("m_maxMustard", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.BleedDamageMult = sosigScript.BleedDamageMult;
+            data.configTemplate.BleedRateMultiplier = sosigScript.BleedRateMult;
+            data.configTemplate.BleedVFXIntensity = sosigScript.BleedVFXIntensity;
+            data.configTemplate.SearchExtentsModifier = sosigScript.SearchExtentsModifier;
+            data.configTemplate.ShudderThreshold = sosigScript.ShudderThreshold;
+            data.configTemplate.ConfusionThreshold = (float)typeof(Sosig).GetField("ConfusionThreshold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.ConfusionMultiplier = (float)typeof(Sosig).GetField("ConfusionMultiplier", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.ConfusionTimeMax = (float)typeof(Sosig).GetField("m_maxConfusedTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.StunThreshold = (float)typeof(Sosig).GetField("StunThreshold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.StunMultiplier = (float)typeof(Sosig).GetField("StunMultiplier", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.StunTimeMax = (float)typeof(Sosig).GetField("m_maxStunTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.HasABrain = sosigScript.HasABrain;
+            data.configTemplate.DoesDropWeaponsOnBallistic = sosigScript.DoesDropWeaponsOnBallistic;
+            data.configTemplate.RegistersPassiveThreats = sosigScript.RegistersPassiveThreats;
+            data.configTemplate.CanBeKnockedOut = sosigScript.CanBeKnockedOut;
+            data.configTemplate.MaxUnconsciousTime = (float)typeof(Sosig).GetField("m_maxUnconsciousTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.AssaultPointOverridesSkirmishPointWhenFurtherThan = (float)typeof(Sosig).GetField("m_assaultPointOverridesSkirmishPointWhenFurtherThan", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.ViewDistance = sosigScript.MaxSightRange;
+            data.configTemplate.HearingDistance = sosigScript.MaxHearingRange;
+            data.configTemplate.MaxFOV = sosigScript.MaxFOV;
+            data.configTemplate.StateSightRangeMults = sosigScript.StateSightRangeMults;
+            data.configTemplate.StateHearingRangeMults = sosigScript.StateHearingRangeMults;
+            data.configTemplate.StateFOVMults = sosigScript.StateFOVMults;
+            data.configTemplate.CanPickup_Ranged = sosigScript.CanPickup_Ranged;
+            data.configTemplate.CanPickup_Melee = sosigScript.CanPickup_Melee;
+            data.configTemplate.CanPickup_Other = sosigScript.CanPickup_Other;
+            data.configTemplate.DoesJointBreakKill_Head = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.DoesJointBreakKill_Upper = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.DoesJointBreakKill_Lower = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.DoesSeverKill_Head = (bool)typeof(Sosig).GetField("m_doesSeverKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.DoesSeverKill_Upper = (bool)typeof(Sosig).GetField("m_doesSeverKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.DoesSeverKill_Lower = (bool)typeof(Sosig).GetField("m_doesSeverKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.DoesExplodeKill_Head = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.DoesExplodeKill_Upper = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.DoesExplodeKill_Lower = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.CrawlSpeed = sosigScript.Speed_Crawl;
+            data.configTemplate.SneakSpeed = sosigScript.Speed_Sneak;
+            data.configTemplate.WalkSpeed = sosigScript.Speed_Walk;
+            data.configTemplate.RunSpeed = sosigScript.Speed_Run;
+            data.configTemplate.TurnSpeed = sosigScript.Speed_Turning;
+            data.configTemplate.MovementRotMagnitude = sosigScript.MovementRotMagnitude;
+            data.configTemplate.DamMult_Projectile = sosigScript.DamMult_Projectile;
+            data.configTemplate.DamMult_Explosive = sosigScript.DamMult_Explosive;
+            data.configTemplate.DamMult_Melee = sosigScript.DamMult_Melee;
+            data.configTemplate.DamMult_Piercing = sosigScript.DamMult_Piercing;
+            data.configTemplate.DamMult_Blunt = sosigScript.DamMult_Blunt;
+            data.configTemplate.DamMult_Cutting = sosigScript.DamMult_Cutting;
+            data.configTemplate.DamMult_Thermal = sosigScript.DamMult_Thermal;
+            data.configTemplate.DamMult_Chilling = sosigScript.DamMult_Chilling;
+            data.configTemplate.DamMult_EMP = sosigScript.DamMult_EMP;
+            data.configTemplate.CanBeSurpressed = sosigScript.CanBeSuppresed;
+            data.configTemplate.SuppressionMult = sosigScript.SuppressionMult;
+            data.configTemplate.CanBeGrabbed = sosigScript.CanBeGrabbed;
+            data.configTemplate.CanBeSevered = sosigScript.CanBeSevered;
+            data.configTemplate.CanBeStabbed = sosigScript.CanBeStabbed;
+            data.configTemplate.MaxJointLimit = (float)typeof(Sosig).GetField("m_maxJointLimit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
+            data.configTemplate.OverrideSpeech = sosigScript.Speech;
+            FieldInfo linkIntegrity = typeof(SosigLink).GetField("m_integrity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            FieldInfo linkJointBroken = typeof(SosigLink).GetField("m_isJointBroken", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            for (int i = 1; i < sosigScript.Links.Count; i++)
+            {
+                data.configTemplate.LinkDamageMultipliers[i] = sosigScript.Links[i].DamMult;
+                data.configTemplate.LinkStaggerMultipliers[i] = sosigScript.Links[i].StaggerMagnitude;
+                float actualLinkIntegrity = (float)linkIntegrity.GetValue(sosigScript.Links[i]);
+                data.configTemplate.StartingLinkIntegrity[i] = new Vector2(actualLinkIntegrity, actualLinkIntegrity);
+                data.configTemplate.StartingChanceBrokenJoint[i] = ((bool)linkJointBroken.GetValue(sosigScript.Links[i])) ? 1 : 0;
+            }
+            if (sosigScript.Priority != null)
+            {
+                data.configTemplate.TargetCapacity = (int)typeof(SosigTargetPrioritySystem).GetField("m_eventCapacity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority); 
+                data.configTemplate.TargetTrackingTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_maxTrackingTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority);
+                data.configTemplate.NoFreshTargetTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_timeToNoFreshTarget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority);
+            }
+
+            data.controller = H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID;
+
+            // Add to local list
+            data.localTrackedID = sosigs.Count;
+            sosigs.Add(data);
+
+            return trackedSosig;
         }
 
         private static bool OtherPlayersInScene()
@@ -257,92 +549,6 @@ namespace H3MP
         public static void ProcessAdditionalPlayerData(int playerID, byte[] data)
         {
 
-        }
-
-        public static void SyncTrackedItems(Transform root, bool controlEverything, H3MP_TrackedItemData parent, string scene)
-        {
-            // NOTE: When we sync tracked items, we always send the parent before its children, through TCP. This means we are guaranteed 
-            //       that if we receive a full item packet on the server or any client and it has a parent,
-            //       this parent is guaranteed to be in the global list already
-            //       We are later dependent on this fact so if we modify anything here, ensure this remains true
-            FVRPhysicalObject physObj = root.GetComponent<FVRPhysicalObject>();
-            if (physObj != null)
-            {
-                if (physObj.ObjectWrapper != null)
-                {
-                    H3MP_TrackedItem currentTrackedItem = root.GetComponent<H3MP_TrackedItem>();
-                    if (currentTrackedItem == null)
-                    {
-                        if (controlEverything || IsControlled(physObj))
-                        {
-                            H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
-                            if (H3MP_ThreadManager.host)
-                            {
-                                // This will also send a packet with the item to be added in the client's global item list
-                                H3MP_Server.AddTrackedItem(trackedItem.data, scene, 0);
-                            }
-                            else
-                            {
-                                Debug.Log("Sending tracked item: "+trackedItem.data.itemID);
-                                // Tell the server we need to add this item to global tracked items
-                                H3MP_ClientSend.TrackedItem(trackedItem.data, scene);
-                            }
-
-                            foreach (Transform child in root)
-                            {
-                                SyncTrackedItems(child, controlEverything, trackedItem.data, scene);
-                            }
-                        }
-                        else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
-                        {
-                            Destroy(root.gameObject);
-                        }
-                    }
-                    else 
-                    {
-                        // It already has tracked item on it, this is possible of we received new item from server before we sync
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                foreach(Transform child in root)
-                {
-                    SyncTrackedItems(child, controlEverything, null, scene);
-                }
-            }
-        }
-
-        private static H3MP_TrackedItem MakeItemTracked(FVRPhysicalObject physObj, H3MP_TrackedItemData parent)
-        {
-            H3MP_TrackedItem trackedItem = physObj.gameObject.AddComponent<H3MP_TrackedItem>();
-            H3MP_TrackedItemData data = new H3MP_TrackedItemData();
-            trackedItem.data = data;
-            data.physicalObject = trackedItem;
-
-            if(parent != null)
-            {
-                data.parent = parent.trackedID;
-                if(parent.children == null)
-                {
-                    parent.children = new List<H3MP_TrackedItemData>();
-                }
-                data.childIndex = parent.children.Count;
-                parent.children.Add(data);
-            }
-            data.itemID = physObj.ObjectWrapper.ItemID;
-            data.position = trackedItem.transform.position;
-            data.rotation = trackedItem.transform.rotation;
-            data.active = trackedItem.gameObject.activeInHierarchy;
-
-            data.controller = H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID;
-
-            // Add to local list
-            data.localtrackedID = items.Count;
-            items.Add(data);
-
-            return trackedItem;
         }
 
         // MOD: This will be called to check if the given physObj is controlled by this client
@@ -417,6 +623,12 @@ namespace H3MP
                                     }
                                 }
                             }
+
+                            // Register player entity to AIManager if we have one in this scene
+                            if (GM.CurrentAIManager != null)
+                            {
+                                GM.CurrentAIManager.RegisterAIEntity(player.Value.entity);
+                            }
                         }
                         else
                         {
@@ -430,6 +642,7 @@ namespace H3MP
                     Debug.Log("Scene is syncable, and has "+playersInSameScene+" otherp layers in it, syncing");
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
+                    SyncTrackedSosigs();
                     SyncTrackedItems();
                 }
                 else // New scene not syncable, ensure all players are disabled regardless of scene

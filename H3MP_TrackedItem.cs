@@ -264,6 +264,7 @@ namespace H3MP
             return false;
         }
 
+        #region Type Updates
         private bool UpdateClosedBoltWeapon()
         {
             ClosedBoltWeapon asCBW = dataObject as ClosedBoltWeapon;
@@ -1120,6 +1121,7 @@ namespace H3MP
 
             return modified;
         }
+        #endregion
 
         private void OnDestroy()
         {
@@ -1151,17 +1153,18 @@ namespace H3MP
                     if (sendDestroy)
                     {
                         H3MP_ServerSend.DestroyItem(data.trackedID);
+                        sendDestroy = true;
                     }
 
                     H3MP_Server.items[data.trackedID] = null;
                     H3MP_Server.availableItemIndices.Add(data.trackedID);
                 }
-                if(data.localtrackedID != -1)
+                if(data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.items[data.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[data.localtrackedID].localtrackedID = data.localtrackedID;
+                    H3MP_GameManager.items[data.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                    H3MP_GameManager.items[data.localTrackedID].localTrackedID = data.localTrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    data.localtrackedID = -1;
+                    data.localTrackedID = -1;
                 }
             }
             else
@@ -1191,16 +1194,17 @@ namespace H3MP
                     if (sendDestroy)
                     {
                         H3MP_ClientSend.DestroyItem(data.trackedID);
+                        sendDestroy = true;
                     }
 
                     H3MP_Client.items[data.trackedID] = null;
                 }
-                if (data.localtrackedID != -1)
+                if (data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.items[data.localtrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[data.localtrackedID].localtrackedID = data.localtrackedID;
+                    H3MP_GameManager.items[data.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                    H3MP_GameManager.items[data.localTrackedID].localTrackedID = data.localTrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    data.localtrackedID = -1;
+                    data.localTrackedID = -1;
                 }
             }
         }
