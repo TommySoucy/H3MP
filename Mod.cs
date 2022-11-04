@@ -32,6 +32,7 @@ namespace H3MP
         public GameObject H3MPMenuPrefab;
         public GameObject playerPrefab;
         public GameObject H3MPMenu;
+        public static Dictionary<string, string> sosigWearableMap;
 
         // Menu refs
         public static Text mainStatusText;
@@ -89,6 +90,50 @@ namespace H3MP
                 {
                     SteamVR_LoadLevel.Begin("ProvingGround", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
+                else if (Input.GetKeyDown(KeyCode.Keypad6))
+                {
+                    Debug.Log("Building sosigWearable map, iterating through "+IM.OD.Count+" OD entries");
+                    Dictionary<string, string> map = new Dictionary<string, string>();
+                    foreach(KeyValuePair<string, FVRObject> o in IM.OD)
+                    {
+                        Debug.Log("trying to add ID: "+o.Key);
+                        GameObject prefab = null;
+                        try
+                        {
+                            prefab = o.Value.GetGameObject();
+
+                        }
+                        catch(Exception ex)
+                        {
+                            Debug.LogError("There was an error trying to retrieve prefab with ID: " + o.Key);
+                            continue;
+                        }
+                        try
+                        {
+                            SosigWearable wearable = prefab.GetComponent<SosigWearable>();
+                            if (wearable != null)
+                            {
+                                if (map.ContainsKey(prefab.name))
+                                {
+                                    Debug.LogWarning("Sosig wearable with name: " + prefab.name + " is already in the map with value: " + map[prefab.name] + " and wewanted to add value: " + o.Key);
+                                }
+                                else
+                                {
+                                    Debug.Log("Sosig wearable with name: " + prefab.name + " added value: " + o.Key);
+                                    map.Add(prefab.name, o.Key);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogError("There was an error trying to check if prefab with ID: " + o.Key+" is wearable or adding it to the list");
+                            continue;
+                        }
+                    }
+                    Debug.Log("DONE");
+                    JObject jDict = JObject.FromObject(map);
+                    File.WriteAllText("BepInEx/Plugins/H3MP/Debug/SosigWearableMap.json", jDict.ToString());
+                }
             }
         }
 
@@ -140,6 +185,8 @@ namespace H3MP
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
             SetupPlayerPrefab();
+
+            sosigWearableMap = JObject.Parse(File.ReadAllText("BepinEx/Plugins/H3MP/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
         }
 
         // MOD: If you need to add anything to the player prefab, this is what you should patch to do it
@@ -1478,6 +1525,7 @@ namespace H3MP
 
     #region Damageable Patches
     // TODO: Patch IFVRDamageable.Damage and have a way to track damageables so we don't need to have a specific TCP call for each
+    //       Or make sure we track damageables, then when we can patch damageable.damage and send the damage and trackedID directly to other clients so they can process it too
 
     // Patches BallisticProjectile.Fire to keep a reference to the source firearm
     class ProjectileFirePatch

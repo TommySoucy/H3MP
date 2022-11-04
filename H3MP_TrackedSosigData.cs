@@ -32,6 +32,7 @@ namespace H3MP
         public int localTrackedID;
         public bool previousActive;
         public bool active;
+        public string[][] wearables;
 
         public IEnumerator Instantiate()
         {
@@ -53,6 +54,8 @@ namespace H3MP
             SosigConfigurePatch.skipConfigure = true;
             physicalObject.physicalSosig.Configure(configTemplate);
 
+            AnvilManager.Run(EquipWearables());
+
             // Deregister the AI from the manager if we are not in control
             if (H3MP_ThreadManager.host)
             {
@@ -68,6 +71,24 @@ namespace H3MP
 
             // Initially set itself
             Update(this);
+        }
+
+        private IEnumerator EquipWearables()
+        {
+            if (wearables != null)
+            {
+                for (int i = 0; i < wearables.Length; ++i)
+                {
+                    for (int j = 0; j < wearables.Length; ++j)
+                    {
+                        yield return IM.OD[wearables[i][j]].GetGameObjectAsync();
+                        GameObject outfitItemObject = GameObject.Instantiate(IM.OD[wearables[i][j]].GetGameObject(), physicalObject.physicalSosig.Links[i].transform.position, physicalObject.physicalSosig.Links[i].transform.rotation, physicalObject.physicalSosig.Links[i].transform);
+                        SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
+                        wearableScript.RegisterWearable(physicalObject.physicalSosig.Links[i]);
+                    }
+                }
+            }
+            yield break;
         }
 
         public void Update(H3MP_TrackedSosigData updatedItem)

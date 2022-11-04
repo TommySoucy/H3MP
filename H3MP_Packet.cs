@@ -310,6 +310,37 @@ namespace H3MP
                 Write(trackedSosig.configTemplate);
                 Write(trackedSosig.controller);
                 Write(trackedSosig.localTrackedID);
+                FieldInfo wearablesInfo = typeof(SosigLink).GetField("m_wearables", BindingFlags.NonPublic | BindingFlags.Instance);
+                Write((byte)trackedSosig.physicalObject.physicalSosig.Links.Count);
+                for(int i=0; i < trackedSosig.physicalObject.physicalSosig.Links.Count; ++i)
+                {
+                    List<SosigWearable> wearables = (List<SosigWearable>)wearablesInfo.GetValue(trackedSosig.physicalObject.physicalSosig.Links[i]);
+                    if (wearables == null || wearables.Count == 0)
+                    {
+                        Write((byte)0);
+                    }
+                    else
+                    {
+                        Write((byte)wearables.Count);
+                        for (int j = 0; j < wearables.Count; ++j)
+                        {
+                            string actualName = wearables[j].name;
+                            if (actualName.EndsWith("(Clone)"))
+                            {
+                                actualName = actualName.Substring(0, actualName.Length - 7);
+                            }
+                            if (Mod.sosigWearableMap.ContainsKey(actualName))
+                            {
+                                Write(Mod.sosigWearableMap[actualName]);
+                            }
+                            else
+                            {
+                                Debug.LogError(actualName + " was not found in sosigWearableMap");
+                                Write("n");
+                            }
+                        }
+                    }
+                }
             }
             else
             {
@@ -679,6 +710,20 @@ namespace H3MP
                 trackedSosig.configTemplate = ReadSosigConfig();
                 trackedSosig.controller = ReadInt();
                 trackedSosig.localTrackedID = ReadInt();
+                byte linkCount = ReadByte();
+                trackedSosig.wearables = new string[linkCount][];
+                for(int i=0; i < linkCount; ++i)
+                {
+                    byte wearableCount = ReadByte();
+                    trackedSosig.wearables[i] = new string[wearableCount];
+                    if(wearableCount > 0)
+                    {
+                        for(int j = 0; j < wearableCount; ++j)
+                        {
+                            trackedSosig.wearables[i][j] = ReadString();
+                        }
+                    }
+                }
             }
             else
             {
