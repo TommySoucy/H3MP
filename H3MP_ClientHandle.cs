@@ -159,10 +159,6 @@ namespace H3MP
 
             if (trackedSosig.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
             {
-                Sosig sosig = trackedSosig.physicalObject.physicalSosig;
-
-                GM.CurrentAIManager.DeRegisterAIEntity(sosig.E);
-
                 H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
                 H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
                 H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
@@ -173,9 +169,6 @@ namespace H3MP
                 trackedSosig.controller = controllerID;
                 trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
                 H3MP_GameManager.sosigs.Add(trackedSosig);
-
-                Sosig sosig = trackedSosig.physicalObject.physicalSosig;
-                GM.CurrentAIManager.RegisterAIEntity(sosig.E);
             }
             trackedSosig.controller = controllerID;
         }
@@ -327,6 +320,7 @@ namespace H3MP
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 trackedSosig.configTemplate = config;
+                SosigConfigurePatch.skipConfigure = true;
                 trackedSosig.physicalObject.physicalSosig.Configure(config);
             }
         }

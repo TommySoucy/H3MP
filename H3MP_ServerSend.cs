@@ -394,6 +394,17 @@ namespace H3MP
             }
         }
 
+        public static void TrackedSosigSpecific(H3MP_TrackedSosigData trackedSosig, string scene, int toClientID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedSosig))
+            {
+                packet.Write(trackedSosig, true);
+                packet.Write(scene);
+
+                SendTCPData(toClientID, packet);
+            }
+        }
+
         public static void GiveControl(int trackedID, int clientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.giveControl))

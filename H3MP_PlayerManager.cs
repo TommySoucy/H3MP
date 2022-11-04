@@ -38,7 +38,7 @@ namespace H3MP
             headHitBox = head.gameObject.AddComponent<H3MP_PlayerHitbox>();
             headHitBox.part = H3MP_PlayerHitbox.Part.Head;
             torso = transform.GetChild(1);
-            torsoEntity = head.gameObject.AddComponent<AIEntity>();
+            torsoEntity = torso.gameObject.AddComponent<AIEntity>();
             torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
             torsoHitBox = torso.gameObject.AddComponent<H3MP_PlayerHitbox>();
             torsoHitBox.part = H3MP_PlayerHitbox.Part.Torso;
@@ -62,6 +62,23 @@ namespace H3MP
             else
             {
                 H3MP_ClientSend.PlayerDamage(ID, (byte)part, damage);
+            }
+        }
+
+        public void SetEntitiesRegistered(bool registered)
+        {
+            if(GM.CurrentAIManager != null)
+            {
+                if (registered)
+                {
+                    GM.CurrentAIManager.RegisterAIEntity(headEntity);
+                    GM.CurrentAIManager.RegisterAIEntity(torsoEntity);
+                }
+                else
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(headEntity);
+                    GM.CurrentAIManager.DeRegisterAIEntity(torsoEntity);
+                }
             }
         }
     }

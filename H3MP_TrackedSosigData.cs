@@ -50,7 +50,21 @@ namespace H3MP
             physicalObject.data = this;
 
             physicalObject.physicalSosig = sosigInstance.GetComponent<Sosig>();
+            SosigConfigurePatch.skipConfigure = true;
             physicalObject.physicalSosig.Configure(configTemplate);
+
+            // Deregister the AI from the manager if we are not in control
+            if (H3MP_ThreadManager.host)
+            {
+                if(controller != 0)
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosig.E);
+                }
+            }
+            else if(controller != H3MP_Client.singleton.ID)
+            {
+                GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosig.E);
+            }
 
             // Initially set itself
             Update(this);

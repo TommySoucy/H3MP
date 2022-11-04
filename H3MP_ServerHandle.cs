@@ -71,7 +71,7 @@ namespace H3MP
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
             {
                 Debug.Log("Player "+clientID+" joined scene "+ scene);
-                H3MP_Server.clients[clientID].SendRelevantTrackedItems();
+                H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
             }
             Debug.Log("Synced with player who just joined scene");
         }
@@ -164,8 +164,6 @@ namespace H3MP
             {
                 trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
                 H3MP_GameManager.sosigs.Add(trackedSosig);
-
-                GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosig.E);
             }
             else if(trackedSosig.controller == 0 && newController != 0)
             {
@@ -173,8 +171,6 @@ namespace H3MP
                 H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
                 H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
                 trackedSosig.localTrackedID = -1;
-
-                GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosig.E);
             }
             trackedSosig.controller = newController;
 
@@ -361,13 +357,16 @@ namespace H3MP
         public static void SosigConfigure(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
+            Debug.Log("server handle sosig configure got called from client: " + clientID + " for sosig tracked ID: " + sosigTrackedID);
             SosigConfigTemplate config = packet.ReadSosigConfig();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
+                Debug.Log("\tFound trackedSosig, and it has physical, configuring ");
                 trackedSosig.configTemplate = config;
-                trackedSosig.physicalObject.physicalSosig.Hand_Primary.DropHeldObject();
+                SosigConfigurePatch.skipConfigure = true;
+                trackedSosig.physicalObject.physicalSosig.Configure(config);
             }
 
             H3MP_ServerSend.SosigConfigure(sosigTrackedID, config, clientID);

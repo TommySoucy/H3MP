@@ -1019,8 +1019,16 @@ namespace H3MP
     // Patches Sosig.Configure to keep a reference to the config template
     class SosigConfigurePatch
     {
+        public static bool skipConfigure;
+
         static void Prefix(ref Sosig __instance, SosigConfigTemplate t)
         {
+            if (skipConfigure)
+            {
+                skipConfigure = false;
+                return;
+            }
+
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null)
             {

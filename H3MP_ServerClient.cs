@@ -235,14 +235,14 @@ namespace H3MP
             {
                 Debug.Log("Player " + ID + " join server in scene " + scene);
                 // Send to the clients all items that are already synced and controlled by clients in the same scene
-                SendRelevantTrackedItems();
+                SendRelevantTrackedObjects();
 
                 // Tell the client to sync its items
                 H3MP_ServerSend.ConnectSync(ID, inControl);
             }
         }
 
-        public void SendRelevantTrackedItems()
+        public void SendRelevantTrackedObjects()
         {
             Debug.Log("Sending relevant tracked items");
             // Send to the clients all items that are already synced and controlled by clients in the same scene
@@ -260,7 +260,17 @@ namespace H3MP
                     H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], player.scene, ID);
                 }
             }
-            Debug.Log("Rrelevant tracked items sent");
+            Debug.Log("Relevant tracked items sent, sending relevant tracked sosigs");
+            // Send to the clients all sosigs that are already synced and controlled by clients in the same scene
+            for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
+            {
+                if (H3MP_Server.sosigs[i] != null &&
+                    player.scene.Equals(H3MP_Server.sosigs[i].controller == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene))
+                {
+                    H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, ID);
+                }
+            }
+            Debug.Log("Relevant tracked sosigs sent");
         }
 
         private void Disconnect()

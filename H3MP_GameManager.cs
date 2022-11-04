@@ -91,6 +91,8 @@ namespace H3MP
             if (!scene.Equals(SceneManager.GetActiveScene().name))
             {
                 playerManager.gameObject.SetActive(false);
+
+                playerManager.SetEntitiesRegistered(false);
             }
             else
             {
@@ -153,10 +155,7 @@ namespace H3MP
                     player.gameObject.SetActive(true);
                     ++playersInSameScene;
 
-                    if(GM.CurrentAIManager != null)
-                    {
-                        GM.CurrentAIManager.RegisterAIEntity(player.headEntity);
-                    }
+                    player.SetEntitiesRegistered(true);
                 }
             }
             else
@@ -166,10 +165,7 @@ namespace H3MP
                     player.gameObject.SetActive(false);
                     --playersInSameScene;
 
-                    if (GM.CurrentAIManager != null)
-                    {
-                        GM.CurrentAIManager.DeRegisterAIEntity(player.headEntity);
-                    }
+                    player.SetEntitiesRegistered(false);
                 }
             }
         }
@@ -371,11 +367,14 @@ namespace H3MP
             Sosig sosigScript = root.GetComponent<Sosig>();
             if (sosigScript != null)
             {
+                Debug.Log("SyncTrackedSosigs called on a sosig with everything: "+ controlEverything + ", syncing if necessary");
                 H3MP_TrackedSosig trackedSosig = root.GetComponent<H3MP_TrackedSosig>();
                 if (trackedSosig == null)
                 {
+                    Debug.Log("\tNot yet tracked");
                     if (controlEverything)
                     {
+                        Debug.Log("\tWe want to control");
                         trackedSosig = MakeSosigTracked(sosigScript);
                         if (H3MP_ThreadManager.host)
                         {
@@ -416,14 +415,15 @@ namespace H3MP
 
         private static H3MP_TrackedSosig MakeSosigTracked(Sosig sosigScript)
         {
+            Debug.Log("MakeSosigTracked called");
             H3MP_TrackedSosig trackedSosig = sosigScript.gameObject.AddComponent<H3MP_TrackedSosig>();
             H3MP_TrackedSosigData data = new H3MP_TrackedSosigData();
             trackedSosig.data = data;
             data.physicalObject = trackedSosig;
 
             data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
-            data.configTemplate.AppliesDamageResistToIntegrityLoss =sosigScript.AppliesDamageResistToIntegrityLoss;
-            data.configTemplate.DoesDropWeaponsOnBallistic =sosigScript.DoesDropWeaponsOnBallistic;
+            data.configTemplate.AppliesDamageResistToIntegrityLoss = sosigScript.AppliesDamageResistToIntegrityLoss;
+            data.configTemplate.DoesDropWeaponsOnBallistic = sosigScript.DoesDropWeaponsOnBallistic;
             data.configTemplate.TotalMustard = (float)typeof(Sosig).GetField("m_maxMustard", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript);
             data.configTemplate.BleedDamageMult = sosigScript.BleedDamageMult;
             data.configTemplate.BleedRateMultiplier = sosigScript.BleedRateMult;
@@ -484,13 +484,17 @@ namespace H3MP
             data.configTemplate.OverrideSpeech = sosigScript.Speech;
             FieldInfo linkIntegrity = typeof(SosigLink).GetField("m_integrity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             FieldInfo linkJointBroken = typeof(SosigLink).GetField("m_isJointBroken", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            for (int i = 1; i < sosigScript.Links.Count; i++)
+            data.configTemplate.LinkDamageMultipliers = new List<float>();
+            data.configTemplate.LinkStaggerMultipliers = new List<float>();
+            data.configTemplate.StartingLinkIntegrity = new List<Vector2>();
+            data.configTemplate.StartingChanceBrokenJoint = new List<float>();
+            for (int i = 0; i < sosigScript.Links.Count; ++i)
             {
-                data.configTemplate.LinkDamageMultipliers[i] = sosigScript.Links[i].DamMult;
-                data.configTemplate.LinkStaggerMultipliers[i] = sosigScript.Links[i].StaggerMagnitude;
+                data.configTemplate.LinkDamageMultipliers.Add(sosigScript.Links[i].DamMult);
+                data.configTemplate.LinkStaggerMultipliers.Add(sosigScript.Links[i].StaggerMagnitude);
                 float actualLinkIntegrity = (float)linkIntegrity.GetValue(sosigScript.Links[i]);
-                data.configTemplate.StartingLinkIntegrity[i] = new Vector2(actualLinkIntegrity, actualLinkIntegrity);
-                data.configTemplate.StartingChanceBrokenJoint[i] = ((bool)linkJointBroken.GetValue(sosigScript.Links[i])) ? 1 : 0;
+                data.configTemplate.StartingLinkIntegrity.Add(new Vector2(actualLinkIntegrity, actualLinkIntegrity));
+                data.configTemplate.StartingChanceBrokenJoint.Add(((bool)linkJointBroken.GetValue(sosigScript.Links[i])) ? 1 : 0);
             }
             if (sosigScript.Priority != null)
             {
@@ -612,6 +616,8 @@ namespace H3MP
                             }
                             ++playersInSameScene;
 
+                            player.Value.SetEntitiesRegistered(true);
+
                             if (H3MP_ThreadManager.host)
                             {
                                 // Instantiate all items controlled by other players in this scene
@@ -622,12 +628,14 @@ namespace H3MP
                                         AnvilManager.Run(H3MP_Server.items[i].Instantiate());
                                     }
                                 }
-                            }
-
-                            // Register player entity to AIManager if we have one in this scene
-                            if (GM.CurrentAIManager != null)
-                            {
-                                GM.CurrentAIManager.RegisterAIEntity(player.Value.headEntity);
+                                // Instantiate all sosigs controlled by other players in this scene
+                                for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
+                                {
+                                    if (H3MP_Server.sosigs[i] != null && H3MP_Server.sosigs[i].controller == player.Key)
+                                    {
+                                        AnvilManager.Run(H3MP_Server.sosigs[i].Instantiate());
+                                    }
+                                }
                             }
                         }
                         else
