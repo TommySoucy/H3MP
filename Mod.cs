@@ -266,6 +266,21 @@ namespace H3MP
 
             harmony.Patch(sosigConfigurePatchOriginal, new HarmonyMethod(sosigConfigurePatchPrefix));
 
+            // SosigUpdatePatch
+            MethodInfo sosigUpdatePatchOriginal = typeof(Sosig).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigUpdatePatchPrefix = typeof(SosigUpdatePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigHandPhysUpdatePatchOriginal = typeof(Sosig).GetMethod("HandPhysUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigHandPhysUpdatePatchPrefix = typeof(SosigUpdatePatch).GetMethod("HandPhysUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigUpdatePatchOriginal, new HarmonyMethod(sosigUpdatePatchPrefix));
+            harmony.Patch(sosigHandPhysUpdatePatchOriginal, new HarmonyMethod(sosigHandPhysUpdatePatchPrefix));
+
+            // InventoryUpdatePatch
+            MethodInfo sosigInvUpdatePatchOriginal = typeof(SosigInventory).GetMethod("PhysHold", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigInvUpdatePatchPrefix = typeof(SosigInvUpdatePatch).GetMethod("PhysHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigInvUpdatePatchOriginal, new HarmonyMethod(sosigInvUpdatePatchPrefix));
+
             // SosigLinkActionPatch
             MethodInfo sosigLinkRegisterWearablePatchOriginal = typeof(SosigLink).GetMethod("RegisterWearable", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigLinkRegisterWearablePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("RegisterWearablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1111,7 +1126,7 @@ namespace H3MP
     // Patches Sosig update methods to prevent processing on non controlling client
     class SosigUpdatePatch
     {
-        static bool UpdatePrefix(ref Sosig __instance, SosigConfigTemplate t)
+        static bool UpdatePrefix(ref Sosig __instance)
         {
             // Skip if not connected
             if (Mod.managerObject == null)
@@ -1119,11 +1134,46 @@ namespace H3MP
                 return true;
             }
 
-            continue from here apply patch then test
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if(trackedSosig != null)
             {
-                return (H3MP_ThreadManager.host && trackedSosig.data.trackedID == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.trackedID);
+                return (H3MP_ThreadManager.host && trackedSosig.data.controller == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.controller);
+            }
+            return true;
+        }
+        
+        static bool HandPhysUpdatePrefix(ref Sosig __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if(trackedSosig != null)
+            {
+                return (H3MP_ThreadManager.host && trackedSosig.data.controller == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.controller);
+            }
+            return true;
+        }
+    }
+
+    // Patches SosigInventory update methods to prevent processing on non controlling client
+    class SosigInvUpdatePatch
+    {
+        static bool PhysHoldPrefix(ref SosigInventory __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if(trackedSosig != null)
+            {
+                return (H3MP_ThreadManager.host && trackedSosig.data.controller == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.controller);
             }
             return true;
         }
