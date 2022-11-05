@@ -1085,7 +1085,7 @@ namespace H3MP
                 return;
             }
 
-            // Skip if not connected or no one to send data to
+            // Skip if not connected
             if (Mod.managerObject == null)
             {
                 return;
@@ -1105,6 +1105,27 @@ namespace H3MP
                     H3MP_ClientSend.SosigConfigure(trackedSosig.data.trackedID, t);
                 }
             }
+        }
+    }
+
+    // Patches Sosig update methods to prevent processing on non controlling client
+    class SosigUpdatePatch
+    {
+        static bool UpdatePrefix(ref Sosig __instance, SosigConfigTemplate t)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            continue from here apply patch then test
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if(trackedSosig != null)
+            {
+                return (H3MP_ThreadManager.host && trackedSosig.data.trackedID == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.trackedID);
+            }
+            return true;
         }
     }
 

@@ -16,6 +16,8 @@ namespace H3MP
 
         private void OnDestroy()
         {
+            H3MP_GameManager.trackedSosigBySosig.Remove(physicalSosig);
+
             if (H3MP_ThreadManager.host)
             {
                 if (H3MP_GameManager.giveControlOfDestroyed)

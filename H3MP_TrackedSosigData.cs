@@ -55,6 +55,8 @@ namespace H3MP
             SosigConfigurePatch.skipConfigure = true;
             physicalObject.physicalSosig.Configure(configTemplate);
 
+            H3MP_GameManager.trackedSosigBySosig.Add(physicalObject.physicalSosig, physicalObject);
+
             if (H3MP_GameManager.waitingWearables.ContainsKey(trackedID))
             {
                 if (wearables == null || wearables.Count == 0)

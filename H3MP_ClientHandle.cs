@@ -215,6 +215,7 @@ namespace H3MP
             }
             else
             {
+                H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosig);
                 trackedSosig.physicalObject.sendDestroy = false;
                 GameObject.Destroy(trackedSosig.physicalObject.gameObject);
             }

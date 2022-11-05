@@ -37,6 +37,7 @@ namespace H3MP
         public static List<H3MP_TrackedSosigData> sosigs = new List<H3MP_TrackedSosigData>(); // Tracked sosigs under control of this gameManager
         public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
         public static Dictionary<int, List<List<string>>> waitingWearables = new Dictionary<int, List<List<string>>>();
+        public static Dictionary<Sosig, H3MP_TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, H3MP_TrackedSosig>();
 
         public static bool giveControlOfDestroyed;
 
@@ -419,6 +420,7 @@ namespace H3MP
             trackedSosig.data = data;
             data.physicalObject = trackedSosig;
             trackedSosig.physicalSosig = sosigScript;
+            H3MP_GameManager.trackedSosigBySosig.Add(sosigScript, trackedSosig);
 
             data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
             data.configTemplate.AppliesDamageResistToIntegrityLoss = sosigScript.AppliesDamageResistToIntegrityLoss;
