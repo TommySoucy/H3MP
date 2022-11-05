@@ -103,7 +103,7 @@ namespace H3MP
                             prefab = o.Value.GetGameObject();
 
                         }
-                        catch(Exception ex)
+                        catch(Exception)
                         {
                             Debug.LogError("There was an error trying to retrieve prefab with ID: " + o.Key);
                             continue;
@@ -124,7 +124,7 @@ namespace H3MP
                                 }
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             Debug.LogError("There was an error trying to check if prefab with ID: " + o.Key+" is wearable or adding it to the list");
                             continue;
@@ -266,6 +266,15 @@ namespace H3MP
 
             harmony.Patch(sosigConfigurePatchOriginal, new HarmonyMethod(sosigConfigurePatchPrefix));
 
+            // SosigLinkActionPatch
+            MethodInfo sosigLinkRegisterWearablePatchOriginal = typeof(SosigLink).GetMethod("RegisterWearable", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkRegisterWearablePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("RegisterWearablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkDeRegisterWearablePatchOriginal = typeof(SosigLink).GetMethod("DeRegisterWearable", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkDeRegisterWearablePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("DeRegisterWearablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigLinkRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkRegisterWearablePatchPrefix));
+            harmony.Patch(sosigLinkDeRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkDeRegisterWearablePatchPrefix));
+
             // ChamberEjectRoundPatch
             MethodInfo chamberEjectRoundPatchOriginal = typeof(FVRFireArmChamber).GetMethod("EjectRound", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo chamberEjectRoundPatchPrefix = typeof(ChamberEjectRoundPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -300,7 +309,7 @@ namespace H3MP
             harmony.Patch(internal_InstantiateSingleWithParentPatchOriginal, new HarmonyMethod(internal_InstantiateSingleWithParentPatchPrefix), new HarmonyMethod(internal_InstantiateSingleWithParentPatchPostfix));
 
             // LoadDefaultSceneRoutinePatch
-            MethodInfo loadDefaultSceneRoutinePatchOriginal = typeof(ItemSpawnerV2).GetMethod("LoadDefaultSceneRoutine", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo loadDefaultSceneRoutinePatchOriginal = typeof(FVRSceneSettings).GetMethod("LoadDefaultSceneRoutine", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo loadDefaultSceneRoutinePatchPrefix = typeof(LoadDefaultSceneRoutinePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo loadDefaultSceneRoutinePatchPostfix = typeof(LoadDefaultSceneRoutinePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
@@ -1098,6 +1107,142 @@ namespace H3MP
             }
         }
     }
+
+    // Patches SosigLink to keep track of all actions taken on a link
+    class SosigLinkActionPatch
+    {
+        public static string knownWearableID;
+        public static int skipRegisterWearable;
+        public static int skipDeRegisterWearable;
+
+        static void RegisterWearablePrefix(ref SosigLink __instance, SosigWearable w)
+        {
+            if (skipRegisterWearable > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if(trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for(int i=0; i<__instance.S.Links.Count;++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if(linkIndex == -1)
+                {
+                    Debug.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if(knownWearableID == null)
+                    {
+                        knownWearableID = w.name;
+                        if (knownWearableID.EndsWith("(Clone)"))
+                        {
+                            knownWearableID = knownWearableID.Substring(0, knownWearableID.Length - 7);
+                        }
+                        if (Mod.sosigWearableMap.ContainsKey(knownWearableID))
+                        {
+                            knownWearableID = Mod.sosigWearableMap[knownWearableID];
+                        }
+                        else
+                        {
+                            Debug.LogError("SosigWearable: " + knownWearableID + " not found in map");
+                        }
+                    }
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                    }
+
+                    trackedSosig.data.wearables[linkIndex].Add(knownWearableID);
+
+                    knownWearableID = null;
+                }
+            }
+        }
+
+        static void DeRegisterWearablePrefix(ref SosigLink __instance, SosigWearable w)
+        {
+            if (skipDeRegisterWearable > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if(trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for(int i=0; i<__instance.S.Links.Count;++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if(linkIndex == -1)
+                {
+                    Debug.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if(knownWearableID == null)
+                    {
+                        knownWearableID = w.name;
+                        if (knownWearableID.EndsWith("(Clone)"))
+                        {
+                            knownWearableID = knownWearableID.Substring(0, knownWearableID.Length - 7);
+                        }
+                        if (Mod.sosigWearableMap.ContainsKey(knownWearableID))
+                        {
+                            knownWearableID = Mod.sosigWearableMap[knownWearableID];
+                        }
+                        else
+                        {
+                            Debug.LogError("SosigWearable: " + knownWearableID + " not found in map");
+                        }
+                    }
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigLinkDeRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigLinkDeRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                    }
+
+                    trackedSosig.data.wearables[linkIndex].Remove(knownWearableID);
+
+                    knownWearableID = null;
+                }
+            }
+        }
+    }
     #endregion
 
     #region Instatiation Patches
@@ -1180,8 +1325,8 @@ namespace H3MP
                 return;
             }
 
-            // Skip if not connected or no one to send data to
-            if (__result == null || Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            // Skip if not connected
+            if (__result == null || Mod.managerObject == null)
             {
                 return;
             }
@@ -1223,8 +1368,8 @@ namespace H3MP
                 return;
             }
 
-            // Skip if not connected or no one to send data to
-            if (data == null || Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            // Skip if not connected
+            if (data == null || Mod.managerObject == null)
             {
                 return;
             }
@@ -1290,8 +1435,8 @@ namespace H3MP
                 return;
             }
 
-            // Skip if not connected or no one to send data to
-            if (__result == null || Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            // Skip if not connected
+            if (__result == null || Mod.managerObject == null)
             {
                 return;
             }
@@ -1333,12 +1478,11 @@ namespace H3MP
                 return;
             }
 
-            // Skip if not connected or no one to send data to
-            if (data == null || Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            // Skip if not connected
+            if (data == null || Mod.managerObject == null)
             {
                 return;
             }
-
 
             // If this is a game object check and sync all physical objects if necessary
             if (data is GameObject)
@@ -1364,7 +1508,7 @@ namespace H3MP
 
         static void Postfix(ref UnityEngine.Object __result, Transform parent)
         {
-            // Skip if not connected or no one to send data to
+            // Skip if not connected
             if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
             {
                 return;
@@ -1396,7 +1540,7 @@ namespace H3MP
         }
     }
 
-    // Patches ItemSpawnerV2.LoadDefaultSceneRoutine so we know when we spawn items from vault as part of scene loading
+    // Patches FVRSceneSettings.LoadDefaultSceneRoutine so we know when we spawn items from vault as part of scene loading
     class LoadDefaultSceneRoutinePatch
     {
         public static bool inLoadDefaultSceneRoutine;
@@ -1443,20 +1587,6 @@ namespace H3MP
     // Patches VaultSystem.SpawnVaultFileRoutine.MoveNext to keep track of whether we are spawning items as part of scene loading
     class SpawnVaultFileRoutinePatch
     {
-        // Use https://github.com/BepInEx/HarmonyX/wiki/Enumerator-patches
-        // to patch the specific moveNext where the instantiate happens
-
-        // In prefix, set a flag true
-        // In postfix set the flag false
-
-        // In between, when instantiate is called in SpawnVaultFileRoutine, in the instantiate patches, we check the flag, if true we skip instantiation
-        // Problem is that this routine is used to spawn objects other than default scene, so these will be skipped too
-
-        // We need another flag to know if this was started by load default scene, because only if it was do we want to skip the insntatiation
-        // We could do this by having a flag set when we call load default scene and when we start the first step of the coroutine we set our own flag and reset 
-        // the load default scene to false. Our own flag tells us we started the coroutine by load default scene
-        // So now we only skip the instantiations specific to the default scene
-
         public static bool inSpawnVaultFileRoutineToSkip;
         public static List<string> filesToSkip;
         public static string currentFile;

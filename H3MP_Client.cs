@@ -324,6 +324,8 @@ namespace H3MP
                 { (int)ServerPackets.sosigDropSlot, H3MP_ClientHandle.SosigDropSlot },
                 { (int)ServerPackets.sosigHandDrop, H3MP_ClientHandle.SosigHandDrop },
                 { (int)ServerPackets.sosigConfigure, H3MP_ClientHandle.SosigConfigure },
+                { (int)ServerPackets.sosigLinkRegisterWearable, H3MP_ClientHandle.SosigLinkRegisterWearable },
+                { (int)ServerPackets.sosigLinkDeRegisterWearable, H3MP_ClientHandle.SosigLinkDeRegisterWearable },
             };
 
             // All vanilla scenes can be synced by default
@@ -375,6 +377,7 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene)
         {
+            Debug.Log("Received order to add a sosig");
             // Adjust sosigs size to acommodate if necessary
             if (sosigs.Length <= trackedSosig.trackedID)
             {

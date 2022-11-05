@@ -267,6 +267,7 @@ namespace H3MP
                 if (H3MP_Server.sosigs[i] != null &&
                     player.scene.Equals(H3MP_Server.sosigs[i].controller == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene))
                 {
+                    Debug.Log("\tSending a sosig");
                     H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, ID);
                 }
             }

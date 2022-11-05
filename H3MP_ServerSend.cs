@@ -598,5 +598,43 @@ namespace H3MP
                 }
             }
         }
+
+        public static void SosigLinkRegisterWearable(int trackedSosigID, int linkIndex, string itemID, int fromclientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigLinkRegisterWearable))
+            {
+                packet.Write(trackedSosigID);
+                packet.Write((byte)linkIndex);
+                packet.Write(itemID);
+
+                if (fromclientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(fromclientID, packet);
+                }
+            }
+        }
+
+        public static void SosigLinkDeRegisterWearable(int trackedSosigID, int linkIndex, string itemID, int fromclientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigLinkDeRegisterWearable))
+            {
+                packet.Write(trackedSosigID);
+                packet.Write((byte)linkIndex);
+                packet.Write(itemID);
+
+                if (fromclientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(fromclientID, packet);
+                }
+            }
+        }
     }
 }

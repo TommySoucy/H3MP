@@ -246,6 +246,8 @@ namespace H3MP
                 { (int)ClientPackets.sosigDropSlot, H3MP_ServerHandle.SosigDropSlot },
                 { (int)ClientPackets.sosigHandDrop, H3MP_ServerHandle.SosigHandDrop },
                 { (int)ClientPackets.sosigConfigure, H3MP_ServerHandle.SosigConfigure },
+                { (int)ClientPackets.sosigLinkRegisterWearable, H3MP_ServerHandle.SosigLinkRegisterWearable },
+                { (int)ClientPackets.sosigLinkDeRegisterWearable, H3MP_ServerHandle.SosigLinkDeRegisterWearable },
             };
 
             items = new H3MP_TrackedItemData[100];

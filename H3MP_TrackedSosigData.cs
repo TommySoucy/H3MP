@@ -32,7 +32,8 @@ namespace H3MP
         public int localTrackedID;
         public bool previousActive;
         public bool active;
-        public string[][] wearables;
+        public List<List<string>> wearables;
+        public float[][] linkData;
 
         public IEnumerator Instantiate()
         {
@@ -53,6 +54,26 @@ namespace H3MP
             physicalObject.physicalSosig = sosigInstance.GetComponent<Sosig>();
             SosigConfigurePatch.skipConfigure = true;
             physicalObject.physicalSosig.Configure(configTemplate);
+
+            if (H3MP_GameManager.waitingWearables.ContainsKey(trackedID))
+            {
+                if (wearables == null || wearables.Count == 0)
+                {
+                    wearables = H3MP_GameManager.waitingWearables[trackedID];
+                }
+                else
+                {
+                    List<List<string>> newWearables = H3MP_GameManager.waitingWearables[trackedID];
+                    for(int i = 0; i < newWearables.Count; ++i)
+                    {
+                        for (int j = 0; j < newWearables.Count; ++j)
+                        {
+                            wearables[i].Add(newWearables[i][j]);
+                        }
+                    }
+                }
+                H3MP_GameManager.waitingWearables.Remove(trackedID);
+            }
 
             AnvilManager.Run(EquipWearables());
 
@@ -77,16 +98,53 @@ namespace H3MP
         {
             if (wearables != null)
             {
-                for (int i = 0; i < wearables.Length; ++i)
+                for (int i = 0; i < wearables.Count; ++i)
                 {
-                    for (int j = 0; j < wearables.Length; ++j)
+                    for (int j = 0; j < wearables[i].Count; ++j)
                     {
-                        yield return IM.OD[wearables[i][j]].GetGameObjectAsync();
-                        GameObject outfitItemObject = GameObject.Instantiate(IM.OD[wearables[i][j]].GetGameObject(), physicalObject.physicalSosig.Links[i].transform.position, physicalObject.physicalSosig.Links[i].transform.rotation, physicalObject.physicalSosig.Links[i].transform);
-                        SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
-                        wearableScript.RegisterWearable(physicalObject.physicalSosig.Links[i]);
+                        if (IM.OD.ContainsKey(wearables[i][j]))
+                        {
+                            yield return IM.OD[wearables[i][j]].GetGameObjectAsync();
+                            ++Mod.skipAllInstantiates;
+                            GameObject outfitItemObject = GameObject.Instantiate(IM.OD[wearables[i][j]].GetGameObject(), physicalObject.physicalSosig.Links[i].transform.position, physicalObject.physicalSosig.Links[i].transform.rotation, physicalObject.physicalSosig.Links[i].transform);
+                            --Mod.skipAllInstantiates;
+                            SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
+                            ++SosigLinkActionPatch.skipRegisterWearable;
+                            wearableScript.RegisterWearable(physicalObject.physicalSosig.Links[i]);
+                            --SosigLinkActionPatch.skipRegisterWearable;
+                        }
+                        else
+                        {
+                            Debug.LogWarning("TrackedSosigData.EquipWearables: Wearable "+ wearables[i][j]+" not found in OD");
+                        }
                     }
                 }
+            }
+            yield break;
+        }
+
+        public IEnumerator EquipWearable(int linkIndex, string ID, bool skip = false)
+        {
+            if (IM.OD.ContainsKey(ID))
+            {
+                yield return IM.OD[ID].GetGameObjectAsync();
+                ++Mod.skipAllInstantiates;
+                GameObject outfitItemObject = GameObject.Instantiate(IM.OD[ID].GetGameObject(), physicalObject.physicalSosig.Links[linkIndex].transform.position, physicalObject.physicalSosig.Links[linkIndex].transform.rotation, physicalObject.physicalSosig.Links[linkIndex].transform);
+                --Mod.skipAllInstantiates;
+                SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
+                if (skip)
+                {
+                    ++SosigLinkActionPatch.skipRegisterWearable;
+                }
+                wearableScript.RegisterWearable(physicalObject.physicalSosig.Links[linkIndex]);
+                if (skip)
+                {
+                    --SosigLinkActionPatch.skipRegisterWearable;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("TrackedSosigData.EquipWearables: Wearable " + ID + " not found in OD");
             }
             yield break;
         }
@@ -113,8 +171,8 @@ namespace H3MP
                 {
                     physicalObject.physicalSosig.SetIFF(IFF);
                 }
-                physicalObject.physicalSosig.CoreTarget.position = position;
-                physicalObject.physicalSosig.CoreTarget.rotation = rotation;
+                physicalObject.transform.position = position;
+                physicalObject.transform.rotation = rotation;
                 sosigInvAmmoStores.SetValue(physicalObject.physicalSosig.Inventory, ammoStores);
                 
                 if (active)
@@ -140,8 +198,8 @@ namespace H3MP
             IFF = physicalObject.physicalSosig.GetIFF();
             previousPos = position;
             previousRot = rotation;
-            position = physicalObject.physicalSosig.CoreTarget.position;
-            rotation = physicalObject.physicalSosig.CoreTarget.rotation;
+            position = physicalObject.transform.position;
+            rotation = physicalObject.transform.rotation;
             previousAmmoStores = ammoStores;
             ammoStores = (int[])sosigInvAmmoStores.GetValue(physicalObject.physicalSosig.Inventory);
 

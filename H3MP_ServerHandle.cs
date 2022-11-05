@@ -2,9 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 using static H3MP.H3MP_PlayerHitbox;
+using static Valve.VR.SteamVR_ExternalCamera;
 
 namespace H3MP
 {
@@ -370,6 +372,112 @@ namespace H3MP
             }
 
             H3MP_ServerSend.SosigConfigure(sosigTrackedID, config, clientID);
+        }
+
+        public static void SosigLinkRegisterWearable(int clientID, H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte linkIndex = packet.ReadByte();
+            string wearableID = packet.ReadString();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.wearables == null)
+                {
+                    trackedSosig.wearables = new List<List<string>>();
+                    if (trackedSosig.physicalObject != null)
+                    {
+                        foreach (SosigLink link in trackedSosig.physicalObject.physicalSosig.Links)
+                        {
+                            trackedSosig.wearables.Add(new List<string>());
+                        }
+                    }
+                    else
+                    {
+                        while (trackedSosig.wearables.Count <= linkIndex)
+                        {
+                            trackedSosig.wearables.Add(new List<string>());
+                        }
+                    }
+                }
+                trackedSosig.wearables[linkIndex].Add(wearableID);
+
+                if (trackedSosig.physicalObject != null)
+                {
+                    AnvilManager.Run(trackedSosig.EquipWearable(linkIndex, wearableID, true));
+                }
+            }
+            else // We could receive a register wearable packet before the sosig is instantiated
+            {
+                // Keep the wearables in a dictionary that we will query once we instantiate the sosig
+                if (H3MP_GameManager.waitingWearables.ContainsKey(sosigTrackedID))
+                {
+                    if (H3MP_GameManager.waitingWearables[sosigTrackedID].Count <= linkIndex)
+                    {
+                        while (H3MP_GameManager.waitingWearables[sosigTrackedID].Count <= linkIndex)
+                        {
+                            H3MP_GameManager.waitingWearables[sosigTrackedID].Add(new List<string>());
+                        }
+                    }
+                    H3MP_GameManager.waitingWearables[sosigTrackedID][linkIndex].Add(wearableID);
+                }
+                else
+                {
+                    H3MP_GameManager.waitingWearables.Add(sosigTrackedID, new List<List<string>>());
+                    while (H3MP_GameManager.waitingWearables[sosigTrackedID].Count <= linkIndex)
+                    {
+                        H3MP_GameManager.waitingWearables[sosigTrackedID].Add(new List<string>());
+                    }
+                    H3MP_GameManager.waitingWearables[sosigTrackedID][linkIndex].Add(wearableID);
+                }
+            }
+
+            H3MP_ServerSend.SosigLinkRegisterWearable(sosigTrackedID, linkIndex, wearableID, clientID);
+        }
+
+        public static void SosigLinkDeRegisterWearable(int clientID, H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte linkIndex = packet.ReadByte();
+            string wearableID = packet.ReadString();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.wearables != null)
+                {
+                    if (trackedSosig.physicalObject != null)
+                    {
+                        FieldInfo wearablesField = typeof(SosigLink).GetField("m_wearables", BindingFlags.NonPublic | BindingFlags.Instance);
+                        for (int i = 0; i < trackedSosig.wearables[linkIndex].Count; ++i)
+                        {
+                            if (trackedSosig.wearables[linkIndex][i].Equals(wearableID))
+                            {
+                                trackedSosig.wearables[linkIndex].RemoveAt(i);
+                                if (trackedSosig.physicalObject != null)
+                                {
+                                    ++SosigLinkActionPatch.skipDeRegisterWearable;
+                                    trackedSosig.physicalObject.physicalSosig.Links[linkIndex].DeRegisterWearable((wearablesField.GetValue(trackedSosig.physicalObject.physicalSosig.Links[linkIndex]) as List<SosigWearable>)[i]);
+                                    --SosigLinkActionPatch.skipDeRegisterWearable;
+                                }
+                                break;                           
+                            }
+                        }
+                    }
+                    else
+                    {
+                        trackedSosig.wearables[linkIndex].Remove(wearableID);
+                    }
+                }
+            }
+            else if (H3MP_GameManager.waitingWearables.ContainsKey(sosigTrackedID)
+                    && H3MP_GameManager.waitingWearables[sosigTrackedID].Count > linkIndex)
+            {
+                H3MP_GameManager.waitingWearables[sosigTrackedID][linkIndex].Remove(wearableID);
+            }
+
+            H3MP_ServerSend.SosigLinkDeRegisterWearable(sosigTrackedID, linkIndex, wearableID, clientID);
         }
     }
 }

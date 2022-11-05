@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,7 +10,7 @@ using static Valve.VR.SteamVR_ExternalCamera;
 
 namespace H3MP
 {
-    // WRITTEN BY Tom Weiland: https://tomweiland.net/github
+    // MOSTLY WRITTEN BY Tom Weiland: https://tomweiland.net/github
 
     /// <summary>Sent from server to client.</summary>
     public enum ServerPackets
@@ -36,7 +37,9 @@ namespace H3MP
         sosigPlaceItemIn = 20,
         sosigDropSlot = 21,
         sosigHandDrop = 22,
-        sosigConfigure = 23
+        sosigConfigure = 23,
+        sosigLinkRegisterWearable = 24,
+        sosigLinkDeRegisterWearable = 25
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -62,7 +65,9 @@ namespace H3MP
         sosigPlaceItemIn = 18,
         sosigDropSlot = 19,
         sosigHandDrop = 20,
-        sosigConfigure = 21
+        sosigConfigure = 21,
+        sosigLinkRegisterWearable = 22,
+        sosigLinkDeRegisterWearable = 23
     }
 
     public class H3MP_Packet : IDisposable
@@ -284,7 +289,8 @@ namespace H3MP
             Write((byte)damage.Class);
         }
         /// <summary>Adds a H3MP_TrackedSosigData to the packet.</summary>
-        /// <param name="_value">The H3MP_TrackedSosigData to add.</param>
+        /// <param name="trackedSosig">The H3MP_TrackedSosigData to add.</param>
+        /// <param name="full">Whether to include all necessary data to instantiate this sosig.</param>
         public void Write(H3MP_TrackedSosigData trackedSosig, bool full = false)
         {
             Write(trackedSosig.trackedID);
@@ -304,40 +310,40 @@ namespace H3MP
             {
                 Write((byte)0);
             }
+            if(trackedSosig.linkData == null || trackedSosig.linkData.Length == 0)
+            {
+                Write((byte)0);
+            }
+            else
+            {
+                Write((byte)trackedSosig.linkData.Length);
+                for (int i = 0; i < trackedSosig.linkData.Length; ++i) 
+                {
+                    for(int k=0; k < 5; ++k)
+                    {
+                        Write(trackedSosig.linkData[i][k]);
+                    }
+                }
+            }
 
             if (full)
             {
                 Write(trackedSosig.configTemplate);
                 Write(trackedSosig.controller);
                 Write(trackedSosig.localTrackedID);
-                FieldInfo wearablesInfo = typeof(SosigLink).GetField("m_wearables", BindingFlags.NonPublic | BindingFlags.Instance);
-                Write((byte)trackedSosig.physicalObject.physicalSosig.Links.Count);
-                for(int i=0; i < trackedSosig.physicalObject.physicalSosig.Links.Count; ++i)
+                Write((byte)trackedSosig.wearables.Count);
+                for(int i=0; i < trackedSosig.wearables.Count; ++i)
                 {
-                    List<SosigWearable> wearables = (List<SosigWearable>)wearablesInfo.GetValue(trackedSosig.physicalObject.physicalSosig.Links[i]);
-                    if (wearables == null || wearables.Count == 0)
+                    if (trackedSosig.wearables[i] == null || trackedSosig.wearables[i].Count == 0)
                     {
                         Write((byte)0);
                     }
                     else
                     {
-                        Write((byte)wearables.Count);
-                        for (int j = 0; j < wearables.Count; ++j)
+                        Write((byte)trackedSosig.wearables[i].Count);
+                        for (int j = 0; j < trackedSosig.wearables[i].Count; ++j)
                         {
-                            string actualName = wearables[j].name;
-                            if (actualName.EndsWith("(Clone)"))
-                            {
-                                actualName = actualName.Substring(0, actualName.Length - 7);
-                            }
-                            if (Mod.sosigWearableMap.ContainsKey(actualName))
-                            {
-                                Write(Mod.sosigWearableMap[actualName]);
-                            }
-                            else
-                            {
-                                Debug.LogError(actualName + " was not found in sosigWearableMap");
-                                Write("n");
-                            }
+                            Write(trackedSosig.wearables[i][j]);
                         }
                     }
                 }
@@ -348,7 +354,7 @@ namespace H3MP
             }
         }
         /// <summary>Adds a SosigConfigTemplate to the packet.</summary>
-        /// <param name="_value">The SosigConfigTemplate to add.</param>
+        /// <param name="config">The SosigConfigTemplate to add.</param>
         public void Write(SosigConfigTemplate config)
         {
             Write(config.AppliesDamageResistToIntegrityLoss);
@@ -704,6 +710,26 @@ namespace H3MP
                     trackedSosig.ammoStores[i] = ReadInt();
                 }
             }
+            byte sosigLinkDataLength = ReadByte();
+            if (sosigLinkDataLength > 0)
+            {
+                if(trackedSosig.linkData == null)
+                {
+                    trackedSosig.linkData = new float[sosigLinkDataLength][];
+                }
+                for (int i = 0; i < sosigLinkDataLength; ++i)
+                {
+                    if(trackedSosig.linkData[i] == null || trackedSosig.linkData[i].Length != 5)
+                    {
+                        trackedSosig.linkData[i] = new float[5];
+                    }
+
+                    for (int j = 0; j < 5; ++j)
+                    {
+                        trackedSosig.linkData[i][j] = ReadFloat();
+                    }
+                }
+            }
 
             if (full)
             {
@@ -711,16 +737,16 @@ namespace H3MP
                 trackedSosig.controller = ReadInt();
                 trackedSosig.localTrackedID = ReadInt();
                 byte linkCount = ReadByte();
-                trackedSosig.wearables = new string[linkCount][];
+                trackedSosig.wearables = new List<List<string>>();
                 for(int i=0; i < linkCount; ++i)
                 {
+                    trackedSosig.wearables.Add(new List<string>());
                     byte wearableCount = ReadByte();
-                    trackedSosig.wearables[i] = new string[wearableCount];
                     if(wearableCount > 0)
                     {
                         for(int j = 0; j < wearableCount; ++j)
                         {
-                            trackedSosig.wearables[i][j] = ReadString();
+                            trackedSosig.wearables[i].Add(ReadString());
                         }
                     }
                 }

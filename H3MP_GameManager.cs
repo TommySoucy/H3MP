@@ -36,6 +36,7 @@ namespace H3MP
         public static List<H3MP_TrackedItemData> items = new List<H3MP_TrackedItemData>(); // Tracked items under control of this gameManager
         public static List<H3MP_TrackedSosigData> sosigs = new List<H3MP_TrackedSosigData>(); // Tracked sosigs under control of this gameManager
         public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
+        public static Dictionary<int, List<List<string>>> waitingWearables = new Dictionary<int, List<List<string>>>();
 
         public static bool giveControlOfDestroyed;
 
@@ -367,19 +368,16 @@ namespace H3MP
             Sosig sosigScript = root.GetComponent<Sosig>();
             if (sosigScript != null)
             {
-                Debug.Log("SyncTrackedSosigs called on a sosig with everything: "+ controlEverything + ", syncing if necessary");
                 H3MP_TrackedSosig trackedSosig = root.GetComponent<H3MP_TrackedSosig>();
                 if (trackedSosig == null)
                 {
-                    Debug.Log("\tNot yet tracked");
                     if (controlEverything)
                     {
-                        Debug.Log("\tWe want to control");
                         trackedSosig = MakeSosigTracked(sosigScript);
                         if (H3MP_ThreadManager.host)
                         {
                             // This will also send a packet with the sosig to be added in the client's global sosig list
-                            H3MP_ServerSend.TrackedSosig(trackedSosig.data, scene, 0);
+                            H3MP_Server.AddTrackedSosig(trackedSosig.data, scene, 0);
                         }
                         else
                         {
@@ -420,6 +418,7 @@ namespace H3MP
             H3MP_TrackedSosigData data = new H3MP_TrackedSosigData();
             trackedSosig.data = data;
             data.physicalObject = trackedSosig;
+            trackedSosig.physicalSosig = sosigScript;
 
             data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
             data.configTemplate.AppliesDamageResistToIntegrityLoss = sosigScript.AppliesDamageResistToIntegrityLoss;
@@ -501,6 +500,42 @@ namespace H3MP
                 data.configTemplate.TargetCapacity = (int)typeof(SosigTargetPrioritySystem).GetField("m_eventCapacity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority); 
                 data.configTemplate.TargetTrackingTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_maxTrackingTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority);
                 data.configTemplate.NoFreshTargetTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_timeToNoFreshTarget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority);
+            }
+            data.position = sosigScript.CoreTarget.position;
+            data.rotation = sosigScript.CoreTarget.rotation;
+            data.active = trackedSosig.gameObject.activeInHierarchy;
+            data.linkData = new float[sosigScript.Links.Count][];
+            for(int i=0; i < sosigScript.Links.Count; ++i)
+            {
+                data.linkData[i] = new float[5];
+                data.linkData[i][0] = sosigScript.Links[i].StaggerMagnitude;
+                data.linkData[i][1] = sosigScript.Links[i].DamMult;
+                data.linkData[i][2] = sosigScript.Links[i].DamMultAVG;
+                data.linkData[i][3] = sosigScript.Links[i].CollisionBluntDamageMultiplier;
+                data.linkData[i][4] = (float)typeof(SosigLink).GetField("m_integrity", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(sosigScript.Links[i]);
+            }
+            data.wearables = new List<List<string>>();
+            FieldInfo wearablesField = typeof(SosigLink).GetField("m_wearables", BindingFlags.NonPublic | BindingFlags.Instance);
+            for (int i = 0; i < sosigScript.Links.Count; ++i)
+            {
+                data.wearables.Add(new List<string>());
+                List<SosigWearable> sosigWearables = (List<SosigWearable>)wearablesField.GetValue(sosigScript.Links[i]);
+                for (int j = 0; j < sosigWearables.Count; ++j)
+                {
+                    data.wearables[i].Add(sosigWearables[j].name);
+                    if (data.wearables[i][j].EndsWith("(Clone)"))
+                    {
+                        data.wearables[i][j] = data.wearables[i][j].Substring(0, data.wearables[i][j].Length - 7);
+                    }
+                    if (Mod.sosigWearableMap.ContainsKey(data.wearables[i][j]))
+                    {
+                        data.wearables[i][j] = Mod.sosigWearableMap[data.wearables[i][j]];
+                    }
+                    else
+                    {
+                        Debug.LogError("SosigWearable: " + data.wearables[i][j] + " not found in map");
+                    }
+                }
             }
 
             data.controller = H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID;
