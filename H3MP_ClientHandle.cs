@@ -433,5 +433,138 @@ namespace H3MP
                 H3MP_GameManager.waitingWearables[sosigTrackedID][linkIndex].Remove(wearableID);
             }
         }
+
+        public static void SosigSetIFF(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte IFF = packet.ReadByte();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                trackedSosig.IFF = IFF;
+                if (trackedSosig.physicalObject != null)
+                {
+                    ++SosigIFFPatch.skip;
+                    trackedSosig.physicalObject.physicalSosig.SetIFF(IFF);
+                    --SosigIFFPatch.skip;
+                }
+            }
+        }
+
+        public static void SosigSetOriginalIFF(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte IFF = packet.ReadByte();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                trackedSosig.IFF = IFF;
+                if (trackedSosig.physicalObject != null)
+                {
+                    ++SosigIFFPatch.skip;
+                    trackedSosig.physicalObject.physicalSosig.SetOriginalIFFTeam(IFF);
+                    --SosigIFFPatch.skip;
+                }
+            }
+        }
+
+        public static void SosigLinkDamage(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte linkIndex = packet.ReadByte();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.controller != H3MP_Client.singleton.ID)
+                {
+                    if (trackedSosig.physicalObject != null)
+                    {
+                        ++SosigLinkDamagePatch.skip;
+                        trackedSosig.physicalObject.physicalSosig.Links[linkIndex].Damage(damage);
+                        --SosigLinkDamagePatch.skip;
+                    }
+                }
+            }
+        }
+
+        public static void SosigWearableDamage(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte linkIndex = packet.ReadByte();
+            byte wearableIndex = packet.ReadByte();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.controller != H3MP_Client.singleton.ID)
+                {
+                    if (trackedSosig.physicalObject != null)
+                    {
+                        ++SosigWearableDamagePatch.skip;
+                        (Mod.SosigLink_m_wearables.GetValue(trackedSosig.physicalObject.physicalSosig.Links[linkIndex]) as List<SosigWearable>)[wearableIndex].Damage(damage);
+                        --SosigWearableDamagePatch.skip;
+                    }
+                }
+            }
+        }
+
+        public static void SosigDamageData(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.controller != H3MP_Client.singleton.ID && trackedSosig.physicalObject != null)
+                {
+                    Sosig physicalSosig = trackedSosig.physicalObject.physicalSosig;
+                    Mod.Sosig_m_isStunned.SetValue(physicalSosig, packet.ReadBool());
+                    physicalSosig.m_stunTimeLeft = packet.ReadFloat();
+                    physicalSosig.BodyState = (Sosig.SosigBodyState)packet.ReadByte();
+                    Mod.Sosig_m_isOnOffMeshLinkField.SetValue(physicalSosig, packet.ReadBool());
+                    physicalSosig.Agent.autoTraverseOffMeshLink = packet.ReadBool();
+                    physicalSosig.Agent.enabled = packet.ReadBool();
+                    List<CharacterJoint> joints = (List<CharacterJoint>)Mod.Sosig_m_joints.GetValue(physicalSosig);
+                    byte jointCount = packet.ReadByte();
+                    for (int i = 0; i < jointCount; ++i)
+                    {
+                        SoftJointLimit softJointLimit = joints[i].lowTwistLimit;
+                        softJointLimit.limit = packet.ReadFloat();
+                        joints[i].lowTwistLimit = softJointLimit;
+                        softJointLimit = joints[i].highTwistLimit;
+                        softJointLimit.limit = packet.ReadFloat();
+                        joints[i].highTwistLimit = softJointLimit;
+                        softJointLimit = joints[i].swing1Limit;
+                        softJointLimit.limit = packet.ReadFloat();
+                        joints[i].swing1Limit = softJointLimit;
+                        softJointLimit = joints[i].swing2Limit;
+                        softJointLimit.limit = packet.ReadFloat();
+                        joints[i].swing2Limit = softJointLimit;
+                    }
+                    Mod.Sosig_m_isCountingDownToStagger.SetValue(physicalSosig, packet.ReadBool());
+                    Mod.Sosig_m_staggerAmountToApply.SetValue(physicalSosig, packet.ReadFloat());
+                    Mod.Sosig_m_recoveringFromBallisticState.SetValue(physicalSosig, packet.ReadBool());
+                    Mod.Sosig_m_recoveryFromBallisticLerp.SetValue(physicalSosig, packet.ReadFloat());
+                    Mod.Sosig_m_tickDownToWrithe.SetValue(physicalSosig, packet.ReadFloat());
+                    Mod.Sosig_m_recoveryFromBallisticTick.SetValue(physicalSosig, packet.ReadFloat());
+                    Mod.Sosig_m_lastIFFDamageSource.SetValue(physicalSosig, packet.ReadInt());
+                    Mod.Sosig_m_diedFromClass.SetValue(physicalSosig, (Damage.DamageClass)packet.ReadByte());
+                    Mod.Sosig_m_isBlinded.SetValue(physicalSosig, packet.ReadBool());
+                    Mod.Sosig_m_blindTime.SetValue(physicalSosig, packet.ReadFloat());
+                    Mod.Sosig_m_isFrozen.SetValue(physicalSosig, packet.ReadBool());
+                    Mod.Sosig_m_debuffTime_Freeze.SetValue(physicalSosig, packet.ReadFloat());
+                    Mod.Sosig_m_receivedHeadShot.SetValue(physicalSosig, packet.ReadBool());
+                    Mod.Sosig_m_timeSinceLastDamage.SetValue(physicalSosig, packet.ReadFloat());
+                    Mod.Sosig_m_isConfused.SetValue(physicalSosig, packet.ReadBool());
+                    physicalSosig.m_confusedTime = packet.ReadFloat();
+                    Mod.Sosig_m_storedShudder.SetValue(physicalSosig, packet.ReadFloat());
+                }
+            }
+        }
     }
 }

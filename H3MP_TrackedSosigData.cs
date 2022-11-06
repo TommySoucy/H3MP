@@ -19,8 +19,6 @@ namespace H3MP
 
         public int trackedID;
         public int controller;
-        public int previousIFF;
-        public int IFF;
         public Vector3 previousPos;
         public Quaternion previousRot;
         public Vector3 position;
@@ -34,6 +32,7 @@ namespace H3MP
         public bool active;
         public List<List<string>> wearables;
         public float[][] linkData;
+        public byte IFF;
 
         public IEnumerator Instantiate()
         {
@@ -91,6 +90,9 @@ namespace H3MP
             {
                 GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosig.E);
             }
+
+            // Initially set IFF
+            physicalObject.physicalSosig.SetIFF(IFF);
 
             // Initially set itself
             Update(this);
@@ -154,8 +156,6 @@ namespace H3MP
         public void Update(H3MP_TrackedSosigData updatedItem)
         {
             // Set data
-            previousIFF = IFF;
-            IFF = updatedItem.IFF;
             order = updatedItem.order;
             previousPos = position;
             previousRot = rotation;
@@ -169,10 +169,6 @@ namespace H3MP
             // Set physically
             if (physicalObject != null)
             {
-                if (previousIFF != IFF)
-                {
-                    physicalObject.physicalSosig.SetIFF(IFF);
-                }
                 physicalObject.transform.position = position;
                 physicalObject.transform.rotation = rotation;
                 sosigInvAmmoStores.SetValue(physicalObject.physicalSosig.Inventory, ammoStores);
@@ -196,8 +192,6 @@ namespace H3MP
 
         public bool Update()
         {
-            previousIFF = IFF;
-            IFF = physicalObject.physicalSosig.GetIFF();
             previousPos = position;
             previousRot = rotation;
             position = physicalObject.transform.position;
@@ -228,7 +222,7 @@ namespace H3MP
                     }
                 }
             }
-            return previousActive != active || previousIFF != IFF || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+            return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation);
         }
     }
 }

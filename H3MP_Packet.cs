@@ -39,7 +39,12 @@ namespace H3MP
         sosigHandDrop = 22,
         sosigConfigure = 23,
         sosigLinkRegisterWearable = 24,
-        sosigLinkDeRegisterWearable = 25
+        sosigLinkDeRegisterWearable = 25,
+        sosigSetIFF = 26,
+        sosigSetOriginalIFF = 27,
+        sosigLinkDamage = 28,
+        sosigDamageData = 29,
+        sosigWearableDamage = 30
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -67,14 +72,19 @@ namespace H3MP
         sosigHandDrop = 20,
         sosigConfigure = 21,
         sosigLinkRegisterWearable = 22,
-        sosigLinkDeRegisterWearable = 23
+        sosigLinkDeRegisterWearable = 23,
+        sosigSetIFF = 24,
+        sosigSetOriginalIFF = 25,
+        sosigLinkDamage = 26,
+        sosigDamageData = 27,
+        sosigWearableDamage = 28
     }
 
     public class H3MP_Packet : IDisposable
     {
         public List<byte> buffer;
         public byte[] readableBuffer;
-        private int readPos;
+        public int readPos;
 
         /// <summary>Creates a new empty packet (without an ID).</summary>
         public H3MP_Packet()
@@ -297,7 +307,6 @@ namespace H3MP
             Write(trackedSosig.position);
             Write(trackedSosig.rotation);
             Write(trackedSosig.active);
-            Write((byte)trackedSosig.IFF);
             if(trackedSosig.ammoStores != null && trackedSosig.ammoStores.Length > 0)
             {
                 Write((byte)trackedSosig.ammoStores.Length);
@@ -328,6 +337,7 @@ namespace H3MP
 
             if (full)
             {
+                Write((byte)trackedSosig.IFF);
                 Write(trackedSosig.configTemplate);
                 Write(trackedSosig.controller);
                 Write(trackedSosig.localTrackedID);
@@ -700,7 +710,6 @@ namespace H3MP
             trackedSosig.position = ReadVector3();
             trackedSosig.rotation = ReadQuaternion();
             trackedSosig.active = ReadBool();
-            trackedSosig.IFF = ReadByte();
             byte ammoStoreLength = ReadByte();
             if(ammoStoreLength > 0)
             {
@@ -733,6 +742,7 @@ namespace H3MP
 
             if (full)
             {
+                trackedSosig.IFF = ReadByte();
                 trackedSosig.configTemplate = ReadSosigConfig();
                 trackedSosig.controller = ReadInt();
                 trackedSosig.localTrackedID = ReadInt();

@@ -47,6 +47,28 @@ namespace H3MP
         public static int skipNextFires = 0;
         public static int skipAllInstantiates = 0;
 
+        // Reused private FieldInfos
+        public static readonly FieldInfo Sosig_m_isOnOffMeshLinkField = typeof(Sosig).GetField("m_isOnOffMeshLink", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_joints = typeof(Sosig).GetField("m_joints", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_isCountingDownToStagger = typeof(Sosig).GetField("m_isCountingDownToStagger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_staggerAmountToApply = typeof(Sosig).GetField("m_staggerAmountToApply", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_recoveringFromBallisticState = typeof(Sosig).GetField("m_recoveringFromBallisticState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_recoveryFromBallisticLerp = typeof(Sosig).GetField("m_recoveryFromBallisticLerp", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_tickDownToWrithe = typeof(Sosig).GetField("m_tickDownToWrithe", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_recoveryFromBallisticTick = typeof(Sosig).GetField("m_recoveryFromBallisticTick", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_blindTime = typeof(Sosig).GetField("m_blindTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_debuffTime_Freeze = typeof(Sosig).GetField("m_debuffTime_Freeze", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_timeSinceLastDamage = typeof(Sosig).GetField("m_timeSinceLastDamage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_storedShudder = typeof(Sosig).GetField("m_storedShudder", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_isStunned = typeof(Sosig).GetField("m_isStunned", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_lastIFFDamageSource = typeof(Sosig).GetField("m_lastIFFDamageSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_diedFromClass = typeof(Sosig).GetField("m_diedFromClass", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_isBlinded = typeof(Sosig).GetField("m_isBlinded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_isFrozen = typeof(Sosig).GetField("m_isFrozen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_receivedHeadShot = typeof(Sosig).GetField("m_receivedHeadShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_isConfused = typeof(Sosig).GetField("m_isConfused", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo SosigLink_m_wearables = typeof(SosigLink).GetField("m_wearables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
         // Debug
         bool debug;
 
@@ -289,6 +311,15 @@ namespace H3MP
 
             harmony.Patch(sosigLinkRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkRegisterWearablePatchPrefix));
             harmony.Patch(sosigLinkDeRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkDeRegisterWearablePatchPrefix));
+
+            // SosigIFFPatch
+            MethodInfo sosigSetIFFPatchOriginal = typeof(Sosig).GetMethod("SetIFF", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigSetIFFPatchPrefix = typeof(SosigIFFPatch).GetMethod("SetIFFPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigSetOriginalIFFPatchOriginal = typeof(Sosig).GetMethod("SetOriginalIFFTeam", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigSetOriginalIFFPatchPrefix = typeof(SosigIFFPatch).GetMethod("SetOriginalIFFPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigSetIFFPatchOriginal, new HarmonyMethod(sosigSetIFFPatchPrefix));
+            harmony.Patch(sosigSetOriginalIFFPatchOriginal, new HarmonyMethod(sosigSetOriginalIFFPatchPrefix));
 
             // ChamberEjectRoundPatch
             MethodInfo chamberEjectRoundPatchOriginal = typeof(FVRFireArmChamber).GetMethod("EjectRound", BindingFlags.Public | BindingFlags.Instance);
@@ -578,6 +609,20 @@ namespace H3MP
             MethodInfo projectileBladeDamageablePatchTranspiler = typeof(ProjectileDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(projectileDamageablePatchOriginal, null, null, new HarmonyMethod(projectileBladeDamageablePatchTranspiler));
+
+            // SosigLinkDamagePatch
+            MethodInfo sosigLinkDamagePatchOriginal = typeof(SosigLink).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkDamagePatchPrefix = typeof(SosigLinkDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkDamagePatchPostfix = typeof(SosigLinkDamagePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigLinkDamagePatchOriginal, new HarmonyMethod(sosigLinkDamagePatchPrefix), new HarmonyMethod(sosigLinkDamagePatchPostfix));
+
+            // SosigWearableDamagePatch
+            MethodInfo sosigWearableDamagePatchOriginal = typeof(SosigWearable).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigWearableDamagePatchPrefix = typeof(SosigWearableDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigWearableDamagePatchPostfix = typeof(SosigWearableDamagePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigWearableDamagePatchOriginal, new HarmonyMethod(sosigWearableDamagePatchPrefix), new HarmonyMethod(sosigWearableDamagePatchPostfix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1310,6 +1355,68 @@ namespace H3MP
                     trackedSosig.data.wearables[linkIndex].Remove(knownWearableID);
 
                     knownWearableID = null;
+                }
+            }
+        }
+    }
+
+    // Patches Sosig IFF methods to keep track of changes to the IFF
+    class SosigIFFPatch
+    {
+        public static int skip;
+
+        static void SetIFFPrefix(ref Sosig __instance, int i)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                trackedSosig.data.IFF = (byte)i;
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSetIFF(trackedSosig.data.trackedID, i);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigSetIFF(trackedSosig.data.trackedID, i);
+                }
+            }
+        }
+
+        static void SetOriginalIFFPrefix(ref Sosig __instance, int i)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                trackedSosig.data.IFF = (byte)i;
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
                 }
             }
         }
@@ -3227,6 +3334,188 @@ namespace H3MP
                 }
             }
             return instructionList;
+        }
+    }
+
+    // Patches SosigLink.Damage to keep track of damage taken by a sosig
+    class SosigLinkDamagePatch
+    {
+        public static int skip;
+        static H3MP_TrackedSosig trackedSosig;
+
+        static bool Prefix(ref SosigLink __instance, Damage d)
+        {
+            if(skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged sosig link, we want to process the damage
+            trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if(trackedSosig.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        for(int i=0; i < __instance.S.Links.Count; ++i)
+                        {
+                            if (__instance.S.Links[i] == __instance)
+                            {
+                                H3MP_ServerSend.SosigLinkDamage(trackedSosig.data, i, d);
+                                break;
+                            }
+                        }
+                        return false;
+                    }
+                }
+                else if(trackedSosig.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    for (int i = 0; i < __instance.S.Links.Count; ++i)
+                    {
+                        if (__instance.S.Links[i] == __instance)
+                        {
+                            H3MP_ClientSend.SosigLinkDamage(trackedSosig.data.trackedID, i, d);
+                            break;
+                        }
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        static void Postfix(ref SosigLink __instance)
+        {
+            // If in control of the damaged sosig link, we want to send the damage results to other clients
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedSosig.data.controller == 0)
+                    {
+                        H3MP_ServerSend.SosigDamageData(trackedSosig);
+                    }
+                }
+                else if (trackedSosig.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.SosigDamageData(trackedSosig);
+                }
+            }
+        }
+    }
+
+    // Patches SosigWearable.Damage to keep track of damage taken by a sosig
+    class SosigWearableDamagePatch
+    {
+        public static int skip;
+        static H3MP_TrackedSosig trackedSosig;
+
+        static bool Prefix(ref SosigWearable __instance, Damage d)
+        {
+            // SosigWearable.Damage could call a SosigLink.Damage
+            // This would trigger the sosig link damage patch seperataly, but we want to handle these as one, so just skip it
+            ++SosigLinkDamagePatch.skip;
+
+            if (skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged sosig wearable, we want to process the damage
+            trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if(trackedSosig.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < __instance.S.Links.Count; ++i)
+                        {
+                            if (__instance.S.Links[i] == __instance.L)
+                            {
+                                List<SosigWearable> linkWearables = (List<SosigWearable>)Mod.SosigLink_m_wearables.GetValue(__instance.L);
+                                for (int j = 0; j < linkWearables.Count; ++j)
+                                {
+                                    if (linkWearables[j] == __instance)
+                                    {
+                                        H3MP_ServerSend.SosigWearableDamage(trackedSosig.data, i, j, d);
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if(trackedSosig.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    for (int i = 0; i < __instance.S.Links.Count; ++i)
+                    {
+                        if (__instance.S.Links[i] == __instance.L)
+                        {
+                            List<SosigWearable> linkWearables = (List<SosigWearable>)Mod.SosigLink_m_wearables.GetValue(__instance.L);
+                            for (int j = 0; j < linkWearables.Count; ++j)
+                            {
+                                if (linkWearables[j] == __instance)
+                                {
+                                    H3MP_ClientSend.SosigWearableDamage(trackedSosig.data.trackedID, i, j, d);
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        static void Postfix(ref SosigWearable __instance)
+        {
+            --SosigLinkDamagePatch.skip;
+
+            // If in control of the damaged sosig link, we want to send the damage results to other clients
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedSosig.data.controller == 0)
+                    {
+                        H3MP_ServerSend.SosigDamageData(trackedSosig);
+                    }
+                }
+                else if (trackedSosig.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.SosigDamageData(trackedSosig);
+                }
+            }
         }
     }
     #endregion

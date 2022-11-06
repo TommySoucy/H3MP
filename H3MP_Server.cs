@@ -248,6 +248,11 @@ namespace H3MP
                 { (int)ClientPackets.sosigConfigure, H3MP_ServerHandle.SosigConfigure },
                 { (int)ClientPackets.sosigLinkRegisterWearable, H3MP_ServerHandle.SosigLinkRegisterWearable },
                 { (int)ClientPackets.sosigLinkDeRegisterWearable, H3MP_ServerHandle.SosigLinkDeRegisterWearable },
+                { (int)ClientPackets.sosigSetIFF, H3MP_ServerHandle.SosigSetIFF },
+                { (int)ClientPackets.sosigSetOriginalIFF, H3MP_ServerHandle.SosigSetOriginalIFF },
+                { (int)ClientPackets.sosigLinkDamage, H3MP_ServerHandle.SosigLinkDamage },
+                { (int)ClientPackets.sosigDamageData, H3MP_ServerHandle.SosigDamageData },
+                { (int)ClientPackets.sosigWearableDamage, H3MP_ServerHandle.SosigWearableDamage },
             };
 
             items = new H3MP_TrackedItemData[100];

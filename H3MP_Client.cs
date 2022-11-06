@@ -326,6 +326,11 @@ namespace H3MP
                 { (int)ServerPackets.sosigConfigure, H3MP_ClientHandle.SosigConfigure },
                 { (int)ServerPackets.sosigLinkRegisterWearable, H3MP_ClientHandle.SosigLinkRegisterWearable },
                 { (int)ServerPackets.sosigLinkDeRegisterWearable, H3MP_ClientHandle.SosigLinkDeRegisterWearable },
+                { (int)ServerPackets.sosigSetIFF, H3MP_ClientHandle.SosigSetIFF },
+                { (int)ServerPackets.sosigSetOriginalIFF, H3MP_ClientHandle.SosigSetOriginalIFF },
+                { (int)ServerPackets.sosigLinkDamage, H3MP_ClientHandle.SosigLinkDamage },
+                { (int)ServerPackets.sosigDamageData, H3MP_ClientHandle.SosigDamageData },
+                { (int)ServerPackets.sosigWearableDamage, H3MP_ClientHandle.SosigWearableDamage },
             };
 
             // All vanilla scenes can be synced by default
