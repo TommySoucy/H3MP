@@ -79,20 +79,25 @@ namespace H3MP
             AnvilManager.Run(EquipWearables());
 
             // Deregister the AI from the manager if we are not in control
+            // Also set CoreRB as kinematic
             if (H3MP_ThreadManager.host)
             {
                 if(controller != 0)
                 {
                     GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosig.E);
+                    physicalObject.physicalSosig.CoreRB.isKinematic = true;
                 }
             }
             else if(controller != H3MP_Client.singleton.ID)
             {
                 GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosig.E);
+                physicalObject.physicalSosig.CoreRB.isKinematic = true;
             }
 
             // Initially set IFF
+            ++SosigIFFPatch.skip;
             physicalObject.physicalSosig.SetIFF(IFF);
+            --SosigIFFPatch.skip;
 
             // Initially set itself
             Update(this);
@@ -169,8 +174,8 @@ namespace H3MP
             // Set physically
             if (physicalObject != null)
             {
-                physicalObject.transform.position = position;
-                physicalObject.transform.rotation = rotation;
+                physicalObject.physicalSosig.CoreRB.position = position;
+                physicalObject.physicalSosig.CoreRB.rotation = rotation;
                 sosigInvAmmoStores.SetValue(physicalObject.physicalSosig.Inventory, ammoStores);
                 
                 if (active)
@@ -194,8 +199,8 @@ namespace H3MP
         {
             previousPos = position;
             previousRot = rotation;
-            position = physicalObject.transform.position;
-            rotation = physicalObject.transform.rotation;
+            position = physicalObject.physicalSosig.CoreRB.position;
+            rotation = physicalObject.physicalSosig.CoreRB.rotation;
             previousAmmoStores = ammoStores;
             ammoStores = (int[])sosigInvAmmoStores.GetValue(physicalObject.physicalSosig.Inventory);
 

@@ -165,6 +165,11 @@ namespace H3MP
             if (trackedSosig.controller != 0 && newController == 0)
             {
                 trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
+                if(trackedSosig.physicalObject != null)
+                {
+                    GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosig.E);
+                    trackedSosig.physicalObject.physicalSosig.CoreRB.isKinematic = false;
+                }
                 H3MP_GameManager.sosigs.Add(trackedSosig);
             }
             else if(trackedSosig.controller == 0 && newController != 0)
@@ -173,6 +178,11 @@ namespace H3MP
                 H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
                 H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
                 trackedSosig.localTrackedID = -1;
+                if (trackedSosig.physicalObject != null)
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosig.E);
+                    trackedSosig.physicalObject.physicalSosig.CoreRB.isKinematic = true;
+                }
             }
             trackedSosig.controller = newController;
 

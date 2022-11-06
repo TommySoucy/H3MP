@@ -503,8 +503,8 @@ namespace H3MP
                 data.configTemplate.TargetTrackingTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_maxTrackingTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority);
                 data.configTemplate.NoFreshTargetTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_timeToNoFreshTarget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority);
             }
-            data.position = sosigScript.CoreTarget.position;
-            data.rotation = sosigScript.CoreTarget.rotation;
+            data.position = sosigScript.CoreRB.position;
+            data.rotation = sosigScript.CoreRB.rotation;
             data.active = trackedSosig.gameObject.activeInHierarchy;
             data.linkData = new float[sosigScript.Links.Count][];
             for(int i=0; i < sosigScript.Links.Count; ++i)
