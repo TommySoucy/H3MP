@@ -491,7 +491,7 @@ namespace H3MP
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if (trackedSosig != null)
             {
-                if (trackedSosig.controller != H3MP_Client.singleton.ID)
+                if (trackedSosig.controller == H3MP_Client.singleton.ID)
                 {
                     if (trackedSosig.physicalObject != null)
                     {
@@ -513,7 +513,7 @@ namespace H3MP
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if (trackedSosig != null)
             {
-                if (trackedSosig.controller != H3MP_Client.singleton.ID)
+                if (trackedSosig.controller == H3MP_Client.singleton.ID)
                 {
                     if (trackedSosig.physicalObject != null)
                     {
@@ -545,18 +545,21 @@ namespace H3MP
                     byte jointCount = packet.ReadByte();
                     for (int i = 0; i < jointCount; ++i)
                     {
-                        SoftJointLimit softJointLimit = joints[i].lowTwistLimit;
-                        softJointLimit.limit = packet.ReadFloat();
-                        joints[i].lowTwistLimit = softJointLimit;
-                        softJointLimit = joints[i].highTwistLimit;
-                        softJointLimit.limit = packet.ReadFloat();
-                        joints[i].highTwistLimit = softJointLimit;
-                        softJointLimit = joints[i].swing1Limit;
-                        softJointLimit.limit = packet.ReadFloat();
-                        joints[i].swing1Limit = softJointLimit;
-                        softJointLimit = joints[i].swing2Limit;
-                        softJointLimit.limit = packet.ReadFloat();
-                        joints[i].swing2Limit = softJointLimit;
+                        if (joints[i] != null)
+                        {
+                            SoftJointLimit softJointLimit = joints[i].lowTwistLimit;
+                            softJointLimit.limit = packet.ReadFloat();
+                            joints[i].lowTwistLimit = softJointLimit;
+                            softJointLimit = joints[i].highTwistLimit;
+                            softJointLimit.limit = packet.ReadFloat();
+                            joints[i].highTwistLimit = softJointLimit;
+                            softJointLimit = joints[i].swing1Limit;
+                            softJointLimit.limit = packet.ReadFloat();
+                            joints[i].swing1Limit = softJointLimit;
+                            softJointLimit = joints[i].swing2Limit;
+                            softJointLimit.limit = packet.ReadFloat();
+                            joints[i].swing2Limit = softJointLimit;
+                        }
                     }
                     Mod.Sosig_m_isCountingDownToStagger.SetValue(physicalSosig, packet.ReadBool());
                     Mod.Sosig_m_staggerAmountToApply.SetValue(physicalSosig, packet.ReadFloat());
@@ -564,7 +567,7 @@ namespace H3MP
                     Mod.Sosig_m_recoveryFromBallisticLerp.SetValue(physicalSosig, packet.ReadFloat());
                     Mod.Sosig_m_tickDownToWrithe.SetValue(physicalSosig, packet.ReadFloat());
                     Mod.Sosig_m_recoveryFromBallisticTick.SetValue(physicalSosig, packet.ReadFloat());
-                    Mod.Sosig_m_lastIFFDamageSource.SetValue(physicalSosig, packet.ReadInt());
+                    Mod.Sosig_m_lastIFFDamageSource.SetValue(physicalSosig, packet.ReadByte());
                     Mod.Sosig_m_diedFromClass.SetValue(physicalSosig, (Damage.DamageClass)packet.ReadByte());
                     Mod.Sosig_m_isBlinded.SetValue(physicalSosig, packet.ReadBool());
                     Mod.Sosig_m_blindTime.SetValue(physicalSosig, packet.ReadFloat());
@@ -576,6 +579,189 @@ namespace H3MP
                     physicalSosig.m_confusedTime = packet.ReadFloat();
                     Mod.Sosig_m_storedShudder.SetValue(physicalSosig, packet.ReadFloat());
                 }
+            }
+        }
+
+        public static void SosigLinkExplodes(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.physicalObject != null)
+                {
+                    byte linkIndex = packet.ReadByte();
+                    ++SosigLinkActionPatch.skipLinkExplodes;
+                    trackedSosig.physicalObject.physicalSosig.Links[linkIndex].LinkExplodes((Damage.DamageClass)packet.ReadByte());
+                    --SosigLinkActionPatch.skipLinkExplodes;
+                }
+            }
+        }
+
+        public static void SosigDies(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.physicalObject != null)
+                {
+                    byte damClass = packet.ReadByte();
+                    byte deathType = packet.ReadByte();
+                    ++SosigActionPatch.sosigDiesSkip;
+                    trackedSosig.physicalObject.physicalSosig.SosigDies((Damage.DamageClass)damClass, (Sosig.SosigDeathType)deathType);
+                    --SosigActionPatch.sosigDiesSkip;
+                }
+            }
+        }
+
+        public static void SosigClear(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.physicalObject != null)
+                {
+                    ++SosigActionPatch.sosigClearSkip;
+                    trackedSosig.physicalObject.physicalSosig.ClearSosig();
+                    --SosigActionPatch.sosigClearSkip;
+                }
+            }
+        }
+
+        public static void PlaySosigFootStepSound(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            FVRPooledAudioType audioType = (FVRPooledAudioType)packet.ReadByte();
+            Vector3 position = packet.ReadVector3();
+            Vector2 vol = packet.ReadVector2();
+            Vector2 pitch = packet.ReadVector2();
+            float delay = packet.ReadFloat();
+
+            if (H3MP_Client.sosigs[sosigTrackedID].physicalObject != null)
+            {
+                // Ensure we have reference to sosig footsteps audio event
+                if (Mod.sosigFootstepAudioEvent == null)
+                {
+                    Mod.sosigFootstepAudioEvent = H3MP_Client.sosigs[sosigTrackedID].physicalObject.physicalSosig.AudEvent_FootSteps;
+                }
+
+                // Play sound
+                SM.PlayCoreSoundDelayedOverrides(audioType, Mod.sosigFootstepAudioEvent, position, vol, pitch, delay);
+            }
+        }
+
+        public static void SosigSpeakState(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            Sosig.SosigOrder currentOrder = (Sosig.SosigOrder)packet.ReadByte();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                switch (currentOrder)
+                {
+                    case Sosig.SosigOrder.GuardPoint:
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnWander });
+                        break;
+                    case Sosig.SosigOrder.Investigate:
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnInvestigate });
+                        break;
+                    case Sosig.SosigOrder.SearchForEquipment:
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnSearchingForGuns });
+                        break;
+                    case Sosig.SosigOrder.TakeCover:
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnTakingCover });
+                        break;
+                    case Sosig.SosigOrder.Wander:
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnWander });
+                        break;
+                    case Sosig.SosigOrder.Assault:
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnAssault });
+                        break;
+                }
+            }
+        }
+
+        public static void SosigSetCurrentOrder(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            Sosig.SosigOrder currentOrder = (Sosig.SosigOrder)packet.ReadByte();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                trackedSosig.physicalObject.physicalSosig.SetCurrentOrder(currentOrder);
+                --SosigActionPatch.sosigSetCurrentOrderSkip;
+            }
+        }
+
+        public static void SosigVaporize(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte iff = packet.ReadByte();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                ++SosigActionPatch.sosigVaporizeSkip;
+                trackedSosig.physicalObject.physicalSosig.Vaporize(trackedSosig.physicalObject.physicalSosig.DamageFX_Vaporize, iff);
+                --SosigActionPatch.sosigVaporizeSkip;
+            }
+        }
+
+        public static void SosigLinkBreak(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte linkIndex = packet.ReadByte();
+            bool isStart = packet.ReadBool();
+            byte damClass = packet.ReadByte();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                ++SosigLinkActionPatch.sosigLinkBreakSkip;
+                trackedSosig.physicalObject.physicalSosig.Links[linkIndex].BreakJoint(isStart, (Damage.DamageClass)damClass);
+                --SosigLinkActionPatch.sosigLinkBreakSkip;
+            }
+        }
+
+        public static void SosigLinkSever(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+            byte linkIndex = packet.ReadByte();
+            byte damClass = packet.ReadByte();
+            bool isPullApart = packet.ReadBool();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                ++SosigLinkActionPatch.sosigLinkSeverSkip;
+                Mod.Sosig_SeverJoint.Invoke(trackedSosig.physicalObject.physicalSosig.Links[linkIndex], new object[] { damClass, isPullApart });
+                --SosigLinkActionPatch.sosigLinkSeverSkip;
+            }
+        }
+
+        public static void SosigRequestHitDecal(H3MP_Packet packet)
+        {
+            int sosigTrackedID = packet.ReadInt();
+
+            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            {
+                Vector3 point = packet.ReadVector3();
+                Vector3 normal = packet.ReadVector3();
+                Vector3 edgeNormal = packet.ReadVector3();
+                float scale = packet.ReadFloat();
+                byte linkIndex = packet.ReadByte();
+                ++SosigActionPatch.sosigRequestHitDecalSkip;
+                trackedSosig.physicalObject.physicalSosig.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalObject.physicalSosig.Links[linkIndex]);
+                --SosigActionPatch.sosigRequestHitDecalSkip;
             }
         }
     }

@@ -155,6 +155,19 @@ namespace H3MP
                 itemObject.transform.parent = parentItem.physicalObject.transform;
             }
 
+            // Store and destroy RB if not in control
+            if (H3MP_ThreadManager.host)
+            {
+                if (controller != 0)
+                {
+                    physicalObject.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+                }
+            }
+            else if (controller != H3MP_Client.singleton.ID)
+            {
+                physicalObject.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+            }
+
             // Initially set itself
             Update(this);
         }

@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using FFmpeg.AutoGen;
 using FistVR;
 using HarmonyLib;
 using System;
@@ -15,6 +16,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR.InteractionSystem;
+using static FistVR.Damage;
 using static RenderHeads.Media.AVProVideo.MediaPlayer.OptionsApple;
 
 namespace H3MP
@@ -46,6 +48,7 @@ namespace H3MP
         public static GameObject managerObject;
         public static int skipNextFires = 0;
         public static int skipAllInstantiates = 0;
+        public static AudioEvent sosigFootstepAudioEvent;
 
         // Reused private FieldInfos
         public static readonly FieldInfo Sosig_m_isOnOffMeshLinkField = typeof(Sosig).GetField("m_isOnOffMeshLink", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -68,6 +71,14 @@ namespace H3MP
         public static readonly FieldInfo Sosig_m_receivedHeadShot = typeof(Sosig).GetField("m_receivedHeadShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Sosig_m_isConfused = typeof(Sosig).GetField("m_isConfused", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigLink_m_wearables = typeof(SosigLink).GetField("m_wearables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo SosigLink_m_integrity = typeof(SosigLink).GetField("m_integrity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        // Reused private MethodInfos
+        public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Sosig_SetBodyPose = typeof(Sosig).GetMethod("SetBodyPose", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Sosig_SetBodyState = typeof(Sosig).GetMethod("SetBodyState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Sosig_VaporizeUpdate = typeof(Sosig).GetMethod("VaporizeUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Sosig_SeverJoint = typeof(SosigLink).GetMethod("SeverJoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -308,9 +319,54 @@ namespace H3MP
             MethodInfo sosigLinkRegisterWearablePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("RegisterWearablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigLinkDeRegisterWearablePatchOriginal = typeof(SosigLink).GetMethod("DeRegisterWearable", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigLinkDeRegisterWearablePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("DeRegisterWearablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkExplodesPatchOriginal = typeof(SosigLink).GetMethod("LinkExplodes", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkExplodesPatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkExplodesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkExplodesPatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkExplodesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkBreakPatchOriginal = typeof(SosigLink).GetMethod("BreakJoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkBreakPatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkBreakPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkBreakPatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkBreakPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkSeverPatchOriginal = typeof(SosigLink).GetMethod("SeverJoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkSeverPatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkSeverPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkSeverPatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkSeverPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkVaporizePatchOriginal = typeof(SosigLink).GetMethod("Vaporize", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkVaporizePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkVaporizePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkVaporizePatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkVaporizePostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(sosigLinkRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkRegisterWearablePatchPrefix));
             harmony.Patch(sosigLinkDeRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkDeRegisterWearablePatchPrefix));
+            harmony.Patch(sosigLinkExplodesPatchOriginal, new HarmonyMethod(sosigLinkExplodesPatchPrefix), new HarmonyMethod(sosigLinkExplodesPatchPosfix));
+            harmony.Patch(sosigLinkBreakPatchOriginal, new HarmonyMethod(sosigLinkBreakPatchPrefix), new HarmonyMethod(sosigLinkBreakPatchPosfix));
+            harmony.Patch(sosigLinkSeverPatchOriginal, new HarmonyMethod(sosigLinkSeverPatchPrefix), new HarmonyMethod(sosigLinkSeverPatchPosfix));
+            harmony.Patch(sosigLinkVaporizePatchOriginal, new HarmonyMethod(sosigLinkVaporizePatchPrefix), new HarmonyMethod(sosigLinkVaporizePatchPosfix));
+
+            // SosigActionPatch
+            MethodInfo sosigDiesPatchOriginal = typeof(Sosig).GetMethod("SosigDies", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigDiesPatchPrefix = typeof(SosigActionPatch).GetMethod("SosigDiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigDiesPatchPosfix = typeof(SosigActionPatch).GetMethod("SosigDiesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigBodyStatePatchOriginal = typeof(Sosig).GetMethod("SetBodyState", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigBodyStatePatchPrefix = typeof(SosigActionPatch).GetMethod("SetBodyStatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigBodyUpdatePatchOriginal = typeof(Sosig).GetMethod("BodyUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigBodyUpdatePatchTranspiler = typeof(SosigActionPatch).GetMethod("FootStepTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigSpeechUpdatePatchOriginal = typeof(Sosig).GetMethod("SpeechUpdate_State", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigSpeechUpdatePatchTranspiler = typeof(SosigActionPatch).GetMethod("SpeechUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigSetCurrentOrderPatchOriginal = typeof(Sosig).GetMethod("SetCurrentOrder", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigSetCurrentOrderPatchPrefix = typeof(SosigActionPatch).GetMethod("SetCurrentOrderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigVaporizePatchOriginal = typeof(Sosig).GetMethod("Vaporize", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigVaporizePatchPrefix = typeof(SosigActionPatch).GetMethod("SosigVaporizePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigVaporizePatchPostfix = typeof(SosigActionPatch).GetMethod("SosigVaporizePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigRequestHitDecalPatchOriginal = typeof(Sosig).GetMethod("RequestHitDecal", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(float), typeof(SosigLink) }, null);
+            MethodInfo sosigRequestHitDecalPatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigRequestHitDecalEdgePatchOriginal = typeof(Sosig).GetMethod("RequestHitDecal", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(SosigLink) }, null);
+            MethodInfo sosigRequestHitDecalEdgePatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalEdgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigDiesPatchOriginal, new HarmonyMethod(sosigDiesPatchPrefix), new HarmonyMethod(sosigDiesPatchPosfix));
+            harmony.Patch(sosigBodyStatePatchOriginal, new HarmonyMethod(sosigBodyStatePatchPrefix));
+            harmony.Patch(sosigBodyUpdatePatchOriginal, null, null, new HarmonyMethod(sosigBodyUpdatePatchTranspiler));
+            harmony.Patch(sosigSpeechUpdatePatchOriginal, null, null, new HarmonyMethod(sosigSpeechUpdatePatchTranspiler));
+            harmony.Patch(sosigSetCurrentOrderPatchOriginal, new HarmonyMethod(sosigSetCurrentOrderPatchPrefix));
+            harmony.Patch(sosigVaporizePatchOriginal, new HarmonyMethod(sosigVaporizePatchPrefix), new HarmonyMethod(sosigVaporizePatchPostfix));
+            harmony.Patch(sosigRequestHitDecalPatchOriginal, new HarmonyMethod(sosigRequestHitDecalPatchPrefix));
+            harmony.Patch(sosigRequestHitDecalEdgePatchOriginal, new HarmonyMethod(sosigRequestHitDecalEdgePatchPrefix));
 
             // SosigIFFPatch
             MethodInfo sosigSetIFFPatchOriginal = typeof(Sosig).GetMethod("SetIFF", BindingFlags.Public | BindingFlags.Instance);
@@ -1017,8 +1073,15 @@ namespace H3MP
     // Patches SosigInventory.Slot.DetachHeldObject so we can keep track of item control
     class SosigSlotDetachPatch
     {
+        public static int skip;
+
         static void Prefix(ref SosigInventory.Slot __instance)
         {
+            if (skip > 0)
+            {
+                return;
+            }
+
             if (Mod.managerObject == null || !__instance.IsHoldingObject)
             {
                 return;
@@ -1060,8 +1123,15 @@ namespace H3MP
     // Patches SosigHand.DropHeldObject AND SosigHand.ThrowObject so we can keep track of item control
     class SosigHandDropPatch
     {
+        public static int skip;
+
         static void Prefix(ref SosigHand __instance)
         {
+            if(skip > 0)
+            {
+                return;
+            }
+
             if (Mod.managerObject == null || !__instance.IsHoldingObject)
             {
                 return;
@@ -1182,7 +1252,14 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if(trackedSosig != null)
             {
-                return (H3MP_ThreadManager.host && trackedSosig.data.controller == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.controller);
+                bool runOriginal = (H3MP_ThreadManager.host && trackedSosig.data.controller == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.controller);
+                if (!runOriginal)
+                {
+                    // Call Sosig update methods we don't want to skip
+                    Mod.Sosig_VaporizeUpdate.Invoke(__instance, null);
+                    __instance.HeadIconUpdate();
+                }
+                return runOriginal;
             }
             return true;
         }
@@ -1224,12 +1301,354 @@ namespace H3MP
         }
     }
 
+    // Patches Sosig to keep track of all actions taken on a sosig
+    class SosigActionPatch
+    {
+        public static int sosigDiesSkip;
+        public static int sosigClearSkip;
+        public static int sosigSetBodyStateSkip;
+        public static int sosigVaporizeSkip;
+        public static int sosigSetCurrentOrderSkip;
+        public static int sosigRequestHitDecalSkip;
+
+        static void SosigDiesPrefix(ref Sosig __instance, Damage.DamageClass damClass, Sosig.SosigDeathType deathType)
+        {
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            if (sosigDiesSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigDies(trackedSosig.data.trackedID, damClass, deathType);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigDies(trackedSosig.data.trackedID, damClass, deathType);
+                }
+            }
+        }
+
+        static void SosigDiesPostfix()
+        {
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+
+        static void SosigClearPrefix(ref Sosig __instance)
+        {
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+            ++SosigLinkActionPatch.skipLinkExplodes;
+
+            if (sosigClearSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                trackedSosig.sendDestroy = false;
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigClear(trackedSosig.data.trackedID);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigClear(trackedSosig.data.trackedID);
+                }
+            }
+        }
+
+        static void SosigClearPostfix()
+        {
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+            --SosigLinkActionPatch.skipLinkExplodes;
+        }
+
+        static void SetBodyStatePrefix(ref Sosig __instance, Sosig.SosigBodyState s)
+        {
+            if (sosigSetBodyStateSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSetBodyState(trackedSosig.data.trackedID, s);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigSetBodyState(trackedSosig.data.trackedID, s);
+                }
+            }
+        }
+
+        static IEnumerable<CodeInstruction> FootStepTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsertSecond = new List<CodeInstruction>();
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig gameobject
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_I4_S, 10)); // Load value of FVRPooledAudioType.GenericClose
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig gameobject
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "get_Transform"))); // Get Sosig transform
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "get_position"))); // Get position of Sosig transform
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load num3
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 0.35f)); // Load 4 byte real literal 0.35
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Mul)); // Multiply
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load num3
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 0.4f)); // Load 4 byte real literal 0.4
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Mul)); // Multiply
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(Vector2), new Type[] { typeof(float), typeof(float) }))); // Create new Vector2
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 0.95f)); // Load 4 byte real literal 0.95
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 1.05f)); // Load 4 byte real literal 1.05
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(Vector2), new Type[] { typeof(float), typeof(float) }))); // Create new Vector2
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load delay
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendFootStepSound"))); // Call our own method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("PlayCoreSoundDelayedOverrides"))
+                {
+                    instructionList.InsertRange(i + 1, toInsertSecond);
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SendFootStepSound(Sosig sosig, FVRPooledAudioType audioType, Vector3 position, Vector2 vol, Vector2 pitch, float delay)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(sosig) ? H3MP_GameManager.trackedSosigBySosig[sosig] : sosig.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.PlaySosigFootStepSound(trackedSosig.data.trackedID, audioType, position, vol, pitch, delay);
+                }
+                else
+                {
+                    H3MP_ClientSend.PlaySosigFootStepSound(trackedSosig.data.trackedID, audioType, position, vol, pitch, delay);
+                }
+            }
+        }
+
+        static IEnumerable<CodeInstruction> SpeechUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Sosig), "CurrentOrder"))); // Load CurrentOrder
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendSpeakState"))); // Call our own method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("Speak_State"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SendSpeakState(Sosig sosig, Sosig.SosigOrder currentOrder)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(sosig) ? H3MP_GameManager.trackedSosigBySosig[sosig] : sosig.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSpeakState(trackedSosig.data.trackedID, currentOrder);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigSpeakState(trackedSosig.data.trackedID, currentOrder);
+                }
+            }
+        }
+
+        static void SetCurrentOrderPrefix(ref Sosig __instance, Sosig.SosigOrder o)
+        {
+            if(sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data.trackedID, o);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data.trackedID, o);
+                }
+            }
+        }
+
+        static void SosigVaporizePrefix(ref Sosig __instance, int iff)
+        {
+            ++sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++sosigSetBodyStateSkip;
+
+            if(sosigVaporizeSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                }
+            }
+        }
+
+        static void SosigVaporizePosfix()
+        {
+            --sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --sosigSetBodyStateSkip;
+        }
+
+        static void RequestHitDecalPrefix(ref Sosig __instance, Vector3 point, Vector3 normal, float scale, SosigLink l)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            for(int i=0; i < __instance.Links.Count; ++i)
+            {
+                if (__instance.Links[i] == l)
+                {
+                    H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+                    if (trackedSosig != null)
+                    {
+                        SendRequestHitDecal(trackedSosig.data.trackedID, point, normal, UnityEngine.Random.onUnitSphere, scale, i);
+                    }
+                    break;
+                }
+            }
+        }
+
+        static void RequestHitDecalEdgePrefix(ref Sosig __instance, Vector3 point, Vector3 normal, Vector3 edgeNormal, float scale, SosigLink l)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < __instance.Links.Count; ++i)
+            {
+                if (__instance.Links[i] == l)
+                {
+                    H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+                    if (trackedSosig != null)
+                    {
+                        SendRequestHitDecal(trackedSosig.data.trackedID, point, normal, edgeNormal, scale, i);
+                    }
+                    break;
+                }
+            }
+        }
+
+        static void SendRequestHitDecal(int sosigTrackedID, Vector3 point, Vector3 normal, Vector3 edgeNormal, float scale, int linkIndex)
+        {
+            if (sosigRequestHitDecalSkip > 0)
+            {
+                return;
+            }
+
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.SosigRequestHitDecal(sosigTrackedID, point, normal, edgeNormal, scale, linkIndex);
+            }
+            else
+            {
+                H3MP_ClientSend.SosigRequestHitDecal(sosigTrackedID, point, normal, edgeNormal, scale, linkIndex);
+            }
+        }
+    }
+
     // Patches SosigLink to keep track of all actions taken on a link
     class SosigLinkActionPatch
     {
         public static string knownWearableID;
         public static int skipRegisterWearable;
         public static int skipDeRegisterWearable;
+        public static int skipLinkExplodes;
+        public static int sosigLinkBreakSkip;
+        public static int sosigLinkSeverSkip;
 
         static void RegisterWearablePrefix(ref SosigLink __instance, SosigWearable w)
         {
@@ -1244,8 +1663,8 @@ namespace H3MP
                 return;
             }
 
-            H3MP_TrackedSosig trackedSosig = __instance.S.GetComponent<H3MP_TrackedSosig>();
-            if(trackedSosig != null)
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
             {
                 int linkIndex = -1;
                 for(int i=0; i<__instance.S.Links.Count;++i)
@@ -1308,8 +1727,8 @@ namespace H3MP
                 return;
             }
 
-            H3MP_TrackedSosig trackedSosig = __instance.S.GetComponent<H3MP_TrackedSosig>();
-            if(trackedSosig != null)
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
             {
                 int linkIndex = -1;
                 for(int i=0; i<__instance.S.Links.Count;++i)
@@ -1357,6 +1776,212 @@ namespace H3MP
                     knownWearableID = null;
                 }
             }
+        }
+
+        static void LinkExplodesPrefix(ref SosigLink __instance, Damage.DamageClass damClass)
+        {
+            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            if (skipLinkExplodes > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for(int i=0; i<__instance.S.Links.Count;++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if(linkIndex == -1)
+                {
+                    Debug.LogError("LinkExplodesPrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigLinkExplodes(trackedSosig.data.trackedID, linkIndex, damClass);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigLinkExplodes(trackedSosig.data.trackedID, linkIndex, damClass);
+                    }
+                }
+            }
+        }
+
+        static void LinkExplodesPostfix()
+        {
+            --SosigActionPatch.sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+
+        static void LinkBreakPrefix(ref SosigLink __instance, bool isStart, Damage.DamageClass damClass)
+        {
+            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            if (sosigLinkBreakSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for(int i=0; i<__instance.S.Links.Count;++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if(linkIndex == -1)
+                {
+                    Debug.LogError("LinkBreakPrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigLinkBreak(trackedSosig.data.trackedID, linkIndex, isStart, (byte)damClass);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigLinkBreak(trackedSosig.data.trackedID, linkIndex, isStart, damClass);
+                    }
+                }
+            }
+        }
+
+        static void LinkBreakPostfix()
+        {
+            --SosigActionPatch.sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+
+        static void LinkSeverPrefix(ref SosigLink __instance, Damage.DamageClass damClass, bool isPullApart)
+        {
+            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            if (sosigLinkSeverSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for(int i=0; i<__instance.S.Links.Count;++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if(linkIndex == -1)
+                {
+                    Debug.LogError("LinkSeverPrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigLinkSever(trackedSosig.data.trackedID, linkIndex, (byte)damClass, isPullApart);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigLinkSever(trackedSosig.data.trackedID, linkIndex, damClass, isPullApart);
+                    }
+                }
+            }
+        }
+
+        static void LinkSeverPostfix()
+        {
+            --SosigActionPatch.sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+
+        static void LinkVaporizePrefix(ref SosigLink __instance, int iff)
+        {
+            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                }
+            }
+        }
+
+        static void LinkVaporizePosfix()
+        {
+            --SosigActionPatch.sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
         }
     }
 
@@ -3368,7 +3993,7 @@ namespace H3MP
                     }
                     else
                     {
-                        for(int i=0; i < __instance.S.Links.Count; ++i)
+                        for (int i=0; i < __instance.S.Links.Count; ++i)
                         {
                             if (__instance.S.Links[i] == __instance)
                             {

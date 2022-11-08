@@ -253,6 +253,17 @@ namespace H3MP
                 { (int)ClientPackets.sosigLinkDamage, H3MP_ServerHandle.SosigLinkDamage },
                 { (int)ClientPackets.sosigDamageData, H3MP_ServerHandle.SosigDamageData },
                 { (int)ClientPackets.sosigWearableDamage, H3MP_ServerHandle.SosigWearableDamage },
+                { (int)ClientPackets.sosigLinkExplodes, H3MP_ServerHandle.SosigLinkExplodes },
+                { (int)ClientPackets.sosigDies, H3MP_ServerHandle.SosigDies },
+                { (int)ClientPackets.sosigClear, H3MP_ServerHandle.SosigClear },
+                { (int)ClientPackets.sosigSetBodyState, H3MP_ServerHandle.SosigSetBodyState },
+                { (int)ClientPackets.playSosigFootStepSound, H3MP_ServerHandle.PlaySosigFootStepSound },
+                { (int)ClientPackets.sosigSpeakState, H3MP_ServerHandle.SosigSpeakState },
+                { (int)ClientPackets.sosigSetCurrentOrder, H3MP_ServerHandle.SosigSetCurrentOrder },
+                { (int)ClientPackets.sosigVaporize, H3MP_ServerHandle.SosigVaporize },
+                { (int)ClientPackets.sosigRequestHitDecal, H3MP_ServerHandle.SosigRequestHitDecal },
+                { (int)ClientPackets.sosigLinkBreak, H3MP_ServerHandle.SosigLinkBreak },
+                { (int)ClientPackets.sosigLinkSever, H3MP_ServerHandle.SosigLinkSever },
             };
 
             items = new H3MP_TrackedItemData[100];

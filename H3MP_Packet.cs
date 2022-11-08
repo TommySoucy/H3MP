@@ -44,7 +44,18 @@ namespace H3MP
         sosigSetOriginalIFF = 27,
         sosigLinkDamage = 28,
         sosigDamageData = 29,
-        sosigWearableDamage = 30
+        sosigWearableDamage = 30,
+        sosigLinkExplodes = 31,
+        sosigDies = 32,
+        sosigClear = 33,
+        sosigSetBodyState = 34,
+        playSosigFootStepSound = 35,
+        sosigSpeakState = 36,
+        sosigSetCurrentOrder = 37,
+        sosigVaporize = 38,
+        sosigRequestHitDecal = 39,
+        sosigLinkBreak = 40,
+        sosigLinkSever = 41
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -77,7 +88,18 @@ namespace H3MP
         sosigSetOriginalIFF = 25,
         sosigLinkDamage = 26,
         sosigDamageData = 27,
-        sosigWearableDamage = 28
+        sosigWearableDamage = 28,
+        sosigLinkExplodes = 29,
+        sosigDies = 30,
+        sosigClear = 31,
+        sosigSetBodyState = 32,
+        playSosigFootStepSound = 33,
+        sosigSpeakState = 34,
+        sosigSetCurrentOrder = 35,
+        sosigVaporize = 36,
+        sosigRequestHitDecal = 37,
+        sosigLinkBreak = 38,
+        sosigLinkSever = 39
     }
 
     public class H3MP_Packet : IDisposable
@@ -307,6 +329,7 @@ namespace H3MP
             Write(trackedSosig.position);
             Write(trackedSosig.rotation);
             Write(trackedSosig.active);
+            Write(trackedSosig.mustard);
             if(trackedSosig.ammoStores != null && trackedSosig.ammoStores.Length > 0)
             {
                 Write((byte)trackedSosig.ammoStores.Length);
@@ -319,24 +342,25 @@ namespace H3MP
             {
                 Write((byte)0);
             }
-            if(trackedSosig.linkData == null || trackedSosig.linkData.Length == 0)
-            {
-                Write((byte)0);
-            }
-            else
-            {
-                Write((byte)trackedSosig.linkData.Length);
-                for (int i = 0; i < trackedSosig.linkData.Length; ++i) 
-                {
-                    for(int k=0; k < 5; ++k)
-                    {
-                        Write(trackedSosig.linkData[i][k]);
-                    }
-                }
-            }
+            Write((byte)trackedSosig.bodyPose);
 
             if (full)
             {
+                if (trackedSosig.linkData == null || trackedSosig.linkData.Length == 0)
+                {
+                    Write((byte)0);
+                }
+                else
+                {
+                    Write((byte)trackedSosig.linkData.Length);
+                    for (int i = 0; i < trackedSosig.linkData.Length; ++i)
+                    {
+                        for (int k = 0; k < 5; ++k)
+                        {
+                            Write(trackedSosig.linkData[i][k]);
+                        }
+                    }
+                }
                 Write((byte)trackedSosig.IFF);
                 Write(trackedSosig.configTemplate);
                 Write(trackedSosig.controller);
@@ -719,29 +743,30 @@ namespace H3MP
                     trackedSosig.ammoStores[i] = ReadInt();
                 }
             }
-            byte sosigLinkDataLength = ReadByte();
-            if (sosigLinkDataLength > 0)
-            {
-                if(trackedSosig.linkData == null)
-                {
-                    trackedSosig.linkData = new float[sosigLinkDataLength][];
-                }
-                for (int i = 0; i < sosigLinkDataLength; ++i)
-                {
-                    if(trackedSosig.linkData[i] == null || trackedSosig.linkData[i].Length != 5)
-                    {
-                        trackedSosig.linkData[i] = new float[5];
-                    }
-
-                    for (int j = 0; j < 5; ++j)
-                    {
-                        trackedSosig.linkData[i][j] = ReadFloat();
-                    }
-                }
-            }
+            trackedSosig.bodyPose = (Sosig.SosigBodyPose)ReadByte();
 
             if (full)
             {
+                byte sosigLinkDataLength = ReadByte();
+                if (sosigLinkDataLength > 0)
+                {
+                    if (trackedSosig.linkData == null)
+                    {
+                        trackedSosig.linkData = new float[sosigLinkDataLength][];
+                    }
+                    for (int i = 0; i < sosigLinkDataLength; ++i)
+                    {
+                        if (trackedSosig.linkData[i] == null || trackedSosig.linkData[i].Length != 5)
+                        {
+                            trackedSosig.linkData[i] = new float[5];
+                        }
+
+                        for (int j = 0; j < 5; ++j)
+                        {
+                            trackedSosig.linkData[i][j] = ReadFloat();
+                        }
+                    }
+                }
                 trackedSosig.IFF = ReadByte();
                 trackedSosig.configTemplate = ReadSosigConfig();
                 trackedSosig.controller = ReadInt();

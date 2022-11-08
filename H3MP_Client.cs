@@ -331,6 +331,16 @@ namespace H3MP
                 { (int)ServerPackets.sosigLinkDamage, H3MP_ClientHandle.SosigLinkDamage },
                 { (int)ServerPackets.sosigDamageData, H3MP_ClientHandle.SosigDamageData },
                 { (int)ServerPackets.sosigWearableDamage, H3MP_ClientHandle.SosigWearableDamage },
+                { (int)ServerPackets.sosigLinkExplodes, H3MP_ClientHandle.SosigLinkExplodes },
+                { (int)ServerPackets.sosigDies, H3MP_ClientHandle.SosigDies },
+                { (int)ServerPackets.sosigClear, H3MP_ClientHandle.SosigClear },
+                { (int)ServerPackets.playSosigFootStepSound, H3MP_ClientHandle.PlaySosigFootStepSound },
+                { (int)ServerPackets.sosigSpeakState, H3MP_ClientHandle.SosigSpeakState },
+                { (int)ServerPackets.sosigSetCurrentOrder, H3MP_ClientHandle.SosigSetCurrentOrder },
+                { (int)ServerPackets.sosigVaporize, H3MP_ClientHandle.SosigVaporize },
+                { (int)ServerPackets.sosigLinkBreak, H3MP_ClientHandle.SosigLinkBreak },
+                { (int)ServerPackets.sosigLinkSever, H3MP_ClientHandle.SosigLinkSever },
+                { (int)ServerPackets.sosigRequestHitDecal, H3MP_ClientHandle.SosigRequestHitDecal },
             };
 
             // All vanilla scenes can be synced by default

@@ -749,8 +749,192 @@ namespace H3MP
             {
                 packet.buffer[i] = IDbytes[i];
             }
+            packet.readPos = 0;
 
             SendTCPDataToAll(packet);
+        }
+
+        public static void SosigLinkExplodes(int sosigTrackedID, int linkIndex, Damage.DamageClass damClass, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigLinkExplodes))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)linkIndex);
+                packet.Write((byte)damClass);
+
+                SosigLinkExplodes(packet, fromClientID);
+            }
+        }
+
+        public static void SosigLinkExplodes(H3MP_Packet packet, int fromClientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigLinkExplodes);
+            for(int i=0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPDataToAll(fromClientID, packet);
+        }
+
+        public static void SosigDies(int sosigTrackedID, Damage.DamageClass damClass, Sosig.SosigDeathType deathType, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigDies))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)damClass);
+                packet.Write((byte)deathType);
+
+                SosigDies(packet, fromClientID);
+            }
+        }
+
+        public static void SosigDies(H3MP_Packet packet, int fromClientID)
+        {
+            // Make sure the packet is set to ServerPackets.sosigDies
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigDies);
+            for(int i=0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPDataToAll(fromClientID, packet);
+        }
+
+        public static void PlaySosigFootStepSound(int sosigTrackedID, FVRPooledAudioType audioType, Vector3 position, Vector2 vol, Vector2 pitch, float delay, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playSosigFootStepSound))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)audioType);
+                packet.Write(position);
+                packet.Write(vol);
+                packet.Write(pitch);
+                packet.Write(delay);
+
+                PlaySosigFootStepSound(packet, fromClientID);
+            }
+        }
+
+        public static void PlaySosigFootStepSound(H3MP_Packet packet, int fromClientID = 0)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.playSosigFootStepSound);
+            for(int i=0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPDataToAll(fromClientID, packet);
+        }
+
+        public static void SosigRequestHitDecal(int sosigTrackedID, Vector3 point, Vector3 normal, Vector3 edgeNormal, float scale, int linkIndex, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigRequestHitDecal))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write(point);
+                packet.Write(normal);
+                packet.Write(edgeNormal);
+                packet.Write(scale);
+                packet.Write(linkIndex);
+
+                SosigRequestHitDecal(packet, fromClientID);
+            }
+        }
+
+        public static void SosigRequestHitDecal(H3MP_Packet packet, int fromClientID = 0)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigRequestHitDecal);
+            for(int i=0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPDataToAll(fromClientID, packet);
+        }
+
+        public static void SosigClear(int sosigTrackedID, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigClear))
+            {
+                packet.Write(sosigTrackedID);
+
+                SendTCPDataToAll(fromClientID, packet);
+            }
+        }
+
+        public static void SosigSetBodyState(int sosigTrackedID, Sosig.SosigBodyState s, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigSetBodyState))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)s);
+
+                SendTCPDataToAll(fromClientID, packet);
+            }
+        }
+
+        public static void SosigSpeakState(int sosigTrackedID, Sosig.SosigOrder currentOrder, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigSpeakState))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)currentOrder);
+
+                SendTCPDataToAll(fromClientID, packet);
+            }
+        }
+
+        public static void SosigSetCurrentOrder(int sosigTrackedID, Sosig.SosigOrder currentOrder, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigSetCurrentOrder))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)currentOrder);
+
+                SendTCPDataToAll(fromClientID, packet);
+            }
+        }
+
+        public static void SosigVaporize(int sosigTrackedID, int iff, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigVaporize))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)iff);
+
+                SendTCPDataToAll(fromClientID, packet);
+            }
+        }
+
+        public static void SosigLinkBreak(int sosigTrackedID, int linkIndex, bool isStart, byte damClass, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigLinkBreak))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)linkIndex);
+                packet.Write(isStart);
+                packet.Write(damClass);
+
+                SendTCPDataToAll(fromClientID, packet);
+            }
+        }
+
+        public static void SosigLinkSever(int sosigTrackedID, int linkIndex, byte damClass, bool isPullApart, int fromClientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigLinkSever))
+            {
+                packet.Write(sosigTrackedID);
+                packet.Write((byte)linkIndex);
+                packet.Write(damClass);
+                packet.Write(isPullApart);
+
+                SendTCPDataToAll(fromClientID, packet);
+            }
         }
     }
 }

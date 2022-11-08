@@ -25,6 +25,10 @@ namespace H3MP
         public Quaternion rotation;
         public int[] previousAmmoStores;
         public int[] ammoStores;
+        public float[] previousLinkIntegrity;
+        public float[] linkIntegrity;
+        public float previousMustard;
+        public float mustard;
         public SosigConfigTemplate configTemplate;
         public H3MP_TrackedSosig physicalObject;
         public int localTrackedID;
@@ -33,6 +37,8 @@ namespace H3MP
         public List<List<string>> wearables;
         public float[][] linkData;
         public byte IFF;
+        public Sosig.SosigBodyPose previousBodyPose;
+        public Sosig.SosigBodyPose bodyPose;
 
         public IEnumerator Instantiate()
         {
@@ -170,13 +176,32 @@ namespace H3MP
             ammoStores = updatedItem.ammoStores;
             previousActive = active;
             active = updatedItem.active;
+            previousMustard = mustard;
+            mustard = updatedItem.mustard;
+            previousLinkIntegrity = linkIntegrity;
+            linkIntegrity = updatedItem.linkIntegrity;
+            previousBodyPose = bodyPose;
+            bodyPose = updatedItem.bodyPose;
 
             // Set physically
             if (physicalObject != null)
             {
+                physicalObject.physicalSosig.Mustard = mustard;
                 physicalObject.physicalSosig.CoreRB.position = position;
                 physicalObject.physicalSosig.CoreRB.rotation = rotation;
+                Mod.Sosig_SetBodyPose.Invoke(physicalObject.physicalSosig, new object[] { bodyPose });
                 sosigInvAmmoStores.SetValue(physicalObject.physicalSosig.Inventory, ammoStores);
+                for(int i=0; i < physicalObject.physicalSosig.Links.Count; ++i)
+                {
+                    if (physicalObject.physicalSosig.Links[i] != null)
+                    {
+                        if(previousLinkIntegrity[i] != linkIntegrity[i])
+                        {
+                            Mod.SosigLink_m_integrity.SetValue(physicalObject.physicalSosig.Links[i], linkIntegrity[i]);
+                            physicalObject.physicalSosig.UpdateRendererOnLink(i);
+                        }
+                    }
+                }
                 
                 if (active)
                 {
@@ -201,33 +226,50 @@ namespace H3MP
             previousRot = rotation;
             position = physicalObject.physicalSosig.CoreRB.position;
             rotation = physicalObject.physicalSosig.CoreRB.rotation;
-            previousAmmoStores = ammoStores;
+            previousBodyPose = bodyPose;
+            bodyPose = physicalObject.physicalSosig.BodyPose;
             ammoStores = (int[])sosigInvAmmoStores.GetValue(physicalObject.physicalSosig.Inventory);
+            if (ammoStores != null && previousAmmoStores == null)
+            {
+                previousAmmoStores = new int[ammoStores.Length];
+            }
+            bool ammoStoresModified = false;
+            for(int i=0; i < ammoStores.Length; ++i)
+            {
+                if (ammoStores[i] != previousAmmoStores[i])
+                {
+                    ammoStoresModified = true;
+                }
+                previousAmmoStores[i] = ammoStores[i];
+            }
+            previousAmmoStores = ammoStores;
+            previousMustard = mustard;
+            mustard = physicalObject.physicalSosig.Mustard;
+            previousLinkIntegrity = linkIntegrity;
+            if(linkIntegrity == null || linkIntegrity.Length < physicalObject.physicalSosig.Links.Count)
+            {
+                linkIntegrity = new float[physicalObject.physicalSosig.Links.Count];
+                previousLinkIntegrity = new float[physicalObject.physicalSosig.Links.Count];
+            }
+            bool modifiedLinkIntegrity = false;
+            for(int i=0; i < physicalObject.physicalSosig.Links.Count; ++i)
+            {
+                linkIntegrity[i] = (float)Mod.SosigLink_m_integrity.GetValue(physicalObject.physicalSosig.Links[i]);
+                if(linkIntegrity[i] != previousLinkIntegrity[i])
+                {
+                    modifiedLinkIntegrity = true;
+                }
+            }
 
             previousActive = active;
             active = physicalObject.gameObject.activeInHierarchy;
 
-            return NeedsUpdate();
+            return ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();
         }
 
         public bool NeedsUpdate()
         {
-            bool ammoStoresModified = (previousAmmoStores == null && ammoStores != null) || (previousAmmoStores != null && ammoStores == null);
-            if (ammoStoresModified)
-            {
-                return true;
-            }
-            else if (ammoStores != null) 
-            { 
-                for (int i = 0; i < ammoStores.Length; ++i)
-                {
-                    if (ammoStores[i] != previousAmmoStores[i])
-                    {
-                        return true;
-                    }
-                }
-            }
-            return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+            return !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousActive != active || previousMustard != mustard;
         }
     }
 }
