@@ -325,7 +325,7 @@ namespace H3MP
             MethodInfo sosigLinkBreakPatchOriginal = typeof(SosigLink).GetMethod("BreakJoint", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigLinkBreakPatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkBreakPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigLinkBreakPatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkBreakPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo sosigLinkSeverPatchOriginal = typeof(SosigLink).GetMethod("SeverJoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkSeverPatchOriginal = typeof(SosigLink).GetMethod("SeverJoint", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo sosigLinkSeverPatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkSeverPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigLinkSeverPatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkSeverPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigLinkVaporizePatchOriginal = typeof(SosigLink).GetMethod("Vaporize", BindingFlags.Public | BindingFlags.Instance);
@@ -1424,7 +1424,7 @@ namespace H3MP
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig gameobject
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_I4_S, 10)); // Load value of FVRPooledAudioType.GenericClose
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig gameobject
-            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "get_Transform"))); // Get Sosig transform
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "get_transform"))); // Get Sosig transform
             toInsertSecond.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "get_position"))); // Get position of Sosig transform
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load num3
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 0.35f)); // Load 4 byte real literal 0.35
@@ -1570,7 +1570,7 @@ namespace H3MP
             }
         }
 
-        static void SosigVaporizePosfix()
+        static void SosigVaporizePostfix()
         {
             --sosigDiesSkip;
             --SosigHandDropPatch.skip;
@@ -1954,7 +1954,7 @@ namespace H3MP
             --SosigActionPatch.sosigSetBodyStateSkip;
         }
 
-        static void LinkVaporizePrefix(ref SosigLink __instance, int iff)
+        static void LinkVaporizePrefix(ref SosigLink __instance, int IFF)
         {
             ++SosigActionPatch.sosigDiesSkip;
             ++SosigHandDropPatch.skip;
@@ -1972,16 +1972,16 @@ namespace H3MP
             {
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                    H3MP_ServerSend.SosigVaporize(trackedSosig.data.trackedID, IFF);
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                    H3MP_ClientSend.SosigVaporize(trackedSosig.data.trackedID, IFF);
                 }
             }
         }
 
-        static void LinkVaporizePosfix()
+        static void LinkVaporizePostfix()
         {
             --SosigActionPatch.sosigDiesSkip;
             --SosigHandDropPatch.skip;
