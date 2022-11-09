@@ -301,16 +301,16 @@ namespace H3MP
             int itemTrackedID = packet.ReadInt();
             bool primaryHand = packet.ReadBool();
 
-            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 if (primaryHand)
                 {
-                    trackedSosig.physicalObject.physicalSosig.Hand_Primary.PickUp(H3MP_Client.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+                    trackedSosig.physicalObject.physicalSosig.Hand_Primary.PickUp(H3MP_Server.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
                 }
                 else
                 {
-                    trackedSosig.physicalObject.physicalSosig.Hand_Secondary.PickUp(H3MP_Client.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+                    trackedSosig.physicalObject.physicalSosig.Hand_Secondary.PickUp(H3MP_Server.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
                 }
             }
 
@@ -323,10 +323,10 @@ namespace H3MP
             int itemTrackedID = packet.ReadInt();
             int slotIndex = packet.ReadInt();
 
-            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
-                trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Client.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+                trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Server.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
             }
 
             H3MP_ServerSend.SosigPlaceItemIn(sosigTrackedID, slotIndex, itemTrackedID, clientID);
@@ -337,7 +337,7 @@ namespace H3MP
             int sosigTrackedID = packet.ReadInt();
             int slotIndex = packet.ReadInt();
 
-            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].DetachHeldObject();
@@ -351,7 +351,7 @@ namespace H3MP
             int sosigTrackedID = packet.ReadInt();
             bool primaryHand = packet.ReadBool();
 
-            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 if (primaryHand)
@@ -373,7 +373,7 @@ namespace H3MP
             Debug.Log("server handle sosig configure got called from client: " + clientID + " for sosig tracked ID: " + sosigTrackedID);
             SosigConfigTemplate config = packet.ReadSosigConfig();
 
-            H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
+            H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 Debug.Log("\tFound trackedSosig, and it has physical, configuring ");

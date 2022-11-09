@@ -718,8 +718,8 @@ namespace H3MP
 
             H3MP_Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]);
 
-            mainStatusText.text = "Starting...";
-            mainStatusText.color = Color.white;
+            //mainStatusText.text = "Starting...";
+            //mainStatusText.color = Color.white;
         }
 
         private void OnConnectClicked()
@@ -732,8 +732,8 @@ namespace H3MP
 
             client.ConnectToServer();
 
-            mainStatusText.text = "Connecting...";
-            mainStatusText.color = Color.white;
+            //mainStatusText.text = "Connecting...";
+            //mainStatusText.color = Color.white;
         }
 
         private void CreateManagerObject(bool host = false)

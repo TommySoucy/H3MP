@@ -734,6 +734,7 @@ namespace H3MP
             trackedSosig.position = ReadVector3();
             trackedSosig.rotation = ReadQuaternion();
             trackedSosig.active = ReadBool();
+            trackedSosig.mustard = ReadFloat();
             byte ammoStoreLength = ReadByte();
             if(ammoStoreLength > 0)
             {
