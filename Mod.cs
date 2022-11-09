@@ -1580,6 +1580,11 @@ namespace H3MP
 
         static void RequestHitDecalPrefix(ref Sosig __instance, Vector3 point, Vector3 normal, float scale, SosigLink l)
         {
+            if (sosigRequestHitDecalSkip > 0)
+            {
+                return;
+            }
+
             // Skip if not connected
             if (Mod.managerObject == null)
             {
@@ -1602,6 +1607,11 @@ namespace H3MP
 
         static void RequestHitDecalEdgePrefix(ref Sosig __instance, Vector3 point, Vector3 normal, Vector3 edgeNormal, float scale, SosigLink l)
         {
+            if (sosigRequestHitDecalSkip > 0)
+            {
+                return;
+            }
+
             // Skip if not connected
             if (Mod.managerObject == null)
             {
@@ -1624,11 +1634,6 @@ namespace H3MP
 
         static void SendRequestHitDecal(int sosigTrackedID, Vector3 point, Vector3 normal, Vector3 edgeNormal, float scale, int linkIndex)
         {
-            if (sosigRequestHitDecalSkip > 0)
-            {
-                return;
-            }
-
             if (H3MP_ThreadManager.host)
             {
                 H3MP_ServerSend.SosigRequestHitDecal(sosigTrackedID, point, normal, edgeNormal, scale, linkIndex);

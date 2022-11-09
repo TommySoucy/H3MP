@@ -111,7 +111,7 @@ namespace H3MP
         public int parent = -1; // The tracked ID of item this item is attached to
         public List<H3MP_TrackedItemData> children; // The items attached to this item
         public int childIndex = -1; // The index of this item in its parent's children list
-        public bool ignoreParentChanged;
+        public int ignoreParentChanged;
 
         public IEnumerator Instantiate()
         {
@@ -151,8 +151,9 @@ namespace H3MP
                 parentItem.children.Add(this);
 
                 // Physically parent
-                ignoreParentChanged = true;
+                ++ignoreParentChanged;
                 itemObject.transform.parent = parentItem.physicalObject.transform;
+                --ignoreParentChanged;
             }
 
             // Store and destroy RB if not in control
@@ -278,14 +279,21 @@ namespace H3MP
                     // Physically unparent if necessary
                     if (physicallyParent && physicalObject != null)
                     {
-                        ignoreParentChanged = true;
+                        ++ignoreParentChanged;
                         physicalObject.transform.parent = GetGeneralParent();
+                        --ignoreParentChanged;
 
                         // If in control, we want to enable rigidbody
-                        if(controller == clientID)
+                        if (controller == clientID)
                         {
                             // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
                             physicalObject.GetComponent<FVRPhysicalObject>().RecoverRigidbody();
+                        }
+
+                        // Call updateParent delegate on item if it has one
+                        if(physicalObject.updateParentFunc != null)
+                        {
+                            physicalObject.updateParentFunc();
                         }
                     }
                 }
@@ -325,14 +333,21 @@ namespace H3MP
                 // Physically parent
                 if (physicallyParent && physicalObject != null)
                 {
-                    ignoreParentChanged = true;
+                    ++ignoreParentChanged;
                     physicalObject.transform.parent = newParent.physicalObject.transform;
+                    --ignoreParentChanged;
 
                     // If in control, we want to enable rigidbody
                     if (controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
                     {
                         // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
                         physicalObject.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+                    }
+
+                    // Call updateParent delegate on item if it has one
+                    if (physicalObject.updateParentFunc != null)
+                    {
+                        physicalObject.updateParentFunc();
                     }
                 }
             }

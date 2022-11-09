@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
@@ -17,10 +18,13 @@ namespace H3MP
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
         public delegate bool UpdateDataWithGiven(byte[] newData);
         public delegate bool FireFirearm();
+        public delegate void UpdateParent();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
-        public UnityEngine.Object dataObject;
+        public UpdateParent updateParentFunc; // Update the item's state depending on current parent
+        public sbyte currentMountIndex = -1; // Used by attachment
+        public FVRPhysicalObject dataObject;
 
         public bool sendDestroy = true; // To prevent feeback loops
 
@@ -86,6 +90,14 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenTubeFedShotgun;
                 dataObject = asTFS;
                 fireFunc = asTFS.Fire;
+            }
+            else if (physObj is FVRFireArmAttachment)
+            {
+                FVRFireArmAttachment asAttachment = (FVRFireArmAttachment)physObj;
+                updateFunc = UpdateAttachment;
+                updateGivenFunc = UpdateGivenAttachment;
+                updateParentFunc = UpdateAttachmentParent;
+                dataObject = asAttachment;
             }
             /* TODO: All other type of firearms below
             else if (physObj is Revolver)
@@ -806,6 +818,186 @@ namespace H3MP
             return modified;
         }
 
+        private bool UpdateAttachment()
+        {
+            bool modified = false;
+            FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
+
+            if (data.data == null)
+            {
+                data.data = new byte[1];
+                modified = true;
+            }
+
+            byte preIndex = data.data[0];
+
+            // Write attached mount index
+            if (asAttachment.curMount == null)
+            {
+                BitConverter.GetBytes(-1).CopyTo(data.data, 0);
+            }
+            else
+            {
+                // Find the mount and set it
+                bool found = false;
+                for(int i=0; i < asAttachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                {
+                    if (asAttachment.curMount.Parent.AttachmentMounts[i] == asAttachment.curMount)
+                    {
+                        BitConverter.GetBytes((byte)i).CopyTo(data.data, 0);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    BitConverter.GetBytes(-1).CopyTo(data.data, 0);
+                }
+            }
+
+            return modified || (preIndex != data.data[0]);
+        }
+
+        private bool UpdateGivenAttachment(byte[] newData)
+        {
+            bool modified = false;
+            FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
+
+            if (data.data == null || data.data.Length != newData.Length)
+            {
+                data.data = new byte[1];
+                BitConverter.GetBytes((sbyte)-1).CopyTo(data.data, 0);
+                modified = true;
+            }
+
+            // If mount doesn;t actually change, just return now
+            sbyte mountIndex = (sbyte)newData[0];
+            if(currentMountIndex == mountIndex)
+            {
+                return modified;
+            }
+
+            sbyte preMountIndex = currentMountIndex;
+            if (mountIndex == -1)
+            {
+                // Should not be mounted, check if currently is
+                if(asAttachment.curMount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    asAttachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+                    currentMountIndex = -1;
+
+                    // Detach from mount will recover rigidbody, store and destroy again if not controller
+                    if (H3MP_ThreadManager.host)
+                    {
+                        if(data.controller != 0)
+                        {
+                            asAttachment.StoreAndDestroyRigidbody();
+                        }
+                    }
+                    else
+                    {
+                        if (data.controller != H3MP_Client.singleton.ID)
+                        {
+                            asAttachment.StoreAndDestroyRigidbody();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Find mount instance we want to be mounted to
+                FVRFireArmAttachmentMount mount = null;
+                H3MP_TrackedItemData parentTrackedItemData = null;
+                if (H3MP_ThreadManager.host)
+                {
+                    parentTrackedItemData = H3MP_Server.items[data.parent];
+                }
+                else
+                {
+                    parentTrackedItemData = H3MP_Client.items[data.parent];
+                }
+
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalObject)
+                {
+                    // We want to be mounted, we have a parent
+                    if (parentTrackedItemData.physicalObject.dataObject.AttachmentMounts.Count > mountIndex)
+                    {
+                        mount = parentTrackedItemData.physicalObject.dataObject.AttachmentMounts[mountIndex];
+                    }
+                }
+
+                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                if (mount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    if (asAttachment.curMount != null)
+                    {
+                        asAttachment.DetachFromMount();
+                    }
+
+                    asAttachment.AttachToMount(mount, true);
+                    currentMountIndex = mountIndex;
+                    --data.ignoreParentChanged;
+                }
+            }
+
+            return modified || (preMountIndex != currentMountIndex);
+        }
+
+        private void UpdateAttachmentParent()
+        {
+            FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
+
+            if(currentMountIndex != -1) // We want to be attached to a mount
+            {
+                if (data.parent != -1) // We have parent
+                {
+                    // We could be on wrong mount (or none physically) if we got a new mount through update but the parent hadn't been updated yet
+
+                    // Get the mount we are supposed to be mounted to
+                    FVRFireArmAttachmentMount mount = null;
+                    H3MP_TrackedItemData parentTrackedItemData = null;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        parentTrackedItemData = H3MP_Server.items[data.parent];
+                    }
+                    else
+                    {
+                        parentTrackedItemData = H3MP_Client.items[data.parent];
+                    }
+
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalObject)
+                    {
+                        mount = parentTrackedItemData.physicalObject.dataObject.AttachmentMounts[currentMountIndex];
+                    }
+
+                    // If not yet physically mounted to anything, can right away mount to the proper mount
+                    if (asAttachment.curMount == null)
+                    {
+                        ++data.ignoreParentChanged;
+                        asAttachment.AttachToMount(mount, true);
+                        --data.ignoreParentChanged;
+                    }
+                    else if(asAttachment.curMount != mount) // Already mounted, but not on the right one, need to unmount, then mount of right one
+                    {
+                        ++data.ignoreParentChanged;
+                        if (asAttachment.curMount != null)
+                        {
+                            asAttachment.DetachFromMount();
+                        }
+
+                        asAttachment.AttachToMount(mount, true);
+                        --data.ignoreParentChanged;
+                    }
+                }
+                // else, if this happens it is because we received a parent update to null and just haven't gotten the up to date mount index of -1 yet
+                //       This will be handled on update
+            }
+            // else, on update we will detach from any current mount if this is the case, no need to handle this here
+        }
+
         private bool UpdateMagazine()
         {
             bool modified = false;
@@ -1211,9 +1403,8 @@ namespace H3MP
 
         private void OnTransformParentChanged()
         {
-            if (data.ignoreParentChanged)
+            if (data.ignoreParentChanged > 0)
             {
-                data.ignoreParentChanged = false;
                 return;
             }
 
