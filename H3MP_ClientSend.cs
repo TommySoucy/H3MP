@@ -639,7 +639,7 @@ namespace H3MP
                         trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
 
                         Debug.Log("\t\tTracked item at: "+trackedItem.trackedID);
-                        trackedItem.Update();
+                        trackedItem.Update(true);
                         packet.Write(trackedItem, true);
 
                         ++count;
@@ -680,7 +680,7 @@ namespace H3MP
                         trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
 
                         Debug.Log("\t\tTracked sosig at: " + trackedSosig.trackedID);
-                        trackedSosig.Update();
+                        trackedSosig.Update(true);
                         packet.Write(trackedSosig, true);
 
                         ++count;

@@ -222,7 +222,7 @@ namespace H3MP
             UpdateData(updatedItem.data);
         }
 
-        public bool Update()
+        public bool Update(bool full = false)
         {
             previousPos = position;
             previousRot = rotation;
