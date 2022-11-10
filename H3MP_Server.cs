@@ -231,6 +231,7 @@ namespace H3MP
                 { (int)ClientPackets.playerScene, H3MP_ServerHandle.PlayerScene },
                 { (int)ClientPackets.addSyncScene, H3MP_ServerHandle.AddSyncScene },
                 { (int)ClientPackets.trackedItems, H3MP_ServerHandle.TrackedItems },
+                { (int)ClientPackets.trackedSosigs, H3MP_ServerHandle.TrackedSosigs },
                 { (int)ClientPackets.takeControl, H3MP_ServerHandle.TakeControl },
                 { (int)ClientPackets.giveControl, H3MP_ServerHandle.GiveControl },
                 { (int)ClientPackets.destroyItem, H3MP_ServerHandle.DestroyItem },
@@ -264,6 +265,8 @@ namespace H3MP
                 { (int)ClientPackets.sosigRequestHitDecal, H3MP_ServerHandle.SosigRequestHitDecal },
                 { (int)ClientPackets.sosigLinkBreak, H3MP_ServerHandle.SosigLinkBreak },
                 { (int)ClientPackets.sosigLinkSever, H3MP_ServerHandle.SosigLinkSever },
+                { (int)ClientPackets.updateItemRequest, H3MP_ServerHandle.UpToDateItems },
+                { (int)ClientPackets.updateSosigRequest, H3MP_ServerHandle.UpToDateSosigs },
             };
 
             items = new H3MP_TrackedItemData[100];

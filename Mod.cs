@@ -72,6 +72,7 @@ namespace H3MP
         public static readonly FieldInfo Sosig_m_isConfused = typeof(Sosig).GetField("m_isConfused", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigLink_m_wearables = typeof(SosigLink).GetField("m_wearables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigLink_m_integrity = typeof(SosigLink).GetField("m_integrity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo SosigInventory_m_ammoStores = typeof(SosigInventory).GetField("m_ammoStores", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -2408,7 +2409,9 @@ namespace H3MP
                 // Destroy any objects that need to be destroyed and remove the data
                 foreach (UnityEngine.Object obj in routineData[currentFile])
                 {
+                    ++H3MP_TrackedItem.skipDestroy;
                     UnityEngine.Object.Destroy(obj);
+                    --H3MP_TrackedItem.skipDestroy;
                 }
                 routineData.Remove(currentFile);
             }

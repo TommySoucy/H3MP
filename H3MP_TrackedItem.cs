@@ -27,6 +27,7 @@ namespace H3MP
         public FVRPhysicalObject dataObject;
 
         public bool sendDestroy = true; // To prevent feeback loops
+        public static int skipDestroy;
 
         private void Awake()
         {
@@ -1342,10 +1343,9 @@ namespace H3MP
                 }
                 else
                 {
-                    if (sendDestroy)
+                    if (sendDestroy && skipDestroy == 0)
                     {
                         H3MP_ServerSend.DestroyItem(data.trackedID);
-                        sendDestroy = true;
                     }
 
                     H3MP_Server.items[data.trackedID] = null;
@@ -1383,10 +1383,9 @@ namespace H3MP
                 }
                 else
                 {
-                    if (sendDestroy)
+                    if (sendDestroy && skipDestroy == 0)
                     {
                         H3MP_ClientSend.DestroyItem(data.trackedID);
-                        sendDestroy = true;
                     }
 
                     H3MP_Client.items[data.trackedID] = null;

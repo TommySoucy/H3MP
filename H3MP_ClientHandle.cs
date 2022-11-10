@@ -192,20 +192,23 @@ namespace H3MP
 
             H3MP_TrackedItemData trackedItem = H3MP_Client.items[trackedID];
 
-            if(trackedItem.physicalObject == null)
+            if (trackedItem != null)
             {
-                H3MP_Client.items[trackedID] = null;
-                if (trackedItem.controller == H3MP_Client.singleton.ID)
+                if (trackedItem.physicalObject == null)
                 {
-                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    if (trackedItem.controller == H3MP_Client.singleton.ID)
+                    {
+                        H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                        H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                        H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    }
                 }
-            }
-            else
-            {
-                trackedItem.physicalObject.sendDestroy = false;
-                GameObject.Destroy(trackedItem.physicalObject.gameObject);
+                else
+                {
+                    trackedItem.physicalObject.sendDestroy = false;
+                    GameObject.Destroy(trackedItem.physicalObject.gameObject);
+                }
+                H3MP_Client.items[trackedID] = null;
             }
         }
 
@@ -215,21 +218,24 @@ namespace H3MP
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[trackedID];
 
-            if(trackedSosig.physicalObject == null)
+            if (trackedSosig != null)
             {
-                H3MP_Client.items[trackedID] = null;
-                if (trackedSosig.controller == H3MP_Client.singleton.ID)
+                if (trackedSosig.physicalObject == null)
                 {
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                    if (trackedSosig.controller == H3MP_Client.singleton.ID)
+                    {
+                        H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                        H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
+                        H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                    }
                 }
-            }
-            else
-            {
-                H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosig);
-                trackedSosig.physicalObject.sendDestroy = false;
-                GameObject.Destroy(trackedSosig.physicalObject.gameObject);
+                else
+                {
+                    H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosig);
+                    trackedSosig.physicalObject.sendDestroy = false;
+                    GameObject.Destroy(trackedSosig.physicalObject.gameObject);
+                }
+                H3MP_Client.items[trackedID] = null;
             }
         }
 
@@ -763,6 +769,11 @@ namespace H3MP
                 trackedSosig.physicalObject.physicalSosig.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalObject.physicalSosig.Links[linkIndex]);
                 --SosigActionPatch.sosigRequestHitDecalSkip;
             }
+        }
+
+        public static void RequestUpToDateObjects(H3MP_Packet packet)
+        {
+            H3MP_ClientSend.UpToDateObjects();
         }
     }
 }

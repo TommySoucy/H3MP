@@ -186,12 +186,16 @@ namespace H3MP
             // Set physically
             if (physicalObject != null)
             {
+                Debug.Log("SosigData physical update start");
                 physicalObject.physicalSosig.Mustard = mustard;
                 physicalObject.physicalSosig.CoreRB.position = position;
                 physicalObject.physicalSosig.CoreRB.rotation = rotation;
+                Debug.Log("0");
                 Mod.Sosig_SetBodyPose.Invoke(physicalObject.physicalSosig, new object[] { bodyPose });
+                Debug.Log("0");
                 sosigInvAmmoStores.SetValue(physicalObject.physicalSosig.Inventory, ammoStores);
-                for(int i=0; i < physicalObject.physicalSosig.Links.Count; ++i)
+                Debug.Log("0");
+                for (int i=0; i < physicalObject.physicalSosig.Links.Count; ++i)
                 {
                     if (physicalObject.physicalSosig.Links[i] != null)
                     {
@@ -202,7 +206,8 @@ namespace H3MP
                         }
                     }
                 }
-                
+                Debug.Log("0");
+
                 if (active)
                 {
                     if (!physicalObject.gameObject.activeSelf)
@@ -217,6 +222,7 @@ namespace H3MP
                         physicalObject.gameObject.SetActive(false);
                     }
                 }
+                Debug.Log("0");
             }
         }
 

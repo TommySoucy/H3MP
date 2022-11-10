@@ -55,7 +55,8 @@ namespace H3MP
         sosigVaporize = 38,
         sosigRequestHitDecal = 39,
         sosigLinkBreak = 40,
-        sosigLinkSever = 41
+        sosigLinkSever = 41,
+        updateRequest = 42
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -99,7 +100,9 @@ namespace H3MP
         sosigVaporize = 36,
         sosigRequestHitDecal = 37,
         sosigLinkBreak = 38,
-        sosigLinkSever = 39
+        sosigLinkSever = 39,
+        updateItemRequest = 40,
+        updateSosigRequest = 41
     }
 
     public class H3MP_Packet : IDisposable
@@ -343,6 +346,18 @@ namespace H3MP
                 Write((byte)0);
             }
             Write((byte)trackedSosig.bodyPose);
+            if (trackedSosig.linkIntegrity == null || trackedSosig.linkIntegrity.Length == 0)
+            {
+                Write((byte)0);
+            }
+            else
+            {
+                Write((byte)trackedSosig.linkIntegrity.Length);
+                for (int i = 0; i < trackedSosig.linkIntegrity.Length; ++i)
+                {
+                    Write(trackedSosig.linkIntegrity[i]);
+                }
+            }
 
             if (full)
             {
@@ -745,6 +760,18 @@ namespace H3MP
                 }
             }
             trackedSosig.bodyPose = (Sosig.SosigBodyPose)ReadByte();
+            byte sosigLinkIntegrityLength = ReadByte();
+            if (sosigLinkIntegrityLength > 0)
+            {
+                if (trackedSosig.linkIntegrity == null)
+                {
+                    trackedSosig.linkIntegrity = new float[sosigLinkIntegrityLength];
+                }
+                for (int i = 0; i < sosigLinkIntegrityLength; ++i)
+                {
+                    trackedSosig.linkIntegrity[i] = ReadFloat();
+                }
+            }
 
             if (full)
             {

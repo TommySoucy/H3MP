@@ -172,7 +172,7 @@ namespace H3MP
             }
         }
 
-        public static void UpdateTrackedItem(H3MP_TrackedItemData updatedItem)
+        public static void UpdateTrackedItem(H3MP_TrackedItemData updatedItem, bool ignoreOrder = false)
         {
             if(updatedItem.trackedID == -1)
             {
@@ -205,14 +205,14 @@ namespace H3MP
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
                 // Since the order is kept as a single byte, it will overflow every 256 packets of this item
                 // Here we consider the update out of order if it is within 128 iterations before the latest
-                if(trackedItemData.controller != ID && (updatedItem.order > trackedItemData.order || trackedItemData.order - updatedItem.order > 128))
+                if(trackedItemData.controller != ID && (ignoreOrder || ((updatedItem.order > trackedItemData.order || trackedItemData.order - updatedItem.order > 128))))
                 {
                     trackedItemData.Update(updatedItem);
                 }
             }
         }
 
-        public static void UpdateTrackedSosig(H3MP_TrackedSosigData updatedSosig)
+        public static void UpdateTrackedSosig(H3MP_TrackedSosigData updatedSosig, bool ignoreOrder = false)
         {
             if(updatedSosig.trackedID == -1)
             {
@@ -245,7 +245,7 @@ namespace H3MP
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
                 // Since the order is kept as a single byte, it will overflow every 256 packets of this sosig
                 // Here we consider the update out of order if it is within 128 iterations before the latest
-                if(trackedSosigData.controller != ID && (updatedSosig.order > trackedSosigData.order || trackedSosigData.order - updatedSosig.order > 128))
+                if(trackedSosigData.controller != ID && (ignoreOrder || ((updatedSosig.order > trackedSosigData.order || trackedSosigData.order - updatedSosig.order > 128))))
                 {
                     trackedSosigData.Update(updatedSosig);
                 }
@@ -507,6 +507,7 @@ namespace H3MP
             data.rotation = sosigScript.CoreRB.rotation;
             data.active = trackedSosig.gameObject.activeInHierarchy;
             data.linkData = new float[sosigScript.Links.Count][];
+            data.linkIntegrity = new float[data.linkData.Length];
             for(int i=0; i < sosigScript.Links.Count; ++i)
             {
                 data.linkData[i] = new float[5];
@@ -514,7 +515,16 @@ namespace H3MP
                 data.linkData[i][1] = sosigScript.Links[i].DamMult;
                 data.linkData[i][2] = sosigScript.Links[i].DamMultAVG;
                 data.linkData[i][3] = sosigScript.Links[i].CollisionBluntDamageMultiplier;
-                data.linkData[i][4] = (float)typeof(SosigLink).GetField("m_integrity", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(sosigScript.Links[i]);
+                if(sosigScript.Links[i] == null)
+                {
+                    data.linkData[i][4] = 0;
+                    data.linkIntegrity[i] = 0;
+                }
+                else
+                {
+                    data.linkData[i][4] = (float)typeof(SosigLink).GetField("m_integrity", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(sosigScript.Links[i]);
+                    data.linkIntegrity[i] = data.linkData[i][4];
+                }
             }
             data.wearables = new List<List<string>>();
             FieldInfo wearablesField = typeof(SosigLink).GetField("m_wearables", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -539,8 +549,11 @@ namespace H3MP
                     }
                 }
             }
-
+            data.ammoStores = (int[])Mod.SosigInventory_m_ammoStores.GetValue(sosigScript.Inventory);
             data.controller = H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID;
+            data.mustard = sosigScript.Mustard;
+            data.bodyPose = sosigScript.BodyPose;
+            data.IFF = (byte)sosigScript.GetIFF();
 
             // Add to local list
             data.localTrackedID = sosigs.Count;
@@ -657,22 +670,12 @@ namespace H3MP
 
                             if (H3MP_ThreadManager.host)
                             {
-                                // Instantiate all items controlled by other players in this scene
-                                for (int i = 0; i < H3MP_Server.items.Length; ++i)
-                                {
-                                    if (H3MP_Server.items[i] != null && H3MP_Server.items[i].controller == player.Key)
-                                    {
-                                        AnvilManager.Run(H3MP_Server.items[i].Instantiate());
-                                    }
-                                }
-                                // Instantiate all sosigs controlled by other players in this scene
-                                for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
-                                {
-                                    if (H3MP_Server.sosigs[i] != null && H3MP_Server.sosigs[i].controller == player.Key)
-                                    {
-                                        AnvilManager.Run(H3MP_Server.sosigs[i].Instantiate());
-                                    }
-                                }
+                                // Request most up to date items from the client
+                                // We do this because we may not have the most up to date version of items/sosigs since
+                                // clients only send updated data when there are others in their scene
+                                // But we need the most of to date data to instantiate the item/sosig
+                                Debug.Log("Requesting up to date objects from "+player.Key);
+                                H3MP_ServerSend.RequestUpToDateObjects(player.Key);
                             }
                         }
                         else

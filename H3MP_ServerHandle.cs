@@ -98,6 +98,16 @@ namespace H3MP
             }
         }
 
+        public static void TrackedSosigs(int clientID, H3MP_Packet packet)
+        {
+            // Reconstruct passed trackedItems from packet
+            int count = packet.ReadShort();
+            for(int i=0; i < count; ++i)
+            {
+                H3MP_GameManager.UpdateTrackedSosig(packet.ReadTrackedSosig());
+            }
+        }
+
         public static void TakeControl(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -862,6 +872,36 @@ namespace H3MP
             }
 
             H3MP_ServerSend.SosigLinkSever(sosigTrackedID, linkIndex, damClass, isPullApart, clientID);
+        }
+
+        public static void UpToDateItems(int clientID, H3MP_Packet packet)
+        {
+            Debug.Log("Server received up to date items packet");
+            // Reconstruct passed trackedItems from packet
+            int count = packet.ReadShort();
+            for (int i = 0; i < count; ++i)
+            {
+                H3MP_TrackedItemData trackedItem = packet.ReadTrackedItem(true);
+                Debug.Log("\tItem: " +trackedItem.trackedID+", updating");
+                H3MP_GameManager.UpdateTrackedItem(trackedItem, true);
+                Debug.Log("\tInstantiating");
+                AnvilManager.Run(H3MP_Server.items[trackedItem.trackedID].Instantiate());
+            }
+        }
+
+        public static void UpToDateSosigs(int clientID, H3MP_Packet packet)
+        {
+            Debug.Log("Server received up to date sosigs packet");
+            // Reconstruct passed trackedSosigs from packet
+            int count = packet.ReadShort();
+            for (int i = 0; i < count; ++i)
+            {
+                H3MP_TrackedSosigData trackedSosig = packet.ReadTrackedSosig(true);
+                Debug.Log("\tSosig: " + trackedSosig.trackedID + ", updating");
+                H3MP_GameManager.UpdateTrackedSosig(trackedSosig, true);
+                Debug.Log("\tInstantiating");
+                AnvilManager.Run(H3MP_Server.sosigs[trackedSosig.trackedID].Instantiate());
+            }
         }
     }
 }

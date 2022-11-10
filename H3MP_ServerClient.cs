@@ -257,6 +257,10 @@ namespace H3MP
                     player.scene.Equals(H3MP_Server.items[i].controller == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene))
                 {
                     Debug.Log("\t"+ H3MP_Server.items[i].itemID);
+                    // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                    // been anyone in the scene with the controller. Then when someone else joins the scene, we send relevent items but
+                    // nullable are still null, which is problematic
+                    H3MP_Server.items[i].Update();
                     H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], player.scene, ID);
                 }
             }
@@ -268,6 +272,7 @@ namespace H3MP
                     player.scene.Equals(H3MP_Server.sosigs[i].controller == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene))
                 {
                     Debug.Log("\tSending a sosig");
+                    H3MP_Server.sosigs[i].Update();
                     H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, ID);
                 }
             }

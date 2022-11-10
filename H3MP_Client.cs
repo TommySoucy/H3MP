@@ -341,6 +341,7 @@ namespace H3MP
                 { (int)ServerPackets.sosigLinkBreak, H3MP_ClientHandle.SosigLinkBreak },
                 { (int)ServerPackets.sosigLinkSever, H3MP_ClientHandle.SosigLinkSever },
                 { (int)ServerPackets.sosigRequestHitDecal, H3MP_ClientHandle.SosigRequestHitDecal },
+                { (int)ServerPackets.updateRequest, H3MP_ClientHandle.RequestUpToDateObjects },
             };
 
             // All vanilla scenes can be synced by default

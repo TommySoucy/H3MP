@@ -430,6 +430,7 @@ namespace H3MP
 
         public static void DestroyItem(int trackedID, int clientID = -1)
         {
+            Debug.Log("Server sending a DestroyItem packet for : " + trackedID+"\n"+Environment.StackTrace);
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.destroyItem))
             {
                 packet.Write(trackedID);
@@ -934,6 +935,14 @@ namespace H3MP
                 packet.Write(isPullApart);
 
                 SendTCPDataToAll(fromClientID, packet);
+            }
+        }
+
+        public static void RequestUpToDateObjects(int clientID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.updateRequest))
+            {
+                SendTCPData(clientID, packet);
             }
         }
     }

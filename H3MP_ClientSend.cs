@@ -7,6 +7,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Valve.Newtonsoft.Json.Linq;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -97,7 +98,7 @@ namespace H3MP
         public static void TrackedItems()
         {
             int index = 0;
-            while (index < H3MP_GameManager.items.Count - 1)
+            while (index < H3MP_GameManager.items.Count)
             {
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedItems))
                 {
@@ -138,7 +139,7 @@ namespace H3MP
                             }
                         }
 
-                        index = i;
+                        ++index;
                     }
 
                     // Write the count to packet
@@ -156,7 +157,7 @@ namespace H3MP
         public static void TrackedSosigs()
         {
             int index = 0;
-            while (index < H3MP_GameManager.sosigs.Count - 1)
+            while (index < H3MP_GameManager.sosigs.Count)
             {
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedSosigs))
                 {
@@ -197,7 +198,7 @@ namespace H3MP
                             }
                         }
 
-                        index = i;
+                        ++index;
                     }
 
                     // Write the count to packet
@@ -615,6 +616,93 @@ namespace H3MP
                 packet.Write(isPullApart);
 
                 SendTCPData(packet);
+            }
+        }
+
+        public static void UpToDateObjects()
+        {
+            Debug.Log(H3MP_Client.singleton.ID.ToString()+ " sending up to date objects to server");
+            int index = 0;
+            while (index < H3MP_GameManager.items.Count)
+            {
+                Debug.Log("\tItem Packet");
+                using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateItemRequest))
+                {
+                    // Write place holder int at start to hold the count once we know it
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
+
+                    short count = 0;
+                    for (int i = index; i < H3MP_GameManager.items.Count; ++i)
+                    {
+                        H3MP_TrackedItemData trackedItem = H3MP_GameManager.items[i];
+                        trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+
+                        Debug.Log("\t\tTracked item at: "+trackedItem.trackedID);
+                        trackedItem.Update();
+                        packet.Write(trackedItem, true);
+
+                        ++count;
+
+                        // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                        if (packet.buffer.Count >= 1300)
+                        {
+                            break;
+                        }
+
+                        ++index;
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                    {
+                        packet.buffer[i] = countArr[j];
+                    }
+
+                    SendTCPData(packet);
+                }
+            }
+            index = 0;
+            while (index < H3MP_GameManager.sosigs.Count)
+            {
+                Debug.Log("\tSosig Packet");
+                using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateSosigRequest))
+                {
+                    // Write place holder int at start to hold the count once we know it
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
+
+                    short count = 0;
+                    for (int i = index; i < H3MP_GameManager.sosigs.Count; ++i)
+                    {
+                        H3MP_TrackedSosigData trackedSosig = H3MP_GameManager.sosigs[i];
+                        trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+
+                        Debug.Log("\t\tTracked sosig at: " + trackedSosig.trackedID);
+                        trackedSosig.Update();
+                        packet.Write(trackedSosig, true);
+
+                        ++count;
+
+                        // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                        if (packet.buffer.Count >= 1300)
+                        {
+                            break;
+                        }
+
+                        ++index;
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                    {
+                        packet.buffer[i] = countArr[j];
+                    }
+
+                    SendTCPData(packet);
+                }
             }
         }
     }
