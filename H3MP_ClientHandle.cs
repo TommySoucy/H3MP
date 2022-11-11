@@ -31,10 +31,11 @@ namespace H3MP
             int ID = packet.ReadInt();
             string username = packet.ReadString();
             string scene = packet.ReadString();
+            int instance = packet.ReadInt();
             Vector3 position = packet.ReadVector3();
             Quaternion rotation = packet.ReadQuaternion();
 
-            H3MP_GameManager.singleton.SpawnPlayer(ID, username, scene, position, rotation);
+            H3MP_GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation);
         }
 
         public static void ConnectSync(H3MP_Packet packet)
@@ -85,6 +86,14 @@ namespace H3MP
             H3MP_GameManager.UpdatePlayerScene(ID, scene);
         }
 
+        public static void PlayerInstance(H3MP_Packet packet)
+        {
+            int ID = packet.ReadInt();
+            int instance = packet.ReadInt();
+
+            H3MP_GameManager.UpdatePlayerInstance(ID, instance);
+        }
+
         public static void TrackedItems(H3MP_Packet packet)
         {
             // Reconstruct passed trackedItems from packet
@@ -107,12 +116,12 @@ namespace H3MP
 
         public static void TrackedItem(H3MP_Packet packet)
         {
-            H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString());
+            H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString(), packet.ReadInt());
         }
 
         public static void TrackedSosig(H3MP_Packet packet)
         {
-            H3MP_Client.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString());
+            H3MP_Client.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString(), packet.ReadInt());
         }
 
         public static void AddSyncScene(H3MP_Packet packet)

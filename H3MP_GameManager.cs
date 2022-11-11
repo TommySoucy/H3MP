@@ -44,6 +44,7 @@ namespace H3MP
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
         public static int playersInSameScene = 0;
         public static int playerStateAddtionalDataSize = -1;
+        public static int instance = 0;
 
         //public GameObject localPlayerPrefab;
         public GameObject playerPrefab;
@@ -60,12 +61,13 @@ namespace H3MP
                 int sceneCount = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
                 for (int i = 0; i < sceneCount; i++)
                 {
-                    synchronizedScenes.Add(System.IO.Path.GetFileNameWithoutExtension(UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i)), 0);
+                    string sceneName = System.IO.Path.GetFileNameWithoutExtension(UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i));
+                    synchronizedScenes.Add(sceneName, 0);
                 }
             }
         }
 
-        public void SpawnPlayer(int ID, string username, string scene, Vector3 position, Quaternion rotation)
+        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation)
         {
             Debug.Log($"Spawn player called with ID: {ID}");
 
@@ -86,6 +88,7 @@ namespace H3MP
             playerManager.ID = ID;
             playerManager.username = username;
             playerManager.scene = scene;
+            playerManager.instance = instance;
             playerManager.usernameLabel.text = username;
             players.Add(ID, playerManager);
 
@@ -151,6 +154,39 @@ namespace H3MP
             }
 
             if (sceneName.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(sceneName))
+            {
+                if (!player.gameObject.activeSelf)
+                {
+                    player.gameObject.SetActive(true);
+                    ++playersInSameScene;
+
+                    player.SetEntitiesRegistered(true);
+                }
+            }
+            else
+            {
+                if (player.gameObject.activeSelf)
+                {
+                    player.gameObject.SetActive(false);
+                    --playersInSameScene;
+
+                    player.SetEntitiesRegistered(false);
+                }
+            }
+        }
+
+        public static void UpdatePlayerInstance(int playerID, int instance)
+        {
+            H3MP_PlayerManager player = players[playerID];
+
+            player.instance = instance;
+
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_Server.clients[playerID].player.instance = instance;
+            }
+
+            if (player.scene.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene) && instance == player.instance)
             {
                 if (!player.gameObject.activeSelf)
                 {

@@ -56,7 +56,8 @@ namespace H3MP
         sosigRequestHitDecal = 39,
         sosigLinkBreak = 40,
         sosigLinkSever = 41,
-        updateRequest = 42
+        updateRequest = 42,
+        playerInstance = 43
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -102,7 +103,8 @@ namespace H3MP
         sosigLinkBreak = 38,
         sosigLinkSever = 39,
         updateItemRequest = 40,
-        updateSosigRequest = 41
+        updateSosigRequest = 41,
+        playerInstance = 42
     }
 
     public class H3MP_Packet : IDisposable

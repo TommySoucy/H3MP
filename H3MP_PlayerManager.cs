@@ -29,6 +29,7 @@ namespace H3MP
         public Text healthIndicator;
 
         public string scene;
+        public int instance;
 
         private void Awake()
         {

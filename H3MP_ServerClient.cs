@@ -196,10 +196,11 @@ namespace H3MP
             }
         }
 
-        public void SendIntoGame(string playerName, string scene)
+        public void SendIntoGame(string playerName, string scene, int instance)
         {
             player = new H3MP_Player(ID, playerName, Vector3.zero);
             player.scene = scene;
+            player.instance = instance;
 
             // Spawn this client's player in all connected client but itself
             foreach(H3MP_ServerClient client in H3MP_Server.clients.Values)
@@ -208,13 +209,13 @@ namespace H3MP
                 {
                     if(client.ID != ID)
                     {
-                        H3MP_ServerSend.SpawnPlayer(ID, client.player, scene);
+                        H3MP_ServerSend.SpawnPlayer(ID, client.player, scene, instance);
                     }
                 }
             }
 
             // Also spawn player for host
-            H3MP_GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, player.position, player.rotation);
+            H3MP_GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, instance, player.position, player.rotation);
 
             // Spawn all clients' players in this client
             bool inControl = true;
@@ -222,13 +223,13 @@ namespace H3MP
             {
                 if(client.player != null && client.ID != ID)
                 {
-                    H3MP_ServerSend.SpawnPlayer(client.ID, player, client.player.scene);
+                    H3MP_ServerSend.SpawnPlayer(client.ID, player, client.player.scene, client.player.instance);
                     inControl &= !scene.Equals(client.player.scene);
                 }
             }
 
             // Also spawn host player in this client
-            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), SceneManager.GetActiveScene().name, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation);
+            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), SceneManager.GetActiveScene().name, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation);
             inControl &= !scene.Equals(SceneManager.GetActiveScene().name);
 
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
@@ -245,7 +246,7 @@ namespace H3MP
         public void SendRelevantTrackedObjects()
         {
             Debug.Log("Sending relevant tracked items");
-            // Send to the clients all items that are already synced and controlled by clients in the same scene
+            // Send to the clients all items that are already synced and controlled by clients in the same scene and instance
             for (int i = 0; i < H3MP_Server.items.Length; ++i)
             {
                 // TODO: In client handle for trackedItem we already check if this item is in our scene before instantiating
@@ -253,27 +254,30 @@ namespace H3MP
                 //       the ones from other scenes, which will be useless to the client
                 //       Need to check which one would be more efficient, more packets or checking scene twice
                 //       Could also pass a bool telling the client not to check the scene because its already been checked?
-                if (H3MP_Server.items[i] != null &&
-                    player.scene.Equals(H3MP_Server.items[i].controller == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene))
+                if (H3MP_Server.items[i] != null)
                 {
-                    Debug.Log("\t"+ H3MP_Server.items[i].itemID);
-                    // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
-                    // been anyone in the scene with the controller. Then when someone else joins the scene, we send relevent items but
-                    // nullable are still null, which is problematic
-                    H3MP_Server.items[i].Update();
-                    H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], player.scene, ID);
+                    if ((H3MP_Server.items[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                        (H3MP_Server.items[i].controller != 0 && player.scene.Equals(H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.items[i].controller].player.instance))
+                    {
+                        Debug.Log("\t" + H3MP_Server.items[i].itemID);
+                        // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                        // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                        // nullable are still null, which is problematic
+                        H3MP_Server.items[i].Update();
+                        H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], player.scene, player.instance, ID);
+                    }
                 }
             }
             Debug.Log("Relevant tracked items sent, sending relevant tracked sosigs");
             // Send to the clients all sosigs that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
             {
-                if (H3MP_Server.sosigs[i] != null &&
-                    player.scene.Equals(H3MP_Server.sosigs[i].controller == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene))
+                if ((H3MP_Server.sosigs[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                    (H3MP_Server.sosigs[i].controller != 0 && player.scene.Equals(H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.instance))
                 {
                     Debug.Log("\tSending a sosig");
                     H3MP_Server.sosigs[i].Update();
-                    H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, ID);
+                    H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, player.instance, ID);
                 }
             }
             Debug.Log("Relevant tracked sosigs sent");

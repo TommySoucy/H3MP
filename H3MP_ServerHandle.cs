@@ -17,6 +17,7 @@ namespace H3MP
             int clientIDCheck = packet.ReadInt();
             string username = packet.ReadString();
             string scene = packet.ReadString();
+            int instance = packet.ReadInt();
 
             Debug.Log($"{H3MP_Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}");
 
@@ -26,7 +27,7 @@ namespace H3MP
             }
 
             // Spawn player to clients 
-            H3MP_Server.clients[clientID].SendIntoGame(username, scene);
+            H3MP_Server.clients[clientID].SendIntoGame(username, scene, instance);
         }
 
         public static void PlayerState(int clientID, H3MP_Packet packet)
@@ -76,6 +77,26 @@ namespace H3MP
                 H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
             }
             Debug.Log("Synced with player who just joined scene");
+        }
+
+        public static void PlayerInstance(int clientID, H3MP_Packet packet)
+        {
+            H3MP_Player player = H3MP_Server.clients[clientID].player;
+
+            int instance = packet.ReadInt();
+
+            H3MP_GameManager.UpdatePlayerInstance(player.ID, instance);
+
+            // Send to all other clients
+            H3MP_ServerSend.PlayerInstance(player.ID, instance);
+
+            // Send the client all items it needs to instantiate from the scene/instance
+            if (H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene))
+            {
+                Debug.Log("Player "+clientID+" joined instance "+ instance);
+                H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
+            }
+            Debug.Log("Synced with player who just joined instance");
         }
 
         public static void AddSyncScene(int clientID, H3MP_Packet packet)

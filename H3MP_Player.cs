@@ -26,6 +26,7 @@ namespace H3MP
         public int maxHealth;
 
         public string scene;
+        public int instance;
 
         public H3MP_Player(int ID, string username, Vector3 spawnPos)
         {

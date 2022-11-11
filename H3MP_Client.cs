@@ -342,6 +342,7 @@ namespace H3MP
                 { (int)ServerPackets.sosigLinkSever, H3MP_ClientHandle.SosigLinkSever },
                 { (int)ServerPackets.sosigRequestHitDecal, H3MP_ClientHandle.SosigRequestHitDecal },
                 { (int)ServerPackets.updateRequest, H3MP_ClientHandle.RequestUpToDateObjects },
+                { (int)ServerPackets.playerInstance, H3MP_ClientHandle.PlayerInstance },
             };
 
             // All vanilla scenes can be synced by default
@@ -359,7 +360,7 @@ namespace H3MP
             Debug.Log("Initialized client");
         }
 
-        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene)
+        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance)
         {
             // Adjust items size to acommodate if necessary
             if (items.Length <= trackedItem.trackedID)
@@ -384,14 +385,14 @@ namespace H3MP
                 items[trackedItem.trackedID] = trackedItem;
 
                 // Instantiate item if it is in the current scene
-                if (scene.Equals(SceneManager.GetActiveScene().name))
+                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
         }
 
-        public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene)
+        public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance)
         {
             Debug.Log("Received order to add a sosig");
             // Adjust sosigs size to acommodate if necessary
@@ -417,7 +418,7 @@ namespace H3MP
                 sosigs[trackedSosig.trackedID] = trackedSosig;
 
                 // Instantiate sosig if it is in the current scene
-                if (scene.Equals(SceneManager.GetActiveScene().name))
+                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(trackedSosig.Instantiate());
                 }

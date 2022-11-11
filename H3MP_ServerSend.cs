@@ -77,18 +77,19 @@ namespace H3MP
             }
         }
 
-        public static void SpawnPlayer(int clientID, H3MP_Player player, string scene)
+        public static void SpawnPlayer(int clientID, H3MP_Player player, string scene, int instance)
         {
-            SpawnPlayer(clientID, player.ID, player.username, scene, player.position, player.rotation);
+            SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation);
         }
 
-        public static void SpawnPlayer(int clientID, int ID, string username, string scene, Vector3 position, Quaternion rotation)
+        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.spawnPlayer))
             {
                 packet.Write(ID);
                 packet.Write(username);
                 packet.Write(scene);
+                packet.Write(instance);
                 packet.Write(position);
                 packet.Write(rotation);
 
@@ -384,23 +385,25 @@ namespace H3MP
             }
         }
 
-        public static void TrackedItemSpecific(H3MP_TrackedItemData trackedItem, string scene, int toClientID)
+        public static void TrackedItemSpecific(H3MP_TrackedItemData trackedItem, string scene, int instance, int toClientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItem))
             {
                 packet.Write(trackedItem, true);
                 packet.Write(scene);
+                packet.Write(instance);
 
                 SendTCPData(toClientID, packet);
             }
         }
 
-        public static void TrackedSosigSpecific(H3MP_TrackedSosigData trackedSosig, string scene, int toClientID)
+        public static void TrackedSosigSpecific(H3MP_TrackedSosigData trackedSosig, string scene, int instance, int toClientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedSosig))
             {
                 packet.Write(trackedSosig, true);
                 packet.Write(scene);
+                packet.Write(instance);
 
                 SendTCPData(toClientID, packet);
             }
@@ -943,6 +946,17 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.updateRequest))
             {
                 SendTCPData(clientID, packet);
+            }
+        }
+
+        public static void PlayerInstance(int clientID, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerInstance))
+            {
+                packet.Write(clientID);
+                packet.Write(instance);
+
+                SendTCPDataToAll(clientID, packet);
             }
         }
     }
