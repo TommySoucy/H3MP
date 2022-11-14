@@ -666,10 +666,29 @@ namespace H3MP
 
         public static void SetInstance(int instance)
         {
+            // Remove ourselves from the previous instance and manage dicts accordingly
+            --activeInstances[H3MP_GameManager.instance];
+            if(activeInstances[H3MP_GameManager.instance] == 0)
+            {
+                activeInstances.Remove(H3MP_GameManager.instance);
+            }
+            if (TNHInstances.ContainsKey(H3MP_GameManager.instance))
+            {
+                TNHInstances[H3MP_GameManager.instance].playerIDs.Remove(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+
+                if (TNHInstances[H3MP_GameManager.instance].playerIDs.Count == 0)
+                {
+                    TNHInstances.Remove(H3MP_GameManager.instance);
+                }
+            }
+
             // Set locally
             H3MP_GameManager.instance = instance;
 
-            // If we switch to a new instance, we assume this instance already exists in the dict
+            if (!activeInstances.ContainsKey(instance))
+            {
+                activeInstances.Add(instance, 0);
+            }
             ++activeInstances[instance];
             if (TNHInstances.ContainsKey(instance))
             {

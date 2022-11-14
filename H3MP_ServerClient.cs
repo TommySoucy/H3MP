@@ -272,12 +272,15 @@ namespace H3MP
             // Send to the clients all sosigs that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
             {
-                if ((H3MP_Server.sosigs[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                    (H3MP_Server.sosigs[i].controller != 0 && player.scene.Equals(H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.instance))
+                if (H3MP_Server.sosigs[i] != null)
                 {
-                    Debug.Log("\tSending a sosig");
-                    H3MP_Server.sosigs[i].Update();
-                    H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, player.instance, ID);
+                    if ((H3MP_Server.sosigs[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                        (H3MP_Server.sosigs[i].controller != 0 && player.scene.Equals(H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.instance))
+                    {
+                        Debug.Log("\tSending a sosig");
+                        H3MP_Server.sosigs[i].Update();
+                        H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, player.instance, ID);
+                    }
                 }
             }
             Debug.Log("Relevant tracked sosigs sent");
