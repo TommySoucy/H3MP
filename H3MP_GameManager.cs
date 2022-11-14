@@ -68,6 +68,9 @@ namespace H3MP
                     synchronizedScenes.Add(sceneName, 0);
                 }
             }
+
+            // Init the main instance
+            activeInstances.Add(instance, 1);
         }
 
         public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation)
@@ -94,6 +97,16 @@ namespace H3MP
             playerManager.instance = instance;
             playerManager.usernameLabel.text = username;
             players.Add(ID, playerManager);
+
+            // Add to instance
+            if (activeInstances.ContainsKey(instance))
+            {
+                ++activeInstances[instance];
+            }
+            else
+            {
+                activeInstances.Add(instance, 1);
+            }
 
             // Make sure the player is disabled if not in the same scene/instance
             if (!scene.Equals(SceneManager.GetActiveScene().name) || instance != H3MP_GameManager.instance)
@@ -228,7 +241,11 @@ namespace H3MP
                 }
             }
 
-            if (!activeInstances.ContainsKey(instance))
+            if (activeInstances.ContainsKey(instance))
+            {
+                ++activeInstances[instance];
+            }
+            else
             {
                 activeInstances.Add(instance, 1);
             }
