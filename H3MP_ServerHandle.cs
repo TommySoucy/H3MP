@@ -99,6 +99,14 @@ namespace H3MP
             Debug.Log("Synced with player who just joined instance");
         }
 
+        public static void AddTNHInstance(int clientID, H3MP_Packet packet)
+        {
+            int hostID = packet.ReadInt();
+
+            // Send to all clients
+            H3MP_ServerSend.AddTNHInstance(H3MP_GameManager.AddNewTNHInstance(hostID));
+        }
+
         public static void AddSyncScene(int clientID, H3MP_Packet packet)
         {
             string scene = packet.ReadString();

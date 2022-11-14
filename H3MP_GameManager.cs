@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
+using static H3MP.H3MP_PlayerHitbox;
 using static UnityEngine.ParticleSystem;
 
 namespace H3MP
@@ -38,11 +39,13 @@ namespace H3MP
         public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
         public static Dictionary<int, List<List<string>>> waitingWearables = new Dictionary<int, List<List<string>>>();
         public static Dictionary<Sosig, H3MP_TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, H3MP_TrackedSosig>();
+        public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
+        public static Dictionary<int, H3MP_TNHInstance> TNHInstances = new Dictionary<int, H3MP_TNHInstance>();
 
         public static bool giveControlOfDestroyed;
 
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
-        public static int playersInSameScene = 0;
+        public static int playersPresent = 0;
         public static int playerStateAddtionalDataSize = -1;
         public static int instance = 0;
 
@@ -92,8 +95,8 @@ namespace H3MP
             playerManager.usernameLabel.text = username;
             players.Add(ID, playerManager);
 
-            // Make sure the player is disabled if not in the same scene
-            if (!scene.Equals(SceneManager.GetActiveScene().name))
+            // Make sure the player is disabled if not in the same scene/instance
+            if (!scene.Equals(SceneManager.GetActiveScene().name) || instance != H3MP_GameManager.instance)
             {
                 playerManager.gameObject.SetActive(false);
 
@@ -101,7 +104,7 @@ namespace H3MP
             }
             else
             {
-                ++playersInSameScene;
+                ++playersPresent;
             }
         }
 
@@ -153,12 +156,12 @@ namespace H3MP
                 H3MP_Server.clients[playerID].player.scene = sceneName;
             }
 
-            if (sceneName.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(sceneName))
+            if (sceneName.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
             {
                 if (!player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(true);
-                    ++playersInSameScene;
+                    ++playersPresent;
 
                     player.SetEntitiesRegistered(true);
                 }
@@ -168,7 +171,7 @@ namespace H3MP
                 if (player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(false);
-                    --playersInSameScene;
+                    --playersPresent;
 
                     player.SetEntitiesRegistered(false);
                 }
@@ -179,6 +182,24 @@ namespace H3MP
         {
             H3MP_PlayerManager player = players[playerID];
 
+            if (activeInstances.ContainsKey(player.instance))
+            {
+                --activeInstances[player.instance];
+                if (activeInstances[player.instance] == 0)
+                {
+                    activeInstances.Remove(player.instance);
+                }
+            }
+
+            if (TNHInstances.ContainsKey(player.instance))
+            {
+                TNHInstances[player.instance].playerIDs.Remove(player.instance);
+                if (TNHInstances[player.instance].playerIDs.Count == 0)
+                {
+                    TNHInstances.Remove(player.instance);
+                }
+            }
+
             player.instance = instance;
 
             if (H3MP_ThreadManager.host)
@@ -186,12 +207,12 @@ namespace H3MP
                 H3MP_Server.clients[playerID].player.instance = instance;
             }
 
-            if (player.scene.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene) && instance == player.instance)
+            if (player.scene.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
             {
                 if (!player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(true);
-                    ++playersInSameScene;
+                    ++playersPresent;
 
                     player.SetEntitiesRegistered(true);
                 }
@@ -201,10 +222,20 @@ namespace H3MP
                 if (player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(false);
-                    --playersInSameScene;
+                    --playersPresent;
 
                     player.SetEntitiesRegistered(false);
                 }
+            }
+
+            if (!activeInstances.ContainsKey(instance))
+            {
+                activeInstances.Add(instance, 1);
+            }
+
+            if (TNHInstances.ContainsKey(instance))
+            {
+                TNHInstances[instance].playerIDs.Add(playerID);
             }
         }
 
@@ -290,7 +321,7 @@ namespace H3MP
 
         public static void SyncTrackedItems(bool init = false, bool inControl = false)
         {
-            Debug.Log("SyncTrackedItems called with init: "+init+", in control: "+inControl+", others: "+OtherPlayersInScene());
+            Debug.Log("SyncTrackedItems called with init: "+init+", in control: "+inControl+", others: "+(playersPresent > 0));
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
             // while all other items get destroyed. We will receive any item that the players inside this scene are controlling
@@ -298,7 +329,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach(GameObject root in roots)
             {
-                SyncTrackedItems(root.transform, init ? inControl : !OtherPlayersInScene(), null, scene.name);
+                SyncTrackedItems(root.transform, init ? inControl : playersPresent == 0, null, scene.name);
             }
         }
 
@@ -390,13 +421,13 @@ namespace H3MP
 
         public static void SyncTrackedSosigs(bool init = false, bool inControl = false)
         {
-            Debug.Log("SyncTrackedSosigs called with init: " + init + ", in control: " + inControl + ", others: " + OtherPlayersInScene());
+            Debug.Log("SyncTrackedSosigs called with init: " + init + ", in control: " + inControl + ", others: " + (playersPresent > 0));
             // When we sync our current scene, if we are alone, we sync and take control of all sosigs
             Scene scene = SceneManager.GetActiveScene();
             GameObject[] roots = scene.GetRootGameObjects();
             foreach (GameObject root in roots)
             {
-                SyncTrackedSosigs(root.transform, init ? inControl : !OtherPlayersInScene(), scene.name);
+                SyncTrackedSosigs(root.transform, init ? inControl : playersPresent == 0, scene.name);
             }
         }
 
@@ -598,16 +629,92 @@ namespace H3MP
             return trackedSosig;
         }
 
-        private static bool OtherPlayersInScene()
+        public static H3MP_TNHInstance AddNewTNHInstance(int hostID)
         {
-            foreach(KeyValuePair<int, H3MP_PlayerManager> player in players)
+            if (H3MP_ThreadManager.host)
             {
-                if (player.Value.gameObject.activeSelf)
+                int freeInstance = 0;
+                while (TNHInstances.ContainsKey(freeInstance))
                 {
-                    return true;
+                    ++freeInstance;
                 }
+                H3MP_TNHInstance newInstance = new H3MP_TNHInstance(freeInstance, hostID);
+                TNHInstances.Add(freeInstance, newInstance);
+                activeInstances.Add(freeInstance, 1);
+
+                Mod.modInstance.OnTNHInstanceReceived(newInstance);
+
+                H3MP_ServerSend.AddTNHInstance(newInstance);
+
+                return newInstance;
             }
-            return false;
+            else
+            {
+                H3MP_ClientSend.AddTNHInstance(hostID);
+
+                return null;
+            }
+        }
+
+        public static void AddTNHInstance(H3MP_TNHInstance instance)
+        {
+            activeInstances.Add(instance.instance, instance.playerIDs.Count);
+            TNHInstances.Add(instance.instance, instance);
+
+            Mod.modInstance.OnTNHInstanceReceived(instance);
+        }
+
+        public static void SetInstance(int instance)
+        {
+            // Set locally
+            H3MP_GameManager.instance = instance;
+
+            // If we switch to a new instance, we assume this instance already exists in the dict
+            ++activeInstances[instance];
+            if (TNHInstances.ContainsKey(instance))
+            {
+                TNHInstances[instance].playerIDs.Add(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+            }
+
+            // Send update to other clients
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.PlayerInstance(0, instance);
+            }
+            else
+            {
+                H3MP_ClientSend.PlayerInstance(instance);
+            }
+
+            // Give control of all objects by destroying their tracked script with giveControlOfDestroyed true
+            // Then retrack them
+            giveControlOfDestroyed = true;
+            List<GameObject> gos = new List<GameObject>();
+            foreach (H3MP_TrackedItemData trackedItem in items)
+            {
+                if(trackedItem.parent == -1)
+                {
+                    gos.Add(trackedItem.physicalObject.gameObject);
+                }
+                Destroy(trackedItem.physicalObject);
+            }
+            items.Clear();
+            foreach (GameObject go in gos)
+            {
+                SyncTrackedItems(go);
+            }
+            gos.Clear();
+            foreach (H3MP_TrackedSosigData trackedSosig in sosigs)
+            {
+                gos.Add(trackedSosig.physicalObject.gameObject);
+                Destroy(trackedSosig.physicalObject);
+            }
+            sosigs.Clear();
+            foreach (GameObject go in gos)
+            {
+                SyncTrackedSosigs(go);
+            }
+            giveControlOfDestroyed = false;
         }
 
         // MOD: When a client takes control of an item that is under our control, we will need to make sure that we are not 
@@ -661,12 +768,23 @@ namespace H3MP
             {
                 Debug.Log("Just started loading scene");
 
-                if (OtherPlayersInScene())
+                if (playersPresent > 0)
                 {
                     giveControlOfDestroyed = true;
                 }
 
                 ++Mod.skipAllInstantiates;
+
+                // Get out of TNH instance 
+                // This makes assumption that player must go through main menu to leave TNH
+                // TODO: If this is not always true, will have to handle by "if we leave a TNH scene" instead of "if we go into main menu"
+                if (LoadLevelBeginPatch.loadingLevel.Equals("MainMenu3") && Mod.currentTNHInstance != null) 
+                {
+                    // The destruction of items as we leave the level with giveControlOfDestroyed to true will handle to handover of 
+                    // item and sosig control. SetInstance will handle the update of activeInstances and TNHInstances
+                    SetInstance(0);
+                    Mod.currentTNHInstance = null;
+                }
             }
             else // Finished loading
             {
@@ -688,19 +806,19 @@ namespace H3MP
                     H3MP_ClientSend.PlayerScene(loadedScene.name);
                 }
 
-                // Update players' active state depending on which are in the same scene
-                playersInSameScene = 0;
+                // Update players' active state depending on which are in the same scene/instance
+                playersPresent = 0;
                 if (synchronizedScenes.ContainsKey(loadedScene.name))
                 {
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                     {
-                        if (player.Value.scene.Equals(loadedScene.name))
+                        if (player.Value.scene.Equals(loadedScene.name) && player.Value.instance == instance)
                         {
                             if (!player.Value.gameObject.activeSelf)
                             {
                                 player.Value.gameObject.SetActive(true);
                             }
-                            ++playersInSameScene;
+                            ++playersPresent;
 
                             player.Value.SetEntitiesRegistered(true);
 
@@ -723,7 +841,7 @@ namespace H3MP
                         }
                     }
 
-                    Debug.Log("Scene is syncable, and has "+playersInSameScene+" otherp layers in it, syncing");
+                    Debug.Log("Scene is syncable, and has "+playersPresent+" otherp layers in it, syncing");
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
                     SyncTrackedSosigs();

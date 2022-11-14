@@ -343,6 +343,7 @@ namespace H3MP
                 { (int)ServerPackets.sosigRequestHitDecal, H3MP_ClientHandle.SosigRequestHitDecal },
                 { (int)ServerPackets.updateRequest, H3MP_ClientHandle.RequestUpToDateObjects },
                 { (int)ServerPackets.playerInstance, H3MP_ClientHandle.PlayerInstance },
+                { (int)ServerPackets.addTNHInstance, H3MP_ClientHandle.AddTNHInstance },
             };
 
             // All vanilla scenes can be synced by default

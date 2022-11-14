@@ -153,14 +153,21 @@ namespace H3MP
             }
         }
 
-        public static void PlayerScene(int ID, string sceneName)
+        public static void PlayerScene(int clientID, string sceneName)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerScene))
             {
-                packet.Write(ID);
+                packet.Write(clientID);
                 packet.Write(sceneName);
 
-                SendTCPDataToAll(ID, packet);
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
 
@@ -956,7 +963,25 @@ namespace H3MP
                 packet.Write(clientID);
                 packet.Write(instance);
 
-                SendTCPDataToAll(clientID, packet);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void AddTNHInstance(H3MP_TNHInstance instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.addTNHInstance))
+            {
+                packet.Write(instance);
+
+                SendTCPDataToAll(packet);
             }
         }
     }

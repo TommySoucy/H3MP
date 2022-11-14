@@ -77,7 +77,7 @@ namespace H3MP
                 }
 
                 // Send all trackedItems to all clients if there are other players in the scene
-                if (H3MP_GameManager.playersInSameScene > 0)
+                if (H3MP_GameManager.playersPresent > 0)
                 {
                     H3MP_ServerSend.TrackedItems();
                     H3MP_ServerSend.TrackedSosigs();
@@ -101,7 +101,7 @@ namespace H3MP
             else
             {
                 // Send this client's up to date trackedItems to host and all other clients of there are others in the scene
-                if (H3MP_GameManager.playersInSameScene > 0)
+                if (H3MP_GameManager.playersPresent > 0)
                 {
                     H3MP_ClientSend.TrackedItems();
                     H3MP_ClientSend.TrackedSosigs();

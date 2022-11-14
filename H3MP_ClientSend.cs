@@ -95,6 +95,16 @@ namespace H3MP
             }
         }
 
+        public static void AddTNHInstance(int hostID)
+        {
+            using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.addTNHInstance))
+            {
+                packet.Write(hostID);
+
+                SendTCPData(packet);
+            }
+        }
+
         // MOD: This is what a mod that adds a scene it wants to sync would call to sync players and items inside it
         public static void AddSyncScene(string sceneName)
         {

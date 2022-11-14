@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Security.Policy;
@@ -32,8 +33,10 @@ namespace H3MP
         // Assets
         public static JObject config;
         public GameObject H3MPMenuPrefab;
+        public GameObject TNHMenuPrefab;
         public GameObject playerPrefab;
         public GameObject H3MPMenu;
+        public GameObject TNHMenu;
         public static Dictionary<string, string> sosigWearableMap;
 
         // Menu refs
@@ -44,11 +47,49 @@ namespace H3MP
         public GameObject connectButton;
         public GameObject joinButton;
 
+        // TNH Menu refs
+        public static GameObject[] TNHMenuPages; // Main, Host, Join_Options, Join_Instance, Instance
+        public static Text TNHStatusText;
+        public static GameObject TNHInstanceList;
+        public static GameObject TNHInstancePrefab;
+        public static GameObject TNHInstanceListScrollUpArrow;
+        public static GameObject TNHInstanceListScrollDownArrow;
+        public static Scrollbar TNHInstanceListScrollBar;
+        public static GameObject TNHHostButton;
+        public static GameObject TNHJoinButton;
+        public static GameObject TNHLPJCheck;
+        public static GameObject TNHHostOnDeathSpectateRadio;
+        public static GameObject TNHHostOnDeathLeaveRadio;
+        public static GameObject TNHHostConfirmButton;
+        public static GameObject TNHHostCancelButton;
+        public static GameObject TNHJoinCancelButton;
+        public static GameObject TNHJoinOptionsCancelButton;
+        public static GameObject TNHJoinOnDeathSpectateRadio;
+        public static GameObject TNHJoinOnDeathLeaveRadio;
+        public static GameObject TNHJoinConfirmButton;
+        public static GameObject TNHPlayerList;
+        public static GameObject TNHPlayerPrefab;
+        public static GameObject TNHPlayerListScrollUpArrow;
+        public static GameObject TNHPlayerListScrollDownArrow;
+        public static Scrollbar TNHPlayerListScrollBar;
+        public static GameObject TNHLPJCheckMark;
+        public static GameObject TNHHostOnDeathSpectateCheckMark;
+        public static GameObject TNHHostOnDeathLeaveCheckMark;
+        public static GameObject TNHJoinOnDeathSpectateCheckMark;
+        public static GameObject TNHJoinOnDeathLeaveCheckMark;
+        public static Text TNHInstanceTitle;
+
         // Live
+        public static Mod modInstance;
         public static GameObject managerObject;
         public static int skipNextFires = 0;
         public static int skipAllInstantiates = 0;
         public static AudioEvent sosigFootstepAudioEvent;
+        public static bool TNHMenuLPJ;
+        public static bool TNHMenuHostOnDeathSpectate; // If false, leave
+        public static bool TNHMenuJoinOnDeathSpectate; // If false, leave
+        public static bool setLatestInstance; // Whether to set instance screen according to new instance index when we receive server response
+        public static H3MP_TNHInstance currentTNHInstance;
 
         // Reused private FieldInfos
         public static readonly FieldInfo Sosig_m_isOnOffMeshLinkField = typeof(Sosig).GetField("m_isOnOffMeshLink", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -87,6 +128,8 @@ namespace H3MP
         private void Start()
         {
             Logger.LogInfo("H3MP Started");
+
+            modInstance = this;
 
             Init();
         }
@@ -211,11 +254,140 @@ namespace H3MP
             Logger.LogInfo("H3MP Menu initialized");
         }
 
+        private void InitTNHMenu()
+        {
+            Logger.LogInfo("H3MP InitTNHMenu called");
+            TNHMenu = Instantiate(TNHMenuPrefab, Vector3.zero, Quaternion.identity);
+
+            // Add background pointable
+            TNHMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
+
+            // Init refs
+            TNHMenuPages = new GameObject[5];
+            TNHMenuPages[0] = TNHMenu.transform.GetChild(1).gameObject;
+            TNHMenuPages[1] = TNHMenu.transform.GetChild(2).gameObject;
+            TNHMenuPages[2] = TNHMenu.transform.GetChild(3).gameObject;
+            TNHMenuPages[3] = TNHMenu.transform.GetChild(4).gameObject;
+            TNHMenuPages[4] = TNHMenu.transform.GetChild(5).gameObject;
+            TNHStatusText = TNHMenu.transform.GetChild(6).GetChild(0).GetComponent<Text>();
+            TNHInstanceList = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(0).GetChild(0).gameObject;
+            TNHInstancePrefab = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(0).GetChild(0).GetChild(0).gameObject;
+            TNHInstanceListScrollBar = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(1).GetComponent<Scrollbar>();
+            TNHPlayerList = TNHMenu.transform.GetChild(5).GetChild(2).GetChild(0).GetChild(0).gameObject;
+            TNHPlayerPrefab = TNHMenu.transform.GetChild(5).GetChild(2).GetChild(0).GetChild(0).GetChild(0).gameObject;
+            TNHPlayerListScrollBar = TNHMenu.transform.GetChild(5).GetChild(2).GetChild(1).GetComponent<Scrollbar>();
+            TNHLPJCheckMark = TNHMenu.transform.GetChild(2).GetChild(1).GetChild(0).GetChild(0).gameObject;
+            TNHHostOnDeathSpectateCheckMark = TNHMenu.transform.GetChild(2).GetChild(2).GetChild(1).GetChild(0).gameObject;
+            TNHHostOnDeathLeaveCheckMark = TNHMenu.transform.GetChild(2).GetChild(2).GetChild(2).GetChild(0).gameObject;
+            TNHHostOnDeathSpectateCheckMark = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(1).GetChild(0).gameObject;
+            TNHHostOnDeathLeaveCheckMark = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(2).GetChild(0).gameObject;
+            TNHInstanceTitle = TNHMenu.transform.GetChild(5).GetChild(0).GetComponent<Text>();
+
+            // Init buttons
+            TNHHostButton = TNHMenu.transform.GetChild(1).GetChild(1).gameObject;
+            FVRPointableButton currentButton = TNHHostButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHHostClicked);
+            TNHJoinButton = TNHMenu.transform.GetChild(1).GetChild(2).gameObject;
+            currentButton = TNHJoinButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHJoinClicked);
+            TNHLPJCheck = TNHMenu.transform.GetChild(2).GetChild(1).GetChild(0).gameObject;
+            currentButton = TNHLPJCheck.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHLPJCheckClicked);
+            TNHHostOnDeathSpectateRadio = TNHMenu.transform.GetChild(2).GetChild(2).GetChild(1).gameObject;
+            currentButton = TNHHostOnDeathSpectateRadio.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHHostOnDeathSpectateClicked);
+            TNHHostOnDeathLeaveRadio = TNHMenu.transform.GetChild(2).GetChild(2).GetChild(2).gameObject;
+            currentButton = TNHHostOnDeathLeaveRadio.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHHostOnDeathLeaveClicked);
+            TNHHostConfirmButton = TNHMenu.transform.GetChild(2).GetChild(3).gameObject;
+            currentButton = TNHHostConfirmButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHHostConfirmClicked);
+            TNHHostCancelButton = TNHMenu.transform.GetChild(2).GetChild(4).gameObject;
+            currentButton = TNHHostCancelButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHHostCancelClicked);
+            TNHJoinCancelButton = TNHMenu.transform.GetChild(3).GetChild(3).gameObject;
+            currentButton = TNHJoinCancelButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHJoinCancelClicked);
+            TNHInstanceListScrollUpArrow = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(2).gameObject;
+            TNHInstanceListScrollDownArrow = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(3).gameObject;
+            H3MP_HoverScroll upScroll = TNHInstanceListScrollUpArrow.AddComponent<H3MP_HoverScroll>();
+            H3MP_HoverScroll downScroll = TNHInstanceListScrollDownArrow.AddComponent<H3MP_HoverScroll>();
+            upScroll.MaxPointingRange = 5;
+            upScroll.scrollbar = TNHInstanceListScrollBar;
+            upScroll.other = downScroll;
+            upScroll.up = true;
+            upScroll.rate = 0.25f;
+            downScroll.MaxPointingRange = 5;
+            downScroll.scrollbar = TNHInstanceListScrollBar;
+            downScroll.other = upScroll;
+            downScroll.rate = 0.25f;
+            TNHJoinOnDeathSpectateRadio = TNHMenu.transform.GetChild(4).GetChild(1).GetChild(1).gameObject;
+            currentButton = TNHJoinOnDeathSpectateRadio.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHJoinOnDeathSpectateClicked);
+            TNHJoinOnDeathLeaveRadio = TNHMenu.transform.GetChild(4).GetChild(1).GetChild(2).gameObject;
+            currentButton = TNHJoinOnDeathLeaveRadio.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHJoinOnDeathLeaveClicked);
+            TNHJoinConfirmButton = TNHMenu.transform.GetChild(4).GetChild(2).gameObject;
+            currentButton = TNHJoinConfirmButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHJoinConfirmClicked);
+            TNHJoinOptionsCancelButton = TNHMenu.transform.GetChild(4).GetChild(3).gameObject;
+            currentButton = TNHJoinOptionsCancelButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHJoinCancelClicked);
+            TNHPlayerListScrollUpArrow = TNHMenu.transform.GetChild(5).GetChild(2).GetChild(2).gameObject;
+            TNHPlayerListScrollDownArrow = TNHMenu.transform.GetChild(5).GetChild(2).GetChild(3).gameObject;
+            upScroll = TNHPlayerListScrollUpArrow.AddComponent<H3MP_HoverScroll>();
+            downScroll = TNHPlayerListScrollDownArrow.AddComponent<H3MP_HoverScroll>();
+            upScroll.MaxPointingRange = 5;
+            upScroll.scrollbar = TNHInstanceListScrollBar;
+            upScroll.other = downScroll;
+            upScroll.up = true;
+            upScroll.rate = 0.25f;
+            downScroll.MaxPointingRange = 5;
+            downScroll.scrollbar = TNHInstanceListScrollBar;
+            downScroll.other = upScroll;
+            downScroll.rate = 0.25f;
+            TNHJoinOptionsCancelButton = TNHMenu.transform.GetChild(5).GetChild(3).gameObject;
+            currentButton = TNHJoinOptionsCancelButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHDisconnectClicked);
+
+            // Set option defaults
+            TNHMenuLPJ = true;
+            TNHMenuHostOnDeathSpectate = true;
+            TNHMenuJoinOnDeathSpectate = true;
+        }
+
         private void LoadAssets()
         {
             AssetBundle assetBundle = AssetBundle.LoadFromFile("BepInEx/Plugins/H3MP/H3MP.ab");
 
             H3MPMenuPrefab = assetBundle.LoadAsset<GameObject>("H3MPMenu");
+            TNHMenuPrefab = assetBundle.LoadAsset<GameObject>("TNHMenu");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
             SetupPlayerPrefab();
@@ -247,6 +419,12 @@ namespace H3MP
         private void DoPatching()
         {
             var harmony = new HarmonyLib.Harmony("VIP.TommySoucy.H3MP");
+
+            // LoadLevelBeginPatch
+            MethodInfo loadLevelBeginPatchOriginal = typeof(SteamVR_LoadLevel).GetMethod("Begin", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo loadLevelBeginPatchPrefix = typeof(LoadLevelBeginPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(loadLevelBeginPatchOriginal, new HarmonyMethod(loadLevelBeginPatchPrefix));
 
             // HandCurrentInteractableSetPatch
             MethodInfo handCurrentInteractableSetPatchOriginal = typeof(FVRViveHand).GetMethod("set_CurrentInteractable", BindingFlags.Public | BindingFlags.Instance);
@@ -717,7 +895,13 @@ namespace H3MP
             //H3MP_Server.IP = config["IP"].ToString();
             CreateManagerObject(true);
 
-            H3MP_Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]);
+            H3MP_Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]); 
+            
+            if (SceneManager.GetActiveScene().name.Equals("TakeAndHold_Lobby_2"))
+            {
+                Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
+                InitTNHMenu();
+            }
 
             //mainStatusText.text = "Starting...";
             //mainStatusText.color = Color.white;
@@ -733,8 +917,162 @@ namespace H3MP
 
             client.ConnectToServer();
 
+            if (SceneManager.GetActiveScene().name.Equals("TakeAndHold_Lobby_2"))
+            {
+                Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
+                InitTNHMenu();
+            }
+
             //mainStatusText.text = "Connecting...";
             //mainStatusText.color = Color.white;
+        }
+
+        private void OnTNHHostClicked()
+        {
+            TNHMenuPages[0].SetActive(false);
+            TNHMenuPages[1].SetActive(true);
+        }
+
+        private void OnTNHJoinClicked()
+        {
+            TNHMenuPages[0].SetActive(false);
+            TNHMenuPages[2].SetActive(true);
+
+            // Populate instance list
+            foreach(KeyValuePair<int, H3MP_TNHInstance> THNInstance in H3MP_GameManager.TNHInstances)
+            {
+                GameObject newInstance = Instantiate<GameObject>(TNHInstancePrefab, TNHInstanceList.transform);
+                newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance "+ THNInstance.Key;
+                newInstance.SetActive(true);
+
+                int instanceID = THNInstance.Key;
+                FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
+                instanceButton.SetButton();
+                instanceButton.MaxPointingRange = 5;
+                instanceButton.Button.onClick.AddListener(()=> { OnTNHInstanceClicked(instanceID); });
+            }
+        }
+
+        private void OnTNHLPJCheckClicked()
+        {
+            TNHLPJCheckMark.SetActive(!TNHLPJCheckMark.activeSelf);
+
+            TNHMenuLPJ = TNHLPJCheckMark.activeSelf;
+        }
+
+        private void OnTNHHostOnDeathSpectateClicked()
+        {
+            TNHHostOnDeathSpectateCheckMark.SetActive(!TNHHostOnDeathSpectateCheckMark.activeSelf);
+            TNHHostOnDeathLeaveCheckMark.SetActive(!TNHHostOnDeathSpectateCheckMark.activeSelf);
+
+            TNHMenuHostOnDeathSpectate = TNHHostOnDeathSpectateCheckMark.activeSelf;
+        }
+
+        private void OnTNHHostOnDeathLeaveClicked()
+        {
+            TNHHostOnDeathLeaveCheckMark.SetActive(!TNHHostOnDeathLeaveCheckMark.activeSelf);
+            TNHHostOnDeathSpectateCheckMark.SetActive(!TNHHostOnDeathLeaveCheckMark.activeSelf);
+
+            TNHMenuHostOnDeathSpectate = TNHHostOnDeathSpectateCheckMark.activeSelf;
+        }
+
+        private void OnTNHHostConfirmClicked()
+        {
+            TNHMenuPages[1].SetActive(false);
+            TNHMenuPages[4].SetActive(true);
+
+            setLatestInstance = true;
+            H3MP_GameManager.AddNewTNHInstance(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+        }
+
+        private void OnTNHHostCancelClicked()
+        {
+            TNHMenuPages[0].SetActive(true);
+            TNHMenuPages[1].SetActive(false);
+        }
+
+        private void OnTNHJoinCancelClicked()
+        {
+            TNHMenuPages[0].SetActive(true);
+            TNHMenuPages[2].SetActive(false);
+            TNHMenuPages[3].SetActive(false);
+        }
+
+        private void OnTNHJoinOnDeathSpectateClicked()
+        {
+            TNHJoinOnDeathSpectateCheckMark.SetActive(!TNHJoinOnDeathSpectateCheckMark.activeSelf);
+            TNHJoinOnDeathLeaveCheckMark.SetActive(!TNHJoinOnDeathSpectateCheckMark.activeSelf);
+
+            TNHMenuJoinOnDeathSpectate = TNHJoinOnDeathSpectateCheckMark.activeSelf;
+        }
+
+        private void OnTNHJoinOnDeathLeaveClicked()
+        {
+            TNHJoinOnDeathLeaveCheckMark.SetActive(!TNHJoinOnDeathLeaveCheckMark.activeSelf);
+            TNHJoinOnDeathSpectateCheckMark.SetActive(!TNHJoinOnDeathLeaveCheckMark.activeSelf);
+
+            TNHMenuJoinOnDeathSpectate = TNHJoinOnDeathSpectateCheckMark.activeSelf;
+        }
+
+        private void OnTNHJoinConfirmClicked()
+        {
+            TNHMenuPages[2].SetActive(false);
+            TNHMenuPages[3].SetActive(true);
+        }
+
+        private void OnTNHInstanceClicked(int instance)
+        {
+            TNHMenuPages[3].SetActive(false);
+            TNHMenuPages[4].SetActive(true);
+
+            SetTNHInstance(H3MP_GameManager.TNHInstances[instance]);
+        }
+
+        private void OnTNHDisconnectClicked()
+        {
+            TNHMenuPages[4].SetActive(false);
+            TNHMenuPages[0].SetActive(true);
+
+            H3MP_GameManager.SetInstance(0);
+            Mod.currentTNHInstance = null;
+        }
+
+        public void OnTNHInstanceReceived(H3MP_TNHInstance instance)
+        {
+            if (setLatestInstance)
+            {
+                setLatestInstance = false;
+
+                SetTNHInstance(instance);
+            }
+        }
+
+        private void SetTNHInstance(H3MP_TNHInstance instance)
+        {
+            H3MP_GameManager.SetInstance(instance.instance);
+
+            TNHInstanceTitle.text = "Instance " + instance.instance;
+
+            bool foundOurselves = false;
+            for(int i=0; i < instance.playerIDs.Count; ++i)
+            {
+                GameObject newPlayer = Instantiate<GameObject>(TNHPlayerPrefab, TNHPlayerList.transform);
+                newPlayer.transform.GetChild(0).GetComponent<Text>().text = H3MP_GameManager.players[instance.playerIDs[i]].username;
+                newPlayer.SetActive(true);
+                    
+                if(instance.playerIDs[i] == (H3MP_ThreadManager.host? 0 : H3MP_Client.singleton.ID))
+                {
+                    foundOurselves = true;
+                }
+            }
+            if (!foundOurselves)
+            {
+                GameObject newPlayer = Instantiate<GameObject>(TNHPlayerPrefab, TNHPlayerList.transform);
+                newPlayer.transform.GetChild(0).GetComponent<Text>().text = config["Username"].ToString();
+                newPlayer.SetActive(true);
+            }
+
+            currentTNHInstance = instance;
         }
 
         private void CreateManagerObject(bool host = false)
@@ -765,8 +1103,29 @@ namespace H3MP
                 Logger.LogInfo("H3 Main menu loaded, initializing H3MP menu");
                 InitMenu();
             }
+            else if (loadedScene.name.Equals("TakeAndHold_Lobby_2"))
+            {
+                Logger.LogInfo("TNH lobby loaded, initializing H3MP menu if possible");
+                if (managerObject != null)
+                {
+                    InitTNHMenu();
+                }
+            }
         }
     }
+
+    #region General Patches
+    // Patches SteamVR_LoadLevel.Begin() So we can keep track of which scene we are loading
+    class LoadLevelBeginPatch
+    {
+        public static string loadingLevel;
+
+        static void Prefix(string levelName)
+        {
+            loadingLevel = levelName;
+        }
+    }
+    #endregion
 
     #region Interaction Patches
     // Patches FVRViveHand.CurrentInteractable.set to keep track of item held
@@ -1173,7 +1532,7 @@ namespace H3MP
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return;
             }
@@ -2064,7 +2423,7 @@ namespace H3MP
         static void Prefix(ref FVRFireArmChamber __instance, ref FVRFireArmRound ___m_round, bool ForceCaseLessEject)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return;
             }
@@ -2147,7 +2506,7 @@ namespace H3MP
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
                 // because the client that has initialized the scene spawned these and synced them
-                if (H3MP_GameManager.playersInSameScene > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                if (H3MP_GameManager.playersPresent > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
                 {
                     List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
                     objectsToDestroy.Add(__result);
@@ -2215,7 +2574,7 @@ namespace H3MP
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
                 // because the client that has initialized the scene spawned these and synced them
-                if (H3MP_GameManager.playersInSameScene > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                if (H3MP_GameManager.playersPresent > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
                 {
                     List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
                     objectsToDestroy.Add(__result);
@@ -2257,7 +2616,7 @@ namespace H3MP
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
                 // because the client that has initialized the scene spawned these and synced them
-                if (H3MP_GameManager.playersInSameScene > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                if (H3MP_GameManager.playersPresent > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
                 {
                     List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
                     objectsToDestroy.Add(__result);
@@ -2318,7 +2677,7 @@ namespace H3MP
         static void Postfix(ref UnityEngine.Object __result, Transform parent)
         {
             // Skip if not connected
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return;
             }
@@ -2330,7 +2689,7 @@ namespace H3MP
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
                 // because the client that has initialized the scene spawned these and synced them
-                if (H3MP_GameManager.playersInSameScene > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                if (H3MP_GameManager.playersPresent > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
                 {
                     List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
                     objectsToDestroy.Add(__result);
@@ -2357,7 +2716,7 @@ namespace H3MP
         static void Prefix()
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return;
             }
@@ -2377,7 +2736,7 @@ namespace H3MP
         static void Prefix(VaultFile file)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return;
             }
@@ -2420,7 +2779,7 @@ namespace H3MP
         static void Prefix(ref VaultFile ___f)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return;
             }
@@ -2483,7 +2842,7 @@ namespace H3MP
         public static bool GetActualFlag(bool flag2, FVRFireArm tempFA)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return flag2;
             }
@@ -2770,7 +3129,7 @@ namespace H3MP
         public static void AddControllerReference(GameObject dest, GameObject src = null)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return;
             }
@@ -2791,7 +3150,7 @@ namespace H3MP
         public static IFVRDamageable GetActualDamageable(MonoBehaviour mb, IFVRDamageable original)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return original;
             }
@@ -3015,7 +3374,7 @@ namespace H3MP
         public static IFVRReceiveDamageable GetActualReceiveDamageable(MonoBehaviour mb, IFVRReceiveDamageable original)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersInSameScene == 0)
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 return original;
             }

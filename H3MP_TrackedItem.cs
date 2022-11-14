@@ -1316,6 +1316,34 @@ namespace H3MP
         }
         #endregion
 
+        // MOD: This method will be used to find the ID of which player to give control of this sosig
+        //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
+        private int GetNewObjectHost()
+        {
+            if (Mod.currentTNHInstance != null)
+            {
+                // Going through each like this, we will go through the host of the instance before any other
+                foreach (int playerID in Mod.currentTNHInstance.playerIDs)
+                {
+                    if (playerID != data.controller && H3MP_GameManager.players[playerID].gameObject.activeSelf)
+                    {
+                        return playerID;
+                    }
+                }
+            }
+            else
+            {
+                foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                {
+                    if (player.Value.gameObject.activeSelf)
+                    {
+                        return player.Key;
+                    }
+                }
+            }
+            return -1;
+        }
+
         private void OnDestroy()
         {
             if (H3MP_ThreadManager.host)
@@ -1325,20 +1353,15 @@ namespace H3MP
                     // We just want to give control of our items to another client (usually because leaving scene with other clients left inside)
                     if (data.controller == 0)
                     {
-                        int firstPlayerInScene = 0;
-                        foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                        int otherPlayer = GetNewObjectHost();
+
+                        if (otherPlayer != -1)
                         {
-                            if (player.Value.gameObject.activeSelf)
-                            {
-                                firstPlayerInScene = player.Key;
-                            }
-                            break;
+                            H3MP_ServerSend.GiveControl(data.trackedID, otherPlayer);
+
+                            // Also change controller locally
+                            data.controller = otherPlayer;
                         }
-
-                        H3MP_ServerSend.GiveControl(data.trackedID, firstPlayerInScene);
-
-                        // Also change controller locally
-                        data.controller = firstPlayerInScene;
                     }
                 }
                 else
@@ -1346,6 +1369,10 @@ namespace H3MP
                     if (sendDestroy && skipDestroy == 0)
                     {
                         H3MP_ServerSend.DestroyItem(data.trackedID);
+                    }
+                    else if (!sendDestroy)
+                    {
+                        sendDestroy = true;
                     }
 
                     H3MP_Server.items[data.trackedID] = null;
@@ -1365,20 +1392,15 @@ namespace H3MP
                 {
                     if (data.controller == H3MP_Client.singleton.ID)
                     {
-                        int firstPlayerInScene = 0;
-                        foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                        int otherPlayer = GetNewObjectHost();
+
+                        if (otherPlayer != -1)
                         {
-                            if (player.Value.gameObject.activeSelf)
-                            {
-                                firstPlayerInScene = player.Key;
-                            }
-                            break;
+                            H3MP_ClientSend.GiveControl(data.trackedID, otherPlayer);
+
+                            // Also change controller locally
+                            data.controller = otherPlayer;
                         }
-
-                        H3MP_ClientSend.GiveControl(data.trackedID, firstPlayerInScene);
-
-                        // Also change controller locally
-                        data.controller = firstPlayerInScene;
                     }
                 }
                 else
@@ -1386,6 +1408,10 @@ namespace H3MP
                     if (sendDestroy && skipDestroy == 0)
                     {
                         H3MP_ClientSend.DestroyItem(data.trackedID);
+                    }
+                    else if (!sendDestroy)
+                    {
+                        sendDestroy = true;
                     }
 
                     H3MP_Client.items[data.trackedID] = null;

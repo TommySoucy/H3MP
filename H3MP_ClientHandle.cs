@@ -784,5 +784,10 @@ namespace H3MP
         {
             H3MP_ClientSend.UpToDateObjects();
         }
+
+        public static void AddTNHInstance(H3MP_Packet packet)
+        {
+            H3MP_GameManager.AddTNHInstance(packet.ReadTNHInstance());
+        }
     }
 }

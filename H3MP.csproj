@@ -69,6 +69,7 @@
     <Compile Include="H3MP_ClientSend.cs" />
     <Compile Include="H3MP_ControllerReference.cs" />
     <Compile Include="H3MP_GameManager.cs" />
+    <Compile Include="H3MP_HoverScroll.cs" />
     <Compile Include="H3MP_Player.cs" />
     <Compile Include="H3MP_PlayerHitbox.cs" />
     <Compile Include="H3MP_PlayerManager.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="H3MP_Packet.cs" />
     <Compile Include="H3MP_ServerSend.cs" />
     <Compile Include="H3MP_ThreadManager.cs" />
+    <Compile Include="H3MP_TNHInstance.cs" />
     <Compile Include="H3MP_TrackedItem.cs" />
     <Compile Include="H3MP_TrackedItemData.cs" />
     <Compile Include="H3MP_TrackedSosig.cs" />

@@ -57,7 +57,8 @@ namespace H3MP
         sosigLinkBreak = 40,
         sosigLinkSever = 41,
         updateRequest = 42,
-        playerInstance = 43
+        playerInstance = 43,
+        addTNHInstance = 44
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -104,7 +105,8 @@ namespace H3MP
         sosigLinkSever = 39,
         updateItemRequest = 40,
         updateSosigRequest = 41,
-        playerInstance = 42
+        playerInstance = 42,
+        addTNHInstance = 43
     }
 
     public class H3MP_Packet : IDisposable
@@ -517,6 +519,17 @@ namespace H3MP
             Write(config.TargetCapacity);
             Write(config.TargetTrackingTime);
             Write(config.NoFreshTargetTime);
+        }
+        /// <summary>Adds a H3MP_TNHInstance to the packet.</summary>
+        /// <param name="instance">The H3MP_TNHInstance to add.</param>
+        public void Write(H3MP_TNHInstance instance)
+        {
+            Write(instance.instance);
+            Write(instance.playerIDs.Count);
+            for(int i=0; i < instance.playerIDs.Count; ++i)
+            {
+                Write(instance.playerIDs[i]);
+            }
         }
         #endregion
 
@@ -957,6 +970,22 @@ namespace H3MP
             damage.Class = (Damage.DamageClass)ReadByte();
 
             return damage;
+        }
+
+        /// <summary>Reads a H3MP_TNHInstance from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public H3MP_TNHInstance ReadTNHInstance(bool _moveReadPos = true)
+        {
+            int instanceID = ReadInt();
+            int playerCount = ReadInt();
+            int hostID = ReadInt();
+            H3MP_TNHInstance instance = new H3MP_TNHInstance(instanceID, hostID);
+            for(int i=1; i < playerCount; ++i)
+            {
+                instance.playerIDs.Add(ReadInt());
+            }
+
+            return instance;
         }
         #endregion
 
