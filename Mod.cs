@@ -211,6 +211,10 @@ namespace H3MP
                     JObject jDict = JObject.FromObject(map);
                     File.WriteAllText("BepInEx/Plugins/H3MP/Debug/SosigWearableMap.json", jDict.ToString());
                 }
+                else if (Input.GetKeyDown(KeyCode.Keypad7))
+                {
+                    SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
+                }
             }
         }
 
@@ -256,8 +260,7 @@ namespace H3MP
 
         private void InitTNHMenu()
         {
-            Logger.LogInfo("H3MP InitTNHMenu called");
-            TNHMenu = Instantiate(TNHMenuPrefab, Vector3.zero, Quaternion.identity);
+            TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.3109f, 1.04f, 6.2977f), Quaternion.Euler(0,270,0));
 
             // Add background pointable
             TNHMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
@@ -270,17 +273,17 @@ namespace H3MP
             TNHMenuPages[3] = TNHMenu.transform.GetChild(4).gameObject;
             TNHMenuPages[4] = TNHMenu.transform.GetChild(5).gameObject;
             TNHStatusText = TNHMenu.transform.GetChild(6).GetChild(0).GetComponent<Text>();
-            TNHInstanceList = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(0).GetChild(0).gameObject;
-            TNHInstancePrefab = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(0).GetChild(0).GetChild(0).gameObject;
-            TNHInstanceListScrollBar = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(1).GetComponent<Scrollbar>();
+            TNHInstanceList = TNHMenu.transform.GetChild(4).GetChild(2).GetChild(0).GetChild(0).gameObject;
+            TNHInstancePrefab = TNHMenu.transform.GetChild(4).GetChild(2).GetChild(0).GetChild(0).GetChild(0).gameObject;
+            TNHInstanceListScrollBar = TNHMenu.transform.GetChild(4).GetChild(2).GetChild(1).GetComponent<Scrollbar>();
             TNHPlayerList = TNHMenu.transform.GetChild(5).GetChild(2).GetChild(0).GetChild(0).gameObject;
             TNHPlayerPrefab = TNHMenu.transform.GetChild(5).GetChild(2).GetChild(0).GetChild(0).GetChild(0).gameObject;
             TNHPlayerListScrollBar = TNHMenu.transform.GetChild(5).GetChild(2).GetChild(1).GetComponent<Scrollbar>();
             TNHLPJCheckMark = TNHMenu.transform.GetChild(2).GetChild(1).GetChild(0).GetChild(0).gameObject;
             TNHHostOnDeathSpectateCheckMark = TNHMenu.transform.GetChild(2).GetChild(2).GetChild(1).GetChild(0).gameObject;
             TNHHostOnDeathLeaveCheckMark = TNHMenu.transform.GetChild(2).GetChild(2).GetChild(2).GetChild(0).gameObject;
-            TNHHostOnDeathSpectateCheckMark = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(1).GetChild(0).gameObject;
-            TNHHostOnDeathLeaveCheckMark = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(2).GetChild(0).gameObject;
+            TNHJoinOnDeathSpectateCheckMark = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(1).GetChild(0).gameObject;
+            TNHJoinOnDeathLeaveCheckMark = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(2).GetChild(0).gameObject;
             TNHInstanceTitle = TNHMenu.transform.GetChild(5).GetChild(0).GetComponent<Text>();
 
             // Init buttons
@@ -324,8 +327,8 @@ namespace H3MP
             currentButton.SetButton();
             currentButton.MaxPointingRange = 5;
             currentButton.Button.onClick.AddListener(OnTNHJoinCancelClicked);
-            TNHInstanceListScrollUpArrow = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(2).gameObject;
-            TNHInstanceListScrollDownArrow = TNHMenu.transform.GetChild(3).GetChild(2).GetChild(3).gameObject;
+            TNHInstanceListScrollUpArrow = TNHMenu.transform.GetChild(4).GetChild(2).GetChild(2).gameObject;
+            TNHInstanceListScrollDownArrow = TNHMenu.transform.GetChild(4).GetChild(2).GetChild(3).gameObject;
             H3MP_HoverScroll upScroll = TNHInstanceListScrollUpArrow.AddComponent<H3MP_HoverScroll>();
             H3MP_HoverScroll downScroll = TNHInstanceListScrollDownArrow.AddComponent<H3MP_HoverScroll>();
             upScroll.MaxPointingRange = 5;
@@ -337,22 +340,22 @@ namespace H3MP
             downScroll.scrollbar = TNHInstanceListScrollBar;
             downScroll.other = upScroll;
             downScroll.rate = 0.25f;
-            TNHJoinOnDeathSpectateRadio = TNHMenu.transform.GetChild(4).GetChild(1).GetChild(1).gameObject;
+            TNHJoinOnDeathSpectateRadio = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(1).gameObject;
             currentButton = TNHJoinOnDeathSpectateRadio.AddComponent<FVRPointableButton>();
             currentButton.SetButton();
             currentButton.MaxPointingRange = 5;
             currentButton.Button.onClick.AddListener(OnTNHJoinOnDeathSpectateClicked);
-            TNHJoinOnDeathLeaveRadio = TNHMenu.transform.GetChild(4).GetChild(1).GetChild(2).gameObject;
+            TNHJoinOnDeathLeaveRadio = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(2).gameObject;
             currentButton = TNHJoinOnDeathLeaveRadio.AddComponent<FVRPointableButton>();
             currentButton.SetButton();
             currentButton.MaxPointingRange = 5;
             currentButton.Button.onClick.AddListener(OnTNHJoinOnDeathLeaveClicked);
-            TNHJoinConfirmButton = TNHMenu.transform.GetChild(4).GetChild(2).gameObject;
+            TNHJoinConfirmButton = TNHMenu.transform.GetChild(3).GetChild(2).gameObject;
             currentButton = TNHJoinConfirmButton.AddComponent<FVRPointableButton>();
             currentButton.SetButton();
             currentButton.MaxPointingRange = 5;
             currentButton.Button.onClick.AddListener(OnTNHJoinConfirmClicked);
-            TNHJoinOptionsCancelButton = TNHMenu.transform.GetChild(4).GetChild(3).gameObject;
+            TNHJoinOptionsCancelButton = TNHMenu.transform.GetChild(3).GetChild(3).gameObject;
             currentButton = TNHJoinOptionsCancelButton.AddComponent<FVRPointableButton>();
             currentButton.SetButton();
             currentButton.MaxPointingRange = 5;
