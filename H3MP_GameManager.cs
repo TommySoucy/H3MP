@@ -410,7 +410,8 @@ namespace H3MP
             H3MP_TrackedItem trackedItem = physObj.gameObject.AddComponent<H3MP_TrackedItem>();
             H3MP_TrackedItemData data = new H3MP_TrackedItemData();
             trackedItem.data = data;
-            data.physicalObject = trackedItem;
+            data.physicalItem = trackedItem;
+            data.physicalItem.physicalObject = physObj;
 
             if (parent != null)
             {
@@ -503,7 +504,7 @@ namespace H3MP
             H3MP_TrackedSosigData data = new H3MP_TrackedSosigData();
             trackedSosig.data = data;
             data.physicalObject = trackedSosig;
-            trackedSosig.physicalSosig = sosigScript;
+            trackedSosig.physicalSosigScript = sosigScript;
             H3MP_GameManager.trackedSosigBySosig.Add(sosigScript, trackedSosig);
 
             data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
@@ -702,8 +703,10 @@ namespace H3MP
             // Set locally
             H3MP_GameManager.instance = instance;
 
+            bool isNewInstance = false;
             if (!activeInstances.ContainsKey(instance))
             {
+                isNewInstance = true;
                 activeInstances.Add(instance, 0);
             }
             ++activeInstances[instance];
@@ -711,6 +714,106 @@ namespace H3MP
             {
                 TNHInstances[instance].playerIDs.Add(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
             }
+
+            // Item we do not control: Destroy, giveControlOfDestroyed = true will ensure destruction does not get sent
+            // Item we control: Destroy, giveControlOfDestroyed = true will ensure item's control is passed on is necessary
+            // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these from instance to instance
+            giveControlOfDestroyed = true;
+            H3MP_TrackedItemData[] itemArrToUse = null;
+            H3MP_TrackedSosigData[] sosigArrToUse = null;
+            if (H3MP_ThreadManager.host)
+            {
+                itemArrToUse = H3MP_Server.items;
+                sosigArrToUse = H3MP_Server.sosigs;
+            }
+            else
+            {
+                itemArrToUse = H3MP_Client.items;
+                sosigArrToUse = H3MP_Client.sosigs;
+            }
+            for (int i = itemArrToUse.Length - 1; i >= 0; --i)
+            {
+                if (itemArrToUse[i] != null && itemArrToUse[i].physicalItem != null)
+                {
+                    if (IsControlled(itemArrToUse[i].physicalItem.physicalObject))
+                    {
+                        // Send destruction without removing from global list
+                        // We just don't want the other clients to have the item on their side anymore if they had it
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.DestroyItem(i, false);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.DestroyItem(i, false);
+                        }
+                    }
+                    else // Not being interacted with, just destroy on our side and give control
+                    {
+                        if (isNewInstance)
+                        {
+                            GameObject go = itemArrToUse[i].physicalItem.gameObject;
+                            bool hadNoParent = itemArrToUse[i].physicalItem.data.parent == -1;
+
+                            // Destroy just the tracked script because we want to make a copy for ourselves
+                            DestroyImmediate(itemArrToUse[i].physicalItem);
+
+                            // Only sync the top parent of items. The children will also get retracked as children
+                            if (hadNoParent)
+                            {
+                                SyncTrackedItems(go.transform, true, null, SceneManager.GetActiveScene().name);
+                            }
+                        }
+                        else // Destroy entire object
+                        {
+                            // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
+                            // like we do now if we didn't do immediate because OnDestroy() gets called later
+                            // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
+                            DestroyImmediate(itemArrToUse[i].physicalItem.gameObject);
+                        }
+                    }
+                }
+            }
+            for (int i = sosigArrToUse.Length - 1; i >= 0; --i)
+            {
+                if (sosigArrToUse[i] != null && sosigArrToUse[i].physicalObject != null)
+                {
+                    if (IsControlled(sosigArrToUse[i].physicalObject.physicalSosigScript))
+                    {
+                        // Send destruction without removing from global list
+                        // We just don't want the other clients to have the sosig on their side anymore if they had it
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.DestroySosig(i, false);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.DestroySosig(i, false);
+                        }
+                    }
+                    else // Not being interacted with, just destroy on our side and give control
+                    {
+                        if (isNewInstance)
+                        {
+                            GameObject go = sosigArrToUse[i].physicalObject.gameObject;
+
+                            // Destroy just the tracked script because we want to make a copy for ourselves
+                            DestroyImmediate(sosigArrToUse[i].physicalObject);
+
+                            // Retrack sosig
+                            SyncTrackedSosigs(go.transform, true, SceneManager.GetActiveScene().name);
+                        }
+                        else // Destroy entire object
+                        {
+                            // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
+                            // like we do now if we didn't do immediate because OnDestroy() gets called later
+                            // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
+                            DestroyImmediate(sosigArrToUse[i].physicalObject.gameObject);
+                        }
+                    }
+                }
+            }
+            giveControlOfDestroyed = false;
 
             // Send update to other clients
             if (H3MP_ThreadManager.host)
@@ -722,35 +825,52 @@ namespace H3MP
                 H3MP_ClientSend.PlayerInstance(instance);
             }
 
-            // Give control of all objects by destroying their tracked script with giveControlOfDestroyed true
-            // Then retrack them
-            giveControlOfDestroyed = true;
-            List<GameObject> gos = new List<GameObject>();
-            foreach (H3MP_TrackedItemData trackedItem in items)
+            // Set players active and playersPresent
+            playersPresent = 0;
+            string sceneName = SceneManager.GetActiveScene().name;
+            if (synchronizedScenes.ContainsKey(sceneName))
             {
-                if(trackedItem.parent == -1)
+                foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                 {
-                    gos.Add(trackedItem.physicalObject.gameObject);
+                    if (player.Value.scene.Equals(sceneName) && player.Value.instance == instance)
+                    {
+                        if (!player.Value.gameObject.activeSelf)
+                        {
+                            player.Value.gameObject.SetActive(true);
+                        }
+                        ++playersPresent;
+
+                        player.Value.SetEntitiesRegistered(true);
+
+                        if (H3MP_ThreadManager.host)
+                        {
+                            // Request most up to date items from the client
+                            // We do this because we may not have the most up to date version of items/sosigs since
+                            // clients only send updated data when there are others in their scene
+                            // But we need the most of to date data to instantiate the item/sosig
+                            Debug.Log("Requesting up to date objects from " + player.Key);
+                            H3MP_ServerSend.RequestUpToDateObjects(player.Key);
+                        }
+                    }
+                    else
+                    {
+                        if (player.Value.gameObject.activeSelf)
+                        {
+                            player.Value.gameObject.SetActive(false);
+                        }
+                    }
                 }
-                Destroy(trackedItem.physicalObject);
             }
-            items.Clear();
-            foreach (GameObject go in gos)
+            else // New scene not syncable, ensure all players are disabled regardless of scene
             {
-                SyncTrackedItems(go);
+                foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
+                {
+                    if (player.Value.gameObject.activeSelf)
+                    {
+                        player.Value.gameObject.SetActive(false);
+                    }
+                }
             }
-            gos.Clear();
-            foreach (H3MP_TrackedSosigData trackedSosig in sosigs)
-            {
-                gos.Add(trackedSosig.physicalObject.gameObject);
-                Destroy(trackedSosig.physicalObject);
-            }
-            sosigs.Clear();
-            foreach (GameObject go in gos)
-            {
-                SyncTrackedSosigs(go);
-            }
-            giveControlOfDestroyed = false;
         }
 
         // MOD: When a client takes control of an item that is under our control, we will need to make sure that we are not 
@@ -790,6 +910,21 @@ namespace H3MP
         public static bool IsControlled(FVRPhysicalObject physObj)
         {
             return physObj.m_hand != null || physObj.QuickbeltSlot != null;
+        }
+
+        // MOD: This will be called to check if the given sosig is controlled by this client
+        //      This currently checks if any link of the sosig is controlled
+        //      A mod can postfix this to change the return value if it wants to have control of items based on other criteria
+        public static bool IsControlled(Sosig sosig)
+        {
+            foreach(SosigLink link in sosig.Links)
+            {
+                if(link != null && link.O != null && IsControlled(link.O))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void OnSceneLoadedVR(bool loading)

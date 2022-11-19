@@ -257,7 +257,7 @@ namespace H3MP
                 if (H3MP_Server.items[i] != null)
                 {
                     if ((H3MP_Server.items[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (H3MP_Server.items[i].controller != 0 && player.scene.Equals(H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.items[i].controller].player.instance))
+                        (H3MP_Server.items[i].controller != 0 && H3MP_Server.items[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.items[i].controller].player.instance))
                     {
                         Debug.Log("\t" + H3MP_Server.items[i].itemID);
                         // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
@@ -275,7 +275,7 @@ namespace H3MP
                 if (H3MP_Server.sosigs[i] != null)
                 {
                     if ((H3MP_Server.sosigs[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (H3MP_Server.sosigs[i].controller != 0 && player.scene.Equals(H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.instance))
+                        (H3MP_Server.sosigs[i].controller != 0 && H3MP_Server.sosigs[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.instance))
                     {
                         Debug.Log("\tSending a sosig");
                         H3MP_Server.sosigs[i].Update();

@@ -106,7 +106,7 @@ namespace H3MP
         public Quaternion rotation;
         private Vector3 previousPos;
         private Quaternion previousRot;
-        public H3MP_TrackedItem physicalObject;
+        public H3MP_TrackedItem physicalItem;
 
         public int parent = -1; // The tracked ID of item this item is attached to
         public List<H3MP_TrackedItemData> children; // The items attached to this item
@@ -135,11 +135,12 @@ namespace H3MP
             ++Mod.skipAllInstantiates;
             GameObject itemObject = GameObject.Instantiate(itemPrefab);
             --Mod.skipAllInstantiates;
-            physicalObject = itemObject.AddComponent<H3MP_TrackedItem>();
-            physicalObject.data = this;
+            physicalItem = itemObject.AddComponent<H3MP_TrackedItem>();
+            physicalItem.data = this;
+            physicalItem.physicalObject = itemObject.GetComponent<FVRPhysicalObject>();
 
             // See Note in H3MP_GameManager.SyncTrackedItems
-            if(parent != -1)
+            if (parent != -1)
             {
                 // Add ourselves to the prent's children
                 H3MP_TrackedItemData parentItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[parent];
@@ -152,7 +153,7 @@ namespace H3MP
 
                 // Physically parent
                 ++ignoreParentChanged;
-                itemObject.transform.parent = parentItem.physicalObject.transform;
+                itemObject.transform.parent = parentItem.physicalItem.transform;
                 --ignoreParentChanged;
             }
 
@@ -161,12 +162,12 @@ namespace H3MP
             {
                 if (controller != 0)
                 {
-                    physicalObject.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+                    physicalItem.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
                 }
             }
             else if (controller != H3MP_Client.singleton.ID)
             {
-                physicalObject.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+                physicalItem.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
             }
 
             // Initially set itself
@@ -187,34 +188,34 @@ namespace H3MP
             previousRot = rotation;
             position = updatedItem.position;
             rotation = updatedItem.rotation;
-            if (physicalObject != null)
+            if (physicalItem != null)
             {
                 if (parent == -1)
                 {
-                    physicalObject.transform.position = updatedItem.position;
-                    physicalObject.transform.rotation = updatedItem.rotation;
+                    physicalItem.transform.position = updatedItem.position;
+                    physicalItem.transform.rotation = updatedItem.rotation;
                 }
                 else
                 {
                     // If parented, the position and rotation are relative, so set it now after parenting
-                    physicalObject.transform.localPosition = updatedItem.position;
-                    physicalObject.transform.localRotation = updatedItem.rotation;
+                    physicalItem.transform.localPosition = updatedItem.position;
+                    physicalItem.transform.localRotation = updatedItem.rotation;
                 }
 
                 previousActive = active;
                 active = updatedItem.active;
                 if (active)
                 {
-                    if (!physicalObject.gameObject.activeSelf)
+                    if (!physicalItem.gameObject.activeSelf)
                     {
-                        physicalObject.gameObject.SetActive(true);
+                        physicalItem.gameObject.SetActive(true);
                     }
                 }
                 else
                 {
-                    if (physicalObject.gameObject.activeSelf)
+                    if (physicalItem.gameObject.activeSelf)
                     {
-                        physicalObject.gameObject.SetActive(false);
+                        physicalItem.gameObject.SetActive(false);
                     }
                 }
             }
@@ -228,17 +229,17 @@ namespace H3MP
             previousRot = rotation;
             if (parent == -1)
             {
-                position = physicalObject.transform.position;
-                rotation = physicalObject.transform.rotation;
+                position = physicalItem.transform.position;
+                rotation = physicalItem.transform.rotation;
             }
             else
             {
-                position = physicalObject.transform.localPosition;
-                rotation = physicalObject.transform.localRotation;
+                position = physicalItem.transform.localPosition;
+                rotation = physicalItem.transform.localRotation;
             }
 
             previousActive = active;
-            active = physicalObject.gameObject.activeInHierarchy;
+            active = physicalItem.gameObject.activeInHierarchy;
 
             return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation) || UpdateData();
         }
@@ -277,23 +278,23 @@ namespace H3MP
                     childIndex = -1;
 
                     // Physically unparent if necessary
-                    if (physicallyParent && physicalObject != null)
+                    if (physicallyParent && physicalItem != null)
                     {
                         ++ignoreParentChanged;
-                        physicalObject.transform.parent = GetGeneralParent();
+                        physicalItem.transform.parent = GetGeneralParent();
                         --ignoreParentChanged;
 
                         // If in control, we want to enable rigidbody
                         if (controller == clientID)
                         {
                             // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
-                            physicalObject.GetComponent<FVRPhysicalObject>().RecoverRigidbody();
+                            physicalItem.GetComponent<FVRPhysicalObject>().RecoverRigidbody();
                         }
 
                         // Call updateParent delegate on item if it has one
-                        if(physicalObject.updateParentFunc != null)
+                        if(physicalItem.updateParentFunc != null)
                         {
-                            physicalObject.updateParentFunc();
+                            physicalItem.updateParentFunc();
                         }
                     }
                 }
@@ -331,23 +332,23 @@ namespace H3MP
                 newParent.children.Add(this);
 
                 // Physically parent
-                if (physicallyParent && physicalObject != null)
+                if (physicallyParent && physicalItem != null)
                 {
                     ++ignoreParentChanged;
-                    physicalObject.transform.parent = newParent.physicalObject.transform;
+                    physicalItem.transform.parent = newParent.physicalItem.transform;
                     --ignoreParentChanged;
 
                     // If in control, we want to enable rigidbody
                     if (controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
                     {
                         // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
-                        physicalObject.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+                        physicalItem.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
                     }
 
                     // Call updateParent delegate on item if it has one
-                    if (physicalObject.updateParentFunc != null)
+                    if (physicalItem.updateParentFunc != null)
                     {
-                        physicalObject.updateParentFunc();
+                        physicalItem.updateParentFunc();
                     }
                 }
             }
@@ -403,7 +404,7 @@ namespace H3MP
         {
             previousData = data;
 
-            return physicalObject == null ? false : physicalObject.UpdateItemData(newData);
+            return physicalItem == null ? false : physicalItem.UpdateItemData(newData);
         }
     }
 }

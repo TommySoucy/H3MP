@@ -9,7 +9,7 @@ namespace H3MP
 {
     public class H3MP_TrackedSosig : MonoBehaviour
     {
-        public Sosig physicalSosig;
+        public Sosig physicalSosigScript;
         public H3MP_TrackedSosigData data;
 
         public bool sendDestroy = true; // To prevent feeback loops
@@ -45,7 +45,7 @@ namespace H3MP
 
         private void OnDestroy()
         {
-            H3MP_GameManager.trackedSosigBySosig.Remove(physicalSosig);
+            H3MP_GameManager.trackedSosigBySosig.Remove(physicalSosigScript);
 
             if (H3MP_ThreadManager.host)
             {

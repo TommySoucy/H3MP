@@ -56,11 +56,11 @@ namespace H3MP
             physicalObject = sosigInstance.AddComponent<H3MP_TrackedSosig>();
             physicalObject.data = this;
 
-            physicalObject.physicalSosig = sosigInstance.GetComponent<Sosig>();
+            physicalObject.physicalSosigScript = sosigInstance.GetComponent<Sosig>();
             SosigConfigurePatch.skipConfigure = true;
-            physicalObject.physicalSosig.Configure(configTemplate);
+            physicalObject.physicalSosigScript.Configure(configTemplate);
 
-            H3MP_GameManager.trackedSosigBySosig.Add(physicalObject.physicalSosig, physicalObject);
+            H3MP_GameManager.trackedSosigBySosig.Add(physicalObject.physicalSosigScript, physicalObject);
 
             if (H3MP_GameManager.waitingWearables.ContainsKey(trackedID))
             {
@@ -90,19 +90,19 @@ namespace H3MP
             {
                 if(controller != 0)
                 {
-                    GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosig.E);
-                    physicalObject.physicalSosig.CoreRB.isKinematic = true;
+                    GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
+                    physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
                 }
             }
             else if(controller != H3MP_Client.singleton.ID)
             {
-                GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosig.E);
-                physicalObject.physicalSosig.CoreRB.isKinematic = true;
+                GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
+                physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
             }
 
             // Initially set IFF
             ++SosigIFFPatch.skip;
-            physicalObject.physicalSosig.SetIFF(IFF);
+            physicalObject.physicalSosigScript.SetIFF(IFF);
             --SosigIFFPatch.skip;
 
             // Initially set itself
@@ -121,11 +121,11 @@ namespace H3MP
                         {
                             yield return IM.OD[wearables[i][j]].GetGameObjectAsync();
                             ++Mod.skipAllInstantiates;
-                            GameObject outfitItemObject = GameObject.Instantiate(IM.OD[wearables[i][j]].GetGameObject(), physicalObject.physicalSosig.Links[i].transform.position, physicalObject.physicalSosig.Links[i].transform.rotation, physicalObject.physicalSosig.Links[i].transform);
+                            GameObject outfitItemObject = GameObject.Instantiate(IM.OD[wearables[i][j]].GetGameObject(), physicalObject.physicalSosigScript.Links[i].transform.position, physicalObject.physicalSosigScript.Links[i].transform.rotation, physicalObject.physicalSosigScript.Links[i].transform);
                             --Mod.skipAllInstantiates;
                             SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
                             ++SosigLinkActionPatch.skipRegisterWearable;
-                            wearableScript.RegisterWearable(physicalObject.physicalSosig.Links[i]);
+                            wearableScript.RegisterWearable(physicalObject.physicalSosigScript.Links[i]);
                             --SosigLinkActionPatch.skipRegisterWearable;
                         }
                         else
@@ -144,14 +144,14 @@ namespace H3MP
             {
                 yield return IM.OD[ID].GetGameObjectAsync();
                 ++Mod.skipAllInstantiates;
-                GameObject outfitItemObject = GameObject.Instantiate(IM.OD[ID].GetGameObject(), physicalObject.physicalSosig.Links[linkIndex].transform.position, physicalObject.physicalSosig.Links[linkIndex].transform.rotation, physicalObject.physicalSosig.Links[linkIndex].transform);
+                GameObject outfitItemObject = GameObject.Instantiate(IM.OD[ID].GetGameObject(), physicalObject.physicalSosigScript.Links[linkIndex].transform.position, physicalObject.physicalSosigScript.Links[linkIndex].transform.rotation, physicalObject.physicalSosigScript.Links[linkIndex].transform);
                 --Mod.skipAllInstantiates;
                 SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
                 if (skip)
                 {
                     ++SosigLinkActionPatch.skipRegisterWearable;
                 }
-                wearableScript.RegisterWearable(physicalObject.physicalSosig.Links[linkIndex]);
+                wearableScript.RegisterWearable(physicalObject.physicalSosigScript.Links[linkIndex]);
                 if (skip)
                 {
                     --SosigLinkActionPatch.skipRegisterWearable;
@@ -186,19 +186,19 @@ namespace H3MP
             // Set physically
             if (physicalObject != null)
             {
-                physicalObject.physicalSosig.Mustard = mustard;
-                physicalObject.physicalSosig.CoreRB.position = position;
-                physicalObject.physicalSosig.CoreRB.rotation = rotation;
-                Mod.Sosig_SetBodyPose.Invoke(physicalObject.physicalSosig, new object[] { bodyPose });
-                sosigInvAmmoStores.SetValue(physicalObject.physicalSosig.Inventory, ammoStores);
-                for (int i=0; i < physicalObject.physicalSosig.Links.Count; ++i)
+                physicalObject.physicalSosigScript.Mustard = mustard;
+                physicalObject.physicalSosigScript.CoreRB.position = position;
+                physicalObject.physicalSosigScript.CoreRB.rotation = rotation;
+                Mod.Sosig_SetBodyPose.Invoke(physicalObject.physicalSosigScript, new object[] { bodyPose });
+                sosigInvAmmoStores.SetValue(physicalObject.physicalSosigScript.Inventory, ammoStores);
+                for (int i=0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
                 {
-                    if (physicalObject.physicalSosig.Links[i] != null)
+                    if (physicalObject.physicalSosigScript.Links[i] != null)
                     {
                         if(previousLinkIntegrity[i] != linkIntegrity[i])
                         {
-                            Mod.SosigLink_m_integrity.SetValue(physicalObject.physicalSosig.Links[i], linkIntegrity[i]);
-                            physicalObject.physicalSosig.UpdateRendererOnLink(i);
+                            Mod.SosigLink_m_integrity.SetValue(physicalObject.physicalSosigScript.Links[i], linkIntegrity[i]);
+                            physicalObject.physicalSosigScript.UpdateRendererOnLink(i);
                         }
                     }
                 }
@@ -224,11 +224,11 @@ namespace H3MP
         {
             previousPos = position;
             previousRot = rotation;
-            position = physicalObject.physicalSosig.CoreRB.position;
-            rotation = physicalObject.physicalSosig.CoreRB.rotation;
+            position = physicalObject.physicalSosigScript.CoreRB.position;
+            rotation = physicalObject.physicalSosigScript.CoreRB.rotation;
             previousBodyPose = bodyPose;
-            bodyPose = physicalObject.physicalSosig.BodyPose;
-            ammoStores = (int[])sosigInvAmmoStores.GetValue(physicalObject.physicalSosig.Inventory);
+            bodyPose = physicalObject.physicalSosigScript.BodyPose;
+            ammoStores = (int[])sosigInvAmmoStores.GetValue(physicalObject.physicalSosigScript.Inventory);
             if (ammoStores != null && previousAmmoStores == null)
             {
                 previousAmmoStores = new int[ammoStores.Length];
@@ -244,17 +244,17 @@ namespace H3MP
             }
             previousAmmoStores = ammoStores;
             previousMustard = mustard;
-            mustard = physicalObject.physicalSosig.Mustard;
+            mustard = physicalObject.physicalSosigScript.Mustard;
             previousLinkIntegrity = linkIntegrity;
-            if(linkIntegrity == null || linkIntegrity.Length < physicalObject.physicalSosig.Links.Count)
+            if(linkIntegrity == null || linkIntegrity.Length < physicalObject.physicalSosigScript.Links.Count)
             {
-                linkIntegrity = new float[physicalObject.physicalSosig.Links.Count];
-                previousLinkIntegrity = new float[physicalObject.physicalSosig.Links.Count];
+                linkIntegrity = new float[physicalObject.physicalSosigScript.Links.Count];
+                previousLinkIntegrity = new float[physicalObject.physicalSosigScript.Links.Count];
             }
             bool modifiedLinkIntegrity = false;
-            for(int i=0; i < physicalObject.physicalSosig.Links.Count; ++i)
+            for(int i=0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
             {
-                linkIntegrity[i] = (float)Mod.SosigLink_m_integrity.GetValue(physicalObject.physicalSosig.Links[i]);
+                linkIntegrity[i] = (float)Mod.SosigLink_m_integrity.GetValue(physicalObject.physicalSosigScript.Links[i]);
                 if(linkIntegrity[i] != previousLinkIntegrity[i])
                 {
                     modifiedLinkIntegrity = true;
@@ -267,97 +267,97 @@ namespace H3MP
             if (full)
             {
                 configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
-                configTemplate.AppliesDamageResistToIntegrityLoss = physicalObject.physicalSosig.AppliesDamageResistToIntegrityLoss;
-                configTemplate.DoesDropWeaponsOnBallistic = physicalObject.physicalSosig.DoesDropWeaponsOnBallistic;
-                configTemplate.TotalMustard = (float)typeof(Sosig).GetField("m_maxMustard", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.BleedDamageMult = physicalObject.physicalSosig.BleedDamageMult;
-                configTemplate.BleedRateMultiplier = physicalObject.physicalSosig.BleedRateMult;
-                configTemplate.BleedVFXIntensity = physicalObject.physicalSosig.BleedVFXIntensity;
-                configTemplate.SearchExtentsModifier = physicalObject.physicalSosig.SearchExtentsModifier;
-                configTemplate.ShudderThreshold = physicalObject.physicalSosig.ShudderThreshold;
-                configTemplate.ConfusionThreshold = (float)typeof(Sosig).GetField("ConfusionThreshold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.ConfusionMultiplier = (float)typeof(Sosig).GetField("ConfusionMultiplier", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.ConfusionTimeMax = (float)typeof(Sosig).GetField("m_maxConfusedTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.StunThreshold = (float)typeof(Sosig).GetField("StunThreshold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.StunMultiplier = (float)typeof(Sosig).GetField("StunMultiplier", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.StunTimeMax = (float)typeof(Sosig).GetField("m_maxStunTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.HasABrain = physicalObject.physicalSosig.HasABrain;
-                configTemplate.DoesDropWeaponsOnBallistic = physicalObject.physicalSosig.DoesDropWeaponsOnBallistic;
-                configTemplate.RegistersPassiveThreats = physicalObject.physicalSosig.RegistersPassiveThreats;
-                configTemplate.CanBeKnockedOut = physicalObject.physicalSosig.CanBeKnockedOut;
-                configTemplate.MaxUnconsciousTime = (float)typeof(Sosig).GetField("m_maxUnconsciousTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.AssaultPointOverridesSkirmishPointWhenFurtherThan = (float)typeof(Sosig).GetField("m_assaultPointOverridesSkirmishPointWhenFurtherThan", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.ViewDistance = physicalObject.physicalSosig.MaxSightRange;
-                configTemplate.HearingDistance = physicalObject.physicalSosig.MaxHearingRange;
-                configTemplate.MaxFOV = physicalObject.physicalSosig.MaxFOV;
-                configTemplate.StateSightRangeMults = physicalObject.physicalSosig.StateSightRangeMults;
-                configTemplate.StateHearingRangeMults = physicalObject.physicalSosig.StateHearingRangeMults;
-                configTemplate.StateFOVMults = physicalObject.physicalSosig.StateFOVMults;
-                configTemplate.CanPickup_Ranged = physicalObject.physicalSosig.CanPickup_Ranged;
-                configTemplate.CanPickup_Melee = physicalObject.physicalSosig.CanPickup_Melee;
-                configTemplate.CanPickup_Other = physicalObject.physicalSosig.CanPickup_Other;
-                configTemplate.DoesJointBreakKill_Head = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.DoesJointBreakKill_Upper = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.DoesJointBreakKill_Lower = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.DoesSeverKill_Head = (bool)typeof(Sosig).GetField("m_doesSeverKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.DoesSeverKill_Upper = (bool)typeof(Sosig).GetField("m_doesSeverKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.DoesSeverKill_Lower = (bool)typeof(Sosig).GetField("m_doesSeverKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.DoesExplodeKill_Head = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.DoesExplodeKill_Upper = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.DoesExplodeKill_Lower = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.CrawlSpeed = physicalObject.physicalSosig.Speed_Crawl;
-                configTemplate.SneakSpeed = physicalObject.physicalSosig.Speed_Sneak;
-                configTemplate.WalkSpeed = physicalObject.physicalSosig.Speed_Walk;
-                configTemplate.RunSpeed = physicalObject.physicalSosig.Speed_Run;
-                configTemplate.TurnSpeed = physicalObject.physicalSosig.Speed_Turning;
-                configTemplate.MovementRotMagnitude = physicalObject.physicalSosig.MovementRotMagnitude;
-                configTemplate.DamMult_Projectile = physicalObject.physicalSosig.DamMult_Projectile;
-                configTemplate.DamMult_Explosive = physicalObject.physicalSosig.DamMult_Explosive;
-                configTemplate.DamMult_Melee = physicalObject.physicalSosig.DamMult_Melee;
-                configTemplate.DamMult_Piercing = physicalObject.physicalSosig.DamMult_Piercing;
-                configTemplate.DamMult_Blunt = physicalObject.physicalSosig.DamMult_Blunt;
-                configTemplate.DamMult_Cutting = physicalObject.physicalSosig.DamMult_Cutting;
-                configTemplate.DamMult_Thermal = physicalObject.physicalSosig.DamMult_Thermal;
-                configTemplate.DamMult_Chilling = physicalObject.physicalSosig.DamMult_Chilling;
-                configTemplate.DamMult_EMP = physicalObject.physicalSosig.DamMult_EMP;
-                configTemplate.CanBeSurpressed = physicalObject.physicalSosig.CanBeSuppresed;
-                configTemplate.SuppressionMult = physicalObject.physicalSosig.SuppressionMult;
-                configTemplate.CanBeGrabbed = physicalObject.physicalSosig.CanBeGrabbed;
-                configTemplate.CanBeSevered = physicalObject.physicalSosig.CanBeSevered;
-                configTemplate.CanBeStabbed = physicalObject.physicalSosig.CanBeStabbed;
-                configTemplate.MaxJointLimit = (float)typeof(Sosig).GetField("m_maxJointLimit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig);
-                configTemplate.OverrideSpeech = physicalObject.physicalSosig.Speech;
+                configTemplate.AppliesDamageResistToIntegrityLoss = physicalObject.physicalSosigScript.AppliesDamageResistToIntegrityLoss;
+                configTemplate.DoesDropWeaponsOnBallistic = physicalObject.physicalSosigScript.DoesDropWeaponsOnBallistic;
+                configTemplate.TotalMustard = (float)typeof(Sosig).GetField("m_maxMustard", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.BleedDamageMult = physicalObject.physicalSosigScript.BleedDamageMult;
+                configTemplate.BleedRateMultiplier = physicalObject.physicalSosigScript.BleedRateMult;
+                configTemplate.BleedVFXIntensity = physicalObject.physicalSosigScript.BleedVFXIntensity;
+                configTemplate.SearchExtentsModifier = physicalObject.physicalSosigScript.SearchExtentsModifier;
+                configTemplate.ShudderThreshold = physicalObject.physicalSosigScript.ShudderThreshold;
+                configTemplate.ConfusionThreshold = (float)typeof(Sosig).GetField("ConfusionThreshold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.ConfusionMultiplier = (float)typeof(Sosig).GetField("ConfusionMultiplier", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.ConfusionTimeMax = (float)typeof(Sosig).GetField("m_maxConfusedTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.StunThreshold = (float)typeof(Sosig).GetField("StunThreshold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.StunMultiplier = (float)typeof(Sosig).GetField("StunMultiplier", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.StunTimeMax = (float)typeof(Sosig).GetField("m_maxStunTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.HasABrain = physicalObject.physicalSosigScript.HasABrain;
+                configTemplate.DoesDropWeaponsOnBallistic = physicalObject.physicalSosigScript.DoesDropWeaponsOnBallistic;
+                configTemplate.RegistersPassiveThreats = physicalObject.physicalSosigScript.RegistersPassiveThreats;
+                configTemplate.CanBeKnockedOut = physicalObject.physicalSosigScript.CanBeKnockedOut;
+                configTemplate.MaxUnconsciousTime = (float)typeof(Sosig).GetField("m_maxUnconsciousTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.AssaultPointOverridesSkirmishPointWhenFurtherThan = (float)typeof(Sosig).GetField("m_assaultPointOverridesSkirmishPointWhenFurtherThan", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.ViewDistance = physicalObject.physicalSosigScript.MaxSightRange;
+                configTemplate.HearingDistance = physicalObject.physicalSosigScript.MaxHearingRange;
+                configTemplate.MaxFOV = physicalObject.physicalSosigScript.MaxFOV;
+                configTemplate.StateSightRangeMults = physicalObject.physicalSosigScript.StateSightRangeMults;
+                configTemplate.StateHearingRangeMults = physicalObject.physicalSosigScript.StateHearingRangeMults;
+                configTemplate.StateFOVMults = physicalObject.physicalSosigScript.StateFOVMults;
+                configTemplate.CanPickup_Ranged = physicalObject.physicalSosigScript.CanPickup_Ranged;
+                configTemplate.CanPickup_Melee = physicalObject.physicalSosigScript.CanPickup_Melee;
+                configTemplate.CanPickup_Other = physicalObject.physicalSosigScript.CanPickup_Other;
+                configTemplate.DoesJointBreakKill_Head = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.DoesJointBreakKill_Upper = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.DoesJointBreakKill_Lower = (bool)typeof(Sosig).GetField("m_doesJointBreakKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.DoesSeverKill_Head = (bool)typeof(Sosig).GetField("m_doesSeverKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.DoesSeverKill_Upper = (bool)typeof(Sosig).GetField("m_doesSeverKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.DoesSeverKill_Lower = (bool)typeof(Sosig).GetField("m_doesSeverKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.DoesExplodeKill_Head = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Head", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.DoesExplodeKill_Upper = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Upper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.DoesExplodeKill_Lower = (bool)typeof(Sosig).GetField("m_doesExplodeKill_Lower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.CrawlSpeed = physicalObject.physicalSosigScript.Speed_Crawl;
+                configTemplate.SneakSpeed = physicalObject.physicalSosigScript.Speed_Sneak;
+                configTemplate.WalkSpeed = physicalObject.physicalSosigScript.Speed_Walk;
+                configTemplate.RunSpeed = physicalObject.physicalSosigScript.Speed_Run;
+                configTemplate.TurnSpeed = physicalObject.physicalSosigScript.Speed_Turning;
+                configTemplate.MovementRotMagnitude = physicalObject.physicalSosigScript.MovementRotMagnitude;
+                configTemplate.DamMult_Projectile = physicalObject.physicalSosigScript.DamMult_Projectile;
+                configTemplate.DamMult_Explosive = physicalObject.physicalSosigScript.DamMult_Explosive;
+                configTemplate.DamMult_Melee = physicalObject.physicalSosigScript.DamMult_Melee;
+                configTemplate.DamMult_Piercing = physicalObject.physicalSosigScript.DamMult_Piercing;
+                configTemplate.DamMult_Blunt = physicalObject.physicalSosigScript.DamMult_Blunt;
+                configTemplate.DamMult_Cutting = physicalObject.physicalSosigScript.DamMult_Cutting;
+                configTemplate.DamMult_Thermal = physicalObject.physicalSosigScript.DamMult_Thermal;
+                configTemplate.DamMult_Chilling = physicalObject.physicalSosigScript.DamMult_Chilling;
+                configTemplate.DamMult_EMP = physicalObject.physicalSosigScript.DamMult_EMP;
+                configTemplate.CanBeSurpressed = physicalObject.physicalSosigScript.CanBeSuppresed;
+                configTemplate.SuppressionMult = physicalObject.physicalSosigScript.SuppressionMult;
+                configTemplate.CanBeGrabbed = physicalObject.physicalSosigScript.CanBeGrabbed;
+                configTemplate.CanBeSevered = physicalObject.physicalSosigScript.CanBeSevered;
+                configTemplate.CanBeStabbed = physicalObject.physicalSosigScript.CanBeStabbed;
+                configTemplate.MaxJointLimit = (float)typeof(Sosig).GetField("m_maxJointLimit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript);
+                configTemplate.OverrideSpeech = physicalObject.physicalSosigScript.Speech;
                 FieldInfo linkIntegrityField = typeof(SosigLink).GetField("m_integrity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 FieldInfo linkJointBroken = typeof(SosigLink).GetField("m_isJointBroken", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 configTemplate.LinkDamageMultipliers = new List<float>();
                 configTemplate.LinkStaggerMultipliers = new List<float>();
                 configTemplate.StartingLinkIntegrity = new List<Vector2>();
                 configTemplate.StartingChanceBrokenJoint = new List<float>();
-                for (int i = 0; i < physicalObject.physicalSosig.Links.Count; ++i)
+                for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
                 {
-                    configTemplate.LinkDamageMultipliers.Add(physicalObject.physicalSosig.Links[i].DamMult);
-                    configTemplate.LinkStaggerMultipliers.Add(physicalObject.physicalSosig.Links[i].StaggerMagnitude);
-                    float actualLinkIntegrity = (float)linkIntegrityField.GetValue(physicalObject.physicalSosig.Links[i]);
+                    configTemplate.LinkDamageMultipliers.Add(physicalObject.physicalSosigScript.Links[i].DamMult);
+                    configTemplate.LinkStaggerMultipliers.Add(physicalObject.physicalSosigScript.Links[i].StaggerMagnitude);
+                    float actualLinkIntegrity = (float)linkIntegrityField.GetValue(physicalObject.physicalSosigScript.Links[i]);
                     configTemplate.StartingLinkIntegrity.Add(new Vector2(actualLinkIntegrity, actualLinkIntegrity));
-                    configTemplate.StartingChanceBrokenJoint.Add(((bool)linkJointBroken.GetValue(physicalObject.physicalSosig.Links[i])) ? 1 : 0);
+                    configTemplate.StartingChanceBrokenJoint.Add(((bool)linkJointBroken.GetValue(physicalObject.physicalSosigScript.Links[i])) ? 1 : 0);
                 }
-                if (physicalObject.physicalSosig.Priority != null)
+                if (physicalObject.physicalSosigScript.Priority != null)
                 {
-                    configTemplate.TargetCapacity = (int)typeof(SosigTargetPrioritySystem).GetField("m_eventCapacity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig.Priority);
-                    configTemplate.TargetTrackingTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_maxTrackingTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig.Priority);
-                    configTemplate.NoFreshTargetTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_timeToNoFreshTarget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosig.Priority);
+                    configTemplate.TargetCapacity = (int)typeof(SosigTargetPrioritySystem).GetField("m_eventCapacity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript.Priority);
+                    configTemplate.TargetTrackingTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_maxTrackingTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript.Priority);
+                    configTemplate.NoFreshTargetTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_timeToNoFreshTarget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(physicalObject.physicalSosigScript.Priority);
                 }
-                IFF = (byte)physicalObject.physicalSosig.GetIFF();
-                linkData = new float[physicalObject.physicalSosig.Links.Count][];
+                IFF = (byte)physicalObject.physicalSosigScript.GetIFF();
+                linkData = new float[physicalObject.physicalSosigScript.Links.Count][];
                 linkIntegrity = new float[linkData.Length];
-                for (int i = 0; i < physicalObject.physicalSosig.Links.Count; ++i)
+                for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
                 {
                     linkData[i] = new float[5];
-                    linkData[i][0] = physicalObject.physicalSosig.Links[i].StaggerMagnitude;
-                    linkData[i][1] = physicalObject.physicalSosig.Links[i].DamMult;
-                    linkData[i][2] = physicalObject.physicalSosig.Links[i].DamMultAVG;
-                    linkData[i][3] = physicalObject.physicalSosig.Links[i].CollisionBluntDamageMultiplier;
-                    if (physicalObject.physicalSosig.Links[i] == null)
+                    linkData[i][0] = physicalObject.physicalSosigScript.Links[i].StaggerMagnitude;
+                    linkData[i][1] = physicalObject.physicalSosigScript.Links[i].DamMult;
+                    linkData[i][2] = physicalObject.physicalSosigScript.Links[i].DamMultAVG;
+                    linkData[i][3] = physicalObject.physicalSosigScript.Links[i].CollisionBluntDamageMultiplier;
+                    if (physicalObject.physicalSosigScript.Links[i] == null)
                     {
                         linkData[i][4] = 0;
                     }
@@ -368,10 +368,10 @@ namespace H3MP
                 }
                 wearables = new List<List<string>>();
                 FieldInfo wearablesField = typeof(SosigLink).GetField("m_wearables", BindingFlags.NonPublic | BindingFlags.Instance);
-                for (int i = 0; i < physicalObject.physicalSosig.Links.Count; ++i)
+                for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
                 {
                     wearables.Add(new List<string>());
-                    List<SosigWearable> sosigWearables = (List<SosigWearable>)wearablesField.GetValue(physicalObject.physicalSosig.Links[i]);
+                    List<SosigWearable> sosigWearables = (List<SosigWearable>)wearablesField.GetValue(physicalObject.physicalSosigScript.Links[i]);
                     for (int j = 0; j < sosigWearables.Count; ++j)
                     {
                         wearables[i].Add(sosigWearables[j].name);

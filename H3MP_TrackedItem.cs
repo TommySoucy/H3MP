@@ -25,6 +25,7 @@ namespace H3MP
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
         public sbyte currentMountIndex = -1; // Used by attachment
         public FVRPhysicalObject dataObject;
+        public FVRPhysicalObject physicalObject;
 
         public bool sendDestroy = true; // To prevent feeback loops
         public static int skipDestroy;
@@ -920,12 +921,12 @@ namespace H3MP
                     parentTrackedItemData = H3MP_Client.items[data.parent];
                 }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalObject)
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalObject.dataObject.AttachmentMounts.Count > mountIndex)
+                    if (parentTrackedItemData.physicalItem.dataObject.AttachmentMounts.Count > mountIndex)
                     {
-                        mount = parentTrackedItemData.physicalObject.dataObject.AttachmentMounts[mountIndex];
+                        mount = parentTrackedItemData.physicalItem.dataObject.AttachmentMounts[mountIndex];
                     }
                 }
 
@@ -969,9 +970,9 @@ namespace H3MP
                         parentTrackedItemData = H3MP_Client.items[data.parent];
                     }
 
-                    if (parentTrackedItemData != null && parentTrackedItemData.physicalObject)
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
                     {
-                        mount = parentTrackedItemData.physicalObject.dataObject.AttachmentMounts[currentMountIndex];
+                        mount = parentTrackedItemData.physicalItem.dataObject.AttachmentMounts[currentMountIndex];
                     }
 
                     // If not yet physically mounted to anything, can right away mount to the proper mount
@@ -1089,23 +1090,23 @@ namespace H3MP
                         parentTrackedItemData = H3MP_Client.items[data.parent];
                     }
 
-                    if (parentTrackedItemData != null && parentTrackedItemData.physicalObject != null && parentTrackedItemData.physicalObject.dataObject is FVRFireArm)
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is FVRFireArm)
                     {
                         // We want to be loaded in a firearm, we have a parent, it is a firearm
                         if (asMag.FireArm != null)
                         {
-                            if (asMag.FireArm != parentTrackedItemData.physicalObject.dataObject)
+                            if (asMag.FireArm != parentTrackedItemData.physicalItem.dataObject)
                             {
                                 // Unload from current, load into new firearm
                                 asMag.FireArm.EjectMag();
-                                asMag.Load(parentTrackedItemData.physicalObject.dataObject as FVRFireArm);
+                                asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
                                 modified = true;
                             }
                         }
                         else
                         {
                             // Load into firearm
-                            asMag.Load(parentTrackedItemData.physicalObject.dataObject as FVRFireArm);
+                            asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
                             modified = true;
                         }
                     }
@@ -1213,23 +1214,23 @@ namespace H3MP
                         parentTrackedItemData = H3MP_Client.items[data.parent];
                     }
 
-                    if (parentTrackedItemData != null && parentTrackedItemData.physicalObject != null && parentTrackedItemData.physicalObject.dataObject is FVRFireArm)
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is FVRFireArm)
                     {
                         // We want to be loaded in a firearm, we have a parent, it is a firearm
                         if (asClip.FireArm != null)
                         {
-                            if (asClip.FireArm != parentTrackedItemData.physicalObject.dataObject)
+                            if (asClip.FireArm != parentTrackedItemData.physicalItem.dataObject)
                             {
                                 // Unload from current, load into new firearm
                                 asClip.FireArm.EjectClip();
-                                asClip.Load(parentTrackedItemData.physicalObject.dataObject as FVRFireArm);
+                                asClip.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
                                 modified = true;
                             }
                         }
                         else
                         {
                             // Load into firearm
-                            asClip.Load(parentTrackedItemData.physicalObject.dataObject as FVRFireArm);
+                            asClip.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
                             modified = true;
                         }
                     }
@@ -1348,15 +1349,20 @@ namespace H3MP
         {
             if (H3MP_ThreadManager.host)
             {
+                Debug.Log("Destroying host item: " + data.itemID);
                 if (H3MP_GameManager.giveControlOfDestroyed)
                 {
+                    Debug.Log("\tGive control is true, controller: "+data.controller);
                     // We just want to give control of our items to another client (usually because leaving scene with other clients left inside)
                     if (data.controller == 0)
                     {
+                        Debug.Log("\t\tWe have control");
                         int otherPlayer = GetNewObjectHost();
+                        Debug.Log("\t\tFirst other valid player in scene: "+otherPlayer);
 
                         if (otherPlayer != -1)
                         {
+                            Debug.Log("\t\t\tServersending control of item at "+data.trackedID);
                             H3MP_ServerSend.GiveControl(data.trackedID, otherPlayer);
 
                             // Also change controller locally
@@ -1380,6 +1386,7 @@ namespace H3MP
                 }
                 if(data.localTrackedID != -1)
                 {
+                    Debug.Log("Removing game manager item at : "+data.localTrackedID);
                     H3MP_GameManager.items[data.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                     H3MP_GameManager.items[data.localTrackedID].localTrackedID = data.localTrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);

@@ -146,7 +146,7 @@ namespace H3MP
             // Update locally
             if (trackedItem.controller == 0)
             {
-                FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
+                FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
                 physObj.StoreAndDestroyRigidbody();
                 H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                 H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
@@ -172,7 +172,7 @@ namespace H3MP
                 // Only want to active rigidbody if not parented to another tracked item
                 if (trackedItem.parent == -1)
                 {
-                    FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
+                    FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
                     physObj.RecoverRigidbody();
                 }
                 trackedItem.localTrackedID = H3MP_GameManager.items.Count;
@@ -180,7 +180,7 @@ namespace H3MP
             }
             else if(trackedItem.controller == 0 && newController != 0)
             {
-                FVRPhysicalObject physObj = trackedItem.physicalObject.GetComponent<FVRPhysicalObject>();
+                FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
                 physObj.StoreAndDestroyRigidbody();
                 H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                 H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
@@ -206,8 +206,8 @@ namespace H3MP
                 trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
                 if(trackedSosig.physicalObject != null)
                 {
-                    GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosig.E);
-                    trackedSosig.physicalObject.physicalSosig.CoreRB.isKinematic = false;
+                    GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
                 }
                 H3MP_GameManager.sosigs.Add(trackedSosig);
             }
@@ -219,8 +219,8 @@ namespace H3MP
                 trackedSosig.localTrackedID = -1;
                 if (trackedSosig.physicalObject != null)
                 {
-                    GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosig.E);
-                    trackedSosig.physicalObject.physicalSosig.CoreRB.isKinematic = true;
+                    GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
                 }
             }
             trackedSosig.controller = newController;
@@ -232,53 +232,59 @@ namespace H3MP
         public static void DestroySosig(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
+            bool removeFromList = packet.ReadBool();
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[trackedID];
 
-            if (trackedSosig.physicalObject == null)
+            if (trackedSosig.physicalObject != null)
             {
-                H3MP_Server.sosigs[trackedID] = null;
-                H3MP_Server.availableSosigIndices.Add(trackedID);
-                if (trackedSosig.localTrackedID != -1)
-                {
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                }
-            }
-            else
-            {
-                H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosig);
+                H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosigScript);
                 trackedSosig.physicalObject.sendDestroy = false;
                 GameObject.Destroy(trackedSosig.physicalObject.gameObject);
             }
 
-            H3MP_ServerSend.DestroySosig(trackedID, clientID);
+            if (trackedSosig.localTrackedID != -1)
+            {
+                H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
+                H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+            }
+
+            if (removeFromList)
+            {
+                H3MP_Server.sosigs[trackedID] = null;
+                H3MP_Server.availableSosigIndices.Add(trackedID);
+            }
+
+            H3MP_ServerSend.DestroySosig(trackedID, removeFromList, clientID);
         }
 
         public static void DestroyItem(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
+            bool removeFromList = packet.ReadBool();
             H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
             Debug.Log("Received destroy order for " + trackedItem.itemID);
 
-            if (trackedItem.physicalObject == null)
+            if (trackedItem.physicalItem != null)
+            {
+                trackedItem.physicalItem.sendDestroy = false;
+                GameObject.Destroy(trackedItem.physicalItem.gameObject);
+            }
+
+            if (trackedItem.localTrackedID != -1)
+            {
+                H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+            }
+
+            if (removeFromList)
             {
                 H3MP_Server.items[trackedID] = null;
                 H3MP_Server.availableItemIndices.Add(trackedID);
-                if (trackedItem.localTrackedID != -1)
-                {
-                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                }
-            }
-            else
-            {
-                trackedItem.physicalObject.sendDestroy = false;
-                GameObject.Destroy(trackedItem.physicalObject.gameObject);
             }
 
-            H3MP_ServerSend.DestroyItem(trackedID, clientID);
+            H3MP_ServerSend.DestroyItem(trackedID, removeFromList, clientID);
         }
 
         public static void TrackedItem(int clientID, H3MP_Packet packet)
@@ -307,11 +313,11 @@ namespace H3MP
             int trackedID = packet.ReadInt();
 
             // Update locally
-            if (H3MP_Server.items[trackedID].physicalObject != null)
+            if (H3MP_Server.items[trackedID].physicalItem != null)
             {
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                H3MP_Server.items[trackedID].physicalObject.fireFunc();
+                H3MP_Server.items[trackedID].physicalItem.fireFunc();
             }
 
             // Send to other clients
@@ -345,11 +351,11 @@ namespace H3MP
             {
                 if (primaryHand)
                 {
-                    trackedSosig.physicalObject.physicalSosig.Hand_Primary.PickUp(H3MP_Server.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+                    trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
                 }
                 else
                 {
-                    trackedSosig.physicalObject.physicalSosig.Hand_Secondary.PickUp(H3MP_Server.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+                    trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
                 }
             }
 
@@ -365,7 +371,7 @@ namespace H3MP
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
-                trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Server.items[itemTrackedID].physicalObject.GetComponent<SosigWeapon>());
+                trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
             }
 
             H3MP_ServerSend.SosigPlaceItemIn(sosigTrackedID, slotIndex, itemTrackedID, clientID);
@@ -379,7 +385,7 @@ namespace H3MP
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
-                trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].DetachHeldObject();
+                trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].DetachHeldObject();
             }
 
             H3MP_ServerSend.SosigDropSlot(sosigTrackedID, slotIndex, clientID);
@@ -395,11 +401,11 @@ namespace H3MP
             {
                 if (primaryHand)
                 {
-                    trackedSosig.physicalObject.physicalSosig.Hand_Primary.DropHeldObject();
+                    trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.DropHeldObject();
                 }
                 else
                 {
-                    trackedSosig.physicalObject.physicalSosig.Hand_Secondary.DropHeldObject();
+                    trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.DropHeldObject();
                 }
             }
 
@@ -418,7 +424,7 @@ namespace H3MP
                 Debug.Log("\tFound trackedSosig, and it has physical, configuring ");
                 trackedSosig.configTemplate = config;
                 SosigConfigurePatch.skipConfigure = true;
-                trackedSosig.physicalObject.physicalSosig.Configure(config);
+                trackedSosig.physicalObject.physicalSosigScript.Configure(config);
             }
 
             H3MP_ServerSend.SosigConfigure(sosigTrackedID, config, clientID);
@@ -438,7 +444,7 @@ namespace H3MP
                     trackedSosig.wearables = new List<List<string>>();
                     if (trackedSosig.physicalObject != null)
                     {
-                        foreach (SosigLink link in trackedSosig.physicalObject.physicalSosig.Links)
+                        foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
                         {
                             trackedSosig.wearables.Add(new List<string>());
                         }
@@ -508,7 +514,7 @@ namespace H3MP
                                 if (trackedSosig.physicalObject != null)
                                 {
                                     ++SosigLinkActionPatch.skipDeRegisterWearable;
-                                    trackedSosig.physicalObject.physicalSosig.Links[linkIndex].DeRegisterWearable((wearablesField.GetValue(trackedSosig.physicalObject.physicalSosig.Links[linkIndex]) as List<SosigWearable>)[i]);
+                                    trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].DeRegisterWearable((wearablesField.GetValue(trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex]) as List<SosigWearable>)[i]);
                                     --SosigLinkActionPatch.skipDeRegisterWearable;
                                 }
                                 break;                           
@@ -542,7 +548,7 @@ namespace H3MP
                 if (trackedSosig.physicalObject != null)
                 {
                     ++SosigIFFPatch.skip;
-                    trackedSosig.physicalObject.physicalSosig.SetIFF(IFF);
+                    trackedSosig.physicalObject.physicalSosigScript.SetIFF(IFF);
                     --SosigIFFPatch.skip;
                 }
             }
@@ -562,7 +568,7 @@ namespace H3MP
                 if (trackedSosig.physicalObject != null)
                 {
                     ++SosigIFFPatch.skip;
-                    trackedSosig.physicalObject.physicalSosig.SetOriginalIFFTeam(IFF);
+                    trackedSosig.physicalObject.physicalSosigScript.SetOriginalIFFTeam(IFF);
                     --SosigIFFPatch.skip;
                 }
             }
@@ -584,7 +590,7 @@ namespace H3MP
                     if (trackedSosig.physicalObject != null)
                     {
                         ++SosigLinkDamagePatch.skip;
-                        trackedSosig.physicalObject.physicalSosig.Links[linkIndex].Damage(damage);
+                        trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].Damage(damage);
                         --SosigLinkDamagePatch.skip;
                     }
                 }
@@ -610,7 +616,7 @@ namespace H3MP
                     if (trackedSosig.physicalObject != null)
                     {
                         ++SosigWearableDamagePatch.skip;
-                        (Mod.SosigLink_m_wearables.GetValue(trackedSosig.physicalObject.physicalSosig.Links[linkIndex]) as List<SosigWearable>)[wearableIndex].Damage(damage);
+                        (Mod.SosigLink_m_wearables.GetValue(trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex]) as List<SosigWearable>)[wearableIndex].Damage(damage);
                         --SosigWearableDamagePatch.skip;
                     }
                 }
@@ -630,7 +636,7 @@ namespace H3MP
             {
                 if(trackedSosig.controller != 0 && trackedSosig.physicalObject != null)
                 {
-                    Sosig physicalSosig = trackedSosig.physicalObject.physicalSosig;
+                    Sosig physicalSosig = trackedSosig.physicalObject.physicalSosigScript;
                     Mod.Sosig_m_isStunned.SetValue(physicalSosig, packet.ReadBool());
                     physicalSosig.m_stunTimeLeft = packet.ReadFloat();
                     physicalSosig.BodyState = (Sosig.SosigBodyState)packet.ReadByte();
@@ -692,7 +698,7 @@ namespace H3MP
                 {
                     byte linkIndex = packet.ReadByte();
                     ++SosigLinkActionPatch.skipLinkExplodes;
-                    trackedSosig.physicalObject.physicalSosig.Links[linkIndex].LinkExplodes((Damage.DamageClass)packet.ReadByte());
+                    trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].LinkExplodes((Damage.DamageClass)packet.ReadByte());
                     --SosigLinkActionPatch.skipLinkExplodes;
                 }
             }
@@ -712,7 +718,7 @@ namespace H3MP
                     byte damClass = packet.ReadByte();
                     byte deathType = packet.ReadByte();
                     ++SosigActionPatch.sosigDiesSkip;
-                    trackedSosig.physicalObject.physicalSosig.SosigDies((Damage.DamageClass)damClass, (Sosig.SosigDeathType)deathType);
+                    trackedSosig.physicalObject.physicalSosigScript.SosigDies((Damage.DamageClass)damClass, (Sosig.SosigDeathType)deathType);
                     --SosigActionPatch.sosigDiesSkip;
                 }
             }
@@ -730,7 +736,7 @@ namespace H3MP
                 if(trackedSosig.physicalObject != null)
                 {
                     ++SosigActionPatch.sosigClearSkip;
-                    trackedSosig.physicalObject.physicalSosig.ClearSosig();
+                    trackedSosig.physicalObject.physicalSosigScript.ClearSosig();
                     --SosigActionPatch.sosigClearSkip;
                 }
             }
@@ -749,7 +755,7 @@ namespace H3MP
                 if(trackedSosig.physicalObject != null)
                 {
                     ++SosigActionPatch.sosigSetBodyStateSkip;
-                    Mod.Sosig_SetBodyState.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { bodyState });
+                    Mod.Sosig_SetBodyState.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { bodyState });
                     --SosigActionPatch.sosigSetBodyStateSkip;
                 }
             }
@@ -771,7 +777,7 @@ namespace H3MP
                 // Ensure we have reference to sosig footsteps audio event
                 if (Mod.sosigFootstepAudioEvent == null)
                 {
-                    Mod.sosigFootstepAudioEvent = H3MP_Server.sosigs[sosigTrackedID].physicalObject.physicalSosig.AudEvent_FootSteps;
+                    Mod.sosigFootstepAudioEvent = H3MP_Server.sosigs[sosigTrackedID].physicalObject.physicalSosigScript.AudEvent_FootSteps;
                 }
 
                 // Play sound
@@ -792,22 +798,22 @@ namespace H3MP
                 switch (currentOrder)
                 {
                     case Sosig.SosigOrder.GuardPoint:
-                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnWander });
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.physicalObject.physicalSosigScript.Speech.OnWander });
                         break;
                     case Sosig.SosigOrder.Investigate:
-                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnInvestigate });
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.physicalObject.physicalSosigScript.Speech.OnInvestigate });
                         break;
                     case Sosig.SosigOrder.SearchForEquipment:
-                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnSearchingForGuns });
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.physicalObject.physicalSosigScript.Speech.OnSearchingForGuns });
                         break;
                     case Sosig.SosigOrder.TakeCover:
-                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnTakingCover });
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.physicalObject.physicalSosigScript.Speech.OnTakingCover });
                         break;
                     case Sosig.SosigOrder.Wander:
-                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnWander });
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.physicalObject.physicalSosigScript.Speech.OnWander });
                         break;
                     case Sosig.SosigOrder.Assault:
-                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosig, new object[] { trackedSosig.physicalObject.physicalSosig.Speech.OnAssault });
+                        Mod.Sosig_Speak_State.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.physicalObject.physicalSosigScript.Speech.OnAssault });
                         break;
                 }
             }
@@ -824,7 +830,7 @@ namespace H3MP
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                trackedSosig.physicalObject.physicalSosig.SetCurrentOrder(currentOrder);
+                trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
                 --SosigActionPatch.sosigSetCurrentOrderSkip;
             }
 
@@ -840,7 +846,7 @@ namespace H3MP
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 ++SosigActionPatch.sosigVaporizeSkip;
-                trackedSosig.physicalObject.physicalSosig.Vaporize(trackedSosig.physicalObject.physicalSosig.DamageFX_Vaporize, iff);
+                trackedSosig.physicalObject.physicalSosigScript.Vaporize(trackedSosig.physicalObject.physicalSosigScript.DamageFX_Vaporize, iff);
                 --SosigActionPatch.sosigVaporizeSkip;
             }
 
@@ -860,7 +866,7 @@ namespace H3MP
                 float scale = packet.ReadFloat();
                 byte linkIndex = packet.ReadByte();
                 ++SosigActionPatch.sosigRequestHitDecalSkip;
-                trackedSosig.physicalObject.physicalSosig.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalObject.physicalSosig.Links[linkIndex]);
+                trackedSosig.physicalObject.physicalSosigScript.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex]);
                 --SosigActionPatch.sosigRequestHitDecalSkip;
             }
 
@@ -878,7 +884,7 @@ namespace H3MP
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 ++SosigLinkActionPatch.sosigLinkBreakSkip;
-                trackedSosig.physicalObject.physicalSosig.Links[linkIndex].BreakJoint(isStart, (Damage.DamageClass)damClass);
+                trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].BreakJoint(isStart, (Damage.DamageClass)damClass);
                 --SosigLinkActionPatch.sosigLinkBreakSkip;
             }
 
@@ -896,7 +902,7 @@ namespace H3MP
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 ++SosigLinkActionPatch.sosigLinkSeverSkip;
-                Mod.Sosig_SeverJoint.Invoke(trackedSosig.physicalObject.physicalSosig.Links[linkIndex], new object[] { damClass, isPullApart });
+                Mod.Sosig_SeverJoint.Invoke(trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex], new object[] { damClass, isPullApart });
                 --SosigLinkActionPatch.sosigLinkSeverSkip;
             }
 
