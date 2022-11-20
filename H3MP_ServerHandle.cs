@@ -102,9 +102,10 @@ namespace H3MP
         public static void AddTNHInstance(int clientID, H3MP_Packet packet)
         {
             int hostID = packet.ReadInt();
+            bool letPeopleJoin = packet.ReadBool();
 
             // Send to all clients
-            H3MP_ServerSend.AddTNHInstance(H3MP_GameManager.AddNewTNHInstance(hostID));
+            H3MP_ServerSend.AddTNHInstance(H3MP_GameManager.AddNewTNHInstance(hostID, letPeopleJoin));
         }
 
         public static void AddSyncScene(int clientID, H3MP_Packet packet)

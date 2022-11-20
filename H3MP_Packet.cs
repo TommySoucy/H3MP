@@ -525,6 +525,7 @@ namespace H3MP
         public void Write(H3MP_TNHInstance instance)
         {
             Write(instance.instance);
+            Write(instance.letPeopleJoin);
             Write(instance.playerIDs.Count);
             for(int i=0; i < instance.playerIDs.Count; ++i)
             {
@@ -977,10 +978,11 @@ namespace H3MP
         public H3MP_TNHInstance ReadTNHInstance(bool _moveReadPos = true)
         {
             int instanceID = ReadInt();
+            bool letPeopleJoin = ReadBool();
             int playerCount = ReadInt();
             int hostID = ReadInt();
-            H3MP_TNHInstance instance = new H3MP_TNHInstance(instanceID, hostID);
-            for(int i=1; i < playerCount; ++i)
+            H3MP_TNHInstance instance = new H3MP_TNHInstance(instanceID, hostID, letPeopleJoin);
+            for (int i=1; i < playerCount; ++i)
             {
                 instance.playerIDs.Add(ReadInt());
             }

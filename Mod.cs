@@ -85,9 +85,9 @@ namespace H3MP
         public static int skipNextFires = 0;
         public static int skipAllInstantiates = 0;
         public static AudioEvent sosigFootstepAudioEvent;
-        public static bool TNHMenuLPJ;
-        public static bool TNHMenuHostOnDeathSpectate; // If false, leave
-        public static bool TNHMenuJoinOnDeathSpectate; // If false, leave
+        public static bool TNHMenuLPJ = true;
+        public static bool TNHMenuHostOnDeathSpectate = true; // If false, leave
+        public static bool TNHMenuJoinOnDeathSpectate = true; // If false, leave
         public static bool setLatestInstance; // Whether to set instance screen according to new instance index when we receive server response
         public static H3MP_TNHInstance currentTNHInstance;
 
@@ -940,20 +940,6 @@ namespace H3MP
         {
             TNHMenuPages[0].SetActive(false);
             TNHMenuPages[2].SetActive(true);
-
-            // Populate instance list
-            foreach(KeyValuePair<int, H3MP_TNHInstance> THNInstance in H3MP_GameManager.TNHInstances)
-            {
-                GameObject newInstance = Instantiate<GameObject>(TNHInstancePrefab, TNHInstanceList.transform);
-                newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance "+ THNInstance.Key;
-                newInstance.SetActive(true);
-
-                int instanceID = THNInstance.Key;
-                FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
-                instanceButton.SetButton();
-                instanceButton.MaxPointingRange = 5;
-                instanceButton.Button.onClick.AddListener(()=> { OnTNHInstanceClicked(instanceID); });
-            }
         }
 
         private void OnTNHLPJCheckClicked()
@@ -985,7 +971,7 @@ namespace H3MP
             TNHMenuPages[4].SetActive(true);
 
             setLatestInstance = true;
-            H3MP_GameManager.AddNewTNHInstance(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+            H3MP_GameManager.AddNewTNHInstance(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID, TNHMenuLPJ);
         }
 
         private void OnTNHHostCancelClicked()
@@ -1021,6 +1007,20 @@ namespace H3MP
         {
             TNHMenuPages[2].SetActive(false);
             TNHMenuPages[3].SetActive(true);
+
+            // Populate instance list
+            foreach (KeyValuePair<int, H3MP_TNHInstance> THNInstance in H3MP_GameManager.TNHInstances)
+            {
+                GameObject newInstance = Instantiate<GameObject>(TNHInstancePrefab, TNHInstanceList.transform);
+                newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + THNInstance.Key;
+                newInstance.SetActive(true);
+
+                int instanceID = THNInstance.Key;
+                FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
+                instanceButton.SetButton();
+                instanceButton.MaxPointingRange = 5;
+                instanceButton.Button.onClick.AddListener(() => { OnTNHInstanceClicked(instanceID); });
+            }
         }
 
         private void OnTNHInstanceClicked(int instance)

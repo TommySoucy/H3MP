@@ -10,11 +10,16 @@ namespace H3MP
         public int instance = -1;
         public List<int> playerIDs;
 
-        public H3MP_TNHInstance(int instance, int hostID)
+        // Settings
+        public bool letPeopleJoin;
+
+        public H3MP_TNHInstance(int instance, int hostID, bool letPeopleJoin)
         {
             this.instance = instance;
             playerIDs = new List<int>();
             playerIDs.Add(hostID);
+
+            this.letPeopleJoin = letPeopleJoin;
         }
     }
 }

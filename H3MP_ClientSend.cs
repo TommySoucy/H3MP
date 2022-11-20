@@ -95,11 +95,12 @@ namespace H3MP
             }
         }
 
-        public static void AddTNHInstance(int hostID)
+        public static void AddTNHInstance(int hostID, bool letPeopleJoin)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.addTNHInstance))
             {
                 packet.Write(hostID);
+                packet.Write(letPeopleJoin);
 
                 SendTCPData(packet);
             }

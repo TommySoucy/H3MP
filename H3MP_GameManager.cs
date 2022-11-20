@@ -647,7 +647,7 @@ namespace H3MP
             return trackedSosig;
         }
 
-        public static H3MP_TNHInstance AddNewTNHInstance(int hostID)
+        public static H3MP_TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin)
         {
             if (H3MP_ThreadManager.host)
             {
@@ -656,7 +656,7 @@ namespace H3MP
                 {
                     ++freeInstance;
                 }
-                H3MP_TNHInstance newInstance = new H3MP_TNHInstance(freeInstance, hostID);
+                H3MP_TNHInstance newInstance = new H3MP_TNHInstance(freeInstance, hostID, letPeopleJoin);
                 TNHInstances.Add(freeInstance, newInstance);
                 activeInstances.Add(freeInstance, 1);
 
@@ -668,7 +668,7 @@ namespace H3MP
             }
             else
             {
-                H3MP_ClientSend.AddTNHInstance(hostID);
+                H3MP_ClientSend.AddTNHInstance(hostID, letPeopleJoin);
 
                 return null;
             }
