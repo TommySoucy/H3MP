@@ -763,7 +763,7 @@ namespace H3MP
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
                 ++SosigLinkActionPatch.sosigLinkSeverSkip;
-                Mod.Sosig_SeverJoint.Invoke(trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex], new object[] { damClass, isPullApart });
+                Mod.SosigLink_SeverJoint.Invoke(trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex], new object[] { damClass, isPullApart });
                 --SosigLinkActionPatch.sosigLinkSeverSkip;
             }
         }

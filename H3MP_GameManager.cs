@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using static H3MP.H3MP_PlayerHitbox;
@@ -206,10 +207,27 @@ namespace H3MP
 
             if (TNHInstances.ContainsKey(player.instance))
             {
-                TNHInstances[player.instance].playerIDs.Remove(player.instance);
+                int preHost = TNHInstances[player.instance].playerIDs[0];
+                TNHInstances[player.instance].playerIDs.Remove(playerID);
                 if (TNHInstances[player.instance].playerIDs.Count == 0)
                 {
                     TNHInstances.Remove(player.instance);
+                }
+                else
+                {
+                    // Remove player from active TNH player list
+                    if (Mod.TNHMenu != null && Mod.TNHPlayerList != null && Mod.TNHPlayerPrefab != null &&
+                        Mod.currentTNHInstancePlayers != null && Mod.currentTNHInstancePlayers.ContainsKey(playerID))
+                    {
+                        Destroy(Mod.currentTNHInstancePlayers[playerID]);
+                        Mod.currentTNHInstancePlayers.Remove(playerID);
+
+                        // Switch host if necessary
+                        if (preHost != TNHInstances[player.instance].playerIDs[0])
+                        {
+                            Mod.currentTNHInstancePlayers[TNHInstances[player.instance].playerIDs[0]].transform.GetChild(0).GetComponent<Text>().text += " (Host)";
+                        }
+                    }
                 }
             }
 
@@ -253,6 +271,17 @@ namespace H3MP
             if (TNHInstances.ContainsKey(instance))
             {
                 TNHInstances[instance].playerIDs.Add(playerID);
+
+                // Add player to active TNH player list
+                if (Mod.TNHMenu != null && Mod.TNHPlayerList != null && Mod.TNHPlayerPrefab != null &&
+                    Mod.currentTNHInstancePlayers != null && !Mod.currentTNHInstancePlayers.ContainsKey(playerID))
+                {
+                    GameObject newPlayerElement = Instantiate<GameObject>(Mod.TNHPlayerPrefab, Mod.TNHPlayerList.transform);
+                    newPlayerElement.transform.GetChild(0).GetComponent<Text>().text = Mod.config["Username"].ToString();
+                    newPlayerElement.SetActive(true);
+
+                    Mod.currentTNHInstancePlayers.Add(playerID, newPlayerElement);
+                }
             }
         }
 

@@ -36,7 +36,7 @@ namespace H3MP
         public GameObject TNHMenuPrefab;
         public GameObject playerPrefab;
         public GameObject H3MPMenu;
-        public GameObject TNHMenu;
+        public static GameObject TNHMenu;
         public static Dictionary<string, string> sosigWearableMap;
 
         // Menu refs
@@ -85,11 +85,13 @@ namespace H3MP
         public static int skipNextFires = 0;
         public static int skipAllInstantiates = 0;
         public static AudioEvent sosigFootstepAudioEvent;
-        public static bool TNHMenuLPJ = true;
-        public static bool TNHMenuHostOnDeathSpectate = true; // If false, leave
-        public static bool TNHMenuJoinOnDeathSpectate = true; // If false, leave
+        public static bool TNHMenuLPJ;
+        public static bool TNHMenuHostOnDeathSpectate; // If false, leave
+        public static bool TNHMenuJoinOnDeathSpectate; // If false, leave
         public static bool setLatestInstance; // Whether to set instance screen according to new instance index when we receive server response
         public static H3MP_TNHInstance currentTNHInstance;
+        public static Dictionary<int, GameObject> joinTNHInstances;
+        public static Dictionary<int, GameObject> currentTNHInstancePlayers;
 
         // Reused private FieldInfos
         public static readonly FieldInfo Sosig_m_isOnOffMeshLinkField = typeof(Sosig).GetField("m_isOnOffMeshLink", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -120,7 +122,7 @@ namespace H3MP
         public static readonly MethodInfo Sosig_SetBodyPose = typeof(Sosig).GetMethod("SetBodyPose", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Sosig_SetBodyState = typeof(Sosig).GetMethod("SetBodyState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Sosig_VaporizeUpdate = typeof(Sosig).GetMethod("VaporizeUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        public static readonly MethodInfo Sosig_SeverJoint = typeof(SosigLink).GetMethod("SeverJoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo SosigLink_SeverJoint = typeof(SosigLink).GetMethod("SeverJoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -861,6 +863,12 @@ namespace H3MP
             MethodInfo sosigWearableDamagePatchPostfix = typeof(SosigWearableDamagePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(sosigWearableDamagePatchOriginal, new HarmonyMethod(sosigWearableDamagePatchPrefix), new HarmonyMethod(sosigWearableDamagePatchPostfix));
+
+            // SetTNHManagerPatch
+            MethodInfo setTNHManagerPatchOriginal = typeof(GM).GetMethod("set_TNH_Manager", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo setTNHManagerPatchPostfix = typeof(SetTNHManagerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(setTNHManagerPatchOriginal, null, new HarmonyMethod(setTNHManagerPatchPostfix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1008,18 +1016,26 @@ namespace H3MP
             TNHMenuPages[2].SetActive(false);
             TNHMenuPages[3].SetActive(true);
 
+            if (joinTNHInstances == null)
+            {
+                joinTNHInstances = new Dictionary<int, GameObject>();
+            }
+            joinTNHInstances.Clear();
+
             // Populate instance list
-            foreach (KeyValuePair<int, H3MP_TNHInstance> THNInstance in H3MP_GameManager.TNHInstances)
+            foreach (KeyValuePair<int, H3MP_TNHInstance> TNHInstance in H3MP_GameManager.TNHInstances)
             {
                 GameObject newInstance = Instantiate<GameObject>(TNHInstancePrefab, TNHInstanceList.transform);
-                newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + THNInstance.Key;
+                newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + TNHInstance.Key;
                 newInstance.SetActive(true);
 
-                int instanceID = THNInstance.Key;
+                int instanceID = TNHInstance.Key;
                 FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
                 instanceButton.SetButton();
                 instanceButton.MaxPointingRange = 5;
                 instanceButton.Button.onClick.AddListener(() => { OnTNHInstanceClicked(instanceID); });
+
+                joinTNHInstances.Add(TNHInstance.Key, newInstance);
             }
         }
 
@@ -1056,23 +1072,34 @@ namespace H3MP
 
             TNHInstanceTitle.text = "Instance " + instance.instance;
 
+            if (currentTNHInstancePlayers == null)
+            {
+                currentTNHInstancePlayers = new Dictionary<int, GameObject>();
+            }
+            currentTNHInstancePlayers.Clear();
+
+            // Populate player list
             bool foundOurselves = false;
             for(int i=0; i < instance.playerIDs.Count; ++i)
             {
                 GameObject newPlayer = Instantiate<GameObject>(TNHPlayerPrefab, TNHPlayerList.transform);
-                newPlayer.transform.GetChild(0).GetComponent<Text>().text = H3MP_GameManager.players[instance.playerIDs[i]].username;
+                newPlayer.transform.GetChild(0).GetComponent<Text>().text = H3MP_GameManager.players[instance.playerIDs[i]].username + (i == 0 ? " (Host)":"");
                 newPlayer.SetActive(true);
                     
                 if(instance.playerIDs[i] == (H3MP_ThreadManager.host? 0 : H3MP_Client.singleton.ID))
                 {
                     foundOurselves = true;
                 }
+
+                currentTNHInstancePlayers.Add(instance.playerIDs[i], newPlayer);
             }
             if (!foundOurselves)
             {
                 GameObject newPlayer = Instantiate<GameObject>(TNHPlayerPrefab, TNHPlayerList.transform);
                 newPlayer.transform.GetChild(0).GetComponent<Text>().text = config["Username"].ToString();
                 newPlayer.SetActive(true);
+
+                currentTNHInstancePlayers.Add((H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID), newPlayer);
             }
 
             currentTNHInstance = instance;
@@ -4509,6 +4536,35 @@ namespace H3MP
                 else if (trackedSosig.data.controller == H3MP_Client.singleton.ID)
                 {
                     H3MP_ClientSend.SosigDamageData(trackedSosig);
+                }
+            }
+        }
+    }
+    #endregion
+
+    #region TNH Patches
+    // Patches GM.set_TNH_Manager() to keep track of TNH Manager instances
+    class SetTNHManagerPatch
+    {
+        public static int skip;
+
+        static void Postfix()
+        {
+            if(skip > 0)
+            {
+                return;
+            }
+
+            // Disable the TNH_Manager if we are not the host
+            if (Mod.managerObject != null && GM.TNH_Manager != null && H3MP_GameManager.TNHInstances != null &&
+                H3MP_GameManager.TNHInstances.ContainsKey(H3MP_GameManager.instance))
+            {
+                H3MP_TNHInstance instance = H3MP_GameManager.TNHInstances[H3MP_GameManager.instance];
+                if(instance.playerIDs.Count > 0 && instance.playerIDs[0] != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                {
+                    ++skip;
+                    GM.TNH_Manager.enabled = false;
+                    --skip;
                 }
             }
         }
