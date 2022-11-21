@@ -265,7 +265,7 @@ namespace H3MP
 
         private void InitTNHMenu()
         {
-            TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.3109f, 1.04f, 6.2977f), Quaternion.Euler(0,270,0));
+            TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.4418f, 1.04f, 6.2977f), Quaternion.Euler(0,270,0));
 
             // Add background pointable
             FVRPointable backgroundPointable = TNHMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
