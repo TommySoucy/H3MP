@@ -680,8 +680,8 @@ namespace H3MP
         {
             if (H3MP_ThreadManager.host)
             {
-                int freeInstance = 0;
-                while (TNHInstances.ContainsKey(freeInstance))
+                int freeInstance = 1; // Start at 1 because 0 is the default instance
+                while (activeInstances.ContainsKey(freeInstance))
                 {
                     ++freeInstance;
                 }

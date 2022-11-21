@@ -2578,7 +2578,7 @@ namespace H3MP
                 // Check if has tracked parent
                 Transform currentParent = parent;
                 parentData = null;
-                while (parent != null)
+                while (currentParent != null)
                 {
                     H3MP_TrackedItem trackedItem = parent.GetComponent<H3MP_TrackedItem>();
                     if (trackedItem != null)
@@ -2688,7 +2688,7 @@ namespace H3MP
                 // Check if has tracked parent
                 Transform currentParent = parent;
                 parentData = null;
-                while (parent != null)
+                while (currentParent != null)
                 {
                     H3MP_TrackedItem trackedItem = parent.GetComponent<H3MP_TrackedItem>();
                     if (trackedItem != null)
