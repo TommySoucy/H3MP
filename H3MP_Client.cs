@@ -344,6 +344,8 @@ namespace H3MP
                 { (int)ServerPackets.updateRequest, H3MP_ClientHandle.RequestUpToDateObjects },
                 { (int)ServerPackets.playerInstance, H3MP_ClientHandle.PlayerInstance },
                 { (int)ServerPackets.addTNHInstance, H3MP_ClientHandle.AddTNHInstance },
+                { (int)ServerPackets.addTNHCurrentlyPlaying, H3MP_ClientHandle.AddTNHCurrentlyPlaying },
+                { (int)ServerPackets.removeTNHCurrentlyPlaying, H3MP_ClientHandle.RemoveTNHCurrentlyPlaying },
             };
 
             // All vanilla scenes can be synced by default

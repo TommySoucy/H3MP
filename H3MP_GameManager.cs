@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Internal.VR;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.VR;
@@ -983,6 +984,11 @@ namespace H3MP
                     // The destruction of items as we leave the level with giveControlOfDestroyed to true will handle to handover of 
                     // item and sosig control. SetInstance will handle the update of activeInstances and TNHInstances
                     SetInstance(0);
+                    if (Mod.currentlyPlayingTNH)
+                    {
+                        Mod.currentTNHInstance.RemoveCurrentlyPlaying();
+                        Mod.currentlyPlayingTNH = false;
+                    }
                     Mod.currentTNHInstance = null;
                 }
             }

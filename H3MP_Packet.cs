@@ -58,7 +58,9 @@ namespace H3MP
         sosigLinkSever = 41,
         updateRequest = 42,
         playerInstance = 43,
-        addTNHInstance = 44
+        addTNHInstance = 44,
+        addTNHCurrentlyPlaying = 45,
+        removeTNHCurrentlyPlaying = 46
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -106,7 +108,9 @@ namespace H3MP
         updateItemRequest = 40,
         updateSosigRequest = 41,
         playerInstance = 42,
-        addTNHInstance = 43
+        addTNHInstance = 43,
+        addTNHCurrentlyPlaying = 44,
+        removeTNHCurrentlyPlaying = 45
     }
 
     public class H3MP_Packet : IDisposable

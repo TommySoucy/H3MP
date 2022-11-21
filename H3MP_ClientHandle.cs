@@ -795,5 +795,33 @@ namespace H3MP
         {
             H3MP_GameManager.AddTNHInstance(packet.ReadTNHInstance());
         }
+
+        public static void AddTNHCurrentlyPlaying(H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if (H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
+            {
+                Debug.LogError("H3MP_ClientHandle: Received AddTNHCurrentlyPlaying packet with missing instance");
+            }
+            else
+            {
+                ++H3MP_GameManager.TNHInstances[instance].currentlyPlaying;
+            }
+        }
+
+        public static void RemoveTNHCurrentlyPlaying(H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if (H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
+            {
+                Debug.LogError("H3MP_ClientHandle: Received RemoveTNHCurrentlyPlaying packet with missing instance");
+            }
+            else
+            {
+                --H3MP_GameManager.TNHInstances[instance].currentlyPlaying;
+            }
+        }
     }
 }

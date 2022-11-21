@@ -729,5 +729,25 @@ namespace H3MP
                 }
             }
         }
+
+        public static void AddTNHCurrentlyPlaying(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.addTNHCurrentlyPlaying))
+            {
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void RemoveTNHCurrentlyPlaying(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.removeTNHCurrentlyPlaying))
+            {
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

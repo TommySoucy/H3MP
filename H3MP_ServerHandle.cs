@@ -939,5 +939,37 @@ namespace H3MP
                 AnvilManager.Run(H3MP_Server.sosigs[trackedSosig.trackedID].Instantiate());
             }
         }
+
+        public static void AddTNHCurrentlyPlaying(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if(H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
+            {
+                Debug.LogError("H3MP_ServerHandle: Received AddTNHCurrentlyPlaying packet with missing instance");
+            }
+            else
+            {
+                ++H3MP_GameManager.TNHInstances[instance].currentlyPlaying;
+
+                H3MP_ServerSend.AddTNHCurrentlyPlaying(instance, clientID);
+            }
+        }
+
+        public static void RemoveTNHCurrentlyPlaying(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if(H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
+            {
+                Debug.LogError("H3MP_ServerHandle: Received RemoveTNHCurrentlyPlaying packet with missing instance");
+            }
+            else
+            {
+                --H3MP_GameManager.TNHInstances[instance].currentlyPlaying;
+
+                H3MP_ServerSend.RemoveTNHCurrentlyPlaying(instance, clientID);
+            }
+        }
     }
 }

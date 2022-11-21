@@ -269,6 +269,7 @@ namespace H3MP
                 { (int)ClientPackets.updateSosigRequest, H3MP_ServerHandle.UpToDateSosigs },
                 { (int)ClientPackets.playerInstance, H3MP_ServerHandle.PlayerInstance },
                 { (int)ClientPackets.addTNHInstance, H3MP_ServerHandle.AddTNHInstance },
+                { (int)ClientPackets.addTNHCurrentlyPlaying, H3MP_ServerHandle.AddTNHCurrentlyPlaying },
             };
 
             items = new H3MP_TrackedItemData[100];

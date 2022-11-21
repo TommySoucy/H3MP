@@ -90,6 +90,7 @@ namespace H3MP
         public static bool TNHMenuJoinOnDeathSpectate; // If false, leave
         public static bool setLatestInstance; // Whether to set instance screen according to new instance index when we receive server response
         public static H3MP_TNHInstance currentTNHInstance;
+        public static bool currentlyPlayingTNH;
         public static Dictionary<int, GameObject> joinTNHInstances;
         public static Dictionary<int, GameObject> currentTNHInstancePlayers;
 
@@ -233,8 +234,10 @@ namespace H3MP
             H3MPMenu = Instantiate(H3MPMenuPrefab, new Vector3(-1.1418f, 1.3855f, -3.64f), Quaternion.Euler(0, 196.6488f, 0));
 
             // Add background pointables
-            H3MPMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
-            H3MPMenu.transform.GetChild(1).gameObject.AddComponent<FVRPointable>();
+            FVRPointable backgroundPointable = H3MPMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
+            backgroundPointable.MaxPointingRange = 5;
+            backgroundPointable = H3MPMenu.transform.GetChild(1).gameObject.AddComponent<FVRPointable>();
+            backgroundPointable.MaxPointingRange = 5;
 
             // Init refs
             mainStatusText = H3MPMenu.transform.GetChild(0).GetChild(3).GetChild(0).GetComponent<Text>();
@@ -265,7 +268,8 @@ namespace H3MP
             TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.3109f, 1.04f, 6.2977f), Quaternion.Euler(0,270,0));
 
             // Add background pointable
-            TNHMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
+            FVRPointable backgroundPointable = TNHMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
+            backgroundPointable.MaxPointingRange = 5;
 
             // Init refs
             TNHMenuPages = new GameObject[5];
@@ -1025,21 +1029,24 @@ namespace H3MP
             // Populate instance list
             foreach (KeyValuePair<int, H3MP_TNHInstance> TNHInstance in H3MP_GameManager.TNHInstances)
             {
-                GameObject newInstance = Instantiate<GameObject>(TNHInstancePrefab, TNHInstanceList.transform);
-                newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + TNHInstance.Key;
-                newInstance.SetActive(true);
+                if (TNHInstance.Value.currentlyPlaying == 0)
+                {
+                    GameObject newInstance = Instantiate<GameObject>(TNHInstancePrefab, TNHInstanceList.transform);
+                    newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + TNHInstance.Key;
+                    newInstance.SetActive(true);
 
-                int instanceID = TNHInstance.Key;
-                FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
-                instanceButton.SetButton();
-                instanceButton.MaxPointingRange = 5;
-                instanceButton.Button.onClick.AddListener(() => { OnTNHInstanceClicked(instanceID); });
+                    int instanceID = TNHInstance.Key;
+                    FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
+                    instanceButton.SetButton();
+                    instanceButton.MaxPointingRange = 5;
+                    instanceButton.Button.onClick.AddListener(() => { OnTNHInstanceClicked(instanceID); });
 
-                joinTNHInstances.Add(TNHInstance.Key, newInstance);
+                    joinTNHInstances.Add(TNHInstance.Key, newInstance);
+                }
             }
         }
 
-        private void OnTNHInstanceClicked(int instance)
+        public void OnTNHInstanceClicked(int instance)
         {
             TNHMenuPages[3].SetActive(false);
             TNHMenuPages[4].SetActive(true);
@@ -1053,6 +1060,11 @@ namespace H3MP
             TNHMenuPages[0].SetActive(true);
 
             H3MP_GameManager.SetInstance(0);
+            if (Mod.currentlyPlayingTNH)
+            {
+                Mod.currentTNHInstance.RemoveCurrentlyPlaying();
+                Mod.currentlyPlayingTNH = false;
+            }
             Mod.currentTNHInstance = null;
         }
 
@@ -1079,30 +1091,25 @@ namespace H3MP
             currentTNHInstancePlayers.Clear();
 
             // Populate player list
-            bool foundOurselves = false;
             for(int i=0; i < instance.playerIDs.Count; ++i)
             {
                 GameObject newPlayer = Instantiate<GameObject>(TNHPlayerPrefab, TNHPlayerList.transform);
-                newPlayer.transform.GetChild(0).GetComponent<Text>().text = H3MP_GameManager.players[instance.playerIDs[i]].username + (i == 0 ? " (Host)":"");
-                newPlayer.SetActive(true);
-                    
-                if(instance.playerIDs[i] == (H3MP_ThreadManager.host? 0 : H3MP_Client.singleton.ID))
+                if (H3MP_GameManager.players.ContainsKey(instance.playerIDs[i]))
                 {
-                    foundOurselves = true;
+                    newPlayer.transform.GetChild(0).GetComponent<Text>().text = H3MP_GameManager.players[instance.playerIDs[i]].username + (i == 0 ? " (Host)" : "");
                 }
+                else
+                {
+                    newPlayer.transform.GetChild(0).GetComponent<Text>().text = config["Username"].ToString() + (i == 0 ? " (Host)" : "");
+                }
+                newPlayer.SetActive(true);
 
                 currentTNHInstancePlayers.Add(instance.playerIDs[i], newPlayer);
             }
-            if (!foundOurselves)
-            {
-                GameObject newPlayer = Instantiate<GameObject>(TNHPlayerPrefab, TNHPlayerList.transform);
-                newPlayer.transform.GetChild(0).GetComponent<Text>().text = config["Username"].ToString();
-                newPlayer.SetActive(true);
-
-                currentTNHInstancePlayers.Add((H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID), newPlayer);
-            }
 
             currentTNHInstance = instance;
+            currentTNHInstance.AddCurrentlyPlaying();
+            currentlyPlayingTNH = true;
         }
 
         private void CreateManagerObject(bool host = false)
@@ -4556,15 +4563,27 @@ namespace H3MP
             }
 
             // Disable the TNH_Manager if we are not the host
-            if (Mod.managerObject != null && GM.TNH_Manager != null && H3MP_GameManager.TNHInstances != null &&
-                H3MP_GameManager.TNHInstances.ContainsKey(H3MP_GameManager.instance))
+            // Also manage currently playing in the TNH instance
+            if (Mod.managerObject != null)
             {
-                H3MP_TNHInstance instance = H3MP_GameManager.TNHInstances[H3MP_GameManager.instance];
-                if(instance.playerIDs.Count > 0 && instance.playerIDs[0] != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                if (Mod.currentTNHInstance != null)
                 {
-                    ++skip;
-                    GM.TNH_Manager.enabled = false;
-                    --skip;
+                    if (GM.TNH_Manager != null)
+                    {
+                        Mod.currentTNHInstance.AddCurrentlyPlaying();
+                        Mod.currentlyPlayingTNH = true;
+                        if (Mod.currentTNHInstance.playerIDs.Count > 0 && Mod.currentTNHInstance.playerIDs[0] != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                        {
+                            ++skip;
+                            GM.TNH_Manager.enabled = false;
+                            --skip;
+                        }
+                    }
+                    else // TNH_Manager was set to null
+                    {
+                        Mod.currentlyPlayingTNH = false;
+                        Mod.currentTNHInstance.RemoveCurrentlyPlaying();
+                    }
                 }
             }
         }
