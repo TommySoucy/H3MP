@@ -1135,6 +1135,16 @@ namespace H3MP
             }
         }
 
+        public void OnInstanceReceived(int instance)
+        {
+            if (setLatestInstance)
+            {
+                setLatestInstance = false;
+
+                H3MP_GameManager.SetInstance(instance);
+            }
+        }
+
         private bool SetTNHInstance(H3MP_TNHInstance instance)
         {
             if (currentTNHUIManager != null)
@@ -4679,12 +4689,8 @@ namespace H3MP
                     else
                     {
                         // Just started a TNH game, must set instance to a new instance to play TNH solo
-                        int newInstance = 1;
-                        while (H3MP_GameManager.activeInstances.ContainsKey(newInstance))
-                        {
-                            ++newInstance;
-                        }
-                        H3MP_GameManager.SetInstance(newInstance);
+                        Mod.setLatestInstance = true;
+                        H3MP_GameManager.AddNewInstance();
                     }
                 }
             }

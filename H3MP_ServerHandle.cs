@@ -123,6 +123,12 @@ namespace H3MP
                                                                               healthMult, sosiggunShakeReloading, TNHSeed, levelIndex));
         }
 
+        public static void AddInstance(int clientID, H3MP_Packet packet)
+        {
+            // Send to all clients
+            H3MP_ServerSend.AddInstance(H3MP_GameManager.AddNewInstance());
+        }
+
         public static void AddSyncScene(int clientID, H3MP_Packet packet)
         {
             string scene = packet.ReadString();

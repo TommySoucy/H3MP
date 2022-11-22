@@ -361,6 +361,7 @@ namespace H3MP
                 H3MP_ClientHandle.SetTNHSosigGunReload,
                 H3MP_ClientHandle.SetTNHSeed,
                 H3MP_ClientHandle.SetTNHLevelIndex,
+                H3MP_ClientHandle.AddInstance,
             };
 
             // All vanilla scenes can be synced by default

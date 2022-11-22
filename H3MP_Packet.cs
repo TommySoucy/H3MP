@@ -72,7 +72,8 @@ namespace H3MP
         setTNHHealthMult = 55,
         setTNHSosigGunReload = 56,
         setTNHSeed = 57,
-        setTNHLevelIndex = 58
+        setTNHLevelIndex = 58,
+        addInstance = 59
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -134,7 +135,8 @@ namespace H3MP
         setTNHHealthMult = 54,
         setTNHSosigGunReload = 55,
         setTNHSeed = 56,
-        setTNHLevelIndex = 57
+        setTNHLevelIndex = 57,
+        addInstance = 58
     }
 
     public class H3MP_Packet : IDisposable

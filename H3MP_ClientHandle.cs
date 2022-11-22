@@ -813,6 +813,11 @@ namespace H3MP
             H3MP_GameManager.AddTNHInstance(packet.ReadTNHInstance());
         }
 
+        public static void AddInstance(H3MP_Packet packet)
+        {
+            H3MP_GameManager.AddInstance(packet.ReadInt());
+        }
+
         public static void AddTNHCurrentlyPlaying(H3MP_Packet packet)
         {
             int instance = packet.ReadInt();

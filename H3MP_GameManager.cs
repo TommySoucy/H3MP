@@ -713,6 +713,32 @@ namespace H3MP
             }
         }
 
+        public static int AddNewInstance()
+        {
+            if (H3MP_ThreadManager.host)
+            {
+                int freeInstance = 1; // Start at 1 because 0 is the default instance
+                while (activeInstances.ContainsKey(freeInstance))
+                {
+                    ++freeInstance;
+                }
+
+                activeInstances.Add(freeInstance, 1);
+
+                Mod.modInstance.OnInstanceReceived(freeInstance);
+
+                H3MP_ServerSend.AddInstance(freeInstance);
+
+                return freeInstance;
+            }
+            else
+            {
+                H3MP_ClientSend.AddInstance();
+
+                return -1;
+            }
+        }
+
         public static void AddTNHInstance(H3MP_TNHInstance instance)
         {
             activeInstances.Add(instance.instance, instance.playerIDs.Count);
@@ -721,11 +747,18 @@ namespace H3MP
             Mod.modInstance.OnTNHInstanceReceived(instance);
         }
 
+        public static void AddInstance(int instance)
+        {
+            activeInstances.Add(instance, 0);
+
+            Mod.modInstance.OnInstanceReceived(instance);
+        }
+
         public static void SetInstance(int instance)
         {
             // Remove ourselves from the previous instance and manage dicts accordingly
             --activeInstances[H3MP_GameManager.instance];
-            if(activeInstances[H3MP_GameManager.instance] == 0)
+            if(activeInstances[H3MP_GameManager.instance] == 0 && H3MP_GameManager.instance != 0)
             {
                 activeInstances.Remove(H3MP_GameManager.instance);
             }

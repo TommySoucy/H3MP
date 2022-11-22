@@ -284,6 +284,7 @@ namespace H3MP
                 H3MP_ServerHandle.SetTNHSosigGunReload,
                 H3MP_ServerHandle.SetTNHSeed,
                 H3MP_ServerHandle.SetTNHLevelIndex,
+                H3MP_ServerHandle.AddInstance,
             };
 
             items = new H3MP_TrackedItemData[100];

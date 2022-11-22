@@ -986,6 +986,16 @@ namespace H3MP
             }
         }
 
+        public static void AddInstance(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.addInstance))
+            {
+                packet.Write(instance);
+
+                SendTCPDataToAll(packet);
+            }
+        }
+
         public static void AddTNHCurrentlyPlaying(int instance, int clientID = 0)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.addTNHCurrentlyPlaying))
