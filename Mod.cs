@@ -4669,6 +4669,24 @@ namespace H3MP
                         Mod.currentTNHInstance.RemoveCurrentlyPlaying();
                     }
                 }
+                else // We just set TNH_Manager but we are not in a TNH instance
+                {
+                    if (GM.TNH_Manager == null)
+                    {
+                        // Just left a TNH game, must set instance to 0
+                        H3MP_GameManager.SetInstance(0);
+                    }
+                    else
+                    {
+                        // Just started a TNH game, must set instance to a new instance to play TNH solo
+                        int newInstance = 1;
+                        while (H3MP_GameManager.activeInstances.ContainsKey(newInstance))
+                        {
+                            ++newInstance;
+                        }
+                        H3MP_GameManager.SetInstance(newInstance);
+                    }
+                }
             }
         }
     }
