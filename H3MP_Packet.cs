@@ -60,7 +60,19 @@ namespace H3MP
         playerInstance = 43,
         addTNHInstance = 44,
         addTNHCurrentlyPlaying = 45,
-        removeTNHCurrentlyPlaying = 46
+        removeTNHCurrentlyPlaying = 46,
+        setTNHProgression = 47,
+        setTNHEquipment = 48,
+        setTNHHealthMode = 49,
+        setTNHTargetMode = 50,
+        setTNHAIDifficulty = 51,
+        setTNHRadarMode = 52,
+        setTNHItemSpawnerMode = 53,
+        setTNHBackpackMode = 54,
+        setTNHHealthMult = 55,
+        setTNHSosigGunReload = 56,
+        setTNHSeed = 57,
+        setTNHLevelIndex = 58
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -110,7 +122,19 @@ namespace H3MP
         playerInstance = 42,
         addTNHInstance = 43,
         addTNHCurrentlyPlaying = 44,
-        removeTNHCurrentlyPlaying = 45
+        removeTNHCurrentlyPlaying = 45,
+        setTNHProgression = 46,
+        setTNHEquipment = 47,
+        setTNHHealthMode = 48,
+        setTNHTargetMode = 49,
+        setTNHAIDifficulty = 50,
+        setTNHRadarMode = 51,
+        setTNHItemSpawnerMode = 52,
+        setTNHBackpackMode = 53,
+        setTNHHealthMult = 54,
+        setTNHSosigGunReload = 55,
+        setTNHSeed = 56,
+        setTNHLevelIndex = 57
     }
 
     public class H3MP_Packet : IDisposable
@@ -530,6 +554,18 @@ namespace H3MP
         {
             Write(instance.instance);
             Write(instance.letPeopleJoin);
+            Write(instance.progressionTypeSetting);
+            Write(instance.healthModeSetting);
+            Write(instance.equipmentModeSetting);
+            Write(instance.targetModeSetting);
+            Write(instance.AIDifficultyModifier);
+            Write(instance.radarModeModifier);
+            Write(instance.itemSpawnerMode);
+            Write(instance.backpackMode);
+            Write(instance.healthMult);
+            Write(instance.sosiggunShakeReloading);
+            Write(instance.TNHSeed);
+            Write(instance.levelIndex);
             Write(instance.playerIDs.Count);
             for(int i=0; i < instance.playerIDs.Count; ++i)
             {
@@ -983,9 +1019,24 @@ namespace H3MP
         {
             int instanceID = ReadInt();
             bool letPeopleJoin = ReadBool();
+            int progressionTypeSetting = ReadInt();
+            int healthModeSetting = ReadInt();
+            int equipmentModeSetting = ReadInt();
+            int targetModeSetting = ReadInt();
+            int AIDifficultyModifier = ReadInt();
+            int radarModeModifier = ReadInt();
+            int itemSpawnerMode = ReadInt();
+            int backpackMode = ReadInt();
+            int healthMult = ReadInt();
+            int sosiggunShakeReloading = ReadInt();
+            int TNHSeed = ReadInt();
+            int levelIndex = ReadInt();
             int playerCount = ReadInt();
             int hostID = ReadInt();
-            H3MP_TNHInstance instance = new H3MP_TNHInstance(instanceID, hostID, letPeopleJoin);
+            H3MP_TNHInstance instance = new H3MP_TNHInstance(instanceID, hostID, letPeopleJoin,
+                                                             progressionTypeSetting, healthModeSetting, equipmentModeSetting,
+                                                             targetModeSetting, AIDifficultyModifier, radarModeModifier,
+                                                             itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
             for (int i=1; i < playerCount; ++i)
             {
                 instance.playerIDs.Add(ReadInt());

@@ -103,9 +103,24 @@ namespace H3MP
         {
             int hostID = packet.ReadInt();
             bool letPeopleJoin = packet.ReadBool();
+            int progressionTypeSetting = packet.ReadInt();
+            int healthModeSetting = packet.ReadInt();
+            int equipmentModeSetting = packet.ReadInt();
+            int targetModeSetting = packet.ReadInt();
+            int AIDifficultyModifier = packet.ReadInt();
+            int radarModeModifier = packet.ReadInt();
+            int itemSpawnerMode = packet.ReadInt();
+            int backpackMode = packet.ReadInt();
+            int healthMult = packet.ReadInt();
+            int sosiggunShakeReloading = packet.ReadInt();
+            int TNHSeed = packet.ReadInt();
+            int levelIndex = packet.ReadInt();
 
             // Send to all clients
-            H3MP_ServerSend.AddTNHInstance(H3MP_GameManager.AddNewTNHInstance(hostID, letPeopleJoin));
+            H3MP_ServerSend.AddTNHInstance(H3MP_GameManager.AddNewTNHInstance(hostID, letPeopleJoin,
+                                                                              progressionTypeSetting, healthModeSetting, equipmentModeSetting,
+                                                                              targetModeSetting, AIDifficultyModifier, radarModeModifier, itemSpawnerMode, backpackMode,
+                                                                              healthMult, sosiggunShakeReloading, TNHSeed, levelIndex));
         }
 
         public static void AddSyncScene(int clientID, H3MP_Packet packet)
@@ -970,6 +985,212 @@ namespace H3MP
 
                 H3MP_ServerSend.RemoveTNHCurrentlyPlaying(instance, clientID);
             }
+        }
+
+        public static void SetTNHProgression(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].progressionTypeSetting = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.progressionSkip;
+                Mod.currentTNHUIManager.SetOBS_Progression(i);
+                --TNH_UIManagerPatch.progressionSkip;
+            }
+
+            H3MP_ServerSend.SetTNHProgression(i, instance, clientID);
+        }
+
+        public static void SetTNHEquipment(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].equipmentModeSetting = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.equipmentSkip;
+                Mod.currentTNHUIManager.SetOBS_EquipmentMode(i);
+                --TNH_UIManagerPatch.equipmentSkip;
+            }
+
+            H3MP_ServerSend.SetTNHEquipment(i, instance, clientID);
+        }
+
+        public static void SetTNHHealthMode(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].healthModeSetting = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.healthModeSkip;
+                Mod.currentTNHUIManager.SetOBS_HealthMode(i);
+                --TNH_UIManagerPatch.healthModeSkip;
+            }
+
+            H3MP_ServerSend.SetTNHHealthMode(i, instance, clientID);
+        }
+
+        public static void SetTNHTargetMode(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].targetModeSetting = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.targetSkip;
+                Mod.currentTNHUIManager.SetOBS_TargetMode(i);
+                --TNH_UIManagerPatch.targetSkip;
+            }
+
+            H3MP_ServerSend.SetTNHTargetMode(i, instance, clientID);
+        }
+
+        public static void SetTNHAIDifficulty(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].AIDifficultyModifier = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.AIDifficultySkip;
+                Mod.currentTNHUIManager.SetOBS_AIDifficulty(i);
+                --TNH_UIManagerPatch.AIDifficultySkip;
+            }
+
+            H3MP_ServerSend.SetTNHAIDifficulty(i, instance, clientID);
+        }
+
+        public static void SetTNHRadarMode(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].radarModeModifier = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.radarSkip;
+                Mod.currentTNHUIManager.SetOBS_AIRadarMode(i);
+                --TNH_UIManagerPatch.radarSkip;
+            }
+
+            H3MP_ServerSend.SetTNHRadarMode(i, instance, clientID);
+        }
+
+        public static void SetTNHItemSpawnerMode(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].itemSpawnerMode = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.itemSpawnerSkip;
+                Mod.currentTNHUIManager.SetOBS_ItemSpawner(i);
+                --TNH_UIManagerPatch.itemSpawnerSkip;
+            }
+
+            H3MP_ServerSend.SetTNHItemSpawnerMode(i, instance, clientID);
+        }
+
+        public static void SetTNHBackpackMode(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].backpackMode = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.backpackSkip;
+                Mod.currentTNHUIManager.SetOBS_Backpack(i);
+                --TNH_UIManagerPatch.backpackSkip;
+            }
+
+            H3MP_ServerSend.SetTNHBackpackMode(i, instance, clientID);
+        }
+
+        public static void SetTNHHealthMult(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].healthMult = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.healthMultSkip;
+                Mod.currentTNHUIManager.SetOBS_HealthMult(i);
+                --TNH_UIManagerPatch.healthMultSkip;
+            }
+
+            H3MP_ServerSend.SetTNHHealthMult(i, instance, clientID);
+        }
+
+        public static void SetTNHSosigGunReload(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].sosiggunShakeReloading = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.sosigGunReloadSkip;
+                Mod.currentTNHUIManager.SetOBS_SosiggunShakeReloading(i);
+                --TNH_UIManagerPatch.sosigGunReloadSkip;
+            }
+
+            H3MP_ServerSend.SetTNHSosigGunReload(i, instance, clientID);
+        }
+
+        public static void SetTNHSeed(int clientID, H3MP_Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].TNHSeed = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                ++TNH_UIManagerPatch.seedSkip;
+                Mod.currentTNHUIManager.SetOBS_RunSeed(i);
+                --TNH_UIManagerPatch.seedSkip;
+            }
+
+            H3MP_ServerSend.SetTNHSeed(i, instance, clientID);
+        }
+
+        public static void SetTNHLevelIndex(int clientID, H3MP_Packet packet)
+        {
+            int levelIndex = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            H3MP_GameManager.TNHInstances[instance].levelIndex = levelIndex;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                Mod.TNH_UIManager_m_currentLevelIndex.SetValue(Mod.currentTNHUIManager, levelIndex);
+                Mod.currentTNHUIManager.CurLevelID = Mod.currentTNHUIManager.Levels[levelIndex].LevelID;
+                Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
+                Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
+                Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
+            }
+
+            H3MP_ServerSend.SetTNHLevelIndex(levelIndex, instance, clientID);
         }
     }
 }

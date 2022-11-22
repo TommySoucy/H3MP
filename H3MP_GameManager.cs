@@ -677,7 +677,10 @@ namespace H3MP
             return trackedSosig;
         }
 
-        public static H3MP_TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin)
+        public static H3MP_TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin,
+                                                         int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
+                                                         int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
+                                                         int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, int levelIndex)
         {
             if (H3MP_ThreadManager.host)
             {
@@ -686,7 +689,10 @@ namespace H3MP
                 {
                     ++freeInstance;
                 }
-                H3MP_TNHInstance newInstance = new H3MP_TNHInstance(freeInstance, hostID, letPeopleJoin);
+                H3MP_TNHInstance newInstance = new H3MP_TNHInstance(freeInstance, hostID, letPeopleJoin,
+                                                                    progressionTypeSetting, healthModeSetting, equipmentModeSetting,
+                                                                    targetModeSetting, AIDifficultyModifier, radarModeModifier,
+                                                                    itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
                 TNHInstances.Add(freeInstance, newInstance);
                 activeInstances.Add(freeInstance, 1);
 
@@ -698,7 +704,10 @@ namespace H3MP
             }
             else
             {
-                H3MP_ClientSend.AddTNHInstance(hostID, letPeopleJoin);
+                H3MP_ClientSend.AddTNHInstance(hostID, letPeopleJoin,
+                                               progressionTypeSetting, healthModeSetting, equipmentModeSetting,
+                                               targetModeSetting, AIDifficultyModifier, radarModeModifier,
+                                               itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
 
                 return null;
             }
@@ -996,6 +1005,8 @@ namespace H3MP
             {
                 --Mod.skipAllInstantiates;
                 giveControlOfDestroyed = false;
+
+                Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
 
                 Scene loadedScene = SceneManager.GetActiveScene();
                 Debug.Log("Just finished loading scene: "+ loadedScene.name);

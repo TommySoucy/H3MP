@@ -95,12 +95,27 @@ namespace H3MP
             }
         }
 
-        public static void AddTNHInstance(int hostID, bool letPeopleJoin)
+        public static void AddTNHInstance(int hostID, bool letPeopleJoin,
+                                          int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
+                                          int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
+                                          int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, int levelIndex)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.addTNHInstance))
             {
                 packet.Write(hostID);
                 packet.Write(letPeopleJoin);
+                packet.Write(progressionTypeSetting);
+                packet.Write(healthModeSetting);
+                packet.Write(equipmentModeSetting);
+                packet.Write(targetModeSetting);
+                packet.Write(AIDifficultyModifier);
+                packet.Write(radarModeModifier);
+                packet.Write(itemSpawnerMode);
+                packet.Write(backpackMode);
+                packet.Write(healthMult);
+                packet.Write(sosiggunShakeReloading);
+                packet.Write(TNHSeed);
+                packet.Write(levelIndex);
 
                 SendTCPData(packet);
             }
@@ -744,6 +759,138 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.removeTNHCurrentlyPlaying))
             {
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHProgression(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHProgression))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHEquipment(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHEquipment))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHHealthMode(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHHealthMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHTargetMode(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHTargetMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHAIDifficulty(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHAIDifficulty))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHRadarMode(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHRadarMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHItemSpawnerMode(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHItemSpawnerMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHBackpackMode(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHBackpackMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHHealthMult(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHHealthMult))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHSosigGunReload(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHSosigGunReload))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHSeed(int i, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHSeed))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHLevelIndex(int levelIndex, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHLevelIndex))
+            {
+                packet.Write(levelIndex);
                 packet.Write(instance);
 
                 SendTCPData(packet);

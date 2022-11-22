@@ -43,14 +43,41 @@ namespace H3MP
 
         // Settings
         public bool letPeopleJoin;
+        public int progressionTypeSetting;
+        public int healthModeSetting;
+        public int equipmentModeSetting;
+        public int targetModeSetting;
+        public int AIDifficultyModifier;
+        public int radarModeModifier;
+        public int itemSpawnerMode;
+        public int backpackMode;
+        public int healthMult;
+        public int sosiggunShakeReloading;
+        public int TNHSeed;
+        public int levelIndex;
 
-        public H3MP_TNHInstance(int instance, int hostID, bool letPeopleJoin)
+        public H3MP_TNHInstance(int instance, int hostID, bool letPeopleJoin,
+                                int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
+                                int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
+                                int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, int levelIndex)
         {
             this.instance = instance;
             playerIDs = new List<int>();
             playerIDs.Add(hostID);
 
             this.letPeopleJoin = letPeopleJoin;
+            this.progressionTypeSetting = progressionTypeSetting;
+            this.healthModeSetting = healthModeSetting;
+            this.equipmentModeSetting = equipmentModeSetting;
+            this.targetModeSetting = targetModeSetting;
+            this.AIDifficultyModifier = AIDifficultyModifier;
+            this.radarModeModifier = radarModeModifier;
+            this.itemSpawnerMode = itemSpawnerMode;
+            this.backpackMode = backpackMode;
+            this.healthMult = healthMult;
+            this.sosiggunShakeReloading = sosiggunShakeReloading;
+            this.TNHSeed = TNHSeed;
+            this.levelIndex = levelIndex;
         }
 
         public void AddCurrentlyPlaying()

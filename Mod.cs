@@ -93,6 +93,7 @@ namespace H3MP
         public static bool currentlyPlayingTNH;
         public static Dictionary<int, GameObject> joinTNHInstances;
         public static Dictionary<int, GameObject> currentTNHInstancePlayers;
+        public static TNH_UIManager currentTNHUIManager;
 
         // Reused private FieldInfos
         public static readonly FieldInfo Sosig_m_isOnOffMeshLinkField = typeof(Sosig).GetField("m_isOnOffMeshLink", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -117,6 +118,7 @@ namespace H3MP
         public static readonly FieldInfo SosigLink_m_wearables = typeof(SosigLink).GetField("m_wearables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigLink_m_integrity = typeof(SosigLink).GetField("m_integrity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigInventory_m_ammoStores = typeof(SosigInventory).GetField("m_ammoStores", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_UIManager_m_currentLevelIndex = typeof(TNH_UIManager).GetField("m_currentLevelIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -124,6 +126,9 @@ namespace H3MP
         public static readonly MethodInfo Sosig_SetBodyState = typeof(Sosig).GetMethod("SetBodyState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Sosig_VaporizeUpdate = typeof(Sosig).GetMethod("VaporizeUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo SosigLink_SeverJoint = typeof(SosigLink).GetMethod("SeverJoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_UIManager_UpdateLevelSelectDisplayAndLoader = typeof(TNH_UIManager).GetMethod("UpdateLevelSelectDisplayAndLoader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_UIManager_UpdateTableBasedOnOptions = typeof(TNH_UIManager).GetMethod("UpdateTableBasedOnOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_UIManager_PlayButtonSound = typeof(TNH_UIManager).GetMethod("PlayButtonSound", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -873,6 +878,48 @@ namespace H3MP
             MethodInfo setTNHManagerPatchPostfix = typeof(SetTNHManagerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(setTNHManagerPatchOriginal, null, new HarmonyMethod(setTNHManagerPatchPostfix));
+
+            // TNH_UIManagerPatch
+            MethodInfo TNH_UIManagerPatchProgressionOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_Progression", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchProgressionPrefix = typeof(TNH_UIManagerPatch).GetMethod("ProgressionPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchEquipmentOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_EquipmentMode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchEquipmentPrefix = typeof(TNH_UIManagerPatch).GetMethod("EquipmentPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchHealthModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_HealthMode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchHealthModePrefix = typeof(TNH_UIManagerPatch).GetMethod("HealthModePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchTargetModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_TargetMode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchTargetModePrefix = typeof(TNH_UIManagerPatch).GetMethod("TargetPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchAIDifficultyOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_AIDifficulty", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchAIDifficultyPrefix = typeof(TNH_UIManagerPatch).GetMethod("AIDifficultyPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchRadarModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_AIRadarMode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchRadarModePrefix = typeof(TNH_UIManagerPatch).GetMethod("RadarModePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchItemSpawnerModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_ItemSpawner", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchItemSpawnerModePrefix = typeof(TNH_UIManagerPatch).GetMethod("ItemSpawnerModePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchBackpackModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_Backpack", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchBackpackModePrefix = typeof(TNH_UIManagerPatch).GetMethod("BackpackModePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchHealthMultOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_HealthMult", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchHealthMultPrefix = typeof(TNH_UIManagerPatch).GetMethod("HealthMultPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchSosigGunReloadOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_SosiggunShakeReloading", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchSosigGunReloadPrefix = typeof(TNH_UIManagerPatch).GetMethod("SosigGunReloadPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchSeedOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_RunSeed", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchSeedPrefix = typeof(TNH_UIManagerPatch).GetMethod("SeedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchNextLevelOriginal = typeof(TNH_UIManager).GetMethod("BTN_NextLevel", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchNextLevelPrefix = typeof(TNH_UIManagerPatch).GetMethod("NextLevelPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchPrevLevelOriginal = typeof(TNH_UIManager).GetMethod("BTN_PrevLevel", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchPrevLevelPrefix = typeof(TNH_UIManagerPatch).GetMethod("PrevLevelPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(TNH_UIManagerPatchProgressionOriginal, new HarmonyMethod(TNH_UIManagerPatchProgressionPrefix));
+            harmony.Patch(TNH_UIManagerPatchEquipmentOriginal, new HarmonyMethod(TNH_UIManagerPatchEquipmentPrefix));
+            harmony.Patch(TNH_UIManagerPatchHealthModeOriginal, new HarmonyMethod(TNH_UIManagerPatchHealthModePrefix));
+            harmony.Patch(TNH_UIManagerPatchTargetModeOriginal, new HarmonyMethod(TNH_UIManagerPatchTargetModePrefix));
+            harmony.Patch(TNH_UIManagerPatchAIDifficultyOriginal, new HarmonyMethod(TNH_UIManagerPatchAIDifficultyPrefix));
+            harmony.Patch(TNH_UIManagerPatchRadarModeOriginal, new HarmonyMethod(TNH_UIManagerPatchRadarModePrefix));
+            harmony.Patch(TNH_UIManagerPatchItemSpawnerModeOriginal, new HarmonyMethod(TNH_UIManagerPatchItemSpawnerModePrefix));
+            harmony.Patch(TNH_UIManagerPatchBackpackModeOriginal, new HarmonyMethod(TNH_UIManagerPatchBackpackModePrefix));
+            harmony.Patch(TNH_UIManagerPatchHealthMultOriginal, new HarmonyMethod(TNH_UIManagerPatchHealthMultPrefix));
+            harmony.Patch(TNH_UIManagerPatchSosigGunReloadOriginal, new HarmonyMethod(TNH_UIManagerPatchSosigGunReloadPrefix));
+            harmony.Patch(TNH_UIManagerPatchSeedOriginal, new HarmonyMethod(TNH_UIManagerPatchSeedPrefix));
+            harmony.Patch(TNH_UIManagerPatchNextLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchNextLevelPrefix));
+            harmony.Patch(TNH_UIManagerPatchPrevLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchPrevLevelPrefix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -983,7 +1030,11 @@ namespace H3MP
             TNHMenuPages[4].SetActive(true);
 
             setLatestInstance = true;
-            H3MP_GameManager.AddNewTNHInstance(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID, TNHMenuLPJ);
+            H3MP_GameManager.AddNewTNHInstance(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID, TNHMenuLPJ, (int)GM.TNHOptions.ProgressionTypeSetting,
+                                               (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
+                                               (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
+                                               (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
+                                               (int)TNH_UIManager_m_currentLevelIndex.GetValue(Mod.currentTNHUIManager));
         }
 
         private void OnTNHHostCancelClicked()
@@ -1048,10 +1099,16 @@ namespace H3MP
 
         public void OnTNHInstanceClicked(int instance)
         {
-            TNHMenuPages[3].SetActive(false);
-            TNHMenuPages[4].SetActive(true);
-
-            SetTNHInstance(H3MP_GameManager.TNHInstances[instance]);
+            // Handle joining instance success/fail
+            if (SetTNHInstance(H3MP_GameManager.TNHInstances[instance]))
+            {
+                TNHMenuPages[3].SetActive(false);
+                TNHMenuPages[4].SetActive(true);
+            }
+            else
+            {
+                joinTNHInstances[instance].transform.GetChild(0).GetComponent<Text>().color = Color.red;
+            }
         }
 
         private void OnTNHDisconnectClicked()
@@ -1078,8 +1135,35 @@ namespace H3MP
             }
         }
 
-        private void SetTNHInstance(H3MP_TNHInstance instance)
+        private bool SetTNHInstance(H3MP_TNHInstance instance)
         {
+            if (currentTNHUIManager != null)
+            {
+                currentTNHUIManager.SetOBS_Progression(instance.progressionTypeSetting);
+                currentTNHUIManager.SetOBS_EquipmentMode(instance.equipmentModeSetting);
+                currentTNHUIManager.SetOBS_TargetMode(instance.targetModeSetting);
+                currentTNHUIManager.SetOBS_HealthMode(instance.healthModeSetting);
+                currentTNHUIManager.SetOBS_RunSeed(instance.TNHSeed);
+                currentTNHUIManager.SetOBS_AIDifficulty(instance.AIDifficultyModifier);
+                currentTNHUIManager.SetOBS_AIRadarMode(instance.radarModeModifier);
+                currentTNHUIManager.SetOBS_HealthMult(instance.healthMult);
+                currentTNHUIManager.SetOBS_ItemSpawner(instance.itemSpawnerMode);
+                currentTNHUIManager.SetOBS_Backpack(instance.backpackMode);
+                currentTNHUIManager.SetOBS_SosiggunShakeReloading(instance.sosiggunShakeReloading);
+                if (instance.levelIndex < currentTNHUIManager.Levels.Count)
+                {
+                    TNH_UIManager_m_currentLevelIndex.SetValue(currentTNHUIManager, instance.levelIndex);
+                    currentTNHUIManager.CurLevelID = currentTNHUIManager.Levels[instance.levelIndex].LevelID;
+                    TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(currentTNHUIManager, null);
+                    TNH_UIManager_UpdateTableBasedOnOptions.Invoke(currentTNHUIManager, null);
+                    TNH_UIManager_PlayButtonSound.Invoke(currentTNHUIManager, new object[] { 2 });
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
             H3MP_GameManager.SetInstance(instance.instance);
 
             TNHInstanceTitle.text = "Instance " + instance.instance;
@@ -1108,8 +1192,8 @@ namespace H3MP
             }
 
             currentTNHInstance = instance;
-            currentTNHInstance.AddCurrentlyPlaying();
-            currentlyPlayingTNH = true;
+
+            return true;
         }
 
         private void CreateManagerObject(bool host = false)
@@ -4586,6 +4670,481 @@ namespace H3MP
                     }
                 }
             }
+        }
+    }
+
+    // Patches TNH_UIManager to keep track of TNH Options
+    class TNH_UIManagerPatch
+    {
+        public static int progressionSkip;
+        public static int equipmentSkip;
+        public static int healthModeSkip;
+        public static int targetSkip;
+        public static int AIDifficultySkip;
+        public static int radarSkip;
+        public static int itemSpawnerSkip;
+        public static int backpackSkip;
+        public static int healthMultSkip;
+        public static int sosigGunReloadSkip;
+        public static int seedSkip;
+
+        static bool ProgressionPrefix(int i)
+        {
+            if (progressionSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if(Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.progressionTypeSetting = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHProgression(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHProgression(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool EquipmentPrefix(int i)
+        {
+            if (equipmentSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.equipmentModeSetting = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHEquipment(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHEquipment(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool HealthModePrefix(int i)
+        {
+            if (healthModeSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.healthModeSetting = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHHealthMode(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHHealthMode(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool TargetPrefix(int i)
+        {
+            if (targetSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.targetModeSetting = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHTargetMode(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHTargetMode(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool AIDifficultyPrefix(int i)
+        {
+            if (AIDifficultySkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.AIDifficultyModifier = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHAIDifficulty(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHAIDifficulty(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool RadarModePrefix(int i)
+        {
+            if (radarSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.radarModeModifier = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHRadarMode(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHRadarMode(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool ItemSpawnerModePrefix(int i)
+        {
+            if (itemSpawnerSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.itemSpawnerMode = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHItemSpawnerMode(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHItemSpawnerMode(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool BackpackModePrefix(int i)
+        {
+            if (backpackSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.backpackMode = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHBackpackMode(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHBackpackMode(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool HealthMultPrefix(int i)
+        {
+            if (healthMultSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.healthMult = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHHealthMult(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHHealthMult(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool SosigGunReloadPrefix(int i)
+        {
+            if (sosigGunReloadSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.sosiggunShakeReloading = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHSosigGunReload(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHSosigGunReload(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool SeedPrefix(int i)
+        {
+            if (seedSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.TNHSeed = i;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHSeed(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHSeed(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool NextLevelPrefix(ref TNH_UIManager __instance, ref int ___m_currentLevelIndex)
+        {
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Claculate new level index
+                    int levelIndex = ___m_currentLevelIndex + 1;
+                    if (levelIndex >= __instance.Levels.Count)
+                    {
+                        levelIndex = 0;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.levelIndex = levelIndex;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool PrevLevelPrefix(ref TNH_UIManager __instance, ref int ___m_currentLevelIndex)
+        {
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    {
+                        return false;
+                    }
+
+                    // Claculate new level index
+                    int levelIndex = ___m_currentLevelIndex - 1;
+                    if (levelIndex < 0)
+                    {
+                        levelIndex = __instance.Levels.Count;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.levelIndex = levelIndex;
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
         }
     }
     #endregion
