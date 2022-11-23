@@ -1030,7 +1030,7 @@ namespace H3MP
             TNHMenuPages[4].SetActive(true);
 
             setLatestInstance = true;
-            H3MP_GameManager.AddNewTNHInstance(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID, TNHMenuLPJ, (int)GM.TNHOptions.ProgressionTypeSetting,
+            H3MP_GameManager.AddNewTNHInstance(H3MP_GameManager.ID, TNHMenuLPJ, (int)GM.TNHOptions.ProgressionTypeSetting,
                                                (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
                                                (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
                                                (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
@@ -1080,7 +1080,7 @@ namespace H3MP
             // Populate instance list
             foreach (KeyValuePair<int, H3MP_TNHInstance> TNHInstance in H3MP_GameManager.TNHInstances)
             {
-                if (TNHInstance.Value.currentlyPlaying == 0)
+                if (TNHInstance.Value.currentlyPlaying.Count == 0)
                 {
                     GameObject newInstance = Instantiate<GameObject>(TNHInstancePrefab, TNHInstanceList.transform);
                     newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + TNHInstance.Key;
@@ -1119,7 +1119,7 @@ namespace H3MP
             H3MP_GameManager.SetInstance(0);
             if (Mod.currentlyPlayingTNH)
             {
-                Mod.currentTNHInstance.RemoveCurrentlyPlaying();
+                Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, H3MP_GameManager.ID);
                 Mod.currentlyPlayingTNH = false;
             }
             Mod.currentTNHInstance = null;
@@ -1300,11 +1300,6 @@ namespace H3MP
                             trackedItem.data.controller = 0;
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
-                            // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
-                            //if (trackedItem.data.parent == -1)
-                            //{
-                            //    (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
-                            //}
                         }
                     }
                     else
@@ -1320,11 +1315,6 @@ namespace H3MP
                             trackedItem.data.controller = H3MP_Client.singleton.ID;
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
-                            // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
-                            //if (trackedItem.data.parent == -1)
-                            //{
-                            //  (___m_currentInteractable as FVRPhysicalObject).RecoverRigidbody();
-                            //}
                         }
                     }
                 }
@@ -1376,7 +1366,7 @@ namespace H3MP
             {
                 // Just put this item in a slot
                 H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
-                if (trackedItem != null && trackedItem.data.controller != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
                 {
                     if (H3MP_ThreadManager.host)
                     {
@@ -1434,7 +1424,7 @@ namespace H3MP
             }
 
             H3MP_TrackedItem trackedItem = o.GetComponent<H3MP_TrackedItem>();
-            if (trackedItem != null && trackedItem.data.controller != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+            if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
             {
                 if (H3MP_ThreadManager.host)
                 {
@@ -1495,7 +1485,7 @@ namespace H3MP
             }
 
             H3MP_TrackedItem trackedItem = o.GetComponent<H3MP_TrackedItem>();
-            if (trackedItem != null && trackedItem.data.controller != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+            if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
             {
                 if (H3MP_ThreadManager.host)
                 {
@@ -1743,7 +1733,7 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if(trackedSosig != null)
             {
-                bool runOriginal = (H3MP_ThreadManager.host && trackedSosig.data.controller == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.controller);
+                bool runOriginal = trackedSosig.data.controller == H3MP_GameManager.ID;
                 if (!runOriginal)
                 {
                     // Call Sosig update methods we don't want to skip
@@ -1766,7 +1756,7 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if(trackedSosig != null)
             {
-                return (H3MP_ThreadManager.host && trackedSosig.data.controller == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.controller);
+                return trackedSosig.data.controller == H3MP_GameManager.ID;
             }
             return true;
         }
@@ -1786,7 +1776,7 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
             if(trackedSosig != null)
             {
-                return (H3MP_ThreadManager.host && trackedSosig.data.controller == 0) || (!H3MP_ThreadManager.host && H3MP_Client.singleton.ID == trackedSosig.data.controller);
+                return trackedSosig.data.controller == H3MP_GameManager.ID;
             }
             return true;
         }
@@ -2584,7 +2574,7 @@ namespace H3MP
                     }
 
                     // Check if we should control and sync it, if so do it in postfix
-                    if (trackedItem == null || trackedItem.data.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                    if (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)
                     {
                         track = true;
                     }
@@ -2691,7 +2681,7 @@ namespace H3MP
                 }
 
                 // We only want to track this item if no tracked parent or if we control the parent
-                track = parentData == null || parentData.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+                track = parentData == null || parentData.controller == H3MP_GameManager.ID;
             }
         }
 
@@ -2801,7 +2791,7 @@ namespace H3MP
                 }
 
                 // We only want to track this item if no tracked parent or if we control the parent
-                track = parentData == null || parentData.controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+                track = parentData == null || parentData.controller == H3MP_GameManager.ID;
             }
         }
 
@@ -2998,7 +2988,7 @@ namespace H3MP
                     }
                     else
                     {
-                        return (H3MP_ThreadManager.host && trackedItem.data.controller == 0) || (!H3MP_ThreadManager.host && trackedItem.data.controller == H3MP_Client.singleton.ID);
+                        return trackedItem.data.controller == H3MP_GameManager.ID;
                     }
                 }
             }
@@ -3306,7 +3296,7 @@ namespace H3MP
                             }
                             break;
                         }
-                        if (firstPlayerInScene != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID)) 
+                        if (firstPlayerInScene != H3MP_GameManager.ID)
                         {
                             return null;
                         }
@@ -3314,13 +3304,13 @@ namespace H3MP
                     else // We have a ref to the item itself
                     {
                         // We only want to let this item do damage if we control it
-                        return (H3MP_ThreadManager.host && ti.data.controller == 0) || (!H3MP_ThreadManager.host && ti.data.controller == H3MP_Client.singleton.ID) ? original : null;
+                        return ti.data.controller == H3MP_GameManager.ID ? original : null;
                     }
                 }
                 else // We have a ref to the controller of the item that caused this damage
                 {
                     // We only want to let this item do damage if we control it
-                    return (H3MP_ThreadManager.host && cr.controller == 0) || (!H3MP_ThreadManager.host && cr.controller == H3MP_Client.singleton.ID) ? original : null;
+                    return cr.controller == H3MP_GameManager.ID ? original : null;
                 }
             }
             return original;
@@ -3530,7 +3520,7 @@ namespace H3MP
                             }
                             break;
                         }
-                        if (firstPlayerInScene != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                        if (firstPlayerInScene != H3MP_GameManager.ID)
                         {
                             return null;
                         }
@@ -3538,13 +3528,13 @@ namespace H3MP
                     else // We have a ref to the item itself
                     {
                         // We only want to let this item do damage if we control it
-                        return (H3MP_ThreadManager.host && ti.data.controller == 0) || (!H3MP_ThreadManager.host && ti.data.controller == H3MP_Client.singleton.ID) ? original : null;
+                        return ti.data.controller == H3MP_GameManager.ID ? original : null;
                     }
                 }
                 else // We have a ref to the controller of the item that caused this damage
                 {
                     // We only want to let this item do damage if we control it
-                    return (H3MP_ThreadManager.host && cr.controller == 0) || (!H3MP_ThreadManager.host && cr.controller == H3MP_Client.singleton.ID) ? original : null;
+                    return cr.controller == H3MP_GameManager.ID ? original : null;
                 }
             }
             return original;
@@ -4664,19 +4654,50 @@ namespace H3MP
                 {
                     if (GM.TNH_Manager != null)
                     {
-                        Mod.currentTNHInstance.AddCurrentlyPlaying();
-                        Mod.currentlyPlayingTNH = true;
-                        if (Mod.currentTNHInstance.playerIDs.Count > 0 && Mod.currentTNHInstance.playerIDs[0] != (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                        if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
-                            ++skip;
-                            GM.TNH_Manager.enabled = false;
-                            --skip;
+                            if (Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID)
+                            {
+                                if (H3MP_ThreadManager.host)
+                                {
+                                    Mod.currentTNHInstance.controller = 0;
+                                    H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, 0);
+                                }
+                                else
+                                {
+                                    Mod.currentTNHInstance.controller = H3MP_Client.singleton.ID;
+                                    H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, H3MP_Client.singleton.ID);
+                                }
+                            }
+                            else
+                            {
+                                ++skip;
+                                GM.TNH_Manager.enabled = false;
+                                --skip;
+                            }
                         }
+
+                        Mod.currentTNHInstance.AddCurrentlyPlaying(true, H3MP_GameManager.ID);
+                        Mod.currentlyPlayingTNH = true;
                     }
                     else // TNH_Manager was set to null
                     {
                         Mod.currentlyPlayingTNH = false;
-                        Mod.currentTNHInstance.RemoveCurrentlyPlaying();
+                        Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, H3MP_GameManager.ID);
+
+                        // If was manager controller, give manager control to next currently playing
+                        if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                        {
+                            int nextID = Mod.currentTNHInstance.currentlyPlaying.Count > 0 ? Mod.currentTNHInstance.currentlyPlaying[0] : -1;
+                            if (H3MP_ThreadManager.host)
+                            {
+                                H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, nextID);
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, nextID);
+                            }
+                        }
                     }
                 }
                 else // We just set TNH_Manager but we are not in a TNH instance
@@ -4724,7 +4745,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if(Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if(Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -4759,7 +4780,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -4794,7 +4815,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -4829,7 +4850,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -4864,7 +4885,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -4899,7 +4920,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -4934,7 +4955,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -4969,7 +4990,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -5004,7 +5025,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -5039,7 +5060,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -5074,7 +5095,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -5104,7 +5125,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }
@@ -5141,7 +5162,7 @@ namespace H3MP
                 if (Mod.currentTNHInstance != null)
                 {
                     // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying > 0)
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                     {
                         return false;
                     }

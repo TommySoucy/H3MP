@@ -362,6 +362,8 @@ namespace H3MP
                 H3MP_ClientHandle.SetTNHSeed,
                 H3MP_ClientHandle.SetTNHLevelIndex,
                 H3MP_ClientHandle.AddInstance,
+                H3MP_ClientHandle.SetTNHController,
+                H3MP_ClientHandle.TNHData,
             };
 
             // All vanilla scenes can be synced by default

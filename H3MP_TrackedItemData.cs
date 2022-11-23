@@ -158,14 +158,7 @@ namespace H3MP
             }
 
             // Store and destroy RB if not in control
-            if (H3MP_ThreadManager.host)
-            {
-                if (controller != 0)
-                {
-                    physicalItem.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
-                }
-            }
-            else if (controller != H3MP_Client.singleton.ID)
+            if (controller != H3MP_GameManager.ID)
             {
                 physicalItem.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
             }
@@ -339,7 +332,7 @@ namespace H3MP
                     --ignoreParentChanged;
 
                     // If in control, we want to enable rigidbody
-                    if (controller == (H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID))
+                    if (controller == H3MP_GameManager.ID)
                     {
                         // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
                         physicalItem.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();

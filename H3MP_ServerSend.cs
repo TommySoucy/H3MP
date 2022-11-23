@@ -1000,6 +1000,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.addTNHCurrentlyPlaying))
             {
+                packet.Write(clientID);
                 packet.Write(instance);
 
                 if(clientID == 0)
@@ -1017,6 +1018,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.removeTNHCurrentlyPlaying))
             {
+                packet.Write(clientID);
                 packet.Write(instance);
 
                 if(clientID == 0)
@@ -1243,6 +1245,47 @@ namespace H3MP
                 {
                     SendTCPDataToAll(clientID, packet);
                 }
+            }
+        }
+
+        public static void SetTNHController(int instance, int newController, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.setTNHController))
+            {
+                packet.Write(instance);
+                packet.Write(newController);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHData(int controller, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.TNHData);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(controller, packet);
+        }
+
+        public static void TNHData(int controller, TNH_Manager manager)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHData))
+            {
+                packet.Write(controller);
+                packet.Write(manager);
+
+                SendTCPData(controller, packet);
             }
         }
     }

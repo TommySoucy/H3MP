@@ -86,15 +86,7 @@ namespace H3MP
 
             // Deregister the AI from the manager if we are not in control
             // Also set CoreRB as kinematic
-            if (H3MP_ThreadManager.host)
-            {
-                if(controller != 0)
-                {
-                    GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
-                    physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
-                }
-            }
-            else if(controller != H3MP_Client.singleton.ID)
+            if(controller != H3MP_GameManager.ID)
             {
                 GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
                 physicalObject.physicalSosigScript.CoreRB.isKinematic = true;

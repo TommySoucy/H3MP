@@ -904,5 +904,27 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void SetTNHController(int instance, int ID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHController))
+            {
+                packet.Write(instance);
+                packet.Write(ID);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TNHData(int controller, TNH_Manager manager)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHData))
+            {
+                packet.Write(controller);
+                packet.Write(manager);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

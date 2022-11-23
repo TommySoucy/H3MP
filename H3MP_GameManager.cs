@@ -46,6 +46,7 @@ namespace H3MP
 
         public static bool giveControlOfDestroyed;
 
+        public static int ID = 0;
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
         public static int playersPresent = 0;
         public static int playerStateAddtionalDataSize = -1;
@@ -458,7 +459,7 @@ namespace H3MP
             data.rotation = trackedItem.transform.rotation;
             data.active = trackedItem.gameObject.activeInHierarchy;
 
-            data.controller = H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID;
+            data.controller = ID;
 
             // Add to local list
             data.localTrackedID = items.Count;
@@ -665,7 +666,7 @@ namespace H3MP
                 }
             }
             data.ammoStores = (int[])Mod.SosigInventory_m_ammoStores.GetValue(sosigScript.Inventory);
-            data.controller = H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID;
+            data.controller = ID;
             data.mustard = sosigScript.Mustard;
             data.bodyPose = sosigScript.BodyPose;
             data.IFF = (byte)sosigScript.GetIFF();
@@ -694,7 +695,7 @@ namespace H3MP
                                                                     targetModeSetting, AIDifficultyModifier, radarModeModifier,
                                                                     itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
                 TNHInstances.Add(freeInstance, newInstance);
-                activeInstances.Add(freeInstance, 1);
+                activeInstances.Add(freeInstance, 0);
 
                 Mod.modInstance.OnTNHInstanceReceived(newInstance);
 
@@ -723,7 +724,7 @@ namespace H3MP
                     ++freeInstance;
                 }
 
-                activeInstances.Add(freeInstance, 1);
+                activeInstances.Add(freeInstance, 0);
 
                 Mod.modInstance.OnInstanceReceived(freeInstance);
 
@@ -764,7 +765,7 @@ namespace H3MP
             }
             if (TNHInstances.ContainsKey(H3MP_GameManager.instance))
             {
-                TNHInstances[H3MP_GameManager.instance].playerIDs.Remove(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+                TNHInstances[H3MP_GameManager.instance].playerIDs.Remove(ID);
 
                 if (TNHInstances[H3MP_GameManager.instance].playerIDs.Count == 0)
                 {
@@ -784,7 +785,7 @@ namespace H3MP
             ++activeInstances[instance];
             if (TNHInstances.ContainsKey(instance))
             {
-                TNHInstances[instance].playerIDs.Add(H3MP_ThreadManager.host ? 0 : H3MP_Client.singleton.ID);
+                TNHInstances[instance].playerIDs.Add(ID);
             }
 
             // Item we do not control: Destroy, giveControlOfDestroyed = true will ensure destruction does not get sent
@@ -1028,7 +1029,7 @@ namespace H3MP
                     SetInstance(0);
                     if (Mod.currentlyPlayingTNH)
                     {
-                        Mod.currentTNHInstance.RemoveCurrentlyPlaying();
+                        Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID);
                         Mod.currentlyPlayingTNH = false;
                     }
                     Mod.currentTNHInstance = null;

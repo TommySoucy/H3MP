@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Valve.VR.InteractionSystem;
 
 namespace H3MP
@@ -21,6 +22,7 @@ namespace H3MP
             Debug.Log($"Message from server: {msg}");
 
             H3MP_Client.singleton.ID = ID;
+            H3MP_GameManager.ID = ID;
             H3MP_ClientSend.WelcomeReceived();
 
             H3MP_Client.singleton.udp.Connect(((IPEndPoint)H3MP_Client.singleton.tcp.socket.Client.LocalEndPoint).Port);
@@ -820,6 +822,7 @@ namespace H3MP
 
         public static void AddTNHCurrentlyPlaying(H3MP_Packet packet)
         {
+            int ID = packet.ReadInt();
             int instance = packet.ReadInt();
 
             if (H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
@@ -828,12 +831,13 @@ namespace H3MP
             }
             else
             {
-                ++H3MP_GameManager.TNHInstances[instance].currentlyPlaying;
+                H3MP_GameManager.TNHInstances[instance].AddCurrentlyPlaying(false, ID);
             }
         }
 
         public static void RemoveTNHCurrentlyPlaying(H3MP_Packet packet)
         {
+            int ID = packet.ReadInt();
             int instance = packet.ReadInt();
 
             if (H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
@@ -842,7 +846,7 @@ namespace H3MP
             }
             else
             {
-                --H3MP_GameManager.TNHInstances[instance].currentlyPlaying;
+                H3MP_GameManager.TNHInstances[instance].RemoveCurrentlyPlaying(false, ID);
             }
         }
 
@@ -1026,6 +1030,30 @@ namespace H3MP
                 Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
                 Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
             }
+        }
+
+        public static void SetTNHController(H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int newController = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && 
+                Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
+            {
+                H3MP_ClientSend.TNHData(newController, GM.TNH_Manager);
+                GM.TNH_Manager.enabled = false;
+            }
+
+            H3MP_GameManager.TNHInstances[instance].controller = newController;
+        }
+
+        public static void TNHData(H3MP_Packet packet)
+        {
+            int controller = packet.ReadInt();
+
+            H3MP_TNHData data = packet.ReadTNHData();
+
+            // TODO: Update the TNH_Manager with the data
         }
     }
 }

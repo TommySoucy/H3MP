@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 using static H3MP.H3MP_PlayerHitbox;
 using static Valve.VR.SteamVR_ExternalCamera;
 
@@ -971,7 +972,7 @@ namespace H3MP
             }
             else
             {
-                ++H3MP_GameManager.TNHInstances[instance].currentlyPlaying;
+                H3MP_GameManager.TNHInstances[instance].AddCurrentlyPlaying(false, clientID);
 
                 H3MP_ServerSend.AddTNHCurrentlyPlaying(instance, clientID);
             }
@@ -987,7 +988,7 @@ namespace H3MP
             }
             else
             {
-                --H3MP_GameManager.TNHInstances[instance].currentlyPlaying;
+                H3MP_GameManager.TNHInstances[instance].RemoveCurrentlyPlaying(false, clientID);
 
                 H3MP_ServerSend.RemoveTNHCurrentlyPlaying(instance, clientID);
             }
@@ -1197,6 +1198,39 @@ namespace H3MP
             }
 
             H3MP_ServerSend.SetTNHLevelIndex(levelIndex, instance, clientID);
+        }
+
+        public static void SetTNHController(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int newController = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && 
+                Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
+            {
+                H3MP_ServerSend.TNHData(newController, GM.TNH_Manager);
+                GM.TNH_Manager.enabled = false;
+            }
+
+            H3MP_GameManager.TNHInstances[instance].controller = newController;
+
+            H3MP_ServerSend.SetTNHController(instance, newController, clientID);
+        }
+
+        public static void TNHData(int clientID, H3MP_Packet packet)
+        {
+            int controller = packet.ReadInt();
+
+            if(controller == H3MP_GameManager.ID)
+            {
+                H3MP_TNHData data = packet.ReadTNHData();
+                
+                // TODO: Update the TNH_Manager with the data
+            }
+            else
+            {
+                H3MP_ServerSend.TNHData(controller, packet);
+            }
         }
     }
 }

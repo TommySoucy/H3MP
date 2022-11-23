@@ -11,35 +11,9 @@ namespace H3MP
     public class H3MP_TNHInstance
     {
         public int instance = -1;
+        public int controller = -1;
         public List<int> playerIDs; // Players in this instance
-        private int _currentlyPlaying; // Number of players actually in-game
-        public int currentlyPlaying
-        {
-            get { return _currentlyPlaying; }
-            set
-            {
-                int preVal = _currentlyPlaying;
-                _currentlyPlaying = value; 
-                if(preVal != 0 && _currentlyPlaying == 0 && Mod.TNHInstanceList != null)
-                {
-                    GameObject newInstance = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
-                    newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
-                    newInstance.SetActive(true);
-
-                    FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
-                    instanceButton.SetButton();
-                    instanceButton.MaxPointingRange = 5;
-                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance); });
-
-                    Mod.joinTNHInstances.Add(instance, newInstance);
-                }
-                else if(preVal == 0 && _currentlyPlaying != 0 && Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
-                {
-                    GameObject.Destroy(Mod.joinTNHInstances[instance]);
-                    Mod.joinTNHInstances.Remove(instance);
-                }
-            }
-        }
+        public List<int> currentlyPlaying; // Players in-game
 
         // Settings
         public bool letPeopleJoin;
@@ -80,33 +54,58 @@ namespace H3MP
             this.levelIndex = levelIndex;
         }
 
-        public void AddCurrentlyPlaying()
+        public void AddCurrentlyPlaying(bool send, int ID)
         {
-            ++currentlyPlaying;
-
-            // Send to other clients
-            if (H3MP_ThreadManager.host)
+            if (!H3MP_GameManager.TNHInstances[instance].letPeopleJoin && H3MP_GameManager.TNHInstances[instance].currentlyPlaying.Count == 0 &&
+                Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
             {
-                H3MP_ServerSend.AddTNHCurrentlyPlaying(instance);
+                GameObject.Destroy(Mod.joinTNHInstances[instance]);
+                Mod.joinTNHInstances.Remove(instance);
             }
-            else
+            currentlyPlaying.Add(ID);
+
+            if (send)
             {
-                H3MP_ClientSend.AddTNHCurrentlyPlaying(instance);
+                // Send to other clients
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.AddTNHCurrentlyPlaying(instance);
+                }
+                else
+                {
+                    H3MP_ClientSend.AddTNHCurrentlyPlaying(instance);
+                }
             }
         }
 
-        public void RemoveCurrentlyPlaying()
+        public void RemoveCurrentlyPlaying(bool send, int ID)
         {
-            --currentlyPlaying;
+            if (!H3MP_GameManager.TNHInstances[instance].letPeopleJoin && H3MP_GameManager.TNHInstances[instance].currentlyPlaying.Count - 1 == 0 && Mod.TNHInstanceList != null)
+            {
+                GameObject newInstance = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
+                newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
+                newInstance.SetActive(true);
 
-            // Send to other clients
-            if (H3MP_ThreadManager.host)
-            {
-                H3MP_ServerSend.RemoveTNHCurrentlyPlaying(instance);
+                FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
+                instanceButton.SetButton();
+                instanceButton.MaxPointingRange = 5;
+                instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance); });
+
+                Mod.joinTNHInstances.Add(instance, newInstance);
             }
-            else
+            currentlyPlaying.Remove(ID);
+
+            if (send)
             {
-                H3MP_ClientSend.RemoveTNHCurrentlyPlaying(instance);
+                // Send to other clients
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.RemoveTNHCurrentlyPlaying(instance);
+                }
+                else
+                {
+                    H3MP_ClientSend.RemoveTNHCurrentlyPlaying(instance);
+                }
             }
         }
     }

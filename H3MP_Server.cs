@@ -285,6 +285,8 @@ namespace H3MP
                 H3MP_ServerHandle.SetTNHSeed,
                 H3MP_ServerHandle.SetTNHLevelIndex,
                 H3MP_ServerHandle.AddInstance,
+                H3MP_ServerHandle.SetTNHController,
+                H3MP_ServerHandle.TNHData,
             };
 
             items = new H3MP_TrackedItemData[100];

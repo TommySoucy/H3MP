@@ -73,7 +73,9 @@ namespace H3MP
         setTNHSosigGunReload = 56,
         setTNHSeed = 57,
         setTNHLevelIndex = 58,
-        addInstance = 59
+        addInstance = 59,
+        setTNHController = 60,
+        TNHData = 61
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -136,7 +138,9 @@ namespace H3MP
         setTNHSosigGunReload = 55,
         setTNHSeed = 56,
         setTNHLevelIndex = 57,
-        addInstance = 58
+        addInstance = 58,
+        setTNHController = 59,
+        TNHData = 60
     }
 
     public class H3MP_Packet : IDisposable
@@ -573,6 +577,12 @@ namespace H3MP
             {
                 Write(instance.playerIDs[i]);
             }
+        }
+        /// <summary>Adds a H3MP_TNHData to the packet.</summary>
+        /// <param name="instance">The TNH_Manager to take teh data from.</param>
+        public void Write(TNH_Manager manager)
+        {
+            // TODO: When necessary
         }
         #endregion
 
@@ -1045,6 +1055,15 @@ namespace H3MP
             }
 
             return instance;
+        }
+
+        /// <summary>Reads a H3MP_TNHData from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public H3MP_TNHData ReadTNHData(bool _moveReadPos = true)
+        {
+            H3MP_TNHData data = new H3MP_TNHData();
+
+            return data;
         }
         #endregion
 
