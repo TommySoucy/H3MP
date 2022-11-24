@@ -129,6 +129,7 @@ namespace H3MP
         public static readonly MethodInfo TNH_UIManager_UpdateLevelSelectDisplayAndLoader = typeof(TNH_UIManager).GetMethod("UpdateLevelSelectDisplayAndLoader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_UIManager_UpdateTableBasedOnOptions = typeof(TNH_UIManager).GetMethod("UpdateTableBasedOnOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_UIManager_PlayButtonSound = typeof(TNH_UIManager).GetMethod("PlayButtonSound", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_Manager_DelayedInit = typeof(TNH_Manager).GetMethod("DelayedInit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -5208,8 +5209,6 @@ namespace H3MP
     // Patches TNH_Manager to keep track of TNH events
     class TNH_ManagerPatch
     {
-        public static int playerDiedSkip;
-
         static bool PlayerDiedPrefix()
         {
             if (Mod.managerObject != null)

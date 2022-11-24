@@ -794,8 +794,8 @@ namespace H3MP
                 }
 
                 // Remove from currently playing and dead if necessary
-                currentInstance.currentlyPlaying.Remove(playerID);
-                currentInstance.dead.Remove(playerID);
+                currentInstance.currentlyPlaying.Remove(ID);
+                currentInstance.dead.Remove(ID);
             }
 
             // Set locally
