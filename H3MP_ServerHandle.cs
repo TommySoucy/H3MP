@@ -982,13 +982,13 @@ namespace H3MP
         {
             int instance = packet.ReadInt();
 
-            if(H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance currentInstance))
             {
-                Debug.LogError("H3MP_ServerHandle: Received RemoveTNHCurrentlyPlaying packet with missing instance");
-            }
-            else
-            {
-                H3MP_GameManager.TNHInstances[instance].RemoveCurrentlyPlaying(false, clientID);
+                currentInstance.RemoveCurrentlyPlaying(false, clientID);
+                if (currentInstance.currentlyPlaying.Count == 0)
+                {
+                    currentInstance.dead.Clear();
+                }
 
                 H3MP_ServerSend.RemoveTNHCurrentlyPlaying(instance, clientID);
             }
@@ -1231,6 +1231,49 @@ namespace H3MP
             {
                 H3MP_ServerSend.TNHData(controller, packet);
             }
+        }
+
+        public static void TNHPlayerDied(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int ID = packet.ReadInt();
+
+            // Process dead
+            bool allDead = false;
+            H3MP_TNHInstance TNHinstance = H3MP_GameManager.TNHInstances[instance];
+            TNHinstance.dead.Add(ID); 
+            if (TNHinstance.dead.Count >= TNHinstance.currentlyPlaying.Count)
+            {
+                // Set visibility of all of the previously dead players
+                foreach(int playerID in TNHinstance.dead)
+                {
+                    if (H3MP_GameManager.players.TryGetValue(ID, out H3MP_PlayerManager player))
+                    {
+                        player.SetVisible(true);
+                    }
+                }
+
+                TNHinstance.dead.Clear();
+                allDead = true;
+            }
+
+            // Set player visibility if still necessary
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentlyPlayingTNH)
+            {
+                if (allDead)
+                {
+                    GM.TNH_Manager.PlayerDied();
+                }
+                else
+                {
+                    if (H3MP_GameManager.players.TryGetValue(ID, out H3MP_PlayerManager player))
+                    {
+                        player.SetVisible(false);
+                    }
+                }
+            }
+
+            H3MP_ServerSend.TNHPlayerDied(instance, ID, clientID);
         }
     }
 }

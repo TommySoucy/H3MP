@@ -75,7 +75,8 @@ namespace H3MP
         setTNHLevelIndex = 58,
         addInstance = 59,
         setTNHController = 60,
-        TNHData = 61
+        TNHData = 61,
+        TNHPlayerDied = 62
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -140,7 +141,8 @@ namespace H3MP
         setTNHLevelIndex = 57,
         addInstance = 58,
         setTNHController = 59,
-        TNHData = 60
+        TNHData = 60,
+        TNHPlayerDied = 61
     }
 
     public class H3MP_Packet : IDisposable

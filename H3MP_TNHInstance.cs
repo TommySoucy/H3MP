@@ -14,6 +14,7 @@ namespace H3MP
         public int controller = -1;
         public List<int> playerIDs; // Players in this instance
         public List<int> currentlyPlaying; // Players in-game
+        public List<int> dead; // in-game players who are dead
 
         // Settings
         public bool letPeopleJoin;
@@ -38,6 +39,8 @@ namespace H3MP
             this.instance = instance;
             playerIDs = new List<int>();
             playerIDs.Add(hostID);
+            currentlyPlaying = new List<int>();
+            dead = new List<int>();
 
             this.letPeopleJoin = letPeopleJoin;
             this.progressionTypeSetting = progressionTypeSetting;
@@ -80,7 +83,7 @@ namespace H3MP
 
         public void RemoveCurrentlyPlaying(bool send, int ID)
         {
-            if (!H3MP_GameManager.TNHInstances[instance].letPeopleJoin && H3MP_GameManager.TNHInstances[instance].currentlyPlaying.Count - 1 == 0 && Mod.TNHInstanceList != null)
+            if (!letPeopleJoin && currentlyPlaying.Count - 1 == 0 && Mod.TNHInstanceList != null)
             {
                 GameObject newInstance = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
                 newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
@@ -93,7 +96,13 @@ namespace H3MP
 
                 Mod.joinTNHInstances.Add(instance, newInstance);
             }
+
             currentlyPlaying.Remove(ID);
+
+            if (currentlyPlaying.Count == 0)
+            {
+                dead.Clear();
+            }
 
             if (send)
             {

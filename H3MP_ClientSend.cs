@@ -926,5 +926,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void TNHPlayerDied(int instance, int ID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHPlayerDied))
+            {
+                packet.Write(instance);
+                packet.Write(ID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

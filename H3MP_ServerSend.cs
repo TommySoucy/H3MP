@@ -1288,5 +1288,23 @@ namespace H3MP
                 SendTCPData(controller, packet);
             }
         }
+
+        public static void TNHPlayerDied(int instance, int ID, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHPlayerDied))
+            {
+                packet.Write(instance);
+                packet.Write(ID);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

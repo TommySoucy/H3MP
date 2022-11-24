@@ -82,5 +82,14 @@ namespace H3MP
                 }
             }
         }
+
+        public void SetVisible(bool hidden)
+        {
+            head.gameObject.SetActive(hidden);
+            torso.gameObject.SetActive(hidden);
+            leftHand.gameObject.SetActive(hidden);
+            rightHand.gameObject.SetActive(hidden);
+            overheadDisplayBillboard.gameObject.SetActive(hidden);
+        }
     }
 }

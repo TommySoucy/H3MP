@@ -177,6 +177,7 @@ namespace H3MP
                 if (!player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(true);
+                    UpdatePlayerHidden(player);
                     ++playersPresent;
 
                     player.SetEntitiesRegistered(true);
@@ -194,6 +195,21 @@ namespace H3MP
             }
         }
 
+        // MOD: This will be called to set a player as hidden based on certain criteria
+        //      Currently sets a player as hidden if they are in the same TNH game as us and are dead for example
+        //      A mod could prefix this to base it on other criteria, mainly for other game modes
+        public static void UpdatePlayerHidden(H3MP_PlayerManager player)
+        {
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance && Mod.currentTNHInstance.dead.Contains(player.ID))
+            {
+                player.SetVisible(false);
+                return;
+            }
+
+            // If have not found a reason for player to be hidden, set as visible
+            player.SetVisible(true);
+        }
+
         public static void UpdatePlayerInstance(int playerID, int instance)
         {
             H3MP_PlayerManager player = players[playerID];
@@ -207,11 +223,11 @@ namespace H3MP
                 }
             }
 
-            if (TNHInstances.ContainsKey(player.instance))
+            if (TNHInstances.TryGetValue(player.instance, out H3MP_TNHInstance currentInstance))
             {
-                int preHost = TNHInstances[player.instance].playerIDs[0];
-                TNHInstances[player.instance].playerIDs.Remove(playerID);
-                if (TNHInstances[player.instance].playerIDs.Count == 0)
+                int preHost = currentInstance.playerIDs[0];
+                currentInstance.playerIDs.Remove(playerID);
+                if (currentInstance.playerIDs.Count == 0)
                 {
                     TNHInstances.Remove(player.instance);
                 }
@@ -225,11 +241,15 @@ namespace H3MP
                         Mod.currentTNHInstancePlayers.Remove(playerID);
 
                         // Switch host if necessary
-                        if (preHost != TNHInstances[player.instance].playerIDs[0])
+                        if (preHost != currentInstance.playerIDs[0])
                         {
-                            Mod.currentTNHInstancePlayers[TNHInstances[player.instance].playerIDs[0]].transform.GetChild(0).GetComponent<Text>().text += " (Host)";
+                            Mod.currentTNHInstancePlayers[currentInstance.playerIDs[0]].transform.GetChild(0).GetComponent<Text>().text += " (Host)";
                         }
                     }
+
+                    // Remove from currently playing and dead if necessary
+                    currentInstance.currentlyPlaying.Remove(playerID);
+                    currentInstance.dead.Remove(playerID);
                 }
             }
 
@@ -245,6 +265,7 @@ namespace H3MP
                 if (!player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(true);
+                    UpdatePlayerHidden(player);
                     ++playersPresent;
 
                     player.SetEntitiesRegistered(true);
@@ -763,14 +784,18 @@ namespace H3MP
             {
                 activeInstances.Remove(H3MP_GameManager.instance);
             }
-            if (TNHInstances.ContainsKey(H3MP_GameManager.instance))
+            if (TNHInstances.TryGetValue(H3MP_GameManager.instance, out H3MP_TNHInstance currentInstance))
             {
-                TNHInstances[H3MP_GameManager.instance].playerIDs.Remove(ID);
+                currentInstance.playerIDs.Remove(ID);
 
-                if (TNHInstances[H3MP_GameManager.instance].playerIDs.Count == 0)
+                if (currentInstance.playerIDs.Count == 0)
                 {
                     TNHInstances.Remove(H3MP_GameManager.instance);
                 }
+
+                // Remove from currently playing and dead if necessary
+                currentInstance.currentlyPlaying.Remove(playerID);
+                currentInstance.dead.Remove(playerID);
             }
 
             // Set locally
@@ -910,6 +935,7 @@ namespace H3MP
                         if (!player.Value.gameObject.activeSelf)
                         {
                             player.Value.gameObject.SetActive(true);
+                            UpdatePlayerHidden(player.Value);
                         }
                         ++playersPresent;
 
@@ -1068,6 +1094,7 @@ namespace H3MP
                             if (!player.Value.gameObject.activeSelf)
                             {
                                 player.Value.gameObject.SetActive(true);
+                                UpdatePlayerHidden(player.Value);
                             }
                             ++playersPresent;
 

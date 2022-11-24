@@ -920,6 +920,12 @@ namespace H3MP
             harmony.Patch(TNH_UIManagerPatchSeedOriginal, new HarmonyMethod(TNH_UIManagerPatchSeedPrefix));
             harmony.Patch(TNH_UIManagerPatchNextLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchNextLevelPrefix));
             harmony.Patch(TNH_UIManagerPatchPrevLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchPrevLevelPrefix));
+
+            // TNH_ManagerPatch
+            MethodInfo TNH_ManagerPatchPlayerDiedOriginal = typeof(TNH_Manager).GetMethod("PlayerDied", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchPlayerDiedPrefix = typeof(TNH_ManagerPatch).GetMethod("PlayerDiedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -5185,6 +5191,47 @@ namespace H3MP
                     else
                     {
                         H3MP_ClientSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches TNH_Manager to keep track of TNH events
+    class TNH_ManagerPatch
+    {
+        public static int playerDiedSkip;
+
+        static bool PlayerDiedPrefix()
+        {
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                {
+                    // Update locally
+                    Mod.currentTNHInstance.dead.Add(H3MP_GameManager.ID);
+
+                    // Send update
+                    if (H3MP_ThreadManager.host)
+                    {
+                        // Only send to other players in the same TNH game
+                        H3MP_ServerSend.TNHPlayerDied(Mod.currentTNHInstance.instance, H3MP_GameManager.ID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHPlayerDied(Mod.currentTNHInstance.instance, H3MP_GameManager.ID);
+                    }
+
+                    // Prevent TNH from processing player death if there are other players stillin the game
+                    if (Mod.currentTNHInstance.dead.Count < Mod.currentTNHInstance.currentlyPlaying.Count)
+                    {
+                        return false;
+                    }
+                    else // Before we actually process the death, we want to clear dead list
+                    {
+                        Mod.currentTNHInstance.dead.Clear();
                     }
                 }
             }

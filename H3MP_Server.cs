@@ -287,6 +287,7 @@ namespace H3MP
                 H3MP_ServerHandle.AddInstance,
                 H3MP_ServerHandle.SetTNHController,
                 H3MP_ServerHandle.TNHData,
+                H3MP_ServerHandle.TNHPlayerDied,
             };
 
             items = new H3MP_TrackedItemData[100];
