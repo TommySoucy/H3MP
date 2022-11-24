@@ -937,5 +937,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void TNHAddTokens(int instance, int amount)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHAddTokens))
+            {
+                packet.Write(instance);
+                packet.Write(amount);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

@@ -76,7 +76,8 @@ namespace H3MP
         addInstance = 59,
         setTNHController = 60,
         TNHData = 61,
-        TNHPlayerDied = 62
+        TNHPlayerDied = 62,
+        TNHAddTokens = 63
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -142,7 +143,8 @@ namespace H3MP
         addInstance = 58,
         setTNHController = 59,
         TNHData = 60,
-        TNHPlayerDied = 61
+        TNHPlayerDied = 61,
+        TNHAddTokens = 62
     }
 
     public class H3MP_Packet : IDisposable

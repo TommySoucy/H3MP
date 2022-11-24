@@ -86,8 +86,8 @@ namespace H3MP
         public static int skipAllInstantiates = 0;
         public static AudioEvent sosigFootstepAudioEvent;
         public static bool TNHMenuLPJ;
-        public static bool TNHMenuHostOnDeathSpectate; // If false, leave
-        public static bool TNHMenuJoinOnDeathSpectate; // If false, leave
+        public static bool TNHOnDeathSpectate; // If false, leave
+        public static bool TNHSpectating;
         public static bool setLatestInstance; // Whether to set instance screen according to new instance index when we receive server response
         public static H3MP_TNHInstance currentTNHInstance;
         public static bool currentlyPlayingTNH;
@@ -393,8 +393,7 @@ namespace H3MP
 
             // Set option defaults
             TNHMenuLPJ = true;
-            TNHMenuHostOnDeathSpectate = true;
-            TNHMenuJoinOnDeathSpectate = true;
+            TNHOnDeathSpectate = true;
         }
 
         private void LoadAssets()
@@ -925,8 +924,11 @@ namespace H3MP
             // TNH_ManagerPatch
             MethodInfo TNH_ManagerPatchPlayerDiedOriginal = typeof(TNH_Manager).GetMethod("PlayerDied", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchPlayerDiedPrefix = typeof(TNH_ManagerPatch).GetMethod("PlayerDiedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchAddTokensOriginal = typeof(TNH_Manager).GetMethod("AddTokens", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchAddTokensPrefix = typeof(TNH_ManagerPatch).GetMethod("AddTokensPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
+            harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1020,7 +1022,7 @@ namespace H3MP
             TNHHostOnDeathSpectateCheckMark.SetActive(!TNHHostOnDeathSpectateCheckMark.activeSelf);
             TNHHostOnDeathLeaveCheckMark.SetActive(!TNHHostOnDeathSpectateCheckMark.activeSelf);
 
-            TNHMenuHostOnDeathSpectate = TNHHostOnDeathSpectateCheckMark.activeSelf;
+            TNHOnDeathSpectate = TNHHostOnDeathSpectateCheckMark.activeSelf;
         }
 
         private void OnTNHHostOnDeathLeaveClicked()
@@ -1028,7 +1030,7 @@ namespace H3MP
             TNHHostOnDeathLeaveCheckMark.SetActive(!TNHHostOnDeathLeaveCheckMark.activeSelf);
             TNHHostOnDeathSpectateCheckMark.SetActive(!TNHHostOnDeathLeaveCheckMark.activeSelf);
 
-            TNHMenuHostOnDeathSpectate = TNHHostOnDeathSpectateCheckMark.activeSelf;
+            TNHOnDeathSpectate = TNHHostOnDeathSpectateCheckMark.activeSelf;
         }
 
         private void OnTNHHostConfirmClicked()
@@ -1062,7 +1064,7 @@ namespace H3MP
             TNHJoinOnDeathSpectateCheckMark.SetActive(!TNHJoinOnDeathSpectateCheckMark.activeSelf);
             TNHJoinOnDeathLeaveCheckMark.SetActive(!TNHJoinOnDeathSpectateCheckMark.activeSelf);
 
-            TNHMenuJoinOnDeathSpectate = TNHJoinOnDeathSpectateCheckMark.activeSelf;
+            TNHOnDeathSpectate = TNHJoinOnDeathSpectateCheckMark.activeSelf;
         }
 
         private void OnTNHJoinOnDeathLeaveClicked()
@@ -1070,7 +1072,7 @@ namespace H3MP
             TNHJoinOnDeathLeaveCheckMark.SetActive(!TNHJoinOnDeathLeaveCheckMark.activeSelf);
             TNHJoinOnDeathSpectateCheckMark.SetActive(!TNHJoinOnDeathLeaveCheckMark.activeSelf);
 
-            TNHMenuJoinOnDeathSpectate = TNHJoinOnDeathSpectateCheckMark.activeSelf;
+            TNHOnDeathSpectate = TNHJoinOnDeathSpectateCheckMark.activeSelf;
         }
 
         private void OnTNHJoinConfirmClicked()
@@ -1130,6 +1132,7 @@ namespace H3MP
                 Mod.currentlyPlayingTNH = false;
             }
             Mod.currentTNHInstance = null;
+            Mod.TNHSpectating = false;
         }
 
         public void OnTNHInstanceReceived(H3MP_TNHInstance instance)
@@ -1250,6 +1253,39 @@ namespace H3MP
                 }
             }
         }
+
+        public static void DropAllItems()
+        {
+            if (GM.CurrentMovementManager.Hands[0].CurrentInteractable != null)
+            {
+                GM.CurrentMovementManager.Hands[0].ForceSetInteractable(null);
+            }
+            if (GM.CurrentMovementManager.Hands[1].CurrentInteractable != null)
+            {
+                GM.CurrentMovementManager.Hands[1].ForceSetInteractable(null);
+            }
+            foreach (FVRQuickBeltSlot slot in GM.CurrentPlayerBody.QuickbeltSlots)
+            {
+                if(slot.CurObject != null)
+                {
+                    slot.CurObject.SetQuickBeltSlot(null);
+                }
+            }
+            foreach (FVRQuickBeltSlot slot in GM.CurrentPlayerBody.QBSlots_Internal)
+            {
+                if(slot.CurObject != null)
+                {
+                    slot.CurObject.SetQuickBeltSlot(null);
+                }
+            }
+            foreach (FVRQuickBeltSlot slot in GM.CurrentPlayerBody.QBSlots_Added)
+            {
+                if(slot.CurObject != null)
+                {
+                    slot.CurObject.SetQuickBeltSlot(null);
+                }
+            }
+        }
     }
 
     #region General Patches
@@ -1290,6 +1326,12 @@ namespace H3MP
 
             if (preObject == null && ___m_currentInteractable != null)
             {
+                // If spectating we are just going to force break the interaction
+                if (Mod.TNHSpectating)
+                {
+                    ___m_currentInteractable.ForceBreakInteraction();
+                }
+
                 // Just started interacting with this item
                 H3MP_TrackedItem trackedItem = ___m_currentInteractable.GetComponent<H3MP_TrackedItem>();
                 if (trackedItem != null)
@@ -1371,6 +1413,12 @@ namespace H3MP
 
             if (slot != null)
             {
+                // If spectating we don't want to be able to put things in slots
+                if (Mod.TNHSpectating)
+                {
+                    __instance.SetQuickBeltSlot(null);
+                }
+
                 // Just put this item in a slot
                 H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
                 if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
@@ -4661,6 +4709,9 @@ namespace H3MP
                 {
                     if (GM.TNH_Manager != null)
                     {
+                        // Keep our own reference
+                        Mod.currentTNHInstance.manager = GM.TNH_Manager;
+
                         if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
                             if (Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID)
@@ -4705,10 +4756,12 @@ namespace H3MP
                             if (H3MP_ThreadManager.host)
                             {
                                 H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, nextID);
+                                H3MP_ServerSend.TNHData(nextID, Mod.currentTNHInstance.manager);
                             }
                             else
                             {
                                 H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, nextID);
+                                H3MP_ClientSend.TNHData(nextID, Mod.currentTNHInstance.manager);
                             }
                         }
                     }
@@ -5209,6 +5262,8 @@ namespace H3MP
     // Patches TNH_Manager to keep track of TNH events
     class TNH_ManagerPatch
     {
+        public static int addTokensSkip;
+
         static bool PlayerDiedPrefix()
         {
             if (Mod.managerObject != null)
@@ -5217,11 +5272,11 @@ namespace H3MP
                 {
                     // Update locally
                     Mod.currentTNHInstance.dead.Add(H3MP_GameManager.ID);
+                    GM.TNH_Manager.SubtractTokens(GM.TNH_Manager.GetNumTokens());
 
                     // Send update
                     if (H3MP_ThreadManager.host)
                     {
-                        // Only send to other players in the same TNH game
                         H3MP_ServerSend.TNHPlayerDied(Mod.currentTNHInstance.instance, H3MP_GameManager.ID);
                     }
                     else
@@ -5229,14 +5284,58 @@ namespace H3MP
                         H3MP_ClientSend.TNHPlayerDied(Mod.currentTNHInstance.instance, H3MP_GameManager.ID);
                     }
 
-                    // Prevent TNH from processing player death if there are other players stillin the game
+                    //TODO: Handle spectate or leave
+                    // Prevent TNH from processing player death if there are other players still in the game
                     if (Mod.currentTNHInstance.dead.Count < Mod.currentTNHInstance.currentlyPlaying.Count)
                     {
-                        return false;
+                        if (Mod.TNHOnDeathSpectate)
+                        {
+                            Mod.TNHSpectating = true;
+                            Mod.DropAllItems();
+                            return false;
+                        }
+                        // else, TNH_Manager will process player death
                     }
-                    else // Before we actually process the death, we want to clear dead list
+                    else // We were the last live player, the game will now end, reset
                     {
-                        Mod.currentTNHInstance.dead.Clear();
+                        Mod.currentTNHInstance.Reset();
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool AddTokensPrefix(int i, bool Scorethis)
+        {
+            if(addTokensSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Send update if these are tokens we want to award to every player
+                    if (Scorethis)
+                    {
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.TNHAddTokens(Mod.currentTNHInstance.instance, i);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.TNHAddTokens(Mod.currentTNHInstance.instance, i);
+                        }
+
+                        Mod.currentTNHInstance.tokenCount += i;
+                    }
+                    
+                    // Prevent TNH from adding tokens if player is dead
+                    if (Mod.currentTNHInstance.dead.Contains(H3MP_GameManager.ID))
+                    {
+                        return false;
                     }
                 }
             }

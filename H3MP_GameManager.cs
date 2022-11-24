@@ -230,6 +230,11 @@ namespace H3MP
                 if (currentInstance.playerIDs.Count == 0)
                 {
                     TNHInstances.Remove(player.instance);
+
+                    if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
+                    {
+                        Mod.TNHSpectating = false;
+                    }
                 }
                 else
                 {
@@ -791,6 +796,7 @@ namespace H3MP
                 if (currentInstance.playerIDs.Count == 0)
                 {
                     TNHInstances.Remove(H3MP_GameManager.instance);
+                    Mod.TNHSpectating = false;
                 }
 
                 // Remove from currently playing and dead if necessary
@@ -1050,7 +1056,7 @@ namespace H3MP
                 // TODO: If this is not always true, will have to handle by "if we leave a TNH scene" instead of "if we go into main menu"
                 if (LoadLevelBeginPatch.loadingLevel.Equals("MainMenu3") && Mod.currentTNHInstance != null) 
                 {
-                    // The destruction of items as we leave the level with giveControlOfDestroyed to true will handle to handover of 
+                    // The destruction of items as we leave the level with giveControlOfDestroyed to true will handle the handover of 
                     // item and sosig control. SetInstance will handle the update of activeInstances and TNHInstances
                     SetInstance(0);
                     if (Mod.currentlyPlayingTNH)
@@ -1059,6 +1065,7 @@ namespace H3MP
                         Mod.currentlyPlayingTNH = false;
                     }
                     Mod.currentTNHInstance = null;
+                    Mod.TNHSpectating = false;
                 }
             }
             else // Finished loading

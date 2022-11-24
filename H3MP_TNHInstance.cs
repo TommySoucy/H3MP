@@ -12,9 +12,12 @@ namespace H3MP
     {
         public int instance = -1;
         public int controller = -1;
+        public TNH_Manager manager;
         public List<int> playerIDs; // Players in this instance
         public List<int> currentlyPlaying; // Players in-game
+        public List<int> played; // Players who have been in-game
         public List<int> dead; // in-game players who are dead
+        public int tokenCount;
 
         // Settings
         public bool letPeopleJoin;
@@ -40,6 +43,7 @@ namespace H3MP
             playerIDs = new List<int>();
             playerIDs.Add(hostID);
             currentlyPlaying = new List<int>();
+            played = new List<int>();
             dead = new List<int>();
 
             this.letPeopleJoin = letPeopleJoin;
@@ -66,6 +70,17 @@ namespace H3MP
                 Mod.joinTNHInstances.Remove(instance);
             }
             currentlyPlaying.Add(ID);
+            if (!played.Contains(ID))
+            {
+                if(ID == H3MP_GameManager.ID)
+                {
+                    // This is us and it is the first time we go into this game, init
+                    ++TNH_ManagerPatch.addTokensSkip;
+                    manager.AddTokens(tokenCount, false);
+                    --TNH_ManagerPatch.addTokensSkip;
+                }
+                played.Add(ID);
+            }
 
             if (send)
             {
@@ -101,7 +116,7 @@ namespace H3MP
 
             if (currentlyPlaying.Count == 0)
             {
-                dead.Clear();
+                Reset();
             }
 
             if (send)
@@ -115,6 +130,19 @@ namespace H3MP
                 {
                     H3MP_ClientSend.RemoveTNHCurrentlyPlaying(instance);
                 }
+            }
+        }
+
+        public void Reset()
+        {
+            dead.Clear();
+            played.Clear();
+            tokenCount = 0;
+
+            // The game has reset, a new game will be created when a player goes in again, if we were spectating we want to stop
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)
+            {
+                Mod.TNHSpectating = false;
             }
         }
     }

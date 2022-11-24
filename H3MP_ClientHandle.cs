@@ -845,7 +845,7 @@ namespace H3MP
                 currentInstance.RemoveCurrentlyPlaying(false, ID);
                 if (currentInstance.currentlyPlaying.Count == 0)
                 {
-                    currentInstance.dead.Clear();
+                    currentInstance.Reset();
                 }
             }
         }
@@ -1037,11 +1037,19 @@ namespace H3MP
             int instance = packet.ReadInt();
             int newController = packet.ReadInt();
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && 
-                Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
+            if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
             {
-                H3MP_ClientSend.TNHData(newController, GM.TNH_Manager);
-                GM.TNH_Manager.enabled = false;
+                H3MP_ClientSend.TNHData(newController, Mod.currentTNHInstance.manager);
+
+                ++SetTNHManagerPatch.skip;
+                Mod.currentTNHInstance.manager.enabled = false;
+                --SetTNHManagerPatch.skip;
+            }
+            else if (newController == H3MP_GameManager.ID && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                ++SetTNHManagerPatch.skip;
+                Mod.currentTNHInstance.manager.enabled = true;
+                --SetTNHManagerPatch.skip;
             }
 
             H3MP_GameManager.TNHInstances[instance].controller = newController;
@@ -1076,7 +1084,7 @@ namespace H3MP
                     }
                 }
 
-                TNHinstance.dead.Clear();
+                TNHinstance.Reset();
                 allDead = true;
             }
 
@@ -1093,6 +1101,25 @@ namespace H3MP
                     {
                         player.SetVisible(false);
                     }
+                }
+            }
+        }
+
+        public static void TNHAddTokens(H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int amount = packet.ReadInt();
+
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance currentInstance))
+            {
+                currentInstance.tokenCount += amount;
+
+                // Implies we are in-game in this instance 
+                if (currentInstance.manager != null && !currentInstance.dead.Contains(H3MP_GameManager.ID))
+                {
+                    ++TNH_ManagerPatch.addTokensSkip;
+                    currentInstance.manager.AddTokens(amount, false);
+                    --TNH_ManagerPatch.addTokensSkip;
                 }
             }
         }

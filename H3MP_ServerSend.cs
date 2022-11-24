@@ -1306,5 +1306,23 @@ namespace H3MP
                 }
             }
         }
+
+        public static void TNHAddTokens(int instance, int ID, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHAddTokens))
+            {
+                packet.Write(instance);
+                packet.Write(ID);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }
