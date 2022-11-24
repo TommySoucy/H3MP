@@ -4680,6 +4680,12 @@ namespace H3MP
                                 ++skip;
                                 GM.TNH_Manager.enabled = false;
                                 --skip;
+
+                                // Even if disabled, we want to make sure that the full init has run on the manager
+                                // There is no Awake()
+                                // GM.TNH_Manager gets set in manager Start() so that has already run by now
+                                // All thats left is the delayed init
+                                Mod.TNH_Manager_DelayedInit.Invoke(GM.TNH_Manager, null);
                             }
                         }
 
