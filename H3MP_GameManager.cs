@@ -1,17 +1,10 @@
 ﻿using FistVR;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.Internal.VR;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.VR;
-using Valve.VR.InteractionSystem;
-using static H3MP.H3MP_PlayerHitbox;
-using static UnityEngine.ParticleSystem;
 
 namespace H3MP
 {
@@ -48,6 +41,7 @@ namespace H3MP
 
         public static int ID = 0;
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
+        public static Vector3 overheadDisplayOffset = new Vector3(0, 0.25f, 0);
         public static int playersPresent = 0;
         public static int playerStateAddtionalDataSize = -1;
         public static int instance = 0;
@@ -153,6 +147,7 @@ namespace H3MP
             player.leftHand.transform.rotation = leftHandRot;
             player.rightHand.transform.position = rightHandPos;
             player.rightHand.transform.rotation = rightHandRot;
+            player.overheadDisplayBillboard.transform.position = player.head.transform.position + overheadDisplayOffset;
             if (player.healthIndicator.gameObject.activeSelf)
             {
                 player.healthIndicator.text = ((int)health).ToString() + "/" + maxHealth;

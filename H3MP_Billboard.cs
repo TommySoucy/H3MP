@@ -10,7 +10,9 @@ namespace H3MP
     {
         void Update()
         {
-            transform.rotation = Camera.main.transform.rotation;
+            Vector3 euler = Camera.main.transform.rotation.eulerAngles;
+            euler.z = 0;
+            transform.rotation = Quaternion.Euler(euler);
         }
     }
 }
