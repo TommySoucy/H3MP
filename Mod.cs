@@ -35,6 +35,8 @@ namespace H3MP
         public GameObject H3MPMenuPrefab;
         public GameObject TNHMenuPrefab;
         public GameObject playerPrefab;
+        public static Material reticleFriendlyContactArrowMat;
+        public static Material reticleFriendlyContactIconMat;
         public GameObject H3MPMenu;
         public static GameObject TNHMenu;
         public static Dictionary<string, string> sosigWearableMap;
@@ -402,6 +404,8 @@ namespace H3MP
 
             H3MPMenuPrefab = assetBundle.LoadAsset<GameObject>("H3MPMenu");
             TNHMenuPrefab = assetBundle.LoadAsset<GameObject>("TNHMenu");
+            reticleFriendlyContactArrowMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactArrowMat");
+            reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
             SetupPlayerPrefab();
@@ -929,6 +933,15 @@ namespace H3MP
 
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
+
+            // TAHReticleContactPatch
+            MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TAHReticleContactPatchTickTranspiler = typeof(TAHReticleContactPatch).GetMethod("TickTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TAHReticleContactPatchSetContactTypeOriginal = typeof(TAH_ReticleContact).GetMethod("SetContactType", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TAHReticleContactPatchSetContactTypePrefix = typeof(TAHReticleContactPatch).GetMethod("SetContactTypePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(TAHReticleContactPatchTickOriginal, null ,null, new HarmonyMethod(TAHReticleContactPatchTickTranspiler));
+            harmony.Patch(TAHReticleContactPatchSetContactTypeOriginal, new HarmonyMethod(TAHReticleContactPatchSetContactTypePrefix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -5341,6 +5354,57 @@ namespace H3MP
             }
 
             return true;
+        }
+    }
+
+    // Patches TAH_ReticleContact to enable display of friendlies
+    class TAHReticleContactPatch
+    {
+        static bool SetContactTypePrefix(ref TAH_ReticleContact __instance, TAH_ReticleContact.ContactType t)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if((int)t == -2) // Friendly
+            {
+                if (__instance.Type != t)
+                {
+                    __instance.Type = t;
+                    __instance.M_Arrow.mesh = __instance.Meshes_Arrow[(int)TAH_ReticleContact.ContactType.Enemy];
+                    __instance.M_Icon.mesh = __instance.Meshes_Icon[(int)TAH_ReticleContact.ContactType.Enemy];
+                    __instance.R_Arrow.material = Mod.reticleFriendlyContactArrowMat;
+                    __instance.R_Icon.material = Mod.reticleFriendlyContactIconMat;
+                }
+                return false;
+            }
+            return true;
+        }
+
+        // This transpiler will make sure that Tick will also return false if the transform is not active
+        // This is so taht when we make a player inactive because they are dead, we don't want to see them on the reticle either
+        static IEnumerable<CodeInstruction> TickTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load TAH_ReticleContact instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(TAH_ReticleContact), "TrackedTransform"))); // Load the TrackedTransform
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "get_gameObject"))); // Get the GameObject
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GameObject), "get_activeInHierarchy"))); // Get activeInHierarchy
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Brfalse)
+                {
+                    Debug.Log("Reticle contact TickTranspiler found brfalse operand: " + instruction.operand.ToString());
+                    toInsert.Add(new CodeInstruction(OpCodes.Brtrue, instruction.operand));
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
         }
     }
     #endregion

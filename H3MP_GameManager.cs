@@ -198,16 +198,29 @@ namespace H3MP
         // MOD: This will be called to set a player as hidden based on certain criteria
         //      Currently sets a player as hidden if they are in the same TNH game as us and are dead for example
         //      A mod could prefix this to base it on other criteria, mainly for other game modes
-        public static void UpdatePlayerHidden(H3MP_PlayerManager player)
+        public static bool UpdatePlayerHidden(H3MP_PlayerManager player)
         {
-            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance && Mod.currentTNHInstance.dead.Contains(player.ID))
+            // TNH
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
             {
-                player.SetVisible(false);
-                return;
+                if (Mod.currentTNHInstance.dead.Contains(player.ID))
+                {
+                    player.SetVisible(false);
+                    return false;
+                }
+                else // Player not dead
+                {
+                    if(GM.TNH_Manager != null && Mod.currentTNHInstance.currentlyPlaying.Contains(player.ID))
+                    {
+                        // We are currently in a TNH game with this player, add them to radar
+                        GM.TNH_Manager.TAHReticle.RegisterTrackedObject(player.head, (TAH_ReticleContact.ContactType)(-2)); // -2 is a custom value handled by TAHReticleContactPatch
+                    }
+                }
             }
 
             // If have not found a reason for player to be hidden, set as visible
             player.SetVisible(true);
+            return true;
         }
 
         public static void UpdatePlayerInstance(int playerID, int instance)
