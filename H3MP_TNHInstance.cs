@@ -138,6 +138,8 @@ namespace H3MP
             dead.Clear();
             played.Clear();
             tokenCount = 0;
+            currentLevel = 0;
+            phase = TNH_Phase.StartUp;
 
             // The game has reset, a new game will be created when a player goes in again, if we were spectating we want to stop
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)

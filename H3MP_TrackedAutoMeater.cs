@@ -7,30 +7,30 @@ using UnityEngine;
 
 namespace H3MP
 {
-    public class H3MP_TrackedSosig : MonoBehaviour
+    public class H3MP_TrackedAutoMeater : MonoBehaviour
     {
-        public Sosig physicalSosigScript;
-        public H3MP_TrackedSosigData data;
+        public AutoMeater physicalAutoMeaterScript;
+        public H3MP_TrackedAutoMeaterData data;
 
         public bool sendDestroy = true; // To prevent feeback loops
         public static int skipDestroy;
 
         private void OnDestroy()
         {
-            H3MP_GameManager.trackedSosigBySosig.Remove(physicalSosigScript);
+            H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(physicalAutoMeaterScript);
 
             if (H3MP_ThreadManager.host)
             {
                 if (H3MP_GameManager.giveControlOfDestroyed)
                 {
-                    // We just want to give control of our items to another client (usually because leaving scene with other clients left inside)
+                    // We just want to give control of our auto meaters to another client (usually because leaving scene with other clients left inside)
                     if (data.controller == 0)
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
 
                         if (otherPlayer != -1)
                         {
-                            H3MP_ServerSend.GiveSosigControl(data.trackedID, otherPlayer);
+                            H3MP_ServerSend.GiveAutoMeaterControl(data.trackedID, otherPlayer);
 
                             // Also change controller locally
                             data.controller = otherPlayer;
@@ -41,21 +41,21 @@ namespace H3MP
                 {
                     if (sendDestroy && skipDestroy == 0)
                     {
-                        H3MP_ServerSend.DestroySosig(data.trackedID);
+                        H3MP_ServerSend.DestroyAutoMeater(data.trackedID);
                     }
                     else if (!sendDestroy)
                     {
                         sendDestroy = true;
                     }
 
-                    H3MP_Server.sosigs[data.trackedID] = null;
-                    H3MP_Server.availableSosigIndices.Add(data.trackedID);
+                    H3MP_Server.autoMeaters[data.trackedID] = null;
+                    H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
                 }
                 if (data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.sosigs[data.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[data.localTrackedID].localTrackedID = data.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                    H3MP_GameManager.autoMeaters[data.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                    H3MP_GameManager.autoMeaters[data.localTrackedID].localTrackedID = data.localTrackedID;
+                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
                     data.localTrackedID = -1;
                 }
             }
@@ -69,7 +69,7 @@ namespace H3MP
 
                         if (otherPlayer != -1)
                         {
-                            H3MP_ClientSend.GiveSosigControl(data.trackedID, otherPlayer);
+                            H3MP_ClientSend.GiveAutoMeaterControl(data.trackedID, otherPlayer);
 
                             // Also change controller locally
                             data.controller = otherPlayer;
@@ -80,20 +80,20 @@ namespace H3MP
                 {
                     if (sendDestroy && skipDestroy == 0)
                     {
-                        H3MP_ClientSend.DestroySosig(data.trackedID);
+                        H3MP_ClientSend.DestroyAutoMeater(data.trackedID);
                     }
                     else if (!sendDestroy)
                     {
                         sendDestroy = true;
                     }
 
-                    H3MP_Client.sosigs[data.trackedID] = null;
+                    H3MP_Client.autoMeaters[data.trackedID] = null;
                 }
                 if (data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.sosigs[data.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[data.localTrackedID].localTrackedID = data.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                    H3MP_GameManager.autoMeaters[data.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                    H3MP_GameManager.autoMeaters[data.localTrackedID].localTrackedID = data.localTrackedID;
+                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
                     data.localTrackedID = -1;
                 }
             }

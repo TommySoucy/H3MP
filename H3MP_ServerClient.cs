@@ -283,6 +283,21 @@ namespace H3MP
                     }
                 }
             }
+            Debug.Log("Relevant tracked sosigs sent, sending relevant tracked AutoMeaters");
+            // Send to the clients all AutoMeaters that are already synced and controlled by clients in the same scene
+            for (int i = 0; i < H3MP_Server.autoMeaters.Length; ++i)
+            {
+                if (H3MP_Server.autoMeaters[i] != null)
+                {
+                    if ((H3MP_Server.autoMeaters[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                        (H3MP_Server.autoMeaters[i].controller != 0 && H3MP_Server.autoMeaters[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.autoMeaters[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.instance))
+                    {
+                        Debug.Log("\tSending a AutoMeater");
+                        H3MP_Server.autoMeaters[i].Update();
+                        H3MP_ServerSend.TrackedAutoMeaterSpecific(H3MP_Server.sosigs[i], player.scene, player.instance, ID);
+                    }
+                }
+            }
             Debug.Log("Relevant tracked sosigs sent");
         }
 

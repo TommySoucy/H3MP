@@ -121,7 +121,24 @@ namespace H3MP
         public static readonly FieldInfo SosigLink_m_integrity = typeof(SosigLink).GetField("m_integrity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigInventory_m_ammoStores = typeof(SosigInventory).GetField("m_ammoStores", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_UIManager_m_currentLevelIndex = typeof(TNH_UIManager).GetField("m_currentLevelIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
+        public static readonly FieldInfo TNH_Manager_m_curLevel = typeof(TNH_Manager).GetField("m_curLevel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_curProgression = typeof(TNH_Manager).GetField("m_curProgression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_curProgressionEndless = typeof(TNH_Manager).GetField("m_curProgressionEndless", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_level = typeof(TNH_Manager).GetField("m_level", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_activeSupplyPointIndicies = typeof(TNH_Manager).GetField("m_activeSupplyPointIndicies", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_curHoldIndex = typeof(TNH_Manager).GetField("m_curHoldIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_lastHoldIndex = typeof(TNH_Manager).GetField("m_lastHoldIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_curHoldPoint = typeof(TNH_Manager).GetField("m_curHoldPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_curPointSequence = typeof(TNH_Manager).GetField("m_curPointSequence", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_seed = typeof(TNH_Manager).GetField("m_seed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_HoldPoint_m_activeSosigs = typeof(TNH_HoldPoint).GetField("m_activeSosigs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AutoMeater_m_idleLookPoint = typeof(AutoMeater).GetField("m_idleLookPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AutoMeater_m_idleLookPointCountDown = typeof(AutoMeater).GetField("m_idleLookPointCountDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AutoMeater_m_idleDestination = typeof(AutoMeater).GetField("m_idleDestination", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AutoMeater_m_idleDestinationCountDown = typeof(AutoMeater).GetField("m_idleDestinationCountDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AutoMeater_m_controlledMovement = typeof(AutoMeater).GetField("m_controlledMovement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AutoMeater_m_flightRecoveryTime = typeof(AutoMeater).GetField("m_flightRecoveryTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Sosig_SetBodyPose = typeof(Sosig).GetMethod("SetBodyPose", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -132,6 +149,9 @@ namespace H3MP
         public static readonly MethodInfo TNH_UIManager_UpdateTableBasedOnOptions = typeof(TNH_UIManager).GetMethod("UpdateTableBasedOnOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_UIManager_PlayButtonSound = typeof(TNH_UIManager).GetMethod("PlayButtonSound", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_Manager_DelayedInit = typeof(TNH_Manager).GetMethod("DelayedInit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_Manager_SetLevel = typeof(TNH_Manager).GetMethod("SetLevel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_Manager_SetPhase = typeof(TNH_Manager).GetMethod("SetPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo AutoMeater_SetState = typeof(AutoMeater).GetMethod("SetState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -505,6 +525,33 @@ namespace H3MP
             harmony.Patch(sosigUpdatePatchOriginal, new HarmonyMethod(sosigUpdatePatchPrefix));
             harmony.Patch(sosigHandPhysUpdatePatchOriginal, new HarmonyMethod(sosigHandPhysUpdatePatchPrefix));
 
+            // AutoMeaterUpdatePatch
+            MethodInfo autoMeaterUpdatePatchOriginal = typeof(AutoMeater).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterFixedUpdatePatchOriginal = typeof(AutoMeater).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterUpdatePatchPrefix = typeof(AutoMeaterUpdatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterUpdatePatchOriginal, new HarmonyMethod(autoMeaterUpdatePatchPrefix));
+            harmony.Patch(autoMeaterFixedUpdatePatchOriginal, new HarmonyMethod(autoMeaterUpdatePatchPrefix));
+
+            // AutoMeaterEventPatch
+            MethodInfo autoMeaterEventReceivePatchOriginal = typeof(AutoMeater).GetMethod("EventReceive", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo autoMeaterEventReceivePatchPrefix = typeof(AutoMeaterEventPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterEventReceivePatchOriginal, new HarmonyMethod(autoMeaterEventReceivePatchPrefix));
+
+            // AutoMeaterSetStatePatch
+            MethodInfo autoMeaterSetStatePatchOriginal = typeof(AutoMeater).GetMethod("SetState", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterSetStatePatchPrefix = typeof(AutoMeaterSetStatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterSetStatePatchOriginal, new HarmonyMethod(autoMeaterSetStatePatchPrefix));
+
+            // AutoMeaterUpdateFlightPatch
+            MethodInfo autoMeaterUpdateFlightPatchOriginal = typeof(AutoMeater).GetMethod("UpdateFlight", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterUpdateFlightPatchPrefix = typeof(AutoMeaterUpdateFlightPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo autoMeaterUpdateFlightPatchTranspiler = typeof(AutoMeaterUpdateFlightPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterUpdateFlightPatchOriginal, new HarmonyMethod(autoMeaterUpdateFlightPatchPrefix), null, new HarmonyMethod(autoMeaterUpdateFlightPatchTranspiler));
+
             // InventoryUpdatePatch
             MethodInfo sosigInvUpdatePatchOriginal = typeof(SosigInventory).GetMethod("PhysHold", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigInvUpdatePatchPrefix = typeof(SosigInvUpdatePatch).GetMethod("PhysHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -573,6 +620,12 @@ namespace H3MP
 
             harmony.Patch(sosigSetIFFPatchOriginal, new HarmonyMethod(sosigSetIFFPatchPrefix));
             harmony.Patch(sosigSetOriginalIFFPatchOriginal, new HarmonyMethod(sosigSetOriginalIFFPatchPrefix));
+
+            // SosigEventReceivePatch
+            MethodInfo sosigEventReceivePatchOriginal = typeof(Sosig).GetMethod("EventReceive", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigEventReceivePatchPrefix = typeof(SosigEventReceivePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigEventReceivePatchOriginal, new HarmonyMethod(sosigEventReceivePatchPrefix));
 
             // ChamberEjectRoundPatch
             MethodInfo chamberEjectRoundPatchOriginal = typeof(FVRFireArmChamber).GetMethod("EjectRound", BindingFlags.Public | BindingFlags.Instance);
@@ -876,6 +929,12 @@ namespace H3MP
             MethodInfo sosigWearableDamagePatchPostfix = typeof(SosigWearableDamagePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(sosigWearableDamagePatchOriginal, new HarmonyMethod(sosigWearableDamagePatchPrefix), new HarmonyMethod(sosigWearableDamagePatchPostfix));
+
+            // AutoMeaterDamagePatch
+            MethodInfo autoMeaterDamagePatchOriginal = typeof(AutoMeater).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo autoMeaterDamagePatchPrefix = typeof(AutoMeaterDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterDamagePatchOriginal, new HarmonyMethod(autoMeaterDamagePatchPrefix));
 
             // SetTNHManagerPatch
             MethodInfo setTNHManagerPatchOriginal = typeof(GM).GetMethod("set_TNH_Manager", BindingFlags.Public | BindingFlags.Static);
@@ -1299,6 +1358,47 @@ namespace H3MP
                 }
             }
         }
+        
+        // MOD: This method will be used to find the ID of which player to give control of this object
+        //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
+        public static int GetBestPotentialObjectHost(int currentController)
+        {
+            if (Mod.currentTNHInstance != null)
+            {
+                if(currentController == -1)
+                {
+                    foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                    {
+                        if (player.Value.gameObject.activeSelf)
+                        {
+                            return player.Key;
+                        }
+                    }
+                }
+                else
+                {
+                    // Going through each like this, we will go through the host of the instance before any other
+                    foreach (int playerID in Mod.currentTNHInstance.playerIDs)
+                    {
+                        if (playerID != currentController && H3MP_GameManager.players[playerID].gameObject.activeSelf)
+                        {
+                            return playerID;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                {
+                    if (player.Value.gameObject.activeSelf)
+                    {
+                        return player.Key;
+                    }
+                }
+            }
+            return -1;
+        }
     }
 
     #region General Patches
@@ -1406,6 +1506,36 @@ namespace H3MP
                                 trackedSosig.data.controller = H3MP_Client.singleton.ID;
                                 trackedSosig.data.localTrackedID = H3MP_GameManager.sosigs.Count;
                                 H3MP_GameManager.sosigs.Add(trackedSosig.data);
+                            }
+                        }
+                    }
+                    else // Although AutoMeater turrets have FVRPhysicalObjects, they don't have an objectWrapper, so they won't be tracked items
+                    {
+                        AutoMeater autoMeater = ___m_currentInteractable.GetComponent<AutoMeater>();
+                        if (autoMeater != null)
+                        {
+                            // We just grabbed an AutoMeater
+                            H3MP_TrackedAutoMeater trackedAutoMeater = autoMeater.GetComponent<H3MP_TrackedAutoMeater>();
+                            if (trackedAutoMeater != null && trackedAutoMeater.data.trackedID != -1 && trackedAutoMeater.data.localTrackedID == -1)
+                            {
+                                if (H3MP_ThreadManager.host)
+                                {
+                                    H3MP_ServerSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, 0);
+
+                                    // Update locally
+                                    trackedAutoMeater.data.controller = 0;
+                                    trackedAutoMeater.data.localTrackedID = H3MP_GameManager.autoMeaters.Count;
+                                    H3MP_GameManager.autoMeaters.Add(trackedAutoMeater.data);
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, H3MP_Client.singleton.ID);
+
+                                    // Update locally
+                                    trackedAutoMeater.data.controller = H3MP_Client.singleton.ID;
+                                    trackedAutoMeater.data.localTrackedID = H3MP_GameManager.autoMeaters.Count;
+                                    H3MP_GameManager.autoMeaters.Add(trackedAutoMeater.data);
+                                }
                             }
                         }
                     }
@@ -2600,6 +2730,160 @@ namespace H3MP
             }
         }
     }
+
+    // Patches Sosig.EventReceive to prevent event processing on non-controlling client
+    class SosigEventReceivePatch
+    {
+        static bool Prefix(ref Sosig __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                return trackedSosig.data.controller == H3MP_GameManager.ID;
+            }
+            return true;
+        }
+    }
+
+    // Patches AutoMeater.Update and FixedUpdate to prevent updating on non-controlling client
+    class AutoMeaterUpdatePatch
+    {
+        static bool Prefix(ref AutoMeater __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedAutoMeater trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                return trackedAutoMeater.data.controller == H3MP_GameManager.ID;
+            }
+            return true;
+        }
+    }
+
+    // Patches AutoMeater.EventReceive to prevent event processing on non-controlling client
+    class AutoMeaterEventPatch
+    {
+        static bool Prefix(ref AutoMeater __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedAutoMeater trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                return trackedAutoMeater.data.controller == H3MP_GameManager.ID;
+            }
+            return true;
+        }
+    }
+
+    // Patches AutoMeater.SetState to send to other clients
+    class AutoMeaterSetStatePatch
+    {
+        public static int skip;
+
+        static void Postfix(ref AutoMeater __instance, AutoMeater.AutoMeaterState s, ref Vector3 ___m_idleLookPoint)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (skip > 0)
+            {
+                return;
+            }
+
+            H3MP_TrackedAutoMeater trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.AutoMeaterSetState(trackedAutoMeater.data.trackedID, (byte)s);
+                }
+                else
+                {
+                    H3MP_ClientSend.AutoMeaterSetState(trackedAutoMeater.data.trackedID, (byte)s);
+                }
+            }
+        }
+    }
+
+    // Patches AutoMeater.UpdateFlight to send to blade activation to other clients ad prevent update on non-controlling clients
+    class AutoMeaterUpdateFlightPatch
+    {
+        static bool Prefix(ref AutoMeater __instance, AutoMeater.AutoMeaterState s, ref Vector3 ___m_idleLookPoint)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedAutoMeater trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                return trackedAutoMeater.data.controller == H3MP_GameManager.ID;
+            }
+            return true;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsertActive = new List<CodeInstruction>();
+            toInsertActive.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeater gameobject
+            toInsertActive.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load true
+            toInsertActive.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterUpdateFlightPatch), "SetAutoMeaterBladesActive"))); // Call SetAutoMeaterBladesActive
+            List<CodeInstruction> toInsertInactive = new List<CodeInstruction>();
+            toInsertActive.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeater gameobject
+            toInsertActive.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load false
+            toInsertActive.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterUpdateFlightPatch), "SetAutoMeaterBladesActive"))); // Call SetAutoMeaterBladesActive
+
+            bool active = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("UsesBlades"))
+                {
+                    instructionList.InsertRange(i + 2, active ? toInsertActive : toInsertInactive);
+                    active = !active;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SetAutoMeaterBladesActive(AutoMeater autoMeater, bool active)
+        {
+            H3MP_TrackedAutoMeater trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(autoMeater) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[autoMeater] : autoMeater.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.AutoMeaterSetBladesActive(trackedAutoMeater.data.trackedID, active);
+                }
+                else
+                {
+                    H3MP_ClientSend.AutoMeaterSetBladesActive(trackedAutoMeater.data.trackedID, active);
+                }
+            }
+        }
+    }
     #endregion
 
     #region Instatiation Patches
@@ -2708,6 +2992,7 @@ namespace H3MP
             {
                 H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -2778,6 +3063,7 @@ namespace H3MP
                 track = false;
                 H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -2818,6 +3104,7 @@ namespace H3MP
             {
                 H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -2893,6 +3180,7 @@ namespace H3MP
                 track = false;
                 H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -3043,7 +3331,8 @@ namespace H3MP
                     // If we don't have a ref to the firearm that fired this projectile, let the damage be controlled by the host
                     if (!H3MP_ThreadManager.host)
                     {
-                        return false;
+                        int bestHost = Mod.GetBestPotentialObjectHost(-1);
+                        return bestHost == -1 || bestHost == H3MP_GameManager.ID;
                     }
                 }
                 else // We have a ref to the firearm that fired this projectile
@@ -3352,22 +3641,9 @@ namespace H3MP
                     H3MP_TrackedItem ti = mb.GetComponent<H3MP_TrackedItem>();
                     if (ti == null)
                     {
-                        // If we don't have a ref to the controller of the item that caused this damage, let the damage be controlled by the
-                        // first player we can find in the same scene
-                        // TODO: Keep a dictionary of players using the scene as key
-                        int firstPlayerInScene = 0;
-                        foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
-                        {
-                            if (player.Value.gameObject.activeSelf)
-                            {
-                                firstPlayerInScene = player.Key;
-                            }
-                            break;
-                        }
-                        if (firstPlayerInScene != H3MP_GameManager.ID)
-                        {
-                            return null;
-                        }
+                        // Controller of damaging item unknown, lest best postential host control it
+                        int bestHost = Mod.GetBestPotentialObjectHost(-1);
+                        return (bestHost == H3MP_GameManager.ID || bestHost == -1) ? original : null;
                     }
                     else // We have a ref to the item itself
                     {
@@ -4549,6 +4825,7 @@ namespace H3MP
                     }
                     else
                     {
+                        // Not in control, we want to send the damage to the controller for them to precess it and return the result
                         for (int i=0; i < __instance.S.Links.Count; ++i)
                         {
                             if (__instance.S.Links[i] == __instance)
@@ -4698,6 +4975,76 @@ namespace H3MP
                 }
             }
         }
+    }
+
+    // Patches AutoMeater.Damage to keep track of damage taken by an AutoMeater
+    class AutoMeaterDamagePatch
+    {
+        public static int skip;
+        static H3MP_TrackedAutoMeater trackedAutoMeater;
+
+        static bool Prefix(ref AutoMeater __instance, Damage d)
+        {
+            if (skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged AutoMeater, we want to process the damage
+            trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedAutoMeater.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Not in control, we want to send the damage to the controller for them to precess it and return the result
+                        H3MP_ServerSend.AutoMeaterDamage(trackedAutoMeater.data, d);
+                        return false;
+                    }
+                }
+                else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    H3MP_ClientSend.AutoMeaterDamage(trackedAutoMeater.data.trackedID, d);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // TODO: Currently no data is necessary to sync after damage, need review
+        //static void Postfix(ref AutoMeater __instance)
+        //{
+        //    // If in control of the damaged sosig link, we want to send the damage results to other clients
+        //    if (trackedAutoMeater != null)
+        //    {
+        //        if (H3MP_ThreadManager.host)
+        //        {
+        //            if (trackedAutoMeater.data.controller == 0)
+        //            {
+        //                H3MP_ServerSend.AutoMeaterDamageData(trackedAutoMeater);
+        //            }
+        //        }
+        //        else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
+        //        {
+        //            H3MP_ClientSend.AutoMeaterDamageData(trackedAutoMeater);
+        //        }
+        //    }
+        //}
     }
     #endregion
 
@@ -5276,6 +5623,7 @@ namespace H3MP
     class TNH_ManagerPatch
     {
         public static int addTokensSkip;
+        public static int setLevelSkip;
 
         static bool PlayerDiedPrefix()
         {

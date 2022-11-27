@@ -44,7 +44,8 @@ namespace H3MP
         private static PacketHandler[] packetHandlers;
         public static Dictionary<string, int> synchronizedScenes;
         public static H3MP_TrackedItemData[] items; // All tracked items, regardless of whos control they are under
-        public static H3MP_TrackedSosigData[] sosigs; // All tracked items, regardless of whos control they are under
+        public static H3MP_TrackedSosigData[] sosigs; // All tracked Sosigs, regardless of whos control they are under
+        public static H3MP_TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
 
         private void Awake()
         {
@@ -366,6 +367,13 @@ namespace H3MP
                 H3MP_ClientHandle.TNHData,
                 H3MP_ClientHandle.TNHPlayerDied,
                 H3MP_ClientHandle.TNHAddTokens,
+                H3MP_ClientHandle.TrackedAutoMeater,
+                H3MP_ClientHandle.TrackedAutoMeaters,
+                H3MP_ClientHandle.DestroyAutoMeater,
+                H3MP_ClientHandle.GiveAutoMeaterControl,
+                H3MP_ClientHandle.AutoMeaterSetState,
+                H3MP_ClientHandle.AutoMeaterSetBladesActive,
+                H3MP_ClientHandle.AutoMeaterDamage,
             };
 
             // All vanilla scenes can be synced by default
@@ -379,6 +387,8 @@ namespace H3MP
             items = new H3MP_TrackedItemData[100];
 
             sosigs = new H3MP_TrackedSosigData[100];
+
+            autoMeaters = new H3MP_TrackedAutoMeaterData[100];
 
             Debug.Log("Initialized client");
         }
@@ -448,6 +458,39 @@ namespace H3MP
             }
         }
 
+        public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int instance)
+        {
+            Debug.Log("Received order to add a AutoMeater");
+            // Adjust AutoMeaters size to acommodate if necessary
+            if (autoMeaters.Length <= trackedAutoMeater.trackedID)
+            {
+                IncreaseAutoMeatersSize(trackedAutoMeater.trackedID);
+            }
+
+            if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
+            {
+                // If we already control the AutoMeater it is because we are the one who sent the AutoMeater to the server
+                // We just need to update the tracked ID of the AutoMeater
+                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].trackedID = trackedAutoMeater.trackedID;
+
+                // Add the AutoMeater to client global list
+                autoMeaters[trackedAutoMeater.trackedID] = H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID];
+            }
+            else
+            {
+                trackedAutoMeater.localTrackedID = -1;
+
+                // Add the AutoMeater to client global list
+                autoMeaters[trackedAutoMeater.trackedID] = trackedAutoMeater;
+
+                // Instantiate AutoMeater if it is in the current scene
+                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                {
+                    AnvilManager.Run(trackedAutoMeater.Instantiate());
+                }
+            }
+        }
+
         private static void IncreaseItemsSize(int minimum)
         {
             int minCapacity = items.Length;
@@ -475,6 +518,21 @@ namespace H3MP
             for (int i = 0; i < tempSosigs.Length; ++i)
             {
                 sosigs[i] = tempSosigs[i];
+            }
+        }
+
+        private static void IncreaseAutoMeatersSize(int minimum)
+        {
+            int minCapacity = autoMeaters.Length;
+            while(minCapacity <= minimum)
+            {
+                minCapacity += 100;
+            }
+            H3MP_TrackedAutoMeaterData[] tempAutoMeaters = autoMeaters;
+            autoMeaters = new H3MP_TrackedAutoMeaterData[minCapacity];
+            for (int i = 0; i < tempAutoMeaters.Length; ++i)
+            {
+                autoMeaters[i] = tempAutoMeaters[i];
             }
         }
 

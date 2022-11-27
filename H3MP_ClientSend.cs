@@ -258,6 +258,65 @@ namespace H3MP
             }
         }
 
+        public static void TrackedAutoMeaters()
+        {
+            int index = 0;
+            while (index < H3MP_GameManager.autoMeaters.Count)
+            {
+                using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedAutoMeaters))
+                {
+                    // Write place holder int at start to hold the count once we know it
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
+
+                    short count = 0;
+                    for (int i = index; i < H3MP_GameManager.autoMeaters.Count; ++i)
+                    {
+                        H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_GameManager.autoMeaters[i];
+                        if (trackedAutoMeater.Update())
+                        {
+                            trackedAutoMeater.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+
+                            packet.Write(trackedAutoMeater);
+
+                            ++count;
+
+                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                            if (packet.buffer.Count >= 1300)
+                            {
+                                break;
+                            }
+                        }
+                        else if(trackedAutoMeater.insuranceCounter > 0)
+                        {
+                            --trackedAutoMeater.insuranceCounter;
+
+                            packet.Write(trackedAutoMeater);
+
+                            ++count;
+
+                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                            if (packet.buffer.Count >= 1300)
+                            {
+                                break;
+                            }
+                        }
+
+                        ++index;
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                    {
+                        packet.buffer[i] = countArr[j];
+                    }
+
+                    SendUDPData(packet);
+                }
+            }
+        }
+
         public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedItem))
@@ -274,6 +333,17 @@ namespace H3MP
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedSosig))
             {
                 packet.Write(trackedSosig, true);
+                packet.Write(scene);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene)
+        {
+            using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedAutoMeater))
+            {
+                packet.Write(trackedAutoMeater, true);
                 packet.Write(scene);
 
                 SendTCPData(packet);
@@ -302,6 +372,17 @@ namespace H3MP
             }
         }
 
+        public static void GiveAutoMeaterControl(int trackedID, int newController)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveAutoMeaterControl))
+            {
+                packet.Write(trackedID);
+                packet.Write(newController);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void DestroyItem(int trackedID, bool removeFromList = true)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.destroyItem))
@@ -316,6 +397,17 @@ namespace H3MP
         public static void DestroySosig(int trackedID, bool removeFromList = true)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.destroySosig))
+            {
+                packet.Write(trackedID);
+                packet.Write(removeFromList);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void DestroyAutoMeater(int trackedID, bool removeFromList = true)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.destroyAutoMeater))
             {
                 packet.Write(trackedID);
                 packet.Write(removeFromList);
@@ -724,11 +816,52 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.sosigs.Count; ++i)
                     {
                         H3MP_TrackedSosigData trackedSosig = H3MP_GameManager.sosigs[i];
-                        trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                        trackedSosig.insuranceCounter = H3MP_TrackedSosigData.insuranceCount;
 
                         Debug.Log("\t\tTracked sosig at: " + trackedSosig.trackedID);
                         trackedSosig.Update(true);
                         packet.Write(trackedSosig, true);
+
+                        ++count;
+
+                        // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                        if (packet.buffer.Count >= 1300)
+                        {
+                            break;
+                        }
+
+                        ++index;
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                    {
+                        packet.buffer[i] = countArr[j];
+                    }
+
+                    SendTCPData(packet);
+                }
+            }
+            index = 0;
+            while (index < H3MP_GameManager.autoMeaters.Count)
+            {
+                Debug.Log("\tAutoMeater Packet");
+                using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateAutoMeatersRequest))
+                {
+                    // Write place holder int at start to hold the count once we know it
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
+
+                    short count = 0;
+                    for (int i = index; i < H3MP_GameManager.autoMeaters.Count; ++i)
+                    {
+                        H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_GameManager.autoMeaters[i];
+                        trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
+
+                        Debug.Log("\t\tTracked AutoMeater at: " + trackedAutoMeater.trackedID);
+                        trackedAutoMeater.Update(true);
+                        packet.Write(trackedAutoMeater, true);
 
                         ++count;
 
@@ -944,6 +1077,39 @@ namespace H3MP
             {
                 packet.Write(instance);
                 packet.Write(amount);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void AutoMeaterSetState(int trackedID, byte state)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterSetState))
+            {
+                packet.Write(trackedID);
+                packet.Write(state);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void AutoMeaterSetBladesActive(int trackedID, bool active)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterSetBladesActive))
+            {
+                packet.Write(trackedID);
+                packet.Write(active);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void AutoMeaterDamage(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
 
                 SendTCPData(packet);
             }

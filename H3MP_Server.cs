@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+using FistVR;
 
 namespace H3MP
 {
@@ -16,8 +17,10 @@ namespace H3MP
         public static PacketHandler[] packetHandlers;
         public static H3MP_TrackedItemData[] items; // All tracked items, regardless of whos control they are under
         public static List<int> availableItemIndices;
-        public static H3MP_TrackedSosigData[] sosigs; // All tracked items, regardless of whos control they are under
+        public static H3MP_TrackedSosigData[] sosigs; // All tracked Sosigs, regardless of whos control they are under
         public static List<int> availableSosigIndices;
+        public static H3MP_TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
+        public static List<int> availableAutoMeaterIndices;
 
         public static TcpListener tcpListener;
         public static UdpClient udpListener;
@@ -43,6 +46,7 @@ namespace H3MP
             {
                 H3MP_GameManager.SyncTrackedItems();
                 H3MP_GameManager.SyncTrackedSosigs();
+                H3MP_GameManager.SyncTrackedAutoMeaters();
             }
         }
 
@@ -189,6 +193,40 @@ namespace H3MP
             }
         }
 
+        public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int clientID)
+        {
+            Debug.Log("Received order to add tracked auto meater");
+            // Adjust AutoMeaters size to acommodate if necessary
+            if (availableAutoMeaterIndices.Count == 0)
+            {
+                IncreaseAutoMeatersSize();
+            }
+
+            // Add it to server global list
+            trackedAutoMeater.trackedID = availableAutoMeaterIndices[availableAutoMeaterIndices.Count - 1];
+            availableAutoMeaterIndices.RemoveAt(availableAutoMeaterIndices.Count - 1);
+
+            autoMeaters[trackedAutoMeater.trackedID] = trackedAutoMeater;
+
+            // Instantiate AutoMeater if it is in the current scene and not controlled by us
+            if (clientID != 0)
+            {
+                if (scene.Equals(SceneManager.GetActiveScene().name))
+                {
+                    AnvilManager.Run(trackedAutoMeater.Instantiate());
+                }
+            }
+
+            // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
+            H3MP_ServerSend.TrackedAutoMeater(trackedAutoMeater, scene, clientID);
+
+            // Update the local tracked ID at the end because we need to send that back to the original client intact
+            if (trackedAutoMeater.controller != 0)
+            {
+                trackedAutoMeater.localTrackedID = -1;
+            }
+        }
+
         private static void IncreaseItemsSize()
         {
             H3MP_TrackedItemData[] tempItems = items;
@@ -214,6 +252,20 @@ namespace H3MP
             for(int i= tempSosigs.Length; i < sosigs.Length; ++i)
             {
                 availableSosigIndices.Add(i);
+            }
+        }
+
+        private static void IncreaseAutoMeatersSize()
+        {
+            H3MP_TrackedAutoMeaterData[] tempAutoMeaters = autoMeaters;
+            autoMeaters = new H3MP_TrackedAutoMeaterData[tempAutoMeaters.Length + 100];
+            for(int i=0; i< tempAutoMeaters.Length;++i)
+            {
+                autoMeaters[i] = tempAutoMeaters[i];
+            }
+            for(int i= tempAutoMeaters.Length; i < autoMeaters.Length; ++i)
+            {
+                availableAutoMeaterIndices.Add(i);
             }
         }
 
@@ -289,6 +341,15 @@ namespace H3MP
                 H3MP_ServerHandle.TNHData,
                 H3MP_ServerHandle.TNHPlayerDied,
                 H3MP_ServerHandle.TNHAddTokens,
+                H3MP_ServerHandle.TrackedAutoMeater,
+                H3MP_ServerHandle.TrackedAutoMeaters,
+                H3MP_ServerHandle.DestroyAutoMeater,
+                H3MP_ServerHandle.GiveAutoMeaterControl,
+                H3MP_ServerHandle.UpToDateAutoMeaters,
+                H3MP_ServerHandle.AutoMeaterSetState,
+                H3MP_ServerHandle.AutoMeaterSetBladesActive,
+                H3MP_ServerHandle.AutoMeaterDamage,
+                H3MP_ServerHandle.AutoMeaterDamageData,
             };
 
             items = new H3MP_TrackedItemData[100];
@@ -305,6 +366,18 @@ namespace H3MP
 
             sosigs = new H3MP_TrackedSosigData[100];
             availableSosigIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9,
+                                                     10,11,12,13,14,15,16,17,18,19,
+                                                     20,21,22,23,24,25,26,27,28,29,
+                                                     30,31,32,33,34,35,36,37,38,39,
+                                                     40,41,42,43,44,45,46,47,48,49,
+                                                     50,51,52,53,54,55,56,57,58,59,
+                                                     60,61,62,63,64,65,66,67,68,69,
+                                                     70,71,72,73,74,75,76,77,78,79,
+                                                     80,81,82,83,84,85,86,87,88,89,
+                                                     90,91,92,93,94,95,96,97,98,99};
+
+            autoMeaters = new H3MP_TrackedAutoMeaterData[100];
+            availableAutoMeaterIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9,
                                                      10,11,12,13,14,15,16,17,18,19,
                                                      20,21,22,23,24,25,26,27,28,29,
                                                      30,31,32,33,34,35,36,37,38,39,

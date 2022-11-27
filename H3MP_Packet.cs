@@ -77,7 +77,15 @@ namespace H3MP
         setTNHController = 60,
         TNHData = 61,
         TNHPlayerDied = 62,
-        TNHAddTokens = 63
+        TNHAddTokens = 63,
+        TNHSetLevel = 64,
+        trackedAutoMeater = 65,
+        trackedAutoMeaters = 66,
+        destroyAutoMeater = 67,
+        giveAutoMeaterControl = 68,
+        autoMeaterSetState = 69,
+        autoMeaterSetBladesActive = 70,
+        autoMeaterDamage = 71
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -144,7 +152,17 @@ namespace H3MP
         setTNHController = 59,
         TNHData = 60,
         TNHPlayerDied = 61,
-        TNHAddTokens = 62
+        TNHAddTokens = 62,
+        TNHSetLevel = 63,
+        trackedAutoMeater = 64,
+        trackedAutoMeaters = 65,
+        destroyAutoMeater = 66,
+        giveAutoMeaterControl = 67,
+        updateAutoMeatersRequest = 68,
+        autoMeaterSetState = 69,
+        autoMeaterSetBladesActive = 70,
+        autoMeaterDamage = 71,
+        autoMeaterDamageData = 72
     }
 
     public class H3MP_Packet : IDisposable
@@ -444,6 +462,29 @@ namespace H3MP
                 Write(trackedSosig.order++);
             }
         }
+        /// <summary>Adds a H3MP_TrackedAutoMeaterData to the packet.</summary>
+        /// <param name="trackedSosig">The H3MP_TrackedAutoMeaterData to add.</param>
+        /// <param name="full">Whether to include all necessary data to instantiate this AutoMeater.</param>
+        public void Write(H3MP_TrackedAutoMeaterData trackedAutoMeater, bool full = false)
+        {
+            Write(trackedAutoMeater.trackedID);
+            Write(trackedAutoMeater.position);
+            Write(trackedAutoMeater.rotation);
+            Write(trackedAutoMeater.active);
+            Write((byte)trackedAutoMeater.IFF);
+            Write(trackedAutoMeater.idleLookPoint);
+
+            if (full)
+            {
+                Write(trackedAutoMeater.ID);
+                Write(trackedAutoMeater.controller);
+                Write(trackedAutoMeater.localTrackedID);
+            }
+            else
+            {
+                Write(trackedAutoMeater.order++);
+            }
+        }
         /// <summary>Adds a SosigConfigTemplate to the packet.</summary>
         /// <param name="config">The SosigConfigTemplate to add.</param>
         public void Write(SosigConfigTemplate config)
@@ -586,7 +627,77 @@ namespace H3MP
         /// <param name="instance">The TNH_Manager to take teh data from.</param>
         public void Write(TNH_Manager manager)
         {
-            // TODO: When necessary
+            Write((int)Mod.TNH_Manager_m_level.GetValue(manager));
+            Write((short)manager.Phase);
+            Write((int)Mod.TNH_Manager_m_curHoldIndex.GetValue(manager));
+            Write((int)Mod.TNH_Manager_m_lastHoldIndex.GetValue(manager));
+            int seed = (int)Mod.TNH_Manager_m_seed.GetValue(manager);
+            if (seed < 0)
+            {
+                TNH_PointSequence curPointSequence = (TNH_PointSequence)Mod.TNH_Manager_m_curPointSequence.GetValue(manager);
+                bool pointSequenceFound = false;
+                for(int i=0; i<manager.PossibleSequnces.Count;++i)
+                {
+                    if(curPointSequence == manager.PossibleSequnces[i])
+                    {
+                        Write(i);
+                        pointSequenceFound = true;
+                        break;
+                    }
+                }
+                if (!pointSequenceFound)
+                {
+                    Write(0);
+                }
+            }
+            else
+            {
+                Write(seed);
+            }
+            Write(GM.TNHOptions.LastPlayedChar);
+            TNH_Progression curProgression = (TNH_Progression)Mod.TNH_Manager_m_curProgression.GetValue(manager);
+            bool found = false;
+            for (int i = 0; i < manager.C.Progressions.Count; ++i)
+            {
+                if (curProgression == manager.C.Progressions[i])
+                {
+                    Write(i);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                Write(0);
+            }
+            TNH_Progression curProgressionEndless = (TNH_Progression)Mod.TNH_Manager_m_curProgressionEndless.GetValue(manager);
+            found = false;
+            for (int i = 0; i < manager.C.Progressions_Endless.Count; ++i)
+            {
+                if (curProgressionEndless == manager.C.Progressions_Endless[i])
+                {
+                    Write(i);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                Write(0);
+            }
+            List<Sosig> holdPointActiveSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(manager);
+            if(holdPointActiveSosigs == null || holdPointActiveSosigs.Count == 0)
+            {
+                Write(0);
+            }
+            else
+            {
+                Write(holdPointActiveSosigs.Count);
+                for(int i=0; i < holdPointActiveSosigs.Count; ++i)
+                {
+                    Write(holdPointActiveSosigs[i].GetComponent<H3MP_TrackedSosig>().data.trackedID);
+                }
+            }
         }
         #endregion
 
@@ -1001,6 +1112,33 @@ namespace H3MP
             return config;
         }
 
+        /// <summary>Reads a H3MP_TrackedAutoMeaterData from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public H3MP_TrackedAutoMeaterData ReadTrackedAutoMeater(bool full = false, bool _moveReadPos = true)
+        {
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = new H3MP_TrackedAutoMeaterData();
+
+            trackedAutoMeater.trackedID = ReadInt();
+            trackedAutoMeater.position = ReadVector3();
+            trackedAutoMeater.rotation = ReadQuaternion();
+            trackedAutoMeater.active = ReadBool();
+            trackedAutoMeater.IFF = ReadByte();
+            trackedAutoMeater.idleLookPoint = ReadVector3();
+
+            if (full)
+            {
+                trackedAutoMeater.ID = ReadByte();
+                trackedAutoMeater.controller = ReadInt();
+                trackedAutoMeater.localTrackedID = ReadInt();
+            }
+            else
+            {
+                trackedAutoMeater.order = ReadByte();
+            }
+
+            return trackedAutoMeater;
+        }
+
         /// <summary>Reads a Damage from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
         public Damage ReadDamage(bool _moveReadPos = true)
@@ -1066,6 +1204,20 @@ namespace H3MP
         public H3MP_TNHData ReadTNHData(bool _moveReadPos = true)
         {
             H3MP_TNHData data = new H3MP_TNHData();
+
+            data.levelIndex = ReadInt();
+            data.phase = (TNH_Phase)ReadShort();
+            data.curHoldIndex = ReadInt();
+            data.lastHoldIndex = ReadInt();
+            data.sequenceIndex = ReadInt();
+            data.charIndex = ReadInt();
+            data.progressionIndex = ReadInt();
+            data.progressionEndlessIndex = ReadInt();
+            data.activeSosigIDs = new int[ReadInt()];
+            for(int i = 0; i< data.activeSosigIDs.Length; ++i)
+            {
+                data.activeSosigIDs[i] = ReadInt();
+            }
 
             return data;
         }

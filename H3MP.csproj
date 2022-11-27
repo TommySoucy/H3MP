@@ -80,6 +80,8 @@
     <Compile Include="H3MP_ThreadManager.cs" />
     <Compile Include="H3MP_TNHData.cs" />
     <Compile Include="H3MP_TNHInstance.cs" />
+    <Compile Include="H3MP_TrackedAutoMeater.cs" />
+    <Compile Include="H3MP_TrackedAutoMeaterData.cs" />
     <Compile Include="H3MP_TrackedItem.cs" />
     <Compile Include="H3MP_TrackedItemData.cs" />
     <Compile Include="H3MP_TrackedSosig.cs" />

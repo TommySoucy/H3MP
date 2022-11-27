@@ -152,11 +152,21 @@ namespace H3MP
 
         public static void TrackedSosigs(int clientID, H3MP_Packet packet)
         {
-            // Reconstruct passed trackedItems from packet
+            // Reconstruct passed trackedSosigs from packet
             int count = packet.ReadShort();
             for(int i=0; i < count; ++i)
             {
                 H3MP_GameManager.UpdateTrackedSosig(packet.ReadTrackedSosig());
+            }
+        }
+
+        public static void TrackedAutoMeaters(int clientID, H3MP_Packet packet)
+        {
+            // Reconstruct passed trackedAutoMeaters from packet
+            int count = packet.ReadShort();
+            for(int i=0; i < count; ++i)
+            {
+                H3MP_GameManager.UpdateTrackedAutoMeater(packet.ReadTrackedAutoMeater());
             }
         }
 
@@ -252,6 +262,42 @@ namespace H3MP
             H3MP_ServerSend.GiveSosigControl(trackedID, newController);
         }
 
+        public static void GiveAutoMeaterControl(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int newController = packet.ReadInt();
+
+            // Update locally
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
+
+            if (trackedAutoMeater.controller != 0 && newController == 0)
+            {
+                trackedAutoMeater.localTrackedID = H3MP_GameManager.autoMeaters.Count;
+                if(trackedAutoMeater.physicalObject != null)
+                {
+                    GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
+                }
+                H3MP_GameManager.autoMeaters.Add(trackedAutoMeater);
+            }
+            else if(trackedAutoMeater.controller == 0 && newController != 0)
+            {
+                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
+                H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                trackedAutoMeater.localTrackedID = -1;
+                if (trackedAutoMeater.physicalObject != null)
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
+                }
+            }
+            trackedAutoMeater.controller = newController;
+
+            // Send to all other clients
+            H3MP_ServerSend.GiveAutoMeaterControl(trackedID, newController);
+        }
+
         public static void DestroySosig(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -279,6 +325,35 @@ namespace H3MP
             }
 
             H3MP_ServerSend.DestroySosig(trackedID, removeFromList, clientID);
+        }
+
+        public static void DestroyAutoMeater(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool removeFromList = packet.ReadBool();
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
+
+            if (trackedAutoMeater.physicalObject != null)
+            {
+                H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(trackedAutoMeater.physicalObject.physicalAutoMeaterScript);
+                trackedAutoMeater.physicalObject.sendDestroy = false;
+                GameObject.Destroy(trackedAutoMeater.physicalObject.gameObject);
+            }
+
+            if (trackedAutoMeater.localTrackedID != -1)
+            {
+                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
+                H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+            }
+
+            if (removeFromList)
+            {
+                H3MP_Server.autoMeaters[trackedID] = null;
+                H3MP_Server.availableAutoMeaterIndices.Add(trackedID);
+            }
+
+            H3MP_ServerSend.DestroyAutoMeater(trackedID, removeFromList, clientID);
         }
 
         public static void DestroyItem(int clientID, H3MP_Packet packet)
@@ -318,6 +393,11 @@ namespace H3MP
         public static void TrackedSosig(int clientID, H3MP_Packet packet)
         {
             H3MP_Server.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString(), clientID);
+        }
+
+        public static void TrackedAutoMeater(int clientID, H3MP_Packet packet)
+        {
+            H3MP_Server.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), packet.ReadString(), clientID);
         }
 
         public static void ItemParent(int clientID, H3MP_Packet packet)
@@ -620,6 +700,30 @@ namespace H3MP
                 else
                 {
                     H3MP_ServerSend.SosigLinkDamage(trackedSosig, linkIndex, damage);
+                }
+            }
+        }
+
+        public static void AutoMeaterDamage(int clientID, H3MP_Packet packet)
+        {
+            int autoMeaterTrackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[autoMeaterTrackedID];
+            if (trackedAutoMeater != null)
+            {
+                if(trackedAutoMeater.controller == 0)
+                {
+                    if (trackedAutoMeater.physicalObject != null)
+                    {
+                        ++AutoMeaterDamagePatch.skip;
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Damage(damage);
+                        --AutoMeaterDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.AutoMeaterDamage(trackedAutoMeater, damage);
                 }
             }
         }
@@ -962,6 +1066,21 @@ namespace H3MP
             }
         }
 
+        public static void UpToDateAutoMeaters(int clientID, H3MP_Packet packet)
+        {
+            Debug.Log("Server received up to date AutoMeaters packet");
+            // Reconstruct passed trackedAutoMeaters from packet
+            int count = packet.ReadShort();
+            for (int i = 0; i < count; ++i)
+            {
+                H3MP_TrackedAutoMeaterData trackedAutoMeater = packet.ReadTrackedAutoMeater(true);
+                Debug.Log("\tAutoMeater: " + trackedAutoMeater.trackedID + ", updating");
+                H3MP_GameManager.UpdateTrackedAutoMeater(trackedAutoMeater, true);
+                Debug.Log("\tInstantiating");
+                AnvilManager.Run(H3MP_Server.autoMeaters[trackedAutoMeater.trackedID].Instantiate());
+            }
+        }
+
         public static void AddTNHCurrentlyPlaying(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
@@ -1236,7 +1355,39 @@ namespace H3MP
             {
                 H3MP_TNHData data = packet.ReadTNHData();
                 
-                // TODO: Update the TNH_Manager with the data
+                GM.TNH_Manager.Phase = data.phase;
+                Mod.TNH_Manager_m_curPointSequence.SetValue(GM.TNH_Manager, GM.TNH_Manager.PossibleSequnces[data.sequenceIndex]);
+                TNH_CharacterDef c = null;
+                try
+                {
+                    c = GM.TNH_Manager.CharDB.GetDef((TNH_Char)GM.TNHOptions.LastPlayedChar);
+                }
+                catch
+                {
+                    c = GM.TNH_Manager.CharDB.GetDef(TNH_Char.DD_BeginnerBlake);
+                }
+                Mod.TNH_Manager_m_curProgression.SetValue(GM.TNH_Manager, c.Progressions[data.progressionIndex]);
+                Mod.TNH_Manager_m_curProgressionEndless.SetValue(GM.TNH_Manager, c.Progressions_Endless[data.progressionEndlessIndex]);
+                Mod.TNH_Manager_m_level.SetValue(GM.TNH_Manager, data.levelIndex);
+                Mod.TNH_Manager_SetLevel.Invoke(GM.TNH_Manager, new object[] { data.levelIndex });
+                Mod.TNH_Manager_m_curHoldIndex.SetValue(GM.TNH_Manager, data.curHoldIndex);
+                Mod.TNH_Manager_m_lastHoldIndex.SetValue(GM.TNH_Manager, data.lastHoldIndex);
+                TNH_HoldPoint curHoldPoint = GM.TNH_Manager.HoldPoints[data.curHoldIndex];
+                Mod.TNH_Manager_m_curHoldPoint.SetValue(GM.TNH_Manager, curHoldPoint);
+                TNH_Progression.Level level = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager);
+                curHoldPoint.T = level.TakeChallenge;
+                curHoldPoint.H = level.HoldChallenge;
+                List<Sosig> curHoldPointSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(curHoldPoint);
+                curHoldPointSosigs.Clear();
+                H3MP_TrackedSosigData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.sosigs : H3MP_Client.sosigs;
+                foreach (int sosigID in data.activeSosigIDs)
+                {
+                    if (arrToUse[sosigID] != null && arrToUse[sosigID].physicalObject != null)
+                    {
+                        curHoldPointSosigs.Add(arrToUse[sosigID].physicalObject.physicalSosigScript);
+                    }
+                }
+                implement turret (AutoMeater) syncing and then add here for holdpoint.ConfigureAsSystemNode->SpawnTakeChallengeEntities->SpawnTurrets
             }
             else
             {
@@ -1258,7 +1409,7 @@ namespace H3MP
                 // Set visibility of all of the previously dead players
                 foreach(int playerID in TNHinstance.dead)
                 {
-                    if (H3MP_GameManager.players.TryGetValue(ID, out H3MP_PlayerManager player))
+                    if (H3MP_GameManager.players.TryGetValue(playerID, out H3MP_PlayerManager player))
                     {
                         player.SetVisible(true);
                     }
@@ -1306,6 +1457,48 @@ namespace H3MP
             }
 
             H3MP_ServerSend.TNHAddTokens(instance, amount, clientID);
+        }
+
+        public static void AutoMeaterSetState(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            byte state = packet.ReadByte();
+
+            if (H3MP_Server.autoMeaters[trackedID] != null && H3MP_Server.autoMeaters[trackedID].physicalObject != null)
+            {
+                ++AutoMeaterSetStatePatch.skip;
+                Mod.AutoMeater_SetState.Invoke(H3MP_Server.autoMeaters[trackedID].physicalObject.physicalAutoMeaterScript, new object[] { (AutoMeater.AutoMeaterState)state });
+                --AutoMeaterSetStatePatch.skip;
+            }
+
+            H3MP_ServerSend.AutoMeaterSetState(trackedID, state, clientID);
+        }
+
+        public static void AutoMeaterSetBladesActive(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool active = packet.ReadBool();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
+            if (trackedAutoMeater != null && trackedAutoMeater.physicalObject != null)
+            {
+                if (active)
+                {
+                    for (int i = 0; i < trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades.Count; i++)
+                    {
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades[i].Reactivate();
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades.Count; i++)
+                    {
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades[i].ShutDown();
+                    }
+                }
+            }
+
+            H3MP_ServerSend.AutoMeaterSetBladesActive(trackedID, active, clientID);
         }
     }
 }

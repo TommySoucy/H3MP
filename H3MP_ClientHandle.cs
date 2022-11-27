@@ -48,6 +48,7 @@ namespace H3MP
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
             {
                 H3MP_GameManager.SyncTrackedSosigs(true, inControl);
+                H3MP_GameManager.SyncTrackedAutoMeaters(true, inControl);
                 H3MP_GameManager.SyncTrackedItems(true, inControl);
             }
         }
@@ -108,11 +109,21 @@ namespace H3MP
 
         public static void TrackedSosigs(H3MP_Packet packet)
         {
-            // Reconstruct passed trackedItems from packet
+            // Reconstruct passed trackedSosigs from packet
             int count = packet.ReadShort();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_GameManager.UpdateTrackedSosig(packet.ReadTrackedSosig());
+            }
+        }
+
+        public static void TrackedAutoMeaters(H3MP_Packet packet)
+        {
+            // Reconstruct passed trackedAutoMeaters from packet
+            int count = packet.ReadShort();
+            for (int i = 0; i < count; ++i)
+            {
+                H3MP_GameManager.UpdateTrackedAutoMeater(packet.ReadTrackedAutoMeater());
             }
         }
 
@@ -124,6 +135,11 @@ namespace H3MP
         public static void TrackedSosig(H3MP_Packet packet)
         {
             H3MP_Client.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString(), packet.ReadInt());
+        }
+
+        public static void TrackedAutoMeater(H3MP_Packet packet)
+        {
+            H3MP_Client.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), packet.ReadString(), packet.ReadInt());
         }
 
         public static void AddSyncScene(H3MP_Packet packet)
@@ -197,6 +213,41 @@ namespace H3MP
             trackedSosig.controller = controllerID;
         }
 
+        public static void GiveAutoMeaterControl(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int controllerID = packet.ReadInt();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Client.autoMeaters[trackedID];
+
+            if (trackedAutoMeater.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
+            {
+                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
+                H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                trackedAutoMeater.localTrackedID = -1;
+
+                if (trackedAutoMeater.physicalObject != null)
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
+                }
+            }
+            else if(trackedAutoMeater.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
+            {
+                trackedAutoMeater.controller = controllerID;
+                trackedAutoMeater.localTrackedID = H3MP_GameManager.autoMeaters.Count;
+                H3MP_GameManager.autoMeaters.Add(trackedAutoMeater);
+
+                if (trackedAutoMeater.physicalObject != null)
+                {
+                    GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
+                }
+            }
+            trackedAutoMeater.controller = controllerID;
+        }
+
         public static void DestroyItem(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -251,7 +302,37 @@ namespace H3MP
 
                 if (removeFromList)
                 {
-                    H3MP_Client.items[trackedID] = null;
+                    H3MP_Client.sosigs[trackedID] = null;
+                }
+            }
+        }
+
+        public static void DestroyAutoMeater(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool removeFromList = packet.ReadBool();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Client.autoMeaters[trackedID];
+
+            if (trackedAutoMeater != null)
+            {
+                if (trackedAutoMeater.physicalObject != null)
+                {
+                    H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(trackedAutoMeater.physicalObject.physicalAutoMeaterScript);
+                    trackedAutoMeater.physicalObject.sendDestroy = false;
+                    GameObject.Destroy(trackedAutoMeater.physicalObject.gameObject);
+                }
+
+                if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
+                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                }
+
+                if (removeFromList)
+                {
+                    H3MP_Client.autoMeaters[trackedID] = null;
                 }
             }
         }
@@ -521,6 +602,26 @@ namespace H3MP
                         ++SosigLinkDamagePatch.skip;
                         trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].Damage(damage);
                         --SosigLinkDamagePatch.skip;
+                    }
+                }
+            }
+        }
+
+        public static void AutoMeaterDamage(H3MP_Packet packet)
+        {
+            int autoMeaterTrackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Client.autoMeaters[autoMeaterTrackedID];
+            if (trackedAutoMeater != null)
+            {
+                if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
+                {
+                    if (trackedAutoMeater.physicalObject != null)
+                    {
+                        ++AutoMeaterDamagePatch.skip;
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Damage(damage);
+                        --AutoMeaterDamagePatch.skip;
                     }
                 }
             }
@@ -1061,7 +1162,13 @@ namespace H3MP
 
             H3MP_TNHData data = packet.ReadTNHData();
 
-            // TODO: Update the TNH_Manager with the data
+            // TODO: Level may be out of range of the levels list which may result in randomness in SetLevel()
+            // This could cause the local TNH_Manager to not have the correct level when taking control
+            // See if we can efficiently receive the correct level index here instead 
+            Mod.TNH_Manager_m_level.SetValue(GM.TNH_Manager, data.levelIndex);
+            Mod.TNH_Manager_SetLevel.Invoke(GM.TNH_Manager, new object[] { data.levelIndex });
+
+            GM.TNH_Manager.Phase = data.phase;
         }
 
         public static void TNHPlayerDied(H3MP_Packet packet)
@@ -1078,7 +1185,7 @@ namespace H3MP
                 // Set visibility of all of the previously dead players
                 foreach (int playerID in TNHinstance.dead)
                 {
-                    if (H3MP_GameManager.players.TryGetValue(ID, out H3MP_PlayerManager player))
+                    if (H3MP_GameManager.players.TryGetValue(playerID, out H3MP_PlayerManager player))
                     {
                         player.SetVisible(true);
                     }
@@ -1120,6 +1227,44 @@ namespace H3MP
                     ++TNH_ManagerPatch.addTokensSkip;
                     currentInstance.manager.AddTokens(amount, false);
                     --TNH_ManagerPatch.addTokensSkip;
+                }
+            }
+        }
+
+        public static void AutoMeaterSetState(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            byte state = packet.ReadByte();
+
+            if (H3MP_Server.autoMeaters[trackedID] != null && H3MP_Server.autoMeaters[trackedID].physicalObject != null)
+            {
+                ++AutoMeaterSetStatePatch.skip;
+                Mod.AutoMeater_SetState.Invoke(H3MP_Server.autoMeaters[trackedID].physicalObject.physicalAutoMeaterScript, new object[] { (AutoMeater.AutoMeaterState)state });
+                --AutoMeaterSetStatePatch.skip;
+            }
+        }
+
+        public static void AutoMeaterSetBladesActive(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool active = packet.ReadBool();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
+            if (trackedAutoMeater != null && trackedAutoMeater.physicalObject != null)
+            {
+                if (active)
+                {
+                    for (int i = 0; i < trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades.Count; i++)
+                    {
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades[i].Reactivate();
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades.Count; i++)
+                    {
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades[i].ShutDown();
+                    }
                 }
             }
         }

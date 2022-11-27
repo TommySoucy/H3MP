@@ -31,9 +31,11 @@ namespace H3MP
         public static Dictionary<int, H3MP_PlayerManager> players = new Dictionary<int, H3MP_PlayerManager>();
         public static List<H3MP_TrackedItemData> items = new List<H3MP_TrackedItemData>(); // Tracked items under control of this gameManager
         public static List<H3MP_TrackedSosigData> sosigs = new List<H3MP_TrackedSosigData>(); // Tracked sosigs under control of this gameManager
+        public static List<H3MP_TrackedAutoMeaterData> autoMeaters = new List<H3MP_TrackedAutoMeaterData>(); // Tracked AutoMeaters under control of this gameManager
         public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
         public static Dictionary<int, List<List<string>>> waitingWearables = new Dictionary<int, List<List<string>>>();
         public static Dictionary<Sosig, H3MP_TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, H3MP_TrackedSosig>();
+        public static Dictionary<AutoMeater, H3MP_TrackedAutoMeater> trackedAutoMeaterByAutoMeater = new Dictionary<AutoMeater, H3MP_TrackedAutoMeater>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, H3MP_TNHInstance> TNHInstances = new Dictionary<int, H3MP_TNHInstance>();
 
@@ -401,6 +403,46 @@ namespace H3MP
             }
         }
 
+        public static void UpdateTrackedAutoMeater(H3MP_TrackedAutoMeaterData updatedAutoMeater, bool ignoreOrder = false)
+        {
+            if(updatedAutoMeater.trackedID == -1)
+            {
+                return;
+            }
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeaterData = null;
+            int ID = -1;
+            if (H3MP_ThreadManager.host)
+            {
+                if (updatedAutoMeater.trackedID < H3MP_Server.autoMeaters.Length)
+                {
+                    trackedAutoMeaterData = H3MP_Server.autoMeaters[updatedAutoMeater.trackedID];
+                    ID = 0;
+                }
+            }
+            else
+            {
+                if (updatedAutoMeater.trackedID < H3MP_Client.autoMeaters.Length)
+                {
+                    trackedAutoMeaterData = H3MP_Client.autoMeaters[updatedAutoMeater.trackedID];
+                    ID = H3MP_Client.singleton.ID;
+                }
+            }
+
+            if (trackedAutoMeaterData != null)
+            {
+                // If we take control of a AutoMeater, we could still receive an updated item from another client
+                // if they haven't received the control update yet, so here we check if this actually needs to update
+                // AND we don't want to take this update if this is a packet that was sent before the previous update
+                // Since the order is kept as a single byte, it will overflow every 256 packets of this sosig
+                // Here we consider the update out of order if it is within 128 iterations before the latest
+                if(trackedAutoMeaterData.controller != ID && (ignoreOrder || ((updatedAutoMeater.order > trackedAutoMeaterData.order || trackedAutoMeaterData.order - updatedAutoMeater.order > 128))))
+                {
+                    trackedAutoMeaterData.Update(updatedAutoMeater);
+                }
+            }
+        }
+
         public static void SyncTrackedItems(bool init = false, bool inControl = false)
         {
             Debug.Log("SyncTrackedItems called with init: "+init+", in control: "+inControl+", others: "+(playersPresent > 0));
@@ -712,6 +754,125 @@ namespace H3MP
             return trackedSosig;
         }
 
+        public static void SyncTrackedAutoMeaters(bool init = false, bool inControl = false)
+        {
+            Debug.Log("SyncTrackedAutoMeaters called with init: " + init + ", in control: " + inControl + ", others: " + (playersPresent > 0));
+            // When we sync our current scene, if we are alone, we sync and take control of all AutoMeaters
+            Scene scene = SceneManager.GetActiveScene();
+            GameObject[] roots = scene.GetRootGameObjects();
+            foreach (GameObject root in roots)
+            {
+                SyncTrackedAutoMeaters(root.transform, init ? inControl : playersPresent == 0, scene.name);
+            }
+        }
+
+        public static void SyncTrackedAutoMeaters(Transform root, bool controlEverything, string scene)
+        {
+            AutoMeater autoMeaterScript = root.GetComponent<AutoMeater>();
+            if (autoMeaterScript != null)
+            {
+                H3MP_TrackedAutoMeater trackedAutoMeater = root.GetComponent<H3MP_TrackedAutoMeater>();
+                if (trackedAutoMeater == null)
+                {
+                    if (controlEverything)
+                    {
+                        trackedAutoMeater = MakeAutoMeaterTracked(autoMeaterScript);
+                        if (H3MP_ThreadManager.host)
+                        {
+                            // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
+                            H3MP_Server.AddTrackedAutoMeater(trackedAutoMeater.data, scene, 0);
+                        }
+                        else
+                        {
+                            Debug.Log("Sending tracked AutoMeater");
+                            // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
+                            H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data, scene);
+                        }
+
+                        foreach (Transform child in root)
+                        {
+                            SyncTrackedAutoMeaters(child, controlEverything, scene);
+                        }
+                    }
+                    else // AutoMeater will not be controlled by us but is an AutoMeater that should be tracked by system, so destroy it
+                    {
+                        Destroy(root.gameObject);
+                    }
+                }
+                else
+                {
+                    // It already has tracked AutoMeater on it, this is possible of we received new AutoMeater from server before we sync
+                    return;
+                }
+            }
+            else
+            {
+                foreach (Transform child in root)
+                {
+                    SyncTrackedAutoMeaters(child, controlEverything, scene);
+                }
+            }
+        }
+
+        private static H3MP_TrackedAutoMeater MakeAutoMeaterTracked(AutoMeater autoMeaterScript)
+        {
+            Debug.Log("MakeSosigTracked called");
+            H3MP_TrackedAutoMeater trackedAutoMeater = autoMeaterScript.gameObject.AddComponent<H3MP_TrackedAutoMeater>();
+            H3MP_TrackedAutoMeaterData data = new H3MP_TrackedAutoMeaterData();
+            trackedAutoMeater.data = data;
+            data.physicalObject = trackedAutoMeater;
+            trackedAutoMeater.physicalAutoMeaterScript = autoMeaterScript;
+            H3MP_GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
+
+            data.position = autoMeaterScript.RB.position;
+            data.rotation = autoMeaterScript.RB.rotation;
+            data.active = trackedAutoMeater.gameObject.activeInHierarchy;
+            data.IFF = (byte)autoMeaterScript.E.IFFCode;
+            if (autoMeaterScript.name.Contains("SMG"))
+            {
+                data.ID = 0;
+            }
+            else if (autoMeaterScript.name.Contains("Flak"))
+            {
+                data.ID = 1;
+            }
+            else if (autoMeaterScript.name.Contains("Flamethrower"))
+            {
+                data.ID = 2;
+            }
+            else if (autoMeaterScript.name.Contains("Machinegun") || autoMeaterScript.name.Contains("MachineGun"))
+            {
+                data.ID = 3;
+            }
+            else if (autoMeaterScript.name.Contains("Suppresion") || autoMeaterScript.name.Contains("Suppression"))
+            {
+                data.ID = 4;
+            }
+            else if (autoMeaterScript.name.Contains("Blue"))
+            {
+                data.ID = 5;
+            }
+            else if (autoMeaterScript.name.Contains("Red"))
+            {
+                data.ID = 6;
+            }
+            else
+            {
+                Debug.Log("Unsupported AutoMeater type tracked");
+                data.ID = 7;
+            }
+            data.sideToSideRotation = autoMeaterScript.SideToSideTransform.localRotation;
+            data.hingeTargetPos = autoMeaterScript.SideToSideHinge.spring.targetPosition;
+            data.upDownMotorRotation = autoMeaterScript.UpDownTransform.localRotation;
+            data.upDownJointTargetPos = autoMeaterScript.UpDownHinge.spring.targetPosition;
+
+            // Add to local list
+            data.localTrackedID = autoMeaters.Count;
+            autoMeaters.Add(data);
+
+            return trackedAutoMeater;
+        }
+
         public static H3MP_TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin,
                                                          int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
                                                          int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
@@ -833,15 +994,18 @@ namespace H3MP
             giveControlOfDestroyed = true;
             H3MP_TrackedItemData[] itemArrToUse = null;
             H3MP_TrackedSosigData[] sosigArrToUse = null;
+            H3MP_TrackedAutoMeaterData[] autoMeaterArrToUse = null;
             if (H3MP_ThreadManager.host)
             {
                 itemArrToUse = H3MP_Server.items;
                 sosigArrToUse = H3MP_Server.sosigs;
+                autoMeaterArrToUse = H3MP_Server.autoMeaters;
             }
             else
             {
                 itemArrToUse = H3MP_Client.items;
                 sosigArrToUse = H3MP_Client.sosigs;
+                autoMeaterArrToUse = H3MP_Client.autoMeaters;
             }
             for (int i = itemArrToUse.Length - 1; i >= 0; --i)
             {
@@ -921,6 +1085,45 @@ namespace H3MP
                             // like we do now if we didn't do immediate because OnDestroy() gets called later
                             // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
                             DestroyImmediate(sosigArrToUse[i].physicalObject.gameObject);
+                        }
+                    }
+                }
+            }
+            for (int i = autoMeaterArrToUse.Length - 1; i >= 0; --i)
+            {
+                if (autoMeaterArrToUse[i] != null && autoMeaterArrToUse[i].physicalObject != null)
+                {
+                    if (IsControlled(autoMeaterArrToUse[i].physicalObject.physicalAutoMeaterScript))
+                    {
+                        // Send destruction without removing from global list
+                        // We just don't want the other clients to have the sosig on their side anymore if they had it
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.DestroyAutoMeater(i, false);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.DestroyAutoMeater(i, false);
+                        }
+                    }
+                    else // Not being interacted with, just destroy on our side and give control
+                    {
+                        if (isNewInstance)
+                        {
+                            GameObject go = autoMeaterArrToUse[i].physicalObject.gameObject;
+
+                            // Destroy just the tracked script because we want to make a copy for ourselves
+                            DestroyImmediate(autoMeaterArrToUse[i].physicalObject);
+
+                            // Retrack sosig
+                            SyncTrackedAutoMeaters(go.transform, true, SceneManager.GetActiveScene().name);
+                        }
+                        else // Destroy entire object
+                        {
+                            // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
+                            // like we do now if we didn't do immediate because OnDestroy() gets called later
+                            // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
+                            DestroyImmediate(autoMeaterArrToUse[i].physicalObject.gameObject);
                         }
                     }
                 }
@@ -1027,7 +1230,7 @@ namespace H3MP
 
         // MOD: This will be called to check if the given sosig is controlled by this client
         //      This currently checks if any link of the sosig is controlled
-        //      A mod can postfix this to change the return value if it wants to have control of items based on other criteria
+        //      A mod can postfix this to change the return value if it wants to have control of sosigs based on other criteria
         public static bool IsControlled(Sosig sosig)
         {
             foreach(SosigLink link in sosig.Links)
@@ -1038,6 +1241,14 @@ namespace H3MP
                 }
             }
             return false;
+        }
+
+        // MOD: This will be called to check if the given AutoMeater is controlled by this client
+        //      This currently checks if any link of the AutoMeater is controlled
+        //      A mod can postfix this to change the return value if it wants to have control of AutoMeaters based on other criteria
+        public static bool IsControlled(AutoMeater autoMeater)
+        {
+            return autoMeater.PO.m_hand != null;
         }
 
         private void OnSceneLoadedVR(bool loading)
@@ -1138,6 +1349,7 @@ namespace H3MP
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
                     SyncTrackedSosigs();
+                    SyncTrackedAutoMeaters();
                     SyncTrackedItems();
                 }
                 else // New scene not syncable, ensure all players are disabled regardless of scene
