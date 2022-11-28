@@ -1455,22 +1455,54 @@ namespace H3MP
 
                 List<TNH_Manager.SosigPatrolSquad> patrolSquads = (List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(GM.TNH_Manager);
                 patrolSquads.Clear();
-                continue form here
-
+                foreach(TNH_Manager.SosigPatrolSquad patrol in data.patrols)
+                {
+                    patrolSquads.Add(patrol);
+                }
 
                 List<Sosig> curHoldPointSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(curHoldPoint);
                 curHoldPointSosigs.Clear();
-                
-
-                H3MP_TrackedSosigData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.sosigs : H3MP_Client.sosigs;
+                H3MP_TrackedSosigData[] sosigArrToUse = H3MP_ThreadManager.host ? H3MP_Server.sosigs : H3MP_Client.sosigs;
                 foreach (int sosigID in data.activeHoldSosigIDs)
                 {
-                    if (arrToUse[sosigID] != null && arrToUse[sosigID].physicalObject != null)
+                    if (sosigArrToUse[sosigID] != null && sosigArrToUse[sosigID].physicalObject != null)
                     {
-                        curHoldPointSosigs.Add(arrToUse[sosigID].physicalObject.physicalSosigScript);
+                        curHoldPointSosigs.Add(sosigArrToUse[sosigID].physicalObject.physicalSosigScript);
                     }
                 }
-                implement turret (AutoMeater) syncing and then add here for holdpoint.ConfigureAsSystemNode->SpawnTakeChallengeEntities->SpawnTurrets
+                List<AutoMeater> curHoldPointTurrets = (List<AutoMeater>)Mod.TNH_HoldPoint_m_activeTurrets.GetValue(curHoldPoint);
+                curHoldPointTurrets.Clear();
+                H3MP_TrackedAutoMeaterData[] autoMeaterArrToUse = H3MP_ThreadManager.host ? H3MP_Server.autoMeaters : H3MP_Client.autoMeaters;
+                foreach (int autoMeaterID in data.activeHoldTurretIDs)
+                {
+                    if (autoMeaterArrToUse[autoMeaterID] != null && autoMeaterArrToUse[autoMeaterID].physicalObject != null)
+                    {
+                        curHoldPointTurrets.Add(autoMeaterArrToUse[autoMeaterID].physicalObject.physicalAutoMeaterScript);
+                    }
+                }
+
+                for(int i=0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+                {
+                    TNH_SupplyPoint curSupplyPoint = GM.TNH_Manager.SupplyPoints[i];
+                    List<Sosig> curSupplyPointSosigs = (List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(curSupplyPoint);
+                    curSupplyPointSosigs.Clear();
+                    foreach (int sosigID in data.supplyPointsSosigIDs[i])
+                    {
+                        if (sosigArrToUse[sosigID] != null && sosigArrToUse[sosigID].physicalObject != null)
+                        {
+                            curSupplyPointSosigs.Add(sosigArrToUse[sosigID].physicalObject.physicalSosigScript);
+                        }
+                    }
+                    List<AutoMeater> curSupplyPointTurrets = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(curHoldPoint);
+                    curSupplyPointTurrets.Clear();
+                    foreach (int autoMeaterID in data.supplyPointsTurretIDs[i])
+                    {
+                        if (autoMeaterArrToUse[autoMeaterID] != null && autoMeaterArrToUse[autoMeaterID].physicalObject != null)
+                        {
+                            curSupplyPointTurrets.Add(autoMeaterArrToUse[autoMeaterID].physicalObject.physicalAutoMeaterScript);
+                        }
+                    }
+                }
             }
             else
             {

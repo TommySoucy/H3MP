@@ -294,7 +294,7 @@ namespace H3MP
                     {
                         Debug.Log("\tSending a AutoMeater");
                         H3MP_Server.autoMeaters[i].Update();
-                        H3MP_ServerSend.TrackedAutoMeaterSpecific(H3MP_Server.sosigs[i], player.scene, player.instance, ID);
+                        H3MP_ServerSend.TrackedAutoMeaterSpecific(H3MP_Server.autoMeaters[i], player.scene, player.instance, ID);
                     }
                 }
             }

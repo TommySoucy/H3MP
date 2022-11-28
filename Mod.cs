@@ -5872,7 +5872,6 @@ namespace H3MP
     class TNH_ManagerPatch
     {
         public static int addTokensSkip;
-        public static int setLevelSkip;
 
         static bool PlayerDiedPrefix()
         {
