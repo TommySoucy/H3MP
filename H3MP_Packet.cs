@@ -85,7 +85,9 @@ namespace H3MP
         giveAutoMeaterControl = 68,
         autoMeaterSetState = 69,
         autoMeaterSetBladesActive = 70,
-        autoMeaterDamage = 71
+        autoMeaterDamage = 71,
+        autoMeaterFireShot = 72,
+        autoMeaterFirearmFireAtWill = 73
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -162,7 +164,9 @@ namespace H3MP
         autoMeaterSetState = 69,
         autoMeaterSetBladesActive = 70,
         autoMeaterDamage = 71,
-        autoMeaterDamageData = 72
+        autoMeaterDamageData = 72,
+        autoMeaterFireShot = 73,
+        autoMeaterFirearmFireAtWill = 74
     }
 
     public class H3MP_Packet : IDisposable

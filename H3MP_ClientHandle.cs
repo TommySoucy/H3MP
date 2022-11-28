@@ -357,6 +357,25 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterFirearmFireShot(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Vector3 angles = packet.ReadVector3();
+
+            // Update locally
+            if (H3MP_Server.autoMeaters[trackedID].physicalObject != null)
+            {
+                // Set the muzzle angles to use
+                AutoMeaterFirearmFireShotPatch.muzzleAngles = angles;
+                AutoMeaterFirearmFireShotPatch.angleOverride = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++AutoMeaterFirearmFireShotPatch.skip;
+                Mod.AutoMeaterFirearm_FireShot.Invoke(H3MP_Server.autoMeaters[trackedID].physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0], null);
+                --AutoMeaterFirearmFireShotPatch.skip;
+            }
+        }
+
         public static void PlayerDamage(H3MP_Packet packet)
         {
             H3MP_PlayerHitbox.Part part = (H3MP_PlayerHitbox.Part)packet.ReadByte();
@@ -1266,6 +1285,22 @@ namespace H3MP
                         trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades[i].ShutDown();
                     }
                 }
+            }
+        }
+
+        public static void AutoMeaterFirearmFireAtWill(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int firearmIndex = packet.ReadInt();
+            bool fireAtWill = packet.ReadBool();
+            float dist = packet.ReadFloat();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
+            if (trackedAutoMeater != null && trackedAutoMeater.physicalObject != null)
+            {
+                ++AutoMeaterFirearmFireAtWillPatch.skip;
+                trackedAutoMeater.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[firearmIndex].SetFireAtWill(fireAtWill, dist);
+                --AutoMeaterFirearmFireAtWillPatch.skip;
             }
         }
     }

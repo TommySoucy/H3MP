@@ -350,6 +350,8 @@ namespace H3MP
                 H3MP_ServerHandle.AutoMeaterSetBladesActive,
                 H3MP_ServerHandle.AutoMeaterDamage,
                 H3MP_ServerHandle.AutoMeaterDamageData,
+                H3MP_ServerHandle.AutoMeaterFirearmFireShot,
+                H3MP_ServerHandle.AutoMeaterFirearmFireAtWill,
             };
 
             items = new H3MP_TrackedItemData[100];

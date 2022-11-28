@@ -442,6 +442,17 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterFirearmFireShot(int trackedID, Vector3 angles)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterFireShot))
+            {
+                packet.Write(trackedID);
+                packet.Write(angles);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void PlayerDamage(int clientID, byte part, Damage damage)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.playerDamage))
@@ -1110,6 +1121,19 @@ namespace H3MP
             {
                 packet.Write(trackedID);
                 packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void AutoMeaterFirearmFireAtWill(int trackedID, int firearmIndex, bool fireAtWill, float dist)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterFirearmFireAtWill))
+            {
+                packet.Write(trackedID);
+                packet.Write(firearmIndex);
+                packet.Write(fireAtWill);
+                packet.Write(dist);
 
                 SendTCPData(packet);
             }

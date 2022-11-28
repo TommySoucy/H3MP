@@ -17,6 +17,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR.InteractionSystem;
+using static FistVR.AutoMeater;
 using static FistVR.Damage;
 using static RenderHeads.Media.AVProVideo.MediaPlayer.OptionsApple;
 
@@ -138,6 +139,7 @@ namespace H3MP
         public static readonly FieldInfo AutoMeater_m_idleDestinationCountDown = typeof(AutoMeater).GetField("m_idleDestinationCountDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_controlledMovement = typeof(AutoMeater).GetField("m_controlledMovement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_flightRecoveryTime = typeof(AutoMeater).GetField("m_flightRecoveryTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AutoMeaterFirearm_M = typeof(AutoMeater.AutoMeaterFirearm).GetField("M", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -152,6 +154,9 @@ namespace H3MP
         public static readonly MethodInfo TNH_Manager_SetLevel = typeof(TNH_Manager).GetMethod("SetLevel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_Manager_SetPhase = typeof(TNH_Manager).GetMethod("SetPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeater_SetState = typeof(AutoMeater).GetMethod("SetState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo AutoMeaterFirearm_FireShot = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo AutoMeaterFirearm_UpdateFlameThrower = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFlameThrower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo AutoMeaterFirearm_UpdateFire = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -935,6 +940,20 @@ namespace H3MP
             MethodInfo autoMeaterDamagePatchPrefix = typeof(AutoMeaterDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(autoMeaterDamagePatchOriginal, new HarmonyMethod(autoMeaterDamagePatchPrefix));
+
+            // AutoMeaterFirearmFireShotPatch
+            MethodInfo autoMeaterFirearmFireShotPatchOriginal = typeof(AutoMeaterFirearm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterFirearmFireShotPatchPrefix = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo autoMeaterFirearmFireShotPatchPostfix = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo autoMeaterFirearmFireShotPatchTranspiler = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterFirearmFireShotPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireShotPatchPrefix), new HarmonyMethod(autoMeaterFirearmFireShotPatchPostfix), new HarmonyMethod(autoMeaterFirearmFireShotPatchTranspiler));
+
+            // AutoMeaterFirearmFireAtWillPatch
+            MethodInfo autoMeaterFirearmFireAtWillPatchOriginal = typeof(AutoMeaterFirearm).GetMethod("SetFireAtWill", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo autoMeaterFirearmFireAtWillPatchPrefix = typeof(AutoMeaterFirearmFireAtWillPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterFirearmFireAtWillPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireAtWillPatchPrefix));
 
             // SetTNHManagerPatch
             MethodInfo setTNHManagerPatchOriginal = typeof(GM).GetMethod("set_TNH_Manager", BindingFlags.Public | BindingFlags.Static);
@@ -2765,7 +2784,16 @@ namespace H3MP
             H3MP_TrackedAutoMeater trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<H3MP_TrackedAutoMeater>();
             if (trackedAutoMeater != null)
             {
-                return trackedAutoMeater.data.controller == H3MP_GameManager.ID;
+                bool runOriginal = trackedAutoMeater.data.controller == H3MP_GameManager.ID;
+                if (!runOriginal)
+                {
+                    // Call AutoMeater update methods we don't want to skip
+                    if(trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].IsFlameThrower)
+                    {
+                        trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].Tick(Time.deltaTime);
+                    }
+                }
+                return runOriginal;
             }
             return true;
         }
@@ -2880,6 +2908,146 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.AutoMeaterSetBladesActive(trackedAutoMeater.data.trackedID, active);
+                }
+            }
+        }
+    }
+
+    // Patches AutoMeaterFirearm.FireShot to send to fire action to other clients
+    class AutoMeaterFirearmFireShotPatch
+    {
+        public static int skip;
+        public static bool angleOverride;
+        public static Vector3 muzzleAngles;
+
+        static void Prefix()
+        {
+            // Make sure we skip projectile instantiation
+            ++Mod.skipAllInstantiates;
+        }
+
+        static void Postfix(ref AutoMeaterFirearm __instance)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            AutoMeater m = (AutoMeater)Mod.AutoMeaterFirearm_M.GetValue(__instance);
+            H3MP_TrackedAutoMeater trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(m) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[m] : m.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedAutoMeater.data.controller == 0)
+                    {
+                        H3MP_ServerSend.AutoMeaterFirearmFireShot(0, trackedAutoMeater.data.trackedID, __instance.Muzzle.localEulerAngles);
+                    }
+                }
+                else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.AutoMeaterFirearmFireShot(trackedAutoMeater.data.trackedID, __instance.Muzzle.localEulerAngles);
+                }
+            }
+
+            --Mod.skipAllInstantiates;
+        }
+
+        public static Vector3 GetMuzzleAngles(Vector3 currentAngles)
+        {
+            if(angleOverride)
+            {
+                angleOverride = false;
+                return muzzleAngles;
+            }
+            return currentAngles;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeaterFirearm instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld)); // Load Muzzle
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "get_localEulerAngles"))); // Get current angles
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterFirearmFireShotPatch), "GetMuzzleAngles"))); // Call GetMuzzleAngles
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeaterFirearm instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld)); // Load Muzzle
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "set_localEulerAngles"))); // Set angles
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("set_localEulerAngles"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches AutoMeaterFirearm.SetFireAtWill to send to sync with other clients
+    class AutoMeaterFirearmFireAtWillPatch
+    {
+        public static int skip;
+
+        static void Prefix(ref AutoMeaterFirearm __instance, bool b, float d)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            AutoMeater m = (AutoMeater)Mod.AutoMeaterFirearm_M.GetValue(__instance);
+            H3MP_TrackedAutoMeater trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(m) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[m] : m.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                // Send the fire at will setting action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedAutoMeater.data.controller == 0)
+                    {
+                        int firearmIndex = -1;
+                        for(int i=0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
+                        {
+                            if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
+                            {
+                                firearmIndex = i;
+                                break;
+                            }
+                        }
+                        H3MP_ServerSend.AutoMeaterFirearmFireAtWill(trackedAutoMeater.data.trackedID, firearmIndex, b, d);
+                    }
+                }
+                else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
+                {
+                    int firearmIndex = -1;
+                    for (int i = 0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
+                    {
+                        if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
+                        {
+                            firearmIndex = i;
+                            break;
+                        }
+                    }
+                    H3MP_ClientSend.AutoMeaterFirearmFireAtWill(trackedAutoMeater.data.trackedID, firearmIndex, b, d);
                 }
             }
         }
@@ -4980,6 +5148,77 @@ namespace H3MP
     // Patches AutoMeater.Damage to keep track of damage taken by an AutoMeater
     class AutoMeaterDamagePatch
     {
+        public static int skip;
+        static H3MP_TrackedAutoMeater trackedAutoMeater;
+
+        static bool Prefix(ref AutoMeater __instance, Damage d)
+        {
+            if (skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged AutoMeater, we want to process the damage
+            trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<H3MP_TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedAutoMeater.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Not in control, we want to send the damage to the controller for them to precess it and return the result
+                        H3MP_ServerSend.AutoMeaterDamage(trackedAutoMeater.data, d);
+                        return false;
+                    }
+                }
+                else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    H3MP_ClientSend.AutoMeaterDamage(trackedAutoMeater.data.trackedID, d);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // TODO: Currently no data is necessary to sync after damage, need review
+        //static void Postfix(ref AutoMeater __instance)
+        //{
+        //    // If in control of the damaged sosig link, we want to send the damage results to other clients
+        //    if (trackedAutoMeater != null)
+        //    {
+        //        if (H3MP_ThreadManager.host)
+        //        {
+        //            if (trackedAutoMeater.data.controller == 0)
+        //            {
+        //                H3MP_ServerSend.AutoMeaterDamageData(trackedAutoMeater);
+        //            }
+        //        }
+        //        else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
+        //        {
+        //            H3MP_ClientSend.AutoMeaterDamageData(trackedAutoMeater);
+        //        }
+        //    }
+        //}
+    }
+
+    // Patches AutoMeater.Damage to keep track of damage taken by an AutoMeater
+    class AutoMeaterHotZoneDamagePatch
+    {
+        TODO: 
         public static int skip;
         static H3MP_TrackedAutoMeater trackedAutoMeater;
 

@@ -427,6 +427,28 @@ namespace H3MP
             H3MP_ServerSend.WeaponFire(clientID, trackedID);
         }
 
+        public static void AutoMeaterFirearmFireShot(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Vector3 angles = packet.ReadVector3();
+
+            // Update locally
+            if (H3MP_Server.autoMeaters[trackedID].physicalObject != null)
+            {
+                // Set the muzzle angles to use
+                AutoMeaterFirearmFireShotPatch.muzzleAngles = angles;
+                AutoMeaterFirearmFireShotPatch.angleOverride = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++AutoMeaterFirearmFireShotPatch.skip;
+                Mod.AutoMeaterFirearm_FireShot.Invoke(H3MP_Server.autoMeaters[trackedID].physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0], null);
+                --AutoMeaterFirearmFireShotPatch.skip;
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.AutoMeaterFirearmFireShot(clientID, trackedID, angles);
+        }
+
         public static void PlayerDamage(int clientID, H3MP_Packet packet)
         {
             int ID = packet.ReadInt();
@@ -726,6 +748,11 @@ namespace H3MP
                     H3MP_ServerSend.AutoMeaterDamage(trackedAutoMeater, damage);
                 }
             }
+        }
+
+        public static void AutoMeaterDamageData(int clientID, H3MP_Packet packet)
+        {
+            // TODO: if ever there is data we need to pass back from a auto meater damage call
         }
 
         public static void SosigWearableDamage(int clientID, H3MP_Packet packet)
@@ -1499,6 +1526,24 @@ namespace H3MP
             }
 
             H3MP_ServerSend.AutoMeaterSetBladesActive(trackedID, active, clientID);
+        }
+
+        public static void AutoMeaterFirearmFireAtWill(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int firearmIndex = packet.ReadInt();
+            bool fireAtWill = packet.ReadBool();
+            float dist = packet.ReadFloat();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
+            if (trackedAutoMeater != null && trackedAutoMeater.physicalObject != null)
+            {
+                ++AutoMeaterFirearmFireAtWillPatch.skip;
+                trackedAutoMeater.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[firearmIndex].SetFireAtWill(fireAtWill, dist);
+                --AutoMeaterFirearmFireAtWillPatch.skip;
+            }
+
+            H3MP_ServerSend.AutoMeaterFirearmFireAtWill(trackedID, firearmIndex, fireAtWill, dist, clientID);
         }
     }
 }
