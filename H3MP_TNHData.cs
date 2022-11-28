@@ -16,6 +16,10 @@ namespace H3MP
         public int charIndex;
         public int progressionIndex;
         public int progressionEndlessIndex;
-        public int[] activeSosigIDs;
+        public TNH_Manager.SosigPatrolSquad[] patrols;
+        public int[] activeHoldSosigIDs;
+        public int[] activeHoldTurretIDs;
+        public int[][] supplyPointsSosigIDs;
+        public int[][] supplyPointsTurretIDs;
     }
 }

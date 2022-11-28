@@ -132,7 +132,11 @@ namespace H3MP
         public static readonly FieldInfo TNH_Manager_m_curHoldPoint = typeof(TNH_Manager).GetField("m_curHoldPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_curPointSequence = typeof(TNH_Manager).GetField("m_curPointSequence", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_seed = typeof(TNH_Manager).GetField("m_seed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_patrolSquads = typeof(TNH_Manager).GetField("m_patrolSquads", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_HoldPoint_m_activeSosigs = typeof(TNH_HoldPoint).GetField("m_activeSosigs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_HoldPoint_m_activeTurrets = typeof(TNH_HoldPoint).GetField("m_activeTurrets", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_SupplyPoint_m_activeSosigs = typeof(TNH_SupplyPoint).GetField("m_activeSosigs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_SupplyPoint_m_activeTurrets = typeof(TNH_SupplyPoint).GetField("m_activeTurrets", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleLookPoint = typeof(AutoMeater).GetField("m_idleLookPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleLookPointCountDown = typeof(AutoMeater).GetField("m_idleLookPointCountDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleDestination = typeof(AutoMeater).GetField("m_idleDestination", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -140,6 +144,7 @@ namespace H3MP
         public static readonly FieldInfo AutoMeater_m_controlledMovement = typeof(AutoMeater).GetField("m_controlledMovement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_flightRecoveryTime = typeof(AutoMeater).GetField("m_flightRecoveryTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeaterFirearm_M = typeof(AutoMeater.AutoMeaterFirearm).GetField("M", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AutoMeaterHitZone_m_isDestroyed = typeof(AutoMeaterHitZone).GetField("m_isDestroyed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -940,6 +945,13 @@ namespace H3MP
             MethodInfo autoMeaterDamagePatchPrefix = typeof(AutoMeaterDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(autoMeaterDamagePatchOriginal, new HarmonyMethod(autoMeaterDamagePatchPrefix));
+
+            // AutoMeaterHitZoneDamagePatch
+            MethodInfo autoMeaterHitZoneDamagePatchOriginal = typeof(AutoMeaterHitZone).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo autoMeaterHitZoneDamagePatchPrefix = typeof(AutoMeaterHitZoneDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo autoMeaterHitZoneDamagePatchPostfix = typeof(AutoMeaterHitZoneDamagePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(autoMeaterHitZoneDamagePatchOriginal, new HarmonyMethod(autoMeaterHitZoneDamagePatchPrefix), new HarmonyMethod(autoMeaterHitZoneDamagePatchPostfix));
 
             // AutoMeaterFirearmFireShotPatch
             MethodInfo autoMeaterFirearmFireShotPatchOriginal = typeof(AutoMeaterFirearm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -5216,13 +5228,12 @@ namespace H3MP
     }
 
     // Patches AutoMeater.Damage to keep track of damage taken by an AutoMeater
-    class AutoMeaterHotZoneDamagePatch
+    class AutoMeaterHitZoneDamagePatch
     {
-        TODO: 
         public static int skip;
         static H3MP_TrackedAutoMeater trackedAutoMeater;
 
-        static bool Prefix(ref AutoMeater __instance, Damage d)
+        static bool Prefix(ref AutoMeaterHitZone __instance, ref AutoMeater.AMHitZoneType ___Type, Damage d)
         {
             if (skip > 0)
             {
@@ -5236,7 +5247,7 @@ namespace H3MP
             }
 
             // If in control of the damaged AutoMeater, we want to process the damage
-            trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<H3MP_TrackedAutoMeater>();
+            trackedAutoMeater = H3MP_GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance.M) ? H3MP_GameManager.trackedAutoMeaterByAutoMeater[__instance.M] : __instance.M.GetComponent<H3MP_TrackedAutoMeater>();
             if (trackedAutoMeater != null)
             {
                 if (H3MP_ThreadManager.host)
@@ -5248,7 +5259,7 @@ namespace H3MP
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to precess it and return the result
-                        H3MP_ServerSend.AutoMeaterDamage(trackedAutoMeater.data, d);
+                        H3MP_ServerSend.AutoMeaterHitZoneDamage(trackedAutoMeater.data, (byte)___Type, d);
                         return false;
                     }
                 }
@@ -5258,32 +5269,31 @@ namespace H3MP
                 }
                 else
                 {
-                    H3MP_ClientSend.AutoMeaterDamage(trackedAutoMeater.data.trackedID, d);
+                    H3MP_ClientSend.AutoMeaterHitZoneDamage(trackedAutoMeater.data.trackedID, ___Type, d);
                     return false;
                 }
             }
             return true;
         }
 
-        // TODO: Currently no data is necessary to sync after damage, need review
-        //static void Postfix(ref AutoMeater __instance)
-        //{
-        //    // If in control of the damaged sosig link, we want to send the damage results to other clients
-        //    if (trackedAutoMeater != null)
-        //    {
-        //        if (H3MP_ThreadManager.host)
-        //        {
-        //            if (trackedAutoMeater.data.controller == 0)
-        //            {
-        //                H3MP_ServerSend.AutoMeaterDamageData(trackedAutoMeater);
-        //            }
-        //        }
-        //        else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
-        //        {
-        //            H3MP_ClientSend.AutoMeaterDamageData(trackedAutoMeater);
-        //        }
-        //    }
-        //}
+        static void Postfix(ref AutoMeaterHitZone __instance, ref AutoMeater.AMHitZoneType ___Type)
+        {
+            // If in control of the damaged AutoMeater, we want to send the damage results to other clients
+            if (trackedAutoMeater != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedAutoMeater.data.controller == 0)
+                    {
+                        H3MP_ServerSend.AutoMeaterHitZoneDamageData(trackedAutoMeater.data.trackedID, __instance);
+                    }
+                }
+                else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.AutoMeaterHitZoneDamageData(trackedAutoMeater.data.trackedID, __instance);
+                }
+            }
+        }
     }
     #endregion
 

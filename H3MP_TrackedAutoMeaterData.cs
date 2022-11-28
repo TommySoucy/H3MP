@@ -38,6 +38,8 @@ namespace H3MP
         public byte previousIFF;
         public byte IFF;
 
+        public Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone> hitZones = new Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone>();
+
         public IEnumerator Instantiate()
         {
             string itemID = AutoMeaterIDToItemID(ID);
@@ -69,6 +71,13 @@ namespace H3MP
 
             // Initially set IFF
             physicalObject.physicalAutoMeaterScript.E.IFFCode = IFF;
+
+            // Get hitzones
+            AutoMeaterHitZone[] hitZoneArr = physicalObject.GetComponentsInChildren<AutoMeaterHitZone>();
+            foreach(AutoMeaterHitZone hitZone in hitZoneArr)
+            {
+                hitZones.Add(hitZone.Type, hitZone);
+            }
 
             // Initially set itself
             Update(this);

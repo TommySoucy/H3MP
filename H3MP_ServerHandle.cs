@@ -750,6 +750,31 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterHitZoneDamage(int clientID, H3MP_Packet packet)
+        {
+            int autoMeaterTrackedID = packet.ReadInt();
+            byte type = packet.ReadByte();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[autoMeaterTrackedID];
+            if (trackedAutoMeater != null)
+            {
+                if(trackedAutoMeater.controller == 0)
+                {
+                    if (trackedAutoMeater.physicalObject != null)
+                    {
+                        ++AutoMeaterHitZoneDamagePatch.skip;
+                        trackedAutoMeater.hitZones[(AutoMeater.AMHitZoneType)type].Damage(damage);
+                        --AutoMeaterHitZoneDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.AutoMeaterHitZoneDamage(trackedAutoMeater, type, damage);
+                }
+            }
+        }
+
         public static void AutoMeaterDamageData(int clientID, H3MP_Packet packet)
         {
             // TODO: if ever there is data we need to pass back from a auto meater damage call
@@ -839,6 +864,29 @@ namespace H3MP
 
             packet.readPos = 0;
             H3MP_ServerSend.SosigLinkDamageData(packet);
+        }
+
+        public static void AutoMeaterHitZoneDamageData(int clientID, H3MP_Packet packet)
+        {
+            int autoMeaterTrackedID = packet.ReadInt();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[autoMeaterTrackedID];
+            if (trackedAutoMeater != null)
+            {
+                if(trackedAutoMeater.controller != 0 && trackedAutoMeater.physicalObject != null)
+                {
+                    AutoMeaterHitZone hitZone = trackedAutoMeater.hitZones[(AutoMeater.AMHitZoneType)packet.ReadByte()];
+                    hitZone.ArmorThreshold = packet.ReadFloat();
+                    hitZone.LifeUntilFailure = packet.ReadFloat();
+                    if (packet.ReadBool()) // Destroyed
+                    {
+                        hitZone.BlowUp();
+                    }
+                }
+            }
+
+            packet.readPos = 0;
+            H3MP_ServerSend.AutoMeaterHitZoneDamageData(packet);
         }
 
         public static void SosigLinkExplodes(int clientID, H3MP_Packet packet)
@@ -1404,10 +1452,18 @@ namespace H3MP
                 TNH_Progression.Level level = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager);
                 curHoldPoint.T = level.TakeChallenge;
                 curHoldPoint.H = level.HoldChallenge;
+
+                List<TNH_Manager.SosigPatrolSquad> patrolSquads = (List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(GM.TNH_Manager);
+                patrolSquads.Clear();
+                continue form here
+
+
                 List<Sosig> curHoldPointSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(curHoldPoint);
                 curHoldPointSosigs.Clear();
+                
+
                 H3MP_TrackedSosigData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.sosigs : H3MP_Client.sosigs;
-                foreach (int sosigID in data.activeSosigIDs)
+                foreach (int sosigID in data.activeHoldSosigIDs)
                 {
                     if (arrToUse[sosigID] != null && arrToUse[sosigID].physicalObject != null)
                     {

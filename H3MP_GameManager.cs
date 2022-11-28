@@ -866,6 +866,13 @@ namespace H3MP
             data.upDownMotorRotation = autoMeaterScript.UpDownTransform.localRotation;
             data.upDownJointTargetPos = autoMeaterScript.UpDownHinge.spring.targetPosition;
 
+            // Get hitzones
+            AutoMeaterHitZone[] hitZoneArr = trackedAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
+            foreach (AutoMeaterHitZone hitZone in hitZoneArr)
+            {
+                data.hitZones.Add(hitZone.Type, hitZone);
+            }
+
             // Add to local list
             data.localTrackedID = autoMeaters.Count;
             autoMeaters.Add(data);

@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using Valve.Newtonsoft.Json.Linq;
+using static FistVR.TNH_PatrolChallenge;
 using static Valve.VR.SteamVR_ExternalCamera;
 
 namespace H3MP
@@ -87,7 +88,9 @@ namespace H3MP
         autoMeaterSetBladesActive = 70,
         autoMeaterDamage = 71,
         autoMeaterFireShot = 72,
-        autoMeaterFirearmFireAtWill = 73
+        autoMeaterFirearmFireAtWill = 73,
+        autoMeaterHitZoneDamage = 74,
+        autoMeaterHitZoneDamageData = 75
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -166,7 +169,9 @@ namespace H3MP
         autoMeaterDamage = 71,
         autoMeaterDamageData = 72,
         autoMeaterFireShot = 73,
-        autoMeaterFirearmFireAtWill = 74
+        autoMeaterFirearmFireAtWill = 74,
+        autoMeaterHitZoneDamage = 75,
+        autoMeaterHitZoneDamageData = 76
     }
 
     public class H3MP_Packet : IDisposable
@@ -476,7 +481,10 @@ namespace H3MP
             Write(trackedAutoMeater.rotation);
             Write(trackedAutoMeater.active);
             Write((byte)trackedAutoMeater.IFF);
-            Write(trackedAutoMeater.idleLookPoint);
+            Write(trackedAutoMeater.sideToSideRotation);
+            Write(trackedAutoMeater.hingeTargetPos);
+            Write(trackedAutoMeater.upDownMotorRotation);
+            Write(trackedAutoMeater.upDownJointTargetPos);
 
             if (full)
             {
@@ -627,13 +635,31 @@ namespace H3MP
                 Write(instance.playerIDs[i]);
             }
         }
+        /// <summary>Adds a TNH_Manager.SosigPatrolSquad to the packet.</summary>
+        /// <param name="instance">The TNH_Manager.SosigPatrolSquad to add.</param>
+        public void Write(TNH_Manager.SosigPatrolSquad patrol)
+        {
+            Write(patrol.Squad.Count);
+            for(int i=0; i < patrol.Squad.Count; ++i)
+            {
+                Write(patrol.Squad[i].GetComponent<H3MP_TrackedSosig>().data.trackedID);
+            }
+            Write(patrol.PatrolPoints.Count);
+            for(int i=0; i < patrol.PatrolPoints.Count; ++i)
+            {
+                Write(patrol.PatrolPoints[i]);
+            }
+            Write(patrol.CurPatrolPointIndex);
+            Write(patrol.IsPatrollingUp);
+        }
         /// <summary>Adds a H3MP_TNHData to the packet.</summary>
         /// <param name="instance">The TNH_Manager to take teh data from.</param>
         public void Write(TNH_Manager manager)
         {
             Write((int)Mod.TNH_Manager_m_level.GetValue(manager));
             Write((short)manager.Phase);
-            Write((int)Mod.TNH_Manager_m_curHoldIndex.GetValue(manager));
+            int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(manager);
+            Write(curHoldIndex);
             Write((int)Mod.TNH_Manager_m_lastHoldIndex.GetValue(manager));
             int seed = (int)Mod.TNH_Manager_m_seed.GetValue(manager);
             if (seed < 0)
@@ -689,7 +715,24 @@ namespace H3MP
             {
                 Write(0);
             }
-            List<Sosig> holdPointActiveSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(manager);
+
+            // Patrols
+            List<TNH_Manager.SosigPatrolSquad> patrols = (List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(manager);
+            if (patrols == null || patrols.Count == 0)
+            {
+                Write(0);
+            }
+            else
+            {
+                Write(patrols.Count);
+                for (int i = 0; i < patrols.Count; ++i)
+                {
+                    Write(patrols[i]);
+                }
+            }
+
+            // HoldPoint data
+            List<Sosig> holdPointActiveSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(manager.HoldPoints[curHoldIndex]);
             if(holdPointActiveSosigs == null || holdPointActiveSosigs.Count == 0)
             {
                 Write(0);
@@ -700,6 +743,60 @@ namespace H3MP
                 for(int i=0; i < holdPointActiveSosigs.Count; ++i)
                 {
                     Write(holdPointActiveSosigs[i].GetComponent<H3MP_TrackedSosig>().data.trackedID);
+                }
+            }
+            List<AutoMeater> holdPointActiveAutoMeaters = (List<AutoMeater>)Mod.TNH_HoldPoint_m_activeTurrets.GetValue(manager.HoldPoints[curHoldIndex]);
+            if(holdPointActiveAutoMeaters == null || holdPointActiveAutoMeaters.Count == 0)
+            {
+                Write(0);
+            }
+            else
+            {
+                Write(holdPointActiveAutoMeaters.Count);
+                for(int i=0; i < holdPointActiveAutoMeaters.Count; ++i)
+                {
+                    Write(holdPointActiveAutoMeaters[i].GetComponent<H3MP_TrackedAutoMeater>().data.trackedID);
+                }
+            }
+
+            // Supply points data
+            List<int> activeSupplyPointsIndices = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(manager); 
+            if(activeSupplyPointsIndices == null)
+            {
+                Write(0);
+            }
+            else
+            {
+                Write(activeSupplyPointsIndices.Count);
+            }
+            foreach (int index in activeSupplyPointsIndices)
+            {
+                TNH_SupplyPoint currentSupplyPoint = manager.SupplyPoints[index];
+                List<Sosig> supplyPointActiveSosigs = (List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(currentSupplyPoint);
+                if (supplyPointActiveSosigs == null || supplyPointActiveSosigs.Count == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(supplyPointActiveSosigs.Count);
+                    for (int i = 0; i < supplyPointActiveSosigs.Count; ++i)
+                    {
+                        Write(supplyPointActiveSosigs[i].GetComponent<H3MP_TrackedSosig>().data.trackedID);
+                    }
+                }
+                List<AutoMeater> supplyPointActiveAutoMeaters = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(currentSupplyPoint);
+                if (supplyPointActiveAutoMeaters == null || supplyPointActiveAutoMeaters.Count == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(supplyPointActiveAutoMeaters.Count);
+                    for (int i = 0; i < supplyPointActiveAutoMeaters.Count; ++i)
+                    {
+                        Write(supplyPointActiveAutoMeaters[i].GetComponent<H3MP_TrackedAutoMeater>().data.trackedID);
+                    }
                 }
             }
         }
@@ -1127,7 +1224,10 @@ namespace H3MP
             trackedAutoMeater.rotation = ReadQuaternion();
             trackedAutoMeater.active = ReadBool();
             trackedAutoMeater.IFF = ReadByte();
-            trackedAutoMeater.idleLookPoint = ReadVector3();
+            trackedAutoMeater.sideToSideRotation = ReadQuaternion();
+            trackedAutoMeater.hingeTargetPos = ReadFloat();
+            trackedAutoMeater.upDownMotorRotation = ReadQuaternion();
+            trackedAutoMeater.upDownJointTargetPos = ReadFloat();
 
             if (full)
             {
@@ -1203,6 +1303,33 @@ namespace H3MP
             return instance;
         }
 
+        /// <summary>Reads a H3MP_TNHInstance from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public TNH_Manager.SosigPatrolSquad ReadTNHSosigPatrol(bool _moveReadPos = true)
+        {
+            TNH_Manager.SosigPatrolSquad patrol = new TNH_Manager.SosigPatrolSquad();
+
+            H3MP_TrackedSosigData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.sosigs : H3MP_Client.sosigs;
+            int squadSize = ReadInt();
+            for(int i=0; i < squadSize; ++i)
+            {
+                int trackedID = ReadInt();
+                if(arrToUse[trackedID] != null && arrToUse[trackedID].physicalObject != null)
+                {
+                    patrol.Squad.Add(arrToUse[trackedID].physicalObject.physicalSosigScript);
+                }
+            }
+            int patrolPointCount = ReadInt();
+            for (int i = 0; i < patrolPointCount; ++i)
+            {
+                patrol.PatrolPoints.Add(ReadVector3());
+            }
+            patrol.CurPatrolPointIndex = ReadInt();
+            patrol.IsPatrollingUp = ReadBool();
+
+            return patrol;
+        }
+
         /// <summary>Reads a H3MP_TNHData from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
         public H3MP_TNHData ReadTNHData(bool _moveReadPos = true)
@@ -1217,10 +1344,36 @@ namespace H3MP
             data.charIndex = ReadInt();
             data.progressionIndex = ReadInt();
             data.progressionEndlessIndex = ReadInt();
-            data.activeSosigIDs = new int[ReadInt()];
-            for(int i = 0; i< data.activeSosigIDs.Length; ++i)
+            data.patrols = new TNH_Manager.SosigPatrolSquad[ReadInt()];
+            for(int i = 0; i < data.patrols.Length; ++i)
             {
-                data.activeSosigIDs[i] = ReadInt();
+                data.patrols[i] = ReadTNHSosigPatrol();
+            }
+            data.activeHoldSosigIDs = new int[ReadInt()];
+            for(int i = 0; i< data.activeHoldSosigIDs.Length; ++i)
+            {
+                data.activeHoldSosigIDs[i] = ReadInt();
+            }
+            data.activeHoldTurretIDs = new int[ReadInt()];
+            for(int i = 0; i< data.activeHoldTurretIDs.Length; ++i)
+            {
+                data.activeHoldTurretIDs[i] = ReadInt();
+            }
+            int activeSupplyCount = ReadInt();
+            data.supplyPointsSosigIDs = new int[activeSupplyCount][];
+            data.supplyPointsTurretIDs = new int[activeSupplyCount][];
+            for(int i=0; i < activeSupplyCount; ++i)
+            {
+                data.supplyPointsSosigIDs[i] = new int[ReadInt()];
+                for (int j = 0; j < data.supplyPointsSosigIDs.Length; ++j)
+                {
+                    data.supplyPointsSosigIDs[i][j] = ReadInt();
+                }
+                data.supplyPointsTurretIDs[i] = new int[ReadInt()];
+                for (int j = 0; j < data.supplyPointsTurretIDs.Length; ++j)
+                {
+                    data.supplyPointsTurretIDs[i][j] = ReadInt();
+                }
             }
 
             return data;

@@ -872,6 +872,18 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterHitZoneDamage(H3MP_TrackedAutoMeaterData trackedAutoMeater, byte type, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.autoMeaterHitZoneDamage))
+            {
+                packet.Write(trackedAutoMeater.trackedID);
+                packet.Write(type);
+                packet.Write(d);
+
+                SendTCPData(trackedAutoMeater.controller, packet);
+            }
+        }
+
         public static void SosigWearableDamage(H3MP_TrackedSosigData trackedSosig, int linkIndex, int wearableIndex, Damage d)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigWearableDamage))
@@ -932,6 +944,34 @@ namespace H3MP
             // Make sure the packet is set to ServerPackets.sosigLinkDamageData
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigDamageData);
             for(int i=0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPDataToAll(packet);
+        }
+
+        public static void AutoMeaterHitZoneDamageData(int trackedID, AutoMeaterHitZone hitZone)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.autoMeaterHitZoneDamageData))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)hitZone.Type);
+
+                packet.Write(hitZone.ArmorThreshold);
+                packet.Write(hitZone.LifeUntilFailure);
+                packet.Write((bool)Mod.AutoMeaterHitZone_m_isDestroyed.GetValue(hitZone));
+
+                AutoMeaterHitZoneDamageData(packet);
+            }
+        }
+
+        public static void AutoMeaterHitZoneDamageData(H3MP_Packet packet)
+        {
+            // Make sure the packet is set to ServerPackets.autoMeaterHitZoneDamageData
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.autoMeaterHitZoneDamageData);
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }

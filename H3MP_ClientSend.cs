@@ -635,6 +635,21 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterHitZoneDamageData(int trackedID, AutoMeaterHitZone hitZone)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterHitZoneDamageData))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)hitZone.Type);
+
+                packet.Write(hitZone.ArmorThreshold);
+                packet.Write(hitZone.LifeUntilFailure);
+                packet.Write((bool)Mod.AutoMeaterHitZone_m_isDestroyed.GetValue(hitZone));
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void SosigLinkExplodes(int sosigTrackedID, int linkIndex, Damage.DamageClass damClass)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigLinkExplodes))
@@ -1134,6 +1149,18 @@ namespace H3MP
                 packet.Write(firearmIndex);
                 packet.Write(fireAtWill);
                 packet.Write(dist);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void AutoMeaterHitZoneDamage(int trackedID, AutoMeater.AMHitZoneType type, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterHitZoneDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)type);
+                packet.Write(d);
 
                 SendTCPData(packet);
             }

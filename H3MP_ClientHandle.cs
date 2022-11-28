@@ -646,6 +646,27 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterHitZoneDamage(H3MP_Packet packet)
+        {
+            int autoMeaterTrackedID = packet.ReadInt();
+            byte type = packet.ReadByte();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[autoMeaterTrackedID];
+            if (trackedAutoMeater != null)
+            {
+                if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
+                {
+                    if (trackedAutoMeater.physicalObject != null)
+                    {
+                        ++AutoMeaterHitZoneDamagePatch.skip;
+                        trackedAutoMeater.hitZones[(AutoMeater.AMHitZoneType)type].Damage(damage);
+                        --AutoMeaterHitZoneDamagePatch.skip;
+                    }
+                }
+            }
+        }
+
         public static void SosigWearableDamage(H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
@@ -738,6 +759,26 @@ namespace H3MP
                     Mod.Sosig_m_isConfused.SetValue(physicalSosig, packet.ReadBool());
                     physicalSosig.m_confusedTime = packet.ReadFloat();
                     Mod.Sosig_m_storedShudder.SetValue(physicalSosig, packet.ReadFloat());
+                }
+            }
+        }
+
+        public static void AutoMeaterHitZoneDamageData(H3MP_Packet packet)
+        {
+            int autoMeaterTrackedID = packet.ReadInt();
+
+            H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Client.autoMeaters[autoMeaterTrackedID];
+            if (trackedAutoMeater != null)
+            {
+                if (trackedAutoMeater.controller != H3MP_Client.singleton.ID && trackedAutoMeater.physicalObject != null)
+                {
+                    AutoMeaterHitZone hitZone = trackedAutoMeater.hitZones[(AutoMeater.AMHitZoneType)packet.ReadByte()];
+                    hitZone.ArmorThreshold = packet.ReadFloat();
+                    hitZone.LifeUntilFailure = packet.ReadFloat();
+                    if (packet.ReadBool()) // Destroyed
+                    {
+                        hitZone.BlowUp();
+                    }
                 }
             }
         }
