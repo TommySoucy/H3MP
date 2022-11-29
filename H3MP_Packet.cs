@@ -11,8 +11,6 @@ using static Valve.VR.SteamVR_ExternalCamera;
 
 namespace H3MP
 {
-    // MOSTLY WRITTEN BY Tom Weiland: https://tomweiland.net/github
-
     /// <summary>Sent from server to client.</summary>
     public enum ServerPackets
     {
@@ -90,7 +88,8 @@ namespace H3MP
         autoMeaterFireShot = 72,
         autoMeaterFirearmFireAtWill = 73,
         autoMeaterHitZoneDamage = 74,
-        autoMeaterHitZoneDamageData = 75
+        autoMeaterHitZoneDamageData = 75,
+        TNHSosigKill = 77
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -171,7 +170,8 @@ namespace H3MP
         autoMeaterFireShot = 73,
         autoMeaterFirearmFireAtWill = 74,
         autoMeaterHitZoneDamage = 75,
-        autoMeaterHitZoneDamageData = 76
+        autoMeaterHitZoneDamageData = 76,
+        TNHSosigKill = 77
     }
 
     public class H3MP_Packet : IDisposable

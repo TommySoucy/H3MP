@@ -1165,5 +1165,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void TNHSosigKill(int instance, int sosigTrackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHSosigKill))
+            {
+                packet.Write(instance);
+                packet.Write(sosigTrackedID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

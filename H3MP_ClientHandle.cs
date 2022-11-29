@@ -1344,5 +1344,22 @@ namespace H3MP
                 --AutoMeaterFirearmFireAtWillPatch.skip;
             }
         }
+
+        public static void TNHSosigKill(H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int trackedID = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[trackedID];
+                if (trackedSosig != null && trackedSosig.physicalObject != null)
+                {
+                    ++TNH_ManagerPatch.sosigKillSkip;
+                    Mod.TNH_Manager_OnSosigKill.Invoke(Mod.currentTNHInstance.manager, new object[] { trackedSosig.physicalObject.physicalSosigScript });
+                    --TNH_ManagerPatch.sosigKillSkip;
+                }
+            }
+        }
     }
 }

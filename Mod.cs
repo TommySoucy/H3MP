@@ -158,6 +158,7 @@ namespace H3MP
         public static readonly MethodInfo TNH_Manager_DelayedInit = typeof(TNH_Manager).GetMethod("DelayedInit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_Manager_SetLevel = typeof(TNH_Manager).GetMethod("SetLevel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_Manager_SetPhase = typeof(TNH_Manager).GetMethod("SetPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_Manager_OnSosigKill = typeof(TNH_Manager).GetMethod("OnSosigKill", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeater_SetState = typeof(AutoMeater).GetMethod("SetState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_FireShot = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_UpdateFlameThrower = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFlameThrower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -1020,9 +1021,12 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchPlayerDiedPrefix = typeof(TNH_ManagerPatch).GetMethod("PlayerDiedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchAddTokensOriginal = typeof(TNH_Manager).GetMethod("AddTokens", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchAddTokensPrefix = typeof(TNH_ManagerPatch).GetMethod("AddTokensPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchSosigKillOriginal = typeof(TNH_Manager).GetMethod("OnSosigKill", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchSosigKillPrefix = typeof(TNH_ManagerPatch).GetMethod("OnSosigKillPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
+            harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
 
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
@@ -5872,6 +5876,7 @@ namespace H3MP
     class TNH_ManagerPatch
     {
         public static int addTokensSkip;
+        public static int sosigKillSkip;
 
         static bool PlayerDiedPrefix()
         {
@@ -5950,6 +5955,30 @@ namespace H3MP
             }
 
             return true;
+        }
+
+        static void OnSosigKillPrefix(Sosig s)
+        {
+            if (sosigKillSkip > 0)
+            {
+                return;
+            }
+
+            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(s) ? H3MP_GameManager.trackedSosigBySosig[s] : s.GetComponent<H3MP_TrackedSosig>();
+                if(trackedSosig != null)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.TNHSosigKill(Mod.currentTNHInstance.instance, trackedSosig.data.trackedID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHSosigKill(Mod.currentTNHInstance.instance, trackedSosig.data.trackedID);
+                    }
+                }
+            }
         }
     }
 
