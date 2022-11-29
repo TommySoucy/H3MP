@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using static FistVR.TNH_Progression;
 using static H3MP.H3MP_PlayerHitbox;
 using static Valve.VR.SteamVR_ExternalCamera;
 
@@ -1651,6 +1652,43 @@ namespace H3MP
             }
 
             H3MP_ServerSend.TNHSosigKill(instance, trackedID, clientID);
+        }
+
+        public static void TNHHoldPointSystemNode(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int charIndex = packet.ReadInt();
+            int progressionIndex = packet.ReadInt();
+            int progressionEndlessIndex = packet.ReadInt();
+            int levelIndex = packet.ReadInt();
+            int holdPointIndex = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                TNH_CharacterDef C = null;
+                try
+                {
+                    C = Mod.currentTNHInstance.manager.CharDB.GetDef((TNH_Char)charIndex);
+                }
+                catch
+                {
+                    C = Mod.currentTNHInstance.manager.CharDB.GetDef(TNH_Char.DD_BeginnerBlake);
+                }
+                TNH_Progression currentProgression = null;
+                if(progressionIndex != -1)
+                {
+                    currentProgression = C.Progressions[progressionIndex];
+                }
+                else // progressionEndlessIndex != -1
+                {
+                    currentProgression = C.Progressions_Endless[progressionEndlessIndex];
+                }
+                TNH_Progression.Level curLevel = currentProgression.Levels[levelIndex];
+                TNH_HoldPoint holdPoint = Mod.currentTNHInstance.manager.HoldPoints[holdPointIndex];
+                holdPoint.ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+            }
+
+            H3MP_ServerSend.TNHHoldPointSystemNode(instance, charIndex, progressionIndex, progressionEndlessIndex, levelIndex, holdPointIndex, clientID);
         }
     }
 }

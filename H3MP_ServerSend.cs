@@ -1612,5 +1612,27 @@ namespace H3MP
                 }
             }
         }
+
+        public static void TNHHoldPointSystemNode(int instance, int charIndex, int progressionIndex, int progressionEndlessIndex, int levelIndex, int holdPointIndex, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldPointSystemNode))
+            {
+                packet.Write(instance);
+                packet.Write(charIndex);
+                packet.Write(progressionIndex);
+                packet.Write(progressionEndlessIndex);
+                packet.Write(levelIndex);
+                packet.Write(holdPointIndex);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

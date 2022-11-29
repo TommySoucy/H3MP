@@ -1023,10 +1023,13 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchAddTokensPrefix = typeof(TNH_ManagerPatch).GetMethod("AddTokensPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSosigKillOriginal = typeof(TNH_Manager).GetMethod("OnSosigKill", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSosigKillPrefix = typeof(TNH_ManagerPatch).GetMethod("OnSosigKillPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchSetPhaseOriginal = typeof(TNH_Manager).GetMethod("SetPhase", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchSetPhasePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhasePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
+            harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix));
 
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
@@ -1036,6 +1039,15 @@ namespace H3MP
 
             harmony.Patch(TAHReticleContactPatchTickOriginal, null ,null, new HarmonyMethod(TAHReticleContactPatchTickTranspiler));
             harmony.Patch(TAHReticleContactPatchSetContactTypeOriginal, new HarmonyMethod(TAHReticleContactPatchSetContactTypePrefix));
+
+            // TNH_HoldPointPatch
+            MethodInfo TNH_HoldPointPatchSystemNodeOriginal = typeof(TNH_HoldPoint).GetMethod("ConfigureAsSystemNode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("ConfigureAsSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeChallengeEntities", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnEntitiesPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTakeChallengeEntitiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
+            harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -5979,6 +5991,93 @@ namespace H3MP
                     }
                 }
             }
+        }
+
+        static bool SetPhasePrefix()
+        {
+            // We want to prevent call to SetPhase unless we are controller
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    // Patches TNH_HoldPoint to keep track of hold point events
+    class TNH_HoldPointPatch
+    {
+        public static bool spawnEntitiesSkip;
+
+        static void ConfigureAsSystemNodePrefix(ref TNH_HoldPoint __instance)
+        {
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                    {
+                        int holdPointIndex = -1;
+                        for(int i=0; i<__instance.M.HoldPoints.Count;++i)
+                        {
+                            if (__instance.M.HoldPoints[i] == __instance)
+                            {
+                                holdPointIndex = i;
+                                break;
+                            }
+                        }
+                        int progressionIndex = -1;
+                        for(int i=0; i<__instance.M.C.Progressions.Count;++i)
+                        {
+                            if (__instance.M.C.Progressions[i] == (TNH_Progression)Mod.TNH_Manager_m_curProgression.GetValue(__instance.M))
+                            {
+                                progressionIndex = i;
+                                break;
+                            }
+                        }
+                        int progressionEndlessIndex = -1;
+                        for(int i=0; i<__instance.M.C.Progressions_Endless.Count;++i)
+                        {
+                            if (__instance.M.C.Progressions_Endless[i] == (TNH_Progression)Mod.TNH_Manager_m_curProgressionEndless.GetValue(__instance.M))
+                            {
+                                progressionEndlessIndex = i;
+                                break;
+                            }
+                        }
+                        if (holdPointIndex == -1)
+                        {
+                            Debug.LogError("Holdpoint to be set as sytem node missing from manager");
+                        }
+                        else
+                        {
+                            if (H3MP_ThreadManager.host)
+                            {
+                                H3MP_ServerSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, GM.TNHOptions.LastPlayedChar, progressionIndex, progressionEndlessIndex, (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager), holdPointIndex);
+                            }
+                            else
+                            {
+
+                                H3MP_ClientSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, GM.TNHOptions.LastPlayedChar, progressionIndex, progressionEndlessIndex, (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager), holdPointIndex);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        spawnEntitiesSkip = true;
+                    }
+                }
+            }
+        }
+
+        static bool SpawnTakeChallengeEntitiesPrefix()
+        {
+            if(spawnEntitiesSkip)
+            {
+                spawnEntitiesSkip = false;
+                return false;
+            }
+
+            return true;
         }
     }
 

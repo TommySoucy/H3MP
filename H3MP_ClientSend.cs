@@ -1176,5 +1176,20 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void TNHHoldPointSystemNode(int instance, int charIndex, int progressionIndex, int progressionEndlessIndex, int levelIndex, int holdPointIndex)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointSystemNode))
+            {
+                packet.Write(instance);
+                packet.Write(charIndex);
+                packet.Write(progressionIndex);
+                packet.Write(progressionEndlessIndex);
+                packet.Write(levelIndex);
+                packet.Write(holdPointIndex);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

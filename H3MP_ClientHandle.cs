@@ -1361,5 +1361,40 @@ namespace H3MP
                 }
             }
         }
+
+        public static void TNHHoldPointSystemNode(H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int charIndex = packet.ReadInt();
+            int progressionIndex = packet.ReadInt();
+            int progressionEndlessIndex = packet.ReadInt();
+            int levelIndex = packet.ReadInt();
+            int holdPointIndex = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                TNH_CharacterDef C = null;
+                try
+                {
+                    C = Mod.currentTNHInstance.manager.CharDB.GetDef((TNH_Char)charIndex);
+                }
+                catch
+                {
+                    C = Mod.currentTNHInstance.manager.CharDB.GetDef(TNH_Char.DD_BeginnerBlake);
+                }
+                TNH_Progression currentProgression = null;
+                if (progressionIndex != -1)
+                {
+                    currentProgression = C.Progressions[progressionIndex];
+                }
+                else // progressionEndlessIndex != -1
+                {
+                    currentProgression = C.Progressions_Endless[progressionEndlessIndex];
+                }
+                TNH_Progression.Level curLevel = currentProgression.Levels[levelIndex];
+                TNH_HoldPoint holdPoint = Mod.currentTNHInstance.manager.HoldPoints[holdPointIndex];
+                holdPoint.ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+            }
+        }
     }
 }
