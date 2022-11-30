@@ -35,6 +35,7 @@ namespace H3MP
         public static JObject config;
         public GameObject H3MPMenuPrefab;
         public GameObject TNHMenuPrefab;
+        public static GameObject TNHStartEquipButtonPrefab;
         public GameObject playerPrefab;
         public static Material reticleFriendlyContactArrowMat;
         public static Material reticleFriendlyContactIconMat;
@@ -97,6 +98,7 @@ namespace H3MP
         public static Dictionary<int, GameObject> joinTNHInstances;
         public static Dictionary<int, GameObject> currentTNHInstancePlayers;
         public static TNH_UIManager currentTNHUIManager;
+        public static GameObject TNHStartEquipButton;
 
         // Reused private FieldInfos
         public static readonly FieldInfo Sosig_m_isOnOffMeshLinkField = typeof(Sosig).GetField("m_isOnOffMeshLink", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -443,6 +445,12 @@ namespace H3MP
             SetupPlayerPrefab();
 
             sosigWearableMap = JObject.Parse(File.ReadAllText("BepinEx/Plugins/H3MP/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
+
+            TNHStartEquipButtonPrefab = assetBundle.LoadAsset<GameObject>("TNHStartEquipButton");
+            FVRPointableButton startEquipButton = TNHStartEquipButtonPrefab.AddComponent<FVRPointableButton>();
+            startEquipButton.SetButton();
+            startEquipButton.MaxPointingRange = 1;
+            startEquipButton.Button.onClick.AddListener(OnTNHSpawnStartEquipClicked);
         }
 
         // MOD: If you need to add anything to the player prefab, this is what you should patch to do it
@@ -1026,14 +1034,21 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchSosigKillPrefix = typeof(TNH_ManagerPatch).GetMethod("OnSosigKillPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseOriginal = typeof(TNH_Manager).GetMethod("SetPhase", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSetPhasePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhasePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchSetPhasePostfix = typeof(TNH_ManagerPatch).GetMethod("SetPhasePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchUpdateOriginal = typeof(TNH_Manager).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchUpdatePrefix = typeof(TNH_ManagerPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchInitBeginEquipOriginal = typeof(TNH_Manager).GetMethod("InitBeginningEquipment", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchInitBeginEquipPrefix = typeof(TNH_ManagerPatch).GetMethod("InitBeginEquipPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchInitHoldCompleteOriginal = typeof(TNH_Manager).GetMethod("HoldPointCompleted", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchInitHoldCompletePrefix = typeof(TNH_ManagerPatch).GetMethod("HoldPointCompletedPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
-            harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix));
+            harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix), new HarmonyMethod(TNH_ManagerPatchSetPhasePostfix));
             harmony.Patch(TNH_ManagerPatchUpdateOriginal, new HarmonyMethod(TNH_ManagerPatchUpdatePrefix));
+            harmony.Patch(TNH_ManagerPatchInitBeginEquipOriginal, new HarmonyMethod(TNH_ManagerPatchInitBeginEquipPrefix));
+            harmony.Patch(TNH_ManagerPatchInitHoldCompleteOriginal, new HarmonyMethod(TNH_ManagerPatchInitHoldCompletePrefix));
 
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
@@ -1259,6 +1274,157 @@ namespace H3MP
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
+        }
+
+        private void OnTNHSpawnStartEquipClicked()
+        {
+            if(GM.TNH_Manager != null)
+            {
+                TNH_Manager M = GM.TNH_Manager;
+                TNH_CharacterDef C = M.C;
+                Vector3 largeCaseSpawnPos = GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward * 0.8f;
+                Vector3 smallCaseSpawnPos = GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward * 0.3f + Vector3.down * 0.3f;
+                Vector3 shieldSpawnPos = GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward * 0.4f + Vector3.up * 0.3f;
+                Vector3 headForwardNegXZero = GM.CurrentPlayerBody.Head.forward * -1;
+                headForwardNegXZero.x = 0;
+                if (C.Has_Weapon_Primary)
+                {
+                    TNH_CharacterDef.LoadoutEntry weapon_Primary = C.Weapon_Primary;
+                    int minAmmo = -1;
+                    int maxAmmo = -1;
+                    FVRObject weapon;
+                    if (weapon_Primary.ListOverride.Count > 0)
+                    {
+                        weapon = weapon_Primary.ListOverride[UnityEngine.Random.Range(0, weapon_Primary.ListOverride.Count)];
+                    }
+                    else
+                    {
+                        ObjectTableDef objectTableDef = weapon_Primary.TableDefs[UnityEngine.Random.Range(0, weapon_Primary.TableDefs.Count)];
+                        ObjectTable objectTable = new ObjectTable();
+                        objectTable.Initialize(objectTableDef);
+                        weapon = objectTable.GetRandomObject();
+                        minAmmo = objectTableDef.MinAmmoCapacity;
+                        maxAmmo = objectTableDef.MaxAmmoCapacity;
+                    }
+                    GameObject gameObject = M.SpawnWeaponCase(M.Prefab_WeaponCaseLarge, largeCaseSpawnPos, headForwardNegXZero, weapon, weapon_Primary.Num_Mags_SL_Clips, weapon_Primary.Num_Rounds, minAmmo, maxAmmo, weapon_Primary.AmmoObjectOverride);
+                    gameObject.GetComponent<TNH_WeaponCrate>().M = M;
+                    gameObject.AddComponent<H3MP_TimerDestroyer>();
+                }
+                if (C.Has_Weapon_Secondary)
+                {
+                    TNH_CharacterDef.LoadoutEntry weapon_Secondary = C.Weapon_Secondary;
+                    int minAmmo2 = -1;
+                    int maxAmmo2 = -1;
+                    FVRObject weapon2;
+                    if (weapon_Secondary.ListOverride.Count > 0)
+                    {
+                        weapon2 = weapon_Secondary.ListOverride[UnityEngine.Random.Range(0, weapon_Secondary.ListOverride.Count)];
+                    }
+                    else
+                    {
+                        ObjectTableDef objectTableDef2 = weapon_Secondary.TableDefs[UnityEngine.Random.Range(0, weapon_Secondary.TableDefs.Count)];
+                        ObjectTable objectTable2 = new ObjectTable();
+                        objectTable2.Initialize(objectTableDef2);
+                        weapon2 = objectTable2.GetRandomObject();
+                        minAmmo2 = objectTableDef2.MinAmmoCapacity;
+                        maxAmmo2 = objectTableDef2.MaxAmmoCapacity;
+                    }
+                    GameObject gameObject2 = M.SpawnWeaponCase(M.Prefab_WeaponCaseSmall, smallCaseSpawnPos, headForwardNegXZero, weapon2, weapon_Secondary.Num_Mags_SL_Clips, weapon_Secondary.Num_Rounds, minAmmo2, maxAmmo2, weapon_Secondary.AmmoObjectOverride);
+                    gameObject2.GetComponent<TNH_WeaponCrate>().M = M;
+                }
+                if (C.Has_Weapon_Tertiary)
+                {
+                    TNH_CharacterDef.LoadoutEntry weapon_Tertiary = C.Weapon_Tertiary;
+                    FVRObject fvrobject;
+                    if (weapon_Tertiary.ListOverride.Count > 0)
+                    {
+                        fvrobject = weapon_Tertiary.ListOverride[UnityEngine.Random.Range(0, weapon_Tertiary.ListOverride.Count)];
+                    }
+                    else
+                    {
+                        ObjectTableDef d = weapon_Tertiary.TableDefs[UnityEngine.Random.Range(0, weapon_Tertiary.TableDefs.Count)];
+                        ObjectTable objectTable3 = new ObjectTable();
+                        objectTable3.Initialize(d);
+                        fvrobject = objectTable3.GetRandomObject();
+                    }
+                    GameObject g = UnityEngine.Object.Instantiate<GameObject>(fvrobject.GetGameObject(), smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
+                    M.AddObjectToTrackedList(g);
+                }
+                if (C.Has_Item_Primary)
+                {
+                    TNH_CharacterDef.LoadoutEntry item_Primary = C.Item_Primary;
+                    FVRObject fvrobject2;
+                    if (item_Primary.ListOverride.Count > 0)
+                    {
+                        fvrobject2 = item_Primary.ListOverride[UnityEngine.Random.Range(0, item_Primary.ListOverride.Count)];
+                    }
+                    else
+                    {
+                        ObjectTableDef d2 = item_Primary.TableDefs[UnityEngine.Random.Range(0, item_Primary.TableDefs.Count)];
+                        ObjectTable objectTable4 = new ObjectTable();
+                        objectTable4.Initialize(d2);
+                        fvrobject2 = objectTable4.GetRandomObject();
+                    }
+                    GameObject g2 = UnityEngine.Object.Instantiate<GameObject>(fvrobject2.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f + Vector3.left * 0.3f, UnityEngine.Random.rotation);
+                    M.AddObjectToTrackedList(g2);
+                }
+                if (C.Has_Item_Secondary)
+                {
+                    TNH_CharacterDef.LoadoutEntry item_Secondary = C.Item_Secondary;
+                    FVRObject fvrobject3;
+                    if (item_Secondary.ListOverride.Count > 0)
+                    {
+                        fvrobject3 = item_Secondary.ListOverride[UnityEngine.Random.Range(0, item_Secondary.ListOverride.Count)];
+                    }
+                    else
+                    {
+                        ObjectTableDef d3 = item_Secondary.TableDefs[UnityEngine.Random.Range(0, item_Secondary.TableDefs.Count)];
+                        ObjectTable objectTable5 = new ObjectTable();
+                        objectTable5.Initialize(d3);
+                        fvrobject3 = objectTable5.GetRandomObject();
+                    }
+                    GameObject g3 = UnityEngine.Object.Instantiate<GameObject>(fvrobject3.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f + Vector3.right * 0.3f, UnityEngine.Random.rotation);
+                    M.AddObjectToTrackedList(g3);
+                }
+                if (C.Has_Item_Tertiary)
+                {
+                    TNH_CharacterDef.LoadoutEntry item_Tertiary = C.Item_Tertiary;
+                    FVRObject fvrobject4;
+                    if (item_Tertiary.ListOverride.Count > 0)
+                    {
+                        fvrobject4 = item_Tertiary.ListOverride[UnityEngine.Random.Range(0, item_Tertiary.ListOverride.Count)];
+                    }
+                    else
+                    {
+                        ObjectTableDef d4 = item_Tertiary.TableDefs[UnityEngine.Random.Range(0, item_Tertiary.TableDefs.Count)];
+                        ObjectTable objectTable6 = new ObjectTable();
+                        objectTable6.Initialize(d4);
+                        fvrobject4 = objectTable6.GetRandomObject();
+                    }
+                    GameObject g4 = UnityEngine.Object.Instantiate<GameObject>(fvrobject4.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f, UnityEngine.Random.rotation);
+                    M.AddObjectToTrackedList(g4);
+                }
+                if (C.Has_Item_Shield)
+                {
+                    TNH_CharacterDef.LoadoutEntry item_Shield = C.Item_Shield;
+                    FVRObject fvrobject5;
+                    if (item_Shield.ListOverride.Count > 0)
+                    {
+                        fvrobject5 = item_Shield.ListOverride[UnityEngine.Random.Range(0, item_Shield.ListOverride.Count)];
+                    }
+                    else
+                    {
+                        ObjectTableDef d5 = item_Shield.TableDefs[UnityEngine.Random.Range(0, item_Shield.TableDefs.Count)];
+                        ObjectTable objectTable7 = new ObjectTable();
+                        objectTable7.Initialize(d5);
+                        fvrobject5 = objectTable7.GetRandomObject();
+                    }
+                    GameObject g5 = UnityEngine.Object.Instantiate<GameObject>(fvrobject5.GetGameObject(), shieldSpawnPos, Quaternion.Euler(Vector3.up));
+                    M.AddObjectToTrackedList(g5);
+                }
+            }
+            Destroy(TNHStartEquipButton);
+            TNHStartEquipButton = null;
         }
 
         public void OnTNHInstanceReceived(H3MP_TNHInstance instance)
@@ -5376,6 +5542,7 @@ namespace H3MP
                             // If there are already players, it means the TNH game is already in some state
                             // Set the state of our TNH_Manager accordingly
                             // - Current hold index (So we can set m_curHoldPoint)
+                            Mod.TNH_Manager_m_curHoldPoint.SetValue(GM.TNH_Manager, GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex]);
                             //  - If sys node m_hasActivated (Set it in the sys node and instantiate and play sound according to SystemNode.Update)
                             //  - If sys node m_hasInitiatedHold (Set it in the sys node and instantiate and play sound according to SystemNode.Update and begin hold challenge, skipping patch)
                             //   - TP to system node psawn point
@@ -5383,14 +5550,21 @@ namespace H3MP
                             //   - Which barriers are active (Raise them)
                             //  - If NO hold ongoing, which supply points are active
                             //   - Which panels of which types are active
-                        }
+                            //   - Sync token boxes
+                            // Then register hold and suplpy points with reticle
 
-                        // If this is the first time we join this game, give the player a button 
-                        // with which they can spawn their own starting equipment
-                        TODO
+                            // If this is the first time we join this game, give the player a button 
+                            // with which they can spawn their own starting equipment
+                            if (!Mod.currentTNHInstance.played.Contains(H3MP_GameManager.ID)) 
+                            {
+                                Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab);
+                            }
+                        }
 
                         Mod.currentTNHInstance.AddCurrentlyPlaying(true, H3MP_GameManager.ID);
                         Mod.currentlyPlayingTNH = true;
+
+                        TODO: Make sure we sync TNH spawn supply point, the starting point
                     }
                     else // TNH_Manager was set to null
                     {
@@ -5912,6 +6086,8 @@ namespace H3MP
     {
         public static int addTokensSkip;
         public static int sosigKillSkip;
+        static bool sendCurHoldIndex;
+        static List<TNH_SupplyPoint.SupplyPanelType> supplyPanelTypes;
 
         static bool PlayerDiedPrefix()
         {
@@ -6019,11 +6195,24 @@ namespace H3MP
         static bool SetPhasePrefix()
         {
             // We want to prevent call to SetPhase unless we are controller
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                return false;
+                if(Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+                {
+                    return false;
+                }
+                sendCurHoldIndex = true;
             }
             return true;
+        }
+
+        static bool SetPhaseTakePostfix()
+        {
+            //continue from here, send take and all necessary data to other clients:
+            // new hold point and configure as system node already gets sent
+            // go through the active panel indices, and for each of these panels pass the constructor panel's exact spawn position/rotation
+            // and secondary panel type and spawn position/rotation
+            // and boxes and what they hold, their position/rotation, might have to write a transpiler for TNH_SupplyPoint.SpawnBoxes to keep track of which box prefab indices we used
         }
 
         static bool UpdatePrefix()
@@ -6044,6 +6233,22 @@ namespace H3MP
             }
             return true;
         }
+
+        static bool InitBeginEquipPrefix()
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+            {
+                // Don't want to spawn starting equipment right away if there are already players in our TNH instance
+                return false;
+            }
+            return true;
+        }
     }
 
     // Patches TNH_HoldPoint to keep track of hold point events
@@ -6054,6 +6259,7 @@ namespace H3MP
 
         static void ConfigureAsSystemNodePrefix(ref TNH_HoldPoint __instance)
         {
+            TODO: Make sure we deregister and register from the reticle supply and hold points as needed
             if (Mod.managerObject != null)
             {
                 if (Mod.currentTNHInstance != null)
@@ -6114,7 +6320,7 @@ namespace H3MP
 
         static bool SpawnTakeChallengeEntitiesPrefix()
         {
-            if(spawnEntitiesSkip)
+            if (spawnEntitiesSkip)
             {
                 spawnEntitiesSkip = false;
                 return false;
@@ -6134,6 +6340,9 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance != null)
                 {
+                    // Update locally
+                    Mod.currentTNHInstance.holdOngoing = true;
+
                     if (H3MP_ThreadManager.host)
                     {
                         H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance);
@@ -6197,5 +6406,7 @@ namespace H3MP
             return instructionList;
         }
     }
+
+    TODO: Add TNH_WeaponCrate.Update transpiler to know whe the case is opened we we can put a timer destroyer on it
     #endregion
 }

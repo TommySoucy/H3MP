@@ -1393,7 +1393,16 @@ namespace H3MP
                 }
                 TNH_Progression.Level curLevel = currentProgression.Levels[levelIndex];
                 TNH_HoldPoint holdPoint = Mod.currentTNHInstance.manager.HoldPoints[holdPointIndex];
+
+                Mod.currentTNHInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Hold);
                 holdPoint.ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+                Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(holdPoint.SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
+            }
+
+            // Update the hold index regardless if this is ours
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.curHoldIndex = holdPointIndex;
             }
         }
 
@@ -1411,7 +1420,12 @@ namespace H3MP
                 --TNH_HoldPointPatch.beginHoldSkip;
 
                 // If we received this it is because we are not the controller, TP to hold point
-                GM.CurrentPlayerBody.transform.position = curHoldPoint.SpawnPoint_SystemNode.position;
+                GM.CurrentMovementManager.TeleportToPoint(curHoldPoint.SpawnPoint_SystemNode.position, true);
+            }
+
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.holdOngoing = true;
             }
         }
     }

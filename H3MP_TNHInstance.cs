@@ -18,6 +18,8 @@ namespace H3MP
         public List<int> played; // Players who have been in-game
         public List<int> dead; // in-game players who are dead
         public int tokenCount;
+        public bool holdOngoing; // Whether the current hold point has an ongoing hold
+        public int curHoldIndex; 
 
         // Settings
         public bool letPeopleJoin;
@@ -138,6 +140,8 @@ namespace H3MP
             dead.Clear();
             played.Clear();
             tokenCount = 0;
+            holdOngoing = false;
+            curHoldIndex = -1;
 
             // The game has reset, a new game will be created when a player goes in again, if we were spectating we want to stop
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)
