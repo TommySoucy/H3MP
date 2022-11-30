@@ -159,6 +159,7 @@ namespace H3MP
         public static readonly MethodInfo TNH_Manager_SetLevel = typeof(TNH_Manager).GetMethod("SetLevel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_Manager_SetPhase = typeof(TNH_Manager).GetMethod("SetPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_Manager_OnSosigKill = typeof(TNH_Manager).GetMethod("OnSosigKill", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_Manager_VoiceUpdate = typeof(TNH_Manager).GetMethod("VoiceUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeater_SetState = typeof(AutoMeater).GetMethod("SetState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_FireShot = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_UpdateFlameThrower = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFlameThrower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -1025,11 +1026,14 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchSosigKillPrefix = typeof(TNH_ManagerPatch).GetMethod("OnSosigKillPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseOriginal = typeof(TNH_Manager).GetMethod("SetPhase", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSetPhasePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhasePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchUpdateOriginal = typeof(TNH_Manager).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchUpdatePrefix = typeof(TNH_ManagerPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
             harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix));
+            harmony.Patch(TNH_ManagerPatchUpdateOriginal, new HarmonyMethod(TNH_ManagerPatchUpdatePrefix));
 
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
@@ -1045,9 +1049,12 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("ConfigureAsSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeChallengeEntities", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnEntitiesPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTakeChallengeEntitiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchBeginHoldOriginal = typeof(TNH_HoldPoint).GetMethod("BeginHoldChallenge", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchBeginHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
+            harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -5364,7 +5371,23 @@ namespace H3MP
                                 // All thats left is the delayed init
                                 Mod.TNH_Manager_DelayedInit.Invoke(GM.TNH_Manager, null);
                             }
+
+                            TODO: Modify patches to keep track of this data and make sure to reset the data in TNHInstance.Reset
+                            // If there are already players, it means the TNH game is already in some state
+                            // Set the state of our TNH_Manager accordingly
+                            // - Current hold index (So we can set m_curHoldPoint)
+                            //  - If sys node m_hasActivated (Set it in the sys node and instantiate and play sound according to SystemNode.Update)
+                            //  - If sys node m_hasInitiatedHold (Set it in the sys node and instantiate and play sound according to SystemNode.Update and begin hold challenge, skipping patch)
+                            //   - TP to system node psawn point
+                            //   - Which number of which type of encryptions does it have (Spawn them)
+                            //   - Which barriers are active (Raise them)
+                            //  - If NO hold ongoing, which supply points are active
+                            //   - Which panels of which types are active
                         }
+
+                        // If this is the first time we join this game, give the player a button 
+                        // with which they can spawn their own starting equipment
+                        TODO
 
                         Mod.currentTNHInstance.AddCurrentlyPlaying(true, H3MP_GameManager.ID);
                         Mod.currentlyPlayingTNH = true;
@@ -6002,12 +6025,32 @@ namespace H3MP
             }
             return true;
         }
+
+        static bool UpdatePrefix()
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                // Call updates we don't want to skip
+                Mod.TNH_Manager_VoiceUpdate.Invoke(Mod.currentTNHInstance.manager, null);
+                Mod.currentTNHInstance.manager.FMODController.SetMasterVolume(0.25f * GM.CurrentPlayerBody.GlobalHearing);
+
+                return false;
+            }
+            return true;
+        }
     }
 
     // Patches TNH_HoldPoint to keep track of hold point events
     class TNH_HoldPointPatch
     {
         public static bool spawnEntitiesSkip;
+        public static int beginHoldSkip;
 
         static void ConfigureAsSystemNodePrefix(ref TNH_HoldPoint __instance)
         {
@@ -6078,6 +6121,29 @@ namespace H3MP
             }
 
             return true;
+        }
+
+        static void BeginHoldPrefix()
+        {
+            if(beginHoldSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance);
+                    }
+                }
+            }  
         }
     }
 

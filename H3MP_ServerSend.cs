@@ -1634,5 +1634,22 @@ namespace H3MP
                 }
             }
         }
+
+        public static void TNHHoldBeginChallenge(int instance, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldBeginChallenge))
+            {
+                packet.Write(instance);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

@@ -90,7 +90,8 @@ namespace H3MP
         autoMeaterHitZoneDamage = 74,
         autoMeaterHitZoneDamageData = 75,
         TNHSosigKill = 77,
-        TNHHoldPointSystemNode = 78
+        TNHHoldPointSystemNode = 78,
+        TNHHoldBeginChallenge = 79
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -173,7 +174,8 @@ namespace H3MP
         autoMeaterHitZoneDamage = 75,
         autoMeaterHitZoneDamageData = 76,
         TNHSosigKill = 77,
-        TNHHoldPointSystemNode = 78
+        TNHHoldPointSystemNode = 78,
+        TNHHoldBeginChallenge = 79
     }
 
     public class H3MP_Packet : IDisposable

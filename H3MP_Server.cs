@@ -356,6 +356,7 @@ namespace H3MP
                 H3MP_ServerHandle.AutoMeaterHitZoneDamageData,
                 H3MP_ServerHandle.TNHSosigKill,
                 H3MP_ServerHandle.TNHHoldPointSystemNode,
+                H3MP_ServerHandle.TNHHoldBeginChallenge,
             };
 
             items = new H3MP_TrackedItemData[100];

@@ -1690,5 +1690,25 @@ namespace H3MP
 
             H3MP_ServerSend.TNHHoldPointSystemNode(instance, charIndex, progressionIndex, progressionEndlessIndex, levelIndex, holdPointIndex, clientID);
         }
+
+        public static void TNHHoldBeginChallenge(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                TNH_HoldPoint curHoldPoint = ((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager));
+
+                // Begin hold on our side
+                ++TNH_HoldPointPatch.beginHoldSkip;
+                curHoldPoint.BeginHoldChallenge();
+                --TNH_HoldPointPatch.beginHoldSkip;
+
+                // If we received this it is because we are not the controller, TP to hold point
+                GM.CurrentPlayerBody.transform.position = curHoldPoint.SpawnPoint_SystemNode.position;
+            }
+
+            H3MP_ServerSend.TNHHoldBeginChallenge(instance, clientID);
+        }
     }
 }

@@ -1191,5 +1191,15 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void TNHHoldBeginChallenge(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldBeginChallenge))
+            {
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }
