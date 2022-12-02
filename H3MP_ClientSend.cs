@@ -317,34 +317,37 @@ namespace H3MP
             }
         }
 
-        public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene)
+        public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedItem))
             {
                 packet.Write(trackedItem, true);
                 packet.Write(scene);
+                packet.Write(instance);
 
                 SendTCPData(packet);
             }
         }
 
-        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene)
+        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedSosig))
             {
                 packet.Write(trackedSosig, true);
                 packet.Write(scene);
+                packet.Write(instance);
 
                 SendTCPData(packet);
             }
         }
 
-        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene)
+        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int instance)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedAutoMeater))
             {
                 packet.Write(trackedAutoMeater, true);
                 packet.Write(scene);
+                packet.Write(instance);
 
                 SendTCPData(packet);
             }
@@ -1197,6 +1200,17 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldBeginChallenge))
             {
                 packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void ShatterableCrateDamage(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.shatterableCrateDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
 
                 SendTCPData(packet);
             }

@@ -125,7 +125,7 @@ namespace H3MP
             }
         }
 
-        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int clientID)
+        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance, int clientID)
         {
             Debug.Log("Received order to add tracked item: "+trackedItem.itemID);
             // Adjust items size to acommodate if necessary
@@ -143,14 +143,14 @@ namespace H3MP
             // Instantiate item if it is in the current scene nad not controlled by us
             if (clientID != 0)
             {
-                if (scene.Equals(SceneManager.GetActiveScene().name))
+                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
 
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedItem(trackedItem, scene, clientID);
+            H3MP_ServerSend.TrackedItem(trackedItem, scene, instance, clientID);
 
             // Update the local tracked ID at the end because we need to send that back to the original client intact
             if (trackedItem.controller != 0)
@@ -159,7 +159,7 @@ namespace H3MP
             }
         }
 
-        public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int clientID)
+        public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance, int clientID)
         {
             Debug.Log("Received order to add tracked sosig");
             // Adjust sosigs size to acommodate if necessary
@@ -177,14 +177,14 @@ namespace H3MP
             // Instantiate sosig if it is in the current scene and not controlled by us
             if (clientID != 0)
             {
-                if (scene.Equals(SceneManager.GetActiveScene().name))
+                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(trackedSosig.Instantiate());
                 }
             }
 
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedSosig(trackedSosig, scene, clientID);
+            H3MP_ServerSend.TrackedSosig(trackedSosig, scene, instance, clientID);
 
             // Update the local tracked ID at the end because we need to send that back to the original client intact
             if (trackedSosig.controller != 0)
@@ -193,7 +193,7 @@ namespace H3MP
             }
         }
 
-        public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int clientID)
+        public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int instance, int clientID)
         {
             Debug.Log("Received order to add tracked auto meater");
             // Adjust AutoMeaters size to acommodate if necessary
@@ -211,14 +211,14 @@ namespace H3MP
             // Instantiate AutoMeater if it is in the current scene and not controlled by us
             if (clientID != 0)
             {
-                if (scene.Equals(SceneManager.GetActiveScene().name))
+                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(trackedAutoMeater.Instantiate());
                 }
             }
 
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedAutoMeater(trackedAutoMeater, scene, clientID);
+            H3MP_ServerSend.TrackedAutoMeater(trackedAutoMeater, scene, instance, clientID);
 
             // Update the local tracked ID at the end because we need to send that back to the original client intact
             if (trackedAutoMeater.controller != 0)
@@ -357,6 +357,8 @@ namespace H3MP
                 H3MP_ServerHandle.TNHSosigKill,
                 H3MP_ServerHandle.TNHHoldPointSystemNode,
                 H3MP_ServerHandle.TNHHoldBeginChallenge,
+                H3MP_ServerHandle.ShatterableCrateDamage,
+                H3MP_ServerHandle.TNHUpdate,
             };
 
             items = new H3MP_TrackedItemData[100];

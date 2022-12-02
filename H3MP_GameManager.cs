@@ -466,7 +466,7 @@ namespace H3MP
             FVRPhysicalObject physObj = root.GetComponent<FVRPhysicalObject>();
             if (physObj != null)
             {
-                if (physObj.ObjectWrapper != null)
+                if (IsObjectIdentifiable(physObj))
                 {
                     H3MP_TrackedItem currentTrackedItem = root.GetComponent<H3MP_TrackedItem>();
                     if (currentTrackedItem == null)
@@ -477,13 +477,13 @@ namespace H3MP
                             if (H3MP_ThreadManager.host)
                             {
                                 // This will also send a packet with the item to be added in the client's global item list
-                                H3MP_Server.AddTrackedItem(trackedItem.data, scene, 0);
+                                H3MP_Server.AddTrackedItem(trackedItem.data, scene, instance, 0);
                             }
                             else
                             {
                                 Debug.Log("Sending tracked item: " + trackedItem.data.itemID);
                                 // Tell the server we need to add this item to global tracked items
-                                H3MP_ClientSend.TrackedItem(trackedItem.data, scene);
+                                H3MP_ClientSend.TrackedItem(trackedItem.data, scene, instance);
                             }
 
                             foreach (Transform child in root)
@@ -530,7 +530,7 @@ namespace H3MP
                 data.childIndex = parent.children.Count;
                 parent.children.Add(data);
             }
-            data.itemID = physObj.ObjectWrapper.ItemID;
+            SetItemIdentifyingInfo(physObj, data);
             data.position = trackedItem.transform.position;
             data.rotation = trackedItem.transform.rotation;
             data.active = trackedItem.gameObject.activeInHierarchy;
@@ -542,6 +542,43 @@ namespace H3MP
             items.Add(data);
 
             return trackedItem;
+        }
+
+        // MOD: If you have a type of item (FVRPhysicalObject) that doen't have an ObjectWrapper,
+        //      you can set custom identifying info here as we currently do for TNH_ShatterableCrate
+        public static void SetItemIdentifyingInfo(FVRPhysicalObject physObj, H3MP_TrackedItemData trackedItemData)
+        {
+            if (physObj.ObjectWrapper != null)
+            {
+                trackedItemData.itemID = physObj.ObjectWrapper.ItemID;
+                return;
+            }
+            TNH_ShatterableCrate crate = physObj.GetComponent<TNH_ShatterableCrate>();
+            if(crate != null)
+            {
+                trackedItemData.itemID = "TNH_ShatterableCrate";
+                trackedItemData.identifyingData = new byte[1];
+                if (crate.name[9] == 'S') // Small
+                {
+                    trackedItemData.identifyingData[0] = 2;
+                }
+                else if (crate.name[9] == 'M') // Medium
+                {
+                    trackedItemData.identifyingData[0] = 1;
+                }
+                else // Large
+                {
+                    trackedItemData.identifyingData[0] = 0;
+                }
+                return;
+            }
+        }
+
+        // MOD: Certain FVRPhysicalObjects don't have an ObjectWrapper
+        //      We would normally not want to track these but here may be some exceptions, like TNH_ShatterableCrates
+        public static bool IsObjectIdentifiable(FVRPhysicalObject physObj)
+        {
+            return physObj.ObjectWrapper != null || physObj.GetComponent<TNH_ShatterableCrate>() != null;
         }
 
         public static void SyncTrackedSosigs(bool init = false, bool inControl = false)
@@ -570,13 +607,13 @@ namespace H3MP
                         if (H3MP_ThreadManager.host)
                         {
                             // This will also send a packet with the sosig to be added in the client's global sosig list
-                            H3MP_Server.AddTrackedSosig(trackedSosig.data, scene, 0);
+                            H3MP_Server.AddTrackedSosig(trackedSosig.data, scene, instance, 0);
                         }
                         else
                         {
                             Debug.Log("Sending tracked sosig");
                             // Tell the server we need to add this item to global tracked items
-                            H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene);
+                            H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene, instance);
                         }
 
                         foreach (Transform child in root)
@@ -780,13 +817,13 @@ namespace H3MP
                         if (H3MP_ThreadManager.host)
                         {
                             // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
-                            H3MP_Server.AddTrackedAutoMeater(trackedAutoMeater.data, scene, 0);
+                            H3MP_Server.AddTrackedAutoMeater(trackedAutoMeater.data, scene, instance, 0);
                         }
                         else
                         {
                             Debug.Log("Sending tracked AutoMeater");
                             // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
-                            H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data, scene);
+                            H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data, scene, instance);
                         }
 
                         foreach (Transform child in root)

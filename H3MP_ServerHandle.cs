@@ -388,17 +388,17 @@ namespace H3MP
 
         public static void TrackedItem(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString(), clientID);
+            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString(), packet.ReadInt(), clientID);
         }
 
         public static void TrackedSosig(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString(), clientID);
+            H3MP_Server.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString(), packet.ReadInt(), clientID);
         }
 
         public static void TrackedAutoMeater(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), packet.ReadString(), clientID);
+            H3MP_Server.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), packet.ReadString(), packet.ReadInt(), clientID);
         }
 
         public static void ItemParent(int clientID, H3MP_Packet packet)
@@ -1723,6 +1723,20 @@ namespace H3MP
             }
 
             H3MP_ServerSend.TNHHoldBeginChallenge(instance, clientID);
+        }
+
+        public static void ShatterableCrateDamage(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].controller == H3MP_GameManager.ID)
+            {
+                H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
+            }
+            else
+            {
+                H3MP_ServerSend.ShatterableCrateDamage(trackedID, packet.ReadDamage());
+            }
         }
     }
 }

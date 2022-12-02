@@ -461,36 +461,39 @@ namespace H3MP
             }
         }
 
-        public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene, int clientID)
+        public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance, int clientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItem))
             {
                 packet.Write(trackedItem, true);
                 packet.Write(scene);
+                packet.Write(instance);
 
                 // We want to send to all, even the one who requested for the item to be tracked because we need to tell them its tracked ID
                 SendTCPDataToAll(packet);
             }
         }
 
-        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int clientID)
+        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance, int clientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedSosig))
             {
                 packet.Write(trackedSosig, true);
                 packet.Write(scene);
+                packet.Write(instance);
 
                 // We want to send to all, even the one who requested for the sosig to be tracked because we need to tell them its tracked ID
                 SendTCPDataToAll(packet);
             }
         }
 
-        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int clientID)
+        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int instance, int clientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedAutoMeater))
             {
                 packet.Write(trackedAutoMeater, true);
                 packet.Write(scene);
+                packet.Write(instance);
 
                 // We want to send to all, even the one who requested for the sosig to be tracked because we need to tell them its tracked ID
                 SendTCPDataToAll(packet);
@@ -1649,6 +1652,17 @@ namespace H3MP
                 {
                     SendTCPDataToAll(clientID, packet);
                 }
+            }
+        }
+
+        public static void ShatterableCrateDamage(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldBeginChallenge))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPDataToAll(H3MP_Server.items[trackedID].controller, packet);
             }
         }
     }

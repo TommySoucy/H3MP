@@ -24,6 +24,7 @@ namespace H3MP
 
         // Data
         public string itemID; // The ID of this item so it can be spawned by clients and host
+        public byte[] identifyingData;
         public byte[] previousData;
         public byte[] data;
 
@@ -171,6 +172,10 @@ namespace H3MP
         //      If this returns null, it will try to find the item in IM.OD
         private GameObject GetItemPrefab()
         {
+            if (itemID.Equals("TNH_ShatterableCrate") && GM.TNH_Manager)
+            {
+                return GM.TNH_Manager.Prefabs_ShatterableCrates[identifyingData[0]];
+            }
             return null;
         }
 

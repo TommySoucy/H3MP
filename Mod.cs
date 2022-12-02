@@ -139,6 +139,8 @@ namespace H3MP
         public static readonly FieldInfo TNH_HoldPoint_m_activeTurrets = typeof(TNH_HoldPoint).GetField("m_activeTurrets", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_SupplyPoint_m_activeSosigs = typeof(TNH_SupplyPoint).GetField("m_activeSosigs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_SupplyPoint_m_activeTurrets = typeof(TNH_SupplyPoint).GetField("m_activeTurrets", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_SupplyPoint_m_constructor = typeof(TNH_SupplyPoint).GetField("m_constructor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_SupplyPoint_m_panel = typeof(TNH_SupplyPoint).GetField("m_panel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleLookPoint = typeof(AutoMeater).GetField("m_idleLookPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleLookPointCountDown = typeof(AutoMeater).GetField("m_idleLookPointCountDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleDestination = typeof(AutoMeater).GetField("m_idleDestination", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -983,6 +985,13 @@ namespace H3MP
 
             harmony.Patch(setTNHManagerPatchOriginal, null, new HarmonyMethod(setTNHManagerPatchPostfix));
 
+            // TNH_TokenPatch
+            MethodInfo TNH_TokenPatchPatchCollectOriginal = typeof(TNH_Token).GetMethod("Collect", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_TokenPatchPatchCollectPrefix = typeof(TNH_TokenPatch).GetMethod("CollectPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_TokenPatchPatchCollectPostfix = typeof(TNH_TokenPatch).GetMethod("CollectPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(TNH_TokenPatchPatchCollectOriginal, new HarmonyMethod(TNH_TokenPatchPatchCollectPrefix), new HarmonyMethod(TNH_TokenPatchPatchCollectPostfix));
+
             // TNH_UIManagerPatch
             MethodInfo TNH_UIManagerPatchProgressionOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_Progression", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_UIManagerPatchProgressionPrefix = typeof(TNH_UIManagerPatch).GetMethod("ProgressionPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1041,6 +1050,10 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchInitBeginEquipPrefix = typeof(TNH_ManagerPatch).GetMethod("InitBeginEquipPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchInitHoldCompleteOriginal = typeof(TNH_Manager).GetMethod("HoldPointCompleted", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchInitHoldCompletePrefix = typeof(TNH_ManagerPatch).GetMethod("HoldPointCompletedPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchSpawnBoxesOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnBoxes", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchSpawnBoxesTranspiler = typeof(TNH_ManagerPatch).GetMethod("SpawnBoxesTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchSetPhaseTakeOriginal = typeof(TNH_Manager).GetMethod("SetPhase_Take", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchSetPhaseTakePostfix = typeof(TNH_ManagerPatch).GetMethod("SetPhaseTakePostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
@@ -1049,6 +1062,7 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchUpdateOriginal, new HarmonyMethod(TNH_ManagerPatchUpdatePrefix));
             harmony.Patch(TNH_ManagerPatchInitBeginEquipOriginal, new HarmonyMethod(TNH_ManagerPatchInitBeginEquipPrefix));
             harmony.Patch(TNH_ManagerPatchInitHoldCompleteOriginal, new HarmonyMethod(TNH_ManagerPatchInitHoldCompletePrefix));
+            harmony.Patch(TNH_ManagerPatchSetPhaseTakeOriginal, null, new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePostfix));
 
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
@@ -5346,6 +5360,56 @@ namespace H3MP
         }
     }
 
+    // Patches TNH_ShatterableCrate to keep track of damage to TNH supply boxes
+    class TNH_ShatterableCrateDamagePatch 
+    {
+        public static int skip;
+        static H3MP_TrackedItem trackedItem;
+
+        static bool Prefix(ref TNH_ShatterableCrate __instance, Damage d)
+        {
+            if (skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged crate, we want to process the damage
+            trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Not in control, we want to send the damage to the controller for them to process it
+                        H3MP_ServerSend.ShatterableCrateDamage(trackedItem.data.trackedID, d);
+                        return false;
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    H3MP_ClientSend.ShatterableCrateDamage(trackedItem.data.trackedID, d);
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     // Patches AutoMeater.Damage to keep track of damage taken by an AutoMeater
     class AutoMeaterDamagePatch
     {
@@ -5545,12 +5609,16 @@ namespace H3MP
                             Mod.TNH_Manager_m_curHoldPoint.SetValue(GM.TNH_Manager, GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex]);
                             //  - If sys node m_hasActivated (Set it in the sys node and instantiate and play sound according to SystemNode.Update)
                             //  - If sys node m_hasInitiatedHold (Set it in the sys node and instantiate and play sound according to SystemNode.Update and begin hold challenge, skipping patch)
-                            //   - TP to system node psawn point
-                            //   - Which number of which type of encryptions does it have (Spawn them)
-                            //   - Which barriers are active (Raise them)
+                            if (Mod.currentTNHInstance.holdOngoing)
+                            {
+                                //   - TP to system node spawn point
+                                GM.CurrentMovementManager.TeleportToPoint(GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode.position, true);
+                                //   - Which number of which type of encryptions does it have (Spawn them)
+                                //   - Which barriers are active (Raise them)
+
+                            }
                             //  - If NO hold ongoing, which supply points are active
                             //   - Which panels of which types are active
-                            //   - Sync token boxes
                             // Then register hold and suplpy points with reticle
 
                             // If this is the first time we join this game, give the player a button 
@@ -6081,13 +6149,33 @@ namespace H3MP
         }
     }
 
+    // Patches TNH_Token to keep track of token events
+    class TNH_TokenPatch
+    {
+        // Prevent addToken to be passed to other clients if just a token picked up from ground
+        // The tokens will be client side
+        // This also means that we require that tokens are always spawned on each client
+        static void CollectPrefix()
+        {
+            ++TNH_ManagerPatch.addTokensSkip;
+        }
+
+        static void CollectPostfix()
+        {
+            --TNH_ManagerPatch.addTokensSkip;
+        }
+    }
+
     // Patches TNH_Manager to keep track of TNH events
     class TNH_ManagerPatch
     {
         public static int addTokensSkip;
         public static int sosigKillSkip;
         static bool sendCurHoldIndex;
-        static List<TNH_SupplyPoint.SupplyPanelType> supplyPanelTypes;
+        static List<List<int>> boxIndices;
+        static List<List<GameObject>> originalBoxes;
+        public static bool addToBoxIndices;
+        public static bool addToOrigBoxes;
 
         static bool PlayerDiedPrefix()
         {
@@ -6210,9 +6298,42 @@ namespace H3MP
         {
             //continue from here, send take and all necessary data to other clients:
             // new hold point and configure as system node already gets sent
-            // go through the active panel indices, and for each of these panels pass the constructor panel's exact spawn position/rotation
+            // go through the active supply point indices, and for each of these points pass the constructor panel's exact spawn position/rotation
             // and secondary panel type and spawn position/rotation
             // and boxes and what they hold, their position/rotation, might have to write a transpiler for TNH_SupplyPoint.SpawnBoxes to keep track of which box prefab indices we used
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                List<Vector3> constructorPositions = new List<Vector3>();
+                List<TNH_SupplyPoint.SupplyPanelType> secondaryPanelTypes = new List<TNH_SupplyPoint.SupplyPanelType>();
+                List<Vector3> secondaryPanelPositions = new List<Vector3>();
+                List<Quaternion> secondaryPanelRotations = new List<Quaternion>();
+                List<int> activeSupplyPointIndicies = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(GM.TNH_Manager);
+                for(int i = 0; i < activeSupplyPointIndicies.Count; ++i)
+                {
+                    int index = activeSupplyPointIndicies[i];
+                    constructorPositions.Add(((GameObject)Mod.TNH_SupplyPoint_m_constructor.GetValue(GM.TNH_Manager.SupplyPoints[index])).transform.position);
+                    GameObject panel = (GameObject)Mod.TNH_SupplyPoint_m_panel.GetValue(GM.TNH_Manager.SupplyPoints[index]);
+                    TNH_AmmoReloader ammoReloader = panel.GetComponent<TNH_AmmoReloader>();
+                    if(ammoReloader != null)
+                    {
+                        secondaryPanelTypes.Add(TNH_SupplyPoint.SupplyPanelType.AmmoReloader);
+                    }
+                    else
+                    {
+                        TNH_MagDuplicator magDuplicator = panel.GetComponent<TNH_MagDuplicator>();
+                        if (magDuplicator != null)
+                        {
+                            secondaryPanelTypes.Add(TNH_SupplyPoint.SupplyPanelType.MagDuplicator);
+                        }
+                        else
+                        {
+                            secondaryPanelTypes.Add(TNH_SupplyPoint.SupplyPanelType.GunRecycler);
+                        }
+                    }
+                    secondaryPanelPositions.Add(panel.transform.position);
+                    secondaryPanelRotations.Add(panel.transform.rotation);
+                }
+            }
         }
 
         static bool UpdatePrefix()
@@ -6223,13 +6344,16 @@ namespace H3MP
                 return true;
             }
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            if (Mod.currentTNHInstance != null)
             {
-                // Call updates we don't want to skip
-                Mod.TNH_Manager_VoiceUpdate.Invoke(Mod.currentTNHInstance.manager, null);
-                Mod.currentTNHInstance.manager.FMODController.SetMasterVolume(0.25f * GM.CurrentPlayerBody.GlobalHearing);
+                if (Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+                {
+                    // Call updates we don't want to skip
+                    Mod.TNH_Manager_VoiceUpdate.Invoke(Mod.currentTNHInstance.manager, null);
+                    Mod.currentTNHInstance.manager.FMODController.SetMasterVolume(0.25f * GM.CurrentPlayerBody.GlobalHearing);
 
-                return false;
+                    return false;
+                }
             }
             return true;
         }
@@ -6252,7 +6376,7 @@ namespace H3MP
     }
 
     // Patches TNH_HoldPoint to keep track of hold point events
-    class TNH_HoldPointPatch
+    public class TNH_HoldPointPatch
     {
         public static bool spawnEntitiesSkip;
         public static int beginHoldSkip;

@@ -107,6 +107,7 @@ namespace H3MP
                     H3MP_ClientSend.TrackedItems();
                     H3MP_ClientSend.TrackedSosigs();
                     H3MP_ClientSend.TrackedAutoMeaters();
+                    H3MP_ClientSend.TNHUpdate();
 
                     // Also send the player state to all clients
                     H3MP_ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,

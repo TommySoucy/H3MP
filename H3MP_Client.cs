@@ -380,6 +380,8 @@ namespace H3MP
                 H3MP_ClientHandle.AutoMeaterHitZoneDamageData,
                 H3MP_ClientHandle.TNHSosigKill,
                 H3MP_ClientHandle.TNHHoldPointSystemNode,
+                H3MP_ClientHandle.TNHHoldBeginChallenge,
+                H3MP_ClientHandle.ShatterableCrateDamage,
             };
 
             // All vanilla scenes can be synced by default

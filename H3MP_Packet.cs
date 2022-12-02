@@ -175,7 +175,8 @@ namespace H3MP
         autoMeaterHitZoneDamageData = 76,
         TNHSosigKill = 77,
         TNHHoldPointSystemNode = 78,
-        TNHHoldBeginChallenge = 79
+        TNHHoldBeginChallenge = 79,
+        shatterableCrateDamage = 80
     }
 
     public class H3MP_Packet : IDisposable
@@ -364,6 +365,15 @@ namespace H3MP
             if (full)
             {
                 Write(trackedItem.itemID);
+                if(trackedItem.identifyingData != null || trackedItem.identifyingData.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedItem.identifyingData.Length);
+                    Write(trackedItem.identifyingData);
+                }
                 Write(trackedItem.controller);
                 Write(trackedItem.parent);
                 Write(trackedItem.localTrackedID);
@@ -1015,6 +1025,11 @@ namespace H3MP
             if (full)
             {
                 trackedItem.itemID = ReadString();
+                int identifyingDataLength = ReadInt();
+                if(identifyingDataLength > 0)
+                {
+                    trackedItem.identifyingData = ReadBytes(identifyingDataLength);
+                }
                 trackedItem.controller = ReadInt();
                 trackedItem.parent = ReadInt();
                 trackedItem.localTrackedID = ReadInt();

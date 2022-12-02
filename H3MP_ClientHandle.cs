@@ -1428,5 +1428,15 @@ namespace H3MP
                 actualInstance.holdOngoing = true;
             }
         }
+
+        public static void ShatterableCrateDamage(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].controller == H3MP_GameManager.ID)
+            {
+                H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
+            }
+        }
     }
 }
