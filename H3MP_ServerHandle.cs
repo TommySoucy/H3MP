@@ -1665,6 +1665,8 @@ namespace H3MP
 
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
             {
+                Mod.currentTNHInstance.curHoldIndex = holdPointIndex;
+
                 TNH_CharacterDef C = null;
                 try
                 {
@@ -1686,13 +1688,18 @@ namespace H3MP
                 TNH_Progression.Level curLevel = currentProgression.Levels[levelIndex];
                 TNH_HoldPoint holdPoint = Mod.currentTNHInstance.manager.HoldPoints[holdPointIndex];
 
+                if (Mod.currentTNHInstance.holdOngoing)
+                {
+                    Mod.TNH_HoldPoint_CompleteHold.Invoke((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager), null);
+                    Mod.currentTNHInstance.holdOngoing = false;
+                }
+
+                Mod.TNH_Manager_m_curHoldIndex.SetValue(Mod.currentTNHInstance.manager, holdPointIndex);
                 Mod.currentTNHInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Hold);
                 holdPoint.ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
                 Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(holdPoint.SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
             }
-
-            // Update the hold index regardless if this is ours
-            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
                 actualInstance.curHoldIndex = holdPointIndex;
             }
@@ -1703,10 +1710,41 @@ namespace H3MP
         public static void TNHHoldBeginChallenge(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
+            int barrierCount = packet.ReadInt();
+            List<int> barrierIndices = new List<int>();
+            List<int> barrierPrefabIndices = new List<int>();
+            for(int i=0; i < barrierCount; ++i)
+            {
+                barrierIndices.Add(packet.ReadInt());
+            }
+            for(int i=0; i < barrierCount; ++i)
+            {
+                barrierPrefabIndices.Add(packet.ReadInt());
+            }
 
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
             {
-                TNH_HoldPoint curHoldPoint = ((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager));
+                Mod.currentTNHInstance.phase = TNH_Phase.Hold;
+                Mod.currentTNHInstance.holdOngoing = true;
+                Mod.currentTNHInstance.raisedBarriers = barrierIndices;
+                Mod.currentTNHInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
+
+                Mod.currentTNHInstance.manager.Phase = TNH_Phase.Hold;
+
+                TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
+
+                // Raise barriers
+                for(int i=0; i < barrierIndices.Count; ++i)
+                {
+                    TNH_DestructibleBarrierPoint point = curHoldPoint.BarrierPoints[barrierIndices[i]];
+                    TNH_DestructibleBarrierPoint.BarrierDataSet barrierDataSet = point.BarrierDataSets[barrierPrefabIndices[i]];
+                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(barrierDataSet.BarrierPrefab, point.transform.position, point.transform.rotation);
+                    TNH_DestructibleBarrier curBarrier = gameObject.GetComponent<TNH_DestructibleBarrier>();
+                    Mod.TNH_DestructibleBarrierPoint_m_curBarrier.SetValue(point, curBarrier);
+                    curBarrier.InitToPlace(point.transform.position, point.transform.forward);
+                    curBarrier.SetBarrierPoint(point);
+                    Mod.TNH_DestructibleBarrierPoint_SetCoverPointData.Invoke(point, new object[] { barrierPrefabIndices[i] });
+                }
 
                 // Begin hold on our side
                 ++TNH_HoldPointPatch.beginHoldSkip;
@@ -1716,13 +1754,15 @@ namespace H3MP
                 // If we received this it is because we are not the controller, TP to hold point
                 GM.CurrentMovementManager.TeleportToPoint(curHoldPoint.SpawnPoint_SystemNode.position, true);
             }
-
-            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
+                actualInstance.phase = TNH_Phase.Hold;
                 actualInstance.holdOngoing = true;
+                actualInstance.raisedBarriers = barrierIndices;
+                actualInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
             }
 
-            H3MP_ServerSend.TNHHoldBeginChallenge(instance, clientID);
+            H3MP_ServerSend.TNHHoldBeginChallenge(instance, barrierIndices, barrierPrefabIndices, clientID);
         }
 
         public static void ShatterableCrateDamage(int clientID, H3MP_Packet packet)
@@ -1737,6 +1777,107 @@ namespace H3MP
             {
                 H3MP_ServerSend.ShatterableCrateDamage(trackedID, packet.ReadDamage());
             }
+        }
+
+        public static void TNHSetLevel(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int level = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                Mod.currentTNHInstance.level = level;
+                Mod.TNH_Manager_m_level.SetValue(Mod.currentTNHInstance.manager, level);
+                Mod.TNH_Manager_SetLevel.Invoke(Mod.currentTNHInstance.manager, new object[] { level });
+            }
+            else if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.level = level;
+            }
+
+            H3MP_ServerSend.TNHSetLevel(instance, level, clientID);
+        }
+
+        public static void TNHSetPhaseTake(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int activeSupplyCount = packet.ReadInt();
+            List<int> activeIndices = new List<int>();
+            for(int i=0; i < activeSupplyCount; ++i)
+            {
+                activeIndices.Add(packet.ReadInt());
+            }
+            List<TNH_SupplyPoint.SupplyPanelType> types = new List<TNH_SupplyPoint.SupplyPanelType>();
+            for(int i=0; i < activeSupplyCount; ++i)
+            {
+                types.Add((TNH_SupplyPoint.SupplyPanelType)packet.ReadByte());
+            }
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                Mod.currentTNHInstance.phase = TNH_Phase.Take;
+                Mod.currentTNHInstance.activeSupplyPointIndices = activeIndices;
+                Mod.currentTNHInstance.supplyPanelTypes = types;
+
+                Mod.TNH_Manager_SetPhase_Take.Invoke(Mod.currentTNHInstance.manager, null);
+            }
+            else if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.phase = TNH_Phase.Take;
+                actualInstance.activeSupplyPointIndices = activeIndices;
+                actualInstance.supplyPanelTypes = types;
+            }
+
+            H3MP_ServerSend.TNHSetPhaseTake(instance, activeIndices, types, clientID);
+        }
+
+        public static void TNHHoldCompletePhase(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                Mod.TNH_HoldPoint_CompletePhase.Invoke(Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager), null);
+            }
+
+            H3MP_ServerSend.TNHHoldCompletePhase(instance, clientID);
+        }
+
+        public static void TNHHoldShutDown(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                ((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager)).ShutDownHoldPoint();
+            }
+
+            H3MP_ServerSend.TNHHoldShutDown(instance, clientID);
+        }
+
+        public static void TNHSetPhaseComplete(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            {
+                Mod.TNH_Manager_SetPhase_Completed.Invoke(Mod.currentTNHInstance.manager, null);
+            }
+
+            H3MP_ServerSend.TNHSetPhaseComplete(instance, clientID);
+        }
+
+        public static void TNHSetPhase(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            short p = packet.ReadShort();
+
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.phase = (TNH_Phase)p;
+            }
+
+            H3MP_ServerSend.TNHSetPhase(instance, p, clientID);
         }
     }
 }

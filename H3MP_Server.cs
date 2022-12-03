@@ -341,6 +341,7 @@ namespace H3MP
                 H3MP_ServerHandle.TNHData,
                 H3MP_ServerHandle.TNHPlayerDied,
                 H3MP_ServerHandle.TNHAddTokens,
+                H3MP_ServerHandle.TNHSetLevel,
                 H3MP_ServerHandle.TrackedAutoMeater,
                 H3MP_ServerHandle.TrackedAutoMeaters,
                 H3MP_ServerHandle.DestroyAutoMeater,
@@ -358,7 +359,10 @@ namespace H3MP
                 H3MP_ServerHandle.TNHHoldPointSystemNode,
                 H3MP_ServerHandle.TNHHoldBeginChallenge,
                 H3MP_ServerHandle.ShatterableCrateDamage,
-                H3MP_ServerHandle.TNHUpdate,
+                H3MP_ServerHandle.TNHSetPhaseTake,
+                H3MP_ServerHandle.TNHHoldCompletePhase,
+                H3MP_ServerHandle.TNHHoldShutDown,
+                H3MP_ServerHandle.TNHSetPhaseComplete,
             };
 
             items = new H3MP_TrackedItemData[100];

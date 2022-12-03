@@ -91,7 +91,12 @@ namespace H3MP
         autoMeaterHitZoneDamageData = 75,
         TNHSosigKill = 77,
         TNHHoldPointSystemNode = 78,
-        TNHHoldBeginChallenge = 79
+        TNHHoldBeginChallenge = 79,
+        TNHSetPhaseTake = 80,
+        TNHHoldCompletePhase = 81,
+        TNHHoldShutDown = 82,
+        TNHSetPhaseComplete = 83,
+        TNHSetPhase = 84
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -176,7 +181,12 @@ namespace H3MP
         TNHSosigKill = 77,
         TNHHoldPointSystemNode = 78,
         TNHHoldBeginChallenge = 79,
-        shatterableCrateDamage = 80
+        shatterableCrateDamage = 80,
+        TNHSetPhaseTake = 81,
+        TNHHoldCompletePhase = 82,
+        TNHHoldShutDown = 83,
+        TNHSetPhaseComplete = 84,
+        TNHSetPhase = 85
     }
 
     public class H3MP_Packet : IDisposable

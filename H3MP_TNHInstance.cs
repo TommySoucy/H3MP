@@ -19,7 +19,13 @@ namespace H3MP
         public List<int> dead; // in-game players who are dead
         public int tokenCount;
         public bool holdOngoing; // Whether the current hold point has an ongoing hold
-        public int curHoldIndex; 
+        public int curHoldIndex;
+        public int level;
+        public TNH_Phase phase;
+        public List<int> activeSupplyPointIndices;
+        public List<TNH_SupplyPoint.SupplyPanelType> supplyPanelTypes;
+        public List<int> raisedBarriers;
+        public List<int> raisedBarrierPrefabIndices;
 
         // Settings
         public bool letPeopleJoin;
@@ -142,6 +148,7 @@ namespace H3MP
             tokenCount = 0;
             holdOngoing = false;
             curHoldIndex = -1;
+            once done with everything, reset it all here
 
             // The game has reset, a new game will be created when a player goes in again, if we were spectating we want to stop
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)

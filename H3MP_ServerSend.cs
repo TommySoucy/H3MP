@@ -1638,11 +1638,20 @@ namespace H3MP
             }
         }
 
-        public static void TNHHoldBeginChallenge(int instance, int clientID = 0)
+        public static void TNHHoldBeginChallenge(int instance, List<int> barrierIndices, List<int> barrierPrefabIndices, int clientID = 0)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldBeginChallenge))
             {
                 packet.Write(instance);
+                packet.Write(barrierIndices.Count);
+                for (int i = 0; i < barrierIndices.Count; i++)
+                {
+                    packet.Write(barrierIndices[i]);
+                }
+                for (int i = 0; i < barrierIndices.Count; i++)
+                {
+                    packet.Write(barrierPrefabIndices[i]);
+                }
 
                 if (clientID == 0)
                 {
@@ -1663,6 +1672,119 @@ namespace H3MP
                 packet.Write(d);
 
                 SendTCPDataToAll(H3MP_Server.items[trackedID].controller, packet);
+            }
+        }
+
+        public static void TNHSetLevel(int instance, int level, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHSetLevel))
+            {
+                packet.Write(instance);
+                packet.Write(level);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHSetPhaseTake(int instance, List<int> activeSupplyPointIndices, List<TNH_SupplyPoint.SupplyPanelType> types, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHSetPhaseTake))
+            {
+                packet.Write(instance);
+                packet.Write(activeSupplyPointIndices.Count);
+                foreach (int index in activeSupplyPointIndices)
+                {
+                    packet.Write(index);
+                }
+                foreach (TNH_SupplyPoint.SupplyPanelType type in types)
+                {
+                    packet.Write((byte)type);
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHHoldCompletePhase(int instance, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldCompletePhase))
+            {
+                packet.Write(instance);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHHoldShutDown(int instance, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldShutDown))
+            {
+                packet.Write(instance);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHSetPhaseComplete(int instance, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHSetPhaseComplete))
+            {
+                packet.Write(instance);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHSetPhase(int instance, short p, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHSetPhase))
+            {
+                packet.Write(instance);
+                packet.Write(p);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
     }

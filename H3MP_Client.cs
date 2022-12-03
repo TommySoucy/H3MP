@@ -367,6 +367,7 @@ namespace H3MP
                 H3MP_ClientHandle.TNHData,
                 H3MP_ClientHandle.TNHPlayerDied,
                 H3MP_ClientHandle.TNHAddTokens,
+                H3MP_ClientHandle.TNHSetLevel,
                 H3MP_ClientHandle.TrackedAutoMeater,
                 H3MP_ClientHandle.TrackedAutoMeaters,
                 H3MP_ClientHandle.DestroyAutoMeater,
@@ -382,6 +383,11 @@ namespace H3MP
                 H3MP_ClientHandle.TNHHoldPointSystemNode,
                 H3MP_ClientHandle.TNHHoldBeginChallenge,
                 H3MP_ClientHandle.ShatterableCrateDamage,
+                H3MP_ClientHandle.TNHSetPhaseTake,
+                H3MP_ClientHandle.TNHHoldCompletePhase,
+                H3MP_ClientHandle.TNHHoldShutDown,
+                H3MP_ClientHandle.TNHSetPhaseComplete,
+                H3MP_ClientHandle.TNHSetPhase,
             };
 
             // All vanilla scenes can be synced by default
