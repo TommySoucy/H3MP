@@ -148,7 +148,12 @@ namespace H3MP
             tokenCount = 0;
             holdOngoing = false;
             curHoldIndex = -1;
-            once done with everything, reset it all here
+            level = 0;
+            phase = TNH_Phase.StartUp;
+            activeSupplyPointIndices = null;
+            supplyPanelTypes = null;
+            raisedBarriers = null;
+            raisedBarrierPrefabIndices = null;
 
             // The game has reset, a new game will be created when a player goes in again, if we were spectating we want to stop
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)

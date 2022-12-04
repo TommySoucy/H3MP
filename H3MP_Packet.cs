@@ -96,7 +96,13 @@ namespace H3MP
         TNHHoldCompletePhase = 81,
         TNHHoldShutDown = 82,
         TNHSetPhaseComplete = 83,
-        TNHSetPhase = 84
+        TNHSetPhase = 84,
+        trackedEncryptions = 85,
+        trackedEncryption = 86,
+        giveEncryptionControl = 87,
+        destroyEncryption = 88,
+        encryptionDamage = 89,
+        encryptionDamageData = 90
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -186,7 +192,13 @@ namespace H3MP
         TNHHoldCompletePhase = 82,
         TNHHoldShutDown = 83,
         TNHSetPhaseComplete = 84,
-        TNHSetPhase = 85
+        TNHSetPhase = 85,
+        trackedEncryptions = 86,
+        trackedEncryption = 87,
+        giveEncryptionControl = 88,
+        destroyEncryption = 89,
+        encryptionDamage = 90,
+        encryptionDamageData = 91
     }
 
     public class H3MP_Packet : IDisposable

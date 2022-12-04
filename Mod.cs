@@ -988,6 +988,13 @@ namespace H3MP
 
             harmony.Patch(autoMeaterFirearmFireAtWillPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireAtWillPatchPrefix));
 
+            // EncryptionDamagePatch
+            MethodInfo encryptionDamagePatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo encryptionDamagePatchPrefix = typeof(EncryptionDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo encryptionDamagePatchPostfix = typeof(EncryptionDamagePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionDamagePatchOriginal, new HarmonyMethod(encryptionDamagePatchPrefix), new HarmonyMethod(encryptionDamagePatchPostfix));
+
             // SetTNHManagerPatch
             MethodInfo setTNHManagerPatchOriginal = typeof(GM).GetMethod("set_TNH_Manager", BindingFlags.Public | BindingFlags.Static);
             MethodInfo setTNHManagerPatchPostfix = typeof(SetTNHManagerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -3408,6 +3415,7 @@ namespace H3MP
                 H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -3479,6 +3487,7 @@ namespace H3MP
                 H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -3520,6 +3529,7 @@ namespace H3MP
                 H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -3596,6 +3606,7 @@ namespace H3MP
                 H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
                 H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
             }
         }
     }
@@ -5580,6 +5591,76 @@ namespace H3MP
             }
         }
     }
+    TODO: add encryption update patch to prevent update if not in control of tnh instance
+
+    // Patches TNH_EncryptionTarget.Damage to keep track of damage taken by an encryption
+    class EncryptionDamagePatch
+    {
+        public static int skip;
+        static H3MP_TrackedEncryption trackedEncryption;
+
+        static bool Prefix(ref TNH_EncryptionTarget __instance, Damage d)
+        {
+            if (skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged AutoMeater, we want to process the damage
+            trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+            if (trackedEncryption != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedEncryption.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Not in control, we want to send the damage to the controller for them to precess it and return the result
+                        H3MP_ServerSend.EncryptionDamage(trackedEncryption.data, d);
+                        return false;
+                    }
+                }
+                else if (trackedEncryption.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    H3MP_ClientSend.EncryptionDamage(trackedEncryption.data.trackedID, d);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        static void Postfix(ref TNH_EncryptionTarget __instance)
+        {
+            // If in control of the damaged Encryption, we want to send the damage results to other clients
+            if (trackedEncryption != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedEncryption.data.controller == 0)
+                    {
+                        H3MP_ServerSend.EncryptionDamageData(trackedEncryption);
+                    }
+                }
+                else if (trackedEncryption.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.EncryptionDamageData(trackedEncryption);
+                }
+            }
+        }
+    }
     #endregion
 
     #region TNH Patches
@@ -6179,8 +6260,6 @@ namespace H3MP
         public static bool addToBoxIndices;
         public static bool addToOrigBoxes;
         public static bool doInit;
-
-        TODO: Sync TNH entirely with event patches but encruyption targets will need to be constantly updatd through their own system like items and sosigs
 
         static bool PlayerDiedPrefix()
         {

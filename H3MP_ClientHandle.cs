@@ -50,6 +50,7 @@ namespace H3MP
                 H3MP_GameManager.SyncTrackedSosigs(true, inControl);
                 H3MP_GameManager.SyncTrackedAutoMeaters(true, inControl);
                 H3MP_GameManager.SyncTrackedItems(true, inControl);
+                H3MP_GameManager.SyncTrackedEncryptions(true, inControl);
             }
         }
 
@@ -127,6 +128,16 @@ namespace H3MP
             }
         }
 
+        public static void TrackedEncryptions(H3MP_Packet packet)
+        {
+            // Reconstruct passed TrackedEncryptions from packet
+            int count = packet.ReadShort();
+            for (int i = 0; i < count; ++i)
+            {
+                H3MP_GameManager.UpdateTrackedEncryption(packet.ReadTrackedEncryption());
+            }
+        }
+
         public static void TrackedItem(H3MP_Packet packet)
         {
             H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString(), packet.ReadInt());
@@ -140,6 +151,11 @@ namespace H3MP
         public static void TrackedAutoMeater(H3MP_Packet packet)
         {
             H3MP_Client.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), packet.ReadString(), packet.ReadInt());
+        }
+
+        public static void TrackedEncryption(H3MP_Packet packet)
+        {
+            H3MP_Client.AddTrackedEncryption(packet.ReadTrackedEncryption(true), packet.ReadString(), packet.ReadInt());
         }
 
         public static void AddSyncScene(H3MP_Packet packet)
@@ -248,6 +264,39 @@ namespace H3MP
             trackedAutoMeater.controller = controllerID;
         }
 
+        public static void GiveEncryptionControl(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int controllerID = packet.ReadInt();
+
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Client.encryptions[trackedID];
+
+            if (trackedEncryption.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
+            {
+                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
+                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
+                H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+                trackedEncryption.localTrackedID = -1;
+
+                if (trackedEncryption.physicalObject != null)
+                {
+                    TODO: Remove from TNH_Manager hold
+                }
+            }
+            else if(trackedEncryption.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
+            {
+                trackedEncryption.controller = controllerID;
+                trackedEncryption.localTrackedID = H3MP_GameManager.encryptions.Count;
+                H3MP_GameManager.encryptions.Add(trackedEncryption);
+
+                if (trackedEncryption.physicalObject != null)
+                {
+                    TODO: Add to TNH_Manager hold
+                }
+            }
+            trackedEncryption.controller = controllerID;
+        }
+
         public static void DestroyItem(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -333,6 +382,36 @@ namespace H3MP
                 if (removeFromList)
                 {
                     H3MP_Client.autoMeaters[trackedID] = null;
+                }
+            }
+        }
+
+        public static void DestroyEncryption(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool removeFromList = packet.ReadBool();
+
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Client.encryptions[trackedID];
+
+            if (trackedEncryption != null)
+            {
+                if (trackedEncryption.physicalObject != null)
+                {
+                    H3MP_GameManager.trackedEncryptionByEncryption.Remove(trackedEncryption.physicalObject.physicalEncryptionScript);
+                    trackedEncryption.physicalObject.sendDestroy = false;
+                    GameObject.Destroy(trackedEncryption.physicalObject.gameObject);
+                }
+
+                if (trackedEncryption.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
+                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
+                    H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+                }
+
+                if (removeFromList)
+                {
+                    H3MP_Client.encryptions[trackedID] = null;
                 }
             }
         }
@@ -667,6 +746,26 @@ namespace H3MP
             }
         }
 
+        public static void EncryptionDamage(H3MP_Packet packet)
+        {
+            int autoMeaterTrackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[autoMeaterTrackedID];
+            if (trackedEncryption != null)
+            {
+                if (trackedEncryption.controller == H3MP_Client.singleton.ID)
+                {
+                    if (trackedEncryption.physicalObject != null)
+                    {
+                        ++EncryptionDamagePatch.skip;
+                        trackedEncryption.physicalObject.physicalEncryptionScript.Damage(damage);
+                        --EncryptionDamagePatch.skip;
+                    }
+                }
+            }
+        }
+
         public static void SosigWearableDamage(H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
@@ -759,6 +858,20 @@ namespace H3MP
                     Mod.Sosig_m_isConfused.SetValue(physicalSosig, packet.ReadBool());
                     physicalSosig.m_confusedTime = packet.ReadFloat();
                     Mod.Sosig_m_storedShudder.SetValue(physicalSosig, packet.ReadFloat());
+                }
+            }
+        }
+
+        public static void EncryptionDamageData(H3MP_Packet packet)
+        {
+            int encryptionTrackedID = packet.ReadInt();
+
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Client.encryptions[encryptionTrackedID];
+            if (trackedEncryption != null)
+            {
+                if (trackedEncryption.controller != H3MP_Client.singleton.ID && trackedEncryption.physicalObject != null)
+                {
+                    //TODO
                 }
             }
         }

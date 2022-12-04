@@ -32,10 +32,12 @@ namespace H3MP
         public static List<H3MP_TrackedItemData> items = new List<H3MP_TrackedItemData>(); // Tracked items under control of this gameManager
         public static List<H3MP_TrackedSosigData> sosigs = new List<H3MP_TrackedSosigData>(); // Tracked sosigs under control of this gameManager
         public static List<H3MP_TrackedAutoMeaterData> autoMeaters = new List<H3MP_TrackedAutoMeaterData>(); // Tracked AutoMeaters under control of this gameManager
+        public static List<H3MP_TrackedEncryptionData> encryptions = new List<H3MP_TrackedEncryptionData>(); // Tracked TNH_EncryptionTarget under control of this gameManager
         public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
         public static Dictionary<int, List<List<string>>> waitingWearables = new Dictionary<int, List<List<string>>>();
         public static Dictionary<Sosig, H3MP_TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, H3MP_TrackedSosig>();
         public static Dictionary<AutoMeater, H3MP_TrackedAutoMeater> trackedAutoMeaterByAutoMeater = new Dictionary<AutoMeater, H3MP_TrackedAutoMeater>();
+        public static Dictionary<TNH_EncryptionTarget, H3MP_TrackedEncryption> trackedEncryptionByEncryption = new Dictionary<TNH_EncryptionTarget, H3MP_TrackedEncryption>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, H3MP_TNHInstance> TNHInstances = new Dictionary<int, H3MP_TNHInstance>();
 
@@ -443,6 +445,46 @@ namespace H3MP
             }
         }
 
+        public static void UpdateTrackedEncryption(H3MP_TrackedEncryptionData updatedEncryption, bool ignoreOrder = false)
+        {
+            if(updatedEncryption.trackedID == -1)
+            {
+                return;
+            }
+
+            H3MP_TrackedEncryptionData trackedEncryptionData = null;
+            int ID = -1;
+            if (H3MP_ThreadManager.host)
+            {
+                if (updatedEncryption.trackedID < H3MP_Server.encryptions.Length)
+                {
+                    trackedEncryptionData = H3MP_Server.encryptions[updatedEncryption.trackedID];
+                    ID = 0;
+                }
+            }
+            else
+            {
+                if (updatedEncryption.trackedID < H3MP_Client.encryptions.Length)
+                {
+                    trackedEncryptionData = H3MP_Client.encryptions[updatedEncryption.trackedID];
+                    ID = H3MP_Client.singleton.ID;
+                }
+            }
+
+            if (trackedEncryptionData != null)
+            {
+                // If we take control of a encryption, we could still receive an updated item from another client
+                // if they haven't received the control update yet, so here we check if this actually needs to update
+                // AND we don't want to take this update if this is a packet that was sent before the previous update
+                // Since the order is kept as a single byte, it will overflow every 256 packets of this sosig
+                // Here we consider the update out of order if it is within 128 iterations before the latest
+                if (trackedEncryptionData.controller != ID && (ignoreOrder || ((updatedEncryption.order > trackedEncryptionData.order || trackedEncryptionData.order - updatedEncryption.order > 128))))
+                {
+                    trackedEncryptionData.Update(updatedEncryption);
+                }
+            }
+        }
+
         public static void SyncTrackedItems(bool init = false, bool inControl = false)
         {
             Debug.Log("SyncTrackedItems called with init: "+init+", in control: "+inControl+", others: "+(playersPresent > 0));
@@ -614,11 +656,6 @@ namespace H3MP
                             Debug.Log("Sending tracked sosig");
                             // Tell the server we need to add this item to global tracked items
                             H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene, instance);
-                        }
-
-                        foreach (Transform child in root)
-                        {
-                            SyncTrackedSosigs(child, controlEverything, scene);
                         }
                     }
                     else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
@@ -825,11 +862,6 @@ namespace H3MP
                             // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
                             H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data, scene, instance);
                         }
-
-                        foreach (Transform child in root)
-                        {
-                            SyncTrackedAutoMeaters(child, controlEverything, scene);
-                        }
                     }
                     else // AutoMeater will not be controlled by us but is an AutoMeater that should be tracked by system, so destroy it
                     {
@@ -915,6 +947,86 @@ namespace H3MP
             autoMeaters.Add(data);
 
             return trackedAutoMeater;
+        }
+
+        public static void SyncTrackedEncryptions(bool init = false, bool inControl = false)
+        {
+            Debug.Log("SyncTrackedEncryptions called with init: " + init + ", in control: " + inControl + ", others: " + (playersPresent > 0));
+            // When we sync our current scene, if we are alone, we sync and take control of everything
+            // If we are not alone, we take control only of what we are currently interacting with
+            // while all other encryptions get destroyed. We will receive any encryption that the players inside this scene are controlling
+            Scene scene = SceneManager.GetActiveScene();
+            GameObject[] roots = scene.GetRootGameObjects();
+            foreach (GameObject root in roots)
+            {
+                SyncTrackedEncryptions(root.transform, init ? inControl : playersPresent == 0, scene.name);
+            }
+        }
+
+        public static void SyncTrackedEncryptions(Transform root, bool controlEverything, string scene)
+        {
+            TNH_EncryptionTarget encryption = root.GetComponent<TNH_EncryptionTarget>();
+            if (encryption != null)
+            {
+                H3MP_TrackedEncryption currentTrackedEncryption = root.GetComponent<H3MP_TrackedEncryption>();
+                if (currentTrackedEncryption == null)
+                {
+                    if (controlEverything)
+                    {
+                        H3MP_TrackedEncryption trackedEncryption = MakeEncryptionTracked(encryption);
+                        if (H3MP_ThreadManager.host)
+                        {
+                            // This will also send a packet with the Encryption to be added in the client's global item list
+                            H3MP_Server.AddTrackedEncryption(trackedEncryption.data, scene, instance, 0);
+                        }
+                        else
+                        {
+                            Debug.Log("Sending tracked Encryption: " + trackedEncryption.data.itemID);
+                            // Tell the server we need to add this Encryption to global tracked Encryptions
+                            H3MP_ClientSend.TrackedEncryption(trackedEncryption.data, scene, instance);
+                        }
+                    }
+                    else // Item will not be controlled by us but is an Encryption that should be tracked by system, so destroy it
+                    {
+                        Destroy(root.gameObject);
+                    }
+                }
+                else
+                {
+                    // It already has tracked item on it, this is possible of we received new item from server before we sync
+                    return;
+                }
+            }
+            else
+            {
+                foreach (Transform child in root)
+                {
+                    SyncTrackedEncryptions(child, controlEverything, scene);
+                }
+            }
+        }
+
+        private static H3MP_TrackedEncryption MakeEncryptionTracked(TNH_EncryptionTarget encryption)
+        {
+            H3MP_TrackedEncryption trackedEncryption = encryption.gameObject.AddComponent<H3MP_TrackedEncryption>();
+            H3MP_TrackedEncryptionData data = new H3MP_TrackedEncryptionData();
+            trackedEncryption.data = data;
+            data.physicalItem = trackedEncryption;
+            data.physicalItem.physicalEncryption = encryption;
+
+            data.type = encryption.Type;
+            data.position = trackedEncryption.transform.position;
+            data.rotation = trackedEncryption.transform.rotation;
+            data.active = trackedEncryption.gameObject.activeInHierarchy;
+            //TODO: add all the other shit we wanna track like the subtargetS? maybe
+
+            data.controller = ID;
+
+            // Add to local list
+            data.localTrackedID = encryptions.Count;
+            encryptions.Add(data);
+
+            return trackedEncryption;
         }
 
         public static H3MP_TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin,
@@ -1039,17 +1151,20 @@ namespace H3MP
             H3MP_TrackedItemData[] itemArrToUse = null;
             H3MP_TrackedSosigData[] sosigArrToUse = null;
             H3MP_TrackedAutoMeaterData[] autoMeaterArrToUse = null;
+            H3MP_TrackedEncryptionData[] encryptionArrToUse = null;
             if (H3MP_ThreadManager.host)
             {
                 itemArrToUse = H3MP_Server.items;
                 sosigArrToUse = H3MP_Server.sosigs;
                 autoMeaterArrToUse = H3MP_Server.autoMeaters;
+                encryptionArrToUse = H3MP_Server.encryptions;
             }
             else
             {
                 itemArrToUse = H3MP_Client.items;
                 sosigArrToUse = H3MP_Client.sosigs;
                 autoMeaterArrToUse = H3MP_Client.autoMeaters;
+                encryptionArrToUse = H3MP_Client.encryptions;
             }
             for (int i = itemArrToUse.Length - 1; i >= 0; --i)
             {
@@ -1168,6 +1283,45 @@ namespace H3MP
                             // like we do now if we didn't do immediate because OnDestroy() gets called later
                             // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
                             DestroyImmediate(autoMeaterArrToUse[i].physicalObject.gameObject);
+                        }
+                    }
+                }
+            }
+            for (int i = encryptionArrToUse.Length - 1; i >= 0; --i)
+            {
+                if (encryptionArrToUse[i] != null && encryptionArrToUse[i].physicalObject != null)
+                {
+                    if (IsControlled(encryptionArrToUse[i].physicalObject.physicalEncryptionScript))
+                    {
+                        // Send destruction without removing from global list
+                        // We just don't want the other clients to have the sosig on their side anymore if they had it
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.DestroyEncryption(i, false);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.DestroyEncryption(i, false);
+                        }
+                    }
+                    else // Not being interacted with, just destroy on our side and give control
+                    {
+                        if (isNewInstance)
+                        {
+                            GameObject go = encryptionArrToUse[i].physicalObject.gameObject;
+
+                            // Destroy just the tracked script because we want to make a copy for ourselves
+                            DestroyImmediate(encryptionArrToUse[i].physicalObject);
+
+                            // Retrack sosig
+                            SyncTrackedEncryptions(go.transform, true, SceneManager.GetActiveScene().name);
+                        }
+                        else // Destroy entire object
+                        {
+                            // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
+                            // like we do now if we didn't do immediate because OnDestroy() gets called later
+                            // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
+                            DestroyImmediate(encryptionArrToUse[i].physicalObject.gameObject);
                         }
                     }
                 }
@@ -1395,6 +1549,7 @@ namespace H3MP
                     SyncTrackedSosigs();
                     SyncTrackedAutoMeaters();
                     SyncTrackedItems();
+                    SyncTrackedEncryptions();
                 }
                 else // New scene not syncable, ensure all players are disabled regardless of scene
                 {

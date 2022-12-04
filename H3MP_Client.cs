@@ -46,6 +46,7 @@ namespace H3MP
         public static H3MP_TrackedItemData[] items; // All tracked items, regardless of whos control they are under
         public static H3MP_TrackedSosigData[] sosigs; // All tracked Sosigs, regardless of whos control they are under
         public static H3MP_TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
+        public static H3MP_TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
 
         private void Awake()
         {
@@ -388,6 +389,12 @@ namespace H3MP
                 H3MP_ClientHandle.TNHHoldShutDown,
                 H3MP_ClientHandle.TNHSetPhaseComplete,
                 H3MP_ClientHandle.TNHSetPhase,
+                H3MP_ClientHandle.TrackedEncryptions,
+                H3MP_ClientHandle.TrackedEncryption,
+                H3MP_ClientHandle.GiveEncryptionControl,
+                H3MP_ClientHandle.DestroyEncryption,
+                H3MP_ClientHandle.EncryptionDamage,
+                H3MP_ClientHandle.EncryptionDamageData,
             };
 
             // All vanilla scenes can be synced by default
@@ -403,6 +410,8 @@ namespace H3MP
             sosigs = new H3MP_TrackedSosigData[100];
 
             autoMeaters = new H3MP_TrackedAutoMeaterData[100];
+
+            encryptions = new H3MP_TrackedEncryptionData[100];
 
             Debug.Log("Initialized client");
         }
@@ -505,6 +514,39 @@ namespace H3MP
             }
         }
 
+        public static void AddTrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, string scene, int instance)
+        {
+            Debug.Log("Received order to add an Encryption");
+            // Adjust Encryptions size to acommodate if necessary
+            if (encryptions.Length <= trackedEncryption.trackedID)
+            {
+                IncreaseEncryptionsSize(trackedEncryption.trackedID);
+            }
+
+            if (trackedEncryption.controller == H3MP_Client.singleton.ID)
+            {
+                // If we already control the Encryption it is because we are the one who sent the Encryption to the server
+                // We just need to update the tracked ID of the Encryption
+                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].trackedID = trackedEncryption.trackedID;
+
+                // Add the Encryption to client global list
+                encryptions[trackedEncryption.trackedID] = H3MP_GameManager.encryptions[trackedEncryption.localTrackedID];
+            }
+            else
+            {
+                trackedEncryption.localTrackedID = -1;
+
+                // Add the Encryption to client global list
+                encryptions[trackedEncryption.trackedID] = trackedEncryption;
+
+                // Instantiate Encryption if it is in the current scene
+                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                {
+                    AnvilManager.Run(trackedEncryption.Instantiate());
+                }
+            }
+        }
+
         private static void IncreaseItemsSize(int minimum)
         {
             int minCapacity = items.Length;
@@ -547,6 +589,21 @@ namespace H3MP
             for (int i = 0; i < tempAutoMeaters.Length; ++i)
             {
                 autoMeaters[i] = tempAutoMeaters[i];
+            }
+        }
+
+        private static void IncreaseEncryptionsSize(int minimum)
+        {
+            int minCapacity = encryptions.Length;
+            while(minCapacity <= minimum)
+            {
+                minCapacity += 100;
+            }
+            H3MP_TrackedEncryptionData[] tempEncryptions = encryptions;
+            encryptions = new H3MP_TrackedEncryptionData[minCapacity];
+            for (int i = 0; i < tempEncryptions.Length; ++i)
+            {
+                encryptions[i] = tempEncryptions[i];
             }
         }
 

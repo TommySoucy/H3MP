@@ -82,6 +82,7 @@ namespace H3MP
                     H3MP_ServerSend.TrackedItems();
                     H3MP_ServerSend.TrackedSosigs();
                     H3MP_ServerSend.TrackedAutoMeaters();
+                    H3MP_ServerSend.TrackedEncryptions();
 
                     // Also send the host's player state to all clients
                     H3MP_ServerSend.PlayerState(0,
@@ -107,7 +108,7 @@ namespace H3MP
                     H3MP_ClientSend.TrackedItems();
                     H3MP_ClientSend.TrackedSosigs();
                     H3MP_ClientSend.TrackedAutoMeaters();
-                    H3MP_ClientSend.TNHUpdate();
+                    H3MP_ClientSend.TrackedEncryptions();
 
                     // Also send the player state to all clients
                     H3MP_ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,

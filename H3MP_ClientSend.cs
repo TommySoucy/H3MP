@@ -275,13 +275,13 @@ namespace H3MP
                         H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_GameManager.autoMeaters[i];
                         if (trackedAutoMeater.Update())
                         {
-                            trackedAutoMeater.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                            trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
 
                             packet.Write(trackedAutoMeater);
 
                             ++count;
 
-                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                            // Limit buffer size to MTU, will send next set of tracked automeaters in separate packet
                             if (packet.buffer.Count >= 1300)
                             {
                                 break;
@@ -295,7 +295,66 @@ namespace H3MP
 
                             ++count;
 
-                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                            // Limit buffer size to MTU, will send next set of tracked automeaters in separate packet
+                            if (packet.buffer.Count >= 1300)
+                            {
+                                break;
+                            }
+                        }
+
+                        ++index;
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                    {
+                        packet.buffer[i] = countArr[j];
+                    }
+
+                    SendUDPData(packet);
+                }
+            }
+        }
+
+        public static void TrackedEncryptions()
+        {
+            int index = 0;
+            while (index < H3MP_GameManager.encryptions.Count)
+            {
+                using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedEncryptions))
+                {
+                    // Write place holder int at start to hold the count once we know it
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
+
+                    short count = 0;
+                    for (int i = index; i < H3MP_GameManager.encryptions.Count; ++i)
+                    {
+                        H3MP_TrackedEncryptionData trackedEncryption = H3MP_GameManager.encryptions[i];
+                        if (trackedEncryption.Update())
+                        {
+                            trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
+
+                            packet.Write(trackedEncryption);
+
+                            ++count;
+
+                            // Limit buffer size to MTU, will send next set of tracked Encryptions in separate packet
+                            if (packet.buffer.Count >= 1300)
+                            {
+                                break;
+                            }
+                        }
+                        else if(trackedEncryption.insuranceCounter > 0)
+                        {
+                            --trackedEncryption.insuranceCounter;
+
+                            packet.Write(trackedEncryption);
+
+                            ++count;
+
+                            // Limit buffer size to MTU, will send next set of tracked Encryptions in separate packet
                             if (packet.buffer.Count >= 1300)
                             {
                                 break;
@@ -353,6 +412,18 @@ namespace H3MP
             }
         }
 
+        public static void TrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, string scene, int instance)
+        {
+            using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedEncryption))
+            {
+                packet.Write(trackedEncryption, true);
+                packet.Write(scene);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void GiveControl(int trackedID, int newController)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveControl))
@@ -386,6 +457,17 @@ namespace H3MP
             }
         }
 
+        public static void GiveEncryptionControl(int trackedID, int newController)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveEncryptionControl))
+            {
+                packet.Write(trackedID);
+                packet.Write(newController);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void DestroyItem(int trackedID, bool removeFromList = true)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.destroyItem))
@@ -411,6 +493,17 @@ namespace H3MP
         public static void DestroyAutoMeater(int trackedID, bool removeFromList = true)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.destroyAutoMeater))
+            {
+                packet.Write(trackedID);
+                packet.Write(removeFromList);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void DestroyEncryption(int trackedID, bool removeFromList = true)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.destroyEncryption))
             {
                 packet.Write(trackedID);
                 packet.Write(removeFromList);
@@ -633,6 +726,16 @@ namespace H3MP
                 packet.Write(trackedSosig.physicalSosigScript.IsConfused);
                 packet.Write(trackedSosig.physicalSosigScript.m_confusedTime);
                 packet.Write((float)Mod.Sosig_m_storedShudder.GetValue(trackedSosig.physicalSosigScript));
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionDamageData(H3MP_TrackedEncryption trackedEncryption)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionDamageData))
+            {
+                packet.Write(trackedEncryption.data.trackedID);
 
                 SendTCPData(packet);
             }
@@ -1163,6 +1266,17 @@ namespace H3MP
             {
                 packet.Write(trackedID);
                 packet.Write((byte)type);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionDamage(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionDamage))
+            {
+                packet.Write(trackedID);
                 packet.Write(d);
 
                 SendTCPData(packet);

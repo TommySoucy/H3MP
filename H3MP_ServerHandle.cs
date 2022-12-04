@@ -171,6 +171,16 @@ namespace H3MP
             }
         }
 
+        public static void TrackedEncryptions(int clientID, H3MP_Packet packet)
+        {
+            // Reconstruct passed trackedEncryptions from packet
+            int count = packet.ReadShort();
+            for(int i=0; i < count; ++i)
+            {
+                H3MP_GameManager.UpdateTrackedEncryption(packet.ReadTrackedEncryption());
+            }
+        }
+
         public static void TakeControl(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -299,6 +309,40 @@ namespace H3MP
             H3MP_ServerSend.GiveAutoMeaterControl(trackedID, newController);
         }
 
+        public static void GiveEncryptionControl(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int newController = packet.ReadInt();
+
+            // Update locally
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[trackedID];
+
+            if (trackedEncryption.controller != 0 && newController == 0)
+            {
+                trackedEncryption.localTrackedID = H3MP_GameManager.encryptions.Count;
+                if(trackedEncryption.physicalObject != null)
+                {
+                    TODO: Add to current TNH manager hold
+                }
+                H3MP_GameManager.encryptions.Add(trackedEncryption);
+            }
+            else if(trackedEncryption.controller == 0 && newController != 0)
+            {
+                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
+                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
+                H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+                trackedEncryption.localTrackedID = -1;
+                if (trackedEncryption.physicalObject != null)
+                {
+                    TODO: Remove from current TNH manager hold
+                }
+            }
+            trackedEncryption.controller = newController;
+
+            // Send to all other clients
+            H3MP_ServerSend.GiveEncryptionControl(trackedID, newController);
+        }
+
         public static void DestroySosig(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -357,6 +401,35 @@ namespace H3MP
             H3MP_ServerSend.DestroyAutoMeater(trackedID, removeFromList, clientID);
         }
 
+        public static void DestroyEncryption(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool removeFromList = packet.ReadBool();
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[trackedID];
+
+            if (trackedEncryption.physicalObject != null)
+            {
+                H3MP_GameManager.trackedEncryptionByEncryption.Remove(trackedEncryption.physicalObject.physicalEncryptionScript);
+                trackedEncryption.physicalObject.sendDestroy = false;
+                GameObject.Destroy(trackedEncryption.physicalObject.gameObject);
+            }
+
+            if (trackedEncryption.localTrackedID != -1)
+            {
+                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
+                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
+                H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+            }
+
+            if (removeFromList)
+            {
+                H3MP_Server.encryptions[trackedID] = null;
+                H3MP_Server.availableEncryptionIndices.Add(trackedID);
+            }
+
+            H3MP_ServerSend.DestroyEncryption(trackedID, removeFromList, clientID);
+        }
+
         public static void DestroyItem(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -399,6 +472,11 @@ namespace H3MP
         public static void TrackedAutoMeater(int clientID, H3MP_Packet packet)
         {
             H3MP_Server.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), packet.ReadString(), packet.ReadInt(), clientID);
+        }
+
+        public static void TrackedEncryption(int clientID, H3MP_Packet packet)
+        {
+            H3MP_Server.AddTrackedEncryption(packet.ReadTrackedEncryption(true), packet.ReadString(), packet.ReadInt(), clientID);
         }
 
         public static void ItemParent(int clientID, H3MP_Packet packet)
@@ -776,6 +854,30 @@ namespace H3MP
             }
         }
 
+        public static void EncryptionDamage(int clientID, H3MP_Packet packet)
+        {
+            int encryptionTrackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[encryptionTrackedID];
+            if (trackedEncryption != null)
+            {
+                if(trackedEncryption.controller == 0)
+                {
+                    if (trackedEncryption.physicalObject != null)
+                    {
+                        ++EncryptionDamagePatch.skip;
+                        trackedEncryption.physicalObject.physicalEncryptionScript.Damage(damage);
+                        --EncryptionDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.EncryptionDamage(trackedEncryption, damage);
+                }
+            }
+        }
+
         public static void AutoMeaterDamageData(int clientID, H3MP_Packet packet)
         {
             // TODO: if ever there is data we need to pass back from a auto meater damage call
@@ -865,6 +967,23 @@ namespace H3MP
 
             packet.readPos = 0;
             H3MP_ServerSend.SosigLinkDamageData(packet);
+        }
+
+        public static void EncryptionDamageData(int clientID, H3MP_Packet packet)
+        {
+            int encryptionTrackedID = packet.ReadInt();
+
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[encryptionTrackedID];
+            if (trackedEncryption != null)
+            {
+                if(trackedEncryption.controller != 0 && trackedEncryption.physicalObject != null)
+                {
+                    //TODO
+                }
+            }
+
+            packet.readPos = 0;
+            H3MP_ServerSend.EncryptionDamageData(packet);
         }
 
         public static void AutoMeaterHitZoneDamageData(int clientID, H3MP_Packet packet)
