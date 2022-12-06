@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 using Valve.Newtonsoft.Json.Linq;
 using static FistVR.TNH_PatrolChallenge;
@@ -102,7 +103,15 @@ namespace H3MP
         giveEncryptionControl = 87,
         destroyEncryption = 88,
         encryptionDamage = 89,
-        encryptionDamageData = 90
+        encryptionDamageData = 90,
+        encryptionRespawnSubTarg = 91,
+        encryptionSpawnGrowth = 92,
+        encryptionRecursiveInit = 93,
+        encryptionResetGrowth = 94,
+        encryptionDisableSubtarg = 95,
+        encryptionSubDamage = 96,
+        shatterableCrateDamage = 97,
+        shatterableCrateDestroy = 98
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -198,7 +207,14 @@ namespace H3MP
         giveEncryptionControl = 88,
         destroyEncryption = 89,
         encryptionDamage = 90,
-        encryptionDamageData = 91
+        encryptionDamageData = 91,
+        encryptionRespawnSubTarg = 92,
+        encryptionSpawnGrowth = 93,
+        encryptionRecursiveInit = 94,
+        encryptionResetGrowth = 95,
+        encryptionDisableSubtarg = 96,
+        encryptionSubDamage = 97,
+        shatterableCrateDestroy = 98
     }
 
     public class H3MP_Packet : IDisposable
@@ -531,6 +547,111 @@ namespace H3MP
             else
             {
                 Write(trackedAutoMeater.order++);
+            }
+        }
+        /// <summary>Adds a H3MP_TrackedEncryptionData to the packet.</summary>
+        /// <param name="trackedSosig">The H3MP_TrackedEncryptionData to add.</param>
+        /// <param name="full">Whether to include all necessary data to instantiate this Encryption.</param>
+        public void Write(H3MP_TrackedEncryptionData trackedEncryption, bool full = false)
+        {
+            Write(trackedEncryption.trackedID);
+            Write(trackedEncryption.position);
+            Write(trackedEncryption.rotation);
+            Write(trackedEncryption.active);
+
+            if (full)
+            {
+                Write((byte)trackedEncryption.type);
+                Write(trackedEncryption.controller);
+                Write(trackedEncryption.localTrackedID);
+                if(trackedEncryption.tendrilsActive == null || trackedEncryption.tendrilsActive.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedEncryption.tendrilsActive.Length);
+                    for(int i=0; i < trackedEncryption.tendrilsActive.Length; ++i)
+                    {
+                        Write(trackedEncryption.tendrilsActive[i]);
+                    }
+                }
+                if(trackedEncryption.growthPoints == null || trackedEncryption.growthPoints.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedEncryption.growthPoints.Length);
+                    for(int i=0; i < trackedEncryption.growthPoints.Length; ++i)
+                    {
+                        Write(trackedEncryption.growthPoints[i]);
+                    }
+                }
+                if(trackedEncryption.subTargsPos == null || trackedEncryption.subTargsPos.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedEncryption.subTargsPos.Length);
+                    for(int i=0; i < trackedEncryption.subTargsPos.Length; ++i)
+                    {
+                        Write(trackedEncryption.subTargsPos[i]);
+                    }
+                }
+                if(trackedEncryption.subTargsActive == null || trackedEncryption.subTargsActive.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedEncryption.subTargsActive.Length);
+                    for(int i=0; i < trackedEncryption.subTargsActive.Length; ++i)
+                    {
+                        Write(trackedEncryption.subTargsActive[i]);
+                    }
+                }
+                if(trackedEncryption.tendrilFloats == null || trackedEncryption.tendrilFloats.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedEncryption.tendrilFloats.Length);
+                    for(int i=0; i < trackedEncryption.tendrilFloats.Length; ++i)
+                    {
+                        Write(trackedEncryption.tendrilFloats[i]);
+                    }
+                }
+                if(trackedEncryption.tendrilsRot == null || trackedEncryption.tendrilsRot.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedEncryption.tendrilsRot.Length);
+                    for(int i=0; i < trackedEncryption.tendrilsRot.Length; ++i)
+                    {
+                        Write(trackedEncryption.tendrilsRot[i]);
+                    }
+                }
+                if(trackedEncryption.tendrilsScale == null || trackedEncryption.tendrilsScale.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedEncryption.tendrilsScale.Length);
+                    for(int i=0; i < trackedEncryption.tendrilsScale.Length; ++i)
+                    {
+                        Write(trackedEncryption.tendrilsScale[i]);
+                    }
+                }
+            }
+            else
+            {
+                Write(trackedEncryption.order++);
             }
         }
         /// <summary>Adds a SosigConfigTemplate to the packet.</summary>
@@ -1282,6 +1403,94 @@ namespace H3MP
             }
 
             return trackedAutoMeater;
+        }
+
+        /// <summary>Reads a H3MP_TrackedEncryptionData from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public H3MP_TrackedEncryptionData ReadTrackedEncryption(bool full = false, bool _moveReadPos = true)
+        {
+            H3MP_TrackedEncryptionData trackedEncryption = new H3MP_TrackedEncryptionData();
+
+            trackedEncryption.trackedID = ReadInt();
+            trackedEncryption.position = ReadVector3();
+            trackedEncryption.rotation = ReadQuaternion();
+            trackedEncryption.active = ReadBool();
+
+            if (full)
+            {
+                trackedEncryption.type = (TNH_EncryptionType)ReadByte();
+                trackedEncryption.controller = ReadInt();
+                trackedEncryption.localTrackedID = ReadInt();
+                int length = ReadInt();
+                if(length > 0)
+                {
+                    trackedEncryption.tendrilsActive = new bool[length];
+                    for(int i=0; i < length; ++i)
+                    {
+                        trackedEncryption.tendrilsActive[i] = ReadBool();
+                    }
+                }
+                length = ReadInt();
+                if (length > 0)
+                {
+                    trackedEncryption.growthPoints = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        trackedEncryption.growthPoints[i] = ReadVector3();
+                    }
+                }
+                length = ReadInt();
+                if (length > 0)
+                {
+                    trackedEncryption.subTargsPos = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        trackedEncryption.subTargsPos[i] = ReadVector3();
+                    }
+                }
+                length = ReadInt();
+                if (length > 0)
+                {
+                    trackedEncryption.subTargsActive = new bool[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        trackedEncryption.subTargsActive[i] = ReadBool();
+                    }
+                }
+                length = ReadInt();
+                if (length > 0)
+                {
+                    trackedEncryption.tendrilFloats = new float[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        trackedEncryption.tendrilFloats[i] = ReadFloat();
+                    }
+                }
+                length = ReadInt();
+                if (length > 0)
+                {
+                    trackedEncryption.tendrilsRot = new Quaternion[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        trackedEncryption.tendrilsRot[i] = ReadQuaternion();
+                    }
+                }
+                length = ReadInt();
+                if (length > 0)
+                {
+                    trackedEncryption.tendrilsScale = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        trackedEncryption.tendrilsScale[i] = ReadVector3();
+                    }
+                }
+            }
+            else
+            {
+                trackedEncryption.order = ReadByte();
+            }
+
+            return trackedEncryption;
         }
 
         /// <summary>Reads a Damage from the packet.</summary>

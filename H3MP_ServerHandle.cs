@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using static FistVR.TNH_Progression;
 using static H3MP.H3MP_PlayerHitbox;
 using static Valve.VR.SteamVR_ExternalCamera;
+using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -320,10 +321,6 @@ namespace H3MP
             if (trackedEncryption.controller != 0 && newController == 0)
             {
                 trackedEncryption.localTrackedID = H3MP_GameManager.encryptions.Count;
-                if(trackedEncryption.physicalObject != null)
-                {
-                    TODO: Add to current TNH manager hold
-                }
                 H3MP_GameManager.encryptions.Add(trackedEncryption);
             }
             else if(trackedEncryption.controller == 0 && newController != 0)
@@ -332,10 +329,6 @@ namespace H3MP
                 H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
                 H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
                 trackedEncryption.localTrackedID = -1;
-                if (trackedEncryption.physicalObject != null)
-                {
-                    TODO: Remove from current TNH manager hold
-                }
             }
             trackedEncryption.controller = newController;
 
@@ -978,7 +971,7 @@ namespace H3MP
             {
                 if(trackedEncryption.controller != 0 && trackedEncryption.physicalObject != null)
                 {
-                    //TODO
+                    Mod.TNH_EncryptionTarget_m_numHitsLeft.SetValue(trackedEncryption.physicalObject.physicalEncryptionScript, packet.ReadInt());
                 }
             }
 
@@ -1890,12 +1883,28 @@ namespace H3MP
 
             if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].controller == H3MP_GameManager.ID)
             {
+                ++TNH_ShatterableCrateDamagePatch.skip;
                 H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
+                --TNH_ShatterableCrateDamagePatch.skip;
             }
             else
             {
                 H3MP_ServerSend.ShatterableCrateDamage(trackedID, packet.ReadDamage());
             }
+        }
+
+        public static void ShatterableCrateDestroy(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                ++TNH_ShatterableCrateDestroyPatch.skip;
+                Mod.TNH_ShatterableCrate_Destroy.Invoke(H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>(), new object[] { packet.ReadDamage() });
+                --TNH_ShatterableCrateDestroyPatch.skip;
+            }
+
+            H3MP_ServerSend.ShatterableCrateDestroy(trackedID, packet.ReadDamage(), clientID);
         }
 
         public static void TNHSetLevel(int clientID, H3MP_Packet packet)
@@ -1997,6 +2006,132 @@ namespace H3MP
             }
 
             H3MP_ServerSend.TNHSetPhase(instance, p, clientID);
+        }
+
+        public static void EncryptionRespawnSubTarg(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+
+            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            {
+                H3MP_Server.encryptions[trackedID].subTargsActive[index] = true;
+
+                H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(true);
+                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript));
+            }
+
+            H3MP_ServerSend.EncryptionRespawnSubTarg(trackedID, index, clientID);
+        }
+
+        public static void EncryptionSpawnGrowth(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+            Vector3 point = packet.ReadVector3();
+
+            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            {
+                H3MP_Server.encryptions[trackedID].tendrilsActive[index] = true;
+                H3MP_Server.encryptions[trackedID].growthPoints[index] = point;
+                H3MP_Server.encryptions[trackedID].subTargsPos[index] = point;
+                H3MP_Server.encryptions[trackedID].subTargsActive[index] = true;
+                H3MP_Server.encryptions[trackedID].tendrilFloats[index] = 1f;
+                Vector3 forward = point - H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
+                H3MP_Server.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
+                H3MP_Server.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+
+                ++EncryptionSpawnGrowthPatch.skip;
+                Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { index, point});
+                --EncryptionSpawnGrowthPatch.skip;
+            }
+
+            H3MP_ServerSend.EncryptionSpawnGrowth(trackedID, index, point, clientID);
+        }
+
+        public static void EncryptionRecursiveInit(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int count = packet.ReadInt();
+            List<int> indices = new List<int>();
+            for(int i=0; i < count; i++)
+            {
+                indices.Add(packet.ReadInt());
+            }
+
+            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            {
+                for(int i=0; i < count; ++i)
+                {
+                    H3MP_Server.encryptions[trackedID].subTargsActive[indices[i]] = true;
+                    H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
+                }
+                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, count);
+            }
+
+            H3MP_ServerSend.EncryptionRecursiveInit(trackedID, indices, clientID);
+        }
+
+        public static void EncryptionResetGrowth(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+            Vector3 point = packet.ReadVector3();
+
+            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            {
+                H3MP_Server.encryptions[trackedID].growthPoints[index] = point;
+                H3MP_Server.encryptions[trackedID].tendrilFloats[index] = 0;
+                Vector3 forward = point - H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
+                H3MP_Server.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
+                H3MP_Server.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+
+                ++EncryptionResetGrowthPatch.skip;
+                Mod.TNH_EncryptionTarget_ResetGrowth.Invoke(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] {index, point});
+                --EncryptionResetGrowthPatch.skip;
+            }
+
+            H3MP_ServerSend.EncryptionResetGrowth(trackedID, index, point, clientID);
+        }
+
+        public static void EncryptionDisableSubtarg(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+
+            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            {
+                H3MP_Server.encryptions[trackedID].subTargsActive[index] = false;
+
+                H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
+            }
+
+            H3MP_ServerSend.EncryptionDisableSubtarg(trackedID, index, clientID);
+        }
+
+        public static void EncryptionSubDamage(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[trackedID];
+            if (trackedEncryption != null)
+            {
+                if (trackedEncryption.controller == 0)
+                {
+                    if (trackedEncryption.physicalObject != null)
+                    {
+                        ++EncryptionSubDamagePatch.skip;
+                        trackedEncryption.physicalObject.physicalEncryptionScript.SubTargs[index].GetComponent<TNH_EncryptionTarget_SubTarget>().Damage(damage);
+                        --EncryptionSubDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.EncryptionSubDamage(trackedEncryption, index, damage);
+                }
+            }
         }
     }
 }

@@ -646,7 +646,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedEncryption))
             {
-                packet.Write(trackedAutoMeater, true);
+                packet.Write(trackedEncryption, true);
                 packet.Write(scene);
                 packet.Write(instance);
 
@@ -1041,6 +1041,18 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionDamage))
             {
                 packet.Write(trackedEncryption.trackedID);
+                packet.Write(d);
+
+                SendTCPData(trackedEncryption.controller, packet);
+            }
+        }
+
+        public static void EncryptionSubDamage(H3MP_TrackedEncryptionData trackedEncryption, int index, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionSubDamage))
+            {
+                packet.Write(trackedEncryption.trackedID);
+                packet.Write(index);
                 packet.Write(d);
 
                 SendTCPData(trackedEncryption.controller, packet);
@@ -1849,12 +1861,30 @@ namespace H3MP
 
         public static void ShatterableCrateDamage(int trackedID, Damage d)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldBeginChallenge))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.shatterableCrateDamage))
             {
                 packet.Write(trackedID);
                 packet.Write(d);
 
                 SendTCPDataToAll(H3MP_Server.items[trackedID].controller, packet);
+            }
+        }
+
+        public static void ShatterableCrateDestroy(int trackedID, Damage d, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.shatterableCrateDestroy))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
 
@@ -1959,6 +1989,109 @@ namespace H3MP
             {
                 packet.Write(instance);
                 packet.Write(p);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void EncryptionRespawnSubTarg(int instance, int index, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionRespawnSubTarg))
+            {
+                packet.Write(instance);
+                packet.Write(index);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void EncryptionSpawnGrowth(int instance, int index, Vector3 point, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionSpawnGrowth))
+            {
+                packet.Write(instance);
+                packet.Write(index);
+                packet.Write(point);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void EncryptionRecursiveInit(int instance, List<int> indices, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionRecursiveInit))
+            {
+                packet.Write(instance);
+                if (indices == null || indices.Count == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(indices.Count);
+                    foreach (int index in indices)
+                    {
+                        packet.Write(index);
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void EncryptionResetGrowth(int instance, int index, Vector3 point, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionResetGrowth))
+            {
+                packet.Write(instance);
+                packet.Write(index);
+                packet.Write(point);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void EncryptionDisableSubtarg(int instance, int index, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionDisableSubtarg))
+            {
+                packet.Write(instance);
+                packet.Write(index);
 
                 if (clientID == 0)
                 {

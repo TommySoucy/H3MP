@@ -981,7 +981,7 @@ namespace H3MP
                         }
                         else
                         {
-                            Debug.Log("Sending tracked Encryption: " + trackedEncryption.data.itemID);
+                            Debug.Log("Sending tracked Encryption: " + trackedEncryption.data.type);
                             // Tell the server we need to add this Encryption to global tracked Encryptions
                             H3MP_ClientSend.TrackedEncryption(trackedEncryption.data, scene, instance);
                         }
@@ -1011,8 +1011,8 @@ namespace H3MP
             H3MP_TrackedEncryption trackedEncryption = encryption.gameObject.AddComponent<H3MP_TrackedEncryption>();
             H3MP_TrackedEncryptionData data = new H3MP_TrackedEncryptionData();
             trackedEncryption.data = data;
-            data.physicalItem = trackedEncryption;
-            data.physicalItem.physicalEncryption = encryption;
+            data.physicalObject = trackedEncryption;
+            data.physicalObject.physicalEncryptionScript = encryption;
 
             data.type = encryption.Type;
             data.position = trackedEncryption.transform.position;
@@ -1291,38 +1291,22 @@ namespace H3MP
             {
                 if (encryptionArrToUse[i] != null && encryptionArrToUse[i].physicalObject != null)
                 {
-                    if (IsControlled(encryptionArrToUse[i].physicalObject.physicalEncryptionScript))
+                    if (isNewInstance)
                     {
-                        // Send destruction without removing from global list
-                        // We just don't want the other clients to have the sosig on their side anymore if they had it
-                        if (H3MP_ThreadManager.host)
-                        {
-                            H3MP_ServerSend.DestroyEncryption(i, false);
-                        }
-                        else
-                        {
-                            H3MP_ClientSend.DestroyEncryption(i, false);
-                        }
+                        GameObject go = encryptionArrToUse[i].physicalObject.gameObject;
+
+                        // Destroy just the tracked script because we want to make a copy for ourselves
+                        DestroyImmediate(encryptionArrToUse[i].physicalObject);
+
+                        // Retrack sosig
+                        SyncTrackedEncryptions(go.transform, true, SceneManager.GetActiveScene().name);
                     }
-                    else // Not being interacted with, just destroy on our side and give control
+                    else // Destroy entire object
                     {
-                        if (isNewInstance)
-                        {
-                            GameObject go = encryptionArrToUse[i].physicalObject.gameObject;
-
-                            // Destroy just the tracked script because we want to make a copy for ourselves
-                            DestroyImmediate(encryptionArrToUse[i].physicalObject);
-
-                            // Retrack sosig
-                            SyncTrackedEncryptions(go.transform, true, SceneManager.GetActiveScene().name);
-                        }
-                        else // Destroy entire object
-                        {
-                            // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
-                            // like we do now if we didn't do immediate because OnDestroy() gets called later
-                            // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                            DestroyImmediate(encryptionArrToUse[i].physicalObject.gameObject);
-                        }
+                        // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
+                        // like we do now if we didn't do immediate because OnDestroy() gets called later
+                        // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
+                        DestroyImmediate(encryptionArrToUse[i].physicalObject.gameObject);
                     }
                 }
             }

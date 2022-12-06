@@ -230,6 +230,40 @@ namespace H3MP
             }
         }
 
+        public static void AddTrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, string scene, int instance, int clientID)
+        {
+            Debug.Log("Received order to add tracked Encryption");
+            // Adjust Encryptions size to acommodate if necessary
+            if (availableEncryptionIndices.Count == 0)
+            {
+                IncreaseEncryptionsSize();
+            }
+
+            // Add it to server global list
+            trackedEncryption.trackedID = availableEncryptionIndices[availableEncryptionIndices.Count - 1];
+            availableEncryptionIndices.RemoveAt(availableEncryptionIndices.Count - 1);
+
+            encryptions[trackedEncryption.trackedID] = trackedEncryption;
+
+            // Instantiate Encryption if it is in the current scene and not controlled by us
+            if (clientID != 0)
+            {
+                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                {
+                    AnvilManager.Run(trackedEncryption.Instantiate());
+                }
+            }
+
+            // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
+            H3MP_ServerSend.TrackedEncryption(trackedEncryption, scene, instance, clientID);
+
+            // Update the local tracked ID at the end because we need to send that back to the original client intact
+            if (trackedEncryption.controller != 0)
+            {
+                trackedEncryption.localTrackedID = -1;
+            }
+        }
+
         private static void IncreaseItemsSize()
         {
             H3MP_TrackedItemData[] tempItems = items;
@@ -269,6 +303,20 @@ namespace H3MP
             for(int i= tempAutoMeaters.Length; i < autoMeaters.Length; ++i)
             {
                 availableAutoMeaterIndices.Add(i);
+            }
+        }
+
+        private static void IncreaseEncryptionsSize()
+        {
+            H3MP_TrackedEncryptionData[] tempEncryptions = encryptions;
+            encryptions = new H3MP_TrackedEncryptionData[tempEncryptions.Length + 100];
+            for(int i=0; i< tempEncryptions.Length;++i)
+            {
+                encryptions[i] = tempEncryptions[i];
+            }
+            for(int i= tempEncryptions.Length; i < encryptions.Length; ++i)
+            {
+                availableEncryptionIndices.Add(i);
             }
         }
 
@@ -366,12 +414,20 @@ namespace H3MP
                 H3MP_ServerHandle.TNHHoldCompletePhase,
                 H3MP_ServerHandle.TNHHoldShutDown,
                 H3MP_ServerHandle.TNHSetPhaseComplete,
+                H3MP_ServerHandle.TNHSetPhase,
                 H3MP_ServerHandle.TrackedEncryptions,
                 H3MP_ServerHandle.TrackedEncryption,
                 H3MP_ServerHandle.GiveEncryptionControl,
                 H3MP_ServerHandle.DestroyEncryption,
                 H3MP_ServerHandle.EncryptionDamage,
                 H3MP_ServerHandle.EncryptionDamageData,
+                H3MP_ServerHandle.EncryptionRespawnSubTarg,
+                H3MP_ServerHandle.EncryptionSpawnGrowth,
+                H3MP_ServerHandle.EncryptionRecursiveInit,
+                H3MP_ServerHandle.EncryptionResetGrowth,
+                H3MP_ServerHandle.EncryptionDisableSubtarg,
+                H3MP_ServerHandle.EncryptionSubDamage,
+                H3MP_ServerHandle.ShatterableCrateDestroy,
             };
 
             items = new H3MP_TrackedItemData[100];

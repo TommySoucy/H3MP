@@ -145,6 +145,14 @@ namespace H3MP
         public static readonly FieldInfo TNH_SupplyPoint_m_constructor = typeof(TNH_SupplyPoint).GetField("m_constructor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_SupplyPoint_m_panel = typeof(TNH_SupplyPoint).GetField("m_panel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_DestructibleBarrierPoint_m_curBarrier = typeof(TNH_DestructibleBarrierPoint).GetField("m_curBarrier", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_EncryptionTarget_m_numSubTargsLeft = typeof(TNH_EncryptionTarget).GetField("m_numSubTargsLeft", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_EncryptionTarget_m_numHitsLeft = typeof(TNH_EncryptionTarget).GetField("m_numHitsLeft", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_EncryptionTarget_m_maxHits = typeof(TNH_EncryptionTarget).GetField("m_maxHits", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_EncryptionTarget_m_damLeftForAHit = typeof(TNH_EncryptionTarget).GetField("m_damLeftForAHit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_EncryptionTarget_agileStartPos = typeof(TNH_EncryptionTarget).GetField("agileStartPos", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_EncryptionTarget_m_fromRot = typeof(TNH_EncryptionTarget).GetField("m_fromRot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_EncryptionTarget_m_warpSpeed = typeof(TNH_EncryptionTarget).GetField("m_warpSpeed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_EncryptionTarget_m_validAgilePos = typeof(TNH_EncryptionTarget).GetField("m_validAgilePos", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleLookPoint = typeof(AutoMeater).GetField("m_idleLookPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleLookPointCountDown = typeof(AutoMeater).GetField("m_idleLookPointCountDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeater_m_idleDestination = typeof(AutoMeater).GetField("m_idleDestination", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -173,6 +181,9 @@ namespace H3MP
         public static readonly MethodInfo TNH_HoldPoint_CompleteHold = typeof(TNH_HoldPoint).GetMethod("CompleteHold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_HoldPoint_CompletePhase = typeof(TNH_HoldPoint).GetMethod("CompletePhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_DestructibleBarrierPoint_SetCoverPointData = typeof(TNH_DestructibleBarrierPoint).GetMethod("SetCoverPointData", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_EncryptionTarget_SpawnGrowth = typeof(TNH_EncryptionTarget).GetMethod("SpawnGrowth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_EncryptionTarget_ResetGrowth = typeof(TNH_EncryptionTarget).GetMethod("ResetGrowth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_ShatterableCrate_Destroy = typeof(TNH_ShatterableCrate).GetMethod("Destroy", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeater_SetState = typeof(AutoMeater).GetMethod("SetState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_FireShot = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_UpdateFlameThrower = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFlameThrower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -995,6 +1006,56 @@ namespace H3MP
 
             harmony.Patch(encryptionDamagePatchOriginal, new HarmonyMethod(encryptionDamagePatchPrefix), new HarmonyMethod(encryptionDamagePatchPostfix));
 
+            // EncryptionRespawnRandSubPatch
+            MethodInfo encryptionRespawnRandSubPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("RespawnRandomSubTarg", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionRespawnRandSubPatchTranspiler = typeof(EncryptionRespawnRandSubPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionRespawnRandSubPatchOriginal, null, null, new HarmonyMethod(encryptionRespawnRandSubPatchTranspiler));
+
+            // EncryptionPopulateInitialRegenPatch
+            MethodInfo encryptionPopulateInitialRegenPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("PopulateInitialRegen", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionPopulateInitialRegenPatchPrefix = typeof(EncryptionPopulateInitialRegenPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionPopulateInitialRegenPatchOriginal, new HarmonyMethod(encryptionPopulateInitialRegenPatchPrefix));
+
+            // EncryptionStartPatch
+            MethodInfo encryptionStartPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo encryptionStartPatchPrefix = typeof(EncryptionStartPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo encryptionStartPatchPostfix = typeof(EncryptionStartPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionStartPatchOriginal, new HarmonyMethod(encryptionStartPatchPrefix), new HarmonyMethod(encryptionStartPatchPostfix));
+
+            // EncryptionResetGrowthPatch
+            MethodInfo encryptionResetGrowthPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("ResetGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionResetGrowthPatchPrefix = typeof(EncryptionResetGrowthPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionResetGrowthPatchOriginal, new HarmonyMethod(encryptionResetGrowthPatchPrefix));
+
+            // EncryptionDisableSubtargPatch
+            MethodInfo encryptionDisableSubtargPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("ResetGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionDisableSubtargPatchPrefix = typeof(EncryptionDisableSubtargPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo encryptionDisableSubtargPatchPostfix = typeof(EncryptionDisableSubtargPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionDisableSubtargPatchOriginal, new HarmonyMethod(encryptionDisableSubtargPatchPrefix), new HarmonyMethod(encryptionDisableSubtargPatchPostfix));
+
+            // EncryptionUpdatePatch
+            MethodInfo encryptionUpdatePatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo encryptionUpdatePatchPrefix = typeof(EncryptionUpdatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionUpdatePatchOriginal, new HarmonyMethod(encryptionUpdatePatchPrefix));
+
+            // EncryptionFixedUpdatePatch
+            MethodInfo encryptionFixedUpdatePatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionFixedUpdatePatchPrefix = typeof(EncryptionFixedUpdatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionFixedUpdatePatchOriginal, new HarmonyMethod(encryptionFixedUpdatePatchPrefix));
+
+            // EncryptionSubDamagePatch
+            MethodInfo encryptionSubDamagePatchOriginal = typeof(TNH_EncryptionTarget_SubTarget).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo encryptionSubDamagePatchPrefix = typeof(EncryptionSubDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(encryptionSubDamagePatchOriginal, new HarmonyMethod(encryptionSubDamagePatchPrefix));
+
             // SetTNHManagerPatch
             MethodInfo setTNHManagerPatchOriginal = typeof(GM).GetMethod("set_TNH_Manager", BindingFlags.Public | BindingFlags.Static);
             MethodInfo setTNHManagerPatchPostfix = typeof(SetTNHManagerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1007,6 +1068,18 @@ namespace H3MP
             MethodInfo TNH_TokenPatchPatchCollectPostfix = typeof(TNH_TokenPatch).GetMethod("CollectPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_TokenPatchPatchCollectOriginal, new HarmonyMethod(TNH_TokenPatchPatchCollectPrefix), new HarmonyMethod(TNH_TokenPatchPatchCollectPostfix));
+
+            // TNH_ShatterableCrateDamagePatch
+            MethodInfo TNH_ShatterableCrateDamagePatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("Damage", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo TNH_ShatterableCrateDamagePatchPrefix = typeof(TNH_ShatterableCrateDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(TNH_ShatterableCrateDamagePatchOriginal, new HarmonyMethod(TNH_ShatterableCrateDamagePatchPrefix));
+
+            // TNH_ShatterableCrateDestroyPatch
+            MethodInfo TNH_ShatterableCrateDestroyPatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("Destroy", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ShatterableCrateDestroyPatchPrefix = typeof(TNH_ShatterableCrateDestroyPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(TNH_ShatterableCrateDestroyPatchOriginal, new HarmonyMethod(TNH_ShatterableCrateDestroyPatchPrefix));
 
             // TNH_UIManagerPatch
             MethodInfo TNH_UIManagerPatchProgressionOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_Progression", BindingFlags.Public | BindingFlags.Instance);
@@ -3306,6 +3379,327 @@ namespace H3MP
             }
         }
     }
+
+    // Patches TNH_EncryptionTarget.RespawnRandomSubTarg to sync subtargets with other clients
+    class EncryptionRespawnRandSubPatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionRespawnRandSubPatch), "RespawnSubTarg"))); // Call RespawnSubTarg
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.operand.ToString().Contains("get_activeSelf"))
+                {
+                    instructionList.InsertRange(i + 2, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void RespawnSubTarg(TNH_EncryptionTarget encryption, int index)
+        {
+            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(encryption) ? H3MP_GameManager.trackedEncryptionByEncryption[encryption] : encryption.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null && trackedEncryption.data.controller == H3MP_GameManager.ID)
+                {
+                    trackedEncryption.data.subTargsActive[index] = true;
+
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.PopulateInitialRegen to prevent it on non-controllers
+    class EncryptionPopulateInitialRegenPatch
+    {
+        static bool Prefix(ref TNH_EncryptionTarget __instance, ref int ___m_numSubTargsLeft)
+        {
+            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    ___m_numSubTargsLeft = __instance.StartingRegenSubTarg;
+                    return trackedEncryption.data.controller == H3MP_GameManager.ID;
+                }
+            }
+            return true;
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.SpawnGrowth to sync with other clients
+    class EncryptionSpawnGrowthPatch
+    {
+        public static int skip;
+
+        static void Prefix(ref TNH_EncryptionTarget __instance, int index, Vector3 point)
+        {
+            if(skip > 0)
+            {
+                return;
+            }
+
+            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null && trackedEncryption.data.controller == H3MP_GameManager.ID)
+                {
+                    trackedEncryption.data.tendrilsActive[index] = true;
+                    trackedEncryption.data.growthPoints[index] = point;
+                    trackedEncryption.data.subTargsPos[index] = point;
+                    trackedEncryption.data.subTargsActive[index] = true;
+                    trackedEncryption.data.tendrilFloats[index] = 1f;
+                    Vector3 forward = point - trackedEncryption.physicalEncryptionScript.Tendrils[index].transform.position;
+                    trackedEncryption.data.tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    trackedEncryption.data.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.EncryptionSpawnGrowth(trackedEncryption.data.trackedID, index, point);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.EncryptionSpawnGrowth(trackedEncryption.data.trackedID, index, point);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.Start to sync recursive init with other clients
+    class EncryptionStartPatch
+    {
+        static bool Prefix(ref TNH_EncryptionTarget __instance)
+        {
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    if (trackedEncryption.data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.TNH_EncryptionTarget_m_numHitsLeft.SetValue(__instance, __instance.NumHitsTilDestroyed);
+                        Mod.TNH_EncryptionTarget_m_maxHits.SetValue(__instance, __instance.NumHitsTilDestroyed);
+                        Mod.TNH_EncryptionTarget_m_damLeftForAHit.SetValue(__instance, __instance.DamagePerHit);
+                        Mod.TNH_EncryptionTarget_agileStartPos.SetValue(__instance, __instance.transform.position);
+                        Mod.TNH_EncryptionTarget_m_fromRot.SetValue(__instance, __instance.transform.rotation);
+                        Mod.TNH_EncryptionTarget_m_warpSpeed.SetValue(__instance, UnityEngine.Random.Range(4f, 5f));
+                        if (__instance.UsesAgileMovement)
+                        {
+                            Mod.TNH_EncryptionTarget_m_validAgilePos.SetValue(__instance, new List<Vector3>());
+                        }
+                        if (__instance.UsesRegenerativeSubTarg)
+                        {
+                            for (int i = 0; i < __instance.Tendrils.Count; i++)
+                            {
+                                __instance.Tendrils[i].transform.SetParent(null);
+                                __instance.SubTargs[i].transform.SetParent(null);
+                            }
+                        }
+                        if (__instance.UsesSubTargs && !__instance.UsesRecursiveSubTarg && !__instance.UsesRegenerativeSubTarg)
+                        {
+                            Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(__instance, __instance.SubTargs.Count);
+                        }
+
+                        return false;
+                    }
+
+                    return true;
+                }
+            }
+
+            return true;
+        }
+
+        static void Postfix(ref TNH_EncryptionTarget __instance)
+        {
+            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null && trackedEncryption.physicalEncryptionScript.UsesRecursiveSubTarg && trackedEncryption.data.controller == H3MP_GameManager.ID)
+                {
+                    if(trackedEncryption.data.controller == H3MP_GameManager.ID)
+                    {
+                        List<int> indices = new List<int>();
+                        for(int i=0; i < trackedEncryption.physicalEncryptionScript.SubTargs.Count; i++)
+                        {
+                            if (trackedEncryption.physicalEncryptionScript.SubTargs[i].activeSelf)
+                            {
+                                trackedEncryption.data.subTargsActive[i] = true;
+                                indices.Add(i);
+                            }
+                        }
+
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.EncryptionRecursiveInit(trackedEncryption.data.trackedID, indices);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.EncryptionRecursiveInit(trackedEncryption.data.trackedID, indices);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.ResetGrowth to sync with other clients
+    class EncryptionResetGrowthPatch
+    {
+        public static int skip; 
+
+        static bool Prefix(ref TNH_EncryptionTarget __instance, int index, Vector3 point)
+        {
+            if(skip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    if (trackedEncryption.data.controller == H3MP_GameManager.ID)
+                    {
+                        trackedEncryption.data.growthPoints[index] = point;
+                        trackedEncryption.data.tendrilFloats[index] = 0;
+                        Vector3 forward = point - __instance.Tendrils[index].transform.position;
+                        trackedEncryption.data.tendrilsRot[index] = Quaternion.LookRotation(forward);
+                        trackedEncryption.data.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.EncryptionResetGrowth(trackedEncryption.data.trackedID, index, point);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.EncryptionResetGrowth(trackedEncryption.data.trackedID, index, point);
+                        }
+
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.DisableSubtarg to sync with other clients
+    class EncryptionDisableSubtargPatch
+    {
+        static bool wasActive;
+
+        static bool Prefix(ref TNH_EncryptionTarget __instance, int i)
+        {
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    if (trackedEncryption.data.controller != H3MP_GameManager.ID)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        wasActive = __instance.SubTargs[i].activeSelf;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static void Postfix(ref TNH_EncryptionTarget __instance, int i)
+        {
+            // Instance could be null if destroyed by the method, in which case we don't need to send anything
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && __instance != null && wasActive && !__instance.SubTargs[i].activeSelf)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    if (trackedEncryption.data.controller == H3MP_GameManager.ID)
+                    {
+                        trackedEncryption.data.subTargsActive[i] = false;
+
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.Update to prevent on non-controllers
+    class EncryptionUpdatePatch
+    {
+        static bool Prefix(ref TNH_EncryptionTarget __instance, int i)
+        {
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    if (trackedEncryption.data.controller != H3MP_GameManager.ID)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.FixedUpdate to prevent on non-controllers
+    class EncryptionFixedUpdatePatch
+    {
+        static bool Prefix(ref TNH_EncryptionTarget __instance, int i)
+        {
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    if (trackedEncryption.data.controller != H3MP_GameManager.ID)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
     #endregion
 
     #region Instatiation Patches
@@ -5453,6 +5847,42 @@ namespace H3MP
         }
     }
 
+    // Patches TNH_ShatterableCrate.Destroy to keep track of destruction
+    class TNH_ShatterableCrateDestroyPatch 
+    {
+        public static int skip;
+        static H3MP_TrackedItem trackedItem;
+
+        static void Prefix(ref TNH_ShatterableCrate __instance, Damage d)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            // Note that this should only ever be called without skip from Damage()
+            // And we already check for control in DamagePatch so no need to check for control here
+            trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.ShatterableCrateDestroy(trackedItem.data.trackedID, d);
+                }
+                else
+                {
+                    H3MP_ClientSend.ShatterableCrateDestroy(trackedItem.data.trackedID, d);
+                }
+            }
+        }
+    }
+
     // Patches AutoMeater.Damage to keep track of damage taken by an AutoMeater
     class AutoMeaterDamagePatch
     {
@@ -5591,8 +6021,7 @@ namespace H3MP
             }
         }
     }
-    TODO: add encryption update patch to prevent update if not in control of tnh instance
-
+    
     // Patches TNH_EncryptionTarget.Damage to keep track of damage taken by an encryption
     class EncryptionDamagePatch
     {
@@ -5612,7 +6041,7 @@ namespace H3MP
                 return true;
             }
 
-            // If in control of the damaged AutoMeater, we want to process the damage
+            // If in control of the damaged Encryption, we want to process the damage
             trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
             if (trackedEncryption != null)
             {
@@ -5645,7 +6074,8 @@ namespace H3MP
         static void Postfix(ref TNH_EncryptionTarget __instance)
         {
             // If in control of the damaged Encryption, we want to send the damage results to other clients
-            if (trackedEncryption != null)
+            // Instance could ben ull if damage destroyed it, at which point the destroy order will be sent, we don't need to send damage data
+            if (trackedEncryption != null && __instance != null)
             {
                 if (H3MP_ThreadManager.host)
                 {
@@ -5659,6 +6089,56 @@ namespace H3MP
                     H3MP_ClientSend.EncryptionDamageData(trackedEncryption);
                 }
             }
+        }
+    }
+
+    // Patches TNH_EncryptionTarget_SubTarget.Damage to keep track of damage taken by an encryption's sub target
+    class EncryptionSubDamagePatch
+    {
+        public static int skip;
+        static H3MP_TrackedEncryption trackedEncryption;
+
+        static bool Prefix(ref TNH_EncryptionTarget_SubTarget __instance, Damage d)
+        {
+            if(skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged Encryption, we want to process the damage
+            trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance.Target) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance.Target] : __instance.Target.GetComponent<H3MP_TrackedEncryption>();
+            if (trackedEncryption != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedEncryption.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Not in control, we want to send the damage to the controller for them to process it and return the result
+                        H3MP_ServerSend.EncryptionSubDamage(trackedEncryption.data, __instance.Index, d);
+                        return false;
+                    }
+                }
+                else if (trackedEncryption.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    H3MP_ClientSend.EncryptionSubDamage(trackedEncryption.data.trackedID, __instance.Index, d);
+                    return false;
+                }
+            }
+            return true;
         }
     }
     #endregion
@@ -6254,11 +6734,6 @@ namespace H3MP
     {
         public static int addTokensSkip;
         public static int sosigKillSkip;
-        static bool sendCurHoldIndex;
-        static List<List<int>> boxIndices;
-        static List<List<GameObject>> originalBoxes;
-        public static bool addToBoxIndices;
-        public static bool addToOrigBoxes;
         public static bool doInit;
 
         static bool PlayerDiedPrefix()
@@ -6379,7 +6854,6 @@ namespace H3MP
                     {
                         H3MP_ClientSend.TNHSetPhase(Mod.currentTNHInstance.instance, p);
                     }
-                    sendCurHoldIndex = true;
                     return true;
                 }
                 else

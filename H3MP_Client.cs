@@ -383,7 +383,6 @@ namespace H3MP
                 H3MP_ClientHandle.TNHSosigKill,
                 H3MP_ClientHandle.TNHHoldPointSystemNode,
                 H3MP_ClientHandle.TNHHoldBeginChallenge,
-                H3MP_ClientHandle.ShatterableCrateDamage,
                 H3MP_ClientHandle.TNHSetPhaseTake,
                 H3MP_ClientHandle.TNHHoldCompletePhase,
                 H3MP_ClientHandle.TNHHoldShutDown,
@@ -395,6 +394,14 @@ namespace H3MP
                 H3MP_ClientHandle.DestroyEncryption,
                 H3MP_ClientHandle.EncryptionDamage,
                 H3MP_ClientHandle.EncryptionDamageData,
+                H3MP_ClientHandle.EncryptionRespawnSubTarg,
+                H3MP_ClientHandle.EncryptionSpawnGrowth,
+                H3MP_ClientHandle.EncryptionRecursiveInit,
+                H3MP_ClientHandle.EncryptionResetGrowth,
+                H3MP_ClientHandle.EncryptionDisableSubtarg,
+                H3MP_ClientHandle.EncryptionSubDamage,
+                H3MP_ClientHandle.ShatterableCrateDamage,
+                H3MP_ClientHandle.ShatterableCrateDestroy,
             };
 
             // All vanilla scenes can be synced by default

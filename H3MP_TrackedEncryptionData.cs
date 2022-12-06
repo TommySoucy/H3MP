@@ -26,6 +26,15 @@ namespace H3MP
         public bool previousActive;
         public bool active;
 
+        public TNH_EncryptionTarget_SubTarget[] subTargets;
+        public bool[] tendrilsActive;
+        public Vector3[] growthPoints;
+        public Vector3[] subTargsPos;
+        public bool[] subTargsActive;
+        public float[] tendrilFloats;
+        public Quaternion[] tendrilsRot;
+        public Vector3[] tendrilsScale;
+
         public IEnumerator Instantiate()
         {
             if(GM.TNH_Manager == null)
@@ -49,6 +58,46 @@ namespace H3MP
             TNH_EncryptionTarget encryptionTarget = encryptionInstance.GetComponent<TNH_EncryptionTarget>();
             encryptionTarget.SetHoldPoint(curHoldPoint);
             curHoldPoint.RegisterNewTarget(encryptionTarget);
+
+            // Keep references to sub targets
+            subTargets = new TNH_EncryptionTarget_SubTarget[encryptionTarget.SubTargs.Count];
+            for(int i=0; i < subTargets.Length; ++i)
+            {
+                subTargets[i] = encryptionTarget.SubTargs[i].GetComponent<TNH_EncryptionTarget_SubTarget>();
+            }
+
+            // Init growths
+            int numSubTargsLeft = 0;
+            if (encryptionTarget.UsesRegenerativeSubTarg)
+            {
+                for (int i = 0; i < tendrilsActive.Length; ++i)
+                {
+                    if (tendrilsActive[i])
+                    {
+                        encryptionTarget.Tendrils[i].SetActive(true);
+                        encryptionTarget.GrowthPoints[i] = growthPoints[i];
+                        encryptionTarget.SubTargs[i].transform.position = subTargsPos[i];
+                        encryptionTarget.SubTargs[i].SetActive(true);
+                        encryptionTarget.TendrilFloats[i] = 1f;
+                        encryptionTarget.Tendrils[i].transform.rotation = tendrilsRot[i];
+                        encryptionTarget.Tendrils[i].transform.localScale = tendrilsScale[i];
+                        encryptionTarget.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
+                        ++numSubTargsLeft;
+                    }
+                }
+            }
+            else if (encryptionTarget.UsesRecursiveSubTarg)
+            {
+                for (int i = 0; i < subTargsActive.Length; ++i)
+                {
+                    if (subTargsActive[i])
+                    {
+                        encryptionTarget.SubTargs[i].SetActive(true);
+                        ++numSubTargsLeft;
+                    }
+                }
+            }
+            Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(encryptionTarget, numSubTargsLeft);
 
             // Initially set itself
             Update(this);

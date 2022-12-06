@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR.InteractionSystem;
+using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -736,6 +737,7 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionDamageData))
             {
                 packet.Write(trackedEncryption.data.trackedID);
+                packet.Write((int)Mod.TNH_EncryptionTarget_m_numHitsLeft.GetValue(trackedEncryption.physicalEncryptionScript));
 
                 SendTCPData(packet);
             }
@@ -1339,6 +1341,17 @@ namespace H3MP
             }
         }
 
+        public static void ShatterableCrateDestroy(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.shatterableCrateDestroy))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void TNHSetLevel(int instance, int level)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHSetLevel))
@@ -1405,6 +1418,86 @@ namespace H3MP
             {
                 packet.Write(instance);
                 packet.Write((short)p);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionRespawnSubTarg(int trackedID, int index)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionRespawnSubTarg))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionSpawnGrowth(int trackedID, int index, Vector3 point)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionSpawnGrowth))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write(point);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionRecursiveInit(int trackedID, List<int> indices)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionRecursiveInit))
+            {
+                packet.Write(trackedID);
+                if(indices == null || indices.Count == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(indices.Count);
+                    foreach(int index in indices)
+                    {
+                        packet.Write(index);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionResetGrowth(int trackedID, int index, Vector3 point)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionResetGrowth))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write(point);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionDisableSubtarg(int trackedID, int index)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionDisableSubtarg))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionSubDamage(int trackedID, int index, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionSubDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write(d);
 
                 SendTCPData(packet);
             }
