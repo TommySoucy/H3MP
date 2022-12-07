@@ -263,6 +263,11 @@ namespace H3MP
                         index = i;
                     }
 
+                    if (count == 0)
+                    {
+                        break;
+                    }
+
                     // Write the count to packet
                     byte[] countArr = BitConverter.GetBytes(count);
                     for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
@@ -354,6 +359,11 @@ namespace H3MP
                         }
 
                         index = i;
+                    }
+
+                    if (count == 0)
+                    {
+                        break;
                     }
 
                     // Write the count to packet
@@ -449,6 +459,11 @@ namespace H3MP
                         index = i;
                     }
 
+                    if (count == 0)
+                    {
+                        break;
+                    }
+
                     // Write the count to packet
                     byte[] countArr = BitConverter.GetBytes(count);
                     for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
@@ -540,6 +555,11 @@ namespace H3MP
                         }
 
                         index = i;
+                    }
+
+                    if(count == 0)
+                    {
+                        break;
                     }
 
                     // Write the count to packet
