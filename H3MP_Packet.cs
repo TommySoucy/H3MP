@@ -403,7 +403,7 @@ namespace H3MP
             if (full)
             {
                 Write(trackedItem.itemID);
-                if(trackedItem.identifyingData != null || trackedItem.identifyingData.Length == 0)
+                if(trackedItem.identifyingData == null || trackedItem.identifyingData.Length == 0)
                 {
                     Write(0);
                 }
