@@ -469,7 +469,7 @@ namespace H3MP
             sosigWearableMap = JObject.Parse(File.ReadAllText("BepinEx/Plugins/H3MP/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
 
             TNHStartEquipButtonPrefab = assetBundle.LoadAsset<GameObject>("TNHStartEquipButton");
-            FVRPointableButton startEquipButton = TNHStartEquipButtonPrefab.AddComponent<FVRPointableButton>();
+            FVRPointableButton startEquipButton = TNHStartEquipButtonPrefab.transform.GetChild(0).gameObject.AddComponent<FVRPointableButton>();
             startEquipButton.SetButton();
             startEquipButton.MaxPointingRange = 1;
             startEquipButton.Button.onClick.AddListener(OnTNHSpawnStartEquipClicked);
@@ -1153,7 +1153,6 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchSetPhaseTakeOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePrefix), new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePostfix));
             harmony.Patch(TNH_ManagerPatchSetPhaseCompleteOriginal, null, new HarmonyMethod(TNH_ManagerPatchSetPhaseCompletePostfix));
 
-            Debug.Log("0");
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TAHReticleContactPatchTickTranspiler = typeof(TAHReticleContactPatch).GetMethod("TickTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1187,7 +1186,6 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchRaiseCompletePhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseCompletePhasePostfix));
             harmony.Patch(TNH_HoldPointPatchShutDownOriginal, null, new HarmonyMethod(TNH_HoldPointPatchShutDownPostfix));
 
-            Debug.Log("0");
             // TNHWeaponCrateUpdatePatch
             MethodInfo TNH_WeaponCrateUpdatePatchOriginal = typeof(TNH_WeaponCrate).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_WeaponCrateUpdatePatchTranspiler = typeof(TNHWeaponCrateUpdatePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
