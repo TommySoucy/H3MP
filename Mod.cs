@@ -566,7 +566,6 @@ namespace H3MP
 
             harmony.Patch(sosigUpdatePatchOriginal, new HarmonyMethod(sosigUpdatePatchPrefix));
             harmony.Patch(sosigHandPhysUpdatePatchOriginal, new HarmonyMethod(sosigHandPhysUpdatePatchPrefix));
-
             // AutoMeaterUpdatePatch
             MethodInfo autoMeaterUpdatePatchOriginal = typeof(AutoMeater).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo autoMeaterFixedUpdatePatchOriginal = typeof(AutoMeater).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -583,9 +582,9 @@ namespace H3MP
 
             // AutoMeaterSetStatePatch
             MethodInfo autoMeaterSetStatePatchOriginal = typeof(AutoMeater).GetMethod("SetState", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo autoMeaterSetStatePatchPrefix = typeof(AutoMeaterSetStatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo autoMeaterSetStatePatchPostfix = typeof(AutoMeaterSetStatePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(autoMeaterSetStatePatchOriginal, new HarmonyMethod(autoMeaterSetStatePatchPrefix));
+            harmony.Patch(autoMeaterSetStatePatchOriginal, null, new HarmonyMethod(autoMeaterSetStatePatchPostfix));
 
             // AutoMeaterUpdateFlightPatch
             MethodInfo autoMeaterUpdateFlightPatchOriginal = typeof(AutoMeater).GetMethod("UpdateFlight", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1032,7 +1031,7 @@ namespace H3MP
             harmony.Patch(encryptionResetGrowthPatchOriginal, new HarmonyMethod(encryptionResetGrowthPatchPrefix));
 
             // EncryptionDisableSubtargPatch
-            MethodInfo encryptionDisableSubtargPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("ResetGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionDisableSubtargPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("DisableSubtarg", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo encryptionDisableSubtargPatchPrefix = typeof(EncryptionDisableSubtargPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo encryptionDisableSubtargPatchPostfix = typeof(EncryptionDisableSubtargPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
@@ -1063,20 +1062,20 @@ namespace H3MP
             harmony.Patch(setTNHManagerPatchOriginal, null, new HarmonyMethod(setTNHManagerPatchPostfix));
 
             // TNH_TokenPatch
-            MethodInfo TNH_TokenPatchPatchCollectOriginal = typeof(TNH_Token).GetMethod("Collect", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_TokenPatchPatchCollectOriginal = typeof(TNH_Token).GetMethod("Collect", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_TokenPatchPatchCollectPrefix = typeof(TNH_TokenPatch).GetMethod("CollectPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_TokenPatchPatchCollectPostfix = typeof(TNH_TokenPatch).GetMethod("CollectPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_TokenPatchPatchCollectOriginal, new HarmonyMethod(TNH_TokenPatchPatchCollectPrefix), new HarmonyMethod(TNH_TokenPatchPatchCollectPostfix));
 
             // TNH_ShatterableCrateDamagePatch
-            MethodInfo TNH_ShatterableCrateDamagePatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("Damage", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo TNH_ShatterableCrateDamagePatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ShatterableCrateDamagePatchPrefix = typeof(TNH_ShatterableCrateDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ShatterableCrateDamagePatchOriginal, new HarmonyMethod(TNH_ShatterableCrateDamagePatchPrefix));
 
             // TNH_ShatterableCrateDestroyPatch
-            MethodInfo TNH_ShatterableCrateDestroyPatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("Destroy", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ShatterableCrateDestroyPatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("Destroy", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ShatterableCrateDestroyPatchPrefix = typeof(TNH_ShatterableCrateDestroyPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ShatterableCrateDestroyPatchOriginal, new HarmonyMethod(TNH_ShatterableCrateDestroyPatchPrefix));
@@ -1132,13 +1131,10 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchSosigKillPrefix = typeof(TNH_ManagerPatch).GetMethod("OnSosigKillPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseOriginal = typeof(TNH_Manager).GetMethod("SetPhase", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSetPhasePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhasePrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_ManagerPatchSetPhasePostfix = typeof(TNH_ManagerPatch).GetMethod("SetPhasePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchUpdateOriginal = typeof(TNH_Manager).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchUpdatePrefix = typeof(TNH_ManagerPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchInitBeginEquipOriginal = typeof(TNH_Manager).GetMethod("InitBeginningEquipment", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchInitBeginEquipPrefix = typeof(TNH_ManagerPatch).GetMethod("InitBeginEquipPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_ManagerPatchInitHoldCompleteOriginal = typeof(TNH_Manager).GetMethod("HoldPointCompleted", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo TNH_ManagerPatchInitHoldCompletePrefix = typeof(TNH_ManagerPatch).GetMethod("HoldPointCompletedPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseTakeOriginal = typeof(TNH_Manager).GetMethod("SetPhase_Take", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSetPhaseTakePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhaseTakePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseTakePostfix = typeof(TNH_ManagerPatch).GetMethod("SetPhaseTakePostfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1150,14 +1146,14 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
-            harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix), new HarmonyMethod(TNH_ManagerPatchSetPhasePostfix));
+            harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix));
             harmony.Patch(TNH_ManagerPatchUpdateOriginal, new HarmonyMethod(TNH_ManagerPatchUpdatePrefix));
             harmony.Patch(TNH_ManagerPatchInitBeginEquipOriginal, new HarmonyMethod(TNH_ManagerPatchInitBeginEquipPrefix));
-            harmony.Patch(TNH_ManagerPatchInitHoldCompleteOriginal, new HarmonyMethod(TNH_ManagerPatchInitHoldCompletePrefix));
             harmony.Patch(TNH_ManagerPatchSetLevelOriginal, new HarmonyMethod(TNH_ManagerPatchSetLevelPrefix));
             harmony.Patch(TNH_ManagerPatchSetPhaseTakeOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePrefix), new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePostfix));
             harmony.Patch(TNH_ManagerPatchSetPhaseCompleteOriginal, null, new HarmonyMethod(TNH_ManagerPatchSetPhaseCompletePostfix));
 
+            Debug.Log("0");
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TAHReticleContactPatchTickTranspiler = typeof(TAHReticleContactPatch).GetMethod("TickTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1172,7 +1168,7 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("ConfigureAsSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeChallengeEntities", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnEntitiesPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTakeChallengeEntitiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_HoldPointPatchBeginHoldOriginal = typeof(TNH_HoldPoint).GetMethod("BeginHoldChallenge", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchBeginHoldOriginal = typeof(TNH_HoldPoint).GetMethod("BeginHoldChallenge", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchBeginHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchRaiseRandomBarriersOriginal = typeof(TNH_HoldPoint).GetMethod("RaiseRandomBarriers", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPrefix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1180,7 +1176,7 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchRaiseSetCoverPointDataPrefix = typeof(TNH_HoldPointPatch).GetMethod("BarrierSetCoverPointDataPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchRaiseCompletePhaseOriginal = typeof(TNH_HoldPoint).GetMethod("CompletePhase", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchRaiseCompletePhasePostfix = typeof(TNH_HoldPointPatch).GetMethod("CompletePhasePostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_HoldPointPatchShutDownOriginal = typeof(TNH_HoldPoint).GetMethod("ShutDownHoldPoint", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchShutDownOriginal = typeof(TNH_HoldPoint).GetMethod("ShutDownHoldPoint", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchShutDownPostfix = typeof(TNH_HoldPointPatch).GetMethod("ShutDownPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
@@ -1191,6 +1187,7 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchRaiseCompletePhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseCompletePhasePostfix));
             harmony.Patch(TNH_HoldPointPatchShutDownOriginal, null, new HarmonyMethod(TNH_HoldPointPatchShutDownPostfix));
 
+            Debug.Log("0");
             // TNHWeaponCrateUpdatePatch
             MethodInfo TNH_WeaponCrateUpdatePatchOriginal = typeof(TNH_WeaponCrate).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_WeaponCrateUpdatePatchTranspiler = typeof(TNHWeaponCrateUpdatePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -3151,7 +3148,7 @@ namespace H3MP
     {
         public static int skip;
 
-        static void Postfix(ref AutoMeater __instance, AutoMeater.AutoMeaterState s, ref Vector3 ___m_idleLookPoint)
+        static void Postfix(ref AutoMeater __instance, AutoMeater.AutoMeaterState s)
         {
             // Skip if not connected
             if (Mod.managerObject == null)
@@ -3182,7 +3179,7 @@ namespace H3MP
     // Patches AutoMeater.UpdateFlight to send to blade activation to other clients ad prevent update on non-controlling clients
     class AutoMeaterUpdateFlightPatch
     {
-        static bool Prefix(ref AutoMeater __instance, AutoMeater.AutoMeaterState s, ref Vector3 ___m_idleLookPoint)
+        static bool Prefix(ref AutoMeater __instance)
         {
             // Skip if not connected
             if (Mod.managerObject == null)
@@ -3303,11 +3300,11 @@ namespace H3MP
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeaterFirearm instance
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld)); // Load Muzzle
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(AutoMeater.AutoMeaterFirearm), "Muzzle"))); // Load Muzzle
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeaterFirearm instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(AutoMeater.AutoMeaterFirearm), "Muzzle"))); // Load Muzzle
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "get_localEulerAngles"))); // Get current angles
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterFirearmFireShotPatch), "GetMuzzleAngles"))); // Call GetMuzzleAngles
-            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeaterFirearm instance
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld)); // Load Muzzle
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "set_localEulerAngles"))); // Set angles
 
             for (int i = 0; i < instructionList.Count; ++i)
@@ -3394,10 +3391,13 @@ namespace H3MP
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (instruction.operand.ToString().Contains("get_activeSelf"))
+                if (instruction != null && instruction.operand != null)
                 {
-                    instructionList.InsertRange(i + 2, toInsert);
-                    break;
+                    if (instruction.operand.ToString().Contains("get_activeSelf"))
+                    {
+                        instructionList.InsertRange(i + 2, toInsert);
+                        break;
+                    }
                 }
             }
             return instructionList;
@@ -3662,7 +3662,7 @@ namespace H3MP
     // Patches TNH_EncryptionTarget.Update to prevent on non-controllers
     class EncryptionUpdatePatch
     {
-        static bool Prefix(ref TNH_EncryptionTarget __instance, int i)
+        static bool Prefix(ref TNH_EncryptionTarget __instance)
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
@@ -3683,7 +3683,7 @@ namespace H3MP
     // Patches TNH_EncryptionTarget.FixedUpdate to prevent on non-controllers
     class EncryptionFixedUpdatePatch
     {
-        static bool Prefix(ref TNH_EncryptionTarget __instance, int i)
+        static bool Prefix(ref TNH_EncryptionTarget __instance)
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
@@ -5853,7 +5853,7 @@ namespace H3MP
         public static int skip;
         static H3MP_TrackedItem trackedItem;
 
-        static void Prefix(ref TNH_ShatterableCrate __instance, Damage d)
+        static void Prefix(ref TNH_ShatterableCrate __instance, Damage dam)
         {
             if (skip > 0)
             {
@@ -5873,11 +5873,11 @@ namespace H3MP
             {
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.ShatterableCrateDestroy(trackedItem.data.trackedID, d);
+                    H3MP_ServerSend.ShatterableCrateDestroy(trackedItem.data.trackedID, dam);
                 }
                 else
                 {
-                    H3MP_ClientSend.ShatterableCrateDestroy(trackedItem.data.trackedID, d);
+                    H3MP_ClientSend.ShatterableCrateDestroy(trackedItem.data.trackedID, dam);
                 }
             }
         }
@@ -7353,7 +7353,6 @@ namespace H3MP
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Brfalse)
                 {
-                    Debug.Log("Reticle contact TickTranspiler found brfalse operand: " + instruction.operand.ToString());
                     toInsert.Add(new CodeInstruction(OpCodes.Brtrue, instruction.operand));
                     instructionList.InsertRange(i + 1, toInsert);
                     break;
