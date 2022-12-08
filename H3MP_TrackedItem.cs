@@ -23,7 +23,7 @@ namespace H3MP
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
-        public sbyte currentMountIndex = -1; // Used by attachment
+        public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public FVRPhysicalObject dataObject;
         public FVRPhysicalObject physicalObject;
 
@@ -836,7 +836,7 @@ namespace H3MP
             // Write attached mount index
             if (asAttachment.curMount == null)
             {
-                BitConverter.GetBytes(-1).CopyTo(data.data, 0);
+                data.data[0] = 255;
             }
             else
             {
@@ -846,14 +846,14 @@ namespace H3MP
                 {
                     if (asAttachment.curMount.Parent.AttachmentMounts[i] == asAttachment.curMount)
                     {
-                        BitConverter.GetBytes((byte)i).CopyTo(data.data, 0);
+                        data.data[0] = (byte)i;
                         found = true;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    BitConverter.GetBytes(-1).CopyTo(data.data, 0);
+                    data.data[0] = 255;
                 }
             }
 
@@ -868,19 +868,21 @@ namespace H3MP
             if (data.data == null || data.data.Length != newData.Length)
             {
                 data.data = new byte[1];
-                BitConverter.GetBytes((sbyte)-1).CopyTo(data.data, 0);
+                data.data[0] = 255;
+                currentMountIndex = 255;
                 modified = true;
             }
 
-            // If mount doesn;t actually change, just return now
-            sbyte mountIndex = (sbyte)newData[0];
+            // If mount doesn't actually change, just return now
+            byte mountIndex = newData[0];
             if(currentMountIndex == mountIndex)
             {
                 return modified;
             }
+            data.data[0] = mountIndex;
 
-            sbyte preMountIndex = currentMountIndex;
-            if (mountIndex == -1)
+            byte preMountIndex = currentMountIndex;
+            if (mountIndex == 255)
             {
                 // Should not be mounted, check if currently is
                 if(asAttachment.curMount != null)
@@ -888,7 +890,7 @@ namespace H3MP
                     ++data.ignoreParentChanged;
                     asAttachment.DetachFromMount();
                     --data.ignoreParentChanged;
-                    currentMountIndex = -1;
+                    currentMountIndex = 255;
 
                     // Detach from mount will recover rigidbody, store and destroy again if not controller
                     if (data.controller != H3MP_GameManager.ID)
@@ -942,7 +944,7 @@ namespace H3MP
         {
             FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
 
-            if(currentMountIndex != -1) // We want to be attached to a mount
+            if(currentMountIndex != 255) // We want to be attached to a mount
             {
                 if (data.parent != -1) // We have parent
                 {

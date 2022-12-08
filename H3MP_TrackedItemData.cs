@@ -239,7 +239,9 @@ namespace H3MP
             previousActive = active;
             active = physicalItem.gameObject.activeInHierarchy;
 
-            return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation) || UpdateData();
+            // Note: UpdateData() must be done first in this expression, otherwise, if active/position/rotation is different,
+            // it will return true before making the call
+            return UpdateData() || previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation);
         }
 
         public bool NeedsUpdate()
