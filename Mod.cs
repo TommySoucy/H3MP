@@ -1222,8 +1222,8 @@ namespace H3MP
         private void OnHostClicked()
         {
             Logger.LogInfo("Host button clicked");
-            hostButton.GetComponent<BoxCollider>().enabled = false;
-            hostButton.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
+            //hostButton.GetComponent<BoxCollider>().enabled = false;
+            //hostButton.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
 
             //H3MP_Server.IP = config["IP"].ToString();
             CreateManagerObject(true);
@@ -3855,6 +3855,14 @@ namespace H3MP
 
         static void Postfix(ref UnityEngine.Object __result, Transform parent)
         {
+            if (Mod.skipAllInstantiates > 0)
+            {
+                return;
+            }
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
 
             // If we want to skip the instantiate because this is a scene load vault file being spawned
             if (SpawnVaultFileRoutinePatch.inSpawnVaultFileRoutineToSkip)
@@ -3969,8 +3977,12 @@ namespace H3MP
 
         static void Postfix(ref UnityEngine.Object __result, Transform parent)
         {
+            if (Mod.skipAllInstantiates > 0)
+            {
+                return;
+            }
             // Skip if not connected
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (Mod.managerObject == null)
             {
                 return;
             }
@@ -4011,7 +4023,7 @@ namespace H3MP
         static void Prefix()
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || !H3MP_GameManager.PlayersPresentSlow())
             {
                 return;
             }
@@ -4031,14 +4043,14 @@ namespace H3MP
         static void Prefix(VaultFile file)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || !H3MP_GameManager.PlayersPresentSlow())
             {
                 return;
             }
 
             if (LoadDefaultSceneRoutinePatch.inLoadDefaultSceneRoutine)
             {
-                if(SpawnVaultFileRoutinePatch.filesToSkip == null)
+                if (SpawnVaultFileRoutinePatch.filesToSkip == null)
                 {
                     SpawnVaultFileRoutinePatch.filesToSkip = new List<string>();
                 }
@@ -4063,6 +4075,11 @@ namespace H3MP
                 // Destroy any objects that need to be destroyed and remove the data
                 foreach (UnityEngine.Object obj in routineData[currentFile])
                 {
+                    if(obj == null)
+                    {
+                        Debug.LogWarning("SpawnVaultFileRoutinePatch.FinishedRoutine object to be destroyed already null");
+                        continue;
+                    }
                     ++H3MP_TrackedItem.skipDestroy;
                     UnityEngine.Object.Destroy(obj);
                     --H3MP_TrackedItem.skipDestroy;
@@ -4074,7 +4091,7 @@ namespace H3MP
         static void Prefix(ref VaultFile ___f)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || !H3MP_GameManager.PlayersPresentSlow())
             {
                 return;
             }
@@ -4113,7 +4130,6 @@ namespace H3MP
         static void Postfix(ref VaultFile ___f)
         {
             inSpawnVaultFileRoutineToSkip = false;
-
         }
     }
     #endregion

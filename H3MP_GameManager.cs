@@ -1433,6 +1433,19 @@ namespace H3MP
             return autoMeater.PO.m_hand != null;
         }
 
+        public static bool PlayersPresentSlow()
+        {
+            Scene currentScene = SceneManager.GetActiveScene();
+            foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
+            {
+                if (player.Value.scene.Equals(currentScene.name) && player.Value.instance == instance)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private void OnSceneLoadedVR(bool loading)
         {
             // Return right away if we don't have server or client running
@@ -1527,7 +1540,7 @@ namespace H3MP
                         }
                     }
 
-                    Debug.Log("Scene is syncable, and has "+playersPresent+" otherp layers in it, syncing");
+                    Debug.Log("Scene is syncable, and has "+playersPresent+" other players in it, syncing");
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
                     SyncTrackedSosigs();
