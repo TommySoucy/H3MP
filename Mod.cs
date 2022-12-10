@@ -4651,7 +4651,7 @@ namespace H3MP
         static bool UpdatePrefix(ref FVRPhysicalObject ___m_obj)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || ___m_obj == null || H3MP_GameManager.playersPresent == 0)
             {
                 return true;
             }
