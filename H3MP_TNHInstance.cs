@@ -42,6 +42,15 @@ namespace H3MP
         public int TNHSeed;
         public int levelIndex;
 
+        public H3MP_TNHInstance(int instance)
+        {
+            this.instance = instance;
+            playerIDs = new List<int>();
+            currentlyPlaying = new List<int>();
+            played = new List<int>();
+            dead = new List<int>();
+        }
+
         public H3MP_TNHInstance(int instance, int hostID, bool letPeopleJoin,
                                 int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
                                 int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,

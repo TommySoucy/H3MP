@@ -111,7 +111,8 @@ namespace H3MP
         encryptionDisableSubtarg = 94,
         encryptionSubDamage = 95,
         shatterableCrateDamage = 96,
-        shatterableCrateDestroy = 97
+        shatterableCrateDestroy = 97,
+        initTNHInstances = 98
     }
 
     /// <summary>Sent from client to server.</summary>

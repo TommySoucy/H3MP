@@ -1139,7 +1139,8 @@ namespace H3MP
                 activeInstances.Add(instance, 0);
             }
             ++activeInstances[instance];
-            if (TNHInstances.ContainsKey(instance))
+            // PlayerIDs could already contain out ID if this instance was created by us
+            if (TNHInstances.ContainsKey(instance) && !TNHInstances[instance].playerIDs.Contains(ID))
             {
                 TNHInstances[instance].playerIDs.Add(ID);
             }

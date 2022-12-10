@@ -241,6 +241,12 @@ namespace H3MP
                 // Tell the client to sync its items
                 H3MP_ServerSend.ConnectSync(ID, inControl);
             }
+
+            // Also send TNH instances
+            H3MP_ServerSend.InitTNHInstances(ID);
+
+            // TODO: Implement a way for MODS to send custom connect data like the TNH instances above
+            // This should probably be an array of bytes to which mods can write whatever they want in a method they can patch
         }
 
         public void SendRelevantTrackedObjects()

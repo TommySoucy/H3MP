@@ -402,6 +402,7 @@ namespace H3MP
                 H3MP_ClientHandle.EncryptionSubDamage,
                 H3MP_ClientHandle.ShatterableCrateDamage,
                 H3MP_ClientHandle.ShatterableCrateDestroy,
+                H3MP_ClientHandle.InitTNHInstances,
             };
 
             // All vanilla scenes can be synced by default

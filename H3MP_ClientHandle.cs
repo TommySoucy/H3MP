@@ -1789,5 +1789,77 @@ namespace H3MP
                 H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
             }
         }
+
+        public static void InitTNHInstances(H3MP_Packet packet)
+        {
+            int count = packet.ReadInt();
+
+            for(int i=0; i < count; i++)
+            {
+                int instance = packet.ReadInt();
+                H3MP_TNHInstance TNHInstance = new H3MP_TNHInstance(instance);
+                TNHInstance.controller = packet.ReadInt();
+                int playerIDCount = packet.ReadInt();
+                for(int j=0; j < playerIDCount; ++j)
+                {
+                    TNHInstance.playerIDs.Add(packet.ReadInt());
+                }
+                int currentlyPlayingCount = packet.ReadInt();
+                for(int j=0; j < currentlyPlayingCount; ++j)
+                {
+                    TNHInstance.currentlyPlaying.Add(packet.ReadInt());
+                }
+                int playedCount = packet.ReadInt();
+                for(int j=0; j < playedCount; ++j)
+                {
+                    TNHInstance.played.Add(packet.ReadInt());
+                }
+                int deadCount = packet.ReadInt();
+                for(int j=0; j < deadCount; ++j)
+                {
+                    TNHInstance.dead.Add(packet.ReadInt());
+                }
+                TNHInstance.tokenCount = packet.ReadInt();
+                TNHInstance.holdOngoing = packet.ReadBool();
+                TNHInstance.curHoldIndex = packet.ReadInt();
+                TNHInstance.level = packet.ReadInt();
+                TNHInstance.phase = (TNH_Phase)packet.ReadShort();
+                int activeSupplyPointIndicesCount = packet.ReadInt();
+                for (int j = 0; j < activeSupplyPointIndicesCount; ++j)
+                {
+                    TNHInstance.activeSupplyPointIndices.Add(packet.ReadInt());
+                }
+                int supplyPanelTypesCount = packet.ReadInt();
+                for (int j = 0; j < supplyPanelTypesCount; ++j)
+                {
+                    TNHInstance.supplyPanelTypes.Add((TNH_SupplyPoint.SupplyPanelType)packet.ReadByte());
+                }
+                int raisedBarriersCount = packet.ReadInt();
+                for (int j = 0; j < raisedBarriersCount; ++j)
+                {
+                    TNHInstance.raisedBarriers.Add(packet.ReadInt());
+                }
+                int raisedBarrierPrefabIndicesCount = packet.ReadInt();
+                for (int j = 0; j < raisedBarrierPrefabIndicesCount; ++j)
+                {
+                    TNHInstance.raisedBarrierPrefabIndices.Add(packet.ReadInt());
+                }
+                TNHInstance.letPeopleJoin = packet.ReadBool();
+                TNHInstance.progressionTypeSetting = packet.ReadInt();
+                TNHInstance.healthModeSetting = packet.ReadInt();
+                TNHInstance.equipmentModeSetting = packet.ReadInt();
+                TNHInstance.targetModeSetting = packet.ReadInt();
+                TNHInstance.AIDifficultyModifier = packet.ReadInt();
+                TNHInstance.radarModeModifier = packet.ReadInt();
+                TNHInstance.itemSpawnerMode = packet.ReadInt();
+                TNHInstance.backpackMode = packet.ReadInt();
+                TNHInstance.healthMult = packet.ReadInt();
+                TNHInstance.sosiggunShakeReloading = packet.ReadInt();
+                TNHInstance.TNHSeed = packet.ReadInt();
+                TNHInstance.levelIndex = packet.ReadInt();
+
+                H3MP_GameManager.TNHInstances.Add(instance, TNHInstance);
+            }
+        }
     }
 }
