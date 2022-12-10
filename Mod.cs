@@ -7191,7 +7191,7 @@ namespace H3MP
                 return true;
             }
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.currentlyPlaying.Count > 1)
             {
                 // Don't want to spawn starting equipment right away if there are already players in our TNH instance
                 return false;
