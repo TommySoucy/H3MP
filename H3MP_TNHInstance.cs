@@ -33,8 +33,8 @@ namespace H3MP
         public int healthModeSetting;
         public int equipmentModeSetting;
         public int targetModeSetting;
-        public int AIDifficultyModifier;
-        public int radarModeModifier;
+        public int AIDifficultyModifier = 1; // AI Diff and radar mode defaults are at index 1
+        public int radarModeModifier = 1;
         public int itemSpawnerMode;
         public int backpackMode;
         public int healthMult;
