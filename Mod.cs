@@ -474,6 +474,14 @@ namespace H3MP
             Mod.currentTNHUIManager.OBS_ItemSpawner.SetSelectedButton(instance.itemSpawnerMode);
             Mod.currentTNHUIManager.OBS_Backpack.SetSelectedButton(instance.backpackMode);
             Mod.currentTNHUIManager.OBS_HealthMult.SetSelectedButton(instance.healthMult);
+            Mod.currentTNHUIManager.OBS_SosiggunReloading.SetSelectedButton(instance.sosiggunShakeReloading);
+            Mod.currentTNHUIManager.OBS_RunSeed.SetSelectedButton(instance.TNHSeed);
+
+            Mod.TNH_UIManager_m_currentLevelIndex.SetValue(Mod.currentTNHUIManager, instance.levelIndex);
+            Mod.currentTNHUIManager.CurLevelID = Mod.currentTNHUIManager.Levels[instance.levelIndex].LevelID;
+            Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
+            Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
+            Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
         }
 
         private void LoadAssets()
