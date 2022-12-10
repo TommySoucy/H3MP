@@ -1311,7 +1311,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.progressionSkip;
-                Mod.currentTNHUIManager.SetOBS_Progression(i);
+                Mod.currentTNHUIManager.OBS_Progression.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.progressionSkip;
             }
 
@@ -1328,7 +1328,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.equipmentSkip;
-                Mod.currentTNHUIManager.SetOBS_EquipmentMode(i);
+                Mod.currentTNHUIManager.OBS_EquipmentMode.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.equipmentSkip;
             }
 
@@ -1345,7 +1345,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.healthModeSkip;
-                Mod.currentTNHUIManager.SetOBS_HealthMode(i);
+                Mod.currentTNHUIManager.OBS_HealthMode.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.healthModeSkip;
             }
 
@@ -1362,7 +1362,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.targetSkip;
-                Mod.currentTNHUIManager.SetOBS_TargetMode(i);
+                Mod.currentTNHUIManager.OBS_TargetMode.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.targetSkip;
             }
 
@@ -1379,7 +1379,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.AIDifficultySkip;
-                Mod.currentTNHUIManager.SetOBS_AIDifficulty(i);
+                Mod.currentTNHUIManager.OBS_AIDifficulty.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.AIDifficultySkip;
             }
 
@@ -1396,7 +1396,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.radarSkip;
-                Mod.currentTNHUIManager.SetOBS_AIRadarMode(i);
+                Mod.currentTNHUIManager.OBS_AIRadarMode.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.radarSkip;
             }
 
@@ -1413,7 +1413,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.itemSpawnerSkip;
-                Mod.currentTNHUIManager.SetOBS_ItemSpawner(i);
+                Mod.currentTNHUIManager.OBS_ItemSpawner.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.itemSpawnerSkip;
             }
 
@@ -1430,7 +1430,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.backpackSkip;
-                Mod.currentTNHUIManager.SetOBS_Backpack(i);
+                Mod.currentTNHUIManager.OBS_Backpack.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.backpackSkip;
             }
 
@@ -1447,7 +1447,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.healthMultSkip;
-                Mod.currentTNHUIManager.SetOBS_HealthMult(i);
+                Mod.currentTNHUIManager.OBS_HealthMult.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.healthMultSkip;
             }
 
@@ -1464,7 +1464,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.sosigGunReloadSkip;
-                Mod.currentTNHUIManager.SetOBS_SosiggunShakeReloading(i);
+                Mod.currentTNHUIManager.OBS_SosiggunReloading.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.sosigGunReloadSkip;
             }
 
@@ -1481,7 +1481,7 @@ namespace H3MP
             if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.seedSkip;
-                Mod.currentTNHUIManager.SetOBS_RunSeed(i);
+                Mod.currentTNHUIManager.OBS_RunSeed.ButtonsInSet[i].Button.onClick.Invoke();
                 --TNH_UIManagerPatch.seedSkip;
             }
 
