@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using FFmpeg.AutoGen;
 using FistVR;
 using HarmonyLib;
 using System;
@@ -7,22 +6,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Security.Policy;
 using UnityEngine;
-using UnityEngine.Analytics;
-using UnityEngine.Internal.VR;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
-using Valve.VR.InteractionSystem;
-using static FistVR.AutoMeater;
-using static FistVR.Damage;
-using static FistVR.TNH_Progression;
-using static RenderHeads.Media.AVProVideo.MediaPlayer.OptionsApple;
-using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -843,12 +832,13 @@ namespace H3MP
             MethodInfo meleeParamsDamageablePatchTearTranspiler = typeof(MeleeParamsDamageablePatch).GetMethod("TearOutTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo meleeParamsDamageablePatchUpdateOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("FixedUpdate", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo meleeParamsDamageablePatchUpdateTranspiler = typeof(MeleeParamsDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo meleeParamsDamageablePatchUpdatePrefix = typeof(MeleeParamsDamageablePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo meleeParamsDamageablePatchCollisionOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo meleeParamsDamageablePatchCollisionTranspiler = typeof(MeleeParamsDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(meleeParamsDamageablePatchStabOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchStabTranspiler));
             harmony.Patch(meleeParamsDamageablePatchTearOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchTearTranspiler));
-            harmony.Patch(meleeParamsDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchUpdateTranspiler));
+            harmony.Patch(meleeParamsDamageablePatchUpdateOriginal, new HarmonyMethod(meleeParamsDamageablePatchUpdatePrefix), null, new HarmonyMethod(meleeParamsDamageablePatchUpdateTranspiler));
             harmony.Patch(meleeParamsDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchCollisionTranspiler));
 
             // AIMeleeDamageablePatch
@@ -1026,7 +1016,7 @@ namespace H3MP
             harmony.Patch(autoMeaterHitZoneDamagePatchOriginal, new HarmonyMethod(autoMeaterHitZoneDamagePatchPrefix), new HarmonyMethod(autoMeaterHitZoneDamagePatchPostfix));
 
             // AutoMeaterFirearmFireShotPatch
-            MethodInfo autoMeaterFirearmFireShotPatchOriginal = typeof(AutoMeaterFirearm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterFirearmFireShotPatchOriginal = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo autoMeaterFirearmFireShotPatchPrefix = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo autoMeaterFirearmFireShotPatchPostfix = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo autoMeaterFirearmFireShotPatchTranspiler = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1034,7 +1024,7 @@ namespace H3MP
             harmony.Patch(autoMeaterFirearmFireShotPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireShotPatchPrefix), new HarmonyMethod(autoMeaterFirearmFireShotPatchPostfix), new HarmonyMethod(autoMeaterFirearmFireShotPatchTranspiler));
 
             // AutoMeaterFirearmFireAtWillPatch
-            MethodInfo autoMeaterFirearmFireAtWillPatchOriginal = typeof(AutoMeaterFirearm).GetMethod("SetFireAtWill", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo autoMeaterFirearmFireAtWillPatchOriginal = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("SetFireAtWill", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo autoMeaterFirearmFireAtWillPatchPrefix = typeof(AutoMeaterFirearmFireAtWillPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(autoMeaterFirearmFireAtWillPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireAtWillPatchPrefix));
@@ -1959,7 +1949,7 @@ namespace H3MP
                 }
 
                 // Just put this item in a slot
-                H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
                 if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
                 {
                     if (H3MP_ThreadManager.host)
@@ -2253,7 +2243,7 @@ namespace H3MP
             }
 
             // Get tracked item
-            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null)
             {
                 // Send the fire action to other clients only if we control it
@@ -3303,7 +3293,7 @@ namespace H3MP
             ++Mod.skipAllInstantiates;
         }
 
-        static void Postfix(ref AutoMeaterFirearm __instance)
+        static void Postfix(ref AutoMeater.AutoMeaterFirearm __instance)
         {
             if (skip > 0)
             {
@@ -3378,7 +3368,7 @@ namespace H3MP
     {
         public static int skip;
 
-        static void Prefix(ref AutoMeaterFirearm __instance, bool b, float d)
+        static void Prefix(ref AutoMeater.AutoMeaterFirearm __instance, bool b, float d)
         {
             if (skip > 0)
             {
@@ -4227,7 +4217,7 @@ namespace H3MP
                 else // We have a ref to the firearm that fired this projectile
                 {
                     // We only want to let this projectile do damage if we control the firearm
-                    H3MP_TrackedItem trackedItem = tempFA.GetComponent<H3MP_TrackedItem>();
+                    H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(tempFA) ? H3MP_GameManager.trackedItemByItem[tempFA] : tempFA.GetComponent<H3MP_TrackedItem>();
                     if (trackedItem == null)
                     {
                         return false;
@@ -4658,6 +4648,22 @@ namespace H3MP
         }
 
         // Patches FixedUpdate()
+        static bool UpdatePrefix(ref FVRPhysicalObject ___m_obj)
+        {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return true;
+            }
+
+            // Skip if not controller of this melee params' parent object
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(___m_obj) ? H3MP_GameManager.trackedItemByItem[___m_obj] : ___m_obj.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                return false;
+            }
+            return true;
+        }
         static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);

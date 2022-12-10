@@ -297,6 +297,7 @@ namespace H3MP
             {
                 if (trackedItem.physicalItem != null)
                 {
+                    H3MP_GameManager.trackedItemByItem.Remove(trackedItem.physicalItem.physicalObject);
                     trackedItem.physicalItem.sendDestroy = false;
                     GameObject.Destroy(trackedItem.physicalItem.gameObject);
                 }

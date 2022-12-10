@@ -1311,6 +1311,8 @@ namespace H3MP
 
         private void OnDestroy()
         {
+            H3MP_GameManager.trackedItemByItem.Remove(physicalObject);
+
             if (H3MP_ThreadManager.host)
             {
                 if (H3MP_GameManager.giveControlOfDestroyed)

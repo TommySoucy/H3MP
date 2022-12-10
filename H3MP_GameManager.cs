@@ -35,6 +35,7 @@ namespace H3MP
         public static List<H3MP_TrackedEncryptionData> encryptions = new List<H3MP_TrackedEncryptionData>(); // Tracked TNH_EncryptionTarget under control of this gameManager
         public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
         public static Dictionary<int, List<List<string>>> waitingWearables = new Dictionary<int, List<List<string>>>();
+        public static Dictionary<FVRPhysicalObject, H3MP_TrackedItem> trackedItemByItem = new Dictionary<FVRPhysicalObject, H3MP_TrackedItem>();
         public static Dictionary<Sosig, H3MP_TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, H3MP_TrackedSosig>();
         public static Dictionary<AutoMeater, H3MP_TrackedAutoMeater> trackedAutoMeaterByAutoMeater = new Dictionary<AutoMeater, H3MP_TrackedAutoMeater>();
         public static Dictionary<TNH_EncryptionTarget, H3MP_TrackedEncryption> trackedEncryptionByEncryption = new Dictionary<TNH_EncryptionTarget, H3MP_TrackedEncryption>();
@@ -566,6 +567,7 @@ namespace H3MP
             trackedItem.data = data;
             data.physicalItem = trackedItem;
             data.physicalItem.physicalObject = physObj;
+            H3MP_GameManager.trackedItemByItem.Add(physObj, trackedItem);
 
             if (parent != null)
             {

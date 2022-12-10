@@ -140,6 +140,8 @@ namespace H3MP
             physicalItem.data = this;
             physicalItem.physicalObject = itemObject.GetComponent<FVRPhysicalObject>();
 
+            H3MP_GameManager.trackedItemByItem.Add(physicalItem.physicalObject, physicalItem);
+
             // See Note in H3MP_GameManager.SyncTrackedItems
             if (parent != -1)
             {
