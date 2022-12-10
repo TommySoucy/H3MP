@@ -452,6 +452,9 @@ namespace H3MP
             // Set option defaults
             TNHMenuLPJ = true;
             TNHOnDeathSpectate = true;
+
+            // Get ref to the UI Manager
+            Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
         }
 
         private void LoadAssets()

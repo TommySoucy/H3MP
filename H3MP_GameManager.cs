@@ -1487,8 +1487,6 @@ namespace H3MP
                 --Mod.skipAllInstantiates;
                 giveControlOfDestroyed = false;
 
-                Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
-
                 Scene loadedScene = SceneManager.GetActiveScene();
                 Debug.Log("Just finished loading scene: "+ loadedScene.name);
 
