@@ -1098,7 +1098,10 @@ namespace H3MP
 
         public static void AddTNHInstance(H3MP_TNHInstance instance)
         {
-            activeInstances.Add(instance.instance, instance.playerIDs.Count);
+            if (!activeInstances.ContainsKey(instance.instance))
+            {
+                activeInstances.Add(instance.instance, instance.playerIDs.Count);
+            }
             TNHInstances.Add(instance.instance, instance);
 
             Mod.modInstance.OnTNHInstanceReceived(instance);

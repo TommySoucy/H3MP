@@ -720,7 +720,6 @@ namespace H3MP
 
         public static void DestroyItem(int trackedID, bool removeFromList = true, int clientID = -1)
         {
-            Debug.Log("Server sending a DestroyItem packet for : " + trackedID+"\n"+Environment.StackTrace);
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.destroyItem))
             {
                 packet.Write(trackedID);
