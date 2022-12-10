@@ -1349,6 +1349,13 @@ namespace H3MP
             {
                 joinTNHInstances = new Dictionary<int, GameObject>();
             }
+            else
+            {
+                foreach(KeyValuePair<int, GameObject> entry in joinTNHInstances)
+                {
+                    Destroy(entry.Value);
+                }
+            }
             joinTNHInstances.Clear();
 
             // Populate instance list
@@ -1607,6 +1614,13 @@ namespace H3MP
             if (currentTNHInstancePlayers == null)
             {
                 currentTNHInstancePlayers = new Dictionary<int, GameObject>();
+            }
+            else
+            {
+                foreach (KeyValuePair<int, GameObject> entry in currentTNHInstancePlayers)
+                {
+                    Destroy(entry.Value);
+                }
             }
             currentTNHInstancePlayers.Clear();
 
