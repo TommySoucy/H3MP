@@ -455,6 +455,25 @@ namespace H3MP
 
             // Get ref to the UI Manager
             Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
+
+            // If already in a TNH isntance, which could be the case if we are coming back from being in game
+            if(currentTNHInstance != null)
+            {
+                InitTNHUIManager(currentTNHInstance);
+            }
+        }
+
+        public static void InitTNHUIManager(H3MP_TNHInstance instance)
+        {
+            Mod.currentTNHUIManager.OBS_Progression.SetSelectedButton(instance.progressionTypeSetting);
+            Mod.currentTNHUIManager.OBS_EquipmentMode.SetSelectedButton(instance.equipmentModeSetting);
+            Mod.currentTNHUIManager.OBS_HealthMode.SetSelectedButton(instance.healthModeSetting);
+            Mod.currentTNHUIManager.OBS_TargetMode.SetSelectedButton(instance.targetModeSetting);
+            Mod.currentTNHUIManager.OBS_AIDifficulty.SetSelectedButton(instance.AIDifficultyModifier);
+            Mod.currentTNHUIManager.OBS_AIRadarMode.SetSelectedButton(instance.radarModeModifier);
+            Mod.currentTNHUIManager.OBS_ItemSpawner.SetSelectedButton(instance.itemSpawnerMode);
+            Mod.currentTNHUIManager.OBS_Backpack.SetSelectedButton(instance.backpackMode);
+            Mod.currentTNHUIManager.OBS_HealthMult.SetSelectedButton(instance.healthMult);
         }
 
         private void LoadAssets()

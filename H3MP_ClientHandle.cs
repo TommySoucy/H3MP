@@ -1160,7 +1160,7 @@ namespace H3MP
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.equipmentSkip;
-                Mod.currentTNHUIManager.OBS_Progression.SetSelectedButton(i);
+                Mod.currentTNHUIManager.OBS_EquipmentMode.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_EquipmentMode(i);
                 --TNH_UIManagerPatch.equipmentSkip;
             }

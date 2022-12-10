@@ -1548,6 +1548,14 @@ namespace H3MP
                                                              itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
             for (int i=1; i < playerCount; ++i)
             {
+                int newPlayerID = ReadInt();
+
+                if (instance.playerIDs.Contains(newPlayerID))
+                {
+                    Debug.LogWarning("ReadTNHInstance player ID: " + newPlayerID + " already in TNH instance " + instanceID + ":\n" + Environment.StackTrace);
+                    continue;
+                }
+
                 instance.playerIDs.Add(ReadInt());
             }
 

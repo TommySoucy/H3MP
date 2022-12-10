@@ -310,6 +310,11 @@ namespace H3MP
 
             if (TNHInstances.ContainsKey(instance))
             {
+                if (TNHInstances[instance].playerIDs.Contains(playerID))
+                {
+                    Debug.LogWarning("UpdatePlayerInstance: player " + playerID + " already in playerIDs of TNH instance " + instance);
+                }
+
                 TNHInstances[instance].playerIDs.Add(playerID);
 
                 // Add player to active TNH player list
@@ -1140,9 +1145,25 @@ namespace H3MP
             }
             ++activeInstances[instance];
             // PlayerIDs could already contain out ID if this instance was created by us
-            if (TNHInstances.ContainsKey(instance) && !TNHInstances[instance].playerIDs.Contains(ID))
+            if (TNHInstances.ContainsKey(instance))
             {
-                TNHInstances[instance].playerIDs.Add(ID);
+                if (!TNHInstances[instance].playerIDs.Contains(ID))
+                {
+                    TNHInstances[instance].playerIDs.Add(ID);
+                }
+
+                if (Mod.currentTNHInstance != null)
+                {
+                    Mod.InitTNHUIManager(TNHInstances[instance]);
+                }
+                else
+                {
+                    Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
+                    if (Mod.currentTNHInstance != null)
+                    {
+                        Mod.InitTNHUIManager(TNHInstances[instance]);
+                    }
+                }
             }
 
             // Item we do not control: Destroy, giveControlOfDestroyed = true will ensure destruction does not get sent
