@@ -1146,6 +1146,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.progressionSkip;
                 Mod.currentTNHUIManager.OBS_Progression.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_Progression(i);
+                GM.TNHOptions.ProgressionTypeSetting = (TNHSetting_ProgressionType)i;
                 --TNH_UIManagerPatch.progressionSkip;
             }
         }
@@ -1162,6 +1163,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.equipmentSkip;
                 Mod.currentTNHUIManager.OBS_EquipmentMode.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_EquipmentMode(i);
+                GM.TNHOptions.EquipmentModeSetting = (TNHSetting_EquipmentMode)i;
                 --TNH_UIManagerPatch.equipmentSkip;
             }
         }
@@ -1178,6 +1180,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.healthModeSkip;
                 Mod.currentTNHUIManager.OBS_HealthMode.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_HealthMode(i);
+                GM.TNHOptions.HealthModeSetting = (TNHSetting_HealthMode)i;
                 --TNH_UIManagerPatch.healthModeSkip;
             }
         }
@@ -1194,6 +1197,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.targetSkip;
                 Mod.currentTNHUIManager.OBS_TargetMode.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_TargetMode(i);
+                GM.TNHOptions.TargetModeSetting = (TNHSetting_TargetMode)i;
                 --TNH_UIManagerPatch.targetSkip;
             }
         }
@@ -1210,6 +1214,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.AIDifficultySkip;
                 Mod.currentTNHUIManager.OBS_AIDifficulty.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_AIDifficulty(i);
+                GM.TNHOptions.AIDifficultyModifier = (TNHModifier_AIDifficulty)i;
                 --TNH_UIManagerPatch.AIDifficultySkip;
             }
         }
@@ -1226,6 +1231,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.radarSkip;
                 Mod.currentTNHUIManager.OBS_AIRadarMode.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_AIRadarMode(i);
+                GM.TNHOptions.RadarModeModifier = (TNHModifier_RadarMode)i;
                 --TNH_UIManagerPatch.radarSkip;
             }
         }
@@ -1242,6 +1248,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.itemSpawnerSkip;
                 Mod.currentTNHUIManager.OBS_ItemSpawner.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_ItemSpawner(i);
+                GM.TNHOptions.ItemSpawnerMode = (TNH_ItemSpawnerMode)i;
                 --TNH_UIManagerPatch.itemSpawnerSkip;
             }
         }
@@ -1258,6 +1265,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.backpackSkip;
                 Mod.currentTNHUIManager.OBS_Backpack.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_Backpack(i);
+                GM.TNHOptions.BackpackMode = (TNH_BackpackMode)i;
                 --TNH_UIManagerPatch.backpackSkip;
             }
         }
@@ -1274,6 +1282,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.healthMultSkip;
                 Mod.currentTNHUIManager.OBS_HealthMult.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_HealthMult(i);
+                GM.TNHOptions.HealthMult = (TNH_HealthMult)i;
                 --TNH_UIManagerPatch.healthMultSkip;
             }
         }
@@ -1290,6 +1299,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.sosigGunReloadSkip;
                 Mod.currentTNHUIManager.OBS_SosiggunReloading.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_SosiggunShakeReloading(i);
+                GM.TNHOptions.SosiggunShakeReloading = (TNH_SosiggunShakeReloading)i;
                 --TNH_UIManagerPatch.sosigGunReloadSkip;
             }
         }
@@ -1306,6 +1316,7 @@ namespace H3MP
                 ++TNH_UIManagerPatch.seedSkip;
                 Mod.currentTNHUIManager.OBS_RunSeed.SetSelectedButton(i);
                 Mod.currentTNHUIManager.SetOBS_RunSeed(i);
+                GM.TNHOptions.TNHSeed = i;
                 --TNH_UIManagerPatch.seedSkip;
             }
         }

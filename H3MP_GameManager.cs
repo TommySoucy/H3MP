@@ -1147,22 +1147,22 @@ namespace H3MP
                 activeInstances.Add(instance, 0);
             }
             ++activeInstances[instance];
-            // PlayerIDs could already contain out ID if this instance was created by us
             if (TNHInstances.ContainsKey(instance))
             {
+                // PlayerIDs could already contain our ID if this instance was created by us
                 if (!TNHInstances[instance].playerIDs.Contains(ID))
                 {
                     TNHInstances[instance].playerIDs.Add(ID);
                 }
 
-                if (Mod.currentTNHInstance != null)
+                if (Mod.currentTNHUIManager != null)
                 {
                     Mod.InitTNHUIManager(TNHInstances[instance]);
                 }
                 else
                 {
                     Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
-                    if (Mod.currentTNHInstance != null)
+                    if (Mod.currentTNHUIManager != null)
                     {
                         Mod.InitTNHUIManager(TNHInstances[instance]);
                     }
