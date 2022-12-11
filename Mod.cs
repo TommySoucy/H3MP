@@ -3826,6 +3826,7 @@ namespace H3MP
                         {
                             break;
                         }
+                        currentParent = currentParent.parent;
                     }
 
                     // Check if we should control and sync it, if so do it in postfix
