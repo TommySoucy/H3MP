@@ -1218,7 +1218,7 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchSpawnEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeChallengeEntities", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnEntitiesPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTakeChallengeEntitiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchBeginHoldOriginal = typeof(TNH_HoldPoint).GetMethod("BeginHoldChallenge", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo TNH_HoldPointPatchBeginHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchBeginHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchRaiseRandomBarriersOriginal = typeof(TNH_HoldPoint).GetMethod("RaiseRandomBarriers", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPrefix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchRaiseSetCoverPointDataOriginal = typeof(TNH_DestructibleBarrierPoint).GetMethod("SetCoverPointData", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1230,7 +1230,7 @@ namespace H3MP
 
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
-            harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix));
+            harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, null, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
             harmony.Patch(TNH_HoldPointPatchRaiseRandomBarriersOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseRandomBarriersPrefix));
             harmony.Patch(TNH_HoldPointPatchRaiseSetCoverPointDataOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseSetCoverPointDataPrefix));
             harmony.Patch(TNH_HoldPointPatchRaiseCompletePhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseCompletePhasePostfix));
