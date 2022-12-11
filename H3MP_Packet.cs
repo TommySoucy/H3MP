@@ -1604,17 +1604,17 @@ namespace H3MP
             data.progressionIndex = ReadInt();
             data.progressionEndlessIndex = ReadInt();
             data.patrols = new TNH_Manager.SosigPatrolSquad[ReadInt()];
-            for(int i = 0; i < data.patrols.Length; ++i)
+            for (int i = 0; i < data.patrols.Length; ++i)
             {
                 data.patrols[i] = ReadTNHSosigPatrol();
             }
             data.activeHoldSosigIDs = new int[ReadInt()];
-            for(int i = 0; i< data.activeHoldSosigIDs.Length; ++i)
+            for (int i = 0; i< data.activeHoldSosigIDs.Length; ++i)
             {
                 data.activeHoldSosigIDs[i] = ReadInt();
             }
             data.activeHoldTurretIDs = new int[ReadInt()];
-            for(int i = 0; i< data.activeHoldTurretIDs.Length; ++i)
+            for (int i = 0; i< data.activeHoldTurretIDs.Length; ++i)
             {
                 data.activeHoldTurretIDs[i] = ReadInt();
             }
@@ -1624,12 +1624,12 @@ namespace H3MP
             for(int i=0; i < activeSupplyCount; ++i)
             {
                 data.supplyPointsSosigIDs[i] = new int[ReadInt()];
-                for (int j = 0; j < data.supplyPointsSosigIDs.Length; ++j)
+                for (int j = 0; j < data.supplyPointsSosigIDs[i].Length; ++j)
                 {
                     data.supplyPointsSosigIDs[i][j] = ReadInt();
                 }
                 data.supplyPointsTurretIDs[i] = new int[ReadInt()];
-                for (int j = 0; j < data.supplyPointsTurretIDs.Length; ++j)
+                for (int j = 0; j < data.supplyPointsTurretIDs[i].Length; ++j)
                 {
                     data.supplyPointsTurretIDs[i][j] = ReadInt();
                 }
