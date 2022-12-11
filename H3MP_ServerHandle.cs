@@ -1541,16 +1541,16 @@ namespace H3MP
                 {
                     H3MP_ServerSend.TNHData(newController, Mod.currentTNHInstance.manager);
 
-                    ++SetTNHManagerPatch.skip;
-                    Mod.currentTNHInstance.manager.enabled = false;
-                    --SetTNHManagerPatch.skip;
+                    //++SetTNHManagerPatch.skip;
+                    //Mod.currentTNHInstance.manager.enabled = false;
+                    //--SetTNHManagerPatch.skip;
                 }
-                else if(newController == H3MP_GameManager.ID && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
-                {
-                    ++SetTNHManagerPatch.skip;
-                    Mod.currentTNHInstance.manager.enabled = true;
-                    --SetTNHManagerPatch.skip;
-                }
+                //else if(newController == H3MP_GameManager.ID && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+                //{
+                //    ++SetTNHManagerPatch.skip;
+                //    Mod.currentTNHInstance.manager.enabled = true;
+                //    --SetTNHManagerPatch.skip;
+                //}
             }
 
             H3MP_GameManager.TNHInstances[instance].controller = newController;

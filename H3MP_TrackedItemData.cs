@@ -117,12 +117,12 @@ namespace H3MP
         public IEnumerator Instantiate()
         {
             GameObject itemPrefab = GetItemPrefab();
-            if(itemPrefab == null)
+            if (itemPrefab == null)
             {
                 yield return IM.OD[itemID].GetGameObjectAsync();
                 itemPrefab = IM.OD[itemID].GetGameObject();
             }
-            if(itemPrefab == null)
+            if (itemPrefab == null)
             {
                 Debug.LogError($"Attempted to instantiate {itemID} sent from {controller} but failed to get item prefab.");
                 yield break;
@@ -133,48 +133,55 @@ namespace H3MP
             // it will consume the skipNextInstantiate, so we instead skipAllInstantiates during the current instantiation
             //++Mod.skipNextInstantiates;
 
-            ++Mod.skipAllInstantiates;
-            GameObject itemObject = GameObject.Instantiate(itemPrefab);
-            --Mod.skipAllInstantiates;
-            physicalItem = itemObject.AddComponent<H3MP_TrackedItem>();
-            physicalItem.data = this;
-            physicalItem.physicalObject = itemObject.GetComponent<FVRPhysicalObject>();
-
-            H3MP_GameManager.trackedItemByItem.Add(physicalItem.physicalObject, physicalItem);
-
-            // See Note in H3MP_GameManager.SyncTrackedItems
-            if (parent != -1)
+            try
             {
-                // Add ourselves to the prent's children
-                H3MP_TrackedItemData parentItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[parent];
-                if(parentItem.children == null)
+                ++Mod.skipAllInstantiates;
+                GameObject itemObject = GameObject.Instantiate(itemPrefab);
+                --Mod.skipAllInstantiates;
+                physicalItem = itemObject.AddComponent<H3MP_TrackedItem>();
+                physicalItem.data = this;
+                physicalItem.physicalObject = itemObject.GetComponent<FVRPhysicalObject>();
+
+                H3MP_GameManager.trackedItemByItem.Add(physicalItem.physicalObject, physicalItem);
+
+                // See Note in H3MP_GameManager.SyncTrackedItems
+                if (parent != -1)
                 {
-                    parentItem.children = new List<H3MP_TrackedItemData>();
+                    // Add ourselves to the prent's children
+                    H3MP_TrackedItemData parentItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[parent];
+                    if (parentItem.children == null)
+                    {
+                        parentItem.children = new List<H3MP_TrackedItemData>();
+                    }
+                    childIndex = parentItem.children.Count;
+                    parentItem.children.Add(this);
+
+                    // Physically parent
+                    ++ignoreParentChanged;
+                    itemObject.transform.parent = parentItem.physicalItem.transform;
+                    --ignoreParentChanged;
                 }
-                childIndex = parentItem.children.Count;
-                parentItem.children.Add(this);
 
-                // Physically parent
-                ++ignoreParentChanged;
-                itemObject.transform.parent = parentItem.physicalItem.transform;
-                --ignoreParentChanged;
+                // Store and destroy RB if not in control
+                if (controller != H3MP_GameManager.ID)
+                {
+                    physicalItem.physicalObject.StoreAndDestroyRigidbody();
+                }
+
+                // Initially set itself
+                Update(this);
             }
-
-            // Store and destroy RB if not in control
-            if (controller != H3MP_GameManager.ID)
+            catch(Exception e)
             {
-                physicalItem.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+                Debug.LogError("Error while trying to instantiate item: " + itemID+":\n"+e.Message+"\n"+e.StackTrace);
             }
-
-            // Initially set itself
-            Update(this);
         }
 
         // MOD: If a mod keeps its item prefabs in a different location than IM.OD, this is what should be patched to find it
         //      If this returns null, it will try to find the item in IM.OD
         private GameObject GetItemPrefab()
         {
-            if (itemID.Equals("TNH_ShatterableCrate") && GM.TNH_Manager)
+            if (itemID.Equals("TNH_ShatterableCrate") && GM.TNH_Manager != null)
             {
                 return GM.TNH_Manager.Prefabs_ShatterableCrates[identifyingData[0]];
             }

@@ -271,6 +271,17 @@ namespace H3MP
                 {
                     SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
+                else if (Input.GetKeyDown(KeyCode.Keypad8))
+                {
+                    OnTNHJoinClicked();
+                    OnTNHJoinConfirmClicked();
+                    OnTNHInstanceClicked(1);
+                }
+                else if (Input.GetKeyDown(KeyCode.Keypad9))
+                {
+                    OnTNHHostClicked();
+                    OnTNHHostConfirmClicked();
+                }
             }
         }
 
@@ -502,7 +513,6 @@ namespace H3MP
             FVRPointableButton startEquipButton = TNHStartEquipButtonPrefab.transform.GetChild(0).gameObject.AddComponent<FVRPointableButton>();
             startEquipButton.SetButton();
             startEquipButton.MaxPointingRange = 1;
-            startEquipButton.Button.onClick.AddListener(OnTNHSpawnStartEquipClicked);
         }
 
         // MOD: If you need to add anything to the player prefab, this is what you should patch to do it
@@ -1173,6 +1183,12 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchSetPhaseCompletePostfix = typeof(TNH_ManagerPatch).GetMethod("SetPhaseCompletePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetLevelOriginal = typeof(TNH_Manager).GetMethod("SetLevel", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSetLevelPrefix = typeof(TNH_ManagerPatch).GetMethod("SetLevelPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchOnShotFiredOriginal = typeof(TNH_Manager).GetMethod("OnShotFired", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchOnShotFiredPrefix = typeof(TNH_ManagerPatch).GetMethod("OnShotFiredPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchOnBotShotFiredOriginal = typeof(TNH_Manager).GetMethod("OnBotShotFired", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchOnBotShotFiredPrefix = typeof(TNH_ManagerPatch).GetMethod("OnBotShotFiredPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchAddFVRObjectToTrackedListOriginal = typeof(TNH_Manager).GetMethod("AddFVRObjectToTrackedList", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchAddFVRObjectToTrackedListPrefix = typeof(TNH_ManagerPatch).GetMethod("AddFVRObjectToTrackedListPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
@@ -1183,6 +1199,9 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchSetLevelOriginal, new HarmonyMethod(TNH_ManagerPatchSetLevelPrefix));
             harmony.Patch(TNH_ManagerPatchSetPhaseTakeOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePrefix), new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePostfix));
             harmony.Patch(TNH_ManagerPatchSetPhaseCompleteOriginal, null, new HarmonyMethod(TNH_ManagerPatchSetPhaseCompletePostfix));
+            harmony.Patch(TNH_ManagerPatchOnShotFiredOriginal, new HarmonyMethod(TNH_ManagerPatchOnShotFiredPrefix));
+            harmony.Patch(TNH_ManagerPatchOnBotShotFiredOriginal, new HarmonyMethod(TNH_ManagerPatchOnBotShotFiredPrefix));
+            harmony.Patch(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, new HarmonyMethod(TNH_ManagerPatchAddFVRObjectToTrackedListPrefix));
 
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
@@ -1217,11 +1236,17 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchRaiseCompletePhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseCompletePhasePostfix));
             harmony.Patch(TNH_HoldPointPatchShutDownOriginal, null, new HarmonyMethod(TNH_HoldPointPatchShutDownPostfix));
 
-            // TNHWeaponCrateUpdatePatch
-            MethodInfo TNH_WeaponCrateUpdatePatchOriginal = typeof(TNH_WeaponCrate).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo TNH_WeaponCrateUpdatePatchTranspiler = typeof(TNHWeaponCrateUpdatePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            // TNHWeaponCrateSpawnObjectsPatch
+            MethodInfo TNH_WeaponCrateSpawnObjectsPatchOriginal = typeof(TNH_WeaponCrate).GetMethod("SpawnObjectsRaw", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_WeaponCrateSpawnObjectsPatchPrefix = typeof(TNHWeaponCrateSpawnObjectsPatch).GetMethod("SpawnObjectsRawPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(TNH_WeaponCrateUpdatePatchOriginal, null ,null, new HarmonyMethod(TNH_WeaponCrateUpdatePatchTranspiler));
+            harmony.Patch(TNH_WeaponCrateSpawnObjectsPatchOriginal, new HarmonyMethod(TNH_WeaponCrateSpawnObjectsPatchPrefix));
+
+            //// SetActivePatch
+            //MethodInfo setActivePatchOriginal = typeof(UnityEngine.GameObject).GetMethod("SetActive", BindingFlags.Public | BindingFlags.Instance);
+            //MethodInfo setActivePatchPrefix = typeof(SetActivePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            //harmony.Patch(setActivePatchOriginal, new HarmonyMethod(setActivePatchPrefix));
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -1435,7 +1460,7 @@ namespace H3MP
             Mod.TNHSpectating = false;
         }
 
-        private void OnTNHSpawnStartEquipClicked()
+        public static void OnTNHSpawnStartEquipClicked()
         {
             if(GM.TNH_Manager != null)
             {
@@ -1798,6 +1823,19 @@ namespace H3MP
             loadingLevel = levelName;
         }
     }
+
+    // DEBUG PATCH Patches GameObject.SetActive
+    class SetActivePatch
+    {
+        static void Prefix(ref GameObject __instance, bool value)
+        {
+            if (value)
+            {
+                Debug.LogWarning("SetActivePatch called with true on " + __instance.name+":\n"+Environment.StackTrace);
+            }
+        }
+    }
+
     #endregion
 
     #region Interaction Patches
@@ -3126,6 +3164,12 @@ namespace H3MP
             if (Mod.managerObject == null)
             {
                 return true;
+            }
+
+            // Possible if instance has been destroyed but still accessible
+            if(__instance == null)
+            {
+                return false;
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
@@ -5708,6 +5752,12 @@ namespace H3MP
                 return true;
             }
 
+            // Sosig could have been destroyed by the damage, we can just skip because the destroy order will be sent to other clients
+            if(__instance == null)
+            {
+                return true;
+            }
+
             // If in control of the damaged sosig link, we want to process the damage
             trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null)
@@ -6222,15 +6272,8 @@ namespace H3MP
     // Patches GM.set_TNH_Manager() to keep track of TNH Manager instances
     class SetTNHManagerPatch
     {
-        public static int skip;
-
         static void Postfix()
         {
-            if(skip > 0)
-            {
-                return;
-            }
-
             // Disable the TNH_Manager if we are not the host
             // Also manage currently playing in the TNH instance
             if (Mod.managerObject != null)
@@ -6257,16 +6300,29 @@ namespace H3MP
                                     H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, H3MP_Client.singleton.ID);
                                 }
                             }
-                            else
-                            {
-                                ++skip;
-                                GM.TNH_Manager.enabled = false;
-                                --skip;
-                            }
+                            //else
+                            //{
+                            //    ++skip;
+                            //    GM.TNH_Manager.enabled = false;
+                            //    --skip;
+                            //}
 
                             // If there are already players, it means the TNH game is already in some state
                             // Make sure we are in that state
                             TNH_ManagerPatch.doInit = true;
+                        }
+                        else
+                        {
+                            if (H3MP_ThreadManager.host)
+                            {
+                                Mod.currentTNHInstance.controller = 0;
+                                H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, 0);
+                            }
+                            else
+                            {
+                                Mod.currentTNHInstance.controller = H3MP_Client.singleton.ID;
+                                H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, H3MP_Client.singleton.ID);
+                            }
                         }
 
                         Mod.currentTNHInstance.AddCurrentlyPlaying(true, H3MP_GameManager.ID);
@@ -6890,15 +6946,20 @@ namespace H3MP
             return true;
         }
 
-        static void OnSosigKillPrefix(Sosig s)
+        static bool OnSosigKillPrefix(Sosig s)
         {
             if (sosigKillSkip > 0)
             {
-                return;
+                return true;
             }
 
             if(Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
+                if(Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+                {
+                    return false;
+                }
+
                 H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(s) ? H3MP_GameManager.trackedSosigBySosig[s] : s.GetComponent<H3MP_TrackedSosig>();
                 if(trackedSosig != null)
                 {
@@ -6912,6 +6973,8 @@ namespace H3MP
                     }
                 }
             }
+
+            return true;
         }
 
         static bool SetPhasePrefix(TNH_Phase p)
@@ -7110,6 +7173,51 @@ namespace H3MP
             return true;
         }
 
+        static bool OnShotFiredPrefix()
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        static bool OnBotShotFiredPrefix()
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        static bool AddFVRObjectToTrackedListPrefix()
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                return false;
+            }
+            return true;
+        }
+
         static void InitJoinTNH()
         {
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex]);
@@ -7183,9 +7291,11 @@ namespace H3MP
 
             // If this is the first time we join this game, give the player a button 
             // with which they can spawn their own starting equipment
-            if (!Mod.currentTNHInstance.played.Contains(H3MP_GameManager.ID))
+            if (!Mod.currentTNHInstance.spawnedStartEquip)
             {
-                Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab);
+                Mod.currentTNHInstance.spawnedStartEquip = true;
+                Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
+                Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
             }
         }
 
@@ -7346,11 +7456,20 @@ namespace H3MP
 
         static void BarrierSetCoverPointDataPrefix(int index)
         {
+            if (index == -1)
+            {
+                return;
+            }
+
             // This patch will prevent BarrierPoints from being shuffled so barriers can be identified across clients
             if(Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
+                    if(Mod.currentTNHInstance.raisedBarrierPrefabIndices == null)
+                    {
+                        Mod.currentTNHInstance.raisedBarrierPrefabIndices = new List<int>();
+                    }
                     Mod.currentTNHInstance.raisedBarrierPrefabIndices.Add(index);
                 }
             }
@@ -7428,7 +7547,12 @@ namespace H3MP
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Brfalse)
                 {
-                    toInsert.Add(new CodeInstruction(OpCodes.Brtrue, instruction.operand));
+                    toInsert.Add(new CodeInstruction(OpCodes.Brtrue, instruction.operand)); // If true jump to same label as if first if statement is false
+                    toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+                    toInsert.Add(new CodeInstruction(OpCodes.Ret)); // Return
+                }
+                if(instruction.opcode == OpCodes.Ret)
+                {
                     instructionList.InsertRange(i + 1, toInsert);
                     break;
                 }
@@ -7438,44 +7562,17 @@ namespace H3MP
     }
 
     // Patches TNH_WeaponCrate.Update to know when the case is open so we can put a timed destroyer on it if necessary
-    class TNHWeaponCrateUpdatePatch
+    class TNHWeaponCrateSpawnObjectsPatch
     {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        static void SpawnObjectsRawPrefix(ref TNH_WeaponCrate __instance)
         {
-            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
-            List<CodeInstruction> toInsert = new List<CodeInstruction>();
-            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load TNH_WeaponCrate instance
-            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Component), "get_gameObject"))); // Call get go on it
-            CodeInstruction newCodeInstruction = CodeInstruction.Call(typeof(GameObject), "GetComponent", null, new Type[] { typeof(H3MP_TimerDestroyer) });
-            newCodeInstruction.opcode = OpCodes.Callvirt;
-            toInsert.Add(newCodeInstruction); // Call get H3MP_TimerDestroyer on it
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(TNHWeaponCrateUpdatePatch), "TriggerDestroyer"))); // Call our function
-
-            bool firstSkipped = true;
-            for (int i = 0; i < instructionList.Count; ++i)
+            if(Mod.managerObject != null)
             {
-                CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("m_containsItems"))
+                H3MP_TimerDestroyer destroyer = __instance.GetComponent<H3MP_TimerDestroyer>();
+                if(destroyer != null)
                 {
-                    if (!firstSkipped)
-                    {
-                        firstSkipped = true;
-                        continue;
-                    }
-
-                    instructionList.InsertRange(i + 2, toInsert);
-
-                    break;
+                    destroyer.triggered = true;
                 }
-            }
-            return instructionList;
-        }
-
-        public static void TriggerDestroyer(H3MP_TimerDestroyer destroyer)
-        {
-            if(destroyer != null)
-            {
-                destroyer.triggered = true;
             }
         }
     }
