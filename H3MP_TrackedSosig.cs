@@ -19,6 +19,10 @@ namespace H3MP
         {
             H3MP_GameManager.trackedSosigBySosig.Remove(physicalSosigScript);
 
+            // Set dead body state even if we are destroying because vanilla may try to process damage on it still
+            // It being Dead will prevent it from doing that
+            physicalSosigScript.BodyState = Sosig.SosigBodyState.Dead;
+
             if (H3MP_ThreadManager.host)
             {
                 if (H3MP_GameManager.giveControlOfDestroyed)
