@@ -117,8 +117,16 @@ namespace H3MP
             // Set physically
             if (physicalObject != null)
             {
-                physicalObject.physicalEncryptionScript.RB.position = position;
-                physicalObject.physicalEncryptionScript.RB.rotation = rotation;
+                if (physicalObject.physicalEncryptionScript.RB != null)
+                {
+                    physicalObject.physicalEncryptionScript.RB.position = position;
+                    physicalObject.physicalEncryptionScript.RB.rotation = rotation;
+                }
+                else
+                {
+                    physicalObject.physicalEncryptionScript.transform.position = position;
+                    physicalObject.physicalEncryptionScript.transform.rotation = rotation;
+                }
 
                 if (active)
                 {
@@ -141,8 +149,16 @@ namespace H3MP
         {
             previousPos = position;
             previousRot = rotation;
-            position = physicalObject.physicalEncryptionScript.RB.position;
-            rotation = physicalObject.physicalEncryptionScript.RB.rotation;
+            if (physicalObject.physicalEncryptionScript != null)
+            {
+                position = physicalObject.physicalEncryptionScript.RB.position;
+                rotation = physicalObject.physicalEncryptionScript.RB.rotation;
+            }
+            else
+            {
+                position = physicalObject.physicalEncryptionScript.transform.position;
+                rotation = physicalObject.physicalEncryptionScript.transform.rotation;
+            }
 
             previousActive = active;
             active = physicalObject.gameObject.activeInHierarchy;
