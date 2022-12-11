@@ -7249,6 +7249,10 @@ namespace H3MP
             }
             else
             {
+                // Set the hold
+                TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
+                Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+
                 //  Set supply points
                 bool spawnToken = true;
                 for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
