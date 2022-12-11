@@ -1629,7 +1629,7 @@ namespace H3MP
                             curSupplyPointSosigs.Add(sosigArrToUse[sosigID].physicalObject.physicalSosigScript);
                         }
                     }
-                    List<AutoMeater> curSupplyPointTurrets = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(curHoldPoint);
+                    List<AutoMeater> curSupplyPointTurrets = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(curSupplyPoint);
                     curSupplyPointTurrets.Clear();
                     foreach (int autoMeaterID in data.supplyPointsTurretIDs[i])
                     {
