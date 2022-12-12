@@ -1562,82 +1562,17 @@ namespace H3MP
         {
             int controller = packet.ReadInt();
 
-            if(controller == H3MP_GameManager.ID)
+            if(controller == H3MP_GameManager.ID && GM.TNH_Manager != null && Mod.currentTNHInstance != null)
             {
                 H3MP_TNHData data = packet.ReadTNHData();
-                
-                GM.TNH_Manager.Phase = data.phase;
-                Mod.TNH_Manager_m_curPointSequence.SetValue(GM.TNH_Manager, GM.TNH_Manager.PossibleSequnces[data.sequenceIndex]);
-                TNH_CharacterDef c = null;
-                try
-                {
-                    c = GM.TNH_Manager.CharDB.GetDef((TNH_Char)GM.TNHOptions.LastPlayedChar);
-                }
-                catch
-                {
-                    c = GM.TNH_Manager.CharDB.GetDef(TNH_Char.DD_BeginnerBlake);
-                }
-                Mod.TNH_Manager_m_curProgression.SetValue(GM.TNH_Manager, c.Progressions[data.progressionIndex]);
-                Mod.TNH_Manager_m_curProgressionEndless.SetValue(GM.TNH_Manager, c.Progressions_Endless[data.progressionEndlessIndex]);
-                Mod.TNH_Manager_m_level.SetValue(GM.TNH_Manager, data.levelIndex);
-                Mod.TNH_Manager_SetLevel.Invoke(GM.TNH_Manager, new object[] { data.levelIndex });
-                Mod.TNH_Manager_m_curHoldIndex.SetValue(GM.TNH_Manager, data.curHoldIndex);
-                Mod.TNH_Manager_m_lastHoldIndex.SetValue(GM.TNH_Manager, data.lastHoldIndex);
-                TNH_HoldPoint curHoldPoint = GM.TNH_Manager.HoldPoints[data.curHoldIndex];
-                Mod.TNH_Manager_m_curHoldPoint.SetValue(GM.TNH_Manager, curHoldPoint);
-                TNH_Progression.Level level = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager);
-                curHoldPoint.T = level.TakeChallenge;
-                curHoldPoint.H = level.HoldChallenge;
 
-                List<TNH_Manager.SosigPatrolSquad> patrolSquads = (List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(GM.TNH_Manager);
-                patrolSquads.Clear();
-                foreach(TNH_Manager.SosigPatrolSquad patrol in data.patrols)
+                if (TNH_ManagerPatch.doInit)
                 {
-                    patrolSquads.Add(patrol);
+                    Mod.initTNHData = data;
                 }
-
-                List<Sosig> curHoldPointSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(curHoldPoint);
-                curHoldPointSosigs.Clear();
-                H3MP_TrackedSosigData[] sosigArrToUse = H3MP_ThreadManager.host ? H3MP_Server.sosigs : H3MP_Client.sosigs;
-                foreach (int sosigID in data.activeHoldSosigIDs)
+                else
                 {
-                    if (sosigArrToUse[sosigID] != null && sosigArrToUse[sosigID].physicalObject != null)
-                    {
-                        curHoldPointSosigs.Add(sosigArrToUse[sosigID].physicalObject.physicalSosigScript);
-                    }
-                }
-                List<AutoMeater> curHoldPointTurrets = (List<AutoMeater>)Mod.TNH_HoldPoint_m_activeTurrets.GetValue(curHoldPoint);
-                curHoldPointTurrets.Clear();
-                H3MP_TrackedAutoMeaterData[] autoMeaterArrToUse = H3MP_ThreadManager.host ? H3MP_Server.autoMeaters : H3MP_Client.autoMeaters;
-                foreach (int autoMeaterID in data.activeHoldTurretIDs)
-                {
-                    if (autoMeaterArrToUse[autoMeaterID] != null && autoMeaterArrToUse[autoMeaterID].physicalObject != null)
-                    {
-                        curHoldPointTurrets.Add(autoMeaterArrToUse[autoMeaterID].physicalObject.physicalAutoMeaterScript);
-                    }
-                }
-
-                for(int i=0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
-                {
-                    TNH_SupplyPoint curSupplyPoint = GM.TNH_Manager.SupplyPoints[i];
-                    List<Sosig> curSupplyPointSosigs = (List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(curSupplyPoint);
-                    curSupplyPointSosigs.Clear();
-                    foreach (int sosigID in data.supplyPointsSosigIDs[i])
-                    {
-                        if (sosigArrToUse[sosigID] != null && sosigArrToUse[sosigID].physicalObject != null)
-                        {
-                            curSupplyPointSosigs.Add(sosigArrToUse[sosigID].physicalObject.physicalSosigScript);
-                        }
-                    }
-                    List<AutoMeater> curSupplyPointTurrets = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(curSupplyPoint);
-                    curSupplyPointTurrets.Clear();
-                    foreach (int autoMeaterID in data.supplyPointsTurretIDs[i])
-                    {
-                        if (autoMeaterArrToUse[autoMeaterID] != null && autoMeaterArrToUse[autoMeaterID].physicalObject != null)
-                        {
-                            curSupplyPointTurrets.Add(autoMeaterArrToUse[autoMeaterID].physicalObject.physicalAutoMeaterScript);
-                        }
-                    }
+                    Mod.InitTNHData(data);
                 }
             }
             else

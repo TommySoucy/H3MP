@@ -1507,6 +1507,10 @@ namespace H3MP
                     }
                     Mod.currentTNHInstance = null;
                     Mod.TNHSpectating = false;
+                    Mod.temporaryHoldSosigIDs.Clear();
+                    Mod.temporaryHoldTurretIDs.Clear();
+                    Mod.temporarySupplySosigIDs.Clear();
+                    Mod.temporarySupplyTurretIDs.Clear();
                 }
             }
             else // Finished loading

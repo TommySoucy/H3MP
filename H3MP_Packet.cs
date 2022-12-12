@@ -929,6 +929,7 @@ namespace H3MP
             }
             foreach (int index in activeSupplyPointsIndices)
             {
+                Write(index);
                 TNH_SupplyPoint currentSupplyPoint = manager.SupplyPoints[index];
                 List<Sosig> supplyPointActiveSosigs = (List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(currentSupplyPoint);
                 if (supplyPointActiveSosigs == null || supplyPointActiveSosigs.Count == 0)
@@ -1619,10 +1620,12 @@ namespace H3MP
                 data.activeHoldTurretIDs[i] = ReadInt();
             }
             int activeSupplyCount = ReadInt();
+            data.activeSupplyIndices = new int[activeSupplyCount];
             data.supplyPointsSosigIDs = new int[activeSupplyCount][];
             data.supplyPointsTurretIDs = new int[activeSupplyCount][];
             for(int i=0; i < activeSupplyCount; ++i)
             {
+                data.activeSupplyIndices[i] = ReadInt();
                 data.supplyPointsSosigIDs[i] = new int[ReadInt()];
                 for (int j = 0; j < data.supplyPointsSosigIDs[i].Length; ++j)
                 {

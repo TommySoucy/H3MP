@@ -342,6 +342,9 @@ namespace H3MP
                 if (removeFromList)
                 {
                     H3MP_Client.sosigs[trackedID] = null;
+
+                    Mod.temporaryHoldSosigIDs.Remove(trackedID);
+                    Mod.temporarySupplySosigIDs.Remove(trackedID);
                 }
             }
         }
@@ -372,6 +375,9 @@ namespace H3MP
                 if (removeFromList)
                 {
                     H3MP_Client.autoMeaters[trackedID] = null;
+
+                    Mod.temporaryHoldTurretIDs.Remove(trackedID);
+                    Mod.temporarySupplyTurretIDs.Remove(trackedID);
                 }
             }
         }
@@ -1366,15 +1372,23 @@ namespace H3MP
         {
             int controller = packet.ReadInt();
 
-            H3MP_TNHData data = packet.ReadTNHData();
+            if (controller == H3MP_GameManager.ID && GM.TNH_Manager != null && Mod.currentTNHInstance != null)
+            {
+                H3MP_TNHData data = packet.ReadTNHData();
 
-            // TODO: Level may be out of range of the levels list which may result in randomness in SetLevel()
-            // This could cause the local TNH_Manager to not have the correct level when taking control
-            // See if we can efficiently receive the correct level index here instead 
-            Mod.TNH_Manager_m_level.SetValue(GM.TNH_Manager, data.levelIndex);
-            Mod.TNH_Manager_SetLevel.Invoke(GM.TNH_Manager, new object[] { data.levelIndex });
-
-            GM.TNH_Manager.Phase = data.phase;
+                if (TNH_ManagerPatch.doInit)
+                {
+                    Mod.initTNHData = data;
+                }
+                else
+                {
+                    Mod.InitTNHData(data);
+                }
+            }
+            else
+            {
+                H3MP_ClientSend.TNHData(packet);
+            }
         }
 
         public static void TNHPlayerDied(H3MP_Packet packet)

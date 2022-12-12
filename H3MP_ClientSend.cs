@@ -1214,6 +1214,18 @@ namespace H3MP
             }
         }
 
+        public static void TNHData(H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.TNHData);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(packet);
+        }
+
         public static void TNHPlayerDied(int instance, int ID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHPlayerDied))
