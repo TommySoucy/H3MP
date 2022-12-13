@@ -42,6 +42,7 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
+            Debug.Log("Instantiating AutoMeater " + trackedID);
             string itemID = AutoMeaterIDToItemID(ID);
             yield return IM.OD[itemID].GetGameObjectAsync();
             GameObject autoMeaterPrefab = IM.OD[itemID].GetGameObject();

@@ -6083,18 +6083,23 @@ namespace H3MP
                 return true;
             }
 
+            Debug.Log("TNH_ShatterableCrateDamagePatch called");
             // If in control of the damaged crate, we want to process the damage
             trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null)
             {
+                Debug.Log("\tCrate tracked");
                 if (H3MP_ThreadManager.host)
                 {
+                    Debug.Log("\t\tWe are host");
                     if (trackedItem.data.controller == 0)
                     {
+                        Debug.Log("\t\t\tWe control");
                         return true;
                     }
                     else
                     {
+                        Debug.Log("\t\t\tWe don't control, server sending damage");
                         // Not in control, we want to send the damage to the controller for them to process it
                         H3MP_ServerSend.ShatterableCrateDamage(trackedItem.data.trackedID, d);
                         return false;
@@ -6102,10 +6107,12 @@ namespace H3MP
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
+                    Debug.Log("\t\tWe are not host, we control");
                     return true;
                 }
                 else
                 {
+                    Debug.Log("\t\tWe are not host, we dont control, client sending damage");
                     H3MP_ClientSend.ShatterableCrateDamage(trackedItem.data.trackedID, d);
                     return false;
                 }
@@ -7428,6 +7435,7 @@ namespace H3MP
                 // Set the hold
                 TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+                Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
 
                 //  Set supply points
                 bool spawnToken = true;

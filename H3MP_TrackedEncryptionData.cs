@@ -37,7 +37,8 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            if(GM.TNH_Manager == null)
+            Debug.Log("Instantiating encryption " + trackedID);
+            if (GM.TNH_Manager == null)
             {
                 yield break;
             }
@@ -55,49 +56,48 @@ namespace H3MP
 
             // Register to hold
             TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(GM.TNH_Manager);
-            TNH_EncryptionTarget encryptionTarget = encryptionInstance.GetComponent<TNH_EncryptionTarget>();
-            encryptionTarget.SetHoldPoint(curHoldPoint);
-            curHoldPoint.RegisterNewTarget(encryptionTarget);
+            physicalObject.physicalEncryptionScript.SetHoldPoint(curHoldPoint);
+            curHoldPoint.RegisterNewTarget(physicalObject.physicalEncryptionScript);
 
             // Keep references to sub targets
-            subTargets = new TNH_EncryptionTarget_SubTarget[encryptionTarget.SubTargs.Count];
+            subTargets = new TNH_EncryptionTarget_SubTarget[physicalObject.physicalEncryptionScript.SubTargs.Count];
             for(int i=0; i < subTargets.Length; ++i)
             {
-                subTargets[i] = encryptionTarget.SubTargs[i].GetComponent<TNH_EncryptionTarget_SubTarget>();
+                subTargets[i] = physicalObject.physicalEncryptionScript.SubTargs[i].GetComponent<TNH_EncryptionTarget_SubTarget>();
             }
 
             // Init growths
             int numSubTargsLeft = 0;
-            if (encryptionTarget.UsesRegenerativeSubTarg)
+            if (physicalObject.physicalEncryptionScript.UsesRegenerativeSubTarg)
             {
                 for (int i = 0; i < tendrilsActive.Length; ++i)
                 {
                     if (tendrilsActive[i])
                     {
-                        encryptionTarget.Tendrils[i].SetActive(true);
-                        encryptionTarget.GrowthPoints[i] = growthPoints[i];
-                        encryptionTarget.SubTargs[i].transform.position = subTargsPos[i];
-                        encryptionTarget.SubTargs[i].SetActive(true);
-                        encryptionTarget.TendrilFloats[i] = 1f;
-                        encryptionTarget.Tendrils[i].transform.rotation = tendrilsRot[i];
-                        encryptionTarget.Tendrils[i].transform.localScale = tendrilsScale[i];
-                        encryptionTarget.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
+                        physicalObject.physicalEncryptionScript.Tendrils[i].SetActive(true);
+                        physicalObject.physicalEncryptionScript.GrowthPoints[i] = growthPoints[i];
+                        physicalObject.physicalEncryptionScript.SubTargs[i].transform.position = subTargsPos[i];
+                        physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
+                        physicalObject.physicalEncryptionScript.TendrilFloats[i] = 1f;
+                        physicalObject.physicalEncryptionScript.Tendrils[i].transform.rotation = tendrilsRot[i];
+                        physicalObject.physicalEncryptionScript.Tendrils[i].transform.localScale = tendrilsScale[i];
+                        physicalObject.physicalEncryptionScript.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
                         ++numSubTargsLeft;
                     }
                 }
             }
-            else if (encryptionTarget.UsesRecursiveSubTarg)
+            else if (physicalObject.physicalEncryptionScript.UsesRecursiveSubTarg)
             {
                 for (int i = 0; i < subTargsActive.Length; ++i)
                 {
                     if (subTargsActive[i])
                     {
-                        encryptionTarget.SubTargs[i].SetActive(true);
+                        physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
                         ++numSubTargsLeft;
                     }
                 }
             }
-            Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(encryptionTarget, numSubTargsLeft);
+            Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(physicalObject.physicalEncryptionScript, numSubTargsLeft);
 
             // Initially set itself
             Update(this);

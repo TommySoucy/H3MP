@@ -778,6 +778,13 @@ namespace H3MP
             }
             data.position = sosigScript.CoreRB.position;
             data.rotation = sosigScript.CoreRB.rotation;
+            data.linkPos = new Vector3[sosigScript.Links.Count];
+            data.linkRot = new Quaternion[sosigScript.Links.Count];
+            for (int i = 0; i < sosigScript.Links.Count; ++i)
+            {
+                data.linkPos[i] = sosigScript.Links[i].R.position;
+                data.linkRot[i] = sosigScript.Links[i].R.rotation;
+            }
             data.active = trackedSosig.gameObject.activeInHierarchy;
             data.linkData = new float[sosigScript.Links.Count][];
             data.linkIntegrity = new float[data.linkData.Length];
@@ -892,7 +899,7 @@ namespace H3MP
 
         private static H3MP_TrackedAutoMeater MakeAutoMeaterTracked(AutoMeater autoMeaterScript)
         {
-            Debug.Log("MakeSosigTracked called");
+            Debug.Log("MakeAutoMeaterTracked called");
             H3MP_TrackedAutoMeater trackedAutoMeater = autoMeaterScript.gameObject.AddComponent<H3MP_TrackedAutoMeater>();
             H3MP_TrackedAutoMeaterData data = new H3MP_TrackedAutoMeaterData();
             trackedAutoMeater.data = data;
@@ -1015,6 +1022,7 @@ namespace H3MP
 
         private static H3MP_TrackedEncryption MakeEncryptionTracked(TNH_EncryptionTarget encryption)
         {
+            Debug.Log("MakeEncryptionTracked called");
             H3MP_TrackedEncryption trackedEncryption = encryption.gameObject.AddComponent<H3MP_TrackedEncryption>();
             H3MP_TrackedEncryptionData data = new H3MP_TrackedEncryptionData();
             trackedEncryption.data = data;
@@ -1025,7 +1033,38 @@ namespace H3MP
             data.position = trackedEncryption.transform.position;
             data.rotation = trackedEncryption.transform.rotation;
             data.active = trackedEncryption.gameObject.activeInHierarchy;
-            //TODO: add all the other shit we wanna track like the subtargetS? maybe
+
+            int numSubTargsLeft = 0;
+            if (data.physicalObject.physicalEncryptionScript.UsesRegenerativeSubTarg)
+            {
+                for (int i = 0; i < data.tendrilsActive.Length; ++i)
+                {
+                    if (data.tendrilsActive[i])
+                    {
+                        data.physicalObject.physicalEncryptionScript.Tendrils[i].SetActive(true);
+                        data.physicalObject.physicalEncryptionScript.GrowthPoints[i] = data.growthPoints[i];
+                        data.physicalObject.physicalEncryptionScript.SubTargs[i].transform.position = data.subTargsPos[i];
+                        data.physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
+                        data.physicalObject.physicalEncryptionScript.TendrilFloats[i] = 1f;
+                        data.physicalObject.physicalEncryptionScript.Tendrils[i].transform.rotation = data.tendrilsRot[i];
+                        data.physicalObject.physicalEncryptionScript.Tendrils[i].transform.localScale = data.tendrilsScale[i];
+                        data.physicalObject.physicalEncryptionScript.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
+                        ++numSubTargsLeft;
+                    }
+                }
+            }
+            else if (data.physicalObject.physicalEncryptionScript.UsesRecursiveSubTarg)
+            {
+                for (int i = 0; i < data.subTargsActive.Length; ++i)
+                {
+                    if (data.subTargsActive[i])
+                    {
+                        data.physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
+                        ++numSubTargsLeft;
+                    }
+                }
+            }
+            Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(data.physicalObject.physicalEncryptionScript, numSubTargsLeft);
 
             data.controller = ID;
 

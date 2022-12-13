@@ -116,6 +116,7 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
+            Debug.Log("Instantiating item " + trackedID);
             GameObject itemPrefab = GetItemPrefab();
             if (itemPrefab == null)
             {

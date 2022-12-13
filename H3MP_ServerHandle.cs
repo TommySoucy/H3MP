@@ -253,6 +253,10 @@ namespace H3MP
                 {
                     GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
+                    foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
+                    {
+                        link.R.isKinematic = false;
+                    }
                 }
                 H3MP_GameManager.sosigs.Add(trackedSosig);
             }
@@ -266,6 +270,10 @@ namespace H3MP
                 {
                     GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
+                    foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
+                    {
+                        link.R.isKinematic = true;
+                    }
                 }
             }
             trackedSosig.controller = newController;

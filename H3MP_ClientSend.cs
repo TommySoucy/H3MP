@@ -937,13 +937,13 @@ namespace H3MP
 
                         ++count;
 
+                        ++index;
+
                         // Limit buffer size to MTU, will send next set of tracked items in separate packet
                         if (packet.buffer.Count >= 1300)
                         {
                             break;
                         }
-
-                        ++index;
                     }
 
                     // Write the count to packet
@@ -978,13 +978,13 @@ namespace H3MP
 
                         ++count;
 
+                        ++index;
+
                         // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
                         if (packet.buffer.Count >= 1300)
                         {
                             break;
                         }
-
-                        ++index;
                     }
 
                     // Write the count to packet
@@ -1019,13 +1019,13 @@ namespace H3MP
 
                         ++count;
 
+                        ++index;
+
                         // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
                         if (packet.buffer.Count >= 1300)
                         {
                             break;
                         }
-
-                        ++index;
                     }
 
                     // Write the count to packet

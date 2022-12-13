@@ -212,6 +212,10 @@ namespace H3MP
                 {
                     GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
+                    foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
+                    {
+                        link.R.isKinematic = true;
+                    }
                 }
             }
             else if(trackedSosig.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
@@ -224,6 +228,10 @@ namespace H3MP
                 {
                     GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
+                    foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
+                    {
+                        link.R.isKinematic = false;
+                    }
                 }
             }
             trackedSosig.controller = controllerID;
@@ -1629,6 +1637,9 @@ namespace H3MP
         public static void ShatterableCrateDamage(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
+            Debug.Log("ShatterableCrateDamage received, H3MP_Client.items[trackedID] == null?: " + (H3MP_Client.items[trackedID] == null));
+            if(H3MP_Client.items[trackedID] != null)
+            Debug.Log("H3MP_Client.items[trackedID].controller: " + H3MP_Client.items[trackedID].controller);
 
             if (H3MP_Client.items[trackedID] != null && H3MP_Client.items[trackedID].controller == H3MP_GameManager.ID)
             {

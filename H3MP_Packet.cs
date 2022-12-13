@@ -452,7 +452,20 @@ namespace H3MP
         {
             Write(trackedSosig.trackedID);
             Write(trackedSosig.position);
-            Write(trackedSosig.rotation);
+            Write(trackedSosig.rotation); 
+            if (trackedSosig.linkPos != null && trackedSosig.linkPos.Length > 0)
+            {
+                Write((byte)trackedSosig.linkPos.Length);
+                for (int i = 0; i < trackedSosig.linkPos.Length; ++i)
+                {
+                    Write(trackedSosig.linkPos[i]);
+                    Write(trackedSosig.linkRot[i]);
+                }
+            }
+            else
+            {
+                Write((byte)0);
+            }
             Write(trackedSosig.active);
             Write(trackedSosig.mustard);
             if(trackedSosig.ammoStores != null && trackedSosig.ammoStores.Length > 0)
@@ -1196,6 +1209,17 @@ namespace H3MP
             trackedSosig.trackedID = ReadInt();
             trackedSosig.position = ReadVector3();
             trackedSosig.rotation = ReadQuaternion();
+            byte linkStateLength = ReadByte();
+            if(linkStateLength > 0)
+            {
+                trackedSosig.linkPos = new Vector3[linkStateLength];
+                trackedSosig.linkRot = new Quaternion[linkStateLength];
+                for(int i=0; i < linkStateLength; ++i)
+                {
+                    trackedSosig.linkPos[i] = ReadVector3();
+                    trackedSosig.linkRot[i] = ReadQuaternion();
+                }
+            }
             trackedSosig.active = ReadBool();
             trackedSosig.mustard = ReadFloat();
             byte ammoStoreLength = ReadByte();
