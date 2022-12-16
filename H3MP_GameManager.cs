@@ -776,13 +776,6 @@ namespace H3MP
             }
             data.position = sosigScript.CoreRB.position;
             data.rotation = sosigScript.CoreRB.rotation;
-            data.linkPos = new Vector3[sosigScript.Links.Count];
-            data.linkRot = new Quaternion[sosigScript.Links.Count];
-            for (int i = 0; i < sosigScript.Links.Count; ++i)
-            {
-                data.linkPos[i] = sosigScript.Links[i].R.position;
-                data.linkRot[i] = sosigScript.Links[i].R.rotation;
-            }
             data.active = trackedSosig.gameObject.activeInHierarchy;
             data.linkData = new float[sosigScript.Links.Count][];
             data.linkIntegrity = new float[data.linkData.Length];
