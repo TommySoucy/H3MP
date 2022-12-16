@@ -1,18 +1,20 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mail;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
-using static UnityEngine.ParticleSystem;
 
 namespace H3MP
 {
     public class H3MP_TrackedItem : MonoBehaviour
     {
         public H3MP_TrackedItemData data;
+
+        // Unknown tracked ID queues
+        public static Dictionary<int, KeyValuePair<int, bool>> unknownTrackedIDs = new Dictionary<int, KeyValuePair<int, bool>>();
+        public static Dictionary<int, List<int>> unknownParentTrackedIDs = new Dictionary<int, List<int>>();
+        public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
+        public static List<int> unknownDestroyTrackedIDs = new List<int>();
 
         // Update
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
@@ -1311,6 +1313,7 @@ namespace H3MP
 
         private void OnDestroy()
         {
+            //tracked list so that when we get the tracked ID we can send the destruction to server and only then can we remove it from the list
             H3MP_GameManager.trackedItemByItem.Remove(physicalObject);
 
             if (H3MP_ThreadManager.host)
@@ -1356,6 +1359,7 @@ namespace H3MP
             }
             else
             {
+                bool removeFromLocal = true;
                 if (H3MP_GameManager.giveControlOfDestroyed)
                 {
                     if (data.controller == H3MP_Client.singleton.ID)
@@ -1364,10 +1368,27 @@ namespace H3MP
 
                         if (otherPlayer != -1)
                         {
-                            H3MP_ClientSend.GiveControl(data.trackedID, otherPlayer);
+                            if(data.trackedID == -1)
+                            {
+                                if (unknownControlTrackedIDs.ContainsKey(data.localTrackedID))
+                                {
+                                    unknownControlTrackedIDs[data.localTrackedID] = otherPlayer;
+                                }
+                                else
+                                {
+                                    unknownControlTrackedIDs.Add(data.localTrackedID, otherPlayer);
+                                }
 
-                            // Also change controller locally
-                            data.controller = otherPlayer;
+                                // We want to keep it in local until we give control
+                                removeFromLocal = false;
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.GiveControl(data.trackedID, otherPlayer);
+
+                                // Also change controller locally
+                                data.controller = otherPlayer;
+                            }
                         }
                     }
                 }
@@ -1375,21 +1396,36 @@ namespace H3MP
                 {
                     if (sendDestroy && skipDestroy == 0)
                     {
-                        H3MP_ClientSend.DestroyItem(data.trackedID);
+                        if (data.trackedID == -1)
+                        {
+                            if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                            {
+                                unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                            }
+
+                            // We want to keep it in local until we give destruction order
+                            removeFromLocal = false;
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.DestroyItem(data.trackedID);
+
+                            H3MP_Client.items[data.trackedID] = null;
+                        }
                     }
                     else if (!sendDestroy)
                     {
                         sendDestroy = true;
                     }
 
-                    H3MP_Client.items[data.trackedID] = null;
+                    if (data.trackedID != -1)
+                    {
+                        H3MP_Client.items[data.trackedID] = null;
+                    }
                 }
-                if (data.localTrackedID != -1)
+                if (removeFromLocal && data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.items[data.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[data.localTrackedID].localTrackedID = data.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    data.localTrackedID = -1;
+                    data.RemoveFromLocal();
                 }
             }
         }
@@ -1401,53 +1437,106 @@ namespace H3MP
                 return;
             }
 
-            if(data.controller == H3MP_GameManager.ID)
+            if (data.controller == H3MP_GameManager.ID)
             {
                 Transform currentParent = transform.parent;
                 H3MP_TrackedItem parentTrackedItem = null;
                 while (currentParent != null)
                 {
                     parentTrackedItem = currentParent.GetComponent<H3MP_TrackedItem>();
-                    if(parentTrackedItem != null)
+                    if (parentTrackedItem != null)
                     {
                         break;
                     }
                     currentParent = currentParent.parent;
                 }
-                if(parentTrackedItem != null)
+                if (parentTrackedItem != null)
                 {
-                    if (parentTrackedItem.data.trackedID != data.parent)
+                    // Handle case of unknown tracked IDs
+                    //      If ours is not yet known, put our local tracked ID in a wait dict with value as parent's LOCAL tracked ID if it is under our control
+                    //      and the actual tracked ID if not, when we receive the tracked ID we set the parent
+                    //          Note that if the parent is under our control, we need to store the local tracked ID because we might not have its tracked ID yet either
+                    //          If it is not under our control then we have guarantee that is has a tracked ID
+                    //      If the parent's tracked ID is not yet known, put it in a wait dict where key is the local tracked ID of the parent,
+                    //      and the value is a list of all children that must be attached to this parent once we know the parent's tracked ID
+                    //          Note that if we do not know the parent's tracked ID, it is because it is under our control
+                    bool haveParentID = parentTrackedItem.data.trackedID != -1;
+                    if (data.trackedID == -1)
                     {
-                        // We have a parent trackedItem and it is new
-                        // Update other clients
-                        if (H3MP_ThreadManager.host)
+                        KeyValuePair<int, bool> parentIDPair = new KeyValuePair<int, bool>(haveParentID ? parentTrackedItem.data.trackedID : parentTrackedItem.data.localTrackedID, haveParentID);
+                        if (unknownTrackedIDs.ContainsKey(data.localTrackedID))
                         {
-                            H3MP_ServerSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                            unknownTrackedIDs[data.localTrackedID] = parentIDPair;
                         }
                         else
                         {
-                            H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                            unknownTrackedIDs.Add(data.localTrackedID, parentIDPair);
                         }
-
-                        // Update local
-                        data.SetParent(parentTrackedItem.data, false);
-                    }
-                }
-                else if(data.parent != -1)
-                {
-                    // We were detached from current parent
-                    // Update other clients
-                    if (H3MP_ThreadManager.host)
-                    {
-                        H3MP_ServerSend.ItemParent(data.trackedID, -1);
                     }
                     else
                     {
-                        H3MP_ClientSend.ItemParent(data.trackedID, -1);
-                    }
+                        if(haveParentID)
+                        {
+                            if (parentTrackedItem.data.trackedID != data.parent)
+                            {
+                                // We have a parent trackedItem and it is new
+                                // Update other clients
+                                if (H3MP_ThreadManager.host)
+                                {
+                                    H3MP_ServerSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                                }
 
-                    // Update locally
-                    data.SetParent(null, false);
+                                // Update local
+                                data.SetParent(parentTrackedItem.data, false);
+                            }
+                        }
+                        else
+                        {
+                            if (unknownParentTrackedIDs.ContainsKey(parentTrackedItem.data.localTrackedID))
+                            {
+                                unknownParentTrackedIDs[parentTrackedItem.data.localTrackedID].Add(data.trackedID);
+                            }
+                            else
+                            {
+                                unknownParentTrackedIDs.Add(parentTrackedItem.data.localTrackedID, new List<int>() { data.trackedID });
+                            }
+                        }
+                    }
+                }
+                else if (data.parent != -1)
+                {
+                    if (data.trackedID == -1)
+                    {
+                        KeyValuePair<int, bool> parentIDPair = new KeyValuePair<int, bool>(-1, false);
+                        if (unknownTrackedIDs.ContainsKey(data.localTrackedID))
+                        {
+                            unknownTrackedIDs[data.localTrackedID] = parentIDPair;
+                        }
+                        else
+                        {
+                            unknownTrackedIDs.Add(data.localTrackedID, parentIDPair);
+                        }
+                    }
+                    else
+                    {
+                        // We were detached from current parent
+                        // Update other clients
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.ItemParent(data.trackedID, -1);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.ItemParent(data.trackedID, -1);
+                        }
+
+                        // Update locally
+                        data.SetParent(null, false);
+                    }
                 }
             }
         }

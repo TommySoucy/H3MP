@@ -582,32 +582,6 @@ namespace H3MP
                     AnvilManager.Run(trackedSosig.EquipWearable(linkIndex, wearableID, true));
                 }
             }
-            else // We could receive a register wearable packet before the sosig is receied
-            {
-                // NOTE: Not sure if this is actually possible, but ill leave this here to handle the case anyway
-
-                // Keep the wearables in a dictionary that we will query once we instantiate the sosig
-                if (H3MP_GameManager.waitingWearables.ContainsKey(sosigTrackedID))
-                {
-                    if (H3MP_GameManager.waitingWearables[sosigTrackedID].Count <= linkIndex)
-                    {
-                        while (H3MP_GameManager.waitingWearables[sosigTrackedID].Count <= linkIndex)
-                        {
-                            H3MP_GameManager.waitingWearables[sosigTrackedID].Add(new List<string>());
-                        }
-                    }
-                    H3MP_GameManager.waitingWearables[sosigTrackedID][linkIndex].Add(wearableID);
-                }
-                else
-                {
-                    H3MP_GameManager.waitingWearables.Add(sosigTrackedID, new List<List<string>>());
-                    while (H3MP_GameManager.waitingWearables[sosigTrackedID].Count <= linkIndex)
-                    {
-                        H3MP_GameManager.waitingWearables[sosigTrackedID].Add(new List<string>());
-                    }
-                    H3MP_GameManager.waitingWearables[sosigTrackedID][linkIndex].Add(wearableID);
-                }
-            }
         }
 
         public static void SosigLinkDeRegisterWearable(H3MP_Packet packet)
@@ -644,11 +618,6 @@ namespace H3MP
                         trackedSosig.wearables[linkIndex].Remove(wearableID);
                     }
                 }
-            }
-            else if(H3MP_GameManager.waitingWearables.ContainsKey(sosigTrackedID)
-                    && H3MP_GameManager.waitingWearables[sosigTrackedID].Count > linkIndex)
-            {
-                H3MP_GameManager.waitingWearables[sosigTrackedID][linkIndex].Remove(wearableID);
             }
         }
 

@@ -12,6 +12,10 @@ namespace H3MP
         public TNH_EncryptionTarget physicalEncryptionScript;
         public H3MP_TrackedEncryptionData data;
 
+        // Unknown tracked ID queues
+        public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
+        public static List<int> unknownDestroyTrackedIDs = new List<int>();
+
         public bool sendDestroy = true; // To prevent feeback loops
         public static int skipDestroy;
 
@@ -69,6 +73,7 @@ namespace H3MP
             }
             else
             {
+                bool removeFromLocal = true;
                 if (H3MP_GameManager.giveControlOfDestroyed)
                 {
                     if (data.controller == H3MP_Client.singleton.ID && H3MP_GameManager.TNHInstances.TryGetValue(H3MP_GameManager.instance, out H3MP_TNHInstance actualInstance))
@@ -85,10 +90,27 @@ namespace H3MP
 
                         if (otherPlayer != -1)
                         {
-                            H3MP_ClientSend.GiveEncryptionControl(data.trackedID, otherPlayer);
+                            if (data.trackedID == -1)
+                            {
+                                if (unknownControlTrackedIDs.ContainsKey(data.localTrackedID))
+                                {
+                                    unknownControlTrackedIDs[data.localTrackedID] = otherPlayer;
+                                }
+                                else
+                                {
+                                    unknownControlTrackedIDs.Add(data.localTrackedID, otherPlayer);
+                                }
 
-                            // Also change controller locally
-                            data.controller = otherPlayer;
+                                // We want to keep it in local until we give control
+                                removeFromLocal = false;
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.GiveEncryptionControl(data.trackedID, otherPlayer);
+
+                                // Also change controller locally
+                                data.controller = otherPlayer;
+                            }
                         }
                     }
                 }
@@ -96,21 +118,36 @@ namespace H3MP
                 {
                     if (sendDestroy && skipDestroy == 0)
                     {
-                        H3MP_ClientSend.DestroyEncryption(data.trackedID);
+                        if (data.trackedID == -1)
+                        {
+                            if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                            {
+                                unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                            }
+
+                            // We want to keep it in local until we give destruction order
+                            removeFromLocal = false;
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.DestroyEncryption(data.trackedID);
+
+                            H3MP_Client.encryptions[data.trackedID] = null;
+                        }
                     }
                     else if (!sendDestroy)
                     {
                         sendDestroy = true;
                     }
 
-                    H3MP_Client.encryptions[data.trackedID] = null;
+                    if(data.trackedID != -1)
+                    {
+                        H3MP_Client.encryptions[data.trackedID] = null;
+                    }
                 }
-                if (data.localTrackedID != -1)
+                if (removeFromLocal && data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.encryptions[data.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-                    H3MP_GameManager.encryptions[data.localTrackedID].localTrackedID = data.localTrackedID;
-                    H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
-                    data.localTrackedID = -1;
+                    data.RemoveFromLocal();
                 }
             }
         }

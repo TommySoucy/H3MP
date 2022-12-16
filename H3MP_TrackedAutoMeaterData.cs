@@ -213,5 +213,49 @@ namespace H3MP
             return !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousActive != active || !previousSideToSideRotation.Equals(sideToSideRotation) ||
                    !previousUpDownMotorRotation.Equals(upDownMotorRotation) || previousHingeTargetPos != hingeTargetPos || previousUpDownJointTargetPos != upDownJointTargetPos;
         }
+
+        public void OnTrackedIDReceived()
+        {
+            if (H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Contains(localTrackedID))
+            {
+                H3MP_ClientSend.DestroySosig(trackedID);
+
+                // Note that if we receive a tracked ID that was previously unknown, we must be a client
+                H3MP_Client.autoMeaters[trackedID] = null;
+
+                // Remove from local
+                RemoveFromLocal();
+            }
+            if (localTrackedID != -1 && H3MP_TrackedAutoMeater.unknownControlTrackedIDs.ContainsKey(localTrackedID))
+            {
+                int newController = H3MP_TrackedAutoMeater.unknownControlTrackedIDs[localTrackedID];
+
+                H3MP_ClientSend.GiveAutoMeaterControl(trackedID, newController);
+
+                // Also change controller locally
+                controller = newController;
+
+                H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localTrackedID);
+
+                // Remove from local
+                if (H3MP_GameManager.ID != controller)
+                {
+                    RemoveFromLocal();
+                }
+            }
+        }
+
+        public void RemoveFromLocal()
+        {
+            // Manage unknown lists
+            H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Remove(localTrackedID);
+
+            // Remove
+            H3MP_GameManager.autoMeaters[localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+            H3MP_GameManager.autoMeaters[localTrackedID].localTrackedID = localTrackedID;
+            H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+            localTrackedID = -1;
+        }
     }
 }

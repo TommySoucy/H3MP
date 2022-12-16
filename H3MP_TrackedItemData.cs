@@ -17,7 +17,7 @@ namespace H3MP
         public byte order; // The index of this item's data packet used to ensure we process this data in the correct order
 
         public int trackedID = -1; // This item's unique ID to identify it across systems (index in global items arrays)
-        public int localTrackedID = -1; // This item's index in local items list 
+        public int localTrackedID = -1; // This item's index in local items list
         public int controller = 0; // Client controlling this item, 0 for host
         public bool active;
         private bool previousActive;
@@ -297,8 +297,7 @@ namespace H3MP
                         // If in control, we want to enable rigidbody
                         if (controller == clientID)
                         {
-                            // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
-                            physicalItem.GetComponent<FVRPhysicalObject>().RecoverRigidbody();
+                            physicalItem.physicalObject.RecoverRigidbody();
                         }
 
                         // Call updateParent delegate on item if it has one
@@ -351,8 +350,7 @@ namespace H3MP
                     // If in control, we want to enable rigidbody
                     if (controller == H3MP_GameManager.ID)
                     {
-                        // TODO: Rename physicalObject to just physical, and keep a ref to the actual FVRPhysicalObject of the item for efficient access
-                        physicalItem.GetComponent<FVRPhysicalObject>().StoreAndDestroyRigidbody();
+                        physicalItem.physicalObject.StoreAndDestroyRigidbody();
                     }
 
                     // Call updateParent delegate on item if it has one
@@ -415,6 +413,151 @@ namespace H3MP
             previousData = data;
 
             return physicalItem == null ? false : physicalItem.UpdateItemData(newData);
+        }
+
+        public void OnTrackedIDReceived()
+        {
+            if (H3MP_TrackedItem.unknownDestroyTrackedIDs.Contains(localTrackedID))
+            {
+                H3MP_ClientSend.DestroyItem(trackedID);
+
+                // Note that if we receive a tracked ID that was previously unknown, we must be a client
+                H3MP_Client.items[trackedID] = null;
+
+                // Remove from local
+                RemoveFromLocal();
+            }
+            if (localTrackedID != -1 && H3MP_TrackedItem.unknownControlTrackedIDs.ContainsKey(localTrackedID))
+            {
+                int newController = H3MP_TrackedItem.unknownControlTrackedIDs[localTrackedID];
+
+                H3MP_ClientSend.GiveControl(trackedID, newController);
+
+                // Also change controller locally
+                controller = newController;
+
+                H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localTrackedID);
+
+                // Remove from local
+                if (H3MP_GameManager.ID != controller)
+                {
+                    RemoveFromLocal();
+                }
+            }
+            if (localTrackedID != -1 && H3MP_TrackedItem.unknownTrackedIDs.ContainsKey(localTrackedID))
+            {
+                KeyValuePair<int, bool> parentPair = H3MP_TrackedItem.unknownTrackedIDs[localTrackedID];
+                if (parentPair.Value)
+                {
+                    H3MP_TrackedItemData parentItemData = null;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        parentItemData = H3MP_Server.items[parentPair.Key];
+                    }
+                    else
+                    {
+                        parentItemData = H3MP_Client.items[parentPair.Key];
+                    }
+                    if (parentItemData != null)
+                    {
+                        if (parentItemData.trackedID != parent)
+                        {
+                            // We have a parent trackedItem and it is new
+                            // Update other clients
+                            if (H3MP_ThreadManager.host)
+                            {
+                                H3MP_ServerSend.ItemParent(trackedID, parentItemData.trackedID);
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.ItemParent(trackedID, parentItemData.trackedID);
+                            }
+
+                            // Update local
+                            SetParent(parentItemData, false);
+                        }
+                    }
+                }
+                else
+                {
+                    if(parentPair.Key == -1)
+                    {
+                        // We were detached from current parent
+                        // Update other clients
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.ItemParent(trackedID, -1);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.ItemParent(trackedID, -1);
+                        }
+
+                        // Update locally
+                        SetParent(null, false);
+                    }
+                    else // We received our tracked ID but not our parent's
+                    {
+                        if (H3MP_TrackedItem.unknownParentTrackedIDs.ContainsKey(parentPair.Key))
+                        {
+                            H3MP_TrackedItem.unknownParentTrackedIDs[parentPair.Key].Add(trackedID);
+                        }
+                        else
+                        {
+                            H3MP_TrackedItem.unknownParentTrackedIDs.Add(parentPair.Key, new List<int>() { trackedID });
+                        }
+                    }
+                }
+
+                H3MP_TrackedItem.unknownTrackedIDs.Remove(localTrackedID);
+            }
+            if (localTrackedID != -1 && H3MP_TrackedItem.unknownParentTrackedIDs.ContainsKey(localTrackedID))
+            {
+                List<int> childrenList = H3MP_TrackedItem.unknownParentTrackedIDs[localTrackedID];
+                H3MP_TrackedItemData[] arrToUse = null;
+                if (H3MP_ThreadManager.host)
+                {
+                    arrToUse = H3MP_Server.items;
+                }
+                else
+                {
+                    arrToUse = H3MP_Client.items;
+                }
+                foreach(int childID in childrenList)
+                {
+                    if (arrToUse[childID] != null)
+                    {
+                        // Update other clients
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.ItemParent(arrToUse[childID].trackedID, trackedID);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.ItemParent(arrToUse[childID].trackedID, trackedID);
+                        }
+
+                        // Update local
+                        arrToUse[childID].SetParent(this, false);
+                    }
+                }
+                H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localTrackedID);
+            }
+        }
+
+        public void RemoveFromLocal()
+        {
+            // Manage unknown lists
+            H3MP_TrackedItem.unknownTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localTrackedID);
+
+            // Remove
+            H3MP_GameManager.items[localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+            H3MP_GameManager.items[localTrackedID].localTrackedID = localTrackedID;
+            H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+            localTrackedID = -1;
         }
     }
 }

@@ -164,35 +164,46 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance, int clientID)
         {
-            Debug.Log("Received order to add tracked sosig");
-            // Adjust sosigs size to acommodate if necessary
-            if (availableSosigIndices.Count == 0)
+            if (trackedSosig.trackedID == -1)
             {
-                IncreaseSosigsSize();
-            }
-
-            // Add it to server global list
-            trackedSosig.trackedID = availableSosigIndices[availableSosigIndices.Count - 1];
-            availableSosigIndices.RemoveAt(availableSosigIndices.Count - 1);
-
-            sosigs[trackedSosig.trackedID] = trackedSosig;
-
-            // Instantiate sosig if it is in the current scene and not controlled by us
-            if (clientID != 0)
-            {
-                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                Debug.Log("Received order to add tracked sosig");
+                // Adjust sosigs size to acommodate if necessary
+                if (availableSosigIndices.Count == 0)
                 {
-                    AnvilManager.Run(trackedSosig.Instantiate());
+                    IncreaseSosigsSize();
+                }
+
+                // Add it to server global list
+                trackedSosig.trackedID = availableSosigIndices[availableSosigIndices.Count - 1];
+                availableSosigIndices.RemoveAt(availableSosigIndices.Count - 1);
+
+                sosigs[trackedSosig.trackedID] = trackedSosig;
+
+                // Instantiate sosig if it is in the current scene and not controlled by us
+                if (clientID != 0)
+                {
+                    if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                    {
+                        AnvilManager.Run(trackedSosig.Instantiate());
+                    }
+                }
+
+                // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
+                H3MP_ServerSend.TrackedSosig(trackedSosig, scene, instance, clientID);
+
+                // Update the local tracked ID at the end because we need to send that back to the original client intact
+                if (trackedSosig.controller != 0)
+                {
+                    trackedSosig.localTrackedID = -1;
                 }
             }
-
-            // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedSosig(trackedSosig, scene, instance, clientID);
-
-            // Update the local tracked ID at the end because we need to send that back to the original client intact
-            if (trackedSosig.controller != 0)
+            else 
             {
-                trackedSosig.localTrackedID = -1;
+                // This is a sosig we already received full data for and assigned a tracked ID to but things may
+                // have appened to it since we sent the tracked ID, so use this data to update our's and everyones else's
+                sosigs[trackedSosig.trackedID].Update(trackedSosig, true);
+
+                H3MP_ServerSend.TrackedSosig(trackedSosig, scene, instance, clientID);
             }
         }
 
@@ -232,35 +243,46 @@ namespace H3MP
 
         public static void AddTrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, string scene, int instance, int clientID)
         {
-            Debug.Log("Received order to add tracked Encryption");
-            // Adjust Encryptions size to acommodate if necessary
-            if (availableEncryptionIndices.Count == 0)
+            if (trackedEncryption.trackedID == -1)
             {
-                IncreaseEncryptionsSize();
-            }
-
-            // Add it to server global list
-            trackedEncryption.trackedID = availableEncryptionIndices[availableEncryptionIndices.Count - 1];
-            availableEncryptionIndices.RemoveAt(availableEncryptionIndices.Count - 1);
-
-            encryptions[trackedEncryption.trackedID] = trackedEncryption;
-
-            // Instantiate Encryption if it is in the current scene and not controlled by us
-            if (clientID != 0)
-            {
-                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                Debug.Log("Received order to add tracked Encryption");
+                // Adjust Encryptions size to acommodate if necessary
+                if (availableEncryptionIndices.Count == 0)
                 {
-                    AnvilManager.Run(trackedEncryption.Instantiate());
+                    IncreaseEncryptionsSize();
+                }
+
+                // Add it to server global list
+                trackedEncryption.trackedID = availableEncryptionIndices[availableEncryptionIndices.Count - 1];
+                availableEncryptionIndices.RemoveAt(availableEncryptionIndices.Count - 1);
+
+                encryptions[trackedEncryption.trackedID] = trackedEncryption;
+
+                // Instantiate Encryption if it is in the current scene and not controlled by us
+                if (clientID != 0)
+                {
+                    if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                    {
+                        AnvilManager.Run(trackedEncryption.Instantiate());
+                    }
+                }
+
+                // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
+                H3MP_ServerSend.TrackedEncryption(trackedEncryption, scene, instance, clientID);
+
+                // Update the local tracked ID at the end because we need to send that back to the original client intact
+                if (trackedEncryption.controller != 0)
+                {
+                    trackedEncryption.localTrackedID = -1;
                 }
             }
-
-            // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedEncryption(trackedEncryption, scene, instance, clientID);
-
-            // Update the local tracked ID at the end because we need to send that back to the original client intact
-            if (trackedEncryption.controller != 0)
+            else
             {
-                trackedEncryption.localTrackedID = -1;
+                // This is a encryption we already received full data for and assigned a tracked ID to but things may
+                // have happened to it since we sent the tracked ID, so use this data to update our's and everyones else's
+                encryptions[trackedEncryption.trackedID].Update(trackedEncryption, true);
+
+                H3MP_ServerSend.TrackedEncryption(trackedEncryption, scene, instance, clientID);
             }
         }
 

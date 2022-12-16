@@ -1799,7 +1799,7 @@ namespace H3MP
                 else
                 {
                     // Going through each like this, we will go through the host of the instance before any other
-                    foreach (int playerID in Mod.currentTNHInstance.playerIDs)
+                    foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                     {
                         if (playerID != currentController && H3MP_GameManager.players[playerID].gameObject.activeSelf)
                         {
@@ -4388,28 +4388,31 @@ namespace H3MP
             {
                 return flag2;
             }
+            Debug.Log("GetActualFlag of projectile patch called");
 
             if (flag2)
             {
+                Debug.Log("\tWe have damageable");
                 if (tempFA == null)
                 {
-                    // If we don't have a ref to the firearm that fired this projectile, let the damage be controlled by the host
-                    if (!H3MP_ThreadManager.host)
-                    {
-                        int bestHost = Mod.GetBestPotentialObjectHost(-1);
-                        return bestHost == -1 || bestHost == H3MP_GameManager.ID;
-                    }
+                    Debug.Log("\t\ttempFA null");
+                    // If we don't have a ref to the firearm that fired this projectile, let the damage be controlled by the best host
+                    int bestHost = Mod.GetBestPotentialObjectHost(-1);
+                    return bestHost == -1 || bestHost == H3MP_GameManager.ID;
                 }
                 else // We have a ref to the firearm that fired this projectile
                 {
+                    Debug.Log("\t\tWe have ref to firearm");
                     // We only want to let this projectile do damage if we control the firearm
                     H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(tempFA) ? H3MP_GameManager.trackedItemByItem[tempFA] : tempFA.GetComponent<H3MP_TrackedItem>();
                     if (trackedItem == null)
                     {
+                        Debug.Log("\t\t\tNo tracked item on firearm");
                         return false;
                     }
                     else
                     {
+                        Debug.Log("\t\t\tFound tracked item on firearm, control projectile damage?: "+ (trackedItem.data.controller == H3MP_GameManager.ID));
                         return trackedItem.data.controller == H3MP_GameManager.ID;
                     }
                 }

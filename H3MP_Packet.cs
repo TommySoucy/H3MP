@@ -515,16 +515,20 @@ namespace H3MP
                 Write(trackedSosig.configTemplate);
                 Write(trackedSosig.controller);
                 Write(trackedSosig.localTrackedID);
+                Debug.Log("Writing full sosig wearables");
                 Write((byte)trackedSosig.wearables.Count);
-                for(int i=0; i < trackedSosig.wearables.Count; ++i)
+                Debug.Log(trackedSosig.wearables.Count.ToString()+" Links");
+                for (int i=0; i < trackedSosig.wearables.Count; ++i)
                 {
                     if (trackedSosig.wearables[i] == null || trackedSosig.wearables[i].Count == 0)
                     {
                         Write((byte)0);
+                        Debug.Log("\t0 wearables");
                     }
                     else
                     {
                         Write((byte)trackedSosig.wearables[i].Count);
+                        Debug.Log("\t"+trackedSosig.wearables[i].Count+" wearables");
                         for (int j = 0; j < trackedSosig.wearables[i].Count; ++j)
                         {
                             Write(trackedSosig.wearables[i][j]);
@@ -1271,13 +1275,16 @@ namespace H3MP
                 trackedSosig.configTemplate = ReadSosigConfig();
                 trackedSosig.controller = ReadInt();
                 trackedSosig.localTrackedID = ReadInt();
+                Debug.Log("Reading full sosig wearables");
                 byte linkCount = ReadByte();
+                Debug.Log(linkCount.ToString()+" links");
                 trackedSosig.wearables = new List<List<string>>();
                 for(int i=0; i < linkCount; ++i)
                 {
                     trackedSosig.wearables.Add(new List<string>());
                     byte wearableCount = ReadByte();
-                    if(wearableCount > 0)
+                    Debug.Log("\t"+wearableCount+" wearables");
+                    if (wearableCount > 0)
                     {
                         for(int j = 0; j < wearableCount; ++j)
                         {

@@ -440,6 +440,8 @@ namespace H3MP
 
                 // Add the item to client global list
                 items[trackedItem.trackedID] = H3MP_GameManager.items[trackedItem.localTrackedID];
+
+                items[trackedItem.trackedID].OnTrackedIDReceived();
             }
             else
             {
@@ -473,18 +475,37 @@ namespace H3MP
 
                 // Add the sosig to client global list
                 sosigs[trackedSosig.trackedID] = H3MP_GameManager.sosigs[trackedSosig.localTrackedID];
+
+                // Send queued up orders
+                sosigs[trackedSosig.trackedID].OnTrackedIDReceived();
+
+                // Only send latest data if not destroyed
+                if (sosigs[trackedSosig.trackedID] != null)
+                {
+                    trackedSosig.Update(true);
+
+                    // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
+                    H3MP_ClientSend.TrackedSosig(trackedSosig, scene, instance);
+                }
             }
             else
             {
-                trackedSosig.localTrackedID = -1;
-
-                // Add the sosig to client global list
-                sosigs[trackedSosig.trackedID] = trackedSosig;
-
-                // Instantiate sosig if it is in the current scene
-                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                if(sosigs[trackedSosig.trackedID] == null)
                 {
-                    AnvilManager.Run(trackedSosig.Instantiate());
+                    trackedSosig.localTrackedID = -1;
+
+                    // Add the sosig to client global list
+                    sosigs[trackedSosig.trackedID] = trackedSosig;
+
+                    // Instantiate sosig if it is in the current scene
+                    if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                    {
+                        AnvilManager.Run(trackedSosig.Instantiate());
+                    }
+                }
+                else // This is an initial update sosig data
+                {
+                    sosigs[trackedSosig.trackedID].Update(trackedSosig, true);
                 }
             }
         }
@@ -506,6 +527,9 @@ namespace H3MP
 
                 // Add the AutoMeater to client global list
                 autoMeaters[trackedAutoMeater.trackedID] = H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID];
+
+                // Send queued up orders
+                autoMeaters[trackedAutoMeater.trackedID].OnTrackedIDReceived();
             }
             else
             {
@@ -539,18 +563,37 @@ namespace H3MP
 
                 // Add the Encryption to client global list
                 encryptions[trackedEncryption.trackedID] = H3MP_GameManager.encryptions[trackedEncryption.localTrackedID];
+
+                // Send queued up orders
+                encryptions[trackedEncryption.trackedID].OnTrackedIDReceived();
+
+                // Only send latest data if not destroyed
+                if (encryptions[trackedEncryption.trackedID] != null)
+                {
+                    trackedEncryption.Update(true);
+
+                    // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
+                    H3MP_ClientSend.TrackedEncryption(trackedEncryption, scene, instance);
+                }
             }
             else
             {
-                trackedEncryption.localTrackedID = -1;
-
-                // Add the Encryption to client global list
-                encryptions[trackedEncryption.trackedID] = trackedEncryption;
-
-                // Instantiate Encryption if it is in the current scene
-                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                if (encryptions[trackedEncryption.trackedID] == null)
                 {
-                    AnvilManager.Run(trackedEncryption.Instantiate());
+                    trackedEncryption.localTrackedID = -1;
+
+                    // Add the Encryption to client global list
+                    encryptions[trackedEncryption.trackedID] = trackedEncryption;
+
+                    // Instantiate Encryption if it is in the current scene
+                    if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                    {
+                        AnvilManager.Run(trackedEncryption.Instantiate());
+                    }
+                }
+                else // This is an initial update sosig data
+                {
+                    encryptions[trackedEncryption.trackedID].Update(trackedEncryption, true);
                 }
             }
         }

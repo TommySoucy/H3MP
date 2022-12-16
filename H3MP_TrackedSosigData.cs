@@ -17,7 +17,7 @@ namespace H3MP
         public int insuranceCounter = insuranceCount; // Amount of times left to send this data
         public byte order; // The index of this sosig's data packet used to ensure we process this data in the correct order
 
-        public int trackedID;
+        public int trackedID = -1;
         public int controller;
         public Vector3 previousPos;
         public Quaternion previousRot;
@@ -66,26 +66,6 @@ namespace H3MP
             physicalObject.physicalSosigScript.Configure(configTemplate);
 
             H3MP_GameManager.trackedSosigBySosig.Add(physicalObject.physicalSosigScript, physicalObject);
-
-            if (H3MP_GameManager.waitingWearables.ContainsKey(trackedID))
-            {
-                if (wearables == null || wearables.Count == 0)
-                {
-                    wearables = H3MP_GameManager.waitingWearables[trackedID];
-                }
-                else
-                {
-                    List<List<string>> newWearables = H3MP_GameManager.waitingWearables[trackedID];
-                    for(int i = 0; i < newWearables.Count; ++i)
-                    {
-                        for (int j = 0; j < newWearables.Count; ++j)
-                        {
-                            wearables[i].Add(newWearables[i][j]);
-                        }
-                    }
-                }
-                H3MP_GameManager.waitingWearables.Remove(trackedID);
-            }
 
             AnvilManager.Run(EquipWearables());
 
@@ -186,7 +166,7 @@ namespace H3MP
             yield break;
         }
 
-        public void Update(H3MP_TrackedSosigData updatedItem)
+        public void Update(H3MP_TrackedSosigData updatedItem, bool full = false)
         {
             // Set data
             order = updatedItem.order;
@@ -228,11 +208,11 @@ namespace H3MP
                 }
                 Mod.Sosig_SetBodyPose.Invoke(physicalObject.physicalSosigScript, new object[] { bodyPose });
                 sosigInvAmmoStores.SetValue(physicalObject.physicalSosigScript.Inventory, ammoStores);
-                for (int i=0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
+                for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
                 {
                     if (physicalObject.physicalSosigScript.Links[i] != null)
                     {
-                        if(previousLinkIntegrity[i] != linkIntegrity[i])
+                        if (previousLinkIntegrity[i] != linkIntegrity[i])
                         {
                             Mod.SosigLink_m_integrity.SetValue(physicalObject.physicalSosigScript.Links[i], linkIntegrity[i]);
                             physicalObject.physicalSosigScript.UpdateRendererOnLink(i);
@@ -254,6 +234,22 @@ namespace H3MP
                         physicalObject.gameObject.SetActive(false);
                     }
                 }
+            }
+
+            if (full)
+            {
+                SosigConfigurePatch.skipConfigure = true;
+                physicalObject.physicalSosigScript.Configure(configTemplate);
+
+                ++SosigIFFPatch.skip;
+                physicalObject.physicalSosigScript.SetIFF(IFF);
+                --SosigIFFPatch.skip;
+
+                linkData = updatedItem.linkData;
+                linkIntegrity = updatedItem.linkIntegrity;
+
+                wearables = updatedItem.wearables;
+                AnvilManager.Run(EquipWearables());
             }
         }
 
@@ -460,6 +456,50 @@ namespace H3MP
         public bool NeedsUpdate()
         {
             return !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousActive != active || previousMustard != mustard;
+        }
+
+        public void OnTrackedIDReceived()
+        {
+            if (H3MP_TrackedSosig.unknownDestroyTrackedIDs.Contains(localTrackedID))
+            {
+                H3MP_ClientSend.DestroySosig(trackedID);
+
+                // Note that if we receive a tracked ID that was previously unknown, we must be a client
+                H3MP_Client.sosigs[trackedID] = null;
+
+                // Remove from local
+                RemoveFromLocal();
+            }
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownControlTrackedIDs.ContainsKey(localTrackedID))
+            {
+                int newController = H3MP_TrackedSosig.unknownControlTrackedIDs[localTrackedID];
+
+                H3MP_ClientSend.GiveSosigControl(trackedID, newController);
+
+                // Also change controller locally
+                controller = newController;
+
+                H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localTrackedID);
+
+                // Remove from local
+                if (H3MP_GameManager.ID != controller)
+                {
+                    RemoveFromLocal();
+                }
+            }
+        }
+
+        public void RemoveFromLocal()
+        {
+            // Manage unknown lists
+            H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedSosig.unknownDestroyTrackedIDs.Remove(localTrackedID);
+
+            // Remove
+            H3MP_GameManager.sosigs[localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+            H3MP_GameManager.sosigs[localTrackedID].localTrackedID = localTrackedID;
+            H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+            localTrackedID = -1;
         }
     }
 }

@@ -34,7 +34,6 @@ namespace H3MP
         public static List<H3MP_TrackedAutoMeaterData> autoMeaters = new List<H3MP_TrackedAutoMeaterData>(); // Tracked AutoMeaters under control of this gameManager
         public static List<H3MP_TrackedEncryptionData> encryptions = new List<H3MP_TrackedEncryptionData>(); // Tracked TNH_EncryptionTarget under control of this gameManager
         public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
-        public static Dictionary<int, List<List<string>>> waitingWearables = new Dictionary<int, List<List<string>>>();
         public static Dictionary<FVRPhysicalObject, H3MP_TrackedItem> trackedItemByItem = new Dictionary<FVRPhysicalObject, H3MP_TrackedItem>();
         public static Dictionary<Sosig, H3MP_TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, H3MP_TrackedSosig>();
         public static Dictionary<AutoMeater, H3MP_TrackedAutoMeater> trackedAutoMeaterByAutoMeater = new Dictionary<AutoMeater, H3MP_TrackedAutoMeater>();
@@ -660,7 +659,6 @@ namespace H3MP
                         }
                         else
                         {
-                            Debug.Log("Sending tracked sosig");
                             // Tell the server we need to add this item to global tracked items
                             H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene, instance);
                         }
@@ -806,12 +804,15 @@ namespace H3MP
                     data.linkIntegrity[i] = data.linkData[i][4];
                 }
             }
+            Debug.Log("\tTracking wearables");
             data.wearables = new List<List<string>>();
             FieldInfo wearablesField = typeof(SosigLink).GetField("m_wearables", BindingFlags.NonPublic | BindingFlags.Instance);
             for (int i = 0; i < sosigScript.Links.Count; ++i)
             {
+                Debug.Log("\t\tLink");
                 data.wearables.Add(new List<string>());
                 List<SosigWearable> sosigWearables = (List<SosigWearable>)wearablesField.GetValue(sosigScript.Links[i]);
+                Debug.Log("\t\t"+ sosigWearables.Count+" wearables");
                 for (int j = 0; j < sosigWearables.Count; ++j)
                 {
                     data.wearables[i].Add(sosigWearables[j].name);
@@ -1034,37 +1035,39 @@ namespace H3MP
             data.rotation = trackedEncryption.transform.rotation;
             data.active = trackedEncryption.gameObject.activeInHierarchy;
 
-            int numSubTargsLeft = 0;
+            data.tendrilsActive = new bool[data.physicalObject.physicalEncryptionScript.Tendrils.Count];
+            data.growthPoints = new Vector3[data.physicalObject.physicalEncryptionScript.GrowthPoints.Count];
+            data.subTargsPos = new Vector3[data.physicalObject.physicalEncryptionScript.SubTargs.Count];
+            data.subTargsActive = new bool[data.physicalObject.physicalEncryptionScript.SubTargs.Count];
+            data.tendrilFloats = new float[data.physicalObject.physicalEncryptionScript.TendrilFloats.Count];
+            data.tendrilsRot = new Quaternion[data.physicalObject.physicalEncryptionScript.Tendrils.Count];
+            data.tendrilsScale = new Vector3[data.physicalObject.physicalEncryptionScript.Tendrils.Count];
             if (data.physicalObject.physicalEncryptionScript.UsesRegenerativeSubTarg)
             {
-                for (int i = 0; i < data.tendrilsActive.Length; ++i)
+                for (int i = 0; i < data.physicalObject.physicalEncryptionScript.Tendrils.Count; ++i)
                 {
-                    if (data.tendrilsActive[i])
+                    if (data.physicalObject.physicalEncryptionScript.Tendrils[i].activeSelf)
                     {
-                        data.physicalObject.physicalEncryptionScript.Tendrils[i].SetActive(true);
-                        data.physicalObject.physicalEncryptionScript.GrowthPoints[i] = data.growthPoints[i];
-                        data.physicalObject.physicalEncryptionScript.SubTargs[i].transform.position = data.subTargsPos[i];
-                        data.physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
-                        data.physicalObject.physicalEncryptionScript.TendrilFloats[i] = 1f;
-                        data.physicalObject.physicalEncryptionScript.Tendrils[i].transform.rotation = data.tendrilsRot[i];
-                        data.physicalObject.physicalEncryptionScript.Tendrils[i].transform.localScale = data.tendrilsScale[i];
-                        data.physicalObject.physicalEncryptionScript.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
-                        ++numSubTargsLeft;
+                        data.tendrilsActive[i] = true;
+                        data.growthPoints[i] = data.physicalObject.physicalEncryptionScript.GrowthPoints[i];
+                        data.subTargsPos[i] = data.physicalObject.physicalEncryptionScript.SubTargs[i].transform.position;
+                        data.subTargsActive[i] = data.physicalObject.physicalEncryptionScript.SubTargs[i];
+                        data.tendrilFloats[i] = data.physicalObject.physicalEncryptionScript.TendrilFloats[i];
+                        data.tendrilsRot[i] = data.physicalObject.physicalEncryptionScript.Tendrils[i].transform.rotation;
+                        data.tendrilsScale[i] = data.physicalObject.physicalEncryptionScript.Tendrils[i].transform.localScale;
                     }
                 }
             }
             else if (data.physicalObject.physicalEncryptionScript.UsesRecursiveSubTarg)
             {
-                for (int i = 0; i < data.subTargsActive.Length; ++i)
+                for (int i = 0; i < data.physicalObject.physicalEncryptionScript.SubTargs.Count; ++i)
                 {
-                    if (data.subTargsActive[i])
+                    if (data.physicalObject.physicalEncryptionScript.SubTargs[i] != null && data.physicalObject.physicalEncryptionScript.SubTargs[i].activeSelf)
                     {
-                        data.physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
-                        ++numSubTargsLeft;
+                        data.subTargsActive[i] = data.physicalObject.physicalEncryptionScript.SubTargs[i].activeSelf;
                     }
                 }
             }
-            Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(data.physicalObject.physicalEncryptionScript, numSubTargsLeft);
 
             data.controller = ID;
 
