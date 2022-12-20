@@ -17,7 +17,6 @@ namespace H3MP
         public static List<int> unknownDestroyTrackedIDs = new List<int>();
 
         public bool sendDestroy = true; // To prevent feeback loops
-        public static int skipDestroy;
 
         private void OnDestroy()
         {
@@ -43,11 +42,11 @@ namespace H3MP
                 }
                 else
                 {
-                    if (sendDestroy && skipDestroy == 0)
+                    if (sendDestroy)
                     {
                         H3MP_ServerSend.DestroyAutoMeater(data.trackedID);
                     }
-                    else if (!sendDestroy)
+                    else
                     {
                         sendDestroy = true;
                     }
@@ -100,7 +99,7 @@ namespace H3MP
                 }
                 else
                 {
-                    if (sendDestroy && skipDestroy == 0)
+                    if (sendDestroy)
                     {
                         if (data.trackedID == -1)
                         {
@@ -119,7 +118,7 @@ namespace H3MP
                             H3MP_Client.autoMeaters[data.trackedID] = null;
                         }
                     }
-                    else if (!sendDestroy)
+                    else
                     {
                         sendDestroy = true;
                     }

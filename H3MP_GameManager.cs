@@ -1520,12 +1520,12 @@ namespace H3MP
                 if (H3MP_ThreadManager.host)
                 {
                     // Send the host's scene to clients
-                    H3MP_ServerSend.PlayerScene(0, SceneManager.GetActiveScene().name);
+                    H3MP_ServerSend.PlayerScene(0, LoadLevelBeginPatch.loadingLevel);
                 }
                 else
                 {
                     // Send to server, host will update and then send to all other clients
-                    H3MP_ClientSend.PlayerScene(SceneManager.GetActiveScene().name);
+                    H3MP_ClientSend.PlayerScene(LoadLevelBeginPatch.loadingLevel);
                 }
 
                 ++Mod.skipAllInstantiates;
@@ -1554,6 +1554,7 @@ namespace H3MP
             else // Finished loading
             {
                 --Mod.skipAllInstantiates;
+
                 giveControlOfDestroyed = false;
 
                 Scene loadedScene = SceneManager.GetActiveScene();
