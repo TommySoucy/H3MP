@@ -219,18 +219,21 @@ namespace H3MP
 
             if (full)
             {
-                SosigConfigurePatch.skipConfigure = true;
-                physicalObject.physicalSosigScript.Configure(configTemplate);
-
-                ++SosigIFFPatch.skip;
-                physicalObject.physicalSosigScript.SetIFF(IFF);
-                --SosigIFFPatch.skip;
-
                 linkData = updatedItem.linkData;
                 linkIntegrity = updatedItem.linkIntegrity;
-
                 wearables = updatedItem.wearables;
-                AnvilManager.Run(EquipWearables());
+
+                if (physicalObject != null)
+                {
+                    SosigConfigurePatch.skipConfigure = true;
+                    physicalObject.physicalSosigScript.Configure(configTemplate);
+
+                    ++SosigIFFPatch.skip;
+                    physicalObject.physicalSosigScript.SetIFF(IFF);
+                    --SosigIFFPatch.skip;
+
+                    AnvilManager.Run(EquipWearables());
+                }
             }
         }
 
