@@ -1516,6 +1516,18 @@ namespace H3MP
                     giveControlOfDestroyed = true;
                 }
 
+                // Send an update to all other clients so they can decide whether they can see this client
+                if (H3MP_ThreadManager.host)
+                {
+                    // Send the host's scene to clients
+                    H3MP_ServerSend.PlayerScene(0, SceneManager.GetActiveScene().name);
+                }
+                else
+                {
+                    // Send to server, host will update and then send to all other clients
+                    H3MP_ClientSend.PlayerScene(SceneManager.GetActiveScene().name);
+                }
+
                 ++Mod.skipAllInstantiates;
 
                 // Get out of TNH instance 
@@ -1546,18 +1558,6 @@ namespace H3MP
 
                 Scene loadedScene = SceneManager.GetActiveScene();
                 Debug.Log("Just finished loading scene: "+ loadedScene.name);
-
-                // Send an update to all other clients so they can decide whether they can see this client
-                if (H3MP_ThreadManager.host)
-                {
-                    // Send the host's scene to clients
-                    H3MP_ServerSend.PlayerScene(0, loadedScene.name);
-                }
-                else
-                {
-                    // Send to server, host will update and then send to all other clients
-                    H3MP_ClientSend.PlayerScene(loadedScene.name);
-                }
 
                 // Update players' active state depending on which are in the same scene/instance
                 playersPresent = 0;

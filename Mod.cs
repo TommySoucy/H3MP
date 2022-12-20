@@ -2535,7 +2535,10 @@ namespace H3MP
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigConfigure(trackedSosig.data.trackedID, t);
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.SosigConfigure(trackedSosig.data.trackedID, t);
+                    }
                 }
             }
         }
