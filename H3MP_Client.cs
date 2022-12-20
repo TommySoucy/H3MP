@@ -482,10 +482,10 @@ namespace H3MP
                 // Only send latest data if not destroyed
                 if (sosigs[trackedSosig.trackedID] != null)
                 {
-                    trackedSosig.Update(true);
+                    sosigs[trackedSosig.trackedID].Update(true);
 
                     // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
-                    H3MP_ClientSend.TrackedSosig(trackedSosig, scene, instance);
+                    H3MP_ClientSend.TrackedSosig(sosigs[trackedSosig.trackedID], scene, instance);
                 }
             }
             else
@@ -570,10 +570,10 @@ namespace H3MP
                 // Only send latest data if not destroyed
                 if (encryptions[trackedEncryption.trackedID] != null)
                 {
-                    trackedEncryption.Update(true);
+                    encryptions[trackedEncryption.trackedID].Update(true);
 
                     // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
-                    H3MP_ClientSend.TrackedEncryption(trackedEncryption, scene, instance);
+                    H3MP_ClientSend.TrackedEncryption(encryptions[trackedEncryption.trackedID], scene, instance);
                 }
             }
             else
