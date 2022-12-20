@@ -587,7 +587,7 @@ namespace H3MP
             }
         }
 
-        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance, int clientID)
+        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance, int clientID, bool sendToOriginal = true)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedSosig))
             {
@@ -595,8 +595,16 @@ namespace H3MP
                 packet.Write(scene);
                 packet.Write(instance);
 
-                // We want to send to all, even the one who requested for the sosig to be tracked because we need to tell them its tracked ID
-                SendTCPDataToAll(packet);
+                if (sendToOriginal)
+                {
+                    // We want to send to all, even the one who requested for the sosig to be tracked because we need to tell them its tracked ID
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    // We want to send to all BUT the controlling client, probably because this is an init update 
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
 
@@ -613,7 +621,7 @@ namespace H3MP
             }
         }
 
-        public static void TrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, string scene, int instance, int clientID)
+        public static void TrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, string scene, int instance, int clientID, bool sendToOriginal = true)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedEncryption))
             {
@@ -621,8 +629,16 @@ namespace H3MP
                 packet.Write(scene);
                 packet.Write(instance);
 
-                // We want to send to all, even the one who requested for the Encryption to be tracked because we need to tell them its tracked ID
-                SendTCPDataToAll(packet);
+                if (sendToOriginal)
+                {
+                    // We want to send to all, even the one who requested for the Encryption to be tracked because we need to tell them its tracked ID
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    // We want to send to all BUT the controlling client, probably because this is an init update 
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
 

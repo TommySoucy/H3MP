@@ -203,7 +203,7 @@ namespace H3MP
                 // have appened to it since we sent the tracked ID, so use this data to update our's and everyones else's
                 sosigs[trackedSosig.trackedID].Update(trackedSosig, true);
 
-                H3MP_ServerSend.TrackedSosig(trackedSosig, scene, instance, clientID);
+                H3MP_ServerSend.TrackedSosig(trackedSosig, scene, instance, clientID, false);
             }
         }
 
@@ -282,7 +282,7 @@ namespace H3MP
                 // have happened to it since we sent the tracked ID, so use this data to update our's and everyones else's
                 encryptions[trackedEncryption.trackedID].Update(trackedEncryption, true);
 
-                H3MP_ServerSend.TrackedEncryption(trackedEncryption, scene, instance, clientID);
+                H3MP_ServerSend.TrackedEncryption(trackedEncryption, scene, instance, clientID, false);
             }
         }
 
