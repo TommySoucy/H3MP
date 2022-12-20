@@ -378,13 +378,11 @@ namespace H3MP
             }
 
             H3MP_TrackedSosigData trackedSosigData = null;
-            int ID = -1;
             if (H3MP_ThreadManager.host)
             {
                 if (updatedSosig.trackedID < H3MP_Server.sosigs.Length)
                 {
                     trackedSosigData = H3MP_Server.sosigs[updatedSosig.trackedID];
-                    ID = 0;
                 }
             }
             else
@@ -392,7 +390,6 @@ namespace H3MP
                 if (updatedSosig.trackedID < H3MP_Client.sosigs.Length)
                 {
                     trackedSosigData = H3MP_Client.sosigs[updatedSosig.trackedID];
-                    ID = H3MP_Client.singleton.ID;
                 }
             }
 
@@ -403,7 +400,7 @@ namespace H3MP
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
                 // Since the order is kept as a single byte, it will overflow every 256 packets of this sosig
                 // Here we consider the update out of order if it is within 128 iterations before the latest
-                if(trackedSosigData.controller != ID && (ignoreOrder || ((updatedSosig.order > trackedSosigData.order || trackedSosigData.order - updatedSosig.order > 128))))
+                if(trackedSosigData.controller != H3MP_GameManager.ID && (ignoreOrder || ((updatedSosig.order > trackedSosigData.order || trackedSosigData.order - updatedSosig.order > 128))))
                 {
                     trackedSosigData.Update(updatedSosig);
                 }
@@ -418,13 +415,11 @@ namespace H3MP
             }
 
             H3MP_TrackedAutoMeaterData trackedAutoMeaterData = null;
-            int ID = -1;
             if (H3MP_ThreadManager.host)
             {
                 if (updatedAutoMeater.trackedID < H3MP_Server.autoMeaters.Length)
                 {
                     trackedAutoMeaterData = H3MP_Server.autoMeaters[updatedAutoMeater.trackedID];
-                    ID = 0;
                 }
             }
             else
@@ -432,7 +427,6 @@ namespace H3MP
                 if (updatedAutoMeater.trackedID < H3MP_Client.autoMeaters.Length)
                 {
                     trackedAutoMeaterData = H3MP_Client.autoMeaters[updatedAutoMeater.trackedID];
-                    ID = H3MP_Client.singleton.ID;
                 }
             }
 
@@ -443,7 +437,7 @@ namespace H3MP
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
                 // Since the order is kept as a single byte, it will overflow every 256 packets of this sosig
                 // Here we consider the update out of order if it is within 128 iterations before the latest
-                if(trackedAutoMeaterData.controller != ID && (ignoreOrder || ((updatedAutoMeater.order > trackedAutoMeaterData.order || trackedAutoMeaterData.order - updatedAutoMeater.order > 128))))
+                if(trackedAutoMeaterData.controller != H3MP_GameManager.ID && (ignoreOrder || ((updatedAutoMeater.order > trackedAutoMeaterData.order || trackedAutoMeaterData.order - updatedAutoMeater.order > 128))))
                 {
                     trackedAutoMeaterData.Update(updatedAutoMeater);
                 }
@@ -458,13 +452,11 @@ namespace H3MP
             }
 
             H3MP_TrackedEncryptionData trackedEncryptionData = null;
-            int ID = -1;
             if (H3MP_ThreadManager.host)
             {
                 if (updatedEncryption.trackedID < H3MP_Server.encryptions.Length)
                 {
                     trackedEncryptionData = H3MP_Server.encryptions[updatedEncryption.trackedID];
-                    ID = 0;
                 }
             }
             else
@@ -472,7 +464,6 @@ namespace H3MP
                 if (updatedEncryption.trackedID < H3MP_Client.encryptions.Length)
                 {
                     trackedEncryptionData = H3MP_Client.encryptions[updatedEncryption.trackedID];
-                    ID = H3MP_Client.singleton.ID;
                 }
             }
 
@@ -483,7 +474,7 @@ namespace H3MP
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
                 // Since the order is kept as a single byte, it will overflow every 256 packets of this sosig
                 // Here we consider the update out of order if it is within 128 iterations before the latest
-                if (trackedEncryptionData.controller != ID && (ignoreOrder || ((updatedEncryption.order > trackedEncryptionData.order || trackedEncryptionData.order - updatedEncryption.order > 128))))
+                if (trackedEncryptionData.controller != H3MP_GameManager.ID && (ignoreOrder || ((updatedEncryption.order > trackedEncryptionData.order || trackedEncryptionData.order - updatedEncryption.order > 128))))
                 {
                     trackedEncryptionData.Update(updatedEncryption);
                 }

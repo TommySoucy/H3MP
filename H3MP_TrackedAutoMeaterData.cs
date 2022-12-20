@@ -16,7 +16,7 @@ namespace H3MP
         public int insuranceCounter = insuranceCount; // Amount of times left to send this data
         public byte order; // The index of this AutoMeater's data packet used to ensure we process this data in the correct order
 
-        public int trackedID;
+        public int trackedID = -1;
         public int controller;
         public byte ID; // 0: SMG, 1: Flak, 2: FlameThrower, 3: MachineGun, 4: Supression, 5: MF Blue, 6: MF Red
         public Vector3 previousPos;

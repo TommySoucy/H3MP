@@ -15,6 +15,7 @@ namespace H3MP
         // Unknown tracked ID queues
         public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
         public static List<int> unknownDestroyTrackedIDs = new List<int>();
+        public static Dictionary<int, List<KeyValuePair<int, KeyValuePair<int, int>>>> unknownItemInteractTrackedIDs = new Dictionary<int, List<KeyValuePair<int, KeyValuePair<int, int>>>>();
 
         public bool sendDestroy = true; // To prevent feeback loops
         public static int skipDestroy;

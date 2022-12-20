@@ -14,7 +14,7 @@ namespace H3MP
         public int insuranceCounter = insuranceCount; // Amount of times left to send this data
         public byte order; // The index of this Encryption's data packet used to ensure we process this data in the correct order
 
-        public int trackedID;
+        public int trackedID = -1;
         public int controller;
         public TNH_EncryptionType type;
         public Vector3 previousPos;

@@ -2208,7 +2208,8 @@ namespace H3MP
                         //  __instance.RecoverRigidbody();
                         //}
                         bool primaryHand = __instance == __instance.S.Hand_Primary;
-                        H3MP_ServerSend.SosigPickUpItem(__instance.S.GetComponent<H3MP_TrackedSosig>().data.trackedID, trackedItem.data.trackedID, primaryHand);
+                        H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+                        H3MP_ServerSend.SosigPickUpItem(trackedSosig.data.trackedID, trackedItem.data.trackedID, primaryHand);
                     }
                 }
                 else
@@ -2229,8 +2230,23 @@ namespace H3MP
                         //{
                         //  __instance.RecoverRigidbody();
                         //}
-                        bool primaryHand = __instance == __instance.S.Hand_Primary;
-                        H3MP_ClientSend.SosigPickUpItem(__instance.S.GetComponent<H3MP_TrackedSosig>(), trackedItem.data.trackedID, primaryHand);
+                        bool primaryHand = __instance == __instance.S.Hand_Primary; 
+                        H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
+                        if(trackedSosig.data.trackedID == -1)
+                        {
+                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
+                            {
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localTrackedID].Add(new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 1 : 0)));
+                            }
+                            else
+                            {
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localTrackedID, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 1 : 0)) });
+                            }
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.SosigPickUpItem(trackedSosig, trackedItem.data.trackedID, primaryHand);
+                        }
                     }
                 }
             }
@@ -2307,7 +2323,22 @@ namespace H3MP
                                 break;
                             }
                         }
-                        H3MP_ClientSend.SosigPlaceItemIn(__instance.I.S.GetComponent<H3MP_TrackedSosig>().data.trackedID, slotIndex, trackedItem.data.trackedID);
+                        H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.I.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.I.S] : __instance.I.S.GetComponent<H3MP_TrackedSosig>();
+                        if (trackedSosig.data.trackedID == -1)
+                        {
+                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
+                            {
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localTrackedID].Add(new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)));
+                            }
+                            else
+                            {
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localTrackedID, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)) });
+                            }
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.SosigPlaceItemIn(trackedSosig.data.trackedID, slotIndex, trackedItem.data.trackedID);
+                        }
                     }
                 }
             }
@@ -2331,7 +2362,7 @@ namespace H3MP
                 return;
             }
 
-            H3MP_TrackedSosig trackedSosig = __instance.I.S.GetComponent<H3MP_TrackedSosig>();
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.I.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.I.S] : __instance.I.S.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.trackedID != -1)
             {
                 if (H3MP_ThreadManager.host)
@@ -2358,7 +2389,21 @@ namespace H3MP
                             break;
                         }
                     }
-                    H3MP_ClientSend.SosigDropSlot(trackedSosig.data.trackedID, slotIndex);
+                    if (trackedSosig.data.trackedID == -1)
+                    {
+                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
+                        {
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localTrackedID].Add(new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)));
+                        }
+                        else
+                        {
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localTrackedID, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)) });
+                        }
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigDropSlot(trackedSosig.data.trackedID, slotIndex);
+                    }
                 }
             }
         }
@@ -2381,7 +2426,7 @@ namespace H3MP
                 return;
             }
 
-            H3MP_TrackedSosig trackedSosig = __instance.S.GetComponent<H3MP_TrackedSosig>();
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.trackedID != -1)
             {
                 if (H3MP_ThreadManager.host)
@@ -2390,7 +2435,21 @@ namespace H3MP
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigHandDrop(trackedSosig.data.trackedID, __instance.S.Hand_Primary == __instance);
+                    if (trackedSosig.data.trackedID == -1)
+                    {
+                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
+                        {
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localTrackedID].Add(new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(__instance.S.Hand_Primary == __instance ? 1 : 0, 0)));
+                        }
+                        else
+                        {
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localTrackedID, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(__instance.S.Hand_Primary == __instance ? 1 : 0, 0)) });
+                        }
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigHandDrop(trackedSosig.data.trackedID, __instance.S.Hand_Primary == __instance);
+                    }
                 }
             }
         }
@@ -2777,7 +2836,10 @@ namespace H3MP
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data.trackedID, o);
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data.trackedID, o);
+                    }
                 }
             }
         }
@@ -2809,7 +2871,10 @@ namespace H3MP
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                    }
                 }
             }
         }
@@ -2953,7 +3018,10 @@ namespace H3MP
                     }
                     else
                     {
-                        H3MP_ClientSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            H3MP_ClientSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        }
                     }
 
                     trackedSosig.data.wearables[linkIndex].Add(knownWearableID);
@@ -3017,7 +3085,10 @@ namespace H3MP
                     }
                     else
                     {
-                        H3MP_ClientSend.SosigLinkDeRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            H3MP_ClientSend.SosigLinkDeRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        }
                     }
 
                     trackedSosig.data.wearables[linkIndex].Remove(knownWearableID);
@@ -3070,7 +3141,10 @@ namespace H3MP
                     }
                     else
                     {
-                        H3MP_ClientSend.SosigLinkExplodes(trackedSosig.data.trackedID, linkIndex, damClass);
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            H3MP_ClientSend.SosigLinkExplodes(trackedSosig.data.trackedID, linkIndex, damClass);
+                        }
                     }
                 }
             }
@@ -3127,7 +3201,10 @@ namespace H3MP
                     }
                     else
                     {
-                        H3MP_ClientSend.SosigLinkBreak(trackedSosig.data.trackedID, linkIndex, isStart, damClass);
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            H3MP_ClientSend.SosigLinkBreak(trackedSosig.data.trackedID, linkIndex, isStart, damClass);
+                        }
                     }
                 }
             }
@@ -3184,7 +3261,10 @@ namespace H3MP
                     }
                     else
                     {
-                        H3MP_ClientSend.SosigLinkSever(trackedSosig.data.trackedID, linkIndex, damClass, isPullApart);
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            H3MP_ClientSend.SosigLinkSever(trackedSosig.data.trackedID, linkIndex, damClass, isPullApart);
+                        }
                     }
                 }
             }
@@ -3220,7 +3300,10 @@ namespace H3MP
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigVaporize(trackedSosig.data.trackedID, IFF);
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.SosigVaporize(trackedSosig.data.trackedID, IFF);
+                    }
                 }
             }
         }
@@ -3398,7 +3481,10 @@ namespace H3MP
                 }
                 else
                 {
-                    H3MP_ClientSend.AutoMeaterSetState(trackedAutoMeater.data.trackedID, (byte)s);
+                    if(trackedAutoMeater.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.AutoMeaterSetState(trackedAutoMeater.data.trackedID, (byte)s);
+                    }
                 }
             }
         }
@@ -3459,7 +3545,10 @@ namespace H3MP
                 }
                 else
                 {
-                    H3MP_ClientSend.AutoMeaterSetBladesActive(trackedAutoMeater.data.trackedID, active);
+                    if (trackedAutoMeater.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.AutoMeaterSetBladesActive(trackedAutoMeater.data.trackedID, active);
+                    }
                 }
             }
         }
@@ -3506,7 +3595,10 @@ namespace H3MP
                 }
                 else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.AutoMeaterFirearmFireShot(trackedAutoMeater.data.trackedID, __instance.Muzzle.localEulerAngles);
+                    if (trackedAutoMeater.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.AutoMeaterFirearmFireShot(trackedAutoMeater.data.trackedID, __instance.Muzzle.localEulerAngles);
+                    }
                 }
             }
 
@@ -3590,16 +3682,19 @@ namespace H3MP
                 }
                 else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
                 {
-                    int firearmIndex = -1;
-                    for (int i = 0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
+                    if (trackedAutoMeater.data.trackedID != -1)
                     {
-                        if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
+                        int firearmIndex = -1;
+                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
                         {
-                            firearmIndex = i;
-                            break;
+                            if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
+                            {
+                                firearmIndex = i;
+                                break;
+                            }
                         }
+                        H3MP_ClientSend.AutoMeaterFirearmFireAtWill(trackedAutoMeater.data.trackedID, firearmIndex, b, d);
                     }
-                    H3MP_ClientSend.AutoMeaterFirearmFireAtWill(trackedAutoMeater.data.trackedID, firearmIndex, b, d);
                 }
             }
         }
@@ -3646,7 +3741,10 @@ namespace H3MP
                     }
                     else
                     {
-                        H3MP_ClientSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
+                        if(trackedEncryption.data.trackedID != -1)
+                        {
+                            H3MP_ClientSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
+                        }
                     }
                 }
             }
@@ -3703,7 +3801,10 @@ namespace H3MP
                     }
                     else
                     {
-                        H3MP_ClientSend.EncryptionSpawnGrowth(trackedEncryption.data.trackedID, index, point);
+                        if (trackedEncryption.data.trackedID != -1)
+                        {
+                            H3MP_ClientSend.EncryptionSpawnGrowth(trackedEncryption.data.trackedID, index, point);
+                        }
                     }
                 }
             }
@@ -3780,7 +3881,10 @@ namespace H3MP
                         }
                         else
                         {
-                            H3MP_ClientSend.EncryptionRecursiveInit(trackedEncryption.data.trackedID, indices);
+                            if (trackedEncryption.data.trackedID != -1)
+                            {
+                                H3MP_ClientSend.EncryptionRecursiveInit(trackedEncryption.data.trackedID, indices);
+                            }
                         }
                     }
                 }
@@ -3819,7 +3923,10 @@ namespace H3MP
                         }
                         else
                         {
-                            H3MP_ClientSend.EncryptionResetGrowth(trackedEncryption.data.trackedID, index, point);
+                            if (trackedEncryption.data.trackedID != -1)
+                            {
+                                H3MP_ClientSend.EncryptionResetGrowth(trackedEncryption.data.trackedID, index, point);
+                            }
                         }
 
                         return true;
@@ -3879,7 +3986,10 @@ namespace H3MP
                         }
                         else
                         {
-                            H3MP_ClientSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                            if (trackedEncryption.data.trackedID != -1)
+                            {
+                                H3MP_ClientSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                            }
                         }
                     }
                 }
@@ -6293,7 +6403,10 @@ namespace H3MP
                 }
                 else if (trackedAutoMeater.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.AutoMeaterHitZoneDamageData(trackedAutoMeater.data.trackedID, __instance);
+                    if (trackedAutoMeater.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.AutoMeaterHitZoneDamageData(trackedAutoMeater.data.trackedID, __instance);
+                    }
                 }
             }
         }
@@ -6361,7 +6474,7 @@ namespace H3MP
                         H3MP_ServerSend.EncryptionDamageData(trackedEncryption);
                     }
                 }
-                else if (trackedEncryption.data.controller == H3MP_Client.singleton.ID)
+                else if (trackedEncryption.data.controller == H3MP_Client.singleton.ID && trackedEncryption.data.trackedID != -1)
                 {
                     H3MP_ClientSend.EncryptionDamageData(trackedEncryption);
                 }
