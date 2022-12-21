@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP
 {
@@ -11,12 +12,35 @@ namespace H3MP
     {
         public TNH_EncryptionTarget physicalEncryptionScript;
         public H3MP_TrackedEncryptionData data;
+        public bool awoken;
+        public bool sendOnAwake;
+        public string sendScene;
+        public int sendInstance;
 
         // Unknown tracked ID queues
         public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
         public static List<int> unknownDestroyTrackedIDs = new List<int>();
 
         public bool sendDestroy = true; // To prevent feeback loops
+
+        private void Awake()
+        {
+            awoken = true;
+            if (sendOnAwake)
+            {
+                Debug.Log(gameObject.name + " awoken");
+                if (H3MP_ThreadManager.host)
+                {
+                    // This will also send a packet with the Encryption to be added in the client's global Encryption list
+                    H3MP_Server.AddTrackedEncryption(data, sendScene, sendInstance, 0);
+                }
+                else
+                {
+                    // Tell the server we need to add this item to global tracked Encryptions
+                    H3MP_ClientSend.TrackedEncryption(data, sendScene, sendInstance);
+                }
+            }
+        }
 
         private void OnDestroy()
         {

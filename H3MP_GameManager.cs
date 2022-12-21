@@ -512,16 +512,27 @@ namespace H3MP
                         if (controlEverything || IsControlled(physObj))
                         {
                             H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
-                            if (H3MP_ThreadManager.host)
+                            if (trackedItem.awoken)
                             {
-                                // This will also send a packet with the item to be added in the client's global item list
-                                H3MP_Server.AddTrackedItem(trackedItem.data, scene, instance, 0);
+                                Debug.Log("trackedItem " + trackedItem.name + " awoken, sending");
+                                if (H3MP_ThreadManager.host)
+                                {
+                                    // This will also send a packet with the item to be added in the client's global item list
+                                    H3MP_Server.AddTrackedItem(trackedItem.data, scene, instance, 0);
+                                }
+                                else
+                                {
+                                    Debug.Log("Sending tracked item: " + trackedItem.data.itemID);
+                                    // Tell the server we need to add this item to global tracked items
+                                    H3MP_ClientSend.TrackedItem(trackedItem.data, scene, instance);
+                                }
                             }
                             else
                             {
-                                Debug.Log("Sending tracked item: " + trackedItem.data.itemID);
-                                // Tell the server we need to add this item to global tracked items
-                                H3MP_ClientSend.TrackedItem(trackedItem.data, scene, instance);
+                                Debug.Log("trackedItem " + trackedItem.name + " NOT awoken, setting for late send");
+                                trackedItem.sendOnAwake = true;
+                                trackedItem.sendScene = scene;
+                                trackedItem.sendInstance = instance;
                             }
 
                             foreach (Transform child in root)
@@ -552,6 +563,7 @@ namespace H3MP
 
         private static H3MP_TrackedItem MakeItemTracked(FVRPhysicalObject physObj, H3MP_TrackedItemData parent)
         {
+            Debug.Log("Making item tracked: " + physObj.name);
             H3MP_TrackedItem trackedItem = physObj.gameObject.AddComponent<H3MP_TrackedItem>();
             H3MP_TrackedItemData data = new H3MP_TrackedItemData();
             trackedItem.data = data;
@@ -643,15 +655,25 @@ namespace H3MP
                     if (controlEverything)
                     {
                         trackedSosig = MakeSosigTracked(sosigScript);
-                        if (H3MP_ThreadManager.host)
-                        {
-                            // This will also send a packet with the sosig to be added in the client's global sosig list
-                            H3MP_Server.AddTrackedSosig(trackedSosig.data, scene, instance, 0);
+                        if (trackedSosig.awoken) 
+                        { 
+                            if (H3MP_ThreadManager.host)
+                            {
+                                // This will also send a packet with the sosig to be added in the client's global sosig list
+                                H3MP_Server.AddTrackedSosig(trackedSosig.data, scene, instance, 0);
+                            }
+                            else
+                            {
+                                // Tell the server we need to add this item to global tracked items
+                                H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene, instance);
+                            }
                         }
                         else
                         {
-                            // Tell the server we need to add this item to global tracked items
-                            H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene, instance);
+                            Debug.Log("trackedSosig " + trackedSosig.name + " NOT awoken, setting for late send");
+                            trackedSosig.sendOnAwake = true;
+                            trackedSosig.sendScene = scene;
+                            trackedSosig.sendInstance = instance;
                         }
                     }
                     else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
@@ -850,16 +872,26 @@ namespace H3MP
                     if (controlEverything)
                     {
                         trackedAutoMeater = MakeAutoMeaterTracked(autoMeaterScript);
-                        if (H3MP_ThreadManager.host)
+                        if (trackedAutoMeater.awoken)
                         {
-                            // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
-                            H3MP_Server.AddTrackedAutoMeater(trackedAutoMeater.data, scene, instance, 0);
+                            if (H3MP_ThreadManager.host)
+                            {
+                                // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
+                                H3MP_Server.AddTrackedAutoMeater(trackedAutoMeater.data, scene, instance, 0);
+                            }
+                            else
+                            {
+                                Debug.Log("Sending tracked AutoMeater");
+                                // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
+                                H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data, scene, instance);
+                            }
                         }
                         else
                         {
-                            Debug.Log("Sending tracked AutoMeater");
-                            // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
-                            H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data, scene, instance);
+                            Debug.Log("trackedAutoMeater " + trackedAutoMeater.name + " NOT awoken, setting for late send");
+                            trackedAutoMeater.sendOnAwake = true;
+                            trackedAutoMeater.sendScene = scene;
+                            trackedAutoMeater.sendInstance = instance;
                         }
                     }
                     else // AutoMeater will not be controlled by us but is an AutoMeater that should be tracked by system, so destroy it
@@ -973,16 +1005,26 @@ namespace H3MP
                     if (controlEverything)
                     {
                         H3MP_TrackedEncryption trackedEncryption = MakeEncryptionTracked(encryption);
-                        if (H3MP_ThreadManager.host)
+                        if (trackedEncryption.awoken)
                         {
-                            // This will also send a packet with the Encryption to be added in the client's global item list
-                            H3MP_Server.AddTrackedEncryption(trackedEncryption.data, scene, instance, 0);
+                            if (H3MP_ThreadManager.host)
+                            {
+                                // This will also send a packet with the Encryption to be added in the client's global item list
+                                H3MP_Server.AddTrackedEncryption(trackedEncryption.data, scene, instance, 0);
+                            }
+                            else
+                            {
+                                Debug.Log("Sending tracked Encryption: " + trackedEncryption.data.type);
+                                // Tell the server we need to add this Encryption to global tracked Encryptions
+                                H3MP_ClientSend.TrackedEncryption(trackedEncryption.data, scene, instance);
+                            }
                         }
                         else
                         {
-                            Debug.Log("Sending tracked Encryption: " + trackedEncryption.data.type);
-                            // Tell the server we need to add this Encryption to global tracked Encryptions
-                            H3MP_ClientSend.TrackedEncryption(trackedEncryption.data, scene, instance);
+                            Debug.Log("trackedEncryption " + trackedEncryption.name + " NOT awoken, setting for late send");
+                            trackedEncryption.sendOnAwake = true;
+                            trackedEncryption.sendScene = scene;
+                            trackedEncryption.sendInstance = instance;
                         }
                     }
                     else // Item will not be controlled by us but is an Encryption that should be tracked by system, so destroy it
@@ -1516,6 +1558,11 @@ namespace H3MP
                     giveControlOfDestroyed = true;
                 }
 
+                TODO: Now that we send the scene change before the scene change actually happens, the server sends the 
+                // relevant items right away, we then spawn them in the old scene, and then change scene, so everything gets destroyed anyway
+                // Once we are done changing the scene, we should request the most up to date items, and only then should the server send relevant items
+                // Then do same thing with change of instance
+
                 // Send an update to all other clients so they can decide whether they can see this client
                 if (H3MP_ThreadManager.host)
                 {
@@ -1613,6 +1660,45 @@ namespace H3MP
                             player.Value.gameObject.SetActive(false);
                         }
                     }
+                }
+
+                // Clear any of our tracked items that may not exist anymore
+                ClearUnawoken();
+            }
+        }
+
+        public static void ClearUnawoken()
+        {
+            // Clear any tracked object that we are supposed to be controlling that doesn't have a physicalItem assigned
+            // These can build up in certain cases. The main one is when we load into a level which contains items that are inactive by default
+            // These items will never be awoken, they will therefore be tracked but not synced with other clients. When we leave the scene, these items 
+            // may be destroyed but heir OnDestroy will not be called because they were never awoken, meaning they will still be in the items list
+            for(int i=0; i < items.Count; ++i)
+            {
+                if (items[i].physicalItem == null)
+                {
+                    items[i].RemoveFromLocal();
+                }
+            }
+            for(int i=0; i < sosigs.Count; ++i)
+            {
+                if (sosigs[i].physicalObject == null)
+                {
+                    sosigs[i].RemoveFromLocal();
+                }
+            }
+            for(int i=0; i < autoMeaters.Count; ++i)
+            {
+                if (autoMeaters[i].physicalObject == null)
+                {
+                    autoMeaters[i].RemoveFromLocal();
+                }
+            }
+            for(int i=0; i < encryptions.Count; ++i)
+            {
+                if (encryptions[i].physicalObject == null)
+                {
+                    encryptions[i].RemoveFromLocal();
                 }
             }
         }

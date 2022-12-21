@@ -156,6 +156,13 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.items.Count; ++i)
                     {
                         H3MP_TrackedItemData trackedItem = H3MP_GameManager.items[i];
+
+                        if(trackedItem.trackedID == -1)
+                        {
+                            ++index;
+                            continue;
+                        }
+
                         if (trackedItem.Update())
                         {
                             trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
@@ -220,6 +227,13 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.sosigs.Count; ++i)
                     {
                         H3MP_TrackedSosigData trackedSosig = H3MP_GameManager.sosigs[i];
+
+                        if (trackedSosig.trackedID == -1)
+                        {
+                            ++index;
+                            continue;
+                        }
+
                         if (trackedSosig.Update())
                         {
                             trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
@@ -284,6 +298,13 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.autoMeaters.Count; ++i)
                     {
                         H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_GameManager.autoMeaters[i];
+
+                        if (trackedAutoMeater.trackedID == -1)
+                        {
+                            ++index;
+                            continue;
+                        }
+
                         if (trackedAutoMeater.Update())
                         {
                             trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
@@ -348,6 +369,13 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.encryptions.Count; ++i)
                     {
                         H3MP_TrackedEncryptionData trackedEncryption = H3MP_GameManager.encryptions[i];
+
+                        if (trackedEncryption.trackedID == -1)
+                        {
+                            ++index;
+                            continue;
+                        }
+
                         if (trackedEncryption.Update())
                         {
                             trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
@@ -929,6 +957,12 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.items.Count; ++i)
                     {
                         H3MP_TrackedItemData trackedItem = H3MP_GameManager.items[i];
+
+                        if(trackedItem.trackedID == -1)
+                        {
+                            continue;
+                        }
+
                         trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
 
                         Debug.Log("\t\tTracked item at: "+trackedItem.trackedID);
@@ -970,6 +1004,12 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.sosigs.Count; ++i)
                     {
                         H3MP_TrackedSosigData trackedSosig = H3MP_GameManager.sosigs[i];
+
+                        if (trackedSosig.trackedID == -1)
+                        {
+                            continue;
+                        }
+
                         trackedSosig.insuranceCounter = H3MP_TrackedSosigData.insuranceCount;
 
                         Debug.Log("\t\tTracked sosig at: " + trackedSosig.trackedID);
@@ -1011,11 +1051,64 @@ namespace H3MP
                     for (int i = index; i < H3MP_GameManager.autoMeaters.Count; ++i)
                     {
                         H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_GameManager.autoMeaters[i];
+
+                        if (trackedAutoMeater.trackedID == -1)
+                        {
+                            continue;
+                        }
+
                         trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
 
                         Debug.Log("\t\tTracked AutoMeater at: " + trackedAutoMeater.trackedID);
                         trackedAutoMeater.Update(true);
                         packet.Write(trackedAutoMeater, true);
+
+                        ++count;
+
+                        ++index;
+
+                        // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                        if (packet.buffer.Count >= 1300)
+                        {
+                            break;
+                        }
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                    {
+                        packet.buffer[i] = countArr[j];
+                    }
+
+                    SendTCPData(packet);
+                }
+            }
+            index = 0;
+            while (index < H3MP_GameManager.encryptions.Count)
+            {
+                Debug.Log("\tEncryption Packet");
+                using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateEncryptionsRequest))
+                {
+                    // Write place holder int at start to hold the count once we know it
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
+
+                    short count = 0;
+                    for (int i = index; i < H3MP_GameManager.encryptions.Count; ++i)
+                    {
+                        H3MP_TrackedEncryptionData trackedEncryption = H3MP_GameManager.encryptions[i];
+
+                        if (trackedEncryption.trackedID == -1)
+                        {
+                            continue;
+                        }
+
+                        trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
+
+                        Debug.Log("\t\tTracked Encryption at: " + trackedEncryption.trackedID);
+                        trackedEncryption.Update(true);
+                        packet.Write(trackedEncryption, true);
 
                         ++count;
 

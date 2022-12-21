@@ -3,12 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace H3MP
 {
     public class H3MP_TrackedItem : MonoBehaviour
     {
         public H3MP_TrackedItemData data;
+        public bool awoken;
+        public bool sendOnAwake;
+        public string sendScene;
+        public int sendInstance;
 
         // Unknown tracked ID queues
         public static Dictionary<int, KeyValuePair<int, bool>> unknownTrackedIDs = new Dictionary<int, KeyValuePair<int, bool>>();
@@ -35,6 +40,22 @@ namespace H3MP
         private void Awake()
         {
             InitItemType();
+
+            awoken = true;
+            if (sendOnAwake)
+            {
+                Debug.Log(gameObject.name + " awoken");
+                if (H3MP_ThreadManager.host)
+                {
+                    // This will also send a packet with the item to be added in the client's global item list
+                    H3MP_Server.AddTrackedItem(data, sendScene, sendInstance, 0);
+                }
+                else
+                {
+                    // Tell the server we need to add this item to global tracked items
+                    H3MP_ClientSend.TrackedItem(data, sendScene, sendInstance);
+                }
+            }
         }
 
         // MOD: This will check which type this item is so we can keep track of its data more efficiently
@@ -1348,9 +1369,9 @@ namespace H3MP
                     H3MP_Server.items[data.trackedID] = null;
                     H3MP_Server.availableItemIndices.Add(data.trackedID);
                 }
-                if(data.localTrackedID != -1)
+                if (data.localTrackedID != -1)
                 {
-                    Debug.Log("Removing game manager item at : "+data.localTrackedID);
+                    Debug.Log("Removing game manager item at : " + data.localTrackedID);
                     H3MP_GameManager.items[data.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                     H3MP_GameManager.items[data.localTrackedID].localTrackedID = data.localTrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
@@ -1368,7 +1389,7 @@ namespace H3MP
 
                         if (otherPlayer != -1)
                         {
-                            if(data.trackedID == -1)
+                            if (data.trackedID == -1)
                             {
                                 if (unknownControlTrackedIDs.ContainsKey(data.localTrackedID))
                                 {

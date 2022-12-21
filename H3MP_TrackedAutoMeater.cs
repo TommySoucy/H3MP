@@ -11,12 +11,35 @@ namespace H3MP
     {
         public AutoMeater physicalAutoMeaterScript;
         public H3MP_TrackedAutoMeaterData data;
+        public bool awoken;
+        public bool sendOnAwake;
+        public string sendScene;
+        public int sendInstance;
 
         // Unknown tracked ID queues
         public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
         public static List<int> unknownDestroyTrackedIDs = new List<int>();
 
         public bool sendDestroy = true; // To prevent feeback loops
+
+        private void Awake()
+        {
+            awoken = true;
+            if (sendOnAwake)
+            {
+                Debug.Log(gameObject.name + " awoken");
+                if (H3MP_ThreadManager.host)
+                {
+                    // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
+                    H3MP_Server.AddTrackedAutoMeater(data, sendScene, sendInstance, 0);
+                }
+                else
+                {
+                    // Tell the server we need to add this item to global tracked AutoMeaters
+                    H3MP_ClientSend.TrackedAutoMeater(data, sendScene, sendInstance);
+                }
+            }
+        }
 
         private void OnDestroy()
         {

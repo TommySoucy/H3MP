@@ -215,7 +215,8 @@ namespace H3MP
         encryptionResetGrowth = 95,
         encryptionDisableSubtarg = 96,
         encryptionSubDamage = 97,
-        shatterableCrateDestroy = 98
+        shatterableCrateDestroy = 98,
+        updateEncryptionsRequest = 99
     }
 
     public class H3MP_Packet : IDisposable

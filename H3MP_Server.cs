@@ -450,6 +450,7 @@ namespace H3MP
                 H3MP_ServerHandle.EncryptionDisableSubtarg,
                 H3MP_ServerHandle.EncryptionSubDamage,
                 H3MP_ServerHandle.ShatterableCrateDestroy,
+                H3MP_ServerHandle.UpToDateEncryptions,
             };
 
             items = new H3MP_TrackedItemData[100];

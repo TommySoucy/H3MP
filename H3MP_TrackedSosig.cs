@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP
 {
@@ -11,6 +13,10 @@ namespace H3MP
     {
         public Sosig physicalSosigScript;
         public H3MP_TrackedSosigData data;
+        public bool awoken;
+        public bool sendOnAwake;
+        public string sendScene;
+        public int sendInstance;
 
         // Unknown tracked ID queues
         public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
@@ -18,6 +24,25 @@ namespace H3MP
         public static Dictionary<int, List<KeyValuePair<int, KeyValuePair<int, int>>>> unknownItemInteractTrackedIDs = new Dictionary<int, List<KeyValuePair<int, KeyValuePair<int, int>>>>();
 
         public bool sendDestroy = true; // To prevent feeback loops
+
+        private void Awake()
+        {
+            awoken = true;
+            if (sendOnAwake)
+            {
+                Debug.Log(gameObject.name + " awoken");
+                if (H3MP_ThreadManager.host)
+                {
+                    // This will also send a packet with the sosig to be added in the client's global sosig list
+                    H3MP_Server.AddTrackedSosig(data, sendScene, sendInstance, 0);
+                }
+                else
+                {
+                    // Tell the server we need to add this item to global tracked sosigs
+                    H3MP_ClientSend.TrackedSosig(data, sendScene, sendInstance);
+                }
+            }
+        }
 
         private void OnDestroy()
         {

@@ -1252,6 +1252,21 @@ namespace H3MP
             }
         }
 
+        public static void UpToDateEncryptions(int clientID, H3MP_Packet packet)
+        {
+            Debug.Log("Server received up to date Encryptions packet");
+            // Reconstruct passed trackedEncryptions from packet
+            int count = packet.ReadShort();
+            for (int i = 0; i < count; ++i)
+            {
+                H3MP_TrackedEncryptionData trackedEncryption = packet.ReadTrackedEncryption(true);
+                Debug.Log("\tEncryption: " + trackedEncryption.trackedID + ", updating");
+                H3MP_GameManager.UpdateTrackedEncryption(trackedEncryption, true);
+                Debug.Log("\tInstantiating");
+                AnvilManager.Run(H3MP_Server.encryptions[trackedEncryption.trackedID].Instantiate());
+            }
+        }
+
         public static void AddTNHCurrentlyPlaying(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
