@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
-using UnityEngine.UI;
 using static FistVR.TNH_Progression;
 using static H3MP.H3MP_PlayerHitbox;
 using static Valve.VR.SteamVR_ExternalCamera;
@@ -73,12 +72,33 @@ namespace H3MP
             // Send to all other clients
             H3MP_ServerSend.PlayerScene(player.ID, scene);
 
-            // Send the client all items it needs to instantiate from the scene
-            if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
+            List<int> waitingFromClients = new List<int>();
+
+            // Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
+            if (H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene))
             {
-                Debug.Log("Player "+clientID+" joined scene "+ scene);
-                H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
+                foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
+                {
+                    // Handle case in which client gets sent relevant tracked objects from a client in a different scene/instance, which could happen if we switch scene
+                    // to one that contains 
+                    if (otherClient.Key != clientID && otherClient.Value.player.scene.Equals(scene) && otherClient.Value.player.instance == player.instance)
+                    {
+                        if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherClient.Key))
+                        {
+                            H3MP_Server.clientsWaitingUpDate[otherClient.Key].Add(clientID);
+                        }
+                        else
+                        {
+                            H3MP_Server.clientsWaitingUpDate.Add(otherClient.Key, new List<int> { clientID });
+                        }
+                        H3MP_ServerSend.RequestUpToDateObjects(otherClient.Key, false, clientID);
+                        waitingFromClients.Add(otherClient.Key);
+                    }
+                }
             }
+
+            H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
+
             Debug.Log("Synced with player who just joined scene");
         }
 
@@ -93,11 +113,24 @@ namespace H3MP
             // Send to all other clients
             H3MP_ServerSend.PlayerInstance(player.ID, instance);
 
-            // Send the client all items it needs to instantiate from the scene/instance
+            // Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene))
             {
-                Debug.Log("Player "+clientID+" joined instance "+ instance);
-                H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
+                foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
+                {
+                    if (otherClient.Key != clientID && otherClient.Value.player.scene.Equals(player.scene) && otherClient.Value.player.instance == instance)
+                    {
+                        if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherClient.Key))
+                        {
+                            H3MP_Server.clientsWaitingUpDate[otherClient.Key].Add(clientID);
+                        }
+                        else
+                        {
+                            H3MP_Server.clientsWaitingUpDate.Add(otherClient.Key, new List<int> { clientID });
+                        }
+                        H3MP_ServerSend.RequestUpToDateObjects(otherClient.Key, false, clientID);
+                    }
+                }
             }
             Debug.Log("Synced with player who just joined instance");
         }
@@ -1212,13 +1245,18 @@ namespace H3MP
             Debug.Log("Server received up to date items packet");
             // Reconstruct passed trackedItems from packet
             int count = packet.ReadShort();
+            bool instantiate = packet.ReadBool();
+            int forClient = packet.ReadInt();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedItemData trackedItem = packet.ReadTrackedItem(true);
                 Debug.Log("\tItem: " +trackedItem.trackedID+", updating");
                 H3MP_GameManager.UpdateTrackedItem(trackedItem, true);
-                Debug.Log("\tInstantiating");
-                AnvilManager.Run(H3MP_Server.items[trackedItem.trackedID].Instantiate());
+                if (instantiate)
+                {
+                    Debug.Log("\tInstantiating");
+                    AnvilManager.Run(H3MP_Server.items[trackedItem.trackedID].Instantiate());
+                }
             }
         }
 
@@ -1227,13 +1265,17 @@ namespace H3MP
             Debug.Log("Server received up to date sosigs packet");
             // Reconstruct passed trackedSosigs from packet
             int count = packet.ReadShort();
+            bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedSosigData trackedSosig = packet.ReadTrackedSosig(true);
                 Debug.Log("\tSosig: " + trackedSosig.trackedID + ", updating");
                 H3MP_GameManager.UpdateTrackedSosig(trackedSosig, true);
-                Debug.Log("\tInstantiating");
-                AnvilManager.Run(H3MP_Server.sosigs[trackedSosig.trackedID].Instantiate());
+                if (instantiate)
+                {
+                    Debug.Log("\tInstantiating");
+                    AnvilManager.Run(H3MP_Server.sosigs[trackedSosig.trackedID].Instantiate());
+                }
             }
         }
 
@@ -1242,13 +1284,17 @@ namespace H3MP
             Debug.Log("Server received up to date AutoMeaters packet");
             // Reconstruct passed trackedAutoMeaters from packet
             int count = packet.ReadShort();
+            bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedAutoMeaterData trackedAutoMeater = packet.ReadTrackedAutoMeater(true);
                 Debug.Log("\tAutoMeater: " + trackedAutoMeater.trackedID + ", updating");
                 H3MP_GameManager.UpdateTrackedAutoMeater(trackedAutoMeater, true);
-                Debug.Log("\tInstantiating");
-                AnvilManager.Run(H3MP_Server.autoMeaters[trackedAutoMeater.trackedID].Instantiate());
+                if (instantiate)
+                {
+                    Debug.Log("\tInstantiating");
+                    AnvilManager.Run(H3MP_Server.autoMeaters[trackedAutoMeater.trackedID].Instantiate());
+                }
             }
         }
 
@@ -1257,13 +1303,64 @@ namespace H3MP
             Debug.Log("Server received up to date Encryptions packet");
             // Reconstruct passed trackedEncryptions from packet
             int count = packet.ReadShort();
+            bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedEncryptionData trackedEncryption = packet.ReadTrackedEncryption(true);
                 Debug.Log("\tEncryption: " + trackedEncryption.trackedID + ", updating");
                 H3MP_GameManager.UpdateTrackedEncryption(trackedEncryption, true);
-                Debug.Log("\tInstantiating");
-                AnvilManager.Run(H3MP_Server.encryptions[trackedEncryption.trackedID].Instantiate());
+                if (instantiate)
+                {
+                    Debug.Log("\tInstantiating");
+                    AnvilManager.Run(H3MP_Server.encryptions[trackedEncryption.trackedID].Instantiate());
+                }
+            }
+        }
+
+        public static void DoneLoadingScene(int clientID, H3MP_Packet packet)
+        {
+            if(H3MP_Server.loadingClientsWaitingFrom.TryGetValue(clientID, out List<int> otherClients))
+            {
+                bool stillWaiting = false;
+                foreach(int otherCLientID in otherClients)
+                {
+                    if(H3MP_Server.clientsWaitingUpDate.TryGetValue(otherCLientID, out List<int> clientIDs))
+                    {
+                        if (clientIDs.Contains(clientID))
+                        {
+                            stillWaiting = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!stillWaiting)
+                {
+                    H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
+                }
+
+                H3MP_Server.loadingClientsWaitingFrom.Remove(clientID);
+            }
+        }
+
+        public static void DoneSendingUpToDateObjects(int clientID, H3MP_Packet packet)
+        {
+            int forClient = packet.ReadInt();
+
+            // If clients were waiting for this client to finish sending up to date objects
+            if(H3MP_Server.clientsWaitingUpDate.TryGetValue(clientID, out List<int> waitingClients))
+            {
+                // If the relevant client is no longer loading or wasn't to begin with
+                if(!H3MP_Server.loadingClientsWaitingFrom.ContainsKey(forClient))
+                {
+                    H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
+                }
+
+                waitingClients.Remove(forClient);
+                if(waitingClients.Count == 0)
+                {
+                    H3MP_Server.clientsWaitingUpDate.Remove(clientID);
+                }
             }
         }
 

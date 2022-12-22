@@ -216,7 +216,9 @@ namespace H3MP
         encryptionDisableSubtarg = 96,
         encryptionSubDamage = 97,
         shatterableCrateDestroy = 98,
-        updateEncryptionsRequest = 99
+        updateEncryptionsRequest = 99,
+        DoneLoadingScene = 100,
+        DoneSendingUpdaToDateObjects = 101
     }
 
     public class H3MP_Packet : IDisposable

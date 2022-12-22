@@ -24,6 +24,9 @@ namespace H3MP
         public static H3MP_TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
         public static List<int> availableEncryptionIndices;
 
+        public static Dictionary<int, List<int>> clientsWaitingUpDate = new Dictionary<int, List<int>>(); // Clients we requested up to date objects from, for which clients
+        public static Dictionary<int, List<int>> loadingClientsWaitingFrom = new Dictionary<int, List<int>>(); // Clients currently loading, waiting for up to date objects from which clients
+
         public static TcpListener tcpListener;
         public static UdpClient udpListener;
 
@@ -451,6 +454,8 @@ namespace H3MP
                 H3MP_ServerHandle.EncryptionSubDamage,
                 H3MP_ServerHandle.ShatterableCrateDestroy,
                 H3MP_ServerHandle.UpToDateEncryptions,
+                H3MP_ServerHandle.DoneLoadingScene,
+                H3MP_ServerHandle.DoneSendingUpToDateObjects,
             };
 
             items = new H3MP_TrackedItemData[100];

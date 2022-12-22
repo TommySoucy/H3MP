@@ -940,7 +940,7 @@ namespace H3MP
             }
         }
 
-        public static void UpToDateObjects()
+        public static void UpToDateObjects(bool instantiateOnReceive, int forClient)
         {
             Debug.Log(H3MP_Client.singleton.ID.ToString()+ " sending up to date objects to server");
             int index = 0;
@@ -952,6 +952,7 @@ namespace H3MP
                     // Write place holder int at start to hold the count once we know it
                     int countPos = packet.buffer.Count;
                     packet.Write((short)0);
+                    packet.Write(instantiateOnReceive);
 
                     short count = 0;
                     for (int i = index; i < H3MP_GameManager.items.Count; ++i)
@@ -999,6 +1000,7 @@ namespace H3MP
                     // Write place holder int at start to hold the count once we know it
                     int countPos = packet.buffer.Count;
                     packet.Write((short)0);
+                    packet.Write(instantiateOnReceive);
 
                     short count = 0;
                     for (int i = index; i < H3MP_GameManager.sosigs.Count; ++i)
@@ -1046,6 +1048,7 @@ namespace H3MP
                     // Write place holder int at start to hold the count once we know it
                     int countPos = packet.buffer.Count;
                     packet.Write((short)0);
+                    packet.Write(instantiateOnReceive);
 
                     short count = 0;
                     for (int i = index; i < H3MP_GameManager.autoMeaters.Count; ++i)
@@ -1093,6 +1096,7 @@ namespace H3MP
                     // Write place holder int at start to hold the count once we know it
                     int countPos = packet.buffer.Count;
                     packet.Write((short)0);
+                    packet.Write(instantiateOnReceive);
 
                     short count = 0;
                     for (int i = index; i < H3MP_GameManager.encryptions.Count; ++i)
@@ -1130,6 +1134,26 @@ namespace H3MP
 
                     SendTCPData(packet);
                 }
+            }
+
+            DoneSendingUpdaToDateObjects(forClient);
+        }
+
+        public static void DoneLoadingScene()
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.DoneLoadingScene))
+            {
+                SendTCPData(packet);
+            }
+        }
+
+        public static void DoneSendingUpdaToDateObjects(int forClient)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.DoneSendingUpdaToDateObjects))
+            {
+                packet.Write(forClient);
+
+                SendTCPData(packet);
             }
         }
 

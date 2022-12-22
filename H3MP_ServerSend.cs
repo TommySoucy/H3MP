@@ -185,7 +185,7 @@ namespace H3MP
         public static void TrackedItems()
         {
             int index = 0;
-            while (index < H3MP_Server.items.Length - 1) // TODO: To optimize, we should also keep track of all item IDs taht are in use so we can iterate only them and do the samei n client send
+            while (index < H3MP_Server.items.Length - 1) // TODO: To optimize, we should also keep track of all item IDs that are in use so we can iterate only them and do the samei n client send
             {
                 using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItems))
                 {
@@ -1396,10 +1396,13 @@ namespace H3MP
             }
         }
 
-        public static void RequestUpToDateObjects(int clientID)
+        public static void RequestUpToDateObjects(int clientID, bool instantiateOnReceive, int forClient)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.updateRequest))
             {
+                packet.Write(instantiateOnReceive);
+                packet.Write(forClient);
+
                 SendTCPData(clientID, packet);
             }
         }

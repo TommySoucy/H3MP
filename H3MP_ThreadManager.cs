@@ -76,29 +76,26 @@ namespace H3MP
                     }
                 }
 
-                // Send all trackedItems to all clients if there are other players in the scene
-                if (H3MP_GameManager.playersPresent > 0)
-                {
-                    H3MP_ServerSend.TrackedItems();
-                    H3MP_ServerSend.TrackedSosigs();
-                    H3MP_ServerSend.TrackedAutoMeaters();
-                    H3MP_ServerSend.TrackedEncryptions();
+                // Send all trackedItems to all clients
+                H3MP_ServerSend.TrackedItems();
+                H3MP_ServerSend.TrackedSosigs();
+                H3MP_ServerSend.TrackedAutoMeaters();
+                H3MP_ServerSend.TrackedEncryptions();
 
-                    // Also send the host's player state to all clients
-                    H3MP_ServerSend.PlayerState(0,
-                                                GM.CurrentPlayerBody.transform.position,
-                                                GM.CurrentPlayerBody.transform.rotation,
-                                                GM.CurrentPlayerBody.headPositionFiltered,
-                                                GM.CurrentPlayerBody.headRotationFiltered,
-                                                GM.CurrentPlayerBody.headPositionFiltered + H3MP_GameManager.torsoOffset,
-                                                GM.CurrentPlayerBody.Torso.rotation,
-                                                GM.CurrentPlayerBody.LeftHand.position,
-                                                GM.CurrentPlayerBody.LeftHand.rotation,
-                                                GM.CurrentPlayerBody.RightHand.position,
-                                                GM.CurrentPlayerBody.RightHand.rotation,
-                                                GM.CurrentPlayerBody.Health,
-                                                GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
-                }
+                // Also send the host's player state to all clients
+                H3MP_ServerSend.PlayerState(0,
+                                            GM.CurrentPlayerBody.transform.position,
+                                            GM.CurrentPlayerBody.transform.rotation,
+                                            GM.CurrentPlayerBody.headPositionFiltered,
+                                            GM.CurrentPlayerBody.headRotationFiltered,
+                                            GM.CurrentPlayerBody.headPositionFiltered + H3MP_GameManager.torsoOffset,
+                                            GM.CurrentPlayerBody.Torso.rotation,
+                                            GM.CurrentPlayerBody.LeftHand.position,
+                                            GM.CurrentPlayerBody.LeftHand.rotation,
+                                            GM.CurrentPlayerBody.RightHand.position,
+                                            GM.CurrentPlayerBody.RightHand.rotation,
+                                            GM.CurrentPlayerBody.Health,
+                                            GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
             }
             else
             {

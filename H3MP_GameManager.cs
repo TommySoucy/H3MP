@@ -338,13 +338,11 @@ namespace H3MP
             }
 
             H3MP_TrackedItemData trackedItemData = null;
-            int ID = -1;
             if (H3MP_ThreadManager.host)
             {
                 if (updatedItem.trackedID < H3MP_Server.items.Length)
                 {
                     trackedItemData = H3MP_Server.items[updatedItem.trackedID];
-                    ID = 0;
                 }
             }
             else
@@ -352,7 +350,6 @@ namespace H3MP
                 if (updatedItem.trackedID < H3MP_Client.items.Length)
                 {
                     trackedItemData = H3MP_Client.items[updatedItem.trackedID];
-                    ID = H3MP_Client.singleton.ID;
                 }
             }
 
@@ -1442,7 +1439,7 @@ namespace H3MP
                             // clients only send updated data when there are others in their scene
                             // But we need the most of to date data to instantiate the item/sosig
                             Debug.Log("Requesting up to date objects from " + player.Key);
-                            H3MP_ServerSend.RequestUpToDateObjects(player.Key);
+                            H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                         }
                     }
                     else
@@ -1558,11 +1555,6 @@ namespace H3MP
                     giveControlOfDestroyed = true;
                 }
 
-                TODO: Now that we send the scene change before the scene change actually happens, the server sends the 
-                // relevant items right away, we then spawn them in the old scene, and then change scene, so everything gets destroyed anyway
-                // Once we are done changing the scene, we should request the most up to date items, and only then should the server send relevant items
-                // Then do same thing with change of instance
-
                 // Send an update to all other clients so they can decide whether they can see this client
                 if (H3MP_ThreadManager.host)
                 {
@@ -1631,7 +1623,7 @@ namespace H3MP
                                 // clients only send updated data when there are others in their scene
                                 // But we need the most of to date data to instantiate the item/sosig
                                 Debug.Log("Requesting up to date objects from "+player.Key);
-                                H3MP_ServerSend.RequestUpToDateObjects(player.Key);
+                                H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                             }
                         }
                         else
@@ -1650,6 +1642,12 @@ namespace H3MP
                     SyncTrackedAutoMeaters();
                     SyncTrackedItems();
                     SyncTrackedEncryptions();
+
+                    // If client, tell server we are done loading
+                    if (!H3MP_ThreadManager.host)
+                    {
+                        H3MP_ClientSend.DoneLoadingScene();
+                    }
                 }
                 else // New scene not syncable, ensure all players are disabled regardless of scene
                 {

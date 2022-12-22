@@ -1075,7 +1075,7 @@ namespace H3MP
 
         public static void RequestUpToDateObjects(H3MP_Packet packet)
         {
-            H3MP_ClientSend.UpToDateObjects();
+            H3MP_ClientSend.UpToDateObjects(packet.ReadBool(), packet.ReadInt());
         }
 
         public static void AddTNHInstance(H3MP_Packet packet)
