@@ -212,10 +212,6 @@ namespace H3MP
                 {
                     GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
-                    foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
-                    {
-                        link.R.isKinematic = true;
-                    }
                 }
             }
             else if(trackedSosig.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
@@ -228,10 +224,6 @@ namespace H3MP
                 {
                     GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
-                    foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
-                    {
-                        link.R.isKinematic = false;
-                    }
                 }
             }
             trackedSosig.controller = controllerID;
