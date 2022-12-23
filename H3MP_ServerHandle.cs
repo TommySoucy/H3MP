@@ -79,9 +79,9 @@ namespace H3MP
             {
                 foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
                 {
-                    // Handle case in which client gets sent relevant tracked objects from a client in a different scene/instance, which could happen if we switch scene
-                    // to one that contains 
-                    if (otherClient.Key != clientID && otherClient.Value.player.scene.Equals(scene) && otherClient.Value.player.instance == player.instance)
+                    if (otherClient.Value.tcp != null && otherClient.Value.tcp.socket != null && // If a client is connected at that index
+                        !H3MP_Server.loadingClientsWaitingFrom.ContainsKey(otherClient.Key) && // If the client is not currently loading
+                        otherClient.Key != clientID && otherClient.Value.player.scene.Equals(scene) && otherClient.Value.player.instance == player.instance)
                     {
                         if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherClient.Key))
                         {
@@ -118,7 +118,9 @@ namespace H3MP
             {
                 foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
                 {
-                    if (otherClient.Key != clientID && otherClient.Value.player.scene.Equals(player.scene) && otherClient.Value.player.instance == instance)
+                    if (otherClient.Value.tcp != null && otherClient.Value.tcp.socket != null && // If a client is connected at that index
+                        !H3MP_Server.loadingClientsWaitingFrom.ContainsKey(otherClient.Key) && // If the client is not currently loading
+                        otherClient.Key != clientID && otherClient.Value.player.scene.Equals(player.scene) && otherClient.Value.player.instance == instance)
                     {
                         if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherClient.Key))
                         {
@@ -1246,7 +1248,6 @@ namespace H3MP
             // Reconstruct passed trackedItems from packet
             int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
-            int forClient = packet.ReadInt();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedItemData trackedItem = packet.ReadTrackedItem(true);

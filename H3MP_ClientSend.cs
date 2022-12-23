@@ -961,6 +961,7 @@ namespace H3MP
 
                         if(trackedItem.trackedID == -1)
                         {
+                            ++index;
                             continue;
                         }
 
@@ -1009,6 +1010,7 @@ namespace H3MP
 
                         if (trackedSosig.trackedID == -1)
                         {
+                            ++index;
                             continue;
                         }
 
@@ -1057,6 +1059,7 @@ namespace H3MP
 
                         if (trackedAutoMeater.trackedID == -1)
                         {
+                            ++index;
                             continue;
                         }
 
@@ -1105,6 +1108,7 @@ namespace H3MP
 
                         if (trackedEncryption.trackedID == -1)
                         {
+                            ++index;
                             continue;
                         }
 

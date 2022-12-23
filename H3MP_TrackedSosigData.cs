@@ -71,10 +71,6 @@ namespace H3MP
             {
                 GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
                 physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
-                foreach(SosigLink link in physicalObject.physicalSosigScript.Links)
-                {
-                    link.R.isKinematic = true;
-                }
             }
 
             // Initially set IFF
