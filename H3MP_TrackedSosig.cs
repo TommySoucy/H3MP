@@ -44,6 +44,15 @@ namespace H3MP
             }
         }
 
+        private void FixedUpdate()
+        {
+            if (data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
+            {
+                physicalSosigScript.CoreRB.position = Vector3.Lerp(physicalSosigScript.CoreRB.position, data.position + data.velocity, 0.5f);
+                physicalSosigScript.CoreRB.rotation = Quaternion.Lerp(physicalSosigScript.CoreRB.rotation, data.rotation, 0.5f);
+            }
+        }
+
         private void OnDestroy()
         {
             H3MP_GameManager.trackedSosigBySosig.Remove(physicalSosigScript);

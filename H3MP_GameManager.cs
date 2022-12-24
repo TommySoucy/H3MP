@@ -785,6 +785,7 @@ namespace H3MP
                 data.configTemplate.NoFreshTargetTime = (float)typeof(SosigTargetPrioritySystem).GetField("m_timeToNoFreshTarget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sosigScript.Priority);
             }
             data.position = sosigScript.CoreRB.position;
+            data.velocity = sosigScript.CoreRB.velocity;
             data.rotation = sosigScript.CoreRB.rotation;
             data.active = trackedSosig.gameObject.activeInHierarchy;
             data.linkData = new float[sosigScript.Links.Count][];

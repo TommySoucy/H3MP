@@ -23,6 +23,7 @@ namespace H3MP
         public Quaternion previousRot;
         public Vector3 position;
         public Quaternion rotation;
+        public Vector3 velocity = Vector3.zero;
         public int[] previousAmmoStores;
         public int[] ammoStores;
         public float[] previousLinkIntegrity;
@@ -165,6 +166,7 @@ namespace H3MP
             previousPos = position;
             previousRot = rotation;
             position = updatedItem.position;
+            velocity = previousPos == null ? Vector3.zero : position - previousPos;
             rotation = updatedItem.rotation;
             previousAmmoStores = ammoStores;
             ammoStores = updatedItem.ammoStores;
@@ -181,8 +183,8 @@ namespace H3MP
             if (physicalObject != null)
             {
                 physicalObject.physicalSosigScript.Mustard = mustard;
-                physicalObject.physicalSosigScript.CoreRB.position = position;
-                physicalObject.physicalSosigScript.CoreRB.rotation = rotation;
+                //physicalObject.physicalSosigScript.CoreRB.position = position;
+                //physicalObject.physicalSosigScript.CoreRB.rotation = rotation;
                 Mod.Sosig_SetBodyPose.Invoke(physicalObject.physicalSosigScript, new object[] { bodyPose });
                 sosigInvAmmoStores.SetValue(physicalObject.physicalSosigScript.Inventory, ammoStores);
                 for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
@@ -238,6 +240,7 @@ namespace H3MP
             previousPos = position;
             previousRot = rotation;
             position = physicalObject.physicalSosigScript.CoreRB.position;
+            velocity = previousPos == null ? Vector3.zero : position - previousPos;
             rotation = physicalObject.physicalSosigScript.CoreRB.rotation;
             previousBodyPose = bodyPose;
             bodyPose = physicalObject.physicalSosigScript.BodyPose;
