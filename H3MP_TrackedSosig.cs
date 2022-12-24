@@ -48,8 +48,15 @@ namespace H3MP
         {
             if (data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
             {
-                physicalSosigScript.CoreRB.position = Vector3.Lerp(physicalSosigScript.CoreRB.position, data.position + data.velocity, 0.5f);
-                physicalSosigScript.CoreRB.rotation = Quaternion.Lerp(physicalSosigScript.CoreRB.rotation, data.rotation, 0.5f);
+                if (data.velocity.magnitude < 5)
+                {
+                    physicalSosigScript.CoreRB.position = Vector3.Lerp(physicalSosigScript.CoreRB.position, data.position + data.velocity, 0.5f * Time.deltaTime);
+                }
+                else
+                {
+                    physicalSosigScript.CoreRB.position = data.position;
+                }
+                physicalSosigScript.CoreRB.rotation = Quaternion.Lerp(physicalSosigScript.CoreRB.rotation, data.rotation, 0.5f * Time.deltaTime);
             }
         }
 
