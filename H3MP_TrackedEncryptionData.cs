@@ -55,7 +55,7 @@ namespace H3MP
             }
 
             ++Mod.skipAllInstantiates;
-            GameObject encryptionInstance = GameObject.Instantiate(prefab);
+            GameObject encryptionInstance = GameObject.Instantiate(prefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalObject = encryptionInstance.AddComponent<H3MP_TrackedEncryption>();
             physicalObject.data = this;

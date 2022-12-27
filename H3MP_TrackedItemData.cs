@@ -137,7 +137,7 @@ namespace H3MP
             try
             {
                 ++Mod.skipAllInstantiates;
-                GameObject itemObject = GameObject.Instantiate(itemPrefab);
+                GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
                 --Mod.skipAllInstantiates;
                 physicalItem = itemObject.AddComponent<H3MP_TrackedItem>();
                 physicalItem.data = this;

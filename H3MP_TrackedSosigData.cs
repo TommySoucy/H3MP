@@ -53,7 +53,7 @@ namespace H3MP
             }
 
             ++Mod.skipAllInstantiates;
-            GameObject sosigInstance = GameObject.Instantiate(sosigPrefab);
+            GameObject sosigInstance = GameObject.Instantiate(sosigPrefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalObject = sosigInstance.AddComponent<H3MP_TrackedSosig>();
             physicalObject.data = this;

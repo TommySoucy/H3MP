@@ -53,7 +53,7 @@ namespace H3MP
             }
 
             ++Mod.skipAllInstantiates;
-            GameObject autoMeaterInstance = GameObject.Instantiate(autoMeaterPrefab);
+            GameObject autoMeaterInstance = GameObject.Instantiate(autoMeaterPrefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalObject = autoMeaterInstance.AddComponent<H3MP_TrackedAutoMeater>();
             physicalObject.data = this;

@@ -11,6 +11,8 @@ namespace H3MP
 {
     public class H3MP_TrackedSosig : MonoBehaviour
     {
+        public static float interpolationSpeed = 5f;
+
         public Sosig physicalSosigScript;
         public H3MP_TrackedSosigData data;
         public bool awoken;
@@ -50,13 +52,13 @@ namespace H3MP
             {
                 if (data.velocity.magnitude < 5)
                 {
-                    physicalSosigScript.CoreRB.position = Vector3.Lerp(physicalSosigScript.CoreRB.position, data.position + data.velocity, 0.5f * Time.deltaTime);
+                    physicalSosigScript.CoreRB.position = Vector3.Lerp(physicalSosigScript.CoreRB.position, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
                 }
                 else
                 {
                     physicalSosigScript.CoreRB.position = data.position;
                 }
-                physicalSosigScript.CoreRB.rotation = Quaternion.Lerp(physicalSosigScript.CoreRB.rotation, data.rotation, 0.5f * Time.deltaTime);
+                physicalSosigScript.CoreRB.rotation = Quaternion.Lerp(physicalSosigScript.CoreRB.rotation, data.rotation, interpolationSpeed * Time.deltaTime);
             }
         }
 
