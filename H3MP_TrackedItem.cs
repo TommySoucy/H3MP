@@ -9,6 +9,8 @@ namespace H3MP
 {
     public class H3MP_TrackedItem : MonoBehaviour
     {
+        public static float interpolationSpeed = 5f;
+
         public H3MP_TrackedItemData data;
         public bool awoken;
         public bool sendOnAwake;
@@ -1331,6 +1333,43 @@ namespace H3MP
             return modified;
         }
         #endregion
+
+        private void FixedUpdate()
+        {
+            if (data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
+            {
+                if (data.previousPos != null && data.velocity.magnitude < 1f)
+                {
+                    if (data.parent == -1)
+                    {
+                        physicalObject.transform.position = Vector3.Lerp(physicalObject.transform.position, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                    }
+                    else
+                    {
+                        physicalObject.transform.localPosition = Vector3.Lerp(physicalObject.transform.localPosition, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                    }
+                }
+                else
+                {
+                    if (data.parent == -1)
+                    {
+                        physicalObject.transform.position = data.position;
+                    }
+                    else
+                    {
+                        physicalObject.transform.localPosition = data.position;
+                    }
+                }
+                if (data.parent == -1)
+                {
+                    physicalObject.transform.rotation = Quaternion.Lerp(physicalObject.transform.rotation, data.rotation, interpolationSpeed * Time.deltaTime);
+                }
+                else
+                {
+                    physicalObject.transform.localRotation = Quaternion.Lerp(physicalObject.transform.localRotation, data.rotation, interpolationSpeed * Time.deltaTime);
+                }
+            }
+        }
 
         private void OnDestroy()
         {

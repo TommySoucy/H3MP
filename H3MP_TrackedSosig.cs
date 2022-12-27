@@ -50,7 +50,14 @@ namespace H3MP
         {
             if (data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
             {
-                if (data.velocity.magnitude < 5)
+                // NOTE: The velocity magnitude check must be greater than the largest displacement a sosig is able to have in a single fixed frame
+                //       (meaning if a sosig moves normally but this normal movement ends up being of more than the threshold in a single frame,
+                //       the sosig will be teleported instead of interpolated although interpolation was intended)
+                //       while being smaller than the smallest intended teleportation (if there is a sosig teleportation that happens for any reason, for example
+                //       a teleportation sosig off mesh link, and this teleportation is less than the threshold, the sosig will instead be interpolated, which could lead to them
+                //       trying to move through a wall instead of teleporting through it)
+                // Here, for a value of 0.5f, we mean that a sosig should never move more than 0.5m in a single frame, and should never teleport less than 0.5m
+                if (data.previousPos != null && data.velocity.magnitude < 0.5f)
                 {
                     physicalSosigScript.CoreRB.position = Vector3.Lerp(physicalSosigScript.CoreRB.position, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
                 }

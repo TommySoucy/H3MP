@@ -105,8 +105,9 @@ namespace H3MP
         // State
         public Vector3 position;
         public Quaternion rotation;
-        private Vector3 previousPos;
-        private Quaternion previousRot;
+        public Vector3 previousPos;
+        public Quaternion previousRot;
+        public Vector3 velocity = Vector3.zero;
         public H3MP_TrackedItem physicalItem;
 
         public int parent = -1; // The tracked ID of item this item is attached to
@@ -195,20 +196,21 @@ namespace H3MP
             previousPos = position;
             previousRot = rotation;
             position = updatedItem.position;
+            velocity = previousPos == null ? Vector3.zero : position - previousPos;
             rotation = updatedItem.rotation;
             if (physicalItem != null)
             {
-                if (parent == -1)
-                {
-                    physicalItem.transform.position = updatedItem.position;
-                    physicalItem.transform.rotation = updatedItem.rotation;
-                }
-                else
-                {
-                    // If parented, the position and rotation are relative, so set it now after parenting
-                    physicalItem.transform.localPosition = updatedItem.position;
-                    physicalItem.transform.localRotation = updatedItem.rotation;
-                }
+                //if (parent == -1)
+                //{
+                //    physicalItem.transform.position = updatedItem.position;
+                //    physicalItem.transform.rotation = updatedItem.rotation;
+                //}
+                //else
+                //{
+                //    // If parented, the position and rotation are relative, so set it now after parenting
+                //    physicalItem.transform.localPosition = updatedItem.position;
+                //    physicalItem.transform.localRotation = updatedItem.rotation;
+                //}
 
                 previousActive = active;
                 active = updatedItem.active;
