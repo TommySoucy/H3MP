@@ -7433,7 +7433,14 @@ namespace H3MP
                     Mod.TNH_Manager_DelayedInit.Invoke(Mod.currentTNHInstance.manager, null);
                     Mod.TNH_Manager_VoiceUpdate.Invoke(Mod.currentTNHInstance.manager, null);
                     Mod.currentTNHInstance.manager.FMODController.SetMasterVolume(0.25f * GM.CurrentPlayerBody.GlobalHearing);
-                    Mod.currentTNHInstance.manager.TAHReticle.transform.position = position;
+                    if (Mod.currentTNHInstance.manager.RadarHand == TNH_RadarHand.Right)
+                    {
+                        Mod.currentTNHInstance.manager.TAHReticle.transform.position = GM.CurrentPlayerBody.RightHand.position + GM.CurrentPlayerBody.RightHand.forward * -0.2f;
+                    }
+                    else
+                    {
+                        Mod.currentTNHInstance.manager.TAHReticle.transform.position = GM.CurrentPlayerBody.LeftHand.position + GM.CurrentPlayerBody.RightHand.forward * -0.2f;
+                    }
 
                     if (doInit && Mod.currentTNHInstance.manager.AIManager.HasInit)
                     {
