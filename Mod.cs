@@ -7430,6 +7430,7 @@ namespace H3MP
 
                     if (doInit && Mod.currentTNHInstance.manager.AIManager.HasInit)
                     {
+                        Debug.Log("\t\t\tdoing TNH init");
                         doInit = false;
                         if (Mod.initTNHData != null)
                         {
@@ -7523,6 +7524,7 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
+            Debug.Log("InitJoinTNH called");
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex]);
             if (Mod.currentTNHInstance.holdOngoing)
             {

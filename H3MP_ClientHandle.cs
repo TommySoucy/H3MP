@@ -1319,20 +1319,23 @@ namespace H3MP
             int instance = packet.ReadInt();
             int newController = packet.ReadInt();
 
-            if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)
             {
-                H3MP_ClientSend.TNHData(newController, Mod.currentTNHInstance.manager);
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
+                {
+                    H3MP_ClientSend.TNHData(newController, Mod.currentTNHInstance.manager);
 
-                //++SetTNHManagerPatch.skip;
-                //Mod.currentTNHInstance.manager.enabled = false;
-                //--SetTNHManagerPatch.skip;
+                    //++SetTNHManagerPatch.skip;
+                    //Mod.currentTNHInstance.manager.enabled = false;
+                    //--SetTNHManagerPatch.skip;
+                }
+                //else if (newController == H3MP_GameManager.ID && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+                //{
+                //    ++SetTNHManagerPatch.skip;
+                //    Mod.currentTNHInstance.manager.enabled = true;
+                //    --SetTNHManagerPatch.skip;
+                //}
             }
-            //else if (newController == H3MP_GameManager.ID && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
-            //{
-            //    ++SetTNHManagerPatch.skip;
-            //    Mod.currentTNHInstance.manager.enabled = true;
-            //    --SetTNHManagerPatch.skip;
-            //}
 
             H3MP_GameManager.TNHInstances[instance].controller = newController;
         }

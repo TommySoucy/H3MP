@@ -11,7 +11,7 @@ namespace H3MP
 {
     public class H3MP_TrackedSosig : MonoBehaviour
     {
-        public static float interpolationSpeed = 5f;
+        public static float interpolationSpeed = 12f;
 
         public Sosig physicalSosigScript;
         public H3MP_TrackedSosigData data;
