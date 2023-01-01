@@ -7290,14 +7290,20 @@ namespace H3MP
                 else // Not controller
                 {
                     TNH_Progression progression = (TNH_Progression)Mod.TNH_Manager_m_curProgression.GetValue(Mod.currentTNHInstance.manager);
-                    if (Mod.currentTNHInstance.manager.ProgressionMode == TNHSetting_ProgressionType.FiveHold || level < progression.Levels.Count)
-                    {
-                        Mod.TNH_Manager_m_curLevel.SetValue(Mod.currentTNHInstance.manager, progression.Levels[Mod.currentTNHInstance.level]);
-                    }
-                    else
-                    {
-                        TNH_Progression endlessProgression = (TNH_Progression)Mod.TNH_Manager_m_curProgressionEndless.GetValue(Mod.currentTNHInstance.manager);
-                        Mod.TNH_Manager_m_curLevel.SetValue(Mod.currentTNHInstance.manager, endlessProgression.Levels[UnityEngine.Random.Range(0, endlessProgression.Levels.Count)]);
+
+                    // Could be null if we receive set level from controller before we set it in delayed init
+                    // If it is null here though, the progression setting will be handled when we receive TNH data from controller
+                    if (progression != null)
+                    { 
+                        if (Mod.currentTNHInstance.manager.ProgressionMode == TNHSetting_ProgressionType.FiveHold || level < progression.Levels.Count)
+                        {
+                            Mod.TNH_Manager_m_curLevel.SetValue(Mod.currentTNHInstance.manager, progression.Levels[Mod.currentTNHInstance.level]);
+                        }
+                        else
+                        {
+                            TNH_Progression endlessProgression = (TNH_Progression)Mod.TNH_Manager_m_curProgressionEndless.GetValue(Mod.currentTNHInstance.manager);
+                            Mod.TNH_Manager_m_curLevel.SetValue(Mod.currentTNHInstance.manager, endlessProgression.Levels[UnityEngine.Random.Range(0, endlessProgression.Levels.Count)]);
+                        }
                     }
 
                     return false;
