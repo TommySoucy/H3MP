@@ -7439,7 +7439,7 @@ namespace H3MP
                     }
                     else
                     {
-                        Mod.currentTNHInstance.manager.TAHReticle.transform.position = GM.CurrentPlayerBody.LeftHand.position + GM.CurrentPlayerBody.RightHand.forward * -0.2f;
+                        Mod.currentTNHInstance.manager.TAHReticle.transform.position = GM.CurrentPlayerBody.LeftHand.position + GM.CurrentPlayerBody.LeftHand.forward * -0.2f;
                     }
 
                     if (doInit && Mod.currentTNHInstance.manager.AIManager.HasInit)
