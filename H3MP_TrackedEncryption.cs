@@ -63,7 +63,21 @@ namespace H3MP
                             }
                         }
 
-                        if (otherPlayer != -1)
+                        if (otherPlayer == -1)
+                        {
+                            if (sendDestroy)
+                            {
+                                H3MP_ServerSend.DestroyEncryption(data.trackedID);
+                            }
+                            else
+                            {
+                                sendDestroy = true;
+                            }
+
+                            H3MP_Server.encryptions[data.trackedID] = null;
+                            H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
+                        }
+                        else
                         {
                             H3MP_ServerSend.GiveEncryptionControl(data.trackedID, otherPlayer);
 
@@ -111,7 +125,38 @@ namespace H3MP
                             }
                         }
 
-                        if (otherPlayer != -1)
+                        if (otherPlayer == -1)
+                        {
+                            if (sendDestroy)
+                            {
+                                if (data.trackedID == -1)
+                                {
+                                    if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                                    {
+                                        unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                    }
+
+                                    // We want to keep it in local until we give destruction order
+                                    removeFromLocal = false;
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.DestroyEncryption(data.trackedID);
+
+                                    H3MP_Client.encryptions[data.trackedID] = null;
+                                }
+                            }
+                            else
+                            {
+                                sendDestroy = true;
+                            }
+
+                            if (data.trackedID != -1)
+                            {
+                                H3MP_Client.encryptions[data.trackedID] = null;
+                            }
+                        }
+                        else
                         {
                             if (data.trackedID == -1)
                             {

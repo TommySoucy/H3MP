@@ -1385,7 +1385,22 @@ namespace H3MP
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
 
-                        if (otherPlayer != -1)
+                        if (otherPlayer == -1)
+                        {
+                            // No one to give control of item to, destroy it
+                            if (sendDestroy && skipDestroy == 0)
+                            {
+                                H3MP_ServerSend.DestroyItem(data.trackedID);
+                            }
+                            else if (!sendDestroy)
+                            {
+                                sendDestroy = true;
+                            }
+
+                            H3MP_Server.items[data.trackedID] = null;
+                            H3MP_Server.availableItemIndices.Add(data.trackedID);
+                        }
+                        else
                         {
                             H3MP_ServerSend.GiveControl(data.trackedID, otherPlayer);
 
@@ -1426,7 +1441,38 @@ namespace H3MP
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
 
-                        if (otherPlayer != -1)
+                        if (otherPlayer == -1)
+                        {
+                            if (sendDestroy && skipDestroy == 0)
+                            {
+                                if (data.trackedID == -1)
+                                {
+                                    if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                                    {
+                                        unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                    }
+
+                                    // We want to keep it in local until we give destruction order
+                                    removeFromLocal = false;
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.DestroyItem(data.trackedID);
+
+                                    H3MP_Client.items[data.trackedID] = null;
+                                }
+                            }
+                            else if (!sendDestroy)
+                            {
+                                sendDestroy = true;
+                            }
+
+                            if (data.trackedID != -1)
+                            {
+                                H3MP_Client.items[data.trackedID] = null;
+                            }
+                        }
+                        else
                         {
                             if (data.trackedID == -1)
                             {

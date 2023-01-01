@@ -86,7 +86,21 @@ namespace H3MP
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
 
-                        if (otherPlayer != -1)
+                        if (otherPlayer == -1)
+                        {
+                            if (sendDestroy)
+                            {
+                                H3MP_ServerSend.DestroySosig(data.trackedID);
+                            }
+                            else
+                            {
+                                sendDestroy = true;
+                            }
+
+                            H3MP_Server.sosigs[data.trackedID] = null;
+                            H3MP_Server.availableSosigIndices.Add(data.trackedID);
+                        }
+                        else
                         {
                             H3MP_ServerSend.GiveSosigControl(data.trackedID, otherPlayer);
 
@@ -126,7 +140,38 @@ namespace H3MP
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
 
-                        if (otherPlayer != -1)
+                        if (otherPlayer == -1)
+                        {
+                            if (sendDestroy)
+                            {
+                                if (data.trackedID == -1)
+                                {
+                                    if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                                    {
+                                        unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                    }
+
+                                    // We want to keep it in local until we give destruction order
+                                    removeFromLocal = false;
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.DestroySosig(data.trackedID);
+
+                                    H3MP_Client.sosigs[data.trackedID] = null;
+                                }
+                            }
+                            else
+                            {
+                                sendDestroy = true;
+                            }
+
+                            if (data.trackedID != -1)
+                            {
+                                H3MP_Client.sosigs[data.trackedID] = null;
+                            }
+                        }
+                        else
                         {
                             if (data.trackedID == -1)
                             {
