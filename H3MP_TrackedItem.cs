@@ -1336,7 +1336,7 @@ namespace H3MP
 
         private void FixedUpdate()
         {
-            if (data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
+            if (physicalObject != null && data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
             {
                 if (data.previousPos != null && data.velocity.magnitude < 1f)
                 {

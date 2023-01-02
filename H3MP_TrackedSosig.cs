@@ -48,7 +48,7 @@ namespace H3MP
 
         private void FixedUpdate()
         {
-            if (data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
+            if (physicalSosigScript != null && physicalSosigScript.CoreRB != null && data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
             {
                 // NOTE: The velocity magnitude check must be greater than the largest displacement a sosig is able to have in a single fixed frame
                 //       (meaning if a sosig moves normally but this normal movement ends up being of more than the threshold in a single frame,
