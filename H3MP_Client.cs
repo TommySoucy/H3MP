@@ -505,7 +505,19 @@ namespace H3MP
                 }
                 else // This is an initial update sosig data
                 {
-                    sosigs[trackedSosig.trackedID].Update(trackedSosig, true);
+                    H3MP_TrackedSosigData trackedSosigData = sosigs[trackedSosig.trackedID];
+
+                    // Instantiate sosig if it is in the current scene if not instantiated already
+                    // This could be the case if joining a scene with sosigs we already have the data for
+                    if (trackedSosigData.physicalObject == null)
+                    {
+                        if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                        {
+                            AnvilManager.Run(trackedSosigData.Instantiate());
+                        }
+                    }
+
+                    trackedSosigData.Update(trackedSosig, true);
                 }
             }
         }
@@ -593,7 +605,19 @@ namespace H3MP
                 }
                 else // This is an initial update sosig data
                 {
-                    encryptions[trackedEncryption.trackedID].Update(trackedEncryption, true);
+                    H3MP_TrackedEncryptionData trackedEncryptionData = encryptions[trackedEncryption.trackedID];
+
+                    // Instantiate Encryption if it is in the current scene if not instantiated already
+                    // This could be the case if joining a scene with encryptions we already have the data for
+                    if (trackedEncryptionData.physicalObject == null)
+                    {
+                        if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                        {
+                            AnvilManager.Run(trackedEncryptionData.Instantiate());
+                        }
+                    }
+
+                    trackedEncryptionData.Update(trackedEncryption, true);
                 }
             }
         }
