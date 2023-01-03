@@ -1267,6 +1267,12 @@ namespace H3MP
 
             harmony.Patch(TNH_WeaponCrateSpawnObjectsPatchOriginal, new HarmonyMethod(TNH_WeaponCrateSpawnObjectsPatchPrefix));
 
+            // TeleportToPointPatch
+            MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
+            MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(teleportToPointPatchOriginal, new HarmonyMethod(teleportToPointPatchPrefix));
+
             //// SetActivePatch
             //MethodInfo setActivePatchOriginal = typeof(UnityEngine.GameObject).GetMethod("SetActive", BindingFlags.Public | BindingFlags.Instance);
             //MethodInfo setActivePatchPrefix = typeof(SetActivePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1997,6 +2003,15 @@ namespace H3MP
             {
                 Debug.LogWarning("SetActivePatch called with true on " + __instance.name+":\n"+Environment.StackTrace);
             }
+        }
+    }
+
+    // DEBUG PATCH Patches FVRMovementManager
+    class TeleportToPointPatch
+    {
+        static void Prefix(Vector3 point)
+        {
+            Debug.LogWarning("TeleportToPoint called with point: ("+point.x+","+point.y+","+point.z+"):\n"+Environment.StackTrace);
         }
     }
 

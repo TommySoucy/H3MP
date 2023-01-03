@@ -177,7 +177,6 @@ namespace H3MP
                 if (!player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(true);
-                    UpdatePlayerHidden(player);
                     ++playersPresent;
 
                     player.SetEntitiesRegistered(true);
@@ -193,6 +192,8 @@ namespace H3MP
                     player.SetEntitiesRegistered(false);
                 }
             }
+
+            UpdatePlayerHidden(player);
         }
 
         // MOD: This will be called to set a player as hidden based on certain criteria
@@ -201,7 +202,7 @@ namespace H3MP
         public static bool UpdatePlayerHidden(H3MP_PlayerManager player)
         {
             // TNH
-            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
             {
                 if (Mod.currentTNHInstance.dead.Contains(player.ID))
                 {
@@ -210,7 +211,7 @@ namespace H3MP
                 }
                 else // Player not dead
                 {
-                    if(GM.TNH_Manager != null && Mod.currentTNHInstance.currentlyPlaying.Contains(player.ID))
+                    if (GM.TNH_Manager != null && Mod.currentTNHInstance.currentlyPlaying.Contains(player.ID))
                     {
                         // We are currently in a TNH game with this player, add them to radar
                         GM.TNH_Manager.TAHReticle.RegisterTrackedObject(player.head, (TAH_ReticleContact.ContactType)(-2)); // -2 is a custom value handled by TAHReticleContactPatch
@@ -283,7 +284,6 @@ namespace H3MP
                 if (!player.gameObject.activeSelf)
                 {
                     player.gameObject.SetActive(true);
-                    UpdatePlayerHidden(player);
                     ++playersPresent;
 
                     player.SetEntitiesRegistered(true);
@@ -299,6 +299,8 @@ namespace H3MP
                     player.SetEntitiesRegistered(false);
                 }
             }
+
+            UpdatePlayerHidden(player);
 
             if (activeInstances.ContainsKey(instance))
             {
@@ -1432,7 +1434,6 @@ namespace H3MP
                         if (!player.Value.gameObject.activeSelf)
                         {
                             player.Value.gameObject.SetActive(true);
-                            UpdatePlayerHidden(player.Value);
                         }
                         ++playersPresent;
 
@@ -1455,6 +1456,8 @@ namespace H3MP
                             player.Value.gameObject.SetActive(false);
                         }
                     }
+
+                    UpdatePlayerHidden(player.Value);
                 }
             }
             else // New scene not syncable, ensure all players are disabled regardless of scene
@@ -1616,7 +1619,6 @@ namespace H3MP
                             if (!player.Value.gameObject.activeSelf)
                             {
                                 player.Value.gameObject.SetActive(true);
-                                UpdatePlayerHidden(player.Value);
                             }
                             ++playersPresent;
 
@@ -1639,6 +1641,8 @@ namespace H3MP
                                 player.Value.gameObject.SetActive(false);
                             }
                         }
+
+                        UpdatePlayerHidden(player.Value);
                     }
 
                     Debug.Log("Scene is syncable, and has "+playersPresent+" other players in it, syncing");

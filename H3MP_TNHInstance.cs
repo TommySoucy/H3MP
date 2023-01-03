@@ -100,6 +100,11 @@ namespace H3MP
                 played.Add(ID);
             }
 
+            if (ID != H3MP_GameManager.ID)
+            {
+                H3MP_GameManager.UpdatePlayerHidden(H3MP_GameManager.players[ID]);
+            }
+
             if (send)
             {
                 // Send to other clients
