@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -287,7 +288,23 @@ namespace H3MP
                     OnTNHHostClicked();
                     OnTNHHostConfirmClicked();
                 }
+                else if (Input.GetKeyDown(KeyCode.KeypadPlus))
+                {
+                    SpawnDummyPlayer();
+                }
             }
+        }
+
+        private void SpawnDummyPlayer()
+        {
+            GameObject player = Instantiate(playerPrefab);
+
+            H3MP_PlayerManager playerManager = player.GetComponent<H3MP_PlayerManager>();
+            playerManager.ID = -1;
+            playerManager.username = "Dummy";
+            playerManager.scene = SceneManager.GetActiveScene().name;
+            playerManager.instance = H3MP_GameManager.instance;
+            playerManager.usernameLabel.text = "Dummy";
         }
 
         private void LoadConfig()
@@ -4633,6 +4650,7 @@ namespace H3MP
                     Debug.Log("\t\ttempFA null");
                     // If we don't have a ref to the firearm that fired this projectile, let the damage be controlled by the best host
                     int bestHost = Mod.GetBestPotentialObjectHost(-1);
+                    Debug.Log("\t\tbestHost: "+bestHost);
                     return bestHost == -1 || bestHost == H3MP_GameManager.ID;
                 }
                 else // We have a ref to the firearm that fired this projectile

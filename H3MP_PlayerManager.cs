@@ -34,14 +34,14 @@ namespace H3MP
         private void Awake()
         {
             head = transform.GetChild(0);
-            headEntity = head.gameObject.AddComponent<AIEntity>();
+            headEntity = head.GetChild(0).gameObject.AddComponent<AIEntity>();
             headEntity.IFFCode = 0;
             headEntity.Beacons = new List<AIEntityIFFBeacon>();
             headHitBox = head.gameObject.AddComponent<H3MP_PlayerHitbox>();
             headHitBox.manager = this;
             headHitBox.part = H3MP_PlayerHitbox.Part.Head;
             torso = transform.GetChild(1);
-            torsoEntity = torso.gameObject.AddComponent<AIEntity>();
+            torsoEntity = torso.GetChild(0).gameObject.AddComponent<AIEntity>();
             torsoEntity.IFFCode = 0;
             torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
             torsoHitBox = torso.gameObject.AddComponent<H3MP_PlayerHitbox>();
@@ -62,13 +62,20 @@ namespace H3MP
 
         public void Damage(H3MP_PlayerHitbox.Part part, Damage damage)
         {
-            if (H3MP_ThreadManager.host)
+            if (ID != -1)
             {
-                H3MP_ServerSend.PlayerDamage(ID, (byte)part, damage);
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.PlayerDamage(ID, (byte)part, damage);
+                }
+                else
+                {
+                    H3MP_ClientSend.PlayerDamage(ID, (byte)part, damage);
+                }
             }
             else
             {
-                H3MP_ClientSend.PlayerDamage(ID, (byte)part, damage);
+                Debug.Log("Dummy player has receive damage on " + part);
             }
         }
 
