@@ -35,11 +35,13 @@ namespace H3MP
         {
             head = transform.GetChild(0);
             headEntity = head.gameObject.AddComponent<AIEntity>();
+            headEntity.IFFCode = 0;
             headEntity.Beacons = new List<AIEntityIFFBeacon>();
             headHitBox = head.gameObject.AddComponent<H3MP_PlayerHitbox>();
             headHitBox.part = H3MP_PlayerHitbox.Part.Head;
             torso = transform.GetChild(1);
             torsoEntity = torso.gameObject.AddComponent<AIEntity>();
+            torsoEntity.IFFCode = 0;
             torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
             torsoHitBox = torso.gameObject.AddComponent<H3MP_PlayerHitbox>();
             torsoHitBox.part = H3MP_PlayerHitbox.Part.Torso;

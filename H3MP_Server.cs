@@ -456,6 +456,9 @@ namespace H3MP
                 H3MP_ServerHandle.UpToDateEncryptions,
                 H3MP_ServerHandle.DoneLoadingScene,
                 H3MP_ServerHandle.DoneSendingUpToDateObjects,
+                H3MP_ServerHandle.SosigWeaponFire,
+                H3MP_ServerHandle.SosigWeaponShatter,
+                H3MP_ServerHandle.SosigWeaponDamage,
             };
 
             items = new H3MP_TrackedItemData[100];

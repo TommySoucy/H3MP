@@ -403,6 +403,9 @@ namespace H3MP
                 H3MP_ClientHandle.ShatterableCrateDamage,
                 H3MP_ClientHandle.ShatterableCrateDestroy,
                 H3MP_ClientHandle.InitTNHInstances,
+                H3MP_ClientHandle.SosigWeaponFire,
+                H3MP_ClientHandle.SosigWeaponShatter,
+                H3MP_ClientHandle.SosigWeaponDamage,
             };
 
             // All vanilla scenes can be synced by default

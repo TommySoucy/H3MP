@@ -27,10 +27,12 @@ namespace H3MP
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
         public delegate bool UpdateDataWithGiven(byte[] newData);
         public delegate bool FireFirearm();
+        public delegate bool FireSosigGun(float recoilMult);
         public delegate void UpdateParent();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
+        public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding firearm type
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public FVRPhysicalObject dataObject;
@@ -125,6 +127,14 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenAttachment;
                 updateParentFunc = UpdateAttachmentParent;
                 dataObject = asAttachment;
+            }
+            else if (physObj is SosigWeaponPlayerInterface)
+            {
+                SosigWeaponPlayerInterface asInterface = (SosigWeaponPlayerInterface)physObj;
+                updateFunc = UpdateSosigWeaponInterface;
+                updateGivenFunc = UpdateGivenSosigWeaponInterface;
+                dataObject = asInterface;
+                sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
             else if (physObj is Revolver)
@@ -304,6 +314,71 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateSosigWeaponInterface()
+        {
+            SosigWeaponPlayerInterface asInterface = dataObject as SosigWeaponPlayerInterface;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[3];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+            byte preval0 = data.data[1];
+
+            // Write shots left
+            BitConverter.GetBytes((short)(int)typeof(SosigWeapon).GetField("m_shotsLeft", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asInterface.W)).CopyTo(data.data, 0);
+
+            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+
+            preval = data.data[2];
+
+            // Write MechaState
+            data.data[2] = (byte)asInterface.W.MechaState;
+
+            modified |= preval != data.data[2];
+
+            return modified;
+        }
+
+        private bool UpdateGivenSosigWeaponInterface(byte[] newData)
+        {
+            bool modified = false;
+            SosigWeaponPlayerInterface asInterface = dataObject as SosigWeaponPlayerInterface;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set shots left
+                typeof(SosigWeapon).GetField("m_shotsLeft", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asInterface.W, BitConverter.ToInt16(newData, 0));
+
+                // Set MechaState
+                asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
+            }
+            else 
+            {
+                if (data.data[0] != newData[0] || data.data[1] != newData[1])
+                {
+                    // Set shots left
+                    typeof(SosigWeapon).GetField("m_shotsLeft", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asInterface.W, BitConverter.ToInt16(newData, 0));
+                    modified = true;
+                }
+                if (data.data[2] != newData[2])
+                {
+                    // Set MechaState
+                    asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateClosedBoltWeapon()
         {
             ClosedBoltWeapon asCBW = dataObject as ClosedBoltWeapon;
@@ -1375,6 +1450,10 @@ namespace H3MP
         {
             //tracked list so that when we get the tracked ID we can send the destruction to server and only then can we remove it from the list
             H3MP_GameManager.trackedItemByItem.Remove(physicalObject);
+            if (physicalObject is SosigWeaponPlayerInterface)
+            {
+                H3MP_GameManager.trackedItemBySosigWeapon.Remove((physicalObject as SosigWeaponPlayerInterface).W);
+            }
 
             if (H3MP_ThreadManager.host)
             {

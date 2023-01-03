@@ -597,6 +597,13 @@ namespace H3MP
 
             harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix));
 
+            // FireSosigWeaponPatch
+            MethodInfo fireSosigWeaponPatchOriginal = typeof(SosigWeapon).GetMethod("FireGun", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireSosigWeaponPatchPrefix = typeof(FireSosigWeaponPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireSosigWeaponPatchPostfix = typeof(FireSosigWeaponPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(fireSosigWeaponPatchOriginal, new HarmonyMethod(fireSosigWeaponPatchPrefix), new HarmonyMethod(fireSosigWeaponPatchPostfix));
+
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigConfigurePatchPrefix = typeof(SosigConfigurePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1050,6 +1057,18 @@ namespace H3MP
             MethodInfo encryptionDamagePatchPostfix = typeof(EncryptionDamagePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(encryptionDamagePatchOriginal, new HarmonyMethod(encryptionDamagePatchPrefix), new HarmonyMethod(encryptionDamagePatchPostfix));
+
+            // SosigWeaponDamagePatch
+            MethodInfo sosigWeaponDamagePatchOriginal = typeof(SosigWeapon).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigWeaponDamagePatchPrefix = typeof(SosigWeaponDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigWeaponDamagePatchOriginal, new HarmonyMethod(sosigWeaponDamagePatchPrefix));
+
+            // SosigWeaponShatterPatch
+            MethodInfo sosigWeaponShatterPatchOriginal = typeof(SosigWeapon).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigWeaponShatterPatchPrefix = typeof(SosigWeaponShatterPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigWeaponShatterPatchOriginal, new HarmonyMethod(sosigWeaponShatterPatchPrefix));
 
             // EncryptionRespawnRandSubPatch
             MethodInfo encryptionRespawnRandSubPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("RespawnRandomSubTarg", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1780,19 +1799,23 @@ namespace H3MP
             }
         }
         
-        // MOD: This method will be used to find the ID of which player to give control of this object
+        // MOD: This method will be used to find the ID of which player to give control of this object to
         //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
         public static int GetBestPotentialObjectHost(int currentController)
         {
             if (Mod.currentTNHInstance != null)
             {
-                if(currentController == -1)
+                if(currentController == -1) // This means the potential host could also be us
                 {
-                    foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                    // Going through each like this, we will go through the host of the instance before any other
+                    foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                     {
-                        if (player.Value.gameObject.activeSelf)
+                        // If the player is us and we are not spectating
+                        // OR it is another player who is not spectating
+                        if ((playerID == H3MP_GameManager.ID && !Mod.TNHSpectating) || 
+                             (H3MP_GameManager.players.ContainsKey(playerID) && H3MP_GameManager.players[playerID].gameObject.activeSelf))
                         {
-                            return player.Key;
+                            return playerID;
                         }
                     }
                 }
@@ -2502,6 +2525,90 @@ namespace H3MP
         static void Postfix()
         {
             --Mod.skipAllInstantiates;
+        }
+    }
+
+    // Patches SosigWeapon.FireGun so we can keep track of when a SosigWeapon is fired
+    class FireSosigWeaponPatch
+    {
+        static void Prefix(ref SosigWeapon __instance, float recoilMult)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemBySosigWeapon.ContainsKey(__instance) ? H3MP_GameManager.trackedItemBySosigWeapon[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.SosigWeaponFire(0, trackedItem.data.trackedID, recoilMult);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.SosigWeaponFire(trackedItem.data.trackedID, recoilMult);
+                }
+            }
+        }
+
+        static void Postfix()
+        {
+            --Mod.skipAllInstantiates;
+        }
+    }
+
+    // Patches SosigWeapon.Shatter so we can keep track of the event
+    class SosigWeaponShatterPatch
+    {
+        public static int skip;
+
+        static void Prefix(ref SosigWeapon __instance)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemBySosigWeapon.ContainsKey(__instance) ? H3MP_GameManager.trackedItemBySosigWeapon[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the shatter action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.SosigWeaponShatter(0, trackedItem.data.trackedID);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.SosigWeaponShatter(trackedItem.data.trackedID);
+                }
+            }
         }
     }
 
@@ -6534,6 +6641,55 @@ namespace H3MP
             return true;
         }
     }
+
+    // Patches SosigWeapon.Damage to keep track of damage taken by a SosigWeapon
+    class SosigWeaponDamagePatch
+    {
+        public static int skip;
+
+        static bool Prefix(ref SosigWeapon __instance, Damage d)
+        {
+            if(skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged SosigWeapon, we want to process the damage
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemBySosigWeapon.ContainsKey(__instance) ? H3MP_GameManager.trackedItemBySosigWeapon[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Not in control, we want to send the damage to the controller for them to process it and return the result
+                        H3MP_ServerSend.SosigWeaponDamage(trackedItem.data, d);
+                        return false;
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    H3MP_ClientSend.SosigWeaponDamage(trackedItem.data.trackedID, d);
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
     #endregion
 
     #region TNH Patches
@@ -7153,7 +7309,6 @@ namespace H3MP
                         H3MP_ClientSend.TNHPlayerDied(Mod.currentTNHInstance.instance, H3MP_GameManager.ID);
                     }
 
-                    //TODO: Handle spectate or leave
                     // Prevent TNH from processing player death if there are other players still in the game
                     if (Mod.currentTNHInstance.dead.Count < Mod.currentTNHInstance.currentlyPlaying.Count)
                     {
@@ -7851,6 +8006,8 @@ namespace H3MP
     {
         static bool SetContactTypePrefix(ref TAH_ReticleContact __instance, TAH_ReticleContact.ContactType t)
         {
+            Debug.Log("SetContactTypePrefix called with type: " + ((int)t));
+
             if(Mod.managerObject == null)
             {
                 return true;
@@ -7872,7 +8029,7 @@ namespace H3MP
         }
 
         // This transpiler will make sure that Tick will also return false if the transform is not active
-        // This is so taht when we make a player inactive because they are dead, we don't want to see them on the reticle either
+        // This is so that when we make a player inactive because they are dead, we don't want to see them on the reticle either
         static IEnumerable<CodeInstruction> TickTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);

@@ -587,6 +587,27 @@ namespace H3MP
             }
         }
 
+        public static void SosigWeaponFire(int trackedID, float recoilMult)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigWeaponFire))
+            {
+                packet.Write(trackedID);
+                packet.Write(recoilMult);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SosigWeaponShatter(int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigWeaponShatter))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void AutoMeaterFirearmFireShot(int trackedID, Vector3 angles)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterFireShot))
@@ -1650,6 +1671,17 @@ namespace H3MP
             {
                 packet.Write(trackedID);
                 packet.Write(index);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SosigWeaponDamage(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigWeaponDamage))
+            {
+                packet.Write(trackedID);
                 packet.Write(d);
 
                 SendTCPData(packet);

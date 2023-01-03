@@ -112,7 +112,10 @@ namespace H3MP
         encryptionSubDamage = 95,
         shatterableCrateDamage = 96,
         shatterableCrateDestroy = 97,
-        initTNHInstances = 98
+        initTNHInstances = 98,
+        sosigWeaponFire = 99,
+        sosigWeaponShatter = 100,
+        sosigWeaponDamage = 101
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -218,7 +221,10 @@ namespace H3MP
         shatterableCrateDestroy = 98,
         updateEncryptionsRequest = 99,
         DoneLoadingScene = 100,
-        DoneSendingUpdaToDateObjects = 101
+        DoneSendingUpdaToDateObjects = 101,
+        sosigWeaponFire = 102,
+        sosigWeaponShatter = 103,
+        sosigWeaponDamage = 104
     }
 
     public class H3MP_Packet : IDisposable

@@ -145,6 +145,10 @@ namespace H3MP
                 physicalItem.physicalObject = itemObject.GetComponent<FVRPhysicalObject>();
 
                 H3MP_GameManager.trackedItemByItem.Add(physicalItem.physicalObject, physicalItem);
+                if (physicalItem.physicalObject is SosigWeaponPlayerInterface)
+                {
+                    H3MP_GameManager.trackedItemBySosigWeapon.Add((physicalItem.physicalObject as SosigWeaponPlayerInterface).W, physicalItem);
+                }
 
                 // See Note in H3MP_GameManager.SyncTrackedItems
                 if (parent != -1)

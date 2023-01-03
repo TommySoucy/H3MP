@@ -468,6 +468,10 @@ namespace H3MP
             if (trackedItem.physicalItem != null)
             {
                 H3MP_GameManager.trackedItemByItem.Remove(trackedItem.physicalItem.physicalObject);
+                if (trackedItem.physicalItem.physicalObject is SosigWeaponPlayerInterface)
+                {
+                    H3MP_GameManager.trackedItemBySosigWeapon.Remove((trackedItem.physicalItem.physicalObject as SosigWeaponPlayerInterface).W);
+                }
                 trackedItem.physicalItem.sendDestroy = false;
                 GameObject.Destroy(trackedItem.physicalItem.gameObject);
             }
@@ -534,6 +538,39 @@ namespace H3MP
 
             // Send to other clients
             H3MP_ServerSend.WeaponFire(clientID, trackedID);
+        }
+
+        public static void SosigWeaponFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            float recoilMult = packet.ReadFloat();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                H3MP_Server.items[trackedID].physicalItem.sosigWeaponfireFunc(recoilMult);
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.SosigWeaponFire(clientID, trackedID, recoilMult);
+        }
+
+        public static void SosigWeaponShatter(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                ++SosigWeaponShatterPatch.skip;
+                typeof(SosigWeaponPlayerInterface).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance).Invoke((H3MP_Server.items[trackedID].physicalItem.physicalObject as SosigWeaponPlayerInterface).W, null);
+                --SosigWeaponShatterPatch.skip;
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.SosigWeaponShatter(clientID, trackedID);
         }
 
         public static void AutoMeaterFirearmFireShot(int clientID, H3MP_Packet packet)
@@ -2176,6 +2213,30 @@ namespace H3MP
                 else
                 {
                     H3MP_ServerSend.EncryptionSubDamage(trackedEncryption, index, damage);
+                }
+            }
+        }
+
+        public static void SosigWeaponDamage(int clientID, H3MP_Packet packet)
+        {
+            int sosigWeaponTrackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedItemData trackedItem = H3MP_Client.items[sosigWeaponTrackedID];
+            if (trackedItem != null)
+            {
+                if (trackedItem.controller == H3MP_GameManager.ID)
+                {
+                    if (trackedItem.physicalItem != null)
+                    {
+                        ++SosigWeaponDamagePatch.skip;
+                        (trackedItem.physicalItem.physicalObject as SosigWeaponPlayerInterface).W.Damage(damage);
+                        --SosigWeaponDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.SosigWeaponDamage(trackedItem, damage);
                 }
             }
         }
