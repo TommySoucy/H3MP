@@ -1267,11 +1267,11 @@ namespace H3MP
 
             harmony.Patch(TNH_WeaponCrateSpawnObjectsPatchOriginal, new HarmonyMethod(TNH_WeaponCrateSpawnObjectsPatchPrefix));
 
-            // TeleportToPointPatch
-            MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
-            MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            //// TeleportToPointPatch
+            //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
+            //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(teleportToPointPatchOriginal, new HarmonyMethod(teleportToPointPatchPrefix));
+            //harmony.Patch(teleportToPointPatchOriginal, new HarmonyMethod(teleportToPointPatchPrefix));
 
             //// SetActivePatch
             //MethodInfo setActivePatchOriginal = typeof(UnityEngine.GameObject).GetMethod("SetActive", BindingFlags.Public | BindingFlags.Instance);
@@ -7757,44 +7757,18 @@ namespace H3MP
                 }
 
                 // Spawn at intial supply point
-                if(Mod.currentTNHInstance.activeSupplyPointIndices == null)
+                // We will already have been TPed to our char's starting point by delayed init
+                // Now check if valid, if not find first player to spawn on
+                if (Mod.currentTNHInstance.activeSupplyPointIndices != null)
                 {
-                    // Note that here we cannot have a hold case
-                    Vector3 position;
-                    switch (Mod.currentTNHInstance.phase)
+                    if (Mod.currentTNHInstance.activeSupplyPointIndices.Contains(((TNH_PointSequence)Mod.TNH_Manager_m_curPointSequence.GetValue(Mod.currentTNHInstance.manager)).StartSupplyPointIndex))
                     {
-                        case TNH_Phase.StartUp:
-                        case TNH_Phase.Take:
-                            position = Mod.currentTNHInstance.manager.SupplyPoints[UnityEngine.Random.Range(0, Mod.currentTNHInstance.manager.SupplyPoints.Count)].SpawnPoint_PlayerSpawn.position;
-                            Debug.Log("\tPhase is startup or take, spawning player at random supply point: "+ position);
-                            GM.CurrentMovementManager.TeleportToPoint(position, true);
-                            break;
-                        default:
-                            position = GM.CurrentSceneSettings.DeathResetPoint.position;
-                            Debug.Log("\tPhase is not startup or take, spawning player at DeathResetPoint: " + position);
-                            GM.CurrentMovementManager.TeleportToPoint(position, true);
-                            break;
-                    }
-                }
-                else
-                {
-                    Debug.Log("\tactiveSupplyPointIndices not null, finding first inactive supply point to spawn player at");
-                    // TP to first inactive point
-                    bool found = false;
-                    for (int i=0; i< Mod.currentTNHInstance.manager.SupplyPoints.Count; ++i)
-                    {
-                        if (!Mod.currentTNHInstance.activeSupplyPointIndices.Contains(i))
+                        // Starting point invalid, find a player to spawn on
+                        if(Mod.currentTNHInstance.currentlyPlaying != null && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
-                            Debug.Log("\t\tFound inactive supply point: " + Mod.currentTNHInstance.manager.SupplyPoints[i].SpawnPoint_PlayerSpawn.position);
-                            GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.SupplyPoints[i].SpawnPoint_PlayerSpawn.position, true);
-                            found = true;
-                            break;
+                            GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position, true);
                         }
-                    }
-                    if (!found)
-                    {
-                        Debug.Log("\tInactive supply point not found, spawning player at DeathResetPoint: " + GM.CurrentSceneSettings.DeathResetPoint.position);
-                        GM.CurrentMovementManager.TeleportToPoint(GM.CurrentSceneSettings.DeathResetPoint.position, true);
+                        //else // No player to spawn on, we will spawno n active supply point, not sure if this case is actually possible though
                     }
                 }
             }
