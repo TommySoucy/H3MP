@@ -1856,11 +1856,28 @@ namespace H3MP
             }
             else
             {
-                foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                if (currentController == -1) // This means the potential host could also be us
                 {
-                    if (player.Value.gameObject.activeSelf)
+                    foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
                     {
-                        return player.Key;
+                        if(player.Key > H3MP_GameManager.ID)
+                        {
+                            return H3MP_GameManager.ID;
+                        }
+                        if (player.Value.gameObject.activeSelf)
+                        {
+                            return player.Key;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                    {
+                        if (player.Value.gameObject.activeSelf)
+                        {
+                            return player.Key;
+                        }
                     }
                 }
             }
