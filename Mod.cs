@@ -4192,7 +4192,7 @@ namespace H3MP
         static void Prefix(ref FVRFireArmChamber __instance, ref FVRFireArmRound ___m_round, bool ForceCaseLessEject)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (Mod.managerObject == null)
             {
                 return;
             }
