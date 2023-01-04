@@ -34,7 +34,7 @@ namespace H3MP
         private void Awake()
         {
             head = transform.GetChild(0);
-            headEntity = head.GetChild(0).gameObject.AddComponent<AIEntity>();
+            headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
             headEntity.IFFCode = 0;
             headEntity.Beacons = new List<AIEntityIFFBeacon>();
             headHitBox = head.gameObject.AddComponent<H3MP_PlayerHitbox>();
