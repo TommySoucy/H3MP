@@ -12,7 +12,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
-using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -156,6 +155,8 @@ namespace H3MP
         public static readonly FieldInfo AutoMeater_m_flightRecoveryTime = typeof(AutoMeater).GetField("m_flightRecoveryTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeaterFirearm_M = typeof(AutoMeater.AutoMeaterFirearm).GetField("M", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AutoMeaterHitZone_m_isDestroyed = typeof(AutoMeaterHitZone).GetField("m_isDestroyed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo LAPD2019_m_capacitorCharge = typeof(LAPD2019).GetField("m_capacitorCharge", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo LAPD2019_m_isCapacitorCharged = typeof(LAPD2019).GetField("m_isCapacitorCharged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -183,6 +184,7 @@ namespace H3MP
         public static readonly MethodInfo AutoMeaterFirearm_FireShot = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_UpdateFlameThrower = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFlameThrower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_UpdateFire = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo LAPD2019_Fire = typeof(LAPD2019).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -610,16 +612,35 @@ namespace H3MP
             // FirePatch
             MethodInfo firePatchOriginal = typeof(FVRFireArm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo firePatchPrefix = typeof(FirePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo firePatchTranspiler = typeof(FirePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo firePatchPostfix = typeof(FirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix));
+            harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix), new HarmonyMethod(firePatchTranspiler));
 
             // FireSosigWeaponPatch
             MethodInfo fireSosigWeaponPatchOriginal = typeof(SosigWeapon).GetMethod("FireGun", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo fireSosigWeaponPatchPrefix = typeof(FireSosigWeaponPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireSosigWeaponPatchTranspiler = typeof(FireSosigWeaponPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireSosigWeaponPatchPostfix = typeof(FireSosigWeaponPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            harmony.Patch(fireSosigWeaponPatchOriginal, new HarmonyMethod(fireSosigWeaponPatchPrefix), new HarmonyMethod(fireSosigWeaponPatchPostfix));
+            harmony.Patch(fireSosigWeaponPatchOriginal, new HarmonyMethod(fireSosigWeaponPatchPrefix), new HarmonyMethod(fireSosigWeaponPatchPostfix), new HarmonyMethod(fireSosigWeaponPatchTranspiler));
+
+            // FireLAPD2019Patch
+            MethodInfo fireLAPD2019PatchOriginal = typeof(LAPD2019).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireLAPD2019PatchPrefix = typeof(FireLAPD2019Patch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireLAPD2019PatchTranspiler = typeof(FireLAPD2019Patch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireLAPD2019PatchPostfix = typeof(FireLAPD2019Patch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(fireLAPD2019PatchOriginal, new HarmonyMethod(fireLAPD2019PatchPrefix), new HarmonyMethod(fireLAPD2019PatchPostfix), new HarmonyMethod(fireLAPD2019PatchTranspiler));
+
+            // LAPD2019ActionPatch
+            MethodInfo LAPD2019PatchLoadOriginal = typeof(LAPD2019).GetMethod("LoadBattery", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo LAPD2019PatchLoadPrefix = typeof(LAPD2019ActionPatch).GetMethod("LoadBatteryPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo LAPD2019PatchExtractOriginal = typeof(LAPD2019).GetMethod("ExtractBattery", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo LAPD2019PatchExtractPrefix = typeof(LAPD2019ActionPatch).GetMethod("ExtractBatteryPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(LAPD2019PatchLoadOriginal, new HarmonyMethod(LAPD2019PatchLoadPrefix));
+            harmony.Patch(LAPD2019PatchExtractOriginal, new HarmonyMethod(LAPD2019PatchExtractPrefix));
 
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
@@ -2530,15 +2551,163 @@ namespace H3MP
 
     #region Action Patches
     // Patches FVRFireArm.Fire so we can keep track of when a firearm is fired
-    // TODO: This depends on the specific firearm type calling base.Fire() or overriding FVRFireArm.Fire, will need to check if this is true for each type
-    //       and if not will have to handle the exceptions accordingly
+    // Note: All projectile fire patches are necessary for 2 things: synchronizing fire action,
+    // and making sure that the shot is in same position/direction on all clients
+    // Synchronizing the action is simple, it is the pos/dir that requires transpilers and make these so complex
+    TODO: Patch the Fire of everything that calls ballistic projectile Fire
+    TODO: In every fire patch, must handle overrides for position and rotation of fired projectile
+    /* TODO: Fire patches for
+     * AttachableFirearm.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
+     * EncryptionBotAgile.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
+     * EncryptionBotCrystal.FirePulseShot // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
+     * EncryptionBotHardened.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
+     * RemoteGun.Fire
+     * AIFireArm.FireBullet
+     * AutoMeater.FireShot
+     * Minigun.Fire
+     * RonchWeapon.Fire
+     */
     class FirePatch
     {
-        static void Prefix(ref FVRFireArm __instance)
+        public static bool overriden;
+        static List<Vector3> positions;
+        static List<Vector3> directions;
+
+        static void Prefix()
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load index
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FirePatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load index
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FirePatch), "GetDirection"))); // Call our GetDirection method
+
+            bool skippedFirstDir = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("op_Subtraction"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    if (skippedFirstDir)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert1);
+                    }
+                    else
+                    {
+                        skippedFirstDir = true;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Postfix(ref FVRFireArm __instance)
+        {
+            overriden = false;
 
             if (Mod.skipNextFires > 0)
             {
@@ -2561,18 +2730,18 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID);
+                        H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID);
+                    H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID, positions, directions);
                 }
             }
-        }
 
-        static void Postfix()
-        {
+            positions = null;
+            directions = null;
+
             --Mod.skipAllInstantiates;
         }
     }
@@ -2580,11 +2749,154 @@ namespace H3MP
     // Patches SosigWeapon.FireGun so we can keep track of when a SosigWeapon is fired
     class FireSosigWeaponPatch
     {
-        static void Prefix(ref SosigWeapon __instance, float recoilMult)
+        public static bool overriden;
+        static List<Vector3> positions;
+        static List<Vector3> directions;
+
+        static void Prefix()
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireSosigWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireSosigWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            bool skippedFirstPos = false;
+            bool skippedFirstDir = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldloc_1)
+                {
+                    if (skippedFirstPos)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert0);
+                    }
+                    else
+                    {
+                        skippedFirstPos = true;
+                    }
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    if (skippedFirstDir)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert1);
+                        break;
+                    }
+                    else
+                    {
+                        skippedFirstDir = true;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Postfix(ref SosigWeapon __instance, float recoilMult)
+        {
+            overriden = false;
 
             if (Mod.skipNextFires > 0)
             {
@@ -2607,18 +2919,222 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.SosigWeaponFire(0, trackedItem.data.trackedID, recoilMult);
+                        H3MP_ServerSend.SosigWeaponFire(0, trackedItem.data.trackedID, recoilMult, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.SosigWeaponFire(trackedItem.data.trackedID, recoilMult);
+                    H3MP_ClientSend.SosigWeaponFire(trackedItem.data.trackedID, recoilMult, positions, directions);
                 }
+            }
+
+            positions = null;
+            directions = null;
+
+            --Mod.skipAllInstantiates;
+        }
+    }
+
+    // Patches LAPD2019.Fire so we can keep track of when an LAPD2019 is fired
+    class FireLAPD2019Patch
+    {
+        public static bool overriden;
+        static List<Vector3> positions;
+        static List<Vector3> directions;
+
+        static void Prefix()
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load index i
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load index i
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetDirection"))); // Call our GetDirection method
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_S, 14)); // Load index j
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert3 = new List<CodeInstruction>();
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 14)); // Load index j
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 15)); // Load gameObject
+            toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetDirection"))); // Call our GetDirection method
+
+            bool foundFirstPos = false;
+            bool foundFirstDir = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("GetMuzzle") &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
+                {
+                    if (foundFirstPos)
+                    {
+                        instructionList.InsertRange(i + 2, toInsert2);
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i + 2, toInsert0);
+                        foundFirstPos = true;
+                    }
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
+                    instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    if (foundFirstDir)
+                    {
+                        instructionList.InsertRange(i + 2, toInsert3);
+                        break;
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i + 2, toInsert1);
+                        foundFirstDir = true;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
             }
         }
 
-        static void Postfix()
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
         {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Postfix(ref LAPD2019 __instance)
+        {
+            overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.LAPD2019Fire(0, trackedItem.data.trackedID, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.LAPD2019Fire(trackedItem.data.trackedID, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
+
             --Mod.skipAllInstantiates;
         }
     }
@@ -4195,6 +4711,68 @@ namespace H3MP
             }
 
             return true;
+        }
+    }
+
+    // Patches LAPD2019 to sync actions
+    class LAPD2019ActionPatch
+    {
+        public static int loadBatterySkip;
+        public static int extractBatterySkip;
+
+        static void LoadBatteryPrefix(ref LAPD2019 __instance, LAPD2019Battery battery)
+        {
+            if(loadBatterySkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                H3MP_TrackedItem trackedGun = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+                H3MP_TrackedItem trackedBattery = H3MP_GameManager.trackedItemByItem.ContainsKey(battery) ? H3MP_GameManager.trackedItemByItem[battery] : battery.GetComponent<H3MP_TrackedItem>();
+                if (trackedGun != null && trackedBattery != null)
+                {
+                    if (trackedGun.data.controller != H3MP_GameManager.ID)
+                    {
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.LAPD2019LoadBattery(0, trackedGun.data.trackedID, trackedGun.data.trackedID);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.LAPD2019LoadBattery(trackedGun.data.trackedID, trackedGun.data.trackedID);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void ExtractBatteryPrefix(ref LAPD2019 __instance)
+        {
+            if(extractBatterySkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                H3MP_TrackedItem trackedGun = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+                if (trackedGun != null)
+                {
+                    if (trackedGun.data.controller != H3MP_GameManager.ID)
+                    {
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.LAPD2019ExtractBattery(0, trackedGun.data.trackedID, trackedGun.data.trackedID);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.LAPD2019ExtractBattery(trackedGun.data.trackedID, trackedGun.data.trackedID);
+                        }
+                    }
+                }
+            }
         }
     }
     #endregion

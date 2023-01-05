@@ -531,13 +531,23 @@ namespace H3MP
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
+                List<Vector3> positions = new List<Vector3>();
+                List<Vector3> directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for(int i=0; i < count; ++i)
+                {
+                    positions.Add(packet.ReadVector3());
+                    directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 H3MP_Server.items[trackedID].physicalItem.fireFunc();
             }
 
             // Send to other clients
-            H3MP_ServerSend.WeaponFire(clientID, trackedID);
+            H3MP_ServerSend.WeaponFire(clientID, packet);
         }
 
         public static void SosigWeaponFire(int clientID, H3MP_Packet packet)
@@ -548,13 +558,82 @@ namespace H3MP
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
+                List<Vector3> positions = new List<Vector3>();
+                List<Vector3> directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    positions.Add(packet.ReadVector3());
+                    directions.Add(packet.ReadVector3());
+                }
+                FireSosigWeaponPatch.overriden = true;
+
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 H3MP_Server.items[trackedID].physicalItem.sosigWeaponfireFunc(recoilMult);
             }
 
             // Send to other clients
-            H3MP_ServerSend.SosigWeaponFire(clientID, trackedID, recoilMult);
+            H3MP_ServerSend.SosigWeaponFire(clientID, packet);
+        }
+
+        public static void LAPD2019Fire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                List<Vector3> positions = new List<Vector3>();
+                List<Vector3> directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    positions.Add(packet.ReadVector3());
+                    directions.Add(packet.ReadVector3());
+                }
+                FireLAPD2019Patch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                Mod.LAPD2019_Fire.Invoke((LAPD2019)H3MP_Server.items[trackedID].physicalItem.physicalObject, null);
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.LAPD2019Fire(clientID, packet);
+        }
+
+        public static void LAPD2019LoadBattery(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int batteryTrackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null && H3MP_Server.items[batteryTrackedID].physicalItem != null)
+            {
+                ++LAPD2019ActionPatch.loadBatterySkip;
+                ((LAPD2019)H3MP_Server.items[trackedID].physicalItem.physicalObject).LoadBattery((LAPD2019Battery)H3MP_Server.items[batteryTrackedID].physicalItem.physicalObject);
+                --LAPD2019ActionPatch.loadBatterySkip;
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.LAPD2019LoadBattery(clientID, trackedID, batteryTrackedID);
+        }
+
+        public static void LAPD2019ExtractBattery(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                ++LAPD2019ActionPatch.extractBatterySkip;
+                ((LAPD2019)H3MP_Server.items[trackedID].physicalItem.physicalObject).ExtractBattery(null);
+                --LAPD2019ActionPatch.extractBatterySkip;
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.LAPD2019ExtractBattery(clientID, trackedID);
         }
 
         public static void SosigWeaponShatter(int clientID, H3MP_Packet packet)

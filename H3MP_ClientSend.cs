@@ -572,7 +572,7 @@ namespace H3MP
             }
         }
 
-        public static void WeaponFire(int trackedID)
+        public static void WeaponFire(int trackedID, List<Vector3> positions, List<Vector3> directions)
         {
             // TODO: It may be necessary to also pass the round class 
             //       This is because when a weapon that is controlled by this client in fired in aanother client, it will use up the projectile in its chamber (if it has one)
@@ -582,17 +582,87 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.weaponFire))
             {
                 packet.Write(trackedID);
+                if(positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for(int i=0; i<positions.Count;++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
 
                 SendTCPData(packet);
             }
         }
 
-        public static void SosigWeaponFire(int trackedID, float recoilMult)
+        public static void SosigWeaponFire(int trackedID, float recoilMult, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigWeaponFire))
             {
                 packet.Write(trackedID);
                 packet.Write(recoilMult);
+                if (positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for (int i = 0; i < positions.Count; ++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void LAPD2019Fire(int trackedID, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.LAPD2019Fire))
+            {
+                packet.Write(trackedID);
+                if (positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for (int i = 0; i < positions.Count; ++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void LAPD2019LoadBattery(int trackedID, int batteryTrackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.LAPD2019LoadBattery))
+            {
+                packet.Write(trackedID);
+                packet.Write(batteryTrackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void LAPD2019ExtractBattery(int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.LAPD2019ExtractBattery))
+            {
+                packet.Write(trackedID);
 
                 SendTCPData(packet);
             }

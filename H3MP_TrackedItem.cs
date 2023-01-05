@@ -32,7 +32,7 @@ namespace H3MP
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
-        public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding firearm type
+        public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding sosig weapon
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public FVRPhysicalObject dataObject;
@@ -120,12 +120,23 @@ namespace H3MP
                 dataObject = asTFS;
                 fireFunc = asTFS.Fire;
             }
+            else if (physObj is LAPD2019)
+            {
+                updateFunc = UpdateLAPD2019;
+                updateGivenFunc = UpdateGivenLAPD2019;
+                dataObject = physObj as LAPD2019;
+            }
+            else if (physObj is LAPD2019Battery)
+            {
+                updateFunc = UpdateLAPD2019Battery;
+                updateGivenFunc = UpdateGivenLAPD2019Battery;
+                dataObject = physObj as LAPD2019Battery;
+            }
             else if (physObj is FVRFireArmAttachment)
             {
                 FVRFireArmAttachment asAttachment = (FVRFireArmAttachment)physObj;
                 updateFunc = UpdateAttachment;
                 updateGivenFunc = UpdateGivenAttachment;
-                updateParentFunc = UpdateAttachmentParent;
                 dataObject = asAttachment;
             }
             else if (physObj is SosigWeaponPlayerInterface)
@@ -208,12 +219,6 @@ namespace H3MP
                 updateFunc = UpdateHCB;
                 updateGivenFunc = UpdateGivenHCB;
                 dataObject = physObj as HCB;
-            }
-            else if (physObj is LAPD2019)
-            {
-                updateFunc = UpdateLAPD2019;
-                updateGivenFunc = UpdateGivenLAPD2019;
-                dataObject = physObj as LAPD2019;
             }
             else if (physObj is OpenBoltReceiver)
             {
@@ -314,6 +319,183 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateLAPD2019Battery()
+        {
+            LAPD2019Battery asLAPD2019Battery = dataObject as LAPD2019Battery;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[4];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+            byte preval0 = data.data[1];
+            byte preval1 = data.data[2];
+            byte preval2 = data.data[3];
+
+            // Write energy
+            BitConverter.GetBytes(asLAPD2019Battery.GetEnergy()).CopyTo(data.data, 0);
+
+            modified |= (preval != data.data[0] || preval0 != data.data[1] || preval1 != data.data[2] || preval2 != data.data[3]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenLAPD2019Battery(byte[] newData)
+        {
+            bool modified = false;
+            LAPD2019Battery asLAPD2019Battery = dataObject as LAPD2019Battery;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set energy
+                asLAPD2019Battery.SetEnergy(BitConverter.ToSingle(newData, 0));
+            }
+            else
+            {
+                if (data.data[11] != newData[11] || data.data[12] != newData[12] || data.data[13] != newData[13] || data.data[14] != newData[14])
+                {
+                    // Set energy
+                    asLAPD2019Battery.SetEnergy(BitConverter.ToSingle(newData, 0));
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateLAPD2019()
+        {
+            LAPD2019 asLAPD2019 = dataObject as LAPD2019;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[15];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write curChamber
+            data.data[0] = (byte)asLAPD2019.CurChamber;
+
+            modified |= preval != data.data[0];
+
+            byte preval0;
+
+            // Write chambered round classes
+            for(int i=0; i < 5; ++i)
+            {
+                int firstIndex = i * 2 + 1;
+                preval = data.data[firstIndex];
+                preval0 = data.data[firstIndex + 1];
+                if (asLAPD2019.Chambers[i].GetRound() == null)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)asLAPD2019.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                }
+
+                modified |= (preval != data.data[firstIndex] || preval0 != data.data[firstIndex + 1]);
+            }
+
+            preval = data.data[11];
+            preval0 = data.data[12];
+            byte preval1 = data.data[13];
+            byte preval2 = data.data[14];
+
+            // Write capacitor charge
+            BitConverter.GetBytes((float)Mod.LAPD2019_m_capacitorCharge.GetValue(asLAPD2019)).CopyTo(data.data, 11);
+
+            modified |= (preval != data.data[11] || preval0 != data.data[12] || preval1 != data.data[13] || preval2 != data.data[14]);
+
+            preval = data.data[15];
+
+            // Write capacitor charged
+            data.data[15] = (bool)Mod.LAPD2019_m_isCapacitorCharged.GetValue(asLAPD2019) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[15];
+
+            return modified;
+        }
+
+        private bool UpdateGivenLAPD2019(byte[] newData)
+        {
+            bool modified = false;
+            LAPD2019 asLAPD2019 = dataObject as LAPD2019;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set curChamber
+                asLAPD2019.CurChamber = newData[0];
+
+                // Set capacitor charge
+                Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, BitConverter.ToSingle(newData, 11));
+
+                // Set capacitor charged
+                Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, newData[15] == 1);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set curChamber
+                    asLAPD2019.CurChamber = newData[0];
+                    modified = true;
+                }
+                if (data.data[11] != newData[11] || data.data[12] != newData[12] || data.data[13] != newData[13] || data.data[14] != newData[14])
+                {
+                    // Set capacitor charge
+                    Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, BitConverter.ToSingle(newData, 11));
+                    modified = true;
+                }
+                if (data.data[15] != newData[15])
+                {
+                    // Set capacitor charged
+                    Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, newData[15] == 1);
+                    modified = true;
+                }
+            }
+
+            // Set chambers
+            for (int i = 0; i < 5; ++i)
+            {
+                short chamberClassIndex = BitConverter.ToInt16(newData, i * 2 + 1);
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (asLAPD2019.Chambers[i].GetRound() != null)
+                    {
+                        asLAPD2019.Chambers[i].SetRound(null, false);
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asLAPD2019.Chambers[i].GetRound() == null || asLAPD2019.Chambers[i].GetRound().RoundClass != roundClass)
+                    {
+                        asLAPD2019.Chambers[i].SetRound(roundClass, asLAPD2019.Chambers[i].transform.position, asLAPD2019.Chambers[i].transform.rotation);
+                        modified = true;
+                    }
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateSosigWeaponInterface()
         {
             SosigWeaponPlayerInterface asInterface = dataObject as SosigWeaponPlayerInterface;
@@ -1040,7 +1222,7 @@ namespace H3MP
             return modified || (preMountIndex != currentMountIndex);
         }
 
-        private void UpdateAttachmentParent()
+        private void UpdateAttachmentParent(int oldParent)
         {
             FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
 

@@ -115,7 +115,10 @@ namespace H3MP
         initTNHInstances = 98,
         sosigWeaponFire = 99,
         sosigWeaponShatter = 100,
-        sosigWeaponDamage = 101
+        sosigWeaponDamage = 101,
+        LAPD2019Fire = 102,
+        LAPD2019LoadBattery = 103,
+        LAPD2019ExtractBattery = 104
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -224,7 +227,10 @@ namespace H3MP
         DoneSendingUpdaToDateObjects = 101,
         sosigWeaponFire = 102,
         sosigWeaponShatter = 103,
-        sosigWeaponDamage = 104
+        sosigWeaponDamage = 104,
+        LAPD2019Fire = 105,
+        LAPD2019LoadBattery = 106,
+        LAPD2019ExtractBattery = 107
     }
 
     public class H3MP_Packet : IDisposable

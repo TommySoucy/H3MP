@@ -459,6 +459,9 @@ namespace H3MP
                 H3MP_ServerHandle.SosigWeaponFire,
                 H3MP_ServerHandle.SosigWeaponShatter,
                 H3MP_ServerHandle.SosigWeaponDamage,
+                H3MP_ServerHandle.LAPD2019Fire,
+                H3MP_ServerHandle.LAPD2019LoadBattery,
+                H3MP_ServerHandle.LAPD2019ExtractBattery,
             };
 
             items = new H3MP_TrackedItemData[100];

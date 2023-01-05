@@ -824,11 +824,24 @@ namespace H3MP
             }
         }
 
-        public static void WeaponFire(int clientID, int trackedID)
+        public static void WeaponFire(int clientID, int trackedID, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.weaponFire))
             {
                 packet.Write(trackedID);
+                if (positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for (int i = 0; i < positions.Count; ++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
 
                 if (clientID == 0)
                 {
@@ -841,12 +854,147 @@ namespace H3MP
             }
         }
 
-        public static void SosigWeaponFire(int clientID, int trackedID, float recoilMult)
+        public static void WeaponFire(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.weaponFire);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void SosigWeaponFire(int clientID, int trackedID, float recoilMult, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigWeaponFire))
             {
                 packet.Write(trackedID);
                 packet.Write(recoilMult);
+                if (positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for (int i = 0; i < positions.Count; ++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void SosigWeaponFire(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigWeaponFire);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void LAPD2019Fire(int clientID, int trackedID, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.LAPD2019Fire))
+            {
+                packet.Write(trackedID);
+                if (positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for (int i = 0; i < positions.Count; ++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void LAPD2019Fire(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.LAPD2019Fire);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void LAPD2019LoadBattery(int clientID, int trackedID, int batteryTrackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.LAPD2019LoadBattery))
+            {
+                packet.Write(trackedID);
+                packet.Write(batteryTrackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void LAPD2019ExtractBattery(int clientID, int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.LAPD2019ExtractBattery))
+            {
+                packet.Write(trackedID);
 
                 if (clientID == 0)
                 {

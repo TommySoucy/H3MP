@@ -406,6 +406,9 @@ namespace H3MP
                 H3MP_ClientHandle.SosigWeaponFire,
                 H3MP_ClientHandle.SosigWeaponShatter,
                 H3MP_ClientHandle.SosigWeaponDamage,
+                H3MP_ClientHandle.LAPD2019Fire,
+                H3MP_ClientHandle.LAPD2019LoadBattery,
+                H3MP_ClientHandle.LAPD2019ExtractBattery,
             };
 
             // All vanilla scenes can be synced by default

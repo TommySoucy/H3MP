@@ -430,6 +430,16 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                List<Vector3> positions = new List<Vector3>();
+                List<Vector3> directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    positions.Add(packet.ReadVector3());
+                    directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 H3MP_Client.items[trackedID].physicalItem.fireFunc();
@@ -443,9 +453,68 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                List<Vector3> positions = new List<Vector3>();
+                List<Vector3> directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    positions.Add(packet.ReadVector3());
+                    directions.Add(packet.ReadVector3());
+                }
+                FireSosigWeaponPatch.overriden = true;
+
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 H3MP_Client.items[trackedID].physicalItem.sosigWeaponfireFunc(recoilMult);
+            }
+        }
+
+        public static void LAPD2019Fire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                List<Vector3> positions = new List<Vector3>();
+                List<Vector3> directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    positions.Add(packet.ReadVector3());
+                    directions.Add(packet.ReadVector3());
+                }
+                FireLAPD2019Patch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                Mod.LAPD2019_Fire.Invoke((LAPD2019)H3MP_Client.items[trackedID].physicalItem.physicalObject, null);
+            }
+        }
+
+        public static void LAPD2019LoadBattery(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int batteryTrackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Client.items[trackedID].physicalItem != null && H3MP_Client.items[batteryTrackedID].physicalItem != null)
+            {
+                ++LAPD2019ActionPatch.loadBatterySkip;
+                ((LAPD2019)H3MP_Client.items[trackedID].physicalItem.physicalObject).LoadBattery((LAPD2019Battery)H3MP_Client.items[batteryTrackedID].physicalItem.physicalObject);
+                --LAPD2019ActionPatch.loadBatterySkip;
+            }
+        }
+
+        public static void LAPD2019ExtractBattery(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                ++LAPD2019ActionPatch.extractBatterySkip;
+                ((LAPD2019)H3MP_Client.items[trackedID].physicalItem.physicalObject).ExtractBattery(null);
+                --LAPD2019ActionPatch.extractBatterySkip;
             }
         }
 
@@ -456,7 +525,7 @@ namespace H3MP
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
                 ++SosigWeaponShatterPatch.skip;
-                typeof(SosigWeaponPlayerInterface).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance).Invoke((H3MP_Server.items[trackedID].physicalItem.physicalObject as SosigWeaponPlayerInterface).W, null);
+                typeof(SosigWeaponPlayerInterface).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance).Invoke((H3MP_Client.items[trackedID].physicalItem.physicalObject as SosigWeaponPlayerInterface).W, null);
                 --SosigWeaponShatterPatch.skip;
             }
         }
