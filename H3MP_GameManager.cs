@@ -608,6 +608,18 @@ namespace H3MP
                 trackedItemData.itemID = physObj.ObjectWrapper.ItemID;
                 return;
             }
+            if(physObj.IDSpawnedFrom != null)
+            {
+                if (IM.OD.ContainsKey(physObj.IDSpawnedFrom.name))
+                {
+                    trackedItemData.itemID = physObj.IDSpawnedFrom.name;
+                }
+                else if (IM.OD.ContainsKey(physObj.IDSpawnedFrom.ItemID))
+                {
+                    trackedItemData.itemID = physObj.IDSpawnedFrom.ItemID;
+                }
+                return;
+            }
             TNH_ShatterableCrate crate = physObj.GetComponent<TNH_ShatterableCrate>();
             if(crate != null)
             {
@@ -629,11 +641,18 @@ namespace H3MP
             }
         }
 
-        // MOD: Certain FVRPhysicalObjects don't have an ObjectWrapper
-        //      We would normally not want to track these but here may be some exceptions, like TNH_ShatterableCrates
+        // MOD: Certain FVRPhysicalObjects don't have an ObjectWrapper or an IDSpawnedFrom
+        //      We would normally not want to track these but there may be some exceptions, like TNH_ShatterableCrates
         public static bool IsObjectIdentifiable(FVRPhysicalObject physObj)
         {
-            return physObj.ObjectWrapper != null || physObj.GetComponent<TNH_ShatterableCrate>() != null;
+            Debug.Log("IsObjectIdentifiable called for " + physObj.name+ ", physObj.IDSpawnedFrom == null?: "+(physObj.IDSpawnedFrom == null));
+            if(physObj.IDSpawnedFrom != null)
+            {
+                Debug.Log("\tWe have ID spawned from, IM.OD.ContainsKey("+ physObj.IDSpawnedFrom.name + ")?: "+ IM.OD.ContainsKey(physObj.IDSpawnedFrom.name)+ ", IM.OD.ContainsKey("+ physObj.IDSpawnedFrom.ItemID + ")?: "+ IM.OD.ContainsKey(physObj.IDSpawnedFrom.ItemID));
+            }
+            return physObj.ObjectWrapper != null ||
+                   (physObj.IDSpawnedFrom != null && (IM.OD.ContainsKey(physObj.IDSpawnedFrom.name) || IM.OD.ContainsKey(physObj.IDSpawnedFrom.ItemID))) ||
+                   physObj.GetComponent<TNH_ShatterableCrate>() != null;
         }
 
         public static void SyncTrackedSosigs(bool init = false, bool inControl = false)

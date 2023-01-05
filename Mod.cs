@@ -822,6 +822,12 @@ namespace H3MP
 
             harmony.Patch(spawnVaultFileRoutinePatchMoveNext, new HarmonyMethod(spawnVaultFileRoutinePatchPrefix), new HarmonyMethod(spawnVaultFileRoutinePatchPostfix), new HarmonyMethod(spawnVaultFileRoutinePatchTranspiler));
 
+            // IDSpawnedFromPatch
+            MethodInfo IDSpawnedFromPatchOriginal = typeof(FVRPhysicalObject).GetMethod("set_IDSpawnedFrom", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo IDSpawnedFromPatchPostfix = typeof(IDSpawnedFromPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(IDSpawnedFromPatchOriginal, null, new HarmonyMethod(IDSpawnedFromPatchPostfix));
+
             // ProjectileFirePatch
             MethodInfo projectileFirePatchOriginal = typeof(BallisticProjectile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(float), typeof(Vector3), typeof(FVRFireArm), typeof(bool) }, null);
             MethodInfo projectileFirePatchPostfix = typeof(ProjectileFirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -5387,6 +5393,22 @@ namespace H3MP
         static void Postfix(ref VaultFile ___f)
         {
             inSpawnVaultFileRoutineToSkip = false;
+        }
+    }
+
+    // Patches FVRPhysicalObject.set_IDSpawnedFrom in case it makes the item identifiable
+    class IDSpawnedFromPatch
+    {
+        static void Postfix(ref FVRPhysicalObject __instance)
+        {
+            // Skip if not connected
+            if (__instance.IDSpawnedFrom == null || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            // Try syncing
+            H3MP_GameManager.SyncTrackedItems(__instance.transform, true, null, SceneManager.GetActiveScene().name);
         }
     }
     #endregion
