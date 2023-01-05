@@ -668,6 +668,26 @@ namespace H3MP
             }
         }
 
+        public static void MinigunFire(int trackedID, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.minigunFire))
+            {
+                packet.Write(trackedID);
+                if (positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)1);
+                    packet.Write(positions[0]);
+                    packet.Write(directions[0]);
+                }
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void SosigWeaponShatter(int trackedID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigWeaponShatter))

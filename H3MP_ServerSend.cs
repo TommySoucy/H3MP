@@ -972,6 +972,52 @@ namespace H3MP
             }
         }
 
+        public static void MinigunFire(int clientID, int trackedID, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.minigunFire))
+            {
+                packet.Write(trackedID);
+                if (positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)1);
+                    packet.Write(positions[0]);
+                    packet.Write(directions[0]);
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void MinigunFire(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.minigunFire);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
         public static void LAPD2019LoadBattery(int clientID, int trackedID, int batteryTrackedID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.LAPD2019LoadBattery))

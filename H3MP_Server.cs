@@ -462,6 +462,7 @@ namespace H3MP
                 H3MP_ServerHandle.LAPD2019Fire,
                 H3MP_ServerHandle.LAPD2019LoadBattery,
                 H3MP_ServerHandle.LAPD2019ExtractBattery,
+                H3MP_ServerHandle.MinigunFire,
             };
 
             items = new H3MP_TrackedItemData[100];

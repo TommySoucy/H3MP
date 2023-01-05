@@ -409,6 +409,7 @@ namespace H3MP
                 H3MP_ClientHandle.LAPD2019Fire,
                 H3MP_ClientHandle.LAPD2019LoadBattery,
                 H3MP_ClientHandle.LAPD2019ExtractBattery,
+                H3MP_ClientHandle.MinigunFire,
             };
 
             // All vanilla scenes can be synced by default

@@ -118,7 +118,8 @@ namespace H3MP
         sosigWeaponDamage = 101,
         LAPD2019Fire = 102,
         LAPD2019LoadBattery = 103,
-        LAPD2019ExtractBattery = 104
+        LAPD2019ExtractBattery = 104,
+        minigunFire = 105
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -230,7 +231,8 @@ namespace H3MP
         sosigWeaponDamage = 104,
         LAPD2019Fire = 105,
         LAPD2019LoadBattery = 106,
-        LAPD2019ExtractBattery = 107
+        LAPD2019ExtractBattery = 107,
+        minigunFire = 108
     }
 
     public class H3MP_Packet : IDisposable

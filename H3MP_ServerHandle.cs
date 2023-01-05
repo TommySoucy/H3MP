@@ -531,13 +531,13 @@ namespace H3MP
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
-                List<Vector3> positions = new List<Vector3>();
-                List<Vector3> directions = new List<Vector3>();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
                 for(int i=0; i < count; ++i)
                 {
-                    positions.Add(packet.ReadVector3());
-                    directions.Add(packet.ReadVector3());
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
                 }
                 FirePatch.overriden = true;
 
@@ -558,13 +558,13 @@ namespace H3MP
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
-                List<Vector3> positions = new List<Vector3>();
-                List<Vector3> directions = new List<Vector3>();
+                FireSosigWeaponPatch.positions = new List<Vector3>();
+                FireSosigWeaponPatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
                 for (int i = 0; i < count; ++i)
                 {
-                    positions.Add(packet.ReadVector3());
-                    directions.Add(packet.ReadVector3());
+                    FireSosigWeaponPatch.positions.Add(packet.ReadVector3());
+                    FireSosigWeaponPatch.directions.Add(packet.ReadVector3());
                 }
                 FireSosigWeaponPatch.overriden = true;
 
@@ -577,6 +577,32 @@ namespace H3MP
             H3MP_ServerSend.SosigWeaponFire(clientID, packet);
         }
 
+        public static void MinigunFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                FireMinigunPatch.positions = new List<Vector3>();
+                FireMinigunPatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FireMinigunPatch.positions.Add(packet.ReadVector3());
+                    FireMinigunPatch.directions.Add(packet.ReadVector3());
+                }
+                FireSosigWeaponPatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                Mod.Minigun_Fire.Invoke((Minigun)H3MP_Server.items[trackedID].physicalItem.physicalObject, null);
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.MinigunFire(clientID, packet);
+        }
+
         public static void LAPD2019Fire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -584,13 +610,13 @@ namespace H3MP
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
-                List<Vector3> positions = new List<Vector3>();
-                List<Vector3> directions = new List<Vector3>();
+                FireLAPD2019Patch.positions = new List<Vector3>();
+                FireLAPD2019Patch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
                 for (int i = 0; i < count; ++i)
                 {
-                    positions.Add(packet.ReadVector3());
-                    directions.Add(packet.ReadVector3());
+                    FireLAPD2019Patch.positions.Add(packet.ReadVector3());
+                    FireLAPD2019Patch.directions.Add(packet.ReadVector3());
                 }
                 FireLAPD2019Patch.overriden = true;
 

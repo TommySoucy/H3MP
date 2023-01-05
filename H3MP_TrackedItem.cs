@@ -137,6 +137,7 @@ namespace H3MP
                 FVRFireArmAttachment asAttachment = (FVRFireArmAttachment)physObj;
                 updateFunc = UpdateAttachment;
                 updateGivenFunc = UpdateGivenAttachment;
+                updateParentFunc = UpdateAttachmentParent;
                 dataObject = asAttachment;
             }
             else if (physObj is SosigWeaponPlayerInterface)
@@ -1222,7 +1223,7 @@ namespace H3MP
             return modified || (preMountIndex != currentMountIndex);
         }
 
-        private void UpdateAttachmentParent(int oldParent)
+        private void UpdateAttachmentParent()
         {
             FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
 
@@ -1279,7 +1280,7 @@ namespace H3MP
             bool modified = false;
             FVRFireArmMagazine asMag = dataObject as FVRFireArmMagazine;
 
-            int necessarySize = asMag.m_numRounds * 2 + 3;
+            int necessarySize = asMag.m_numRounds * 2 + 6;
 
             if(data.data == null || data.data.Length < necessarySize)
             {
@@ -1307,7 +1308,46 @@ namespace H3MP
             }
 
             // Write loaded into firearm
-            BitConverter.GetBytes(asMag.FireArm != null).CopyTo(data.data, necessarySize - 1);
+            data.data[necessarySize - 4] = asMag.FireArm != null ? (byte)1 : (byte)0;
+
+            // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
+            // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
+            if(asMag.FireArm == null)
+            {
+                data.data[necessarySize - 3] = (byte)255;
+            }
+            else
+            {
+                for (int i = 0; i < asMag.FireArm.SecondaryMagazineSlots.Length; ++i)
+                {
+                    if (asMag.FireArm.SecondaryMagazineSlots[i].Magazine == asMag)
+                    {
+                        data.data[necessarySize - 3] = (byte)i;
+                        break;
+                    }
+                }
+            }
+
+            // Write loaded into AttachableFirearm
+            data.data[necessarySize - 2] = asMag.AttachableFireArm != null ? (byte)1 : (byte)0;
+
+            // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
+            // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
+            if (asMag.AttachableFireArm == null)
+            {
+                data.data[necessarySize - 1] = (byte)255;
+            }
+            else
+            {
+                for (int i = 0; i < asMag.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                {
+                    if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
+                    {
+                        data.data[necessarySize - 1] = (byte)i;
+                        break;
+                    }
+                }
+            }
 
             return modified;
         }
@@ -1350,7 +1390,7 @@ namespace H3MP
             }
 
             // Load into firearm if necessary
-            if (BitConverter.ToBoolean(newData, newData.Length - 1))
+            if (newData[newData.Length - 4] == 1)
             {
                 if (data.parent != -1)
                 {
@@ -1372,25 +1412,215 @@ namespace H3MP
                             if (asMag.FireArm != parentTrackedItemData.physicalItem.dataObject)
                             {
                                 // Unload from current, load into new firearm
-                                asMag.FireArm.EjectMag();
-                                asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                if (asMag.FireArm.Magazine == asMag)
+                                {
+                                    asMag.FireArm.EjectMag(true);
+                                }
+                                else
+                                {
+                                    for(int i=0; i < asMag.FireArm.SecondaryMagazineSlots.Length; ++i)
+                                    {
+                                        if (asMag.FireArm.SecondaryMagazineSlots[i].Magazine == asMag)
+                                        {
+                                            asMag.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (newData[newData.Length - 3] == 255)
+                                {
+                                    asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                }
+                                else
+                                {
+                                    asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 3]);
+                                }
                                 modified = true;
                             }
+                        }
+                        else if(asMag.AttachableFireArm != null)
+                        {
+                            // Unload from current, load into new firearm
+                            if (asMag.AttachableFireArm.Magazine == asMag)
+                            {
+                                asMag.AttachableFireArm.EjectMag(true);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < asMag.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                                {
+                                    if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
+                                    {
+                                        //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                        //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (newData[newData.Length - 3] == 255)
+                            {
+                                asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                            }
+                            else
+                            {
+                                asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 3]);
+                            }
+                            modified = true;
                         }
                         else
                         {
                             // Load into firearm
-                            asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                            if (newData[newData.Length - 3] == 255)
+                            {
+                                asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                            }
+                            else
+                            {
+                                asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 3]);
+                            }
                             modified = true;
                         }
                     }
                 }
             }
-            else if(asMag.FireArm != null)
+            else if (newData[newData.Length - 2] == 1)
             {
-                // Don't want to be loaded, but we are loaded, unload
-                asMag.FireArm.EjectMag();
-                modified = true;
+                if (data.parent != -1)
+                {
+                    H3MP_TrackedItemData parentTrackedItemData = null;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        parentTrackedItemData = H3MP_Server.items[data.parent];
+                    }
+                    else
+                    {
+                        parentTrackedItemData = H3MP_Client.items[data.parent];
+                    }
+
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is AttachableFirearmPhysicalObject)
+                    {
+                        // We want to be loaded in a AttachableFireArm, we have a parent, it is a AttachableFireArm
+                        if (asMag.AttachableFireArm != null)
+                        {
+                            if (asMag.AttachableFireArm != (parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA)
+                            {
+                                // Unload from current, load into new AttachableFireArm
+                                if (asMag.AttachableFireArm.Magazine == asMag)
+                                {
+                                    asMag.AttachableFireArm.EjectMag(true);
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < asMag.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                                    {
+                                        if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
+                                        {
+                                            //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                            //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (newData[newData.Length - 1] == 255)
+                                {
+                                    asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                }
+                                else
+                                {
+                                    //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                    //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                                }
+                                modified = true;
+                            }
+                        }
+                        else if (asMag.FireArm != null)
+                        {
+                            // Unload from current firearm, load into new AttachableFireArm
+                            if (asMag.FireArm.Magazine == asMag)
+                            {
+                                asMag.FireArm.EjectMag(true);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < asMag.FireArm.SecondaryMagazineSlots.Length; ++i)
+                                {
+                                    if (asMag.FireArm.SecondaryMagazineSlots[i].Magazine == asMag)
+                                    {
+                                        asMag.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (newData[newData.Length - 1] == 255)
+                            {
+                                asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                            }
+                            else
+                            {
+                                //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                            }
+                            modified = true;
+                        }
+                        else
+                        {
+                            // Load into AttachableFireArm
+                            if (newData[newData.Length - 1] == 255)
+                            {
+                                asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                            }
+                            else
+                            {
+                                //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                            }
+                            modified = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (asMag.FireArm != null)
+                {
+                    // Don't want to be loaded, but we are loaded, unload
+                    if (asMag.FireArm.Magazine == asMag)
+                    {
+                        asMag.FireArm.EjectMag(true);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < asMag.FireArm.SecondaryMagazineSlots.Length; ++i)
+                        {
+                            if (asMag.FireArm.SecondaryMagazineSlots[i].Magazine == asMag)
+                            {
+                                asMag.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                break;
+                            }
+                        }
+                    }
+                    modified = true;
+                }
+                else if(asMag.AttachableFireArm != null)
+                {
+                    if (asMag.AttachableFireArm.Magazine == asMag)
+                    {
+                        asMag.AttachableFireArm.EjectMag(true);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < asMag.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                        {
+                            if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
+                            {
+                                //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                break;
+                            }
+                        }
+                    }
+                    modified = true;
+                }
             }
 
             data.data = newData;

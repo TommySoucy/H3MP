@@ -185,6 +185,7 @@ namespace H3MP
         public static readonly MethodInfo AutoMeaterFirearm_UpdateFlameThrower = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFlameThrower", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AutoMeaterFirearm_UpdateFire = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo LAPD2019_Fire = typeof(LAPD2019).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Minigun_Fire = typeof(Minigun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -641,6 +642,14 @@ namespace H3MP
 
             harmony.Patch(LAPD2019PatchLoadOriginal, new HarmonyMethod(LAPD2019PatchLoadPrefix));
             harmony.Patch(LAPD2019PatchExtractOriginal, new HarmonyMethod(LAPD2019PatchExtractPrefix));
+
+            // FireMinigunPatch
+            MethodInfo fireMinigunPatchOriginal = typeof(Minigun).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireMinigunPatchPrefix = typeof(FireMinigunPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireMinigunPatchTranspiler = typeof(FireMinigunPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireMinigunPatchPostfix = typeof(FireMinigunPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(fireMinigunPatchOriginal, new HarmonyMethod(fireMinigunPatchPrefix), new HarmonyMethod(fireMinigunPatchPostfix), new HarmonyMethod(fireMinigunPatchTranspiler));
 
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
@@ -2554,24 +2563,20 @@ namespace H3MP
     // Note: All projectile fire patches are necessary for 2 things: synchronizing fire action,
     // and making sure that the shot is in same position/direction on all clients
     // Synchronizing the action is simple, it is the pos/dir that requires transpilers and make these so complex
-    TODO: Patch the Fire of everything that calls ballistic projectile Fire
-    TODO: In every fire patch, must handle overrides for position and rotation of fired projectile
     /* TODO: Fire patches for
      * AttachableFirearm.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotAgile.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotCrystal.FirePulseShot // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotHardened.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
-     * RemoteGun.Fire
-     * AIFireArm.FireBullet
-     * AutoMeater.FireShot
-     * Minigun.Fire
-     * RonchWeapon.Fire
+     * RemoteGun.Fire // Will have to be handled unlike other projectiles since it is a player controlled missile
+     * AIFireArm.FireBullet // Will have to check if this is necessary (it is actually used?), it is also an FVRDestroyableObject, need to see how to handle that
+     * RonchWeapon.Fire // Considering ronch is an enemy type, we will probably have to make it into its own sync object type with its own lists
      */
     class FirePatch
     {
         public static bool overriden;
-        static List<Vector3> positions;
-        static List<Vector3> directions;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
 
         static void Prefix()
         {
@@ -2750,8 +2755,8 @@ namespace H3MP
     class FireSosigWeaponPatch
     {
         public static bool overriden;
-        static List<Vector3> positions;
-        static List<Vector3> directions;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
 
         static void Prefix()
         {
@@ -2939,8 +2944,8 @@ namespace H3MP
     class FireLAPD2019Patch
     {
         public static bool overriden;
-        static List<Vector3> positions;
-        static List<Vector3> directions;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
 
         static void Prefix()
         {
@@ -3129,6 +3134,180 @@ namespace H3MP
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
                     H3MP_ClientSend.LAPD2019Fire(trackedItem.data.trackedID, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
+
+            --Mod.skipAllInstantiates;
+        }
+    }
+
+    // Patches Minigun.Fire so we can keep track of when an LAPD2019 is fired
+    class FireMinigunPatch
+    {
+        public static bool overriden;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
+
+        static void Prefix()
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireMinigunPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireMinigunPatch), "GetDirection"))); // Call our GetDirection method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldloc_0)
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
+                    instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 2, toInsert1);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Postfix(ref Minigun __instance)
+        {
+            overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.MinigunFire(0, trackedItem.data.trackedID, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.MinigunFire(trackedItem.data.trackedID, positions, directions);
                 }
             }
 
@@ -4764,11 +4943,11 @@ namespace H3MP
                     {
                         if (H3MP_ThreadManager.host)
                         {
-                            H3MP_ServerSend.LAPD2019ExtractBattery(0, trackedGun.data.trackedID, trackedGun.data.trackedID);
+                            H3MP_ServerSend.LAPD2019ExtractBattery(0, trackedGun.data.trackedID);
                         }
                         else
                         {
-                            H3MP_ClientSend.LAPD2019ExtractBattery(trackedGun.data.trackedID, trackedGun.data.trackedID);
+                            H3MP_ClientSend.LAPD2019ExtractBattery(trackedGun.data.trackedID);
                         }
                     }
                 }
