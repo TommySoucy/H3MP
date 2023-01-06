@@ -603,6 +603,33 @@ namespace H3MP
             H3MP_ServerSend.MinigunFire(clientID, packet);
         }
 
+        public static void AttachableFirearmFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool firedFromInterface = packet.ReadBool();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                FireAttachableFirearmPatch.positions = new List<Vector3>();
+                FireAttachableFirearmPatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FireAttachableFirearmPatch.positions.Add(packet.ReadVector3());
+                    FireAttachableFirearmPatch.directions.Add(packet.ReadVector3());
+                }
+                FireAttachableFirearmPatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                H3MP_Server.items[trackedID].physicalItem.attachableFirearmFunc(firedFromInterface);
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.AttachableFirearmFire(clientID, packet);
+        }
+
         public static void LAPD2019Fire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

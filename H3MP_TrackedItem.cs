@@ -28,10 +28,12 @@ namespace H3MP
         public delegate bool UpdateDataWithGiven(byte[] newData);
         public delegate bool FireFirearm();
         public delegate bool FireSosigGun(float recoilMult);
+        public delegate void FireAttachableFirearm(bool firedFromInterface);
         public delegate void UpdateParent();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
+        public FireAttachableFirearm attachableFirearmFunc; // Fires the corresponding attachable firearm type
         public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding sosig weapon
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
@@ -139,26 +141,31 @@ namespace H3MP
                 {
                     updateFunc = UpdateAttachableBreakActions;
                     updateGivenFunc = UpdateGivenAttachableBreakActions;
+                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableBreakActions).Fire;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is AttachableClosedBoltWeapon)
                 {
                     updateFunc = UpdateAttachableClosedBoltWeapon;
                     updateGivenFunc = UpdateGivenAttachableClosedBoltWeapon;
+                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableClosedBoltWeapon).Fire;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is AttachableTubeFed)
                 {
                     updateFunc = UpdateAttachableTubeFed;
                     updateGivenFunc = UpdateGivenAttachableTubeFed;
+                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableTubeFed).Fire;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is GP25)
                 {
                     updateFunc = UpdateGP25;
                     updateGivenFunc = UpdateGivenGP25;
+                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as GP25).Fire;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is M203)
                 {
                     updateFunc = UpdateM203;
                     updateGivenFunc = UpdateGivenM203;
+                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as M203).Fire;
                 }
                 updateParentFunc = UpdateAttachableFirearmParent;
                 dataObject = asAttachableFirearmPhysicalObject.FA;
