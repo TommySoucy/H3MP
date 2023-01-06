@@ -35,7 +35,7 @@ namespace H3MP
         public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding sosig weapon
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
-        public FVRPhysicalObject dataObject;
+        public UnityEngine.Object dataObject;
         public FVRPhysicalObject physicalObject;
 
         public bool sendDestroy = true; // To prevent feeback loops
@@ -131,6 +131,37 @@ namespace H3MP
                 updateFunc = UpdateLAPD2019Battery;
                 updateGivenFunc = UpdateGivenLAPD2019Battery;
                 dataObject = physObj as LAPD2019Battery;
+            }
+            else if (physObj is AttachableFirearmPhysicalObject)
+            {
+                AttachableFirearmPhysicalObject asAttachableFirearmPhysicalObject = (AttachableFirearmPhysicalObject)physObj;
+                if(asAttachableFirearmPhysicalObject.FA is AttachableBreakActions)
+                {
+                    updateFunc = UpdateAttachableBreakActions;
+                    updateGivenFunc = UpdateGivenAttachableBreakActions;
+                }
+                else if(asAttachableFirearmPhysicalObject.FA is AttachableClosedBoltWeapon)
+                {
+                    updateFunc = UpdateAttachableClosedBoltWeapon;
+                    updateGivenFunc = UpdateGivenAttachableClosedBoltWeapon;
+                }
+                else if(asAttachableFirearmPhysicalObject.FA is AttachableTubeFed)
+                {
+                    updateFunc = UpdateAttachableTubeFed;
+                    updateGivenFunc = UpdateGivenAttachableTubeFed;
+                }
+                else if(asAttachableFirearmPhysicalObject.FA is GP25)
+                {
+                    updateFunc = UpdateGP25;
+                    updateGivenFunc = UpdateGivenGP25;
+                }
+                else if(asAttachableFirearmPhysicalObject.FA is M203)
+                {
+                    updateFunc = UpdateM203;
+                    updateGivenFunc = UpdateGivenM203;
+                }
+                updateParentFunc = UpdateAttachableFirearmParent;
+                dataObject = asAttachableFirearmPhysicalObject.FA;
             }
             else if (physObj is FVRFireArmAttachment)
             {
@@ -320,6 +351,567 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateM203()
+        {
+            M203 asM203 = dataObject as M203;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[2];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+            byte preval0 = data.data[1];
+
+            // Write chambered round class
+            if (asM203.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+            }
+
+            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenM203(byte[] newData)
+        {
+            bool modified = data.data == null;
+            M203 asM203 = dataObject as M203;
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asM203.Chamber.GetRound() != null)
+                {
+                    asM203.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asM203.Chamber.GetRound() == null || asM203.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+        
+        private bool UpdateGP25()
+        {
+            GP25 asGP25 = dataObject as GP25;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[3];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write safety
+            data.data[0] = (byte)(asGP25.m_safetyEngaged ? 1:0);
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+            byte preval0 = data.data[2];
+
+            // Write chambered round class
+            if (asGP25.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+            }
+
+            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenGP25(byte[] newData)
+        {
+            bool modified = false;
+            GP25 asGP25 = dataObject as GP25;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set safety
+                asGP25.m_safetyEngaged = newData[0] == 1;
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set safety
+                    asGP25.m_safetyEngaged = newData[0] == 1;
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asGP25.Chamber.GetRound() != null)
+                {
+                    asGP25.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asGP25.Chamber.GetRound() == null || asGP25.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateAttachableTubeFed()
+        {
+            AttachableTubeFed asATF = dataObject as AttachableTubeFed;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[6];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write fire mode index
+            data.data[0] = (byte)(int)typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asATF);
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+
+            // Write hammer state
+            data.data[1] = BitConverter.GetBytes(asATF.IsHammerCocked)[0];
+
+            modified |= preval != data.data[1];
+
+            preval = data.data[2];
+            byte preval0 = data.data[3];
+
+            // Write chambered round class
+            if (asATF.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+            }
+
+            modified |= (preval != data.data[3] || preval0 != data.data[4]);
+
+            preval = data.data[4];
+
+            // Write bolt handle pos
+            data.data[4] = (byte)asATF.Bolt.CurPos;
+
+            modified |= preval != data.data[4];
+
+            if (asATF.HasHandle)
+            {
+                preval = data.data[5];
+
+                // Write bolt handle pos
+                data.data[5] = (byte)asATF.Handle.CurPos;
+
+                modified |= preval != data.data[5];
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenAttachableTubeFed(byte[] newData)
+        {
+            bool modified = false;
+            AttachableTubeFed asTFS = dataObject as AttachableTubeFed;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set fire select mode
+                typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, (int)newData[0]);
+
+                // Set bolt pos
+                asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
+                asTFS.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[4];
+
+                if (asTFS.HasHandle)
+                {
+                    // Set handle pos
+                    asTFS.Handle.LastPos = asTFS.Handle.CurPos;
+                    asTFS.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[5];
+                }
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set fire select mode
+                    typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, (int)newData[0]);
+                    modified = true;
+                }
+                if (data.data[4] != newData[4])
+                {
+                    // Set bolt pos
+                    asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
+                    asTFS.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[4];
+                }
+                if (asTFS.HasHandle && data.data[5] != newData[5])
+                {
+                    // Set handle pos
+                    asTFS.Handle.LastPos = asTFS.Handle.CurPos;
+                    asTFS.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[5];
+                }
+            }
+
+            // Set hammer state
+            if (newData[1] == 0)
+            {
+                if (asTFS.IsHammerCocked)
+                {
+                    typeof(TubeFedShotgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, BitConverter.ToBoolean(newData, 1));
+                    modified = true;
+                }
+            }
+            else // Hammer should be cocked
+            {
+                if (!asTFS.IsHammerCocked)
+                {
+                    asTFS.CockHammer();
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asTFS.Chamber.GetRound() != null)
+                {
+                    asTFS.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateAttachableClosedBoltWeapon()
+        {
+            AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[5];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write fire mode index
+            data.data[0] = (byte)asACBW.FireSelectorModeIndex;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+
+            // Write camBurst
+            data.data[1] = (byte)(int)typeof(AttachableClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asACBW);
+
+            modified |= preval != data.data[1];
+
+            preval = data.data[2];
+
+            // Write hammer state
+            data.data[2] = BitConverter.GetBytes(asACBW.IsHammerCocked)[0];
+
+            modified |= preval != data.data[2];
+
+            preval = data.data[3];
+            byte preval0 = data.data[4];
+
+            // Write chambered round class
+            if (asACBW.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+            }
+
+            modified |= (preval != data.data[3] || preval0 != data.data[4]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenAttachableClosedBoltWeapon(byte[] newData)
+        {
+            bool modified = false;
+            AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set fire select mode
+                typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[0]);
+
+                // Set camBurst
+                typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[1]);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set fire select mode
+                    typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[0]);
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set camBurst
+                    typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[1]);
+                    modified = true;
+                }
+            }
+
+            // Set hammer state
+            if (newData[2] == 0)
+            {
+                if (asACBW.IsHammerCocked)
+                {
+                    typeof(ClosedBoltWeapon).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, BitConverter.ToBoolean(newData, 2));
+                    modified = true;
+                }
+            }
+            else // Hammer should be cocked
+            {
+                if (!asACBW.IsHammerCocked)
+                {
+                    asACBW.CockHammer();
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asACBW.Chamber.GetRound() != null)
+                {
+                    asACBW.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asACBW.Chamber.GetRound() == null || asACBW.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateAttachableBreakActions()
+        {
+            AttachableBreakActions asABA = dataObject as AttachableBreakActions;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[1];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write breachOpen
+            data.data[0] = ((bool)Mod.AttachableBreakActions_m_isBreachOpen.GetValue(asABA)) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+            byte preval0 = data.data[2];
+
+            // Write chambered round class
+            if (asABA.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+            }
+
+            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenAttachableBreakActions(byte[] newData)
+        {
+            bool modified = false;
+            AttachableBreakActions asABA = dataObject as AttachableBreakActions;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set breachOpen
+                bool current = ((bool)Mod.AttachableBreakActions_m_isBreachOpen.GetValue(asABA));
+                bool newVal = newData[0] == 1;
+                if ((current && !newVal) || (!current && newVal))
+                {
+                    asABA.ToggleBreach();
+                }
+                Mod.AttachableBreakActions_m_isBreachOpen.SetValue(asABA, newVal);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set breachOpen
+                    bool current = ((bool)Mod.AttachableBreakActions_m_isBreachOpen.GetValue(asABA));
+                    bool newVal = newData[0] == 1;
+                    if ((current && !newVal)||(!current && newVal))
+                    {
+                        asABA.ToggleBreach();
+                    }
+                    Mod.AttachableBreakActions_m_isBreachOpen.SetValue(asABA, newVal);
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asABA.Chamber.GetRound() != null)
+                {
+                    asABA.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asABA.Chamber.GetRound() == null || asABA.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private void UpdateAttachableFirearmParent()
+        {
+            FVRFireArmAttachment asAttachment = (dataObject as AttachableFirearm).Attachment;
+
+            if (currentMountIndex != 255) // We want to be attached to a mount
+            {
+                if (data.parent != -1) // We have parent
+                {
+                    // We could be on wrong mount (or none physically) if we got a new mount through update but the parent hadn't been updated yet
+
+                    // Get the mount we are supposed to be mounted to
+                    FVRFireArmAttachmentMount mount = null;
+                    H3MP_TrackedItemData parentTrackedItemData = null;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        parentTrackedItemData = H3MP_Server.items[data.parent];
+                    }
+                    else
+                    {
+                        parentTrackedItemData = H3MP_Client.items[data.parent];
+                    }
+
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                    {
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[currentMountIndex];
+                    }
+
+                    // If not yet physically mounted to anything, can right away mount to the proper mount
+                    if (asAttachment.curMount == null)
+                    {
+                        ++data.ignoreParentChanged;
+                        asAttachment.AttachToMount(mount, true);
+                        --data.ignoreParentChanged;
+                    }
+                    else if (asAttachment.curMount != mount) // Already mounted, but not on the right one, need to unmount, then mount of right one
+                    {
+                        ++data.ignoreParentChanged;
+                        if (asAttachment.curMount != null)
+                        {
+                            asAttachment.DetachFromMount();
+                        }
+
+                        asAttachment.AttachToMount(mount, true);
+                        --data.ignoreParentChanged;
+                    }
+                }
+                // else, if this happens it is because we received a parent update to null and just haven't gotten the up to date mount index of -1 yet
+                //       This will be handled on update
+            }
+            // else, on update we will detach from any current mount if this is the case, no need to handle this here
+        }
+
         private bool UpdateLAPD2019Battery()
         {
             LAPD2019Battery asLAPD2019Battery = dataObject as LAPD2019Battery;
@@ -1199,9 +1791,9 @@ namespace H3MP
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.dataObject.AttachmentMounts.Count > mountIndex)
+                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > mountIndex)
                     {
-                        mount = parentTrackedItemData.physicalItem.dataObject.AttachmentMounts[mountIndex];
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[mountIndex];
                     }
                 }
 
@@ -1247,7 +1839,7 @@ namespace H3MP
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
                     {
-                        mount = parentTrackedItemData.physicalItem.dataObject.AttachmentMounts[currentMountIndex];
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[currentMountIndex];
                     }
 
                     // If not yet physically mounted to anything, can right away mount to the proper mount

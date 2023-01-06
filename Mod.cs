@@ -157,6 +157,7 @@ namespace H3MP
         public static readonly FieldInfo AutoMeaterHitZone_m_isDestroyed = typeof(AutoMeaterHitZone).GetField("m_isDestroyed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo LAPD2019_m_capacitorCharge = typeof(LAPD2019).GetField("m_capacitorCharge", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo LAPD2019_m_isCapacitorCharged = typeof(LAPD2019).GetField("m_isCapacitorCharged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AttachableBreakActions_m_isBreachOpen = typeof(AttachableBreakActions).GetField("m_isBreachOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
