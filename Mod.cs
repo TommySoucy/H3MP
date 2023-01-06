@@ -655,19 +655,19 @@ namespace H3MP
             // FireAttachableFirearmPatch
             MethodInfo fireAttachableFirearmPatchOriginal = typeof(AttachableFirearm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo fireAttachableFirearmPatchTranspiler = typeof(FireAttachableFirearmPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireAttachableBreakActionsPatchOriginal = typeof(AttachableBreakActions).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireAttachableBreakActionsPatchOriginal = typeof(AttachableBreakActions).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
             MethodInfo fireAttachableBreakActionsPatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireAttachableBreakActionsPatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireAttachableClosedBoltWeaponPatchOriginal = typeof(AttachableClosedBoltWeapon).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireAttachableClosedBoltWeaponPatchOriginal = typeof(AttachableClosedBoltWeapon).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
             MethodInfo fireAttachableClosedBoltWeaponPatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireAttachableClosedBoltWeaponPatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireAttachableTubeFedPatchOriginal = typeof(AttachableTubeFed).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireAttachableTubeFedPatchOriginal = typeof(AttachableTubeFed).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
             MethodInfo fireAttachableTubeFedPatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireAttachableTubeFedPatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireGP25PatchOriginal = typeof(GP25).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireGP25PatchOriginal = typeof(GP25).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
             MethodInfo fireGP25PatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireGP25PatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireM203PatchOriginal = typeof(M203).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireM203PatchOriginal = typeof(M203).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
             MethodInfo fireM203PatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireM203PatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
@@ -3376,6 +3376,11 @@ namespace H3MP
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == null || instruction.operand == null)
+                {
+                    continue;
+                }
+
                 if (instruction.operand.ToString().Contains("op_Subtraction"))
                 {
                     instructionList.InsertRange(i + 1, toInsert0);
