@@ -450,6 +450,29 @@ namespace H3MP
             }
         }
 
+        public static void BreakActionWeaponFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int barrelIndex = packet.ReadByte();
+
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                H3MP_Client.items[trackedID].physicalItem.fireFunc();
+            }
+        }
+
         public static void SosigWeaponFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

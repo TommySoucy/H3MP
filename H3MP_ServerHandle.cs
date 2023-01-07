@@ -547,6 +547,35 @@ namespace H3MP
             H3MP_ServerSend.WeaponFire(clientID, packet);
         }
 
+        public static void BreakActionWeaponFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int barrelIndex = packet.ReadByte();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for(int i=0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                // NOTE: Only barrel index is used in the Fire method, other arguments are presumably reserved for later,
+                // TODO: will need to add support later if implemented
+                (H3MP_Server.items[trackedID].physicalItem.physicalObject as BreakActionWeapon).Fire(barrelIndex, false, 0);
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.BreakActionWeaponFire(clientID, packet);
+        }
+
         public static void SosigWeaponFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

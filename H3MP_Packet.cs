@@ -120,7 +120,8 @@ namespace H3MP
         LAPD2019LoadBattery = 103,
         LAPD2019ExtractBattery = 104,
         minigunFire = 105,
-        attachableFirearmFire = 106
+        attachableFirearmFire = 106,
+        breakActionWeaponFire = 107
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -234,7 +235,8 @@ namespace H3MP
         LAPD2019LoadBattery = 106,
         LAPD2019ExtractBattery = 107,
         minigunFire = 108,
-        attachableFirearmFire = 109
+        attachableFirearmFire = 109,
+        breakActionWeaponFire = 110
     }
 
     public class H3MP_Packet : IDisposable

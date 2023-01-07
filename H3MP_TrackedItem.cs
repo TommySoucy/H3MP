@@ -72,7 +72,8 @@ namespace H3MP
             FVRPhysicalObject physObj = GetComponent<FVRPhysicalObject>();
 
             // For each relevant type for which we may want to store additional data, we set a specific update function and the object ref
-            if(physObj is FVRFireArmMagazine)
+            // NOTE: We want to handle a subtype before its parent type (ex.: AttachableFirearmPhysicalObject before FVRFireArmAttachment) 
+            if (physObj is FVRFireArmMagazine)
             {
                 updateFunc = UpdateMagazine;
                 updateGivenFunc = UpdateGivenMagazine;
@@ -121,6 +122,28 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenTubeFedShotgun;
                 dataObject = asTFS;
                 fireFunc = asTFS.Fire;
+            }
+            else if (physObj is Revolver)
+            {
+                Revolver asRevolver = (Revolver)physObj;
+                updateFunc = UpdateRevolver;
+                updateGivenFunc = UpdateGivenRevolver;
+                dataObject = asRevolver;
+                fireFunc = FireRevolver;
+            }
+            else if (physObj is BAP)
+            {
+                BAP asBAP = (BAP)physObj;
+                updateFunc = UpdateBAP;
+                updateGivenFunc = UpdateGivenBAP;
+                dataObject = asBAP;
+                fireFunc = asBAP.Fire;
+            }
+            else if (physObj is BreakActionWeapon)
+            {
+                updateFunc = UpdateBreakActionWeapon;
+                updateGivenFunc = UpdateGivenBreakActionWeapon;
+                dataObject = physObj as BreakActionWeapon;
             }
             else if (physObj is LAPD2019)
             {
@@ -187,24 +210,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is Revolver)
-            {
-                updateFunc = UpdateRevolver;
-                updateGivenFunc = UpdateGivenRevolver;
-                dataObject = physObj as Revolver;
-            }
-            else if (physObj is BAP)
-            {
-                updateFunc = UpdateBAP;
-                updateGivenFunc = UpdateGivenBAP;
-                dataObject = physObj as BAP;
-            }
-            else if (physObj is BreakActionWeapon)
-            {
-                updateFunc = UpdateBreakActionWeapon;
-                updateGivenFunc = UpdateGivenBreakActionWeapon;
-                dataObject = physObj as BreakActionWeapon;
-            }
             else if (physObj is LeverActionFirearm)
             {
                 updateFunc = UpdateLeverActionFirearm;
@@ -358,6 +363,309 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateBreakActionWeapon()
+        {
+            BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
+            bool modified = false;
+
+            int necessarySize = asBreakActionWeapon.Barrels.Length * 3;
+
+            if (data.data == null)
+            {
+                data.data = new byte[necessarySize];
+                modified = true;
+            }
+
+            // Write chambered rounds
+            byte preval0;
+            byte preval1;
+            for (int i = 0; i < asBreakActionWeapon.Barrels.Length; ++i)
+            {
+                // Write chambered round
+                int firstIndex = i * 3;
+                preval0 = data.data[firstIndex];
+                preval1 = data.data[firstIndex + 1];
+
+                if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                }
+
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+
+                // Write hammer state
+                preval0 = data.data[firstIndex + 2];
+
+                data.data[firstIndex + 2] = asBreakActionWeapon.Barrels[i].m_isHammerCocked ? (byte)1 : (byte)0;
+
+                modified |= preval0 != data.data[firstIndex + 2];
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenBreakActionWeapon(byte[] newData)
+        {
+            bool modified = false;
+            BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
+
+            // Set barrels
+            for (int i = 0; i < asBreakActionWeapon.Barrels.Length; ++i)
+            {
+                int firstIndex = i * 3;
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() != null)
+                    {
+                        asBreakActionWeapon.Barrels[i].Chamber.SetRound(null, false);
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null || asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundClass != roundClass)
+                    {
+                        asBreakActionWeapon.Barrels[i].Chamber.SetRound(roundClass, asBreakActionWeapon.Barrels[i].Chamber.transform.position, asBreakActionWeapon.Barrels[i].Chamber.transform.rotation);
+                        modified = true;
+                    }
+                }
+
+                asBreakActionWeapon.Barrels[i].m_isHammerCocked = newData[firstIndex + 2] == 1;
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateBAP()
+        {
+            BAP asBAP = dataObject as BAP;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[4];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write fire mode index
+            data.data[0] = (byte)Mod.BAP_m_fireSelectorMode.GetValue(asBAP);
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+
+            // Write hammer state
+            data.data[1] = BitConverter.GetBytes((bool)Mod.BAP_m_isHammerCocked.GetValue(asBAP))[0];
+
+            modified |= preval != data.data[1];
+
+            preval = data.data[2];
+            byte preval0 = data.data[3];
+
+            // Write chambered round class
+            if (asBAP.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asBAP.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+            }
+
+            modified |= (preval != data.data[2] || preval0 != data.data[3]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenBAP(byte[] newData)
+        {
+            bool modified = false;
+            BAP asBAP = dataObject as BAP;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set fire select mode
+                Mod.BAP_m_fireSelectorMode.SetValue(asBAP, (int)newData[0]);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set fire select mode
+                    Mod.BAP_m_fireSelectorMode.SetValue(asBAP, (int)newData[0]);
+                    modified = true;
+                }
+            }
+
+            // Set hammer state
+            if (newData[1] == 0)
+            {
+                if ((bool)Mod.BAP_m_isHammerCocked.GetValue(asBAP))
+                {
+                    Mod.BAP_m_isHammerCocked.SetValue(asBAP, false);
+                    modified = true;
+                }
+            }
+            else // Hammer should be cocked
+            {
+                if (!(bool)Mod.BAP_m_isHammerCocked.GetValue(asBAP))
+                {
+                    asBAP.CockHammer();
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asBAP.Chamber.GetRound() != null)
+                {
+                    asBAP.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asBAP.Chamber.GetRound() == null || asBAP.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateRevolver()
+        {
+            Revolver asRevolver = dataObject as Revolver;
+            bool modified = false;
+
+            int necessarySize = asRevolver.Cylinder.numChambers * 2 + 1;
+
+            if (data.data == null)
+            {
+                data.data = new byte[necessarySize];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+
+            // Write cur chamber
+            data.data[0] = (byte)asRevolver.CurChamber;
+
+            modified |= preval0 != data.data[0];
+
+            // Write chambered rounds
+            byte preval1;
+            for (int i = 0; i < asRevolver.Chambers.Length; ++i)
+            {
+                int firstIndex = i * 2 + 1;
+                preval0 = data.data[firstIndex];
+                preval1 = data.data[firstIndex + 1];
+
+                if (asRevolver.Chambers[i].GetRound() == null)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)asRevolver.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                }
+
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenRevolver(byte[] newData)
+        {
+            bool modified = false;
+            Revolver asRevolver = dataObject as Revolver;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set cur chamber
+                asRevolver.CurChamber = newData[0];
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set cur chamber
+                    asRevolver.CurChamber = newData[0];
+                    modified = true;
+                }
+            }
+
+            // Set chambers
+            for (int i = 0; i < asRevolver.Chambers.Length; ++i)
+            {
+                int firstIndex = i * 2 + 1;
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (asRevolver.Chambers[i].GetRound() != null)
+                    {
+                        asRevolver.Chambers[i].SetRound(null, false);
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asRevolver.Chambers[i].GetRound() == null || asRevolver.Chambers[i].GetRound().RoundClass != roundClass)
+                    {
+                        asRevolver.Chambers[i].SetRound(roundClass, asRevolver.Chambers[i].transform.position, asRevolver.Chambers[i].transform.rotation);
+                        modified = true;
+                    }
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireRevolver()
+        {
+            Revolver asRevolver = dataObject as Revolver;
+            int num2 = data.data[0] + asRevolver.ChamberOffset;
+            if (num2 >= asRevolver.Cylinder.numChambers)
+            {
+                num2 -= asRevolver.Cylinder.numChambers;
+            }
+            if (asRevolver.Chambers[num2].IsFull && !asRevolver.Chambers[num2].IsSpent)
+            {
+                Mod.Revolver_Fire.Invoke(dataObject, null);
+                if (GM.CurrentSceneSettings.IsAmmoInfinite || GM.CurrentPlayerBody.IsInfiniteAmmo)
+                {
+                    asRevolver.Chambers[num2].IsSpent = false;
+                    asRevolver.Chambers[num2].UpdateProxyDisplay();
+                }
+            }
+            return true;
+        }
+
         private bool UpdateM203()
         {
             M203 asM203 = dataObject as M203;

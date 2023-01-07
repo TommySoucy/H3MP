@@ -873,6 +873,56 @@ namespace H3MP
             }
         }
 
+        public static void BreakActionWeaponFire(int clientID, int trackedID, int barrelIndex, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.breakActionWeaponFire))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)barrelIndex);
+                if (positions == null || positions.Count > 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for (int i = 0; i < positions.Count; ++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void BreakActionWeaponFire(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.breakActionWeaponFire);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
         public static void SosigWeaponFire(int clientID, int trackedID, float recoilMult, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigWeaponFire))

@@ -158,6 +158,8 @@ namespace H3MP
         public static readonly FieldInfo LAPD2019_m_capacitorCharge = typeof(LAPD2019).GetField("m_capacitorCharge", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo LAPD2019_m_isCapacitorCharged = typeof(LAPD2019).GetField("m_isCapacitorCharged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AttachableBreakActions_m_isBreachOpen = typeof(AttachableBreakActions).GetField("m_isBreachOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo BAP_m_fireSelectorMode = typeof(BAP).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo BAP_m_isHammerCocked = typeof(BAP).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -187,6 +189,7 @@ namespace H3MP
         public static readonly MethodInfo AutoMeaterFirearm_UpdateFire = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("UpdateFire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo LAPD2019_Fire = typeof(LAPD2019).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Minigun_Fire = typeof(Minigun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Revolver_Fire = typeof(Revolver).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -677,6 +680,13 @@ namespace H3MP
             harmony.Patch(fireAttachableTubeFedPatchOriginal, new HarmonyMethod(fireAttachableTubeFedPatchPrefix), new HarmonyMethod(fireAttachableTubeFedPatchPostfix));
             harmony.Patch(fireGP25PatchOriginal, new HarmonyMethod(fireGP25PatchPrefix), new HarmonyMethod(fireGP25PatchPostfix));
             harmony.Patch(fireM203PatchOriginal, new HarmonyMethod(fireM203PatchPrefix), new HarmonyMethod(fireM203PatchPostfix));
+
+            // FireBreakActionWeaponPatch
+            MethodInfo fireBreakActionWeaponPatchOriginal = typeof(BreakActionWeapon).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(int), typeof(bool), typeof(int) }, null);
+            MethodInfo fireBreakActionWeaponPatchPrefix = typeof(FireBreakActionWeaponPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireBreakActionWeaponPatchPostfix = typeof(FireBreakActionWeaponPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(fireBreakActionWeaponPatchOriginal, new HarmonyMethod(fireBreakActionWeaponPatchPrefix), new HarmonyMethod(fireBreakActionWeaponPatchPostfix));
 
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
@@ -2668,16 +2678,18 @@ namespace H3MP
     // and making sure that the shot is in same position/direction on all clients
     // Synchronizing the action is simple, it is the pos/dir that requires transpilers and make these so complex
     /* TODO: Fire patches for
-     * AttachableFirearm.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotAgile.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotCrystal.FirePulseShot // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotHardened.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * RemoteGun.Fire // Will have to be handled unlike other projectiles since it is a player controlled missile
      * AIFireArm.FireBullet // Will have to check if this is necessary (it is actually used?), it is also an FVRDestroyableObject, need to see how to handle that
      * RonchWeapon.Fire // Considering ronch is an enemy type, we will probably have to make it into its own sync object type with its own lists
+     * DodecaLauncher // Uses dodeca missiles
+     * StingerLauncher // Uses stinger missiles
      */
     class FirePatch
     {
+        public static int skipSending;
         public static bool overriden;
         public static List<Vector3> positions;
         public static List<Vector3> directions;
@@ -2816,6 +2828,14 @@ namespace H3MP
 
         static void Postfix(ref FVRFireArm __instance)
         {
+            --Mod.skipAllInstantiates;
+
+            // Skip sending will prevent fire patch from handling its own data, as we want to handle it elsewhere
+            if (skipSending > 0)
+            {
+                return;
+            }
+
             overriden = false;
 
             if (Mod.skipNextFires > 0)
@@ -2850,8 +2870,6 @@ namespace H3MP
 
             positions = null;
             directions = null;
-
-            --Mod.skipAllInstantiates;
         }
     }
 
@@ -3598,6 +3616,56 @@ namespace H3MP
             directions = null;
 
             --Mod.skipAllInstantiates;
+        }
+    }
+
+    // Patches BreakActionWeapon.Fire so we can skip 
+    class FireBreakActionWeaponPatch
+    {
+        static void Prefix()
+        {
+            ++FirePatch.skipSending;
+        }
+
+        static void Postfix(ref BreakActionWeapon __instance, int b)
+        {
+            --FirePatch.skipSending;
+            --Mod.skipAllInstantiates;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.BreakActionWeaponFire(0, trackedItem.data.trackedID, b, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.BreakActionWeaponFire(trackedItem.data.trackedID, b, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
         }
     }
 

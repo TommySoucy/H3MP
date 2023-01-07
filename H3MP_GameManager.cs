@@ -311,13 +311,10 @@ namespace H3MP
                 activeInstances.Add(instance, 1);
             }
 
-            if (TNHInstances.ContainsKey(instance))
+            // The player's ID could already have been added to the TNH instance if their are the host of the instance and
+            // have just created it, at which point we just don't want to add them again
+            if (TNHInstances.ContainsKey(instance) && !TNHInstances[instance].playerIDs.Contains(playerID))
             {
-                if (TNHInstances[instance].playerIDs.Contains(playerID))
-                {
-                    Debug.LogWarning("UpdatePlayerInstance: player " + playerID + " already in playerIDs of TNH instance " + instance);
-                }
-
                 TNHInstances[instance].playerIDs.Add(playerID);
 
                 // Add player to active TNH player list
@@ -1144,8 +1141,6 @@ namespace H3MP
                 activeInstances.Add(freeInstance, 0);
 
                 Mod.modInstance.OnTNHInstanceReceived(newInstance);
-
-                H3MP_ServerSend.AddTNHInstance(newInstance);
 
                 return newInstance;
             }
