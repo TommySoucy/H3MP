@@ -27,6 +27,7 @@ namespace H3MP
         public H3MP_Billboard overheadDisplayBillboard;
         public Text usernameLabel;
         public Text healthIndicator;
+        public int IFF;
 
         public string scene;
         public int instance;
@@ -35,15 +36,15 @@ namespace H3MP
         {
             head = transform.GetChild(0);
             headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
-            headEntity.IFFCode = 0;
             headEntity.Beacons = new List<AIEntityIFFBeacon>();
+            headEntity.IFFCode = IFF;
             headHitBox = head.gameObject.AddComponent<H3MP_PlayerHitbox>();
             headHitBox.manager = this;
             headHitBox.part = H3MP_PlayerHitbox.Part.Head;
             torso = transform.GetChild(1);
             torsoEntity = torso.GetChild(0).gameObject.AddComponent<AIEntity>();
-            torsoEntity.IFFCode = 0;
             torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
+            torsoEntity.IFFCode = IFF;
             torsoHitBox = torso.gameObject.AddComponent<H3MP_PlayerHitbox>();
             torsoHitBox.manager = this;
             torsoHitBox.part = H3MP_PlayerHitbox.Part.Torso;
@@ -107,8 +108,12 @@ namespace H3MP
 
         public void SetIFF(int IFF)
         {
-            headEntity.IFFCode = IFF;
-            torsoEntity.IFFCode = IFF;
+            this.IFF = IFF;
+            if (headEntity != null)
+            {
+                headEntity.IFFCode = IFF;
+                torsoEntity.IFFCode = IFF;
+            }
         }
     }
 }
