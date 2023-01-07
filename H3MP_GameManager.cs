@@ -509,6 +509,7 @@ namespace H3MP
                     H3MP_TrackedItem currentTrackedItem = root.GetComponent<H3MP_TrackedItem>();
                     if (currentTrackedItem == null)
                     {
+                        Debug.Log("SyncTrackedItems called with identifiable root: " + root.name + ", control everything?: " + controlEverything+", isControlled?: "+IsControlled(physObj));
                         if (controlEverything || IsControlled(physObj))
                         {
                             H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
@@ -645,11 +646,6 @@ namespace H3MP
         //      We would normally not want to track these but there may be some exceptions, like TNH_ShatterableCrates
         public static bool IsObjectIdentifiable(FVRPhysicalObject physObj)
         {
-            Debug.Log("IsObjectIdentifiable called for " + physObj.name+ ", physObj.IDSpawnedFrom == null?: "+(physObj.IDSpawnedFrom == null));
-            if(physObj.IDSpawnedFrom != null)
-            {
-                Debug.Log("\tWe have ID spawned from, IM.OD.ContainsKey("+ physObj.IDSpawnedFrom.name + ")?: "+ IM.OD.ContainsKey(physObj.IDSpawnedFrom.name)+ ", IM.OD.ContainsKey("+ physObj.IDSpawnedFrom.ItemID + ")?: "+ IM.OD.ContainsKey(physObj.IDSpawnedFrom.ItemID));
-            }
             return physObj.ObjectWrapper != null ||
                    (physObj.IDSpawnedFrom != null && (IM.OD.ContainsKey(physObj.IDSpawnedFrom.name) || IM.OD.ContainsKey(physObj.IDSpawnedFrom.ItemID))) ||
                    physObj.GetComponent<TNH_ShatterableCrate>() != null;

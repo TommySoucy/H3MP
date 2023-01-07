@@ -179,7 +179,7 @@ namespace H3MP
 
                 H3MP_GameManager.EnsureUncontrolled(physObj);
 
-                physObj.StoreAndDestroyRigidbody();
+                Mod.SetKinematicRecursive(physObj.transform, true);
                 H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                 H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
                 H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
@@ -188,6 +188,10 @@ namespace H3MP
             else if(trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
             {
                 trackedItem.controller = controllerID;
+                if(trackedItem.physicalItem != null)
+                {
+                    Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
+                }
                 trackedItem.localTrackedID = H3MP_GameManager.items.Count;
                 H3MP_GameManager.items.Add(trackedItem);
             }

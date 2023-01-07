@@ -171,7 +171,7 @@ namespace H3MP
                 // Store and destroy RB if not in control
                 if (controller != H3MP_GameManager.ID)
                 {
-                    physicalItem.physicalObject.StoreAndDestroyRigidbody();
+                    Mod.SetKinematicRecursive(physicalItem.transform, true);
                 }
 
                 // Initially set itself
@@ -356,7 +356,7 @@ namespace H3MP
                     // If in control, we want to enable rigidbody
                     if (controller == H3MP_GameManager.ID)
                     {
-                        physicalItem.physicalObject.StoreAndDestroyRigidbody();
+                        Mod.SetKinematicRecursive(physicalItem.transform, true);
                     }
 
                     // Call updateParent delegate on item if it has one
@@ -398,7 +398,7 @@ namespace H3MP
         {
             if(data == null && previousData == null)
             {
-                return false;
+                return true;
             }
             if((data == null && previousData != null)||(data != null && previousData == null)||data.Length != previousData.Length)
             {

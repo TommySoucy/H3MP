@@ -226,8 +226,7 @@ namespace H3MP
             // Update locally
             if (trackedItem.controller == 0)
             {
-                FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
-                physObj.StoreAndDestroyRigidbody();
+                Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
                 H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                 H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
                 H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
@@ -252,16 +251,14 @@ namespace H3MP
                 // Only want to active rigidbody if not parented to another tracked item
                 if (trackedItem.parent == -1)
                 {
-                    FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
-                    physObj.RecoverRigidbody();
+                    Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
                 }
                 trackedItem.localTrackedID = H3MP_GameManager.items.Count;
                 H3MP_GameManager.items.Add(trackedItem);
             }
             else if(trackedItem.controller == 0 && newController != 0)
             {
-                FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
-                physObj.StoreAndDestroyRigidbody();
+                Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
                 H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                 H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
                 H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);

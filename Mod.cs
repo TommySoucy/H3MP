@@ -1347,6 +1347,12 @@ namespace H3MP
 
             harmony.Patch(TNH_WeaponCrateSpawnObjectsPatchOriginal, new HarmonyMethod(TNH_WeaponCrateSpawnObjectsPatchPrefix));
 
+            // KinematicPatch
+            MethodInfo kinematicPatchOriginal = typeof(Rigidbody).GetMethod("set_isKinematic", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo kinematicPatchPrefix = typeof(KinematicPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(kinematicPatchOriginal, null, new HarmonyMethod(kinematicPatchPrefix));
+
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
             //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -2077,6 +2083,43 @@ namespace H3MP
                 }
             }
         }
+
+        public static void SetKinematicRecursive(Transform root, bool value)
+        {
+            Rigidbody rb = root.GetComponent<Rigidbody>();
+            if(rb != null)
+            {
+                H3MP_KinematicMarker marker = rb.GetComponent<H3MP_KinematicMarker>();
+
+                // If we want to make kinematic we can just set it and mark all children
+                if (value)
+                {
+                    if (marker == null)
+                    {
+                        marker = rb.gameObject.AddComponent<H3MP_KinematicMarker>();
+                    }
+                    marker.state = rb.isKinematic;
+                    ++KinematicPatch.skip;
+                    rb.isKinematic = value;
+                    --KinematicPatch.skip;
+                }
+                else // If we don't want it kinematic, we only want to unset it on marked children, because unmarked were not set by us
+                {
+                    if(marker != null)
+                    {
+                        ++KinematicPatch.skip;
+                        rb.isKinematic = value;
+                        --KinematicPatch.skip;
+                        Destroy(marker);
+                    }
+                }
+            }
+
+            foreach(Transform child in root.transform)
+            {
+                SetKinematicRecursive(child, value);
+            }
+        }
     }
 
     #region General Patches
@@ -2088,6 +2131,26 @@ namespace H3MP
         static void Prefix(string levelName)
         {
             loadingLevel = levelName;
+        }
+    }
+
+    // Patches RigidBody.set_isKinematic to keep track of when it is being set
+    class KinematicPatch
+    {
+        public static int skip;
+
+        static void Postfix(ref Rigidbody __instance)
+        {
+            if(Mod.managerObject == null || skip > 0)
+            {
+                return;
+            }
+
+            H3MP_KinematicMarker marker = __instance.GetComponent<H3MP_KinematicMarker>();
+            if(marker != null)
+            {
+                GameObject.Destroy(marker);
+            }
         }
     }
 
@@ -2159,6 +2222,7 @@ namespace H3MP
                             H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
 
                             // Update locally
+                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                             trackedItem.data.controller = 0;
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
@@ -2174,6 +2238,7 @@ namespace H3MP
                             H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
 
                             // Update locally
+                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                             trackedItem.data.controller = H3MP_Client.singleton.ID;
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
@@ -2276,6 +2341,7 @@ namespace H3MP
                             H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
 
                             // Update locally
+                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                             trackedItem.data.controller = 0;
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
@@ -2296,6 +2362,7 @@ namespace H3MP
                             H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
 
                             // Update locally
+                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                             trackedItem.data.controller = H3MP_Client.singleton.ID;
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
@@ -2334,6 +2401,7 @@ namespace H3MP
                         H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
 
                         // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                         trackedItem.data.controller = 0;
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
@@ -2357,6 +2425,7 @@ namespace H3MP
                         H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
 
                         // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                         trackedItem.data.controller = H3MP_Client.singleton.ID;
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
@@ -2411,6 +2480,7 @@ namespace H3MP
                         H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
 
                         // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                         trackedItem.data.controller = 0;
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
@@ -2441,6 +2511,7 @@ namespace H3MP
                         H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
 
                         // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                         trackedItem.data.controller = H3MP_Client.singleton.ID;
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);

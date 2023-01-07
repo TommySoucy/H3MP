@@ -1777,7 +1777,7 @@ namespace H3MP
                     // Detach from mount will recover rigidbody, store and destroy again if not controller
                     if (data.controller != H3MP_GameManager.ID)
                     {
-                        asAttachment.StoreAndDestroyRigidbody();
+                        Mod.SetKinematicRecursive(asAttachment.transform, true);
                     }
                 }
             }
