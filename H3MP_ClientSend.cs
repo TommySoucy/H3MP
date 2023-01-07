@@ -912,10 +912,20 @@ namespace H3MP
                 packet.Write((byte)joints.Count);
                 for(int i=0; i < joints.Count; ++i)
                 {
-                    packet.Write(joints[i].lowTwistLimit.limit);
-                    packet.Write(joints[i].highTwistLimit.limit);
-                    packet.Write(joints[i].swing1Limit.limit);
-                    packet.Write(joints[i].swing2Limit.limit);
+                    if (joints[i] != null)
+                    {
+                        packet.Write(joints[i].lowTwistLimit.limit);
+                        packet.Write(joints[i].highTwistLimit.limit);
+                        packet.Write(joints[i].swing1Limit.limit);
+                        packet.Write(joints[i].swing2Limit.limit);
+                    }
+                    else
+                    {
+                        packet.Write(0);
+                        packet.Write(0);
+                        packet.Write(0);
+                        packet.Write(0);
+                    }
                 }
                 packet.Write((bool)Mod.Sosig_m_isCountingDownToStagger.GetValue(trackedSosig.physicalSosigScript));
                 packet.Write((float)Mod.Sosig_m_staggerAmountToApply.GetValue(trackedSosig.physicalSosigScript));
