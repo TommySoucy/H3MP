@@ -34,6 +34,7 @@ namespace H3MP
                 packet.Write(Mod.config["Username"].ToString());
                 packet.Write(SceneManager.GetActiveScene().name);
                 packet.Write(H3MP_GameManager.instance);
+                packet.Write(GM.CurrentPlayerBody.GetPlayerIFF());
 
                 SendTCPData(packet);
             }
@@ -73,6 +74,16 @@ namespace H3MP
                 }
 
                 SendUDPData(packet);
+            }
+        }
+
+        public static void PlayerIFF(int iff)
+        {
+            using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.playerIFF))
+            {
+                packet.Write(iff);
+
+                SendTCPData(packet);
             }
         }
 

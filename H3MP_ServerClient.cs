@@ -196,9 +196,9 @@ namespace H3MP
             }
         }
 
-        public void SendIntoGame(string playerName, string scene, int instance)
+        public void SendIntoGame(string playerName, string scene, int instance, int IFF)
         {
-            player = new H3MP_Player(ID, playerName, Vector3.zero);
+            player = new H3MP_Player(ID, playerName, Vector3.zero, IFF);
             player.scene = scene;
             player.instance = instance;
 
@@ -209,13 +209,13 @@ namespace H3MP
                 {
                     if(client.ID != ID)
                     {
-                        H3MP_ServerSend.SpawnPlayer(ID, client.player, scene, instance);
+                        H3MP_ServerSend.SpawnPlayer(ID, client.player, scene, instance, IFF);
                     }
                 }
             }
 
             // Also spawn player for host
-            H3MP_GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, instance, player.position, player.rotation);
+            H3MP_GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, instance, player.position, player.rotation, IFF);
 
             // Spawn all clients' players in this client
             bool inControl = true;
@@ -223,13 +223,13 @@ namespace H3MP
             {
                 if(client.player != null && client.ID != ID)
                 {
-                    H3MP_ServerSend.SpawnPlayer(client.ID, player, client.player.scene, client.player.instance);
+                    H3MP_ServerSend.SpawnPlayer(client.ID, player, client.player.scene, client.player.instance, IFF);
                     inControl &= !scene.Equals(client.player.scene);
                 }
             }
 
             // Also spawn host player in this client
-            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), SceneManager.GetActiveScene().name, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation);
+            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), SceneManager.GetActiveScene().name, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF);
             inControl &= !scene.Equals(SceneManager.GetActiveScene().name);
 
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))

@@ -465,6 +465,7 @@ namespace H3MP
                 H3MP_ServerHandle.MinigunFire,
                 H3MP_ServerHandle.AttachableFirearmFire,
                 H3MP_ServerHandle.BreakActionWeaponFire,
+                H3MP_ServerHandle.PlayerIFF,
             };
 
             items = new H3MP_TrackedItemData[100];

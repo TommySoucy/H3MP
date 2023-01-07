@@ -36,8 +36,9 @@ namespace H3MP
             int instance = packet.ReadInt();
             Vector3 position = packet.ReadVector3();
             Quaternion rotation = packet.ReadQuaternion();
+            int IFF = packet.ReadInt();
 
-            H3MP_GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation);
+            H3MP_GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation, IFF);
         }
 
         public static void ConnectSync(H3MP_Packet packet)

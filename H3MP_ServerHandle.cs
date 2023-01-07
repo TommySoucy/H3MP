@@ -20,6 +20,7 @@ namespace H3MP
             string username = packet.ReadString();
             string scene = packet.ReadString();
             int instance = packet.ReadInt();
+            int IFF = packet.ReadInt();
 
             Debug.Log($"{H3MP_Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}");
 
@@ -29,7 +30,7 @@ namespace H3MP
             }
 
             // Spawn player to clients 
-            H3MP_Server.clients[clientID].SendIntoGame(username, scene, instance);
+            H3MP_Server.clients[clientID].SendIntoGame(username, scene, instance, IFF);
         }
 
         public static void PlayerState(int clientID, H3MP_Packet packet)
@@ -59,6 +60,21 @@ namespace H3MP
                                                player.leftHandPos, player.leftHandRot,
                                                player.leftHandPos, player.leftHandRot,
                                                player.health, player.maxHealth, additionalData);
+        }
+
+        public static void PlayerIFF(int clientID, H3MP_Packet packet)
+        {
+            int IFF = packet.ReadInt();
+            if (H3MP_Server.clients.ContainsKey(clientID))
+            {
+                H3MP_Server.clients[clientID].player.IFF = IFF;
+            }
+            if (H3MP_GameManager.players.ContainsKey(clientID))
+            {
+                H3MP_GameManager.players[clientID].SetIFF(IFF);
+            }
+
+            H3MP_ServerSend.PlayerIFF(clientID, IFF);
         }
 
         public static void PlayerScene(int clientID, H3MP_Packet packet)

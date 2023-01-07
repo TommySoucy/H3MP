@@ -104,5 +104,11 @@ namespace H3MP
             rightHand.gameObject.SetActive(hidden);
             overheadDisplayBillboard.gameObject.SetActive(hidden);
         }
+
+        public void SetIFF(int IFF)
+        {
+            headEntity.IFFCode = IFF;
+            torsoEntity.IFFCode = IFF;
+        }
     }
 }

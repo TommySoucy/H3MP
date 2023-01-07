@@ -12,6 +12,7 @@ namespace H3MP
         public string username;
 
         // State vars
+        public int IFF;
         public Vector3 position;
         public Quaternion rotation;
         public Vector3 headPos;
@@ -28,12 +29,13 @@ namespace H3MP
         public string scene;
         public int instance;
 
-        public H3MP_Player(int ID, string username, Vector3 spawnPos)
+        public H3MP_Player(int ID, string username, Vector3 spawnPos, int IFF)
         {
             this.ID = ID;
             this.username = username;
             this.position = spawnPos;
             this.rotation = Quaternion.identity;
+            this.IFF = IFF;
         }
 
         public void UpdateState()

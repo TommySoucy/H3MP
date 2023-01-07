@@ -77,12 +77,12 @@ namespace H3MP
             }
         }
 
-        public static void SpawnPlayer(int clientID, H3MP_Player player, string scene, int instance)
+        public static void SpawnPlayer(int clientID, H3MP_Player player, string scene, int instance, int IFF)
         {
-            SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation);
+            SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation, IFF);
         }
 
-        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation)
+        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.spawnPlayer))
             {
@@ -92,6 +92,7 @@ namespace H3MP
                 packet.Write(instance);
                 packet.Write(position);
                 packet.Write(rotation);
+                packet.Write(IFF);
 
                 SendTCPData(clientID, packet);
             }
@@ -150,6 +151,24 @@ namespace H3MP
                 }
 
                 SendUDPDataToAll(ID, packet);
+            }
+        }
+
+        public static void PlayerIFF(int clientID, int IFF)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerIFF))
+            {
+                packet.Write(clientID);
+                packet.Write(IFF);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
 

@@ -75,7 +75,7 @@ namespace H3MP
             activeInstances.Add(instance, 1);
         }
 
-        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation)
+        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF)
         {
             Debug.Log($"Spawn player called with ID: {ID}");
 
@@ -98,6 +98,7 @@ namespace H3MP
             playerManager.scene = scene;
             playerManager.instance = instance;
             playerManager.usernameLabel.text = username;
+            playerManager.SetIFF(IFF);
             players.Add(ID, playerManager);
 
             // Add to instance

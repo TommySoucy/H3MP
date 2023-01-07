@@ -312,6 +312,7 @@ namespace H3MP
             playerManager.scene = SceneManager.GetActiveScene().name;
             playerManager.instance = H3MP_GameManager.instance;
             playerManager.usernameLabel.text = "Dummy";
+            playerManager.SetIFF(GM.CurrentPlayerBody.GetPlayerIFF());
         }
 
         private void LoadConfig()
@@ -1363,6 +1364,12 @@ namespace H3MP
 
             harmony.Patch(kinematicPatchOriginal, null, new HarmonyMethod(kinematicPatchPrefix));
 
+            // SetPlayerIFFPatch
+            MethodInfo setPlayerIFFPatchOriginal = typeof(FVRPlayerBody).GetMethod("SetPlayerIFF", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo setPlayerIFFPatchPrefix = typeof(SetPlayerIFFPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(setPlayerIFFPatchOriginal, new HarmonyMethod(setPlayerIFFPatchPrefix));
+
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
             //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -2160,6 +2167,27 @@ namespace H3MP
             if(marker != null)
             {
                 GameObject.Destroy(marker);
+            }
+        }
+    }
+
+    // Patches FVRPlayerBody.SetPlayerIFF to keep players' IFFs up to date
+    class SetPlayerIFFPatch
+    {
+        static void Prefix(int iff)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.PlayerIFF(H3MP_GameManager.ID, iff);
+            }
+            else
+            {
+                H3MP_ClientSend.PlayerIFF(iff);
             }
         }
     }
