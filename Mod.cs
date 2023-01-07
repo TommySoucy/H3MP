@@ -2828,13 +2828,13 @@ namespace H3MP
 
         static void Postfix(ref FVRFireArm __instance)
         {
-            --Mod.skipAllInstantiates;
-
             // Skip sending will prevent fire patch from handling its own data, as we want to handle it elsewhere
             if (skipSending > 0)
             {
                 return;
             }
+
+            --Mod.skipAllInstantiates;
 
             overriden = false;
 
@@ -3023,6 +3023,8 @@ namespace H3MP
 
         static void Postfix(ref SosigWeapon __instance, float recoilMult)
         {
+            --Mod.skipAllInstantiates;
+
             overriden = false;
 
             if (Mod.skipNextFires > 0)
@@ -3057,8 +3059,6 @@ namespace H3MP
 
             positions = null;
             directions = null;
-
-            --Mod.skipAllInstantiates;
         }
     }
 
@@ -3227,6 +3227,8 @@ namespace H3MP
 
         static void Postfix(ref LAPD2019 __instance)
         {
+            --Mod.skipAllInstantiates;
+
             overriden = false;
 
             if (Mod.skipNextFires > 0)
@@ -3261,8 +3263,6 @@ namespace H3MP
 
             positions = null;
             directions = null;
-
-            --Mod.skipAllInstantiates;
         }
     }
 
@@ -3401,6 +3401,8 @@ namespace H3MP
 
         static void Postfix(ref Minigun __instance)
         {
+            --Mod.skipAllInstantiates;
+
             overriden = false;
 
             if (Mod.skipNextFires > 0)
@@ -3435,8 +3437,6 @@ namespace H3MP
 
             positions = null;
             directions = null;
-
-            --Mod.skipAllInstantiates;
         }
     }
 
@@ -3580,6 +3580,8 @@ namespace H3MP
 
         static void Postfix(ref AttachableFirearm __instance, bool firedFromInterface)
         {
+            --Mod.skipAllInstantiates;
+
             overriden = false;
 
             if (Mod.skipNextFires > 0)
@@ -3614,8 +3616,6 @@ namespace H3MP
 
             positions = null;
             directions = null;
-
-            --Mod.skipAllInstantiates;
         }
     }
 
