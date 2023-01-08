@@ -178,7 +178,7 @@ namespace H3MP
                         {
                             trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
 
-                            packet.Write(trackedItem, true);
+                            packet.Write(trackedItem, true, false);
 
                             ++count;
 
@@ -192,7 +192,7 @@ namespace H3MP
                         {
                             --trackedItem.insuranceCounter;
 
-                            packet.Write(trackedItem, true);
+                            packet.Write(trackedItem, true, false);
 
                             ++count;
 
@@ -249,7 +249,7 @@ namespace H3MP
                         {
                             trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
 
-                            packet.Write(trackedSosig, true);
+                            packet.Write(trackedSosig, true, false);
 
                             ++count;
 
@@ -263,7 +263,7 @@ namespace H3MP
                         {
                             --trackedSosig.insuranceCounter;
 
-                            packet.Write(trackedSosig, true);
+                            packet.Write(trackedSosig, true, false);
 
                             ++count;
 
@@ -320,7 +320,7 @@ namespace H3MP
                         {
                             trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
 
-                            packet.Write(trackedAutoMeater, true);
+                            packet.Write(trackedAutoMeater, true, false);
 
                             ++count;
 
@@ -334,7 +334,7 @@ namespace H3MP
                         {
                             --trackedAutoMeater.insuranceCounter;
 
-                            packet.Write(trackedAutoMeater, true);
+                            packet.Write(trackedAutoMeater, true, false);
 
                             ++count;
 
@@ -391,7 +391,7 @@ namespace H3MP
                         {
                             trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
 
-                            packet.Write(trackedEncryption, true);
+                            packet.Write(trackedEncryption, true, false);
 
                             ++count;
 
@@ -405,7 +405,7 @@ namespace H3MP
                         {
                             --trackedEncryption.insuranceCounter;
 
-                            packet.Write(trackedEncryption, true);
+                            packet.Write(trackedEncryption, true, false);
 
                             ++count;
 
@@ -440,7 +440,7 @@ namespace H3MP
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedItem))
             {
-                packet.Write(trackedItem, true);
+                packet.Write(trackedItem, false, true);
                 packet.Write(scene);
                 packet.Write(instance);
 
@@ -452,7 +452,7 @@ namespace H3MP
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedSosig))
             {
-                packet.Write(trackedSosig, true);
+                packet.Write(trackedSosig, false, true);
                 packet.Write(scene);
                 packet.Write(instance);
 
@@ -464,7 +464,7 @@ namespace H3MP
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedAutoMeater))
             {
-                packet.Write(trackedAutoMeater, true);
+                packet.Write(trackedAutoMeater, false, true);
                 packet.Write(scene);
                 packet.Write(instance);
 
@@ -476,7 +476,7 @@ namespace H3MP
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedEncryption))
             {
-                packet.Write(trackedEncryption, true);
+                packet.Write(trackedEncryption, false, true);
                 packet.Write(scene);
                 packet.Write(instance);
 
@@ -1149,7 +1149,7 @@ namespace H3MP
 
                         Debug.Log("\t\tTracked item at: "+trackedItem.trackedID);
                         trackedItem.Update(true);
-                        packet.Write(trackedItem, true);
+                        packet.Write(trackedItem, false, true);
 
                         ++count;
 
@@ -1198,7 +1198,7 @@ namespace H3MP
 
                         Debug.Log("\t\tTracked sosig at: " + trackedSosig.trackedID);
                         trackedSosig.Update(true);
-                        packet.Write(trackedSosig, true);
+                        packet.Write(trackedSosig, false, true);
 
                         ++count;
 
@@ -1247,7 +1247,7 @@ namespace H3MP
 
                         Debug.Log("\t\tTracked AutoMeater at: " + trackedAutoMeater.trackedID);
                         trackedAutoMeater.Update(true);
-                        packet.Write(trackedAutoMeater, true);
+                        packet.Write(trackedAutoMeater, false, true);
 
                         ++count;
 
@@ -1296,7 +1296,7 @@ namespace H3MP
 
                         Debug.Log("\t\tTracked Encryption at: " + trackedEncryption.trackedID);
                         trackedEncryption.Update(true);
-                        packet.Write(trackedEncryption, true);
+                        packet.Write(trackedEncryption, false, true);
 
                         ++count;
 

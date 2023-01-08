@@ -408,7 +408,7 @@ namespace H3MP
         }
         /// <summary>Adds a H3MP_TrackedItemData to the packet.</summary>
         /// <param name="_value">The H3MP_TrackedItemData to add.</param>
-        public void Write(H3MP_TrackedItemData trackedItem, bool incrementOrder, bool full = false)
+        public void Write(H3MP_TrackedItemData trackedItem, bool incrementOrder, bool full)
         {
             Write(trackedItem.trackedID);
             Write(trackedItem.position);
@@ -478,7 +478,7 @@ namespace H3MP
         /// <summary>Adds a H3MP_TrackedSosigData to the packet.</summary>
         /// <param name="trackedSosig">The H3MP_TrackedSosigData to add.</param>
         /// <param name="full">Whether to include all necessary data to instantiate this sosig.</param>
-        public void Write(H3MP_TrackedSosigData trackedSosig, bool incrementOrder, bool full = false)
+        public void Write(H3MP_TrackedSosigData trackedSosig, bool incrementOrder, bool full)
         {
             Write(trackedSosig.trackedID);
             Write(trackedSosig.position);
@@ -568,7 +568,7 @@ namespace H3MP
         /// <summary>Adds a H3MP_TrackedAutoMeaterData to the packet.</summary>
         /// <param name="trackedAutoMeater">The H3MP_TrackedAutoMeaterData to add.</param>
         /// <param name="full">Whether to include all necessary data to instantiate this AutoMeater.</param>
-        public void Write(H3MP_TrackedAutoMeaterData trackedAutoMeater, bool incrementOrder, bool full = false)
+        public void Write(H3MP_TrackedAutoMeaterData trackedAutoMeater, bool incrementOrder, bool full)
         {
             Write(trackedAutoMeater.trackedID);
             Write(trackedAutoMeater.position);
@@ -601,7 +601,7 @@ namespace H3MP
         /// <summary>Adds a H3MP_TrackedEncryptionData to the packet.</summary>
         /// <param name="trackedEncryption">The H3MP_TrackedEncryptionData to add.</param>
         /// <param name="full">Whether to include all necessary data to instantiate this Encryption.</param>
-        public void Write(H3MP_TrackedEncryptionData trackedEncryption, bool incrementOrder, bool full = false)
+        public void Write(H3MP_TrackedEncryptionData trackedEncryption, bool incrementOrder, bool full)
         {
             Write(trackedEncryption.trackedID);
             Write(trackedEncryption.position);
