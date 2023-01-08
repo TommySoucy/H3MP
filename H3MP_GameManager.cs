@@ -398,7 +398,7 @@ namespace H3MP
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
                 // Since the order is kept as a single byte, it will overflow every 256 packets of this sosig
                 // Here we consider the update out of order if it is within 128 iterations before the latest
-                if(trackedSosigData.controller != H3MP_GameManager.ID && (ignoreOrder || ((updatedSosig.order > trackedSosigData.order || trackedSosigData.order - updatedSosig.order > 128))))
+                if (trackedSosigData.controller != H3MP_GameManager.ID && (ignoreOrder || ((updatedSosig.order > trackedSosigData.order || trackedSosigData.order - updatedSosig.order > 128))))
                 {
                     trackedSosigData.Update(updatedSosig);
                 }

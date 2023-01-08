@@ -408,7 +408,7 @@ namespace H3MP
         }
         /// <summary>Adds a H3MP_TrackedItemData to the packet.</summary>
         /// <param name="_value">The H3MP_TrackedItemData to add.</param>
-        public void Write(H3MP_TrackedItemData trackedItem, bool full = false)
+        public void Write(H3MP_TrackedItemData trackedItem, bool incrementOrder, bool full = false)
         {
             Write(trackedItem.trackedID);
             Write(trackedItem.position);
@@ -442,7 +442,14 @@ namespace H3MP
             }
             else
             {
-                Write(trackedItem.order++);
+                if (incrementOrder)
+                {
+                    Write(trackedItem.order++);
+                }
+                else
+                {
+                    Write(trackedItem.order);
+                }
             }
         }
         /// <summary>Adds a Damage to the packet.</summary>
@@ -471,7 +478,7 @@ namespace H3MP
         /// <summary>Adds a H3MP_TrackedSosigData to the packet.</summary>
         /// <param name="trackedSosig">The H3MP_TrackedSosigData to add.</param>
         /// <param name="full">Whether to include all necessary data to instantiate this sosig.</param>
-        public void Write(H3MP_TrackedSosigData trackedSosig, bool full = false)
+        public void Write(H3MP_TrackedSosigData trackedSosig, bool incrementOrder, bool full = false)
         {
             Write(trackedSosig.trackedID);
             Write(trackedSosig.position);
@@ -548,13 +555,20 @@ namespace H3MP
             }
             else
             {
-                Write(trackedSosig.order++);
+                if (incrementOrder)
+                {
+                    Write(trackedSosig.order++);
+                }
+                else
+                {
+                    Write(trackedSosig.order);
+                }
             }
         }
         /// <summary>Adds a H3MP_TrackedAutoMeaterData to the packet.</summary>
-        /// <param name="trackedSosig">The H3MP_TrackedAutoMeaterData to add.</param>
+        /// <param name="trackedAutoMeater">The H3MP_TrackedAutoMeaterData to add.</param>
         /// <param name="full">Whether to include all necessary data to instantiate this AutoMeater.</param>
-        public void Write(H3MP_TrackedAutoMeaterData trackedAutoMeater, bool full = false)
+        public void Write(H3MP_TrackedAutoMeaterData trackedAutoMeater, bool incrementOrder, bool full = false)
         {
             Write(trackedAutoMeater.trackedID);
             Write(trackedAutoMeater.position);
@@ -574,13 +588,20 @@ namespace H3MP
             }
             else
             {
-                Write(trackedAutoMeater.order++);
+                if (incrementOrder)
+                {
+                    Write(trackedAutoMeater.order++);
+                }
+                else
+                {
+                    Write(trackedAutoMeater.order);
+                }
             }
         }
         /// <summary>Adds a H3MP_TrackedEncryptionData to the packet.</summary>
-        /// <param name="trackedSosig">The H3MP_TrackedEncryptionData to add.</param>
+        /// <param name="trackedEncryption">The H3MP_TrackedEncryptionData to add.</param>
         /// <param name="full">Whether to include all necessary data to instantiate this Encryption.</param>
-        public void Write(H3MP_TrackedEncryptionData trackedEncryption, bool full = false)
+        public void Write(H3MP_TrackedEncryptionData trackedEncryption, bool incrementOrder, bool full = false)
         {
             Write(trackedEncryption.trackedID);
             Write(trackedEncryption.position);
@@ -679,7 +700,14 @@ namespace H3MP
             }
             else
             {
-                Write(trackedEncryption.order++);
+                if (incrementOrder)
+                {
+                    Write(trackedEncryption.order++);
+                }
+                else
+                {
+                    Write(trackedEncryption.order);
+                }
             }
         }
         /// <summary>Adds a SosigConfigTemplate to the packet.</summary>
