@@ -848,7 +848,7 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.weaponFire))
             {
                 packet.Write(trackedID);
-                if (positions == null || positions.Count > 0)
+                if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
                 }
@@ -898,7 +898,7 @@ namespace H3MP
             {
                 packet.Write(trackedID);
                 packet.Write((byte)barrelIndex);
-                if (positions == null || positions.Count > 0)
+                if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
                 }
@@ -948,7 +948,7 @@ namespace H3MP
             {
                 packet.Write(trackedID);
                 packet.Write(recoilMult);
-                if (positions == null || positions.Count > 0)
+                if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
                 }
@@ -997,7 +997,7 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.LAPD2019Fire))
             {
                 packet.Write(trackedID);
-                if (positions == null || positions.Count > 0)
+                if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
                 }
@@ -1046,7 +1046,7 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.minigunFire))
             {
                 packet.Write(trackedID);
-                if (positions == null || positions.Count > 0)
+                if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
                 }
@@ -1093,7 +1093,7 @@ namespace H3MP
             {
                 packet.Write(trackedID);
                 packet.Write(firedFromInterface);
-                if (positions == null || positions.Count > 0)
+                if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
                 }

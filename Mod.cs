@@ -2887,6 +2887,7 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
+                        Debug.Log("Host sending weapon fire for " + trackedItem.data.trackedID+" with first data: "+ positions[0]+", " + directions[0]);
                         H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, positions, directions);
                     }
                 }

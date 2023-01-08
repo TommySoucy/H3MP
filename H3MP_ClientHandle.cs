@@ -445,6 +445,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                Debug.Log("Weapon fire received for " + trackedID);
                 FirePatch.positions = new List<Vector3>();
                 FirePatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -452,6 +453,7 @@ namespace H3MP
                 {
                     FirePatch.positions.Add(packet.ReadVector3());
                     FirePatch.directions.Add(packet.ReadVector3());
+                    Debug.Log("\tWith data: " + FirePatch.positions[0] + ", " + FirePatch.directions[0]);
                 }
                 FirePatch.overriden = true;
 
