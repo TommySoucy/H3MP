@@ -9182,8 +9182,6 @@ namespace H3MP
     {
         static bool SetContactTypePrefix(ref TAH_ReticleContact __instance, TAH_ReticleContact.ContactType t)
         {
-            Debug.Log("SetContactTypePrefix called with type: " + ((int)t));
-
             if(Mod.managerObject == null)
             {
                 return true;

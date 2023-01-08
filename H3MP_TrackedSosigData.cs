@@ -239,9 +239,9 @@ namespace H3MP
         {
             previousPos = position;
             previousRot = rotation;
-            position = physicalObject.physicalSosigScript.CoreRB.position;
+            position = physicalObject.physicalSosigScript.CoreRB == null ? previousPos : physicalObject.physicalSosigScript.CoreRB.position;
             velocity = previousPos == null ? Vector3.zero : position - previousPos;
-            rotation = physicalObject.physicalSosigScript.CoreRB.rotation;
+            rotation = physicalObject.physicalSosigScript.CoreRB == null ? previousRot : physicalObject.physicalSosigScript.CoreRB.rotation;
             previousBodyPose = bodyPose;
             bodyPose = physicalObject.physicalSosigScript.BodyPose;
             ammoStores = (int[])sosigInvAmmoStores.GetValue(physicalObject.physicalSosigScript.Inventory);
