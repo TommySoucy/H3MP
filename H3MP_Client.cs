@@ -411,6 +411,7 @@ namespace H3MP
                 H3MP_ClientHandle.LAPD2019ExtractBattery,
                 H3MP_ClientHandle.MinigunFire,
                 H3MP_ClientHandle.AttachableFirearmFire,
+                H3MP_ClientHandle.PlayerIFF,
             };
 
             // All vanilla scenes can be synced by default

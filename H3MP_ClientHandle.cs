@@ -83,6 +83,16 @@ namespace H3MP
                                                health, maxHealth, additionalData);
         }
 
+        public static void PlayerIFF(H3MP_Packet packet)
+        {
+            int clientID = packet.ReadInt();
+            int IFF = packet.ReadInt();
+            if (H3MP_GameManager.players.ContainsKey(clientID))
+            {
+                H3MP_GameManager.players[clientID].SetIFF(IFF);
+            }
+        }
+
         public static void PlayerScene(H3MP_Packet packet)
         {
             int ID = packet.ReadInt();
