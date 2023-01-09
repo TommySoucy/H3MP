@@ -446,6 +446,7 @@ namespace H3MP
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
                 Debug.Log("Weapon fire received for " + trackedID);
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 FirePatch.positions = new List<Vector3>();
                 FirePatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -459,6 +460,7 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
+                H3MP_Client.items[trackedID].physicalItem.setFirearmUpdateOverride(roundClass);
                 H3MP_Client.items[trackedID].physicalItem.fireFunc();
             }
         }
@@ -505,6 +507,13 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
+                SosigWeaponPlayerInterface asInterface = H3MP_Client.items[trackedID].physicalItem.dataObject as SosigWeaponPlayerInterface;
+                int shotsLeft = (int)Mod.SosigWeapon_m_shotsLeft.GetValue(asInterface.W);
+                if (shotsLeft <= 0)
+                {
+                    Mod.SosigWeapon_m_shotsLeft.SetValue(asInterface.W, 1);
+                }
+                asInterface.W.MechaState = SosigWeapon.SosigWeaponMechaState.ReadyToFire;
                 H3MP_Client.items[trackedID].physicalItem.sosigWeaponfireFunc(recoilMult);
             }
         }
@@ -515,6 +524,8 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                int chamberIndex = packet.ReadInt();
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 FireLAPD2019Patch.positions = new List<Vector3>();
                 FireLAPD2019Patch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -527,6 +538,9 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
+                LAPD2019 asLAPD2019 = H3MP_Client.items[trackedID].physicalItem.physicalObject as LAPD2019;
+                asLAPD2019.CurChamber = chamberIndex;
+                asLAPD2019.Chambers[asLAPD2019.CurChamber].SetRound(roundClass, asLAPD2019.Chambers[asLAPD2019.CurChamber].transform.position, asLAPD2019.Chambers[asLAPD2019.CurChamber].transform.rotation);
                 Mod.LAPD2019_Fire.Invoke((LAPD2019)H3MP_Client.items[trackedID].physicalItem.physicalObject, null);
             }
         }

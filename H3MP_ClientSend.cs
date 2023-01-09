@@ -583,7 +583,7 @@ namespace H3MP
             }
         }
 
-        public static void WeaponFire(int trackedID, List<Vector3> positions, List<Vector3> directions)
+        public static void WeaponFire(int trackedID, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
         {
             // TODO: It may be necessary to also pass the round class 
             //       This is because when a weapon that is controlled by this client in fired in aanother client, it will use up the projectile in its chamber (if it has one)
@@ -593,6 +593,7 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.weaponFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundClass);
                 if(positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
@@ -659,11 +660,13 @@ namespace H3MP
             }
         }
 
-        public static void LAPD2019Fire(int trackedID, List<Vector3> positions, List<Vector3> directions)
+        public static void LAPD2019Fire(int trackedID, int chamberIndex, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.LAPD2019Fire))
             {
                 packet.Write(trackedID);
+                packet.Write(chamberIndex);
+                packet.Write((short)roundClass);
                 if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
@@ -703,11 +706,12 @@ namespace H3MP
             }
         }
 
-        public static void MinigunFire(int trackedID, List<Vector3> positions, List<Vector3> directions)
+        public static void MinigunFire(int trackedID, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.minigunFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundClass);
                 if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);

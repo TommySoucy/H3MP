@@ -160,6 +160,7 @@ namespace H3MP
         public static readonly FieldInfo AttachableBreakActions_m_isBreachOpen = typeof(AttachableBreakActions).GetField("m_isBreachOpen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo BAP_m_fireSelectorMode = typeof(BAP).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo BAP_m_isHammerCocked = typeof(BAP).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo SosigWeapon_m_shotsLeft = typeof(SosigWeapon).GetField("m_shotsLeft", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -2703,8 +2704,15 @@ namespace H3MP
     #region Action Patches
     // Patches FVRFireArm.Fire so we can keep track of when a firearm is fired
     // Note: All projectile fire patches are necessary for 2 things: synchronizing fire action,
-    // and making sure that the shot is in same position/direction on all clients
-    // Synchronizing the action is simple, it is the pos/dir that requires transpilers and make these so complex
+    //       and making sure that the shot is in same position/direction on all clients
+    //       Synchronizing the action is simple, it is the pos/dir that requires transpilers and make these so complex
+    // Note: There is an important problem to keep in mind that make passing the round class necessary
+    //       When we fire a weapon, consider a handgun, the fire packet is sent
+    //       An update of the handgun then gets sent, now telling other clients that this handgun's chamber is empty
+    //       The fire is sent through TCP, while the update is sent through UDP. Although the fire gets sent first, the update gets there first
+    //       Other client's chambers then return false from their Fire(), preventing the weapon from firing
+    //       On other clients, we use the passed round class to fill the chamber prior to firing, and then set it back to its previous state
+    //       So, it is necessary to send, alongside the fire packet, data to override the latest update with just to ensure we can fire
     /* TODO: Fire patches for
      * EncryptionBotAgile.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotCrystal.FirePulseShot // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
@@ -2722,11 +2730,28 @@ namespace H3MP
         public static List<Vector3> positions;
         public static List<Vector3> directions;
 
-        static void Prefix()
+        // Update override data
+        public static bool fireSuccessful;
+        public static FireArmRoundClass roundClass;
+
+        static void Prefix(FVRFireArmChamber chamber)
         {
+            Debug.Log("FirePatch prefix called, weapon fired");
+
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+
+            FVRFireArmRound round = chamber.GetRound();
+            if (round == null)
+            {
+                fireSuccessful = false;
+            }
+            else
+            {
+                fireSuccessful = true;
+                roundClass = round.RoundClass;
+            }
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -2869,12 +2894,16 @@ namespace H3MP
             if (Mod.skipNextFires > 0)
             {
                 --Mod.skipNextFires;
+                positions = null;
+                directions = null;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (!fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
+                positions = null;
+                directions = null;
                 return;
             }
 
@@ -2888,12 +2917,12 @@ namespace H3MP
                     if (trackedItem.data.controller == 0)
                     {
                         Debug.Log("Host sending weapon fire for " + trackedItem.data.trackedID+" with first data: "+ positions[0]+", " + directions[0]);
-                        H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, positions, directions);
+                        H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, roundClass, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID, positions, directions);
+                    H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID, roundClass, positions, directions);
                 }
             }
 
@@ -2909,11 +2938,16 @@ namespace H3MP
         public static List<Vector3> positions;
         public static List<Vector3> directions;
 
-        static void Prefix()
+        // Update override data
+        static bool fireSuccessful;
+
+        static void Prefix(ref SosigWeapon __instance, int ___m_shotsLeft)
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+
+            fireSuccessful = ___m_shotsLeft > 0 && __instance.MechaState == SosigWeapon.SosigWeaponMechaState.ReadyToFire;
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -3059,12 +3093,16 @@ namespace H3MP
             if (Mod.skipNextFires > 0)
             {
                 --Mod.skipNextFires;
+                positions = null;
+                directions = null;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (!fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
+                positions = null;
+                directions = null;
                 return;
             }
 
@@ -3098,11 +3136,27 @@ namespace H3MP
         public static List<Vector3> positions;
         public static List<Vector3> directions;
 
-        static void Prefix()
+        // Update override data
+        static bool fireSucessful;
+        static int curChamber;
+        static FireArmRoundClass roundClass;
+
+        static void Prefix(ref LAPD2019 __instance, bool ___m_isCapacitorCharged)
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+
+            curChamber = __instance.CurChamber;
+            if (__instance.Chambers[__instance.CurChamber].GetRound() != null)
+            {
+                roundClass = __instance.Chambers[__instance.CurChamber].GetRound().RoundClass;
+                fireSucessful = true;
+            }
+            else
+            {
+                fireSucessful = false;
+            }
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -3263,12 +3317,16 @@ namespace H3MP
             if (Mod.skipNextFires > 0)
             {
                 --Mod.skipNextFires;
+                positions = null;
+                directions = null;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (!fireSucessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
+                positions = null;
+                directions = null;
                 return;
             }
 
@@ -3281,12 +3339,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.LAPD2019Fire(0, trackedItem.data.trackedID, positions, directions);
+                        H3MP_ServerSend.LAPD2019Fire(0, trackedItem.data.trackedID, curChamber, roundClass, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.LAPD2019Fire(trackedItem.data.trackedID, positions, directions);
+                    H3MP_ClientSend.LAPD2019Fire(trackedItem.data.trackedID, curChamber, roundClass, positions, directions);
                 }
             }
 
@@ -3302,11 +3360,18 @@ namespace H3MP
         public static List<Vector3> positions;
         public static List<Vector3> directions;
 
-        static void Prefix()
+        // Update override data
+        static bool fireSucessful;
+        static FireArmRoundClass roundClass;
+
+        static void Prefix(ref Minigun __instance, int ___m_numBullets)
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+
+            fireSucessful = ___m_numBullets > 0;
+            roundClass = __instance.LoadedRounds[0].LR_Class;
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -3437,12 +3502,16 @@ namespace H3MP
             if (Mod.skipNextFires > 0)
             {
                 --Mod.skipNextFires;
+                positions = null;
+                directions = null;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (fireSucessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
+                positions = null;
+                directions = null;
                 return;
             }
 
@@ -3455,12 +3524,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.MinigunFire(0, trackedItem.data.trackedID, positions, directions);
+                        H3MP_ServerSend.MinigunFire(0, trackedItem.data.trackedID, roundClass, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.MinigunFire(trackedItem.data.trackedID, positions, directions);
+                    H3MP_ClientSend.MinigunFire(trackedItem.data.trackedID, roundClass, positions, directions);
                 }
             }
 
@@ -3475,6 +3544,9 @@ namespace H3MP
         public static bool overriden;
         public static List<Vector3> positions;
         public static List<Vector3> directions;
+
+        // Update override data
+        static FireArmRoundClass roundClass;
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
@@ -3600,11 +3672,13 @@ namespace H3MP
             directions.Add(dir);
         }
 
-        static void Prefix()
+        static void Prefix(FVRFireArmChamber chamber)
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+
+            roundClass = chamber.GetRound().RoundClass;
         }
 
         static void Postfix(ref AttachableFirearm __instance, bool firedFromInterface)
@@ -3634,12 +3708,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.AttachableFirearmFire(0, trackedItem.data.trackedID, firedFromInterface, positions, directions);
+                        H3MP_ServerSend.AttachableFirearmFire(0, trackedItem.data.trackedID, roundClass, firedFromInterface, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.AttachableFirearmFire(trackedItem.data.trackedID, firedFromInterface, positions, directions);
+                    H3MP_ClientSend.AttachableFirearmFire(trackedItem.data.trackedID, roundClass, firedFromInterface, positions, directions);
                 }
             }
 
@@ -3666,12 +3740,16 @@ namespace H3MP
             if (Mod.skipNextFires > 0)
             {
                 --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
                 return;
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
                 return;
             }
 
@@ -3684,12 +3762,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.BreakActionWeaponFire(0, trackedItem.data.trackedID, b, FirePatch.positions, FirePatch.directions);
+                        H3MP_ServerSend.BreakActionWeaponFire(0, trackedItem.data.trackedID, FirePatch.roundClass, b, FirePatch.positions, FirePatch.directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.BreakActionWeaponFire(trackedItem.data.trackedID, b, FirePatch.positions, FirePatch.directions);
+                    H3MP_ClientSend.BreakActionWeaponFire(trackedItem.data.trackedID, FirePatch.roundClass, b, FirePatch.positions, FirePatch.directions);
                 }
             }
 

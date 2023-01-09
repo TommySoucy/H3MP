@@ -27,12 +27,14 @@ namespace H3MP
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
         public delegate bool UpdateDataWithGiven(byte[] newData);
         public delegate bool FireFirearm();
+        public delegate void FirearmUpdateOverrideSetter(FireArmRoundClass roundClass);
         public delegate bool FireSosigGun(float recoilMult);
         public delegate void FireAttachableFirearm(bool firedFromInterface);
         public delegate void UpdateParent();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
+        public FirearmUpdateOverrideSetter setFirearmUpdateOverride; // Set fire update override data
         public FireAttachableFirearm attachableFirearmFunc; // Fires the corresponding attachable firearm type
         public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding sosig weapon
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
@@ -98,6 +100,7 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenClosedBoltWeapon;
                 dataObject = asCBW;
                 fireFunc = asCBW.Fire;
+                setFirearmUpdateOverride = SetCBWUpdateOverride;
             }
             else if (physObj is BoltActionRifle)
             {
@@ -106,6 +109,7 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenBoltActionRifle;
                 dataObject = asBAR;
                 fireFunc = asBAR.Fire;
+                setFirearmUpdateOverride = SetBARUpdateOverride;
             }
             else if (physObj is Handgun)
             {
@@ -114,6 +118,7 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenHandgun;
                 dataObject = asHandgun;
                 fireFunc = asHandgun.Fire;
+                setFirearmUpdateOverride = SetHandgunUpdateOverride;
             }
             else if (physObj is TubeFedShotgun)
             {
@@ -122,6 +127,7 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenTubeFedShotgun;
                 dataObject = asTFS;
                 fireFunc = asTFS.Fire;
+                setFirearmUpdateOverride = SetTFSUpdateOverride;
             }
             else if (physObj is Revolver)
             {
@@ -130,6 +136,7 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenRevolver;
                 dataObject = asRevolver;
                 fireFunc = FireRevolver;
+                setFirearmUpdateOverride = SetRevolverUpdateOverride;
             }
             else if (physObj is BAP)
             {
@@ -138,6 +145,7 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenBAP;
                 dataObject = asBAP;
                 fireFunc = asBAP.Fire;
+                setFirearmUpdateOverride = SetBAPUpdateOverride;
             }
             else if (physObj is BreakActionWeapon)
             {
@@ -552,6 +560,13 @@ namespace H3MP
             return modified;
         }
 
+        private void SetBAPUpdateOverride(FireArmRoundClass roundClass)
+        {
+            BAP asBAP = dataObject as BAP;
+
+            asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+        }
+
         private bool UpdateRevolver()
         {
             Revolver asRevolver = dataObject as Revolver;
@@ -654,16 +669,24 @@ namespace H3MP
             {
                 num2 -= asRevolver.Cylinder.numChambers;
             }
-            if (asRevolver.Chambers[num2].IsFull && !asRevolver.Chambers[num2].IsSpent)
+            Mod.Revolver_Fire.Invoke(dataObject, null);
+            if (GM.CurrentSceneSettings.IsAmmoInfinite || GM.CurrentPlayerBody.IsInfiniteAmmo)
             {
-                Mod.Revolver_Fire.Invoke(dataObject, null);
-                if (GM.CurrentSceneSettings.IsAmmoInfinite || GM.CurrentPlayerBody.IsInfiniteAmmo)
-                {
-                    asRevolver.Chambers[num2].IsSpent = false;
-                    asRevolver.Chambers[num2].UpdateProxyDisplay();
-                }
+                asRevolver.Chambers[num2].IsSpent = false;
+                asRevolver.Chambers[num2].UpdateProxyDisplay();
             }
             return true;
+        }
+
+        private void SetRevolverUpdateOverride(FireArmRoundClass roundClass)
+        {
+            Revolver asRevolver = dataObject as Revolver;
+            int num2 = data.data[0] + asRevolver.ChamberOffset;
+            if (num2 >= asRevolver.Cylinder.numChambers)
+            {
+                num2 -= asRevolver.Cylinder.numChambers;
+            }
+            asRevolver.Chambers[num2].SetRound(roundClass, asRevolver.Chambers[num2].transform.position, asRevolver.Chambers[num2].transform.rotation);
         }
 
         private bool UpdateM203()
@@ -1593,6 +1616,13 @@ namespace H3MP
             return modified;
         }
 
+        private void SetCBWUpdateOverride(FireArmRoundClass roundClass)
+        {
+            ClosedBoltWeapon asCBW = (ClosedBoltWeapon)dataObject;
+
+            asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+        }
+
         private bool UpdateHandgun()
         {
             Handgun asHandgun = dataObject as Handgun;
@@ -1718,6 +1748,13 @@ namespace H3MP
             data.data = newData;
 
             return modified;
+        }
+
+        private void SetHandgunUpdateOverride(FireArmRoundClass roundClass)
+        {
+            Handgun asHandgun = dataObject as Handgun;
+
+            asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
         }
 
         private bool UpdateTubeFedShotgun()
@@ -1868,6 +1905,13 @@ namespace H3MP
             return modified;
         }
 
+        private void SetTFSUpdateOverride(FireArmRoundClass roundClass)
+        {
+            TubeFedShotgun asTFS = dataObject as TubeFedShotgun;
+
+            asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+        }
+
         private bool UpdateBoltActionRifle()
         {
             BoltActionRifle asBAR = dataObject as BoltActionRifle;
@@ -2008,6 +2052,13 @@ namespace H3MP
             data.data = newData;
 
             return modified;
+        }
+
+        private void SetBARUpdateOverride(FireArmRoundClass roundClass)
+        {
+            BoltActionRifle asBar = dataObject as BoltActionRifle;
+
+            asBar.Chamber.SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
         }
 
         private bool UpdateAttachment()

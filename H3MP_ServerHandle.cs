@@ -544,6 +544,7 @@ namespace H3MP
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
+                int roundClass = packet.ReadShort();
                 FirePatch.positions = new List<Vector3>();
                 FirePatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -556,6 +557,7 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
+                H3MP_Server.items[trackedID].physicalItem.setFirearmUpdateOverride((FireArmRoundClass)roundClass);
                 H3MP_Server.items[trackedID].physicalItem.fireFunc();
             }
 
@@ -612,6 +614,13 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
+                SosigWeaponPlayerInterface asInterface = H3MP_Server.items[trackedID].physicalItem.dataObject as SosigWeaponPlayerInterface;
+                int shotsLeft = (int)Mod.SosigWeapon_m_shotsLeft.GetValue(asInterface.W);
+                if(shotsLeft <= 0)
+                {
+                    Mod.SosigWeapon_m_shotsLeft.SetValue(asInterface.W, 1);
+                }
+                asInterface.W.MechaState = SosigWeapon.SosigWeaponMechaState.ReadyToFire;
                 H3MP_Server.items[trackedID].physicalItem.sosigWeaponfireFunc(recoilMult);
             }
 
@@ -622,7 +631,7 @@ namespace H3MP
         public static void MinigunFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-
+            continue from here handle round class
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
@@ -679,6 +688,8 @@ namespace H3MP
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
+                int chamberIndex = packet.ReadInt();
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 FireLAPD2019Patch.positions = new List<Vector3>();
                 FireLAPD2019Patch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -691,7 +702,10 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                Mod.LAPD2019_Fire.Invoke((LAPD2019)H3MP_Server.items[trackedID].physicalItem.physicalObject, null);
+                LAPD2019 asLAPD2019 = H3MP_Server.items[trackedID].physicalItem.physicalObject as LAPD2019;
+                asLAPD2019.CurChamber = chamberIndex;
+                asLAPD2019.Chambers[asLAPD2019.CurChamber].SetRound(roundClass, asLAPD2019.Chambers[asLAPD2019.CurChamber].transform.position, asLAPD2019.Chambers[asLAPD2019.CurChamber].transform.rotation);
+                Mod.LAPD2019_Fire.Invoke(asLAPD2019, null);
             }
 
             // Send to other clients
