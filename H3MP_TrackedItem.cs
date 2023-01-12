@@ -31,6 +31,7 @@ namespace H3MP
         public delegate bool FireSosigGun(float recoilMult);
         public delegate void FireAttachableFirearm(bool firedFromInterface);
         public delegate void FireAttachableFirearmChamberRound(FireArmRoundClass roundClass);
+        public delegate FVRFireArmChamber FireAttachableFirearmGetChamber();
         public delegate void UpdateParent();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
@@ -38,6 +39,7 @@ namespace H3MP
         public FirearmUpdateOverrideSetter setFirearmUpdateOverride; // Set fire update override data
         public FireAttachableFirearm attachableFirearmFunc; // Fires the corresponding attachable firearm type
         public FireAttachableFirearmChamberRound attachableFirearmChamberRoundFunc; // Loads the chamber of the attachable firearm with round of class
+        public FireAttachableFirearmGetChamber attachableFirearmGetChamberFunc; // Returns the chamber of the corresponding attachable firearm
         public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding sosig weapon
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
@@ -176,6 +178,7 @@ namespace H3MP
                     updateGivenFunc = UpdateGivenAttachableBreakActions;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableBreakActions).Fire;
                     attachableFirearmChamberRoundFunc = AttachableBreakActionsChamberRound;
+                    attachableFirearmGetChamberFunc = AttachableBreakActionsGetChamber;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is AttachableClosedBoltWeapon)
                 {
@@ -183,6 +186,7 @@ namespace H3MP
                     updateGivenFunc = UpdateGivenAttachableClosedBoltWeapon;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableClosedBoltWeapon).Fire;
                     attachableFirearmChamberRoundFunc = AttachableClosedBoltWeaponChamberRound;
+                    attachableFirearmGetChamberFunc = AttachableClosedBoltWeaponGetChamber;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is AttachableTubeFed)
                 {
@@ -190,6 +194,7 @@ namespace H3MP
                     updateGivenFunc = UpdateGivenAttachableTubeFed;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableTubeFed).Fire;
                     attachableFirearmChamberRoundFunc = AttachableTubeFedChamberRound;
+                    attachableFirearmGetChamberFunc = AttachableTubeFedGetChamber;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is GP25)
                 {
@@ -197,6 +202,7 @@ namespace H3MP
                     updateGivenFunc = UpdateGivenGP25;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as GP25).Fire;
                     attachableFirearmChamberRoundFunc = GP25ChamberRound;
+                    attachableFirearmGetChamberFunc = GP25GetChamber;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is M203)
                 {
@@ -204,6 +210,7 @@ namespace H3MP
                     updateGivenFunc = UpdateGivenM203;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as M203).Fire;
                     attachableFirearmChamberRoundFunc = M203ChamberRound;
+                    attachableFirearmGetChamberFunc = M203GetChamber;
                 }
                 updateParentFunc = UpdateAttachableFirearmParent;
                 dataObject = asAttachableFirearmPhysicalObject.FA;
@@ -761,6 +768,12 @@ namespace H3MP
             asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
         }
 
+        private FVRFireArmChamber M203GetChamber()
+        {
+            M203 asM203 = dataObject as M203;
+            return asM203.Chamber;
+        }
+
         private bool UpdateGP25()
         {
             GP25 asGP25 = dataObject as GP25;
@@ -848,6 +861,12 @@ namespace H3MP
         {
             GP25 asGP25 = dataObject as GP25;
             asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+        }
+
+        private FVRFireArmChamber GP25GetChamber()
+        {
+            GP25 asGP25 = dataObject as GP25;
+            return asGP25.Chamber;
         }
 
         private bool UpdateAttachableTubeFed()
@@ -1004,6 +1023,12 @@ namespace H3MP
             asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
         }
 
+        private FVRFireArmChamber AttachableTubeFedGetChamber()
+        {
+            AttachableTubeFed asATF = dataObject as AttachableTubeFed;
+            return asATF.Chamber;
+        }
+
         private bool UpdateAttachableClosedBoltWeapon()
         {
             AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
@@ -1134,6 +1159,12 @@ namespace H3MP
             asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
         }
 
+        private FVRFireArmChamber AttachableClosedBoltWeaponGetChamber()
+        {
+            AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
+            return asACBW.Chamber;
+        }
+
         private bool UpdateAttachableBreakActions()
         {
             AttachableBreakActions asABA = dataObject as AttachableBreakActions;
@@ -1233,6 +1264,12 @@ namespace H3MP
         {
             AttachableBreakActions asABA = dataObject as AttachableBreakActions;
             asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
+        }
+
+        private FVRFireArmChamber AttachableBreakActionsGetChamber()
+        {
+            AttachableBreakActions asABA = dataObject as AttachableBreakActions;
+            return asABA.Chamber;
         }
 
         private void UpdateAttachableFirearmParent()

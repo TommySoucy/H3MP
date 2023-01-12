@@ -3672,13 +3672,14 @@ namespace H3MP
             directions.Add(dir);
         }
 
-        static void Prefix(FVRFireArmChamber chamber)
+        static void Prefix(ref AttachableFirearm __instance)
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
 
-            roundClass = chamber.GetRound().RoundClass;
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.Attachment, out H3MP_TrackedItem item) ? item : __instance.Attachment.GetComponent<H3MP_TrackedItem>();
+            roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
         }
 
         static void Postfix(ref AttachableFirearm __instance, bool firedFromInterface)
