@@ -30,12 +30,14 @@ namespace H3MP
         public delegate void FirearmUpdateOverrideSetter(FireArmRoundClass roundClass);
         public delegate bool FireSosigGun(float recoilMult);
         public delegate void FireAttachableFirearm(bool firedFromInterface);
+        public delegate void FireAttachableFirearmChamberRound(FireArmRoundClass roundClass);
         public delegate void UpdateParent();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
         public FirearmUpdateOverrideSetter setFirearmUpdateOverride; // Set fire update override data
         public FireAttachableFirearm attachableFirearmFunc; // Fires the corresponding attachable firearm type
+        public FireAttachableFirearmChamberRound attachableFirearmChamberRoundFunc; // Loads the chamber of the attachable firearm with round of class
         public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding sosig weapon
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
@@ -173,30 +175,35 @@ namespace H3MP
                     updateFunc = UpdateAttachableBreakActions;
                     updateGivenFunc = UpdateGivenAttachableBreakActions;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableBreakActions).Fire;
+                    attachableFirearmChamberRoundFunc = AttachableBreakActionsChamberRound;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is AttachableClosedBoltWeapon)
                 {
                     updateFunc = UpdateAttachableClosedBoltWeapon;
                     updateGivenFunc = UpdateGivenAttachableClosedBoltWeapon;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableClosedBoltWeapon).Fire;
+                    attachableFirearmChamberRoundFunc = AttachableClosedBoltWeaponChamberRound;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is AttachableTubeFed)
                 {
                     updateFunc = UpdateAttachableTubeFed;
                     updateGivenFunc = UpdateGivenAttachableTubeFed;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableTubeFed).Fire;
+                    attachableFirearmChamberRoundFunc = AttachableTubeFedChamberRound;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is GP25)
                 {
                     updateFunc = UpdateGP25;
                     updateGivenFunc = UpdateGivenGP25;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as GP25).Fire;
+                    attachableFirearmChamberRoundFunc = GP25ChamberRound;
                 }
                 else if(asAttachableFirearmPhysicalObject.FA is M203)
                 {
                     updateFunc = UpdateM203;
                     updateGivenFunc = UpdateGivenM203;
                     attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as M203).Fire;
+                    attachableFirearmChamberRoundFunc = M203ChamberRound;
                 }
                 updateParentFunc = UpdateAttachableFirearmParent;
                 dataObject = asAttachableFirearmPhysicalObject.FA;
@@ -747,7 +754,13 @@ namespace H3MP
 
             return modified;
         }
-        
+
+        private void M203ChamberRound(FireArmRoundClass roundClass)
+        {
+            M203 asM203 = dataObject as M203;
+            asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
+        }
+
         private bool UpdateGP25()
         {
             GP25 asGP25 = dataObject as GP25;
@@ -831,6 +844,12 @@ namespace H3MP
             return modified;
         }
 
+        private void GP25ChamberRound(FireArmRoundClass roundClass)
+        {
+            GP25 asGP25 = dataObject as GP25;
+            asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+        }
+
         private bool UpdateAttachableTubeFed()
         {
             AttachableTubeFed asATF = dataObject as AttachableTubeFed;
@@ -894,24 +913,24 @@ namespace H3MP
         private bool UpdateGivenAttachableTubeFed(byte[] newData)
         {
             bool modified = false;
-            AttachableTubeFed asTFS = dataObject as AttachableTubeFed;
+            AttachableTubeFed asATF = dataObject as AttachableTubeFed;
 
             if (data.data == null)
             {
                 modified = true;
 
                 // Set fire select mode
-                typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, (int)newData[0]);
+                typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asATF, (int)newData[0]);
 
                 // Set bolt pos
-                asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
-                asTFS.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[4];
+                asATF.Bolt.LastPos = asATF.Bolt.CurPos;
+                asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[4];
 
-                if (asTFS.HasHandle)
+                if (asATF.HasHandle)
                 {
                     // Set handle pos
-                    asTFS.Handle.LastPos = asTFS.Handle.CurPos;
-                    asTFS.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[5];
+                    asATF.Handle.LastPos = asATF.Handle.CurPos;
+                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[5];
                 }
             }
             else
@@ -919,37 +938,37 @@ namespace H3MP
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, (int)newData[0]);
+                    typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asATF, (int)newData[0]);
                     modified = true;
                 }
                 if (data.data[4] != newData[4])
                 {
                     // Set bolt pos
-                    asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
-                    asTFS.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[4];
+                    asATF.Bolt.LastPos = asATF.Bolt.CurPos;
+                    asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[4];
                 }
-                if (asTFS.HasHandle && data.data[5] != newData[5])
+                if (asATF.HasHandle && data.data[5] != newData[5])
                 {
                     // Set handle pos
-                    asTFS.Handle.LastPos = asTFS.Handle.CurPos;
-                    asTFS.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[5];
+                    asATF.Handle.LastPos = asATF.Handle.CurPos;
+                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[5];
                 }
             }
 
             // Set hammer state
             if (newData[1] == 0)
             {
-                if (asTFS.IsHammerCocked)
+                if (asATF.IsHammerCocked)
                 {
-                    typeof(TubeFedShotgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, BitConverter.ToBoolean(newData, 1));
+                    typeof(TubeFedShotgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asATF, BitConverter.ToBoolean(newData, 1));
                     modified = true;
                 }
             }
             else // Hammer should be cocked
             {
-                if (!asTFS.IsHammerCocked)
+                if (!asATF.IsHammerCocked)
                 {
-                    asTFS.CockHammer();
+                    asATF.CockHammer();
                     modified = true;
                 }
             }
@@ -958,18 +977,18 @@ namespace H3MP
             short chamberClassIndex = BitConverter.ToInt16(newData, 2);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
-                if (asTFS.Chamber.GetRound() != null)
+                if (asATF.Chamber.GetRound() != null)
                 {
-                    asTFS.Chamber.SetRound(null, false);
+                    asATF.Chamber.SetRound(null, false);
                     modified = true;
                 }
             }
             else // We want a round in the chamber
             {
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
-                if (asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().RoundClass != roundClass)
+                if (asATF.Chamber.GetRound() == null || asATF.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                    asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
                     modified = true;
                 }
             }
@@ -977,6 +996,12 @@ namespace H3MP
             data.data = newData;
 
             return modified;
+        }
+
+        private void AttachableTubeFedChamberRound(FireArmRoundClass roundClass)
+        {
+            AttachableTubeFed asATF = dataObject as AttachableTubeFed;
+            asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
         }
 
         private bool UpdateAttachableClosedBoltWeapon()
@@ -1103,6 +1128,12 @@ namespace H3MP
             return modified;
         }
 
+        private void AttachableClosedBoltWeaponChamberRound(FireArmRoundClass roundClass)
+        {
+            AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
+            asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
+        }
+
         private bool UpdateAttachableBreakActions()
         {
             AttachableBreakActions asABA = dataObject as AttachableBreakActions;
@@ -1196,6 +1227,12 @@ namespace H3MP
             data.data = newData;
 
             return modified;
+        }
+
+        private void AttachableBreakActionsChamberRound(FireArmRoundClass roundClass)
+        {
+            AttachableBreakActions asABA = dataObject as AttachableBreakActions;
+            asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
         }
 
         private void UpdateAttachableFirearmParent()

@@ -3524,12 +3524,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.MinigunFire(0, trackedItem.data.trackedID, roundClass, positions, directions);
+                        H3MP_ServerSend.MinigunFire(0, trackedItem.data.trackedID, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.MinigunFire(trackedItem.data.trackedID, roundClass, positions, directions);
+                    H3MP_ClientSend.MinigunFire(trackedItem.data.trackedID, positions, directions);
                 }
             }
 

@@ -612,11 +612,12 @@ namespace H3MP
             }
         }
 
-        public static void BreakActionWeaponFire(int trackedID, int barrelIndex, List<Vector3> positions, List<Vector3> directions)
+        public static void BreakActionWeaponFire(int trackedID, FireArmRoundClass roundClass, int barrelIndex, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.breakActionWeaponFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundClass);
                 packet.Write((byte)barrelIndex);
                 if(positions == null || positions.Count == 0)
                 {
@@ -706,12 +707,11 @@ namespace H3MP
             }
         }
 
-        public static void MinigunFire(int trackedID, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
+        public static void MinigunFire(int trackedID, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.minigunFire))
             {
                 packet.Write(trackedID);
-                packet.Write((short)roundClass);
                 if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
@@ -727,11 +727,12 @@ namespace H3MP
             }
         }
 
-        public static void AttachableFirearmFire(int trackedID, bool firedFromInterface, List<Vector3> positions, List<Vector3> directions)
+        public static void AttachableFirearmFire(int trackedID, FireArmRoundClass roundClass, bool firedFromInterface, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.attachableFirearmFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundClass);
                 packet.Write(firedFromInterface);
                 if (positions == null || positions.Count == 0)
                 {

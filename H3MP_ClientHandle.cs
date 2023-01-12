@@ -468,10 +468,11 @@ namespace H3MP
         public static void BreakActionWeaponFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-            int barrelIndex = packet.ReadByte();
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                int barrelIndex = packet.ReadByte();
                 FirePatch.positions = new List<Vector3>();
                 FirePatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -484,7 +485,9 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                H3MP_Client.items[trackedID].physicalItem.fireFunc();
+                BreakActionWeapon asBAW = H3MP_Client.items[trackedID].physicalItem.physicalObject as BreakActionWeapon;
+                asBAW.Barrels[barrelIndex].Chamber.SetRound(roundClass, asBAW.Barrels[barrelIndex].Chamber.transform.position, asBAW.Barrels[barrelIndex].Chamber.transform.rotation);
+                asBAW.Fire(barrelIndex, false, 0);
             }
         }
 
@@ -570,10 +573,11 @@ namespace H3MP
         public static void AttachableFirearmFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-            bool firedFromInterface = packet.ReadBool();
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                bool firedFromInterface = packet.ReadBool();
                 FireAttachableFirearmPatch.positions = new List<Vector3>();
                 FireAttachableFirearmPatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -586,6 +590,7 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
+                H3MP_Client.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundClass);
                 H3MP_Client.items[trackedID].physicalItem.attachableFirearmFunc(firedFromInterface);
             }
         }

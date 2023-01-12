@@ -568,11 +568,12 @@ namespace H3MP
         public static void BreakActionWeaponFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-            int barrelIndex = packet.ReadByte();
 
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                int barrelIndex = packet.ReadByte();
                 FirePatch.positions = new List<Vector3>();
                 FirePatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -585,9 +586,11 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
+                BreakActionWeapon asBAW = H3MP_Server.items[trackedID].physicalItem.physicalObject as BreakActionWeapon;
+                asBAW.Barrels[barrelIndex].Chamber.SetRound(roundClass, asBAW.Barrels[barrelIndex].Chamber.transform.position, asBAW.Barrels[barrelIndex].Chamber.transform.rotation);
                 // NOTE: Only barrel index is used in the Fire method, other arguments are presumably reserved for later,
                 // TODO: will need to add support later if implemented
-                (H3MP_Server.items[trackedID].physicalItem.physicalObject as BreakActionWeapon).Fire(barrelIndex, false, 0);
+                asBAW.Fire(barrelIndex, false, 0);
             }
 
             // Send to other clients
@@ -631,7 +634,7 @@ namespace H3MP
         public static void MinigunFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-            continue from here handle round class
+            
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
@@ -647,7 +650,8 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                Mod.Minigun_Fire.Invoke((Minigun)H3MP_Server.items[trackedID].physicalItem.physicalObject, null);
+                Minigun asMinigun = (Minigun)H3MP_Server.items[trackedID].physicalItem.physicalObject;
+                Mod.Minigun_Fire.Invoke(asMinigun, null);
             }
 
             // Send to other clients
@@ -657,11 +661,12 @@ namespace H3MP
         public static void AttachableFirearmFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-            bool firedFromInterface = packet.ReadBool();
 
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                bool firedFromInterface = packet.ReadBool();
                 FireAttachableFirearmPatch.positions = new List<Vector3>();
                 FireAttachableFirearmPatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();
@@ -674,6 +679,7 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
+                H3MP_Server.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundClass);
                 H3MP_Server.items[trackedID].physicalItem.attachableFirearmFunc(firedFromInterface);
             }
 
