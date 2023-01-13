@@ -661,6 +661,17 @@ namespace H3MP
             H3MP_GameManager.ProcessPlayerDamage(part, damage);
         }
 
+        public static void UberShatterableShatter(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null && H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                ++UberShatterableShatterPatch.skip;
+                H3MP_Client.items[trackedID].physicalItem.GetComponent<UberShatterable>().Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
+                --UberShatterableShatterPatch.skip;
+            }
+        }
+
         public static void SosigPickUpItem(H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();

@@ -413,6 +413,7 @@ namespace H3MP
                 H3MP_ClientHandle.AttachableFirearmFire,
                 H3MP_ClientHandle.BreakActionWeaponFire,
                 H3MP_ClientHandle.PlayerIFF,
+                H3MP_ClientHandle.UberShatterableShatter,
             };
 
             // All vanilla scenes can be synced by default

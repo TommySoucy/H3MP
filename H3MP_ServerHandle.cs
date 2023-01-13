@@ -805,6 +805,19 @@ namespace H3MP
             }
         }
 
+        public static void UberShatterableShatter(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                ++UberShatterableShatterPatch.skip;
+                H3MP_Server.items[trackedID].physicalItem.GetComponent<UberShatterable>().Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
+                --UberShatterableShatterPatch.skip;
+            }
+
+            H3MP_ServerSend.UberShatterableShatter(clientID, packet);
+        }
+
         public static void SosigPickUpItem(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();

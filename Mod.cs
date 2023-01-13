@@ -7972,6 +7972,36 @@ namespace H3MP
             return true;
         }
     }
+
+    // Patches UberShatterable.Shatter to keep track of shatter event
+    class UberShatterableShatterPatch
+    {
+        public static int skip;
+
+        static void Prefix(ref UberShatterable __instance, Vector3 point, Vector3 dir, float intensity)
+        {
+            if(skip > 0 || Mod.managerObject != null)
+            {
+                return;
+            }
+
+            if(__instance.O != null)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.O, out H3MP_TrackedItem item) ? item : __instance.O.GetComponent<H3MP_TrackedItem>();
+                if(trackedItem != null)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.UberShatterableShatter(trackedItem.data.trackedID, point, dir, intensity);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.UberShatterableShatter(trackedItem.data.trackedID, point, dir, intensity);
+                    }
+                }
+            }
+        }
+    }
     #endregion
 
     #region TNH Patches
@@ -9035,7 +9065,10 @@ namespace H3MP
                         {
                             GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position, true);
                         }
-                        //else // No player to spawn on, we will spawno n active supply point, not sure if this case is actually possible though
+                        else
+                        {
+                            Debug.LogWarning("Not valid supply point or player to spawn on, spawning on default start point, which might be active");
+                        }
                     }
                 }
             }

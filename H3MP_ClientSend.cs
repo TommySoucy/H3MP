@@ -785,6 +785,19 @@ namespace H3MP
             }
         }
 
+        public static void UberShatterableShatter(int trackedID, Vector3 point, Vector3 dir, float intensity)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.uberShatterableShatter))
+            {
+                packet.Write(trackedID);
+                packet.Write(point);
+                packet.Write(dir);
+                packet.Write(intensity);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void SosigPickUpItem(H3MP_TrackedSosig trackedSosig, int itemTrackedID, bool primaryHand)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigPickupItem))

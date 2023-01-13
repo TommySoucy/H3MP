@@ -1223,6 +1223,39 @@ namespace H3MP
             }
         }
 
+        public static void UberShatterableShatter(int clientID, H3MP_Packet packet)
+        {
+            // Make sure the packet is set to ServerPackets.uberShatterableShatter
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.uberShatterableShatter);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if(clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void UberShatterableShatter(int trackedID, Vector3 point, Vector3 dir, float intensity)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.uberShatterableShatter))
+            {
+                packet.Write(trackedID);
+                packet.Write(point);
+                packet.Write(dir);
+                packet.Write(intensity);
+
+                SendTCPDataToAll(packet);
+            }
+        }
+
         public static void SosigPickUpItem(int trackedSosigID, int itemTrackedID, bool primaryHand, int fromclientID = 0)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigPickUpItem))
