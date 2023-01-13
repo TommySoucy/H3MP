@@ -24,6 +24,9 @@ namespace H3MP
         public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
         public static List<int> unknownDestroyTrackedIDs = new List<int>();
         public static Dictionary<int, List<KeyValuePair<int, KeyValuePair<int, int>>>> unknownItemInteractTrackedIDs = new Dictionary<int, List<KeyValuePair<int, KeyValuePair<int, int>>>>();
+        public static Dictionary<int, int> unknownSetIFFs = new Dictionary<int, int>();
+        public static Dictionary<int, int> unknownSetOriginalIFFs = new Dictionary<int, int>();
+        public static Dictionary<int, Sosig.SosigBodyState> unknownBodyStates = new Dictionary<int, Sosig.SosigBodyState>();
 
         public bool sendDestroy = true; // To prevent feeback loops
 

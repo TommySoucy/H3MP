@@ -445,7 +445,6 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
-                Debug.Log("Weapon fire received for " + trackedID);
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 FirePatch.positions = new List<Vector3>();
                 FirePatch.directions = new List<Vector3>();
@@ -454,7 +453,6 @@ namespace H3MP
                 {
                     FirePatch.positions.Add(packet.ReadVector3());
                     FirePatch.directions.Add(packet.ReadVector3());
-                    Debug.Log("\tWith data: " + FirePatch.positions[0] + ", " + FirePatch.directions[0]);
                 }
                 FirePatch.overriden = true;
 
@@ -1042,7 +1040,7 @@ namespace H3MP
                     physicalSosig.Agent.enabled = packet.ReadBool();
                     List<CharacterJoint> joints = (List<CharacterJoint>)Mod.Sosig_m_joints.GetValue(physicalSosig);
                     byte jointCount = packet.ReadByte();
-                    for (int i = 0; i < jointCount; ++i)
+                    for (int i = 0; i < joints.Count; ++i)
                     {
                         if (joints[i] != null)
                         {
@@ -1780,63 +1778,94 @@ namespace H3MP
         public static void TNHHoldBeginChallenge(H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
-            int barrierCount = packet.ReadInt();
-            List<int> barrierIndices = new List<int>();
-            List<int> barrierPrefabIndices = new List<int>();
-            for (int i = 0; i < barrierCount; ++i)
+            bool fromController = packet.ReadBool(); 
+            if (fromController)
             {
-                barrierIndices.Add(packet.ReadInt());
-            }
-            for (int i = 0; i < barrierCount; ++i)
-            {
-                barrierPrefabIndices.Add(packet.ReadInt());
-            }
-
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
-            {
-                Mod.currentTNHInstance.holdOngoing = true;
-                Mod.currentTNHInstance.raisedBarriers = barrierIndices;
-                Mod.currentTNHInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
-
-                Mod.currentTNHInstance.manager.Phase = TNH_Phase.Hold;
-
-                TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
-
-                // Raise barriers
-                for (int i = 0; i < barrierIndices.Count; ++i)
+                int barrierCount = packet.ReadInt();
+                List<int> barrierIndices = new List<int>();
+                List<int> barrierPrefabIndices = new List<int>();
+                for (int i = 0; i < barrierCount; ++i)
                 {
-                    TNH_DestructibleBarrierPoint point = curHoldPoint.BarrierPoints[barrierIndices[i]];
-                    TNH_DestructibleBarrierPoint.BarrierDataSet barrierDataSet = point.BarrierDataSets[barrierPrefabIndices[i]];
-                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(barrierDataSet.BarrierPrefab, point.transform.position, point.transform.rotation);
-                    TNH_DestructibleBarrier curBarrier = gameObject.GetComponent<TNH_DestructibleBarrier>();
-                    Mod.TNH_DestructibleBarrierPoint_m_curBarrier.SetValue(point, curBarrier);
-                    curBarrier.InitToPlace(point.transform.position, point.transform.forward);
-                    curBarrier.SetBarrierPoint(point);
-                    Mod.TNH_DestructibleBarrierPoint_SetCoverPointData.Invoke(point, new object[] { barrierPrefabIndices[i] });
+                    barrierIndices.Add(packet.ReadInt());
+                }
+                for (int i = 0; i < barrierCount; ++i)
+                {
+                    barrierPrefabIndices.Add(packet.ReadInt());
                 }
 
-                // Begin hold on our side
-                ++TNH_HoldPointPatch.beginHoldSkip;
-                curHoldPoint.BeginHoldChallenge();
-                --TNH_HoldPointPatch.beginHoldSkip;
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+                {
+                    Mod.currentTNHInstance.phase = TNH_Phase.Hold;
+                    Mod.currentTNHInstance.holdOngoing = true;
+                    Mod.currentTNHInstance.raisedBarriers = barrierIndices;
+                    Mod.currentTNHInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
 
-                // If we received this it is because we are not the controller, TP to hold point
+                    Mod.currentTNHInstance.manager.Phase = TNH_Phase.Hold;
+
+                    TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
+
+                    // Begin hold on our side
+                    ++TNH_HoldPointPatch.beginHoldSkip;
+                    curHoldPoint.BeginHoldChallenge();
+                    --TNH_HoldPointPatch.beginHoldSkip;
+
+                    // Raise barriers
+                    for (int i = 0; i < barrierIndices.Count; ++i)
+                    {
+                        TNH_DestructibleBarrierPoint point = curHoldPoint.BarrierPoints[barrierIndices[i]];
+                        TNH_DestructibleBarrierPoint.BarrierDataSet barrierDataSet = point.BarrierDataSets[barrierPrefabIndices[i]];
+                        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(barrierDataSet.BarrierPrefab, point.transform.position, point.transform.rotation);
+                        TNH_DestructibleBarrier curBarrier = gameObject.GetComponent<TNH_DestructibleBarrier>();
+                        Mod.TNH_DestructibleBarrierPoint_m_curBarrier.SetValue(point, curBarrier);
+                        curBarrier.InitToPlace(point.transform.position, point.transform.forward);
+                        curBarrier.SetBarrierPoint(point);
+                        Mod.TNH_DestructibleBarrierPoint_SetCoverPointData.Invoke(point, new object[] { barrierPrefabIndices[i] });
+                    }
+
+                    // TP to hold point
+                    GM.CurrentMovementManager.TeleportToPoint(curHoldPoint.SpawnPoint_SystemNode.position, true);
+                }
+                else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+                {
+                    actualInstance.phase = TNH_Phase.Hold;
+                    actualInstance.holdOngoing = true;
+                    actualInstance.raisedBarriers = barrierIndices;
+                    actualInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
+                }
+            }
+            else if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                // We received order to begin hold and we are the controller, begin it
+                TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
+                curHoldPoint.BeginHoldChallenge();
+
+                // TP to point since we are not the one who started the hold
                 GM.CurrentMovementManager.TeleportToPoint(curHoldPoint.SpawnPoint_SystemNode.position, true);
             }
-            else if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
-                actualInstance.holdOngoing = true;
-                actualInstance.raisedBarriers = barrierIndices;
-                actualInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
+                int barrierCount = packet.ReadInt();
+                List<int> barrierIndices = new List<int>();
+                List<int> barrierPrefabIndices = new List<int>();
+                for (int i = 0; i < barrierCount; ++i)
+                {
+                    barrierIndices.Add(packet.ReadInt());
+                }
+                for (int i = 0; i < barrierCount; ++i)
+                {
+                    barrierPrefabIndices.Add(packet.ReadInt());
+                }
+
+                // We received order to begin hold, but we are not the controller
+                // This is possible if we were the controller when the server sent it but we have since lost control
+                H3MP_ClientSend.TNHHoldBeginChallenge(instance, false, null, null);
             }
         }
 
         public static void ShatterableCrateDamage(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-            Debug.Log("ShatterableCrateDamage received, H3MP_Client.items[trackedID] == null?: " + (H3MP_Client.items[trackedID] == null));
             if(H3MP_Client.items[trackedID] != null)
-            Debug.Log("H3MP_Client.items[trackedID].controller: " + H3MP_Client.items[trackedID].controller);
 
             if (H3MP_Client.items[trackedID] != null && H3MP_Client.items[trackedID].controller == H3MP_GameManager.ID)
             {

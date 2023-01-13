@@ -115,7 +115,7 @@ namespace H3MP
 
             H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
 
-            Debug.Log("Synced with player who just joined scene");
+            Debug.Log("Synced with player who just joined a scene");
         }
 
         public static void PlayerInstance(int clientID, H3MP_Packet packet)
@@ -150,7 +150,7 @@ namespace H3MP
                     }
                 }
             }
-            Debug.Log("Synced with player who just joined instance");
+            Debug.Log("Synced with player who just joined an instance");
         }
 
         public static void AddTNHInstance(int clientID, H3MP_Packet packet)
@@ -473,34 +473,38 @@ namespace H3MP
 
         public static void DestroyItem(int clientID, H3MP_Packet packet)
         {
+            Debug.Log("Received destroy order");
             int trackedID = packet.ReadInt();
+            Debug.Log("\t for " + trackedID);
             bool removeFromList = packet.ReadBool();
-            H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
-            Debug.Log("Received destroy order for " + trackedItem.itemID);
-
-            if (trackedItem.physicalItem != null)
+            if (H3MP_Server.items[trackedID] != null)
             {
-                H3MP_GameManager.trackedItemByItem.Remove(trackedItem.physicalItem.physicalObject);
-                if (trackedItem.physicalItem.physicalObject is SosigWeaponPlayerInterface)
+                H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
+
+                if (trackedItem.physicalItem != null)
                 {
-                    H3MP_GameManager.trackedItemBySosigWeapon.Remove((trackedItem.physicalItem.physicalObject as SosigWeaponPlayerInterface).W);
+                    H3MP_GameManager.trackedItemByItem.Remove(trackedItem.physicalItem.physicalObject);
+                    if (trackedItem.physicalItem.physicalObject is SosigWeaponPlayerInterface)
+                    {
+                        H3MP_GameManager.trackedItemBySosigWeapon.Remove((trackedItem.physicalItem.physicalObject as SosigWeaponPlayerInterface).W);
+                    }
+                    trackedItem.physicalItem.sendDestroy = false;
+                    GameObject.Destroy(trackedItem.physicalItem.gameObject);
                 }
-                trackedItem.physicalItem.sendDestroy = false;
-                GameObject.Destroy(trackedItem.physicalItem.gameObject);
-            }
 
-            if (trackedItem.localTrackedID != -1)
-            {
-                H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                trackedItem.localTrackedID = -1;
-            }
+                if (trackedItem.localTrackedID != -1)
+                {
+                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    trackedItem.localTrackedID = -1;
+                }
 
-            if (removeFromList)
-            {
-                H3MP_Server.items[trackedID] = null;
-                H3MP_Server.availableItemIndices.Add(trackedID);
+                if (removeFromList)
+                {
+                    H3MP_Server.items[trackedID] = null;
+                    H3MP_Server.availableItemIndices.Add(trackedID);
+                }
             }
 
             H3MP_ServerSend.DestroyItem(trackedID, removeFromList, clientID);
@@ -893,13 +897,11 @@ namespace H3MP
         public static void SosigConfigure(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
-            Debug.Log("server handle sosig configure got called from client: " + clientID + " for sosig tracked ID: " + sosigTrackedID);
             SosigConfigTemplate config = packet.ReadSosigConfig();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
             {
-                Debug.Log("\tFound trackedSosig, and it has physical, configuring ");
                 trackedSosig.configTemplate = config;
                 SosigConfigurePatch.skipConfigure = true;
                 trackedSosig.physicalObject.physicalSosigScript.Configure(config);
@@ -1175,7 +1177,7 @@ namespace H3MP
                     physicalSosig.Agent.enabled = packet.ReadBool();
                     List<CharacterJoint> joints = (List<CharacterJoint>)Mod.Sosig_m_joints.GetValue(physicalSosig);
                     byte jointCount = packet.ReadByte();
-                    for (int i = 0; i < jointCount; ++i)
+                    for (int i = 0; i < joints.Count; ++i)
                     {
                         if (joints[i] != null)
                         {
@@ -1279,6 +1281,7 @@ namespace H3MP
         public static void SosigDies(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
+            Debug.Log("Server handle sosig " + sosigTrackedID + " dies");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)
@@ -1299,6 +1302,7 @@ namespace H3MP
         public static void SosigClear(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
+            Debug.Log("Server handle sosig " + sosigTrackedID + " clear");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)
@@ -1318,6 +1322,7 @@ namespace H3MP
         {
             int sosigTrackedID = packet.ReadInt();
             Sosig.SosigBodyState bodyState = (Sosig.SosigBodyState)packet.ReadByte();
+            Debug.Log("Server handle sosig " + sosigTrackedID + " sosig state "+ bodyState);
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)
@@ -1411,6 +1416,7 @@ namespace H3MP
         {
             int sosigTrackedID = packet.ReadInt();
             byte iff = packet.ReadByte();
+            Debug.Log("Server handle sosig " + sosigTrackedID + " vaporize");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
@@ -1481,18 +1487,15 @@ namespace H3MP
 
         public static void UpToDateItems(int clientID, H3MP_Packet packet)
         {
-            Debug.Log("Server received up to date items packet");
             // Reconstruct passed trackedItems from packet
             int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedItemData trackedItem = packet.ReadTrackedItem(true);
-                Debug.Log("\tItem: " +trackedItem.trackedID+", updating");
                 H3MP_GameManager.UpdateTrackedItem(trackedItem, true);
                 if (instantiate)
                 {
-                    Debug.Log("\tInstantiating");
                     AnvilManager.Run(H3MP_Server.items[trackedItem.trackedID].Instantiate());
                 }
             }
@@ -1519,18 +1522,15 @@ namespace H3MP
 
         public static void UpToDateAutoMeaters(int clientID, H3MP_Packet packet)
         {
-            Debug.Log("Server received up to date AutoMeaters packet");
             // Reconstruct passed trackedAutoMeaters from packet
             int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedAutoMeaterData trackedAutoMeater = packet.ReadTrackedAutoMeater(true);
-                Debug.Log("\tAutoMeater: " + trackedAutoMeater.trackedID + ", updating");
                 H3MP_GameManager.UpdateTrackedAutoMeater(trackedAutoMeater, true);
                 if (instantiate)
                 {
-                    Debug.Log("\tInstantiating");
                     AnvilManager.Run(H3MP_Server.autoMeaters[trackedAutoMeater.trackedID].Instantiate());
                 }
             }
@@ -2112,59 +2112,95 @@ namespace H3MP
         public static void TNHHoldBeginChallenge(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
-            int barrierCount = packet.ReadInt();
-            List<int> barrierIndices = new List<int>();
-            List<int> barrierPrefabIndices = new List<int>();
-            for(int i=0; i < barrierCount; ++i)
+            bool fromController = packet.ReadBool();
+            if (fromController)
             {
-                barrierIndices.Add(packet.ReadInt());
-            }
-            for(int i=0; i < barrierCount; ++i)
-            {
-                barrierPrefabIndices.Add(packet.ReadInt());
-            }
-
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
-            {
-                Mod.currentTNHInstance.phase = TNH_Phase.Hold;
-                Mod.currentTNHInstance.holdOngoing = true;
-                Mod.currentTNHInstance.raisedBarriers = barrierIndices;
-                Mod.currentTNHInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
-
-                Mod.currentTNHInstance.manager.Phase = TNH_Phase.Hold;
-
-                TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
-
-                // Raise barriers
-                for(int i=0; i < barrierIndices.Count; ++i)
+                int barrierCount = packet.ReadInt();
+                List<int> barrierIndices = new List<int>();
+                List<int> barrierPrefabIndices = new List<int>();
+                for (int i = 0; i < barrierCount; ++i)
                 {
-                    TNH_DestructibleBarrierPoint point = curHoldPoint.BarrierPoints[barrierIndices[i]];
-                    TNH_DestructibleBarrierPoint.BarrierDataSet barrierDataSet = point.BarrierDataSets[barrierPrefabIndices[i]];
-                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(barrierDataSet.BarrierPrefab, point.transform.position, point.transform.rotation);
-                    TNH_DestructibleBarrier curBarrier = gameObject.GetComponent<TNH_DestructibleBarrier>();
-                    Mod.TNH_DestructibleBarrierPoint_m_curBarrier.SetValue(point, curBarrier);
-                    curBarrier.InitToPlace(point.transform.position, point.transform.forward);
-                    curBarrier.SetBarrierPoint(point);
-                    Mod.TNH_DestructibleBarrierPoint_SetCoverPointData.Invoke(point, new object[] { barrierPrefabIndices[i] });
+                    barrierIndices.Add(packet.ReadInt());
+                }
+                for (int i = 0; i < barrierCount; ++i)
+                {
+                    barrierPrefabIndices.Add(packet.ReadInt());
                 }
 
-                // Begin hold on our side
-                ++TNH_HoldPointPatch.beginHoldSkip;
-                curHoldPoint.BeginHoldChallenge();
-                --TNH_HoldPointPatch.beginHoldSkip;
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+                {
+                    Mod.currentTNHInstance.phase = TNH_Phase.Hold;
+                    Mod.currentTNHInstance.holdOngoing = true;
+                    Mod.currentTNHInstance.raisedBarriers = barrierIndices;
+                    Mod.currentTNHInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
 
-                // If we received this it is because we are not the controller, TP to hold point
+                    TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
+
+                    // Begin hold on our side
+                    ++TNH_HoldPointPatch.beginHoldSkip;
+                    curHoldPoint.BeginHoldChallenge();
+                    --TNH_HoldPointPatch.beginHoldSkip;
+
+                    Mod.currentTNHInstance.manager.Phase = TNH_Phase.Hold;
+
+                    // Raise barriers
+                    for (int i = 0; i < barrierIndices.Count; ++i)
+                    {
+                        TNH_DestructibleBarrierPoint point = curHoldPoint.BarrierPoints[barrierIndices[i]];
+                        TNH_DestructibleBarrierPoint.BarrierDataSet barrierDataSet = point.BarrierDataSets[barrierPrefabIndices[i]];
+                        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(barrierDataSet.BarrierPrefab, point.transform.position, point.transform.rotation);
+                        TNH_DestructibleBarrier curBarrier = gameObject.GetComponent<TNH_DestructibleBarrier>();
+                        Mod.TNH_DestructibleBarrierPoint_m_curBarrier.SetValue(point, curBarrier);
+                        curBarrier.InitToPlace(point.transform.position, point.transform.forward);
+                        curBarrier.SetBarrierPoint(point);
+                        Mod.TNH_DestructibleBarrierPoint_SetCoverPointData.Invoke(point, new object[] { barrierPrefabIndices[i] });
+                    }
+
+                    // TP to hold point
+                    GM.CurrentMovementManager.TeleportToPoint(curHoldPoint.SpawnPoint_SystemNode.position, true);
+                }
+                else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+                {
+                    actualInstance.phase = TNH_Phase.Hold;
+                    actualInstance.holdOngoing = true;
+                    actualInstance.raisedBarriers = barrierIndices;
+                    actualInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
+                }
+
+                // Pass it on
+                H3MP_ServerSend.TNHHoldBeginChallenge(instance, true, barrierIndices, barrierPrefabIndices, true, clientID);
+            }
+            else if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                // We received order to begin hold and we are the controller, begin it
+                TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
+                curHoldPoint.BeginHoldChallenge();
+
+                // TP to point since we are not the one who started the hold
                 GM.CurrentMovementManager.TeleportToPoint(curHoldPoint.SpawnPoint_SystemNode.position, true);
             }
-            else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            else if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
+                int barrierCount = packet.ReadInt();
+                List<int> barrierIndices = new List<int>();
+                List<int> barrierPrefabIndices = new List<int>();
+                for (int i = 0; i < barrierCount; ++i)
+                {
+                    barrierIndices.Add(packet.ReadInt());
+                }
+                for (int i = 0; i < barrierCount; ++i)
+                {
+                    barrierPrefabIndices.Add(packet.ReadInt());
+                }
+
                 actualInstance.phase = TNH_Phase.Hold;
                 actualInstance.holdOngoing = true;
                 actualInstance.raisedBarriers = barrierIndices;
                 actualInstance.raisedBarrierPrefabIndices = barrierPrefabIndices;
-            }
 
-            H3MP_ServerSend.TNHHoldBeginChallenge(instance, barrierIndices, barrierPrefabIndices, clientID);
+                // We received order to begin hold, but we are not the controller, send it to controller
+                H3MP_ServerSend.TNHHoldBeginChallenge(instance, false, null, null, false, actualInstance.controller);
+            }
         }
 
         public static void ShatterableCrateDamage(int clientID, H3MP_Packet packet)
@@ -2186,15 +2222,16 @@ namespace H3MP
         public static void ShatterableCrateDestroy(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
+            Damage d = packet.ReadDamage();
 
             if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].physicalItem != null)
             {
                 ++TNH_ShatterableCrateDestroyPatch.skip;
-                Mod.TNH_ShatterableCrate_Destroy.Invoke(H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>(), new object[] { packet.ReadDamage() });
+                Mod.TNH_ShatterableCrate_Destroy.Invoke(H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>(), new object[] { d });
                 --TNH_ShatterableCrateDestroyPatch.skip;
             }
 
-            H3MP_ServerSend.ShatterableCrateDestroy(trackedID, packet.ReadDamage(), clientID);
+            H3MP_ServerSend.ShatterableCrateDestroy(trackedID, d, clientID);
         }
 
         public static void TNHSetLevel(int clientID, H3MP_Packet packet)

@@ -133,7 +133,6 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance, int clientID)
         {
-            Debug.Log("Received order to add tracked item: "+trackedItem.itemID);
             // Adjust items size to acommodate if necessary
             if (availableItemIndices.Count == 0)
             {
@@ -212,7 +211,6 @@ namespace H3MP
 
         public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int instance, int clientID)
         {
-            Debug.Log("Received order to add tracked auto meater");
             // Adjust AutoMeaters size to acommodate if necessary
             if (availableAutoMeaterIndices.Count == 0)
             {

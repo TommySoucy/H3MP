@@ -162,6 +162,8 @@ namespace H3MP
         public static readonly FieldInfo BAP_m_fireSelectorMode = typeof(BAP).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo BAP_m_isHammerCocked = typeof(BAP).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigWeapon_m_shotsLeft = typeof(SosigWeapon).GetField("m_shotsLeft", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_ShatterableCrate_m_isHoldingHealth = typeof(TNH_ShatterableCrate).GetField("m_isHoldingHealth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_ShatterableCrate_m_isHoldingToken = typeof(TNH_ShatterableCrate).GetField("m_isHoldingToken", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -241,11 +243,9 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.Keypad6))
                 {
-                    Debug.Log("Building sosigWearable map, iterating through "+IM.OD.Count+" OD entries");
                     Dictionary<string, string> map = new Dictionary<string, string>();
                     foreach(KeyValuePair<string, FVRObject> o in IM.OD)
                     {
-                        Debug.Log("trying to add ID: "+o.Key);
                         GameObject prefab = null;
                         try
                         {
@@ -268,7 +268,6 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    Debug.Log("Sosig wearable with name: " + prefab.name + " added value: " + o.Key);
                                     map.Add(prefab.name, o.Key);
                                 }
                             }
@@ -279,7 +278,6 @@ namespace H3MP
                             continue;
                         }
                     }
-                    Debug.Log("DONE");
                     JObject jDict = JObject.FromObject(map);
                     File.WriteAllText("BepInEx/Plugins/H3MP/Debug/SosigWearableMap.json", jDict.ToString());
                 }
@@ -1341,6 +1339,7 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchSpawnEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeChallengeEntities", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnEntitiesPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTakeChallengeEntitiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchBeginHoldOriginal = typeof(TNH_HoldPoint).GetMethod("BeginHoldChallenge", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchBeginHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchBeginHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchRaiseRandomBarriersOriginal = typeof(TNH_HoldPoint).GetMethod("RaiseRandomBarriers", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPrefix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1353,7 +1352,7 @@ namespace H3MP
 
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
-            harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, null, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
+            harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
             harmony.Patch(TNH_HoldPointPatchRaiseRandomBarriersOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseRandomBarriersPrefix));
             harmony.Patch(TNH_HoldPointPatchRaiseSetCoverPointDataOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseSetCoverPointDataPrefix));
             harmony.Patch(TNH_HoldPointPatchRaiseCompletePhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseCompletePhasePostfix));
@@ -2742,8 +2741,6 @@ namespace H3MP
 
         static void Prefix(FVRFireArmChamber chamber)
         {
-            Debug.Log("FirePatch prefix called, weapon fired");
-
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
@@ -2922,7 +2919,6 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        Debug.Log("Host sending weapon fire for " + trackedItem.data.trackedID+" with first data: "+ positions[0]+", " + directions[0]);
                         H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, roundClass, positions, directions);
                     }
                 }
@@ -3116,17 +3112,20 @@ namespace H3MP
             H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemBySosigWeapon.ContainsKey(__instance) ? H3MP_GameManager.trackedItemBySosigWeapon[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null)
             {
-                // Send the fire action to other clients only if we control it
-                if (H3MP_ThreadManager.host)
+                if (trackedItem.data.trackedID != -1)
                 {
-                    if (trackedItem.data.controller == 0)
+                    // Send the fire action to other clients only if we control it
+                    if (H3MP_ThreadManager.host)
                     {
-                        H3MP_ServerSend.SosigWeaponFire(0, trackedItem.data.trackedID, recoilMult, positions, directions);
+                        if (trackedItem.data.controller == 0)
+                        {
+                            H3MP_ServerSend.SosigWeaponFire(0, trackedItem.data.trackedID, recoilMult, positions, directions);
+                        }
                     }
-                }
-                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
-                {
-                    H3MP_ClientSend.SosigWeaponFire(trackedItem.data.trackedID, recoilMult, positions, directions);
+                    else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                    {
+                        H3MP_ClientSend.SosigWeaponFire(trackedItem.data.trackedID, recoilMult, positions, directions);
+                    }
                 }
             }
 
@@ -4028,13 +4027,20 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null)
             {
-                if (H3MP_ThreadManager.host)
+                if(trackedSosig.data.trackedID == -1)
                 {
-                    H3MP_ServerSend.SosigSetBodyState(trackedSosig.data.trackedID, s);
+                    H3MP_TrackedSosig.unknownBodyStates.Add(trackedSosig.data.localTrackedID, s);
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigSetBodyState(trackedSosig.data.trackedID, s);
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigSetBodyState(trackedSosig.data.trackedID, s);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigSetBodyState(trackedSosig.data.trackedID, s);
+                    }
                 }
             }
         }
@@ -4121,7 +4127,7 @@ namespace H3MP
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(sosig) ? H3MP_GameManager.trackedSosigBySosig[sosig] : sosig.GetComponent<H3MP_TrackedSosig>();
-            if (trackedSosig != null)
+            if (trackedSosig != null && trackedSosig.data.trackedID != -1)
             {
                 if (H3MP_ThreadManager.host)
                 {
@@ -4657,14 +4663,21 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null)
             {
-                trackedSosig.data.IFF = (byte)i;
-                if (H3MP_ThreadManager.host)
+                if (trackedSosig.data.trackedID == -1)
                 {
-                    H3MP_ServerSend.SosigSetIFF(trackedSosig.data.trackedID, i);
+                    H3MP_TrackedSosig.unknownSetIFFs.Add(trackedSosig.data.localTrackedID, i);
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigSetIFF(trackedSosig.data.trackedID, i);
+                    trackedSosig.data.IFF = (byte)i;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigSetIFF(trackedSosig.data.trackedID, i);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigSetIFF(trackedSosig.data.trackedID, i);
+                    }
                 }
             }
         }
@@ -4685,14 +4698,21 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null)
             {
-                trackedSosig.data.IFF = (byte)i;
-                if (H3MP_ThreadManager.host)
+                if (trackedSosig.data.trackedID == -1)
                 {
-                    H3MP_ServerSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
+                    H3MP_TrackedSosig.unknownSetOriginalIFFs.Add(trackedSosig.data.localTrackedID, i);
                 }
                 else
                 {
-                    H3MP_ClientSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
+                    trackedSosig.data.IFF = (byte)i;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
+                    }
                 }
             }
         }
@@ -5895,32 +5915,25 @@ namespace H3MP
             {
                 return flag2;
             }
-            Debug.Log("GetActualFlag of projectile patch called");
 
             if (flag2)
             {
-                Debug.Log("\tWe have damageable");
                 if (tempFA == null)
                 {
-                    Debug.Log("\t\ttempFA null");
                     // If we don't have a ref to the firearm that fired this projectile, let the damage be controlled by the best host
                     int bestHost = Mod.GetBestPotentialObjectHost(-1);
-                    Debug.Log("\t\tbestHost: "+bestHost);
                     return bestHost == -1 || bestHost == H3MP_GameManager.ID;
                 }
                 else // We have a ref to the firearm that fired this projectile
                 {
-                    Debug.Log("\t\tWe have ref to firearm");
                     // We only want to let this projectile do damage if we control the firearm
                     H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(tempFA) ? H3MP_GameManager.trackedItemByItem[tempFA] : tempFA.GetComponent<H3MP_TrackedItem>();
                     if (trackedItem == null)
                     {
-                        Debug.Log("\t\t\tNo tracked item on firearm");
                         return false;
                     }
                     else
                     {
-                        Debug.Log("\t\t\tFound tracked item on firearm, control projectile damage?: "+ (trackedItem.data.controller == H3MP_GameManager.ID));
                         return trackedItem.data.controller == H3MP_GameManager.ID;
                     }
                 }
@@ -7458,7 +7471,7 @@ namespace H3MP
         static void Postfix(ref SosigLink __instance)
         {
             // If in control of the damaged sosig link, we want to send the damage results to other clients
-            if (trackedSosig != null)
+            if (trackedSosig != null && trackedSosig.data.trackedID != -1)
             {
                 if (H3MP_ThreadManager.host)
                 {
@@ -7594,23 +7607,18 @@ namespace H3MP
                 return true;
             }
 
-            Debug.Log("TNH_ShatterableCrateDamagePatch called");
             // If in control of the damaged crate, we want to process the damage
             trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null)
             {
-                Debug.Log("\tCrate tracked");
                 if (H3MP_ThreadManager.host)
                 {
-                    Debug.Log("\t\tWe are host");
                     if (trackedItem.data.controller == 0)
                     {
-                        Debug.Log("\t\t\tWe control");
                         return true;
                     }
                     else
                     {
-                        Debug.Log("\t\t\tWe don't control, server sending damage");
                         // Not in control, we want to send the damage to the controller for them to process it
                         H3MP_ServerSend.ShatterableCrateDamage(trackedItem.data.trackedID, d);
                         return false;
@@ -7618,12 +7626,10 @@ namespace H3MP
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    Debug.Log("\t\tWe are not host, we control");
                     return true;
                 }
                 else
                 {
-                    Debug.Log("\t\tWe are not host, we dont control, client sending damage");
                     H3MP_ClientSend.ShatterableCrateDamage(trackedItem.data.trackedID, d);
                     return false;
                 }
@@ -9011,7 +9017,6 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
-            Debug.Log("InitJoinTNH called");
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex]);
             if (Mod.currentTNHInstance.holdOngoing)
             {
@@ -9185,6 +9190,30 @@ namespace H3MP
             return true;
         }
 
+        static bool BeginHoldPrefix()
+        {
+            if(beginHoldSkip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, null, null, false, Mod.currentTNHInstance.controller);
+                }
+                else
+                {
+                    H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, null, null);
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
         static void BeginHoldPostfix()
         {
             if(beginHoldSkip > 0)
@@ -9192,21 +9221,18 @@ namespace H3MP
                 return;
             }
 
-            if (Mod.managerObject != null)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
             {
-                if (Mod.currentTNHInstance != null)
-                {
-                    // Update locally
-                    Mod.currentTNHInstance.holdOngoing = true;
+                // Update locally
+                Mod.currentTNHInstance.holdOngoing = true;
 
-                    if (H3MP_ThreadManager.host)
-                    {
-                        H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.raisedBarriers, Mod.currentTNHInstance.raisedBarrierPrefabIndices);
-                    }
-                    else
-                    {
-                        H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.raisedBarriers, Mod.currentTNHInstance.raisedBarrierPrefabIndices);
-                    }
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true, Mod.currentTNHInstance.raisedBarriers, Mod.currentTNHInstance.raisedBarrierPrefabIndices, true, 0);
+                }
+                else
+                {
+                    H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true, Mod.currentTNHInstance.raisedBarriers, Mod.currentTNHInstance.raisedBarrierPrefabIndices);
                 }
             }  
         }
@@ -9214,9 +9240,10 @@ namespace H3MP
         static bool RaiseRandomBarriersPrefix(int howMany)
         {
             // This patch will prevent BarrierPoints from being shuffled so barriers can be identified across clients
-            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            // It will also prevent raising barriers if we are not the controller of the instance
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
                     int num = howMany;
                     TNH_HoldPoint holdPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);

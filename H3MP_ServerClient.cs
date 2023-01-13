@@ -251,7 +251,7 @@ namespace H3MP
 
         public void SendRelevantTrackedObjects()
         {
-            Debug.Log("Sending relevant tracked items");
+            Debug.Log("Sending relevant tracked objects");
             // Send to the clients all items that are already synced and controlled by clients in the same scene and instance
             for (int i = 0; i < H3MP_Server.items.Length; ++i)
             {

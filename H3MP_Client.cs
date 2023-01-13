@@ -535,7 +535,6 @@ namespace H3MP
 
         public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int instance)
         {
-            Debug.Log("Received order to add a AutoMeater");
             // Adjust AutoMeaters size to acommodate if necessary
             if (autoMeaters.Length <= trackedAutoMeater.trackedID)
             {

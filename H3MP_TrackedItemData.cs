@@ -175,7 +175,7 @@ namespace H3MP
                 }
 
                 // Initially set itself
-                Update(this);
+                Update(this, true);
             }
             catch(Exception e)
             {
@@ -194,7 +194,7 @@ namespace H3MP
             return null;
         }
 
-        public void Update(H3MP_TrackedItemData updatedItem)
+        public void Update(H3MP_TrackedItemData updatedItem, bool initial = false)
         {
             order = updatedItem.order;
             previousPos = position;
@@ -232,9 +232,36 @@ namespace H3MP
                         physicalItem.gameObject.SetActive(false);
                     }
                 }
+
+                if (initial)
+                {
+                    SetInitialData();
+                }
             }
 
             UpdateData(updatedItem.data);
+        }
+
+        // MOD: This will be called in the initial Update of the item, at the end of its instantiation
+        //      This method is meant to be used to intialize the item's data based on additional identifying info
+        //      As we do for TNHShatterableCrate here to init. its contents
+        private void SetInitialData()
+        {
+            if (physicalItem != null && GM.TNH_Manager != null && itemID.Equals("TNH_ShatterableCrate"))
+            {
+                TNH_ShatterableCrate crate = physicalItem.gameObject.GetComponent<TNH_ShatterableCrate>();
+                if(crate != null)
+                {
+                    if (identifyingData[1] == 1)
+                    {
+                        crate.SetHoldingHealth(GM.TNH_Manager);
+                    }
+                    if (identifyingData[2] == 1)
+                    {
+                        crate.SetHoldingToken(GM.TNH_Manager);
+                    }
+                }
+            }
         }
 
         public bool Update(bool full = false)

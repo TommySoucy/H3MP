@@ -481,7 +481,6 @@ namespace H3MP
 
         public static void SyncTrackedItems(bool init = false, bool inControl = false)
         {
-            Debug.Log("SyncTrackedItems called with init: "+init+", in control: "+inControl+", others: "+(playersPresent > 0));
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
             // while all other items get destroyed. We will receive any item that the players inside this scene are controlling
@@ -507,13 +506,11 @@ namespace H3MP
                     H3MP_TrackedItem currentTrackedItem = root.GetComponent<H3MP_TrackedItem>();
                     if (currentTrackedItem == null)
                     {
-                        Debug.Log("SyncTrackedItems called with identifiable root: " + root.name + ", control everything?: " + controlEverything+", isControlled?: "+IsControlled(physObj));
                         if (controlEverything || IsControlled(physObj))
                         {
                             H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
                             if (trackedItem.awoken)
                             {
-                                Debug.Log("trackedItem " + trackedItem.name + " awoken, sending");
                                 if (H3MP_ThreadManager.host)
                                 {
                                     // This will also send a packet with the item to be added in the client's global item list
@@ -521,14 +518,12 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    Debug.Log("Sending tracked item: " + trackedItem.data.itemID);
                                     // Tell the server we need to add this item to global tracked items
                                     H3MP_ClientSend.TrackedItem(trackedItem.data, scene, instance);
                                 }
                             }
                             else
                             {
-                                Debug.Log("trackedItem " + trackedItem.name + " NOT awoken, setting for late send");
                                 trackedItem.sendOnAwake = true;
                                 trackedItem.sendScene = scene;
                                 trackedItem.sendInstance = instance;
@@ -562,7 +557,6 @@ namespace H3MP
 
         private static H3MP_TrackedItem MakeItemTracked(FVRPhysicalObject physObj, H3MP_TrackedItemData parent)
         {
-            Debug.Log("Making item tracked: " + physObj.name);
             H3MP_TrackedItem trackedItem = physObj.gameObject.AddComponent<H3MP_TrackedItem>();
             H3MP_TrackedItemData data = new H3MP_TrackedItemData();
             trackedItem.data = data;
@@ -623,7 +617,7 @@ namespace H3MP
             if(crate != null)
             {
                 trackedItemData.itemID = "TNH_ShatterableCrate";
-                trackedItemData.identifyingData = new byte[1];
+                trackedItemData.identifyingData = new byte[3];
                 if (crate.name[9] == 'S') // Small
                 {
                     trackedItemData.identifyingData[0] = 2;
@@ -636,6 +630,10 @@ namespace H3MP
                 {
                     trackedItemData.identifyingData[0] = 0;
                 }
+
+                trackedItemData.identifyingData[1] = (bool)Mod.TNH_ShatterableCrate_m_isHoldingHealth.GetValue(crate) ? (byte)1 : (byte)0;
+                trackedItemData.identifyingData[2] = (bool)Mod.TNH_ShatterableCrate_m_isHoldingToken.GetValue(crate) ? (byte)1 : (byte)0;
+
                 return;
             }
         }
@@ -828,15 +826,13 @@ namespace H3MP
                     data.linkIntegrity[i] = data.linkData[i][4];
                 }
             }
-            Debug.Log("\tTracking wearables");
+
             data.wearables = new List<List<string>>();
             FieldInfo wearablesField = typeof(SosigLink).GetField("m_wearables", BindingFlags.NonPublic | BindingFlags.Instance);
             for (int i = 0; i < sosigScript.Links.Count; ++i)
             {
-                Debug.Log("\t\tLink");
                 data.wearables.Add(new List<string>());
                 List<SosigWearable> sosigWearables = (List<SosigWearable>)wearablesField.GetValue(sosigScript.Links[i]);
-                Debug.Log("\t\t"+ sosigWearables.Count+" wearables");
                 for (int j = 0; j < sosigWearables.Count; ++j)
                 {
                     data.wearables[i].Add(sosigWearables[j].name);
@@ -869,7 +865,6 @@ namespace H3MP
 
         public static void SyncTrackedAutoMeaters(bool init = false, bool inControl = false)
         {
-            Debug.Log("SyncTrackedAutoMeaters called with init: " + init + ", in control: " + inControl + ", others: " + (playersPresent > 0));
             // When we sync our current scene, if we are alone, we sync and take control of all AutoMeaters
             Scene scene = SceneManager.GetActiveScene();
             GameObject[] roots = scene.GetRootGameObjects();
@@ -899,14 +894,12 @@ namespace H3MP
                             }
                             else
                             {
-                                Debug.Log("Sending tracked AutoMeater");
                                 // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
                                 H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data, scene, instance);
                             }
                         }
                         else
                         {
-                            Debug.Log("trackedAutoMeater " + trackedAutoMeater.name + " NOT awoken, setting for late send");
                             trackedAutoMeater.sendOnAwake = true;
                             trackedAutoMeater.sendScene = scene;
                             trackedAutoMeater.sendInstance = instance;
@@ -934,7 +927,6 @@ namespace H3MP
 
         private static H3MP_TrackedAutoMeater MakeAutoMeaterTracked(AutoMeater autoMeaterScript)
         {
-            Debug.Log("MakeAutoMeaterTracked called");
             H3MP_TrackedAutoMeater trackedAutoMeater = autoMeaterScript.gameObject.AddComponent<H3MP_TrackedAutoMeater>();
             H3MP_TrackedAutoMeaterData data = new H3MP_TrackedAutoMeaterData();
             trackedAutoMeater.data = data;
@@ -976,7 +968,7 @@ namespace H3MP
             }
             else
             {
-                Debug.Log("Unsupported AutoMeater type tracked");
+                Debug.LogWarning("Unsupported AutoMeater type tracked");
                 data.ID = 7;
             }
             data.sideToSideRotation = autoMeaterScript.SideToSideTransform.localRotation;
@@ -1568,8 +1560,6 @@ namespace H3MP
 
             if (loading) // Just started loading
             {
-                Debug.Log("Just started loading scene");
-
                 if (playersPresent > 0)
                 {
                     giveControlOfDestroyed = true;
@@ -1617,7 +1607,6 @@ namespace H3MP
                 giveControlOfDestroyed = false;
 
                 Scene loadedScene = SceneManager.GetActiveScene();
-                Debug.Log("Just finished loading scene: "+ loadedScene.name);
 
                 // Update players' active state depending on which are in the same scene/instance
                 playersPresent = 0;

@@ -1018,6 +1018,7 @@ namespace H3MP
 
         public static void SosigDies(int sosigTrackedID, Damage.DamageClass damClass, Sosig.SosigDeathType deathType)
         {
+            Debug.Log("Client sending sosig " + sosigTrackedID + " dies");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigDies))
             {
                 packet.Write(sosigTrackedID);
@@ -1030,6 +1031,7 @@ namespace H3MP
 
         public static void SosigClear(int sosigTrackedID)
         {
+            Debug.Log("Client sending sosig " + sosigTrackedID + " clear");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigClear))
             {
                 packet.Write(sosigTrackedID);
@@ -1040,6 +1042,7 @@ namespace H3MP
 
         public static void SosigSetBodyState(int sosigTrackedID, Sosig.SosigBodyState s)
         {
+            Debug.Log("Client sending sosig " + sosigTrackedID + " body state " + s);
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigSetBodyState))
             {
                 packet.Write(sosigTrackedID);
@@ -1088,6 +1091,7 @@ namespace H3MP
 
         public static void SosigVaporize(int sosigTrackedID, int iff)
         {
+            Debug.Log("Client sending sosig " + sosigTrackedID + " vaporize");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigVaporize))
             {
                 packet.Write(sosigTrackedID);
@@ -1662,19 +1666,27 @@ namespace H3MP
             }
         }
 
-        public static void TNHHoldBeginChallenge(int instance, List<int> barrierIndices, List<int> barrierPrefabIndices)
+        public static void TNHHoldBeginChallenge(int instance, bool controller, List<int> barrierIndices, List<int> barrierPrefabIndices)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldBeginChallenge))
             {
                 packet.Write(instance);
-                packet.Write(barrierIndices.Count);
-                for(int i = 0; i < barrierIndices.Count; i++)
+                packet.Write(controller);
+                if(barrierIndices == null || barrierIndices.Count == 0)
                 {
-                    packet.Write(barrierIndices[i]);
+                    packet.Write(0);
                 }
-                for(int i = 0; i < barrierIndices.Count; i++)
+                else
                 {
-                    packet.Write(barrierPrefabIndices[i]);
+                    packet.Write(barrierIndices.Count);
+                    for (int i = 0; i < barrierIndices.Count; i++)
+                    {
+                        packet.Write(barrierIndices[i]);
+                    }
+                    for (int i = 0; i < barrierIndices.Count; i++)
+                    {
+                        packet.Write(barrierPrefabIndices[i]);
+                    }
                 }
 
                 SendTCPData(packet);

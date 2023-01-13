@@ -469,6 +469,30 @@ namespace H3MP
 
                 H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localTrackedID);
             }
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownSetIFFs.ContainsKey(localTrackedID))
+            {
+                int newIFF = H3MP_TrackedSosig.unknownSetIFFs[localTrackedID];
+
+                H3MP_ClientSend.SosigSetIFF(trackedID, newIFF);
+
+                H3MP_TrackedSosig.unknownSetIFFs.Remove(localTrackedID);
+            }
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownSetOriginalIFFs.ContainsKey(localTrackedID))
+            {
+                int newIFF = H3MP_TrackedSosig.unknownSetOriginalIFFs[localTrackedID];
+
+                H3MP_ClientSend.SosigSetOriginalIFF(trackedID, newIFF);
+
+                H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localTrackedID);
+            }
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownBodyStates.ContainsKey(localTrackedID))
+            {
+                Sosig.SosigBodyState newBodyState = H3MP_TrackedSosig.unknownBodyStates[localTrackedID];
+
+                H3MP_ClientSend.SosigSetBodyState(trackedID, newBodyState);
+
+                H3MP_TrackedSosig.unknownBodyStates.Remove(localTrackedID);
+            }
         }
 
         public void RemoveFromLocal()
@@ -477,6 +501,9 @@ namespace H3MP
             H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localTrackedID);
             H3MP_TrackedSosig.unknownDestroyTrackedIDs.Remove(localTrackedID);
             H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedSosig.unknownSetIFFs.Remove(localTrackedID);
+            H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localTrackedID);
+            H3MP_TrackedSosig.unknownBodyStates.Remove(localTrackedID);
 
             // Remove
             H3MP_GameManager.sosigs[localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
