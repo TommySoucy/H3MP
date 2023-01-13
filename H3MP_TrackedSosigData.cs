@@ -417,6 +417,13 @@ namespace H3MP
 
         public void OnTrackedIDReceived()
         {
+            if (H3MP_TrackedSosig.unknownTNHKills.ContainsKey(localTrackedID))
+            {
+                H3MP_ClientSend.TNHSosigKill(H3MP_TrackedSosig.unknownTNHKills[localTrackedID], trackedID);
+
+                // Remove from local
+                H3MP_TrackedSosig.unknownTNHKills.Remove(localTrackedID);
+            }
             if (H3MP_TrackedSosig.unknownDestroyTrackedIDs.Contains(localTrackedID))
             {
                 H3MP_ClientSend.DestroySosig(trackedID);
@@ -504,6 +511,7 @@ namespace H3MP
             H3MP_TrackedSosig.unknownSetIFFs.Remove(localTrackedID);
             H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localTrackedID);
             H3MP_TrackedSosig.unknownBodyStates.Remove(localTrackedID);
+            H3MP_TrackedSosig.unknownTNHKills.Remove(localTrackedID);
 
             // Remove
             H3MP_GameManager.sosigs[localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];

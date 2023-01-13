@@ -8708,13 +8708,20 @@ namespace H3MP
                 H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(s) ? H3MP_GameManager.trackedSosigBySosig[s] : s.GetComponent<H3MP_TrackedSosig>();
                 if(trackedSosig != null)
                 {
-                    if (H3MP_ThreadManager.host)
+                    if (trackedSosig.data.trackedID == -1)
                     {
-                        H3MP_ServerSend.TNHSosigKill(Mod.currentTNHInstance.instance, trackedSosig.data.trackedID);
+                        H3MP_TrackedSosig.unknownTNHKills.Add(trackedSosig.data.localTrackedID, Mod.currentTNHInstance.instance);
                     }
                     else
                     {
-                        H3MP_ClientSend.TNHSosigKill(Mod.currentTNHInstance.instance, trackedSosig.data.trackedID);
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.TNHSosigKill(Mod.currentTNHInstance.instance, trackedSosig.data.trackedID);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.TNHSosigKill(Mod.currentTNHInstance.instance, trackedSosig.data.trackedID);
+                        }
                     }
                 }
             }

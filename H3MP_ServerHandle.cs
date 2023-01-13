@@ -1347,7 +1347,7 @@ namespace H3MP
             Vector2 pitch = packet.ReadVector2();
             float delay = packet.ReadFloat();
 
-            if (H3MP_Server.sosigs[sosigTrackedID].physicalObject != null)
+            if (H3MP_Server.sosigs[sosigTrackedID] != null && H3MP_Server.sosigs[sosigTrackedID].physicalObject != null)
             {
                 // Ensure we have reference to sosig footsteps audio event
                 if (Mod.sosigFootstepAudioEvent == null)
