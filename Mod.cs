@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -194,6 +195,7 @@ namespace H3MP
 
         // Debug
         bool debug;
+        public static Vector3 TNHSpawnPoint;
 
         private void Start()
         {
@@ -299,6 +301,10 @@ namespace H3MP
                 else if (Input.GetKeyDown(KeyCode.KeypadPlus))
                 {
                     SpawnDummyPlayer();
+                }
+                else if (Input.GetKeyDown(KeyCode.KeypadMinus))
+                {
+                    GM.CurrentMovementManager.TeleportToPoint(TNHSpawnPoint, true);
                 }
             }
         }
@@ -9063,10 +9069,12 @@ namespace H3MP
                         // Starting point invalid, find a player to spawn on
                         if(Mod.currentTNHInstance.currentlyPlaying != null && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
+                            Mod.TNHSpawnPoint = H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position;
                             GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position, true);
                         }
                         else
                         {
+                            Mod.TNHSpawnPoint = GM.CurrentPlayerBody.transform.position;
                             Debug.LogWarning("Not valid supply point or player to spawn on, spawning on default start point, which might be active");
                         }
                     }

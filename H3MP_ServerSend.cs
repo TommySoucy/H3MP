@@ -2313,7 +2313,7 @@ namespace H3MP
                 packet.Write(trackedID);
                 packet.Write(d);
 
-                SendTCPDataToAll(H3MP_Server.items[trackedID].controller, packet);
+                SendTCPDataToAll(packet);
             }
         }
 
