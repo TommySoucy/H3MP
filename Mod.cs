@@ -9381,20 +9381,21 @@ namespace H3MP
                 if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
                     // Build data list
-                    List<Vector3> spawnPoints = new List<Vector3>();
+                    Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Analyzing;
+                    Mod.currentTNHInstance.warpInData = new List<Vector3>();
                     foreach(GameObject target in ___m_warpInTargets)
                     {
-                        spawnPoints.Add(target.transform.position);
-                        spawnPoints.Add(target.transform.rotation.eulerAngles);
+                        Mod.currentTNHInstance.warpInData.Add(target.transform.position);
+                        Mod.currentTNHInstance.warpInData.Add(target.transform.rotation.eulerAngles);
                     }
 
                     if (H3MP_ThreadManager.host)
                     {
-                        H3MP_ServerSend.TNHHoldPointBeginAnalyzing(0, Mod.currentTNHInstance.instance, spawnPoints);
+                        H3MP_ServerSend.TNHHoldPointBeginAnalyzing(0, Mod.currentTNHInstance.instance, Mod.currentTNHInstance.warpInData);
                     }
                     else
                     {
-                        H3MP_ClientSend.TNHHoldPointBeginAnalyzing(Mod.currentTNHInstance.instance, spawnPoints);
+                        H3MP_ClientSend.TNHHoldPointBeginAnalyzing(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.warpInData);
                     }
                 }
             }
