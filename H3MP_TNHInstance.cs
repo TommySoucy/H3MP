@@ -20,6 +20,8 @@ namespace H3MP
         public List<int> dead; // in-game players who are dead
         public int tokenCount;
         public bool holdOngoing; // Whether the current hold point has an ongoing hold
+        public TNH_HoldPoint.HoldState holdState;
+        public List<Vector3> warpInData;
         public bool spawnedStartEquip; // Whether this client has already gotten its start equip spawned
         public int curHoldIndex;
         public int level;
@@ -163,6 +165,8 @@ namespace H3MP
             played.Clear();
             tokenCount = 0;
             holdOngoing = false;
+            holdState = TNH_HoldPoint.HoldState.Beginning;
+            warpInData = null;
             curHoldIndex = -1;
             level = 0;
             phase = TNH_Phase.StartUp;

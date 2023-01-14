@@ -164,6 +164,7 @@ namespace H3MP
         public static readonly FieldInfo SosigWeapon_m_shotsLeft = typeof(SosigWeapon).GetField("m_shotsLeft", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_ShatterableCrate_m_isHoldingHealth = typeof(TNH_ShatterableCrate).GetField("m_isHoldingHealth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_ShatterableCrate_m_isHoldingToken = typeof(TNH_ShatterableCrate).GetField("m_isHoldingToken", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_HoldPoint_m_warpInTargets = typeof(TNH_HoldPoint).GetField("m_warpInTargets", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -194,6 +195,7 @@ namespace H3MP
         public static readonly MethodInfo LAPD2019_Fire = typeof(LAPD2019).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Minigun_Fire = typeof(Minigun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Revolver_Fire = typeof(Revolver).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_HoldPoint_BeginAnalyzing = typeof(TNH_HoldPoint).GetMethod("BeginAnalyzing", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -1349,6 +1351,12 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchRaiseCompletePhasePostfix = typeof(TNH_HoldPointPatch).GetMethod("CompletePhasePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchShutDownOriginal = typeof(TNH_HoldPoint).GetMethod("ShutDownHoldPoint", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchShutDownPostfix = typeof(TNH_HoldPointPatch).GetMethod("ShutDownPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchUpdateOriginal = typeof(TNH_HoldPoint).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchUpdatePrefix = typeof(TNH_HoldPointPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchBeginAnalyzingOriginal = typeof(TNH_HoldPoint).GetMethod("BeginAnalyzing", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchBeginAnalyzingPostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginAnalyzingPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnWarpInMarkersOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnWarpInMarkers", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnWarpInMarkersPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnWarpInMarkersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
@@ -1357,6 +1365,9 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchRaiseSetCoverPointDataOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseSetCoverPointDataPrefix));
             harmony.Patch(TNH_HoldPointPatchRaiseCompletePhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseCompletePhasePostfix));
             harmony.Patch(TNH_HoldPointPatchShutDownOriginal, null, new HarmonyMethod(TNH_HoldPointPatchShutDownPostfix));
+            harmony.Patch(TNH_HoldPointPatchUpdateOriginal, new HarmonyMethod(TNH_HoldPointPatchUpdatePrefix));
+            harmony.Patch(TNH_HoldPointPatchBeginAnalyzingOriginal, null, new HarmonyMethod(TNH_HoldPointPatchBeginAnalyzingPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnWarpInMarkersOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnWarpInMarkersPrefix));
 
             // TNHWeaponCrateSpawnObjectsPatch
             MethodInfo TNH_WeaponCrateSpawnObjectsPatchOriginal = typeof(TNH_WeaponCrate).GetMethod("SpawnObjectsRaw", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -9024,7 +9035,8 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
-            Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex]);
+            TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
+            Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
             if (Mod.currentTNHInstance.holdOngoing)
             {
                 // Set the hold
@@ -9033,6 +9045,23 @@ namespace H3MP
                 ++TNH_HoldPointPatch.beginHoldSkip;
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].BeginHoldChallenge();
                 --TNH_HoldPointPatch.beginHoldSkip;
+                switch (Mod.currentTNHInstance.holdState)
+                {
+                    case TNH_HoldPoint.HoldState.Analyzing:
+                        Mod.TNH_HoldPoint_BeginAnalyzing.Invoke(curHoldPoint, null);
+                        for (int i = 0; i < Mod.currentTNHInstance.warpInData.Count; i += 2)
+                        {
+                            List<GameObject> warpInTargets = (List<GameObject>)Mod.TNH_HoldPoint_m_warpInTargets.GetValue(curHoldPoint);
+                            warpInTargets.Add(UnityEngine.Object.Instantiate<GameObject>(curHoldPoint.M.Prefab_TargetWarpingIn, Mod.currentTNHInstance.warpInData[i], Quaternion.Euler(Mod.currentTNHInstance.warpInData[i + 1])));
+                        }
+                        break;
+                    case TNH_HoldPoint.HoldState.Hacking:
+                        //TODO
+                        break;
+                    case TNH_HoldPoint.HoldState.Transition:
+                        //TODO
+                        break;
+                }
 
                 // TP to system node spawn point
                 GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode.position, true);
@@ -9125,6 +9154,12 @@ namespace H3MP
     {
         public static bool spawnEntitiesSkip;
         public static int beginHoldSkip;
+
+        static bool UpdatePrefix()
+        {
+            // Skip if connected, have TNH instance, and we are not controller
+            return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
+        }
 
         static void ConfigureAsSystemNodePrefix(ref TNH_HoldPoint __instance)
         {
@@ -9327,6 +9362,40 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.TNHHoldShutDown(Mod.currentTNHInstance.instance);
+                }
+            }
+        }
+
+        static bool SpawnWarpInMarkersPrefix()
+        {
+            // Skip if connected, have TNH instance, and we are not controller
+            return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
+        }
+
+        static void BeginAnalyzingPostfix(ref TNH_HoldPoint __instance, ref List<GameObject> ___m_warpInTargets)
+        {
+            // This patch will prevent BarrierPoints from being shuffled so barriers can be identified across clients
+            // It will also prevent raising barriers if we are not the controller of the instance
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                {
+                    // Build data list
+                    List<Vector3> spawnPoints = new List<Vector3>();
+                    foreach(GameObject target in ___m_warpInTargets)
+                    {
+                        spawnPoints.Add(target.transform.position);
+                        spawnPoints.Add(target.transform.rotation.eulerAngles);
+                    }
+
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.TNHHoldPointBeginAnalyzing(0, Mod.currentTNHInstance.instance, spawnPoints);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHHoldPointBeginAnalyzing(Mod.currentTNHInstance.instance, spawnPoints);
+                    }
                 }
             }
         }

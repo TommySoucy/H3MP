@@ -1876,5 +1876,27 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void TNHHoldPointBeginAnalyzing(int instance, List<Vector3> data)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointBeginAnalyzing))
+            {
+                packet.Write(instance);
+                if(data == null || data.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)data.Count);
+                    foreach(Vector3 dataEntry in data)
+                    {
+                        packet.Write(dataEntry);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

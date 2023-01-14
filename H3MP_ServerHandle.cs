@@ -2484,5 +2484,40 @@ namespace H3MP
                 }
             }
         }
+
+        public static void TNHHoldPointBeginAnalyzing(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
+            {
+                // Set instance data
+                TNHInstance.holdState = TNH_HoldPoint.HoldState.Analyzing;
+                TNHInstance.warpInData = new List<Vector3>();
+                byte dataCount = packet.ReadByte();
+                for(int i=0; i < dataCount; ++i)
+                {
+                    TNHInstance.warpInData.Add(packet.ReadVector3());
+                }
+
+                // If this is our TNH game, actually begin analyzing
+                if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && GM.TNH_Manager != null)
+                {
+                    TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(GM.TNH_Manager);
+
+                    // Note that since we received this order, we are not the controller of the instance
+                    // Consequently, the warpins will not be spawned as in a normal call to BeginAnalyzing
+                    // We have to spawn them ourselves with the given data
+                    Mod.TNH_HoldPoint_BeginAnalyzing.Invoke(curHoldPoint, null);
+
+                    for (int i = 0; i < dataCount; i += 2)
+                    {
+                        List<GameObject> warpInTargets = (List<GameObject>)Mod.TNH_HoldPoint_m_warpInTargets.GetValue(curHoldPoint);
+                        warpInTargets.Add(UnityEngine.Object.Instantiate<GameObject>(curHoldPoint.M.Prefab_TargetWarpingIn, TNHInstance.warpInData[i], Quaternion.Euler(TNHInstance.warpInData[i+1])));
+                    }
+                }
+            }
+
+            H3MP_ServerSend.TNHHoldPointBeginAnalyzing(clientID, packet);
+        }
     }
 }

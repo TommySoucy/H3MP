@@ -123,7 +123,8 @@ namespace H3MP
         attachableFirearmFire = 106,
         breakActionWeaponFire = 107,
         playerIFF = 108,
-        uberShatterableShatter = 109
+        uberShatterableShatter = 109,
+        TNHHoldPointBeginAnalyzing = 110
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -240,7 +241,8 @@ namespace H3MP
         attachableFirearmFire = 109,
         breakActionWeaponFire = 110,
         playerIFF = 111,
-        uberShatterableShatter = 112
+        uberShatterableShatter = 112,
+        TNHHoldPointBeginAnalyzing = 113
     }
 
     public class H3MP_Packet : IDisposable

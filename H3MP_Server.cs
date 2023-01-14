@@ -465,6 +465,7 @@ namespace H3MP
                 H3MP_ServerHandle.BreakActionWeaponFire,
                 H3MP_ServerHandle.PlayerIFF,
                 H3MP_ServerHandle.UberShatterableShatter,
+                H3MP_ServerHandle.TNHHoldPointBeginAnalyzing,
             };
 
             items = new H3MP_TrackedItemData[100];
