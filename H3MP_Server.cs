@@ -435,7 +435,7 @@ namespace H3MP
                 H3MP_ServerHandle.ShatterableCrateDamage,
                 H3MP_ServerHandle.TNHSetPhaseTake,
                 H3MP_ServerHandle.TNHHoldCompletePhase,
-                H3MP_ServerHandle.TNHHoldShutDown,
+                H3MP_ServerHandle.TNHHoldPointFailOut,
                 H3MP_ServerHandle.TNHSetPhaseComplete,
                 H3MP_ServerHandle.TNHSetPhase,
                 H3MP_ServerHandle.TrackedEncryptions,
@@ -467,6 +467,9 @@ namespace H3MP
                 H3MP_ServerHandle.UberShatterableShatter,
                 H3MP_ServerHandle.TNHHoldPointBeginAnalyzing,
                 H3MP_ServerHandle.TNHHoldPointRaiseBarriers,
+                H3MP_ServerHandle.TNHHoldIdentifyEncryption,
+                H3MP_ServerHandle.TNHHoldPointBeginPhase,
+                H3MP_ServerHandle.TNHHoldPointCompleteHold,
             };
 
             items = new H3MP_TrackedItemData[100];

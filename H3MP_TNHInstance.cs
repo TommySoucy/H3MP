@@ -22,6 +22,8 @@ namespace H3MP
         public bool holdOngoing; // Whether the current hold point has an ongoing hold
         public TNH_HoldPoint.HoldState holdState;
         public List<Vector3> warpInData;
+        public float tickDownToID;
+        public float tickDownToFailure;
         public bool spawnedStartEquip; // Whether this client has already gotten its start equip spawned
         public int curHoldIndex;
         public int level;
@@ -175,6 +177,7 @@ namespace H3MP
             raisedBarriers = null;
             raisedBarrierPrefabIndices = null;
             spawnedStartEquip = false;
+            tickDownToFailure = 120;
 
             // The game has reset, a new game will be created when a player goes in again, if we were spectating we want to stop
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)

@@ -2288,24 +2288,73 @@ namespace H3MP
         {
             int instance = packet.ReadInt();
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
-                Mod.TNH_HoldPoint_CompletePhase.Invoke(Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager), null);
+                TNHInstance.holdState = TNH_HoldPoint.HoldState.Transition;
+                TNHInstance.raisedBarriers = null;
+                TNHInstance.raisedBarrierPrefabIndices = null;
+
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+                {
+                    Mod.TNH_HoldPoint_CompletePhase.Invoke(Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager), null);
+                }
             }
 
             H3MP_ServerSend.TNHHoldCompletePhase(instance, clientID);
         }
 
-        public static void TNHHoldShutDown(int clientID, H3MP_Packet packet)
+        public static void TNHHoldPointFailOut(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
-                ((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager)).ShutDownHoldPoint();
+                TNHInstance.holdOngoing = false;
+                TNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+                {
+                    Mod.TNH_HoldPoint_FailOut.Invoke((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager), null);
+                }
             }
 
-            H3MP_ServerSend.TNHHoldShutDown(instance, clientID);
+            H3MP_ServerSend.TNHHoldPointFailOut(instance, clientID);
+        }
+
+        public static void TNHHoldPointBeginPhase(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
+            {
+                TNHInstance.holdOngoing = true;
+                TNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+                {
+                    Mod.TNH_HoldPoint_BeginPhase.Invoke((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager), null);
+                }
+            }
+
+            H3MP_ServerSend.TNHHoldPointFailOut(instance, clientID);
+        }
+
+        public static void TNHHoldPointCompleteHold(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
+            {
+                TNHInstance.holdOngoing = false;
+                TNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+                {
+                    Mod.TNH_HoldPoint_CompleteHold.Invoke((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager), null);
+                }
+            }
+
+            H3MP_ServerSend.TNHHoldPointCompleteHold(instance, clientID);
         }
 
         public static void TNHSetPhaseComplete(int clientID, H3MP_Packet packet)
@@ -2489,6 +2538,7 @@ namespace H3MP
             if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
                 // Set instance data
+                TNHInstance.tickDownToID = packet.ReadFloat();
                 TNHInstance.holdState = TNH_HoldPoint.HoldState.Analyzing;
                 TNHInstance.warpInData = new List<Vector3>();
                 byte dataCount = packet.ReadByte();
@@ -2516,6 +2566,26 @@ namespace H3MP
             }
 
             H3MP_ServerSend.TNHHoldPointBeginAnalyzing(clientID, packet);
+        }
+
+        public static void TNHHoldIdentifyEncryption(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
+            {
+                // Set instance data
+                TNHInstance.holdState = TNH_HoldPoint.HoldState.Hacking;
+
+                // If this is our TNH game, actually begin analyzing
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && GM.TNH_Manager != null)
+                {
+                    TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(GM.TNH_Manager);
+
+                    Mod.TNH_HoldPoint_IdentifyEncryption.Invoke(curHoldPoint, null);
+                }
+            }
+
+            H3MP_ServerSend.TNHHoldIdentifyEncryption(clientID, instance);
         }
     }
 }

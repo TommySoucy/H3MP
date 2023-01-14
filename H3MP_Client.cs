@@ -385,7 +385,7 @@ namespace H3MP
                 H3MP_ClientHandle.TNHHoldBeginChallenge,
                 H3MP_ClientHandle.TNHSetPhaseTake,
                 H3MP_ClientHandle.TNHHoldCompletePhase,
-                H3MP_ClientHandle.TNHHoldShutDown,
+                H3MP_ClientHandle.TNHHoldPointFailOut,
                 H3MP_ClientHandle.TNHSetPhaseComplete,
                 H3MP_ClientHandle.TNHSetPhase,
                 H3MP_ClientHandle.TrackedEncryptions,
@@ -416,6 +416,8 @@ namespace H3MP
                 H3MP_ClientHandle.UberShatterableShatter,
                 H3MP_ClientHandle.TNHHoldPointBeginAnalyzing,
                 H3MP_ClientHandle.TNHHoldPointRaiseBarriers,
+                H3MP_ClientHandle.TNHHoldIdentifyEncryption,
+                H3MP_ClientHandle.TNHHoldPointBeginPhase,
             };
 
             // All vanilla scenes can be synced by default

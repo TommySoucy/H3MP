@@ -95,7 +95,7 @@ namespace H3MP
         TNHHoldBeginChallenge = 78,
         TNHSetPhaseTake = 79,
         TNHHoldCompletePhase = 80,
-        TNHHoldShutDown = 81,
+        TNHHoldPointFailOut = 81,
         TNHSetPhaseComplete = 82,
         TNHSetPhase = 83,
         trackedEncryptions = 84,
@@ -125,7 +125,10 @@ namespace H3MP
         playerIFF = 108,
         uberShatterableShatter = 109,
         TNHHoldPointBeginAnalyzing = 110,
-        TNHHoldPointRaiseBarriers = 111
+        TNHHoldPointRaiseBarriers = 111,
+        TNHHoldIdentifyEncryption = 112,
+        TNHHoldPointBeginPhase = 113,
+        TNHHoldPointCompleteHold = 114
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -213,7 +216,7 @@ namespace H3MP
         shatterableCrateDamage = 80,
         TNHSetPhaseTake = 81,
         TNHHoldCompletePhase = 82,
-        TNHHoldShutDown = 83,
+        TNHHoldPointFailOut = 83,
         TNHSetPhaseComplete = 84,
         TNHSetPhase = 85,
         trackedEncryptions = 86,
@@ -244,7 +247,10 @@ namespace H3MP
         playerIFF = 111,
         uberShatterableShatter = 112,
         TNHHoldPointBeginAnalyzing = 113,
-        TNHHoldPointRaiseBarriers = 114
+        TNHHoldPointRaiseBarriers = 114,
+        TNHHoldIdentifyEncryption = 115,
+        TNHHoldPointBeginPhase = 116,
+        TNHHoldPointCompleteHold = 117
     }
 
     public class H3MP_Packet : IDisposable

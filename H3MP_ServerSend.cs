@@ -2399,9 +2399,43 @@ namespace H3MP
             }
         }
 
-        public static void TNHHoldShutDown(int instance, int clientID = 0)
+        public static void TNHHoldPointFailOut(int instance, int clientID = 0)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldShutDown))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldPointFailOut))
+            {
+                packet.Write(instance);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHHoldPointBeginPhase(int instance, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldPointBeginPhase))
+            {
+                packet.Write(instance);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHHoldPointCompleteHold(int instance, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldPointCompleteHold))
             {
                 packet.Write(instance);
 
@@ -2690,11 +2724,12 @@ namespace H3MP
             }
         }
 
-        public static void TNHHoldPointBeginAnalyzing(int clientID, int instance, List<Vector3> data)
+        public static void TNHHoldPointBeginAnalyzing(int clientID, int instance, List<Vector3> data, float tickDownToID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldPointBeginAnalyzing))
             {
                 packet.Write(instance);
+                packet.Write(tickDownToID);
                 if (data == null || data.Count == 0)
                 {
                     packet.Write((byte)0);
@@ -2787,6 +2822,23 @@ namespace H3MP
             else
             {
                 SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void TNHHoldIdentifyEncryption(int clientID, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldIdentifyEncryption))
+            {
+                packet.Write(instance);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
     }

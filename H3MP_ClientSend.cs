@@ -1765,9 +1765,29 @@ namespace H3MP
             }
         }
 
-        public static void TNHHoldShutDown(int instance)
+        public static void TNHHoldPointFailOut(int instance)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldShutDown))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointFailOut))
+            {
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TNHHoldPointBeginPhase(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointBeginPhase))
+            {
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TNHHoldPointCompleteHold(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointCompleteHold))
             {
                 packet.Write(instance);
 
@@ -1887,11 +1907,12 @@ namespace H3MP
             }
         }
 
-        public static void TNHHoldPointBeginAnalyzing(int instance, List<Vector3> data)
+        public static void TNHHoldPointBeginAnalyzing(int instance, List<Vector3> data, float tickDownToID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointBeginAnalyzing))
             {
                 packet.Write(instance);
+                packet.Write(tickDownToID);
                 if(data == null || data.Count == 0)
                 {
                     packet.Write((byte)0);
@@ -1904,6 +1925,16 @@ namespace H3MP
                         packet.Write(dataEntry);
                     }
                 }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TNHHoldIdentifyEncryption(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldIdentifyEncryption))
+            {
+                packet.Write(instance);
 
                 SendTCPData(packet);
             }
