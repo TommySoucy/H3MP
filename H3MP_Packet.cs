@@ -124,7 +124,8 @@ namespace H3MP
         breakActionWeaponFire = 107,
         playerIFF = 108,
         uberShatterableShatter = 109,
-        TNHHoldPointBeginAnalyzing = 110
+        TNHHoldPointBeginAnalyzing = 110,
+        TNHHoldPointRaiseBarriers = 111
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -242,7 +243,8 @@ namespace H3MP
         breakActionWeaponFire = 110,
         playerIFF = 111,
         uberShatterableShatter = 112,
-        TNHHoldPointBeginAnalyzing = 113
+        TNHHoldPointBeginAnalyzing = 113,
+        TNHHoldPointRaiseBarriers = 114
     }
 
     public class H3MP_Packet : IDisposable

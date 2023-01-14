@@ -1666,12 +1666,22 @@ namespace H3MP
             }
         }
 
-        public static void TNHHoldBeginChallenge(int instance, bool controller, List<int> barrierIndices, List<int> barrierPrefabIndices)
+        public static void TNHHoldBeginChallenge(int instance, bool controller)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldBeginChallenge))
             {
                 packet.Write(instance);
                 packet.Write(controller);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TNHHoldPointRaiseBarriers(int instance, List<int> barrierIndices, List<int> barrierPrefabIndices)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointRaiseBarriers))
+            {
+                packet.Write(instance);
                 if(barrierIndices == null || barrierIndices.Count == 0)
                 {
                     packet.Write(0);

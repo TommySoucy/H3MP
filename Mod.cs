@@ -1344,7 +1344,7 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchBeginHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchBeginHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchRaiseRandomBarriersOriginal = typeof(TNH_HoldPoint).GetMethod("RaiseRandomBarriers", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPrefix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPostfix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchRaiseSetCoverPointDataOriginal = typeof(TNH_DestructibleBarrierPoint).GetMethod("SetCoverPointData", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchRaiseSetCoverPointDataPrefix = typeof(TNH_HoldPointPatch).GetMethod("BarrierSetCoverPointDataPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchRaiseCompletePhaseOriginal = typeof(TNH_HoldPoint).GetMethod("CompletePhase", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1361,7 +1361,7 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
             harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
-            harmony.Patch(TNH_HoldPointPatchRaiseRandomBarriersOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseRandomBarriersPrefix));
+            harmony.Patch(TNH_HoldPointPatchRaiseRandomBarriersOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseRandomBarriersPostfix));
             harmony.Patch(TNH_HoldPointPatchRaiseSetCoverPointDataOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseSetCoverPointDataPrefix));
             harmony.Patch(TNH_HoldPointPatchRaiseCompletePhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseCompletePhasePostfix));
             harmony.Patch(TNH_HoldPointPatchShutDownOriginal, null, new HarmonyMethod(TNH_HoldPointPatchShutDownPostfix));
@@ -9243,11 +9243,11 @@ namespace H3MP
             {
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, null, null, false, Mod.currentTNHInstance.controller);
+                    H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, false, Mod.currentTNHInstance.controller);
                 }
                 else
                 {
-                    H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, null, null);
+                    H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false);
                 }
 
                 return false;
@@ -9267,19 +9267,20 @@ namespace H3MP
             {
                 // Update locally
                 Mod.currentTNHInstance.holdOngoing = true;
+                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
 
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true, Mod.currentTNHInstance.raisedBarriers, Mod.currentTNHInstance.raisedBarrierPrefabIndices, true, 0);
+                    H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true, true, 0);
                 }
                 else
                 {
-                    H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true, Mod.currentTNHInstance.raisedBarriers, Mod.currentTNHInstance.raisedBarrierPrefabIndices);
+                    H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true);
                 }
             }  
         }
 
-        static bool RaiseRandomBarriersPrefix(int howMany)
+        static bool RaiseRandomBarriersPostfix(int howMany)
         {
             // This patch will prevent BarrierPoints from being shuffled so barriers can be identified across clients
             // It will also prevent raising barriers if we are not the controller of the instance
@@ -9306,6 +9307,15 @@ namespace H3MP
 
                         // Set the list in TNHInstance, which will be sent alongside begin hold
                         Mod.currentTNHInstance.raisedBarriers.Add(index);
+                    }
+
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.TNHHoldPointRaiseBarriers(0, Mod.currentTNHInstance.instance, Mod.currentTNHInstance.raisedBarriers, Mod.currentTNHInstance.raisedBarrierPrefabIndices);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHHoldPointRaiseBarriers(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.raisedBarriers, Mod.currentTNHInstance.raisedBarrierPrefabIndices);
                     }
                 }
 
