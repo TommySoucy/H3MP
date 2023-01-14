@@ -9338,7 +9338,7 @@ namespace H3MP
 
         static void CompletePhasePostfix()
         {
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
             {
                 if (H3MP_ThreadManager.host)
                 {
