@@ -1778,11 +1778,13 @@ namespace H3MP
         public static void TNHHoldBeginChallenge(H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
-            bool fromController = packet.ReadBool(); 
+            bool fromController = packet.ReadBool();
+            Debug.Log("TNHHoldBeginChallenge called on client for instance: " + instance + ", from controller: " + fromController);
             if (fromController)
             {
                 if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
                 {
+                    Debug.Log("\tFromcontroller and this is our instance and we are in game, beginning hold");
                     Mod.currentTNHInstance.phase = TNH_Phase.Hold;
                     Mod.currentTNHInstance.holdOngoing = true;
 
@@ -1800,12 +1802,14 @@ namespace H3MP
                 }
                 else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
                 {
+                    Debug.Log("\tThis is not our TNHInstance");
                     actualInstance.phase = TNH_Phase.Hold;
                     actualInstance.holdOngoing = true;
                 }
             }
             else if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
             {
+                Debug.Log("\tNot from controller, we are controller, beginning hold");
                 // We received order to begin hold and we are the controller, begin it
                 TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
                 curHoldPoint.BeginHoldChallenge();
@@ -1815,6 +1819,7 @@ namespace H3MP
             }
             else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
+                Debug.Log("\tNot from controller, we are not controller and this is not our instance, passing on");
                 // We received order to begin hold, but we are not the controller
                 // This is possible if we were the controller when the server sent it but we have since lost control
                 H3MP_ClientSend.TNHHoldBeginChallenge(instance, false);
@@ -2131,6 +2136,7 @@ namespace H3MP
             int instance = packet.ReadInt();
             if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
+                Debug.Log("TNHHoldPointRaiseBarriers called on client setting instance data");
                 // Set instance data
                 int barrierCount = packet.ReadInt();
                 TNHInstance.raisedBarriers = new List<int>();
@@ -2147,11 +2153,13 @@ namespace H3MP
                 // If this is our TNH game, actually raise barriers
                 if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && GM.TNH_Manager != null)
                 {
+                    Debug.Log("\tThis is our instance, raising barriers");
                     TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(GM.TNH_Manager);
 
                     // Raise barriers
                     for (int i = 0; i < TNHInstance.raisedBarriers.Count; ++i)
                     {
+                        Debug.Log("\t\tRaising a barrier");
                         TNH_DestructibleBarrierPoint point = curHoldPoint.BarrierPoints[TNHInstance.raisedBarriers[i]];
                         TNH_DestructibleBarrierPoint.BarrierDataSet barrierDataSet = point.BarrierDataSets[TNHInstance.raisedBarrierPrefabIndices[i]];
                         GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(barrierDataSet.BarrierPrefab, point.transform.position, point.transform.rotation);
