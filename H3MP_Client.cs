@@ -441,6 +441,7 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance)
         {
+            Debug.Log("Client adding a tracked item: "+trackedItem.trackedID+", itemID: "+trackedItem.itemID);
             // Adjust items size to acommodate if necessary
             if (items.Length <= trackedItem.trackedID)
             {
@@ -449,6 +450,7 @@ namespace H3MP
 
             if (trackedItem.controller == H3MP_Client.singleton.ID)
             {
+                Debug.Log("\tItem is ours, setting tracked ID");
                 // If we already control the item it is because we are the one who send the item to the server
                 // We just need to update the tracked ID of the item
                 H3MP_GameManager.items[trackedItem.localTrackedID].trackedID = trackedItem.trackedID;
@@ -460,6 +462,7 @@ namespace H3MP
             }
             else
             {
+                Debug.Log("\tItem is not ours");
                 trackedItem.localTrackedID = -1;
 
                 // Add the item to client global list
@@ -468,6 +471,7 @@ namespace H3MP
                 // Instantiate item if it is in the current scene
                 if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                 {
+                    Debug.Log("\t\tItem is in scene/instance, instantiating");
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
@@ -475,7 +479,7 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance)
         {
-            Debug.Log("Received order to add a sosig");
+            Debug.Log("Client adding a tracked sosig: " + trackedSosig.trackedID);
             // Adjust sosigs size to acommodate if necessary
             if (sosigs.Length <= trackedSosig.trackedID)
             {
@@ -484,6 +488,7 @@ namespace H3MP
 
             if (trackedSosig.controller == H3MP_Client.singleton.ID)
             {
+                Debug.Log("\tSosig is ours, setting tracked ID");
                 // If we already control the sosig it is because we are the one who sent the sosig to the server
                 // We just need to update the tracked ID of the sosig
                 H3MP_GameManager.sosigs[trackedSosig.localTrackedID].trackedID = trackedSosig.trackedID;
@@ -491,6 +496,7 @@ namespace H3MP
                 // Add the sosig to client global list
                 sosigs[trackedSosig.trackedID] = H3MP_GameManager.sosigs[trackedSosig.localTrackedID];
 
+                Debug.Log("\tSosig is ours, doing late update");
                 // Send queued up orders
                 sosigs[trackedSosig.trackedID].OnTrackedIDReceived();
 
@@ -499,14 +505,17 @@ namespace H3MP
                 {
                     sosigs[trackedSosig.trackedID].Update(true);
 
+                    Debug.Log("\t\tSending late update");
                     // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
                     H3MP_ClientSend.TrackedSosig(sosigs[trackedSosig.trackedID], scene, instance);
                 }
             }
             else
             {
-                if(sosigs[trackedSosig.trackedID] == null)
+                Debug.Log("\tSosig is not ours");
+                if (sosigs[trackedSosig.trackedID] == null)
                 {
+                    Debug.Log("\t\tSosig is new");
                     trackedSosig.localTrackedID = -1;
 
                     // Add the sosig to client global list
@@ -515,11 +524,13 @@ namespace H3MP
                     // Instantiate sosig if it is in the current scene
                     if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                     {
+                        Debug.Log("\t\t\tSosig is in scene/instance, instantiating");
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
                 }
                 else // This is an initial update sosig data
                 {
+                    Debug.Log("\t\tSosig is already in local global list, this is late update sosig");
                     H3MP_TrackedSosigData trackedSosigData = sosigs[trackedSosig.trackedID];
 
                     // Instantiate sosig if it is in the current scene if not instantiated already
@@ -528,10 +539,12 @@ namespace H3MP
                     {
                         if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                         {
+                            Debug.Log("\t\t\tSosig is in scene/instance, instantiating");
                             AnvilManager.Run(trackedSosigData.Instantiate());
                         }
                     }
 
+                    Debug.Log("\t\tApplying late update data");
                     trackedSosigData.Update(trackedSosig, true);
                 }
             }

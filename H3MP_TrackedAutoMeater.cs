@@ -65,8 +65,11 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            H3MP_Server.autoMeaters[data.trackedID] = null;
-                            H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
+                            if (H3MP_Server.autoMeaters[data.trackedID] != null)
+                            {
+                                H3MP_Server.autoMeaters[data.trackedID] = null;
+                                H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
+                            }
                         }
                         else
                         {
@@ -88,8 +91,11 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    H3MP_Server.autoMeaters[data.trackedID] = null;
-                    H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
+                    if (H3MP_Server.autoMeaters[data.trackedID] != null)
+                    {
+                        H3MP_Server.autoMeaters[data.trackedID] = null;
+                        H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
+                    }
                 }
                 if (data.localTrackedID != -1)
                 {

@@ -875,7 +875,9 @@ namespace H3MP
             {
                 if (trackedSosig.controller == H3MP_Client.singleton.ID)
                 {
-                    if (trackedSosig.physicalObject != null)
+                    if (trackedSosig.physicalObject != null &&
+                        trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex] != null &&
+                        !trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].IsExploded)
                     {
                         ++SosigLinkDamagePatch.skip;
                         trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].Damage(damage);
@@ -999,7 +1001,9 @@ namespace H3MP
             {
                 if (trackedSosig.controller == H3MP_Client.singleton.ID)
                 {
-                    if (trackedSosig.physicalObject != null)
+                    if (trackedSosig.physicalObject != null &&
+                        trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex] != null &&
+                        !trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].IsExploded)
                     {
                         ++SosigWearableDamagePatch.skip;
                         (Mod.SosigLink_m_wearables.GetValue(trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex]) as List<SosigWearable>)[wearableIndex].Damage(damage);

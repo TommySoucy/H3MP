@@ -408,7 +408,8 @@ namespace H3MP
                 H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
             }
 
-            if (removeFromList)
+            // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
+            if (removeFromList && H3MP_Server.sosigs[trackedID] != null)
             {
                 H3MP_Server.sosigs[trackedID] = null;
                 H3MP_Server.availableSosigIndices.Add(trackedID);
@@ -437,7 +438,8 @@ namespace H3MP
                 H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
             }
 
-            if (removeFromList)
+            // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
+            if (removeFromList && H3MP_Server.autoMeaters[trackedID] != null)
             {
                 H3MP_Server.autoMeaters[trackedID] = null;
                 H3MP_Server.availableAutoMeaterIndices.Add(trackedID);
@@ -466,7 +468,8 @@ namespace H3MP
                 H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
             }
 
-            if (removeFromList)
+            // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
+            if (removeFromList && H3MP_Server.encryptions[trackedID] != null)
             {
                 H3MP_Server.encryptions[trackedID] = null;
                 H3MP_Server.availableEncryptionIndices.Add(trackedID);
@@ -504,7 +507,8 @@ namespace H3MP
                     trackedItem.localTrackedID = -1;
                 }
 
-                if (removeFromList)
+                // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
+                if (removeFromList && H3MP_Server.items[trackedID] != null)
                 {
                     H3MP_Server.items[trackedID] = null;
                     H3MP_Server.availableItemIndices.Add(trackedID);
@@ -1045,7 +1049,9 @@ namespace H3MP
             {
                 if(trackedSosig.controller == 0)
                 {
-                    if (trackedSosig.physicalObject != null)
+                    if (trackedSosig.physicalObject != null &&
+                        trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex] != null &&
+                        !trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].IsExploded)
                     {
                         ++SosigLinkDamagePatch.skip;
                         trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].Damage(damage);
@@ -1149,7 +1155,9 @@ namespace H3MP
             {
                 if(trackedSosig.controller == 0)
                 {
-                    if (trackedSosig.physicalObject != null)
+                    if (trackedSosig.physicalObject != null &&
+                        trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex] != null &&
+                        !trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex].IsExploded)
                     {
                         ++SosigWearableDamagePatch.skip;
                         (Mod.SosigLink_m_wearables.GetValue(trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex]) as List<SosigWearable>)[wearableIndex].Damage(damage);

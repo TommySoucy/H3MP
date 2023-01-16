@@ -514,11 +514,13 @@ namespace H3MP
                                 if (H3MP_ThreadManager.host)
                                 {
                                     // This will also send a packet with the item to be added in the client's global item list
+                                    Debug.Log("Server adding its own tracked item: "+root.name);
                                     H3MP_Server.AddTrackedItem(trackedItem.data, scene, instance, 0);
                                 }
                                 else
                                 {
                                     // Tell the server we need to add this item to global tracked items
+                                    Debug.Log("Client requesting addition of new tracked item: " + root.name);
                                     H3MP_ClientSend.TrackedItem(trackedItem.data, scene, instance);
                                 }
                             }
@@ -675,11 +677,13 @@ namespace H3MP
                             if (H3MP_ThreadManager.host)
                             {
                                 // This will also send a packet with the sosig to be added in the client's global sosig list
+                                Debug.Log("Server adding its own tracked sosig: " + root.name);
                                 H3MP_Server.AddTrackedSosig(trackedSosig.data, scene, instance, 0);
                             }
                             else
                             {
                                 // Tell the server we need to add this item to global tracked items
+                                Debug.Log("Client requesting addition of new tracked sosig: " + root.name);
                                 H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene, instance);
                             }
                         }

@@ -117,7 +117,7 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Debug.Log("Instantiating item " + trackedID);
+            Debug.Log("Instantiating item " + trackedID+", itemID: "+itemID);
             GameObject itemPrefab = GetItemPrefab();
             if (itemPrefab == null)
             {
@@ -139,6 +139,7 @@ namespace H3MP
             {
                 ++Mod.skipAllInstantiates;
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
+                Debug.Log("\tInstantiated item " + itemObject.name);
                 --Mod.skipAllInstantiates;
                 physicalItem = itemObject.AddComponent<H3MP_TrackedItem>();
                 physicalItem.data = this;

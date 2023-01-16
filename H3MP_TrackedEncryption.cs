@@ -74,8 +74,11 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            H3MP_Server.encryptions[data.trackedID] = null;
-                            H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
+                            if (H3MP_Server.encryptions[data.trackedID] != null)
+                            {
+                                H3MP_Server.encryptions[data.trackedID] = null;
+                                H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
+                            }
                         }
                         else
                         {
@@ -97,8 +100,11 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    H3MP_Server.encryptions[data.trackedID] = null;
-                    H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
+                    if (H3MP_Server.encryptions[data.trackedID] != null)
+                    {
+                        H3MP_Server.encryptions[data.trackedID] = null;
+                        H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
+                    }
                 }
                 if (data.localTrackedID != -1)
                 {

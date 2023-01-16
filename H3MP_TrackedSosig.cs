@@ -101,8 +101,11 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            H3MP_Server.sosigs[data.trackedID] = null;
-                            H3MP_Server.availableSosigIndices.Add(data.trackedID);
+                            if (H3MP_Server.sosigs[data.trackedID] != null)
+                            {
+                                H3MP_Server.sosigs[data.trackedID] = null;
+                                H3MP_Server.availableSosigIndices.Add(data.trackedID);
+                            }
                         }
                         else
                         {
@@ -124,8 +127,11 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    H3MP_Server.sosigs[data.trackedID] = null;
-                    H3MP_Server.availableSosigIndices.Add(data.trackedID);
+                    if (H3MP_Server.sosigs[data.trackedID] != null)
+                    {
+                        H3MP_Server.sosigs[data.trackedID] = null;
+                        H3MP_Server.availableSosigIndices.Add(data.trackedID);
+                    }
                 }
                 if (data.localTrackedID != -1)
                 {

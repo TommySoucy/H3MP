@@ -133,6 +133,7 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance, int clientID)
         {
+            Debug.Log("Server adding a tracked item: "+trackedItem.itemID);
             // Adjust items size to acommodate if necessary
             if (availableItemIndices.Count == 0)
             {
@@ -142,19 +143,22 @@ namespace H3MP
             // Add it to server global list
             trackedItem.trackedID = availableItemIndices[availableItemIndices.Count - 1];
             availableItemIndices.RemoveAt(availableItemIndices.Count - 1);
+            Debug.Log("\tItem added to server global list with tracked ID: "+ trackedItem.trackedID);
 
             items[trackedItem.trackedID] = trackedItem;
 
-            // Instantiate item if it is in the current scene nad not controlled by us
+            // Instantiate item if it is in the current scene and not controlled by us
             if (clientID != 0)
             {
                 if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                 {
+                    Debug.Log("\t\tItem in current scene/instance and is not ours, instanting");
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
 
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
+            Debug.Log("\tSending to all clients");
             H3MP_ServerSend.TrackedItem(trackedItem, scene, instance, clientID);
 
             // Update the local tracked ID at the end because we need to send that back to the original client intact
@@ -168,7 +172,7 @@ namespace H3MP
         {
             if (trackedSosig.trackedID == -1)
             {
-                Debug.Log("Received order to add tracked sosig");
+                Debug.Log("Server adding a tracked sosig");
                 // Adjust sosigs size to acommodate if necessary
                 if (availableSosigIndices.Count == 0)
                 {
@@ -178,6 +182,7 @@ namespace H3MP
                 // Add it to server global list
                 trackedSosig.trackedID = availableSosigIndices[availableSosigIndices.Count - 1];
                 availableSosigIndices.RemoveAt(availableSosigIndices.Count - 1);
+                Debug.Log("\tsosig added to server global list with tracked ID: " + trackedSosig.trackedID);
 
                 sosigs[trackedSosig.trackedID] = trackedSosig;
 
@@ -186,11 +191,13 @@ namespace H3MP
                 {
                     if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                     {
+                        Debug.Log("\t\tSosig in current scene/instance and is not ours, instanting");
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
                 }
 
                 // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
+                Debug.Log("\tSending to all clients");
                 H3MP_ServerSend.TrackedSosig(trackedSosig, scene, instance, clientID);
 
                 // Update the local tracked ID at the end because we need to send that back to the original client intact
@@ -199,8 +206,9 @@ namespace H3MP
                     trackedSosig.localTrackedID = -1;
                 }
             }
-            else 
+            else
             {
+                Debug.Log("Server adding a tracked sosig is already has tracked ID of, this is late update sosig data, updating and sending to all clients");
                 // This is a sosig we already received full data for and assigned a tracked ID to but things may
                 // have appened to it since we sent the tracked ID, so use this data to update our's and everyones else's
                 sosigs[trackedSosig.trackedID].Update(trackedSosig, true);
