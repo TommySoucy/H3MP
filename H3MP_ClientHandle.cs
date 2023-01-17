@@ -884,6 +884,16 @@ namespace H3MP
                         --SosigLinkDamagePatch.skip;
                     }
                 }
+                else // We are not controller anymore (if we received this packet, it means we were to the server when they sent it to us)
+                {
+                    // Bounce
+                    H3MP_ClientSend.SosigLinkDamage(packet);
+                }
+            }
+            else // Not sure if this case is possible, but if happens, let server consume it instead of us just in case
+            {
+                // Bounce
+                H3MP_ClientSend.SosigLinkDamage(packet);
             }
         }
 
@@ -904,6 +914,14 @@ namespace H3MP
                         --AutoMeaterDamagePatch.skip;
                     }
                 }
+                else
+                {
+                    H3MP_ClientSend.AutoMeaterDamage(packet);
+                }
+            }
+            else
+            {
+                H3MP_ClientSend.AutoMeaterDamage(packet);
             }
         }
 
@@ -925,6 +943,14 @@ namespace H3MP
                         --AutoMeaterHitZoneDamagePatch.skip;
                     }
                 }
+                else
+                {
+                    H3MP_ClientSend.AutoMeaterHitZoneDamage(packet);
+                }
+            }
+            else
+            {
+                H3MP_ClientSend.AutoMeaterHitZoneDamage(packet);
             }
         }
 
@@ -945,6 +971,14 @@ namespace H3MP
                         --EncryptionDamagePatch.skip;
                     }
                 }
+                else
+                {
+                    H3MP_ClientSend.EncryptionDamage(packet);
+                }
+            }
+            else
+            {
+                H3MP_ClientSend.EncryptionDamage(packet);
             }
         }
 
@@ -992,13 +1026,14 @@ namespace H3MP
         public static void SosigWearableDamage(H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
-            byte linkIndex = packet.ReadByte();
-            byte wearableIndex = packet.ReadByte();
-            Damage damage = packet.ReadDamage();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if (trackedSosig != null)
             {
+                byte linkIndex = packet.ReadByte();
+                byte wearableIndex = packet.ReadByte();
+                Damage damage = packet.ReadDamage();
+
                 if (trackedSosig.controller == H3MP_Client.singleton.ID)
                 {
                     if (trackedSosig.physicalObject != null &&
@@ -1010,6 +1045,14 @@ namespace H3MP
                         --SosigWearableDamagePatch.skip;
                     }
                 }
+                else
+                {
+                    H3MP_ClientSend.SosigWearableDamage(packet);
+                }
+            }
+            else
+            {
+                H3MP_ClientSend.SosigWearableDamage(packet);
             }
         }
 
@@ -1839,6 +1882,10 @@ namespace H3MP
                 ++TNH_ShatterableCrateDamagePatch.skip;
                 H3MP_Client.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
                 --TNH_ShatterableCrateDamagePatch.skip;
+            }
+            else
+            {
+                H3MP_ClientSend.ShatterableCrateDamage(packet);
             }
         }
 

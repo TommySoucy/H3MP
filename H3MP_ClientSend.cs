@@ -913,6 +913,18 @@ namespace H3MP
             }
         }
 
+        public static void SosigLinkDamage(H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.sosigLinkDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(packet);
+        }
+
         public static void SosigWearableDamage(int trackedSosigID, int linkIndex, int wearableIndex, Damage d)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigWearableDamage))
@@ -924,6 +936,18 @@ namespace H3MP
 
                 SendTCPData(packet);
             }
+        }
+
+        public static void SosigWearableDamage(H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.sosigWearableDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(packet);
         }
 
         public static void SosigDamageData(H3MP_TrackedSosig trackedSosig)
@@ -1604,6 +1628,18 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterDamage(H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.autoMeaterDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(packet);
+        }
+
         public static void AutoMeaterFirearmFireAtWill(int trackedID, int firearmIndex, bool fireAtWill, float dist)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterFirearmFireAtWill))
@@ -1629,6 +1665,18 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterHitZoneDamage(H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.autoMeaterHitZoneDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(packet);
+        }
+
         public static void EncryptionDamage(int trackedID, Damage d)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionDamage))
@@ -1638,6 +1686,18 @@ namespace H3MP
 
                 SendTCPData(packet);
             }
+        }
+
+        public static void EncryptionDamage(H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.encryptionDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(packet);
         }
 
         public static void TNHSosigKill(int instance, int sosigTrackedID)
@@ -1712,6 +1772,18 @@ namespace H3MP
 
                 SendTCPData(packet);
             }
+        }
+
+        public static void ShatterableCrateDamage(H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.shatterableCrateDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(packet);
         }
 
         public static void ShatterableCrateDestroy(int trackedID, Damage d)
