@@ -1,6 +1,7 @@
 ﻿using FistVR;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -41,6 +42,7 @@ namespace H3MP
         public static Dictionary<TNH_EncryptionTarget, H3MP_TrackedEncryption> trackedEncryptionByEncryption = new Dictionary<TNH_EncryptionTarget, H3MP_TrackedEncryption>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, H3MP_TNHInstance> TNHInstances = new Dictionary<int, H3MP_TNHInstance>();
+        public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
 
         public static bool giveControlOfDestroyed;
 
@@ -100,6 +102,25 @@ namespace H3MP
             playerManager.usernameLabel.text = username;
             playerManager.SetIFF(IFF);
             players.Add(ID, playerManager);
+
+            // Add to scene/instance
+            if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int,List<int>> relevantInstances))
+            {
+                if (relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
+                {
+                    relevantPlayers.Add(ID);
+                }
+                else // We have scene but not instance, add instance
+                {
+                    relevantInstances.Add(instance, new List<int>() { ID });
+                }
+            }
+            else // We don't have scene, add scene
+            {
+                Dictionary<int,List<int>> newInstances = new Dictionary<int,List<int>>();
+                newInstances.Add(instance, new List<int>() { ID });
+                playersByInstanceByScene.Add(scene, newInstances);
+            }
 
             // Add to instance
             if (activeInstances.ContainsKey(instance))
@@ -166,7 +187,37 @@ namespace H3MP
         {
             H3MP_PlayerManager player = players[playerID];
 
+            // Remove from scene/instance
+            playersByInstanceByScene[player.scene][player.instance].Remove(player.ID);
+            if (playersByInstanceByScene[player.scene][player.instance].Count == 0)
+            {
+                playersByInstanceByScene[player.scene].Remove(player.instance);
+            }
+            if (playersByInstanceByScene[player.scene].Count == 0)
+            {
+                playersByInstanceByScene.Remove(player.scene);
+            }
+
             player.scene = sceneName;
+            
+            // Add to scene/instance
+            if (playersByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> relevantInstances))
+            {
+                if (relevantInstances.TryGetValue(player.instance, out List<int> relevantPlayers))
+                {
+                    relevantPlayers.Add(ID);
+                }
+                else // We have scene but not instance, add instance
+                {
+                    relevantInstances.Add(player.instance, new List<int>() { ID });
+                }
+            }
+            else // We don't have scene, add scene
+            {
+                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                newInstances.Add(player.instance, new List<int>() { ID });
+                playersByInstanceByScene.Add(player.scene, newInstances);
+            }
 
             if (H3MP_ThreadManager.host)
             {
@@ -273,7 +324,30 @@ namespace H3MP
                 }
             }
 
+            // Remove from scene/instance
+            playersByInstanceByScene[player.scene][player.instance].Remove(player.ID);
+            if(playersByInstanceByScene[player.scene][player.instance].Count == 0)
+            {
+                playersByInstanceByScene[player.scene].Remove(player.instance);
+            }
+            // NOTE: No need to check if scene has any instances since here the player's scene doesn't change, only the instance
+            // So the scene is guaranteed to remain
+            //if(playersByInstanceByScene[player.scene].Count == 0)
+            //{
+            //    playersByInstanceByScene.Remove(player.scene);
+            //}
+
             player.instance = instance;
+
+            // Add to instance
+            if (playersByInstanceByScene[player.scene].TryGetValue(instance, out List<int> relevantPlayers))
+            {
+                relevantPlayers.Add(ID);
+            }
+            else // We have scene but not instance, add instance
+            {
+                playersByInstanceByScene[player.scene].Add(instance, new List<int>() { ID });
+            }
 
             if (H3MP_ThreadManager.host)
             {
