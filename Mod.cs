@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -626,6 +627,12 @@ namespace H3MP
 
             harmony.Patch(sosigHandDropPatchOriginal, new HarmonyMethod(sosigHandDropPatchPrefix));
             harmony.Patch(sosigHandThrowPatchOriginal, new HarmonyMethod(sosigHandDropPatchPrefix));
+
+            // GrabbityPatch
+            MethodInfo grabbityPatchOriginal = typeof(FVRViveHand).GetMethod("BeginFlick", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo grabbityPatchPrefix = typeof(GrabbityPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(grabbityPatchOriginal, new HarmonyMethod(grabbityPatchPrefix));
 
             // FirePatch
             MethodInfo firePatchOriginal = typeof(FVRFireArm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
@@ -2732,6 +2739,63 @@ namespace H3MP
                     }
                 }
             }
+        }
+    }
+
+    // Patches FVRViveHand.BeginFlick to take control of the object
+    class GrabbityPatch
+    {
+        static bool Prefix(FVRPhysicalObject o)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If spectating we prevent the flick entirely
+            if (Mod.TNHSpectating)
+            {
+                return false;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(o, out H3MP_TrackedItem currentItem) ? currentItem : o.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller != 0)
+                    {
+                        // Take control
+
+                        // Send to all clients
+                        H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+
+                        // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
+                        trackedItem.data.controller = 0;
+                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem.data);
+                    }
+                }
+                else
+                {
+                    if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                    {
+                        // Take control
+
+                        // Send to all clients
+                        H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+
+                        // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
+                        trackedItem.data.controller = H3MP_Client.singleton.ID;
+                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem.data);
+                    }
+                }
+            }
+
+            return true;
         }
     }
     #endregion
