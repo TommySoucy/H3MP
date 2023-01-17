@@ -8,12 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
-using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -8180,12 +8178,12 @@ namespace H3MP
                             if (H3MP_ThreadManager.host)
                             {
                                 H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, nextID);
-                                H3MP_ServerSend.TNHData(nextID, Mod.currentTNHInstance.manager);
+                                H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
                             }
                             else
                             {
                                 H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, nextID);
-                                H3MP_ClientSend.TNHData(nextID, Mod.currentTNHInstance.manager);
+                                H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
                             }
                         }
                     }

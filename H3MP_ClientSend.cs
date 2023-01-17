@@ -1526,11 +1526,11 @@ namespace H3MP
             }
         }
 
-        public static void TNHData(int controller, TNH_Manager manager)
+        public static void TNHData(int instance, TNH_Manager manager)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHData))
             {
-                packet.Write(controller);
+                packet.Write(instance);
                 packet.Write(manager);
 
                 SendTCPData(packet);

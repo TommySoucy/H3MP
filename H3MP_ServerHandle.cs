@@ -1883,7 +1883,7 @@ namespace H3MP
             {
                 if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
                 {
-                    H3MP_ServerSend.TNHData(newController, Mod.currentTNHInstance.manager);
+                    H3MP_ServerSend.TNHData(instance, Mod.currentTNHInstance.manager);
 
                     //++SetTNHManagerPatch.skip;
                     //Mod.currentTNHInstance.manager.enabled = false;
@@ -1904,9 +1904,9 @@ namespace H3MP
 
         public static void TNHData(int clientID, H3MP_Packet packet)
         {
-            int controller = packet.ReadInt();
+            int instance = packet.ReadInt();
 
-            if(controller == H3MP_GameManager.ID && GM.TNH_Manager != null && Mod.currentTNHInstance != null)
+            if(GM.TNH_Manager != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
             {
                 H3MP_TNHData data = packet.ReadTNHData();
 
@@ -1919,9 +1919,9 @@ namespace H3MP
                     Mod.InitTNHData(data);
                 }
             }
-            else
+            else if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance currentInstance))
             {
-                H3MP_ServerSend.TNHData(controller, packet);
+                H3MP_ServerSend.TNHData(currentInstance.controller, packet);
             }
         }
 
