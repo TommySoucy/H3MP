@@ -45,6 +45,7 @@ namespace H3MP
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
 
         public static bool giveControlOfDestroyed;
+        public static bool controlOverride;
 
         public static int ID = 0;
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
@@ -562,7 +563,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach(GameObject root in roots)
             {
-                SyncTrackedItems(root.transform, init ? inControl : playersPresent == 0, null, scene.name);
+                SyncTrackedItems(root.transform, init ? inControl : controlOverride, null, scene.name);
             }
         }
 
@@ -728,7 +729,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach (GameObject root in roots)
             {
-                SyncTrackedSosigs(root.transform, init ? inControl : playersPresent == 0, scene.name);
+                SyncTrackedSosigs(root.transform, init ? inControl : controlOverride, scene.name);
             }
         }
 
@@ -942,7 +943,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach (GameObject root in roots)
             {
-                SyncTrackedAutoMeaters(root.transform, init ? inControl : playersPresent == 0, scene.name);
+                SyncTrackedAutoMeaters(root.transform, init ? inControl : controlOverride, scene.name);
             }
         }
 
@@ -1072,7 +1073,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach (GameObject root in roots)
             {
-                SyncTrackedEncryptions(root.transform, init ? inControl : playersPresent == 0, scene.name);
+                SyncTrackedEncryptions(root.transform, init ? inControl : controlOverride, scene.name);
             }
         }
 
@@ -1671,6 +1672,15 @@ namespace H3MP
                     Mod.temporarySupplySosigIDs.Clear();
                     Mod.temporarySupplyTurretIDs.Clear();
                 }
+
+                // Check if there are other players where we are going
+                if(playersByInstanceByScene.TryGetValue(SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> relevantInstances))
+                {
+                    if(relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
+                    {
+                        controlOverride = relevantPlayers.Count > 0;
+                    }
+                }
             }
             else // Finished loading
             {
@@ -1717,13 +1727,14 @@ namespace H3MP
                         UpdatePlayerHidden(player.Value);
                     }
 
-                    Debug.Log("Scene is syncable, and has "+playersPresent+" other players in it, syncing");
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
                     SyncTrackedSosigs();
                     SyncTrackedAutoMeaters();
                     SyncTrackedItems();
                     SyncTrackedEncryptions();
+
+                    controlOverride = false;
 
                     // If client, tell server we are done loading
                     if (!H3MP_ThreadManager.host)
