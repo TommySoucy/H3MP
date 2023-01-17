@@ -198,7 +198,7 @@ namespace H3MP
             }
             else if(trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
             {
-                trackedItem.controller = controllerID;
+                //trackedItem.controller = controllerID;
                 if(trackedItem.physicalItem != null)
                 {
                     Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
@@ -206,7 +206,7 @@ namespace H3MP
                 trackedItem.localTrackedID = H3MP_GameManager.items.Count;
                 H3MP_GameManager.items.Add(trackedItem);
             }
-            trackedItem.controller = controllerID;
+            trackedItem.SetController(controllerID);
         }
 
         public static void GiveSosigControl(H3MP_Packet packet)

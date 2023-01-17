@@ -468,7 +468,7 @@ namespace H3MP
                 H3MP_ClientSend.GiveControl(trackedID, newController);
 
                 // Also change controller locally
-                controller = newController;
+                SetController(newController);
 
                 H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localTrackedID);
 
@@ -592,6 +592,24 @@ namespace H3MP
             H3MP_GameManager.items[localTrackedID].localTrackedID = localTrackedID;
             H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
             localTrackedID = -1;
+        }
+
+        public void SetController(int newController)
+        {
+            SetControllerRecursive(this, newController);
+        }
+
+        private void SetControllerRecursive(H3MP_TrackedItemData otherTrackedItem, int newController)
+        {
+            otherTrackedItem.controller = newController;
+
+            if(children != null)
+            {
+                foreach(H3MP_TrackedItemData child in children)
+                {
+                    SetControllerRecursive(child, newController);
+                }
+            }
         }
     }
 }

@@ -2931,7 +2931,7 @@ namespace H3MP
                             H3MP_ServerSend.GiveControl(data.trackedID, otherPlayer);
 
                             // Also change controller locally
-                            data.controller = otherPlayer;
+                            data.SetController(otherPlayer);
                         }
                     }
                 }
@@ -3022,7 +3022,7 @@ namespace H3MP
                                 H3MP_ClientSend.GiveControl(data.trackedID, otherPlayer);
 
                                 // Also change controller locally
-                                data.controller = otherPlayer;
+                                data.SetController(otherPlayer);
                             }
                         }
                     }

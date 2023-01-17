@@ -2302,7 +2302,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.controller = 0;
+                            trackedItem.data.SetController(0);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                         }
@@ -2318,7 +2318,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.controller = H3MP_Client.singleton.ID;
+                            trackedItem.data.SetController(H3MP_Client.singleton.ID);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                         }
@@ -2421,7 +2421,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.controller = 0;
+                            trackedItem.data.SetController(0);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                             // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
@@ -2442,7 +2442,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.controller = H3MP_Client.singleton.ID;
+                            trackedItem.data.SetController(H3MP_Client.singleton.ID);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                             // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
@@ -2481,7 +2481,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.controller = 0;
+                        trackedItem.data.SetController(0);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                         // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
@@ -2505,7 +2505,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.controller = H3MP_Client.singleton.ID;
+                        trackedItem.data.SetController(H3MP_Client.singleton.ID);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                         // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
@@ -2560,7 +2560,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.controller = 0;
+                        trackedItem.data.SetController(0);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                         // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
@@ -2591,7 +2591,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.controller = H3MP_Client.singleton.ID;
+                        trackedItem.data.SetController(H3MP_Client.singleton.ID);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                         // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
@@ -2770,7 +2770,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.controller = 0;
+                        trackedItem.data.SetController(0);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                     }
@@ -2786,7 +2786,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.controller = H3MP_Client.singleton.ID;
+                        trackedItem.data.SetController(H3MP_Client.singleton.ID);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                     }

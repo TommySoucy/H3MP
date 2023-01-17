@@ -248,7 +248,7 @@ namespace H3MP
                 H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
                 trackedItem.localTrackedID = -1;
             }
-            trackedItem.controller = clientID;
+            trackedItem.SetController(clientID);
 
             // Send to all other clients
             H3MP_ServerSend.GiveControl(trackedID, clientID);
@@ -280,7 +280,7 @@ namespace H3MP
                 H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
                 trackedItem.localTrackedID = -1;
             }
-            trackedItem.controller = newController;
+            trackedItem.SetController(newController);
 
             // Send to all other clients
             H3MP_ServerSend.GiveControl(trackedID, newController);
