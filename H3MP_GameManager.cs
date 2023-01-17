@@ -514,13 +514,11 @@ namespace H3MP
                                 if (H3MP_ThreadManager.host)
                                 {
                                     // This will also send a packet with the item to be added in the client's global item list
-                                    Debug.Log("Server adding its own tracked item: "+root.name);
                                     H3MP_Server.AddTrackedItem(trackedItem.data, scene, instance, 0);
                                 }
                                 else
                                 {
                                     // Tell the server we need to add this item to global tracked items
-                                    Debug.Log("Client requesting addition of new tracked item: " + root.name);
                                     H3MP_ClientSend.TrackedItem(trackedItem.data, scene, instance);
                                 }
                             }
@@ -651,7 +649,6 @@ namespace H3MP
 
         public static void SyncTrackedSosigs(bool init = false, bool inControl = false)
         {
-            Debug.Log("SyncTrackedSosigs called with init: " + init + ", in control: " + inControl + ", others: " + (playersPresent > 0));
             // When we sync our current scene, if we are alone, we sync and take control of all sosigs
             Scene scene = SceneManager.GetActiveScene();
             GameObject[] roots = scene.GetRootGameObjects();
@@ -677,19 +674,16 @@ namespace H3MP
                             if (H3MP_ThreadManager.host)
                             {
                                 // This will also send a packet with the sosig to be added in the client's global sosig list
-                                Debug.Log("Server adding its own tracked sosig: " + root.name);
                                 H3MP_Server.AddTrackedSosig(trackedSosig.data, scene, instance, 0);
                             }
                             else
                             {
                                 // Tell the server we need to add this item to global tracked items
-                                Debug.Log("Client requesting addition of new tracked sosig: " + root.name);
                                 H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene, instance);
                             }
                         }
                         else
                         {
-                            Debug.Log("trackedSosig " + trackedSosig.name + " NOT awoken, setting for late send");
                             trackedSosig.sendOnAwake = true;
                             trackedSosig.sendScene = scene;
                             trackedSosig.sendInstance = instance;
