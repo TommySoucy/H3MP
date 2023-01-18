@@ -169,7 +169,7 @@ namespace H3MP
                     --ignoreParentChanged;
                 }
 
-                // Store and destroy RB if not in control
+                // Set as kinematic if not in control
                 if (controller != H3MP_GameManager.ID)
                 {
                     Mod.SetKinematicRecursive(physicalItem.transform, true);
@@ -331,7 +331,7 @@ namespace H3MP
                         // If in control, we want to enable rigidbody
                         if (controller == clientID)
                         {
-                            physicalItem.physicalObject.RecoverRigidbody();
+                            Mod.SetKinematicRecursive(physicalItem.transform, false);
                         }
 
                         // Call updateParent delegate on item if it has one
@@ -381,10 +381,13 @@ namespace H3MP
                     physicalItem.transform.parent = newParent.physicalItem.transform;
                     --ignoreParentChanged;
 
+                    // Set Controller to parent's
+                    SetController(newParent.controller);
+
                     // If in control, we want to enable rigidbody
                     if (controller == H3MP_GameManager.ID)
                     {
-                        Mod.SetKinematicRecursive(physicalItem.transform, true);
+                        Mod.SetKinematicRecursive(physicalItem.transform, false);
                     }
 
                     // Call updateParent delegate on item if it has one

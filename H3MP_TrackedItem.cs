@@ -2207,7 +2207,7 @@ namespace H3MP
                     --data.ignoreParentChanged;
                     currentMountIndex = 255;
 
-                    // Detach from mount will recover rigidbody, store and destroy again if not controller
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
                     if (data.controller != H3MP_GameManager.ID)
                     {
                         Mod.SetKinematicRecursive(asAttachment.transform, true);
