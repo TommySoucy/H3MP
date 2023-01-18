@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
@@ -1410,6 +1411,22 @@ namespace H3MP
             MethodInfo setPlayerIFFPatchPrefix = typeof(SetPlayerIFFPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(setPlayerIFFPatchOriginal, new HarmonyMethod(setPlayerIFFPatchPrefix));
+
+            // SosigTargetPrioritySystemPatch
+            MethodInfo sosigTargetPrioritySystemPatchDefaultOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetDefaultIFFChart", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchMakeEnemyOriginal = typeof(SosigTargetPrioritySystem).GetMethod("MakeEnemy", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchMakeFriendlyOriginal = typeof(SosigTargetPrioritySystem).GetMethod("MakeFriendly", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchSetAllEnemyOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetAllEnemy", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchSetAllFriendlyOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetAllFriendly", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchSetAllyMatrixOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetAllyMatrix", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchPostfix = typeof(SosigTargetPrioritySystemPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(sosigTargetPrioritySystemPatchDefaultOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchMakeEnemyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchMakeFriendlyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchSetAllEnemyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchSetAllFriendlyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchSetAllyMatrixOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
 
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
@@ -5526,6 +5543,65 @@ namespace H3MP
                         {
                             H3MP_ClientSend.LAPD2019ExtractBattery(trackedGun.data.trackedID);
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches SosigTargetPrioritySystem methods to keep track of changes to IFFChart
+    class SosigTargetPrioritySystemPatch
+    {
+        public static int BoolArrToInt(bool[] arr)
+        {
+            int i = 0;
+            for(int index = 0; index < arr.Length; ++index)
+            {
+                if (arr[index])
+                {
+                    i |= (1 << index);
+                }
+            }
+            return i;
+        }
+
+        public static bool[] IntToBoolArr(int i)
+        {
+            bool[] arr = new bool[32];
+            for(int index = arr.Length - 1; index >= 0; --index)
+            {
+                arr[index] = ((i >> index) | 1) == 1;
+            }
+            return arr;
+        }
+
+        static void Postfix(ref SosigTargetPrioritySystem __instance, ref AIEntity ___E)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = ___E.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigPriorityIFFChart(0, trackedSosig.data.trackedID, BoolArrToInt(__instance.IFFChart));
+                }
+                else if (trackedSosig.data.trackedID != -1)
+                {
+                    H3MP_ClientSend.SosigPriorityIFFChart(trackedSosig.data.trackedID, BoolArrToInt(__instance.IFFChart));
+                }
+                else // Unknown tracked ID, keep for late update
+                {
+                    if (H3MP_TrackedSosig.unknownIFFChart.ContainsKey(trackedSosig.data.localTrackedID))
+                    {
+                        H3MP_TrackedSosig.unknownIFFChart[trackedSosig.data.localTrackedID] = BoolArrToInt(__instance.IFFChart);
+                    }
+                    else
+                    {
+                        H3MP_TrackedSosig.unknownIFFChart.Add(trackedSosig.data.localTrackedID, BoolArrToInt(__instance.IFFChart));
                     }
                 }
             }

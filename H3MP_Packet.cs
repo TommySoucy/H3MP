@@ -128,7 +128,8 @@ namespace H3MP
         TNHHoldPointRaiseBarriers = 111,
         TNHHoldIdentifyEncryption = 112,
         TNHHoldPointBeginPhase = 113,
-        TNHHoldPointCompleteHold = 114
+        TNHHoldPointCompleteHold = 114,
+        sosigPriorityIFFChart = 115
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -250,7 +251,8 @@ namespace H3MP
         TNHHoldPointRaiseBarriers = 114,
         TNHHoldIdentifyEncryption = 115,
         TNHHoldPointBeginPhase = 116,
-        TNHHoldPointCompleteHold = 117
+        TNHHoldPointCompleteHold = 117,
+        sosigPriorityIFFChart = 118
     }
 
     public class H3MP_Packet : IDisposable
@@ -560,6 +562,7 @@ namespace H3MP
                         }
                     }
                 }
+                Write(SosigTargetPrioritySystemPatch.BoolArrToInt(trackedSosig.IFFChart));
             }
             else
             {
@@ -1324,6 +1327,7 @@ namespace H3MP
                         }
                     }
                 }
+                trackedSosig.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(ReadInt());
             }
             else
             {

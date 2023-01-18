@@ -2285,5 +2285,20 @@ namespace H3MP
                 }
             }
         }
+
+        public static void SosigPriorityIFFChart(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int chart = packet.ReadInt();
+            if (H3MP_Client.sosigs[trackedID] != null)
+            {
+                // Update local
+                H3MP_Client.sosigs[trackedID].IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(chart);
+                if (H3MP_Client.sosigs[trackedID].physicalObject != null)
+                {
+                    H3MP_Client.sosigs[trackedID].physicalObject.physicalSosigScript.Priority.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(chart);
+                }
+            }
+        }
     }
 }

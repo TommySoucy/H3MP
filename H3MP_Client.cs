@@ -418,6 +418,8 @@ namespace H3MP
                 H3MP_ClientHandle.TNHHoldPointRaiseBarriers,
                 H3MP_ClientHandle.TNHHoldIdentifyEncryption,
                 H3MP_ClientHandle.TNHHoldPointBeginPhase,
+                H3MP_ClientHandle.TNHHoldPointCompleteHold,
+                H3MP_ClientHandle.SosigPriorityIFFChart,
             };
 
             // All vanilla scenes can be synced by default

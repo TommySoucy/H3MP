@@ -2599,5 +2599,22 @@ namespace H3MP
 
             H3MP_ServerSend.TNHHoldIdentifyEncryption(clientID, instance);
         }
+
+        public static void SosigPriorityIFFChart(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int chart = packet.ReadInt();
+            if (H3MP_Server.sosigs[trackedID] != null)
+            {
+                // Update local
+                H3MP_Server.sosigs[trackedID].IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(chart);
+                if (H3MP_Server.sosigs[trackedID].physicalObject != null)
+                {
+                    H3MP_Server.sosigs[trackedID].physicalObject.physicalSosigScript.Priority.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(chart);
+                }
+            }
+
+            H3MP_ServerSend.SosigPriorityIFFChart(clientID, trackedID, chart);
+        }
     }
 }

@@ -28,6 +28,7 @@ namespace H3MP
         public static Dictionary<int, int> unknownSetOriginalIFFs = new Dictionary<int, int>();
         public static Dictionary<int, Sosig.SosigBodyState> unknownBodyStates = new Dictionary<int, Sosig.SosigBodyState>();
         public static Dictionary<int, int> unknownTNHKills = new Dictionary<int, int>();
+        public static Dictionary<int, int> unknownIFFChart = new Dictionary<int, int>();
 
         public bool sendDestroy = true; // To prevent feeback loops
 

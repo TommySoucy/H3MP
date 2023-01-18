@@ -38,6 +38,7 @@ namespace H3MP
         public List<List<string>> wearables;
         public float[][] linkData;
         public byte IFF;
+        public bool[] IFFChart;
         public Sosig.SosigBodyPose previousBodyPose;
         public Sosig.SosigBodyPose bodyPose;
 
@@ -68,7 +69,7 @@ namespace H3MP
 
             // Deregister the AI from the manager if we are not in control
             // Also set CoreRB as kinematic
-            if(controller != H3MP_GameManager.ID)
+            if (controller != H3MP_GameManager.ID)
             {
                 GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
                 physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
@@ -79,8 +80,11 @@ namespace H3MP
             physicalObject.physicalSosigScript.SetIFF(IFF);
             --SosigIFFPatch.skip;
 
+            // Set IFFChart
+            H3MP_Server.sosigs[trackedID].physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
+
             // Check if in temporary lists
-            if(GM.TNH_Manager != null && Mod.currentTNHInstance != null)
+            if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
             {
                 if (Mod.temporaryHoldSosigIDs.Contains(trackedID))
                 {
@@ -220,6 +224,7 @@ namespace H3MP
                 linkData = updatedItem.linkData;
                 linkIntegrity = updatedItem.linkIntegrity;
                 wearables = updatedItem.wearables;
+                IFFChart = updatedItem.IFFChart;
 
                 if (physicalObject != null)
                 {
@@ -231,6 +236,8 @@ namespace H3MP
                     --SosigIFFPatch.skip;
 
                     AnvilManager.Run(EquipWearables());
+
+                    physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
                 }
             }
         }
@@ -405,6 +412,7 @@ namespace H3MP
                         }
                     }
                 }
+                IFFChart = physicalObject.physicalSosigScript.Priority.IFFChart;
             }
 
             return ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();
@@ -500,6 +508,12 @@ namespace H3MP
 
                 H3MP_TrackedSosig.unknownBodyStates.Remove(localTrackedID);
             }
+            if(localTrackedID != -1 && H3MP_TrackedSosig.unknownIFFChart.ContainsKey(localTrackedID))
+            {
+                H3MP_ClientSend.SosigPriorityIFFChart(trackedID, H3MP_TrackedSosig.unknownIFFChart[localTrackedID]);
+
+                H3MP_TrackedSosig.unknownIFFChart.Remove(localTrackedID);
+            }
         }
 
         public void RemoveFromLocal()
@@ -512,6 +526,7 @@ namespace H3MP
             H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localTrackedID);
             H3MP_TrackedSosig.unknownBodyStates.Remove(localTrackedID);
             H3MP_TrackedSosig.unknownTNHKills.Remove(localTrackedID);
+            H3MP_TrackedSosig.unknownIFFChart.Remove(localTrackedID);
 
             // Remove
             H3MP_GameManager.sosigs[localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];

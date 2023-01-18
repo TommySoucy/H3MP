@@ -2011,5 +2011,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void SosigPriorityIFFChart(int trackedID, int chart)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigPriorityIFFChart))
+            {
+                packet.Write(trackedID);
+                packet.Write(chart);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }
