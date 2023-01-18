@@ -389,6 +389,7 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[trackedID];
+            trackedSosig.removeFromListOnDestroy = removeFromList;
 
             if (trackedSosig.physicalObject != null)
             {
@@ -423,6 +424,7 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
+            trackedAutoMeater.removeFromListOnDestroy = removeFromList;
 
             if (trackedAutoMeater.physicalObject != null)
             {
@@ -453,6 +455,7 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[trackedID];
+            trackedEncryption.removeFromListOnDestroy = removeFromList;
 
             if (trackedEncryption.physicalObject != null)
             {
@@ -480,13 +483,12 @@ namespace H3MP
 
         public static void DestroyItem(int clientID, H3MP_Packet packet)
         {
-            Debug.Log("Received destroy order");
             int trackedID = packet.ReadInt();
-            Debug.Log("\t for " + trackedID);
             bool removeFromList = packet.ReadBool();
             if (H3MP_Server.items[trackedID] != null)
             {
                 H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
+                trackedItem.removeFromListOnDestroy = removeFromList;
 
                 if (trackedItem.physicalItem != null)
                 {

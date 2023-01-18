@@ -74,7 +74,7 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            if (H3MP_Server.encryptions[data.trackedID] != null)
+                            if (data.removeFromListOnDestroy && H3MP_Server.encryptions[data.trackedID] != null)
                             {
                                 H3MP_Server.encryptions[data.trackedID] = null;
                                 H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
@@ -100,7 +100,7 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    if (H3MP_Server.encryptions[data.trackedID] != null)
+                    if (data.removeFromListOnDestroy && H3MP_Server.encryptions[data.trackedID] != null)
                     {
                         H3MP_Server.encryptions[data.trackedID] = null;
                         H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
@@ -206,7 +206,10 @@ namespace H3MP
                         {
                             H3MP_ClientSend.DestroyEncryption(data.trackedID);
 
-                            H3MP_Client.encryptions[data.trackedID] = null;
+                            if (data.removeFromListOnDestroy)
+                            {
+                                H3MP_Client.encryptions[data.trackedID] = null;
+                            }
                         }
                     }
                     else
@@ -214,7 +217,7 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    if(data.trackedID != -1)
+                    if(data.removeFromListOnDestroy && data.trackedID != -1)
                     {
                         H3MP_Client.encryptions[data.trackedID] = null;
                     }
@@ -224,6 +227,8 @@ namespace H3MP
                     data.RemoveFromLocal();
                 }
             }
+
+            data.removeFromListOnDestroy = true;
         }
     }
 }

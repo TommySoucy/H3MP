@@ -114,6 +114,7 @@ namespace H3MP
         public List<H3MP_TrackedItemData> children; // The items attached to this item
         public int childIndex = -1; // The index of this item in its parent's children list
         public int ignoreParentChanged;
+        public bool removeFromListOnDestroy = true;
 
         public IEnumerator Instantiate()
         {

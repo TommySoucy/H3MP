@@ -34,6 +34,7 @@ namespace H3MP
         public float[] tendrilFloats;
         public Quaternion[] tendrilsRot;
         public Vector3[] tendrilsScale;
+        public bool removeFromListOnDestroy = true;
 
         public IEnumerator Instantiate()
         {

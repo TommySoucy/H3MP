@@ -310,6 +310,7 @@ namespace H3MP
 
             if (trackedItem != null)
             {
+                trackedItem.removeFromListOnDestroy = removeFromList;
                 if (trackedItem.physicalItem != null)
                 {
                     H3MP_GameManager.trackedItemByItem.Remove(trackedItem.physicalItem.physicalObject);
@@ -344,6 +345,7 @@ namespace H3MP
 
             if (trackedSosig != null)
             {
+                trackedSosig.removeFromListOnDestroy = removeFromList;
                 if (trackedSosig.physicalObject != null)
                 {
                     H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosigScript);
@@ -381,6 +383,7 @@ namespace H3MP
 
             if (trackedAutoMeater != null)
             {
+                trackedAutoMeater.removeFromListOnDestroy = removeFromList;
                 if (trackedAutoMeater.physicalObject != null)
                 {
                     H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(trackedAutoMeater.physicalObject.physicalAutoMeaterScript);
@@ -414,6 +417,7 @@ namespace H3MP
 
             if (trackedEncryption != null)
             {
+                trackedEncryption.removeFromListOnDestroy = removeFromList;
                 if (trackedEncryption.physicalObject != null)
                 {
                     H3MP_GameManager.trackedEncryptionByEncryption.Remove(trackedEncryption.physicalObject.physicalEncryptionScript);

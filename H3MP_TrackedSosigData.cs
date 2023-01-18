@@ -41,6 +41,7 @@ namespace H3MP
         public bool[] IFFChart;
         public Sosig.SosigBodyPose previousBodyPose;
         public Sosig.SosigBodyPose bodyPose;
+        public bool removeFromListOnDestroy = true;
 
         public IEnumerator Instantiate()
         {

@@ -65,7 +65,7 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            if (H3MP_Server.autoMeaters[data.trackedID] != null)
+                            if (data.removeFromListOnDestroy && H3MP_Server.autoMeaters[data.trackedID] != null)
                             {
                                 H3MP_Server.autoMeaters[data.trackedID] = null;
                                 H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
@@ -91,7 +91,7 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    if (H3MP_Server.autoMeaters[data.trackedID] != null)
+                    if (data.removeFromListOnDestroy && H3MP_Server.autoMeaters[data.trackedID] != null)
                     {
                         H3MP_Server.autoMeaters[data.trackedID] = null;
                         H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
@@ -189,7 +189,10 @@ namespace H3MP
                         {
                             H3MP_ClientSend.DestroyAutoMeater(data.trackedID);
 
-                            H3MP_Client.autoMeaters[data.trackedID] = null;
+                            if (data.removeFromListOnDestroy)
+                            {
+                                H3MP_Client.autoMeaters[data.trackedID] = null;
+                            }
                         }
                     }
                     else
@@ -197,7 +200,7 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    if(data.trackedID != -1)
+                    if(data.removeFromListOnDestroy && data.trackedID != -1)
                     {
                         H3MP_Client.autoMeaters[data.trackedID] = null;
                     }
@@ -207,6 +210,8 @@ namespace H3MP
                     data.RemoveFromLocal();
                 }
             }
+
+            data.removeFromListOnDestroy = true;
         }
     }
 }

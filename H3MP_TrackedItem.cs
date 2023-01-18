@@ -2920,7 +2920,7 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            if (H3MP_Server.items[data.trackedID] != null)
+                            if (data.removeFromListOnDestroy && H3MP_Server.items[data.trackedID] != null)
                             {
                                 H3MP_Server.items[data.trackedID] = null;
                                 H3MP_Server.availableItemIndices.Add(data.trackedID);
@@ -2946,7 +2946,7 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    if (H3MP_Server.items[data.trackedID] != null)
+                    if (data.removeFromListOnDestroy && H3MP_Server.items[data.trackedID] != null)
                     {
                         H3MP_Server.items[data.trackedID] = null;
                         H3MP_Server.availableItemIndices.Add(data.trackedID);
@@ -2954,7 +2954,6 @@ namespace H3MP
                 }
                 if (data.localTrackedID != -1)
                 {
-                    Debug.Log("Removing game manager item at : " + data.localTrackedID);
                     H3MP_GameManager.items[data.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                     H3MP_GameManager.items[data.localTrackedID].localTrackedID = data.localTrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
@@ -3045,7 +3044,10 @@ namespace H3MP
                         {
                             H3MP_ClientSend.DestroyItem(data.trackedID);
 
-                            H3MP_Client.items[data.trackedID] = null;
+                            if (data.removeFromListOnDestroy)
+                            {
+                                H3MP_Client.items[data.trackedID] = null;
+                            }
                         }
                     }
                     else if (!sendDestroy)
@@ -3053,7 +3055,7 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    if (data.trackedID != -1)
+                    if (data.removeFromListOnDestroy && data.trackedID != -1)
                     {
                         H3MP_Client.items[data.trackedID] = null;
                     }
@@ -3063,6 +3065,8 @@ namespace H3MP
                     data.RemoveFromLocal();
                 }
             }
+
+            data.removeFromListOnDestroy = true;
         }
 
         private void OnTransformParentChanged()

@@ -37,6 +37,7 @@ namespace H3MP
         public bool active;
         public byte previousIFF;
         public byte IFF;
+        public bool removeFromListOnDestroy = true;
 
         public Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone> hitZones = new Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone>();
 
