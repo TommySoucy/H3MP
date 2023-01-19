@@ -43,6 +43,7 @@ namespace H3MP
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, H3MP_TNHInstance> TNHInstances = new Dictionary<int, H3MP_TNHInstance>();
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
+        public static Dictionary<string, Dictionary<int, List<int>>> itemsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
 
         public static bool giveControlOfDestroyed;
         public static bool controlOverride;
@@ -206,17 +207,17 @@ namespace H3MP
             {
                 if (relevantInstances.TryGetValue(player.instance, out List<int> relevantPlayers))
                 {
-                    relevantPlayers.Add(ID);
+                    relevantPlayers.Add(player.ID);
                 }
                 else // We have scene but not instance, add instance
                 {
-                    relevantInstances.Add(player.instance, new List<int>() { ID });
+                    relevantInstances.Add(player.instance, new List<int>() { player.ID });
                 }
             }
             else // We don't have scene, add scene
             {
                 Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                newInstances.Add(player.instance, new List<int>() { ID });
+                newInstances.Add(player.instance, new List<int>() { player.ID });
                 playersByInstanceByScene.Add(player.scene, newInstances);
             }
 
@@ -343,11 +344,11 @@ namespace H3MP
             // Add to instance
             if (playersByInstanceByScene[player.scene].TryGetValue(instance, out List<int> relevantPlayers))
             {
-                relevantPlayers.Add(ID);
+                relevantPlayers.Add(player.ID);
             }
             else // We have scene but not instance, add instance
             {
-                playersByInstanceByScene[player.scene].Add(instance, new List<int>() { ID });
+                playersByInstanceByScene[player.scene].Add(instance, new List<int>() { player.ID });
             }
 
             if (H3MP_ThreadManager.host)
@@ -589,19 +590,17 @@ namespace H3MP
                                 if (H3MP_ThreadManager.host)
                                 {
                                     // This will also send a packet with the item to be added in the client's global item list
-                                    H3MP_Server.AddTrackedItem(trackedItem.data, scene, instance, 0);
+                                    H3MP_Server.AddTrackedItem(trackedItem.data, 0);
                                 }
                                 else
                                 {
                                     // Tell the server we need to add this item to global tracked items
-                                    H3MP_ClientSend.TrackedItem(trackedItem.data, scene, instance);
+                                    H3MP_ClientSend.TrackedItem(trackedItem.data);
                                 }
                             }
                             else
                             {
                                 trackedItem.sendOnAwake = true;
-                                trackedItem.sendScene = scene;
-                                trackedItem.sendInstance = instance;
                             }
 
                             foreach (Transform child in root)
@@ -658,6 +657,8 @@ namespace H3MP
             data.rotation = trackedItem.transform.rotation;
             data.active = trackedItem.gameObject.activeInHierarchy;
 
+            data.scene = SceneManager.GetActiveScene().name;
+            data.instance = instance;
             data.controller = ID;
 
             // Add to local list
@@ -1321,8 +1322,8 @@ namespace H3MP
             }
 
             // Item we do not control: Destroy, giveControlOfDestroyed = true will ensure destruction does not get sent
-            // Item we control: Destroy, giveControlOfDestroyed = true will ensure item's control is passed on is necessary
-            // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these from instance to instance
+            // Item we control: Destroy, giveControlOfDestroyed = true will ensure item's control is passed on if necessary
+            // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these to new instance
             giveControlOfDestroyed = true;
             H3MP_TrackedItemData[] itemArrToUse = null;
             H3MP_TrackedSosigData[] sosigArrToUse = null;

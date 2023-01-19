@@ -453,6 +453,8 @@ namespace H3MP
                 Write(trackedItem.controller);
                 Write(trackedItem.parent);
                 Write(trackedItem.localTrackedID);
+                Write(trackedItem.scene);
+                Write(trackedItem.instance);
             }
             else
             {
@@ -1244,6 +1246,8 @@ namespace H3MP
                 trackedItem.controller = ReadInt();
                 trackedItem.parent = ReadInt();
                 trackedItem.localTrackedID = ReadInt();
+                trackedItem.scene = ReadString();
+                trackedItem.instance = ReadInt();
             }
             else
             {

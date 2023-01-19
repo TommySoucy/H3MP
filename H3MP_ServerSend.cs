@@ -42,6 +42,15 @@ namespace H3MP
             }
         }
 
+        private static void SendUDPDataToClients(H3MP_Packet packet, List<int> clientIDs)
+        {
+            packet.WriteLength();
+            foreach(int clientID in clientIDs)
+            {
+                H3MP_Server.clients[clientID].udp.SendData(packet);
+            }
+        }
+
         private static void SendTCPDataToAll(int exceptClient, H3MP_Packet packet)
         {
             packet.WriteLength();
@@ -203,98 +212,108 @@ namespace H3MP
 
         public static void TrackedItems()
         {
-            int index = 0;
-            while (index < H3MP_Server.items.Length - 1) // TODO: To optimize, we should also keep track of all item IDs that are in use so we can iterate only them and do the same in client send
+            foreach(KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.itemsByInstanceByScene)
             {
-                using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItems))
+                foreach(KeyValuePair<int, List<int>> inner in outer.Value)
                 {
-                    // Write place holder int at start to hold the count once we know it
-                    int countPos = packet.buffer.Count;
-                    packet.Write((short)0);
-
-                    short count = 0;
-                    for (int i = index; i < H3MP_Server.items.Length; ++i)
+                    if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                        playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
                     {
-                        H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
-                        if (trackedItem != null)
+                        int index = 0;
+                        while (index < inner.Value.Count - 1)
                         {
-                            if (trackedItem.controller == 0)
+                            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItems))
                             {
-                                if (trackedItem.Update())
+                                // Write place holder int at start to hold the count once we know it
+                                int countPos = packet.buffer.Count;
+                                packet.Write((short)0);
+
+                                short count = 0;
+                                for (int i = index; i < inner.Value.Count; ++i)
                                 {
-                                    trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
-
-                                    packet.Write(trackedItem, true, false);
-
-                                    ++count;
-
-                                    // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                    if (packet.buffer.Count >= 1300)
+                                    H3MP_TrackedItemData trackedItem = H3MP_Server.items[inner.Value[i]];
+                                    if (trackedItem != null)
                                     {
-                                        break;
+                                        if (trackedItem.controller == 0)
+                                        {
+                                            if (trackedItem.Update())
+                                            {
+                                                trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+
+                                                packet.Write(trackedItem, true, false);
+
+                                                ++count;
+
+                                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                                if (packet.buffer.Count >= 1300)
+                                                {
+                                                    break;
+                                                }
+                                            }
+                                            else if (trackedItem.insuranceCounter > 0)
+                                            {
+                                                --trackedItem.insuranceCounter;
+
+                                                packet.Write(trackedItem, true, false);
+
+                                                ++count;
+
+                                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                                if (packet.buffer.Count >= 1300)
+                                                {
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        else if (trackedItem.NeedsUpdate())
+                                        {
+                                            trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+
+                                            packet.Write(trackedItem, false, false);
+
+                                            ++count;
+
+                                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                            if (packet.buffer.Count >= 1300)
+                                            {
+                                                break;
+                                            }
+                                        }
+                                        else if (trackedItem.insuranceCounter > 0)
+                                        {
+                                            --trackedItem.insuranceCounter;
+
+                                            packet.Write(trackedItem, false, false);
+
+                                            ++count;
+
+                                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                            if (packet.buffer.Count >= 1300)
+                                            {
+                                                break;
+                                            }
+                                        }
                                     }
+
+                                    index = i;
                                 }
-                                else if(trackedItem.insuranceCounter > 0)
-                                {
-                                    --trackedItem.insuranceCounter;
 
-                                    packet.Write(trackedItem, true, false);
-
-                                    ++count;
-
-                                    // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                    if (packet.buffer.Count >= 1300)
-                                    {
-                                        break;
-                                    }
-                                }
-                            }
-                            else if(trackedItem.NeedsUpdate())
-                            {
-                                trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
-
-                                packet.Write(trackedItem, false, false);
-
-                                ++count;
-
-                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                if (packet.buffer.Count >= 1300)
+                                if (count == 0)
                                 {
                                     break;
                                 }
-                            }
-                            else if(trackedItem.insuranceCounter > 0)
-                            {
-                                --trackedItem.insuranceCounter;
 
-                                packet.Write(trackedItem, false, false);
-
-                                ++count;
-
-                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                if (packet.buffer.Count >= 1300)
+                                // Write the count to packet
+                                byte[] countArr = BitConverter.GetBytes(count);
+                                for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
                                 {
-                                    break;
+                                    packet.buffer[i] = countArr[j];
                                 }
+
+                                SendUDPDataToClients(packet, players);
                             }
                         }
-
-                        index = i;
                     }
-
-                    if (count == 0)
-                    {
-                        break;
-                    }
-
-                    // Write the count to packet
-                    byte[] countArr = BitConverter.GetBytes(count);
-                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                    {
-                        packet.buffer[i] = countArr[j];
-                    }
-
-                    SendUDPDataToAll(packet);
                 }
             }
         }
@@ -593,13 +612,11 @@ namespace H3MP
             }
         }
 
-        public static void TrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance, int clientID)
+        public static void TrackedItem(H3MP_TrackedItemData trackedItem, int clientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItem))
             {
                 packet.Write(trackedItem, false, true);
-                packet.Write(scene);
-                packet.Write(instance);
 
                 // We want to send to all, even the one who requested for the item to be tracked because we need to tell them its tracked ID
                 SendTCPDataToAll(packet);

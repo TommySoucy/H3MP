@@ -49,10 +49,10 @@ namespace H3MP
             // Just connected, sync if current scene is syncable
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
             {
-                H3MP_GameManager.SyncTrackedItems();
-                H3MP_GameManager.SyncTrackedSosigs();
-                H3MP_GameManager.SyncTrackedAutoMeaters();
-                H3MP_GameManager.SyncTrackedEncryptions();
+                H3MP_GameManager.SyncTrackedItems(true, true);
+                H3MP_GameManager.SyncTrackedSosigs(true, true);
+                H3MP_GameManager.SyncTrackedAutoMeaters(true, true);
+                H3MP_GameManager.SyncTrackedEncryptions(true, true);
             }
         }
 
@@ -131,7 +131,7 @@ namespace H3MP
             }
         }
 
-        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, string scene, int instance, int clientID)
+        public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, int clientID)
         {
             // Adjust items size to acommodate if necessary
             if (availableItemIndices.Count == 0)
@@ -145,17 +145,36 @@ namespace H3MP
 
             items[trackedItem.trackedID] = trackedItem;
 
+            // Add to item tracking list
+            if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
+            {
+                if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                {
+                    itemList.Add(trackedItem.trackedID);
+                }
+                else
+                {
+                    relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                }
+            }
+            else
+            {
+                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
+            }
+
             // Instantiate item if it is in the current scene and not controlled by us
             if (clientID != 0)
             {
-                if (scene.Equals(SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
 
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedItem(trackedItem, scene, instance, clientID);
+            H3MP_ServerSend.TrackedItem(trackedItem, clientID);
 
             // Update the local tracked ID at the end because we need to send that back to the original client intact
             if (trackedItem.controller != 0)

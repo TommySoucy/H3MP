@@ -130,6 +130,7 @@ namespace H3MP
             H3MP_ServerSend.PlayerInstance(player.ID, instance);
 
             // Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
+            int requestedCount = 0;
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene))
             {
                 foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
@@ -147,9 +148,20 @@ namespace H3MP
                             H3MP_Server.clientsWaitingUpDate.Add(otherClient.Key, new List<int> { clientID });
                         }
                         H3MP_ServerSend.RequestUpToDateObjects(otherClient.Key, false, clientID);
+                        ++requestedCount;
                     }
                 }
             }
+
+            // In the case of a changing instance, the client will never send a "done loading" packet
+            // This means the server will never get the signal to send relevant tracked objects unless 
+            // there are other clients in the scene/instance to receive up to date items from
+            // This means if there are not other such clients, we will never send relevant items, so we do it here right away instead
+            if(requestedCount == 0)
+            {
+                H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
+            }
+
             Debug.Log("Synced with player who just joined an instance");
         }
 
@@ -514,6 +526,7 @@ namespace H3MP
                 {
                     H3MP_Server.items[trackedID] = null;
                     H3MP_Server.availableItemIndices.Add(trackedID);
+                    H3MP_GameManager.itemsByInstanceByScene[trackedItem.scene][trackedItem.instance].Remove(trackedID);
                 }
             }
 
@@ -522,7 +535,7 @@ namespace H3MP
 
         public static void TrackedItem(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString(), packet.ReadInt(), clientID);
+            H3MP_Server.AddTrackedItem(packet.ReadTrackedItem(true), clientID);
         }
 
         public static void TrackedSosig(int clientID, H3MP_Packet packet)

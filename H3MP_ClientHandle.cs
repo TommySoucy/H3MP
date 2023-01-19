@@ -151,7 +151,7 @@ namespace H3MP
 
         public static void TrackedItem(H3MP_Packet packet)
         {
-            H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true), packet.ReadString(), packet.ReadInt());
+            H3MP_Client.AddTrackedItem(packet.ReadTrackedItem(true));
         }
 
         public static void TrackedSosig(H3MP_Packet packet)
@@ -332,6 +332,7 @@ namespace H3MP
                 if (removeFromList)
                 {
                     H3MP_Client.items[trackedID] = null;
+                    H3MP_GameManager.itemsByInstanceByScene[trackedItem.scene][trackedItem.instance].Remove(trackedID);
                 }
             }
         }

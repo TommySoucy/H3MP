@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace H3MP
 {
@@ -14,8 +13,6 @@ namespace H3MP
         public H3MP_TrackedItemData data;
         public bool awoken;
         public bool sendOnAwake;
-        public string sendScene;
-        public int sendInstance;
 
         // Unknown tracked ID queues
         public static Dictionary<int, KeyValuePair<int, bool>> unknownTrackedIDs = new Dictionary<int, KeyValuePair<int, bool>>();
@@ -60,12 +57,12 @@ namespace H3MP
                 if (H3MP_ThreadManager.host)
                 {
                     // This will also send a packet with the item to be added in the client's global item list
-                    H3MP_Server.AddTrackedItem(data, sendScene, sendInstance, 0);
+                    H3MP_Server.AddTrackedItem(data, 0);
                 }
                 else
                 {
                     // Tell the server we need to add this item to global tracked items
-                    H3MP_ClientSend.TrackedItem(data, sendScene, sendInstance);
+                    H3MP_ClientSend.TrackedItem(data);
                 }
             }
         }
@@ -2924,6 +2921,7 @@ namespace H3MP
                             {
                                 H3MP_Server.items[data.trackedID] = null;
                                 H3MP_Server.availableItemIndices.Add(data.trackedID);
+                                H3MP_GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                         else
@@ -2950,6 +2948,7 @@ namespace H3MP
                     {
                         H3MP_Server.items[data.trackedID] = null;
                         H3MP_Server.availableItemIndices.Add(data.trackedID);
+                        H3MP_GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                     }
                 }
                 if (data.localTrackedID != -1)
@@ -2988,6 +2987,7 @@ namespace H3MP
                                     H3MP_ClientSend.DestroyItem(data.trackedID);
 
                                     H3MP_Client.items[data.trackedID] = null;
+                                    H3MP_GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                                 }
                             }
                             else if (!sendDestroy)
@@ -2995,9 +2995,10 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            if (data.trackedID != -1)
+                            if (data.removeFromListOnDestroy && data.trackedID != -1)
                             {
                                 H3MP_Client.items[data.trackedID] = null;
+                                H3MP_GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                         else
@@ -3047,6 +3048,7 @@ namespace H3MP
                             if (data.removeFromListOnDestroy)
                             {
                                 H3MP_Client.items[data.trackedID] = null;
+                                H3MP_GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                     }
@@ -3058,6 +3060,7 @@ namespace H3MP
                     if (data.removeFromListOnDestroy && data.trackedID != -1)
                     {
                         H3MP_Client.items[data.trackedID] = null;
+                        H3MP_GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                     }
                 }
                 if (removeFromLocal && data.localTrackedID != -1)

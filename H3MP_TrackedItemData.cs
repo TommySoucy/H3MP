@@ -21,6 +21,8 @@ namespace H3MP
         public int controller = 0; // Client controlling this item, 0 for host
         public bool active;
         private bool previousActive;
+        public string scene;
+        public int instance;
 
         // Data
         public string itemID; // The ID of this item so it can be spawned by clients and host
@@ -580,6 +582,28 @@ namespace H3MP
                     }
                 }
                 H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localTrackedID);
+            }
+
+            if(localTrackedID != -1)
+            {
+                // Add to item tracking list
+                if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances))
+                {
+                    if (relevantInstances.TryGetValue(instance, out List<int> itemList))
+                    {
+                        itemList.Add(trackedID);
+                    }
+                    else
+                    {
+                        relevantInstances.Add(instance, new List<int>() { trackedID });
+                    }
+                }
+                else
+                {
+                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                    newInstances.Add(instance, new List<int>() { trackedID });
+                    H3MP_GameManager.itemsByInstanceByScene.Add(scene, newInstances);
+                }
             }
         }
 
