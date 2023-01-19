@@ -565,6 +565,8 @@ namespace H3MP
                     }
                 }
                 Write(SosigTargetPrioritySystemPatch.BoolArrToInt(trackedSosig.IFFChart));
+                Write(trackedSosig.scene);
+                Write(trackedSosig.instance);
             }
             else
             {
@@ -598,6 +600,8 @@ namespace H3MP
                 Write(trackedAutoMeater.ID);
                 Write(trackedAutoMeater.controller);
                 Write(trackedAutoMeater.localTrackedID);
+                Write(trackedAutoMeater.scene);
+                Write(trackedAutoMeater.instance);
             }
             else
             {
@@ -710,6 +714,8 @@ namespace H3MP
                         Write(trackedEncryption.tendrilsScale[i]);
                     }
                 }
+                Write(trackedEncryption.scene);
+                Write(trackedEncryption.instance);
             }
             else
             {
@@ -1332,6 +1338,8 @@ namespace H3MP
                     }
                 }
                 trackedSosig.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(ReadInt());
+                trackedSosig.scene = ReadString();
+                trackedSosig.instance = ReadInt();
             }
             else
             {
@@ -1469,6 +1477,8 @@ namespace H3MP
                 trackedAutoMeater.ID = ReadByte();
                 trackedAutoMeater.controller = ReadInt();
                 trackedAutoMeater.localTrackedID = ReadInt();
+                trackedAutoMeater.scene = ReadString();
+                trackedAutoMeater.instance = ReadInt();
             }
             else
             {
@@ -1557,6 +1567,8 @@ namespace H3MP
                         trackedEncryption.tendrilsScale[i] = ReadVector3();
                     }
                 }
+                trackedEncryption.scene = ReadString();
+                trackedEncryption.instance = ReadInt();
             }
             else
             {

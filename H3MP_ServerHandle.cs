@@ -426,6 +426,7 @@ namespace H3MP
             {
                 H3MP_Server.sosigs[trackedID] = null;
                 H3MP_Server.availableSosigIndices.Add(trackedID);
+                H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
             }
 
             H3MP_ServerSend.DestroySosig(trackedID, removeFromList, clientID);
@@ -457,6 +458,7 @@ namespace H3MP
             {
                 H3MP_Server.autoMeaters[trackedID] = null;
                 H3MP_Server.availableAutoMeaterIndices.Add(trackedID);
+                H3MP_GameManager.autoMeatersByInstanceByScene[trackedAutoMeater.scene][trackedAutoMeater.instance].Remove(trackedID);
             }
 
             H3MP_ServerSend.DestroyAutoMeater(trackedID, removeFromList, clientID);
@@ -488,6 +490,7 @@ namespace H3MP
             {
                 H3MP_Server.encryptions[trackedID] = null;
                 H3MP_Server.availableEncryptionIndices.Add(trackedID);
+                H3MP_GameManager.encryptionsByInstanceByScene[trackedEncryption.scene][trackedEncryption.instance].Remove(trackedID);
             }
 
             H3MP_ServerSend.DestroyEncryption(trackedID, removeFromList, clientID);
@@ -540,17 +543,17 @@ namespace H3MP
 
         public static void TrackedSosig(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString(), packet.ReadInt(), clientID);
+            H3MP_Server.AddTrackedSosig(packet.ReadTrackedSosig(true), clientID);
         }
 
         public static void TrackedAutoMeater(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), packet.ReadString(), packet.ReadInt(), clientID);
+            H3MP_Server.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), clientID);
         }
 
         public static void TrackedEncryption(int clientID, H3MP_Packet packet)
         {
-            H3MP_Server.AddTrackedEncryption(packet.ReadTrackedEncryption(true), packet.ReadString(), packet.ReadInt(), clientID);
+            H3MP_Server.AddTrackedEncryption(packet.ReadTrackedEncryption(true), clientID);
         }
 
         public static void ItemParent(int clientID, H3MP_Packet packet)

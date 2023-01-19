@@ -446,37 +446,31 @@ namespace H3MP
             }
         }
 
-        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, string scene, int instance)
+        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedSosig))
             {
                 packet.Write(trackedSosig, false, true);
-                packet.Write(scene);
-                packet.Write(instance);
 
                 SendTCPData(packet);
             }
         }
 
-        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int instance)
+        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedAutoMeater))
             {
                 packet.Write(trackedAutoMeater, false, true);
-                packet.Write(scene);
-                packet.Write(instance);
 
                 SendTCPData(packet);
             }
         }
 
-        public static void TrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, string scene, int instance)
+        public static void TrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.trackedEncryption))
             {
                 packet.Write(trackedEncryption, false, true);
-                packet.Write(scene);
-                packet.Write(instance);
 
                 SendTCPData(packet);
             }

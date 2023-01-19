@@ -17,8 +17,6 @@ namespace H3MP
         public H3MP_TrackedSosigData data;
         public bool awoken;
         public bool sendOnAwake;
-        public string sendScene;
-        public int sendInstance;
 
         // Unknown tracked ID queues
         public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
@@ -41,12 +39,12 @@ namespace H3MP
                 if (H3MP_ThreadManager.host)
                 {
                     // This will also send a packet with the sosig to be added in the client's global sosig list
-                    H3MP_Server.AddTrackedSosig(data, sendScene, sendInstance, 0);
+                    H3MP_Server.AddTrackedSosig(data, 0);
                 }
                 else
                 {
                     // Tell the server we need to add this item to global tracked sosigs
-                    H3MP_ClientSend.TrackedSosig(data, sendScene, sendInstance);
+                    H3MP_ClientSend.TrackedSosig(data);
                 }
             }
         }
@@ -106,6 +104,7 @@ namespace H3MP
                             {
                                 H3MP_Server.sosigs[data.trackedID] = null;
                                 H3MP_Server.availableSosigIndices.Add(data.trackedID);
+                                H3MP_GameManager.sosigsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                         else
@@ -132,6 +131,7 @@ namespace H3MP
                     {
                         H3MP_Server.sosigs[data.trackedID] = null;
                         H3MP_Server.availableSosigIndices.Add(data.trackedID);
+                        H3MP_GameManager.sosigsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                     }
                 }
                 if (data.localTrackedID != -1)
@@ -170,6 +170,7 @@ namespace H3MP
                                     H3MP_ClientSend.DestroySosig(data.trackedID);
 
                                     H3MP_Client.sosigs[data.trackedID] = null;
+                                    H3MP_GameManager.sosigsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                                 }
                             }
                             else
@@ -180,6 +181,7 @@ namespace H3MP
                             if (data.trackedID != -1)
                             {
                                 H3MP_Client.sosigs[data.trackedID] = null;
+                                H3MP_GameManager.sosigsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                         else
@@ -229,6 +231,7 @@ namespace H3MP
                             if (data.removeFromListOnDestroy)
                             {
                                 H3MP_Client.sosigs[data.trackedID] = null;
+                                H3MP_GameManager.sosigsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                     }
@@ -240,6 +243,7 @@ namespace H3MP
                     if (data.removeFromListOnDestroy && data.trackedID != -1)
                     {
                         H3MP_Client.sosigs[data.trackedID] = null;
+                        H3MP_GameManager.sosigsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                     }
                 }
                 if (removeFromLocal && data.localTrackedID != -1)

@@ -156,17 +156,17 @@ namespace H3MP
 
         public static void TrackedSosig(H3MP_Packet packet)
         {
-            H3MP_Client.AddTrackedSosig(packet.ReadTrackedSosig(true), packet.ReadString(), packet.ReadInt());
+            H3MP_Client.AddTrackedSosig(packet.ReadTrackedSosig(true));
         }
 
         public static void TrackedAutoMeater(H3MP_Packet packet)
         {
-            H3MP_Client.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true), packet.ReadString(), packet.ReadInt());
+            H3MP_Client.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true));
         }
 
         public static void TrackedEncryption(H3MP_Packet packet)
         {
-            H3MP_Client.AddTrackedEncryption(packet.ReadTrackedEncryption(true), packet.ReadString(), packet.ReadInt());
+            H3MP_Client.AddTrackedEncryption(packet.ReadTrackedEncryption(true));
         }
 
         public static void AddSyncScene(H3MP_Packet packet)
@@ -368,6 +368,7 @@ namespace H3MP
                 if (removeFromList)
                 {
                     H3MP_Client.sosigs[trackedID] = null;
+                    H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
 
                     Mod.temporaryHoldSosigIDs.Remove(trackedID);
                     Mod.temporarySupplySosigIDs.Remove(trackedID);
@@ -402,6 +403,7 @@ namespace H3MP
                 if (removeFromList)
                 {
                     H3MP_Client.autoMeaters[trackedID] = null;
+                    H3MP_GameManager.autoMeatersByInstanceByScene[trackedAutoMeater.scene][trackedAutoMeater.instance].Remove(trackedID);
 
                     Mod.temporaryHoldTurretIDs.Remove(trackedID);
                     Mod.temporarySupplyTurretIDs.Remove(trackedID);
@@ -436,6 +438,7 @@ namespace H3MP
                 if (removeFromList)
                 {
                     H3MP_Client.encryptions[trackedID] = null;
+                    H3MP_GameManager.encryptionsByInstanceByScene[trackedEncryption.scene][trackedEncryption.instance].Remove(trackedID);
                 }
             }
         }

@@ -44,6 +44,9 @@ namespace H3MP
         public static Dictionary<int, H3MP_TNHInstance> TNHInstances = new Dictionary<int, H3MP_TNHInstance>();
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> itemsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
+        public static Dictionary<string, Dictionary<int, List<int>>> sosigsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
+        public static Dictionary<string, Dictionary<int, List<int>>> autoMeatersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
+        public static Dictionary<string, Dictionary<int, List<int>>> encryptionsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
 
         public static bool giveControlOfDestroyed;
         public static bool controlOverride;
@@ -750,19 +753,17 @@ namespace H3MP
                             if (H3MP_ThreadManager.host)
                             {
                                 // This will also send a packet with the sosig to be added in the client's global sosig list
-                                H3MP_Server.AddTrackedSosig(trackedSosig.data, scene, instance, 0);
+                                H3MP_Server.AddTrackedSosig(trackedSosig.data, 0);
                             }
                             else
                             {
                                 // Tell the server we need to add this item to global tracked items
-                                H3MP_ClientSend.TrackedSosig(trackedSosig.data, scene, instance);
+                                H3MP_ClientSend.TrackedSosig(trackedSosig.data);
                             }
                         }
                         else
                         {
                             trackedSosig.sendOnAwake = true;
-                            trackedSosig.sendScene = scene;
-                            trackedSosig.sendInstance = instance;
                         }
                     }
                     else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
@@ -929,6 +930,8 @@ namespace H3MP
             data.mustard = sosigScript.Mustard;
             data.bodyPose = sosigScript.BodyPose;
             data.IFF = (byte)sosigScript.GetIFF();
+            data.scene = SceneManager.GetActiveScene().name;
+            data.instance = instance;
 
             // Add to local list
             data.localTrackedID = sosigs.Count;
@@ -964,19 +967,17 @@ namespace H3MP
                             if (H3MP_ThreadManager.host)
                             {
                                 // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
-                                H3MP_Server.AddTrackedAutoMeater(trackedAutoMeater.data, scene, instance, 0);
+                                H3MP_Server.AddTrackedAutoMeater(trackedAutoMeater.data, 0);
                             }
                             else
                             {
                                 // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
-                                H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data, scene, instance);
+                                H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data);
                             }
                         }
                         else
                         {
                             trackedAutoMeater.sendOnAwake = true;
-                            trackedAutoMeater.sendScene = scene;
-                            trackedAutoMeater.sendInstance = instance;
                         }
                     }
                     else // AutoMeater will not be controlled by us but is an AutoMeater that should be tracked by system, so destroy it
@@ -1059,6 +1060,8 @@ namespace H3MP
 
             // Add to local list
             data.localTrackedID = autoMeaters.Count;
+            data.scene = SceneManager.GetActiveScene().name;
+            data.instance = instance;
             autoMeaters.Add(data);
 
             return trackedAutoMeater;
@@ -1094,21 +1097,19 @@ namespace H3MP
                             if (H3MP_ThreadManager.host)
                             {
                                 // This will also send a packet with the Encryption to be added in the client's global item list
-                                H3MP_Server.AddTrackedEncryption(trackedEncryption.data, scene, instance, 0);
+                                H3MP_Server.AddTrackedEncryption(trackedEncryption.data, 0);
                             }
                             else
                             {
                                 Debug.Log("Sending tracked Encryption: " + trackedEncryption.data.type);
                                 // Tell the server we need to add this Encryption to global tracked Encryptions
-                                H3MP_ClientSend.TrackedEncryption(trackedEncryption.data, scene, instance);
+                                H3MP_ClientSend.TrackedEncryption(trackedEncryption.data);
                             }
                         }
                         else
                         {
                             Debug.Log("trackedEncryption " + trackedEncryption.name + " NOT awoken, setting for late send");
                             trackedEncryption.sendOnAwake = true;
-                            trackedEncryption.sendScene = scene;
-                            trackedEncryption.sendInstance = instance;
                         }
                     }
                     else // Item will not be controlled by us but is an Encryption that should be tracked by system, so destroy it
@@ -1183,6 +1184,8 @@ namespace H3MP
 
             // Add to local list
             data.localTrackedID = encryptions.Count;
+            data.scene = SceneManager.GetActiveScene().name;
+            data.instance = instance;
             encryptions.Add(data);
 
             return trackedEncryption;

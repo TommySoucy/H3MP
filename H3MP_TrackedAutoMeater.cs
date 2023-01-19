@@ -13,8 +13,6 @@ namespace H3MP
         public H3MP_TrackedAutoMeaterData data;
         public bool awoken;
         public bool sendOnAwake;
-        public string sendScene;
-        public int sendInstance;
 
         // Unknown tracked ID queues
         public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
@@ -31,12 +29,12 @@ namespace H3MP
                 if (H3MP_ThreadManager.host)
                 {
                     // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
-                    H3MP_Server.AddTrackedAutoMeater(data, sendScene, sendInstance, 0);
+                    H3MP_Server.AddTrackedAutoMeater(data, 0);
                 }
                 else
                 {
                     // Tell the server we need to add this item to global tracked AutoMeaters
-                    H3MP_ClientSend.TrackedAutoMeater(data, sendScene, sendInstance);
+                    H3MP_ClientSend.TrackedAutoMeater(data);
                 }
             }
         }
@@ -69,6 +67,7 @@ namespace H3MP
                             {
                                 H3MP_Server.autoMeaters[data.trackedID] = null;
                                 H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
+                                H3MP_GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                         else
@@ -95,6 +94,7 @@ namespace H3MP
                     {
                         H3MP_Server.autoMeaters[data.trackedID] = null;
                         H3MP_Server.availableAutoMeaterIndices.Add(data.trackedID);
+                        H3MP_GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                     }
                 }
                 if (data.localTrackedID != -1)
@@ -133,6 +133,7 @@ namespace H3MP
                                     H3MP_ClientSend.DestroyAutoMeater(data.trackedID);
 
                                     H3MP_Client.autoMeaters[data.trackedID] = null;
+                                    H3MP_GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                                 }
                             }
                             else
@@ -143,6 +144,7 @@ namespace H3MP
                             if (data.trackedID != -1)
                             {
                                 H3MP_Client.autoMeaters[data.trackedID] = null;
+                                H3MP_GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                         else
@@ -192,6 +194,7 @@ namespace H3MP
                             if (data.removeFromListOnDestroy)
                             {
                                 H3MP_Client.autoMeaters[data.trackedID] = null;
+                                H3MP_GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                             }
                         }
                     }
@@ -203,6 +206,7 @@ namespace H3MP
                     if(data.removeFromListOnDestroy && data.trackedID != -1)
                     {
                         H3MP_Client.autoMeaters[data.trackedID] = null;
+                        H3MP_GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                     }
                 }
                 if (removeFromLocal && data.localTrackedID != -1)

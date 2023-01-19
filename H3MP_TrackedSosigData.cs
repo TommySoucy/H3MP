@@ -42,6 +42,8 @@ namespace H3MP
         public Sosig.SosigBodyPose previousBodyPose;
         public Sosig.SosigBodyPose bodyPose;
         public bool removeFromListOnDestroy = true;
+        public string scene;
+        public int instance;
 
         public IEnumerator Instantiate()
         {
@@ -514,6 +516,28 @@ namespace H3MP
                 H3MP_ClientSend.SosigPriorityIFFChart(trackedID, H3MP_TrackedSosig.unknownIFFChart[localTrackedID]);
 
                 H3MP_TrackedSosig.unknownIFFChart.Remove(localTrackedID);
+            }
+
+            if (localTrackedID != -1)
+            {
+                // Add to sosig tracking list
+                if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances))
+                {
+                    if (relevantInstances.TryGetValue(instance, out List<int> sosigList))
+                    {
+                        sosigList.Add(trackedID);
+                    }
+                    else
+                    {
+                        relevantInstances.Add(instance, new List<int>() { trackedID });
+                    }
+                }
+                else
+                {
+                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                    newInstances.Add(instance, new List<int>() { trackedID });
+                    H3MP_GameManager.sosigsByInstanceByScene.Add(scene, newInstances);
+                }
             }
         }
 
