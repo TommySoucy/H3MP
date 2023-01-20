@@ -546,6 +546,7 @@ namespace H3MP
                 H3MP_ServerHandle.TNHHoldPointBeginPhase,
                 H3MP_ServerHandle.TNHHoldPointCompleteHold,
                 H3MP_ServerHandle.SosigPriorityIFFChart,
+                H3MP_ServerHandle.LeverActionFirearmFire,
             };
 
             items = new H3MP_TrackedItemData[100];

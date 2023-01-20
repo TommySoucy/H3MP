@@ -627,6 +627,70 @@ namespace H3MP
             H3MP_ServerSend.BreakActionWeaponFire(clientID, packet);
         }
 
+        public static void LeverActionFirearmFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                bool hammer1 = packet.ReadBool();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for(int i=0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                LeverActionFirearm asLAF = H3MP_Server.items[trackedID].physicalItem.dataObject as LeverActionFirearm;
+                if (hammer1)
+                {
+                    asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                    Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, true);
+                    Mod.LeverActionFirearm_Fire.Invoke(asLAF, null);
+                }
+                else
+                {
+                    bool reCock = false;
+                    if (asLAF.IsHammerCocked)
+                    {
+                        // Temporarily uncock hammer1
+                        reCock = true;
+                        Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, false);
+                    }
+                    bool reChamber = false;
+                    FireArmRoundClass reChamberClass = FireArmRoundClass.a20AP;
+                    if(asLAF.Chamber.GetRound() != null)
+                    {
+                        // Temporarily unchamber round
+                        reChamber = true;
+                        reChamberClass = asLAF.Chamber.GetRound().RoundClass;
+                        asLAF.Chamber.SetRound(null);
+                    }
+                    asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                    Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, true);
+                    Mod.LeverActionFirearm_Fire.Invoke(asLAF, null);
+                    if (reCock)
+                    {
+                        Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, true);
+                    }
+                    if (reChamber)
+                    {
+                        asLAF.Chamber.SetRound(reChamberClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                    }
+                }
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.LeverActionFirearmFire(clientID, packet);
+        }
+
         public static void SosigWeaponFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

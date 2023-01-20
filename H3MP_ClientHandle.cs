@@ -501,6 +501,67 @@ namespace H3MP
             }
         }
 
+        public static void LeverActionFirearmFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                bool hammer1 = packet.ReadBool();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                LeverActionFirearm asLAF = H3MP_Client.items[trackedID].physicalItem.dataObject as LeverActionFirearm;
+                if (hammer1)
+                {
+                    asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                    Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, true);
+                    Mod.LeverActionFirearm_Fire.Invoke(asLAF, null);
+                }
+                else
+                {
+                    bool reCock = false;
+                    if (asLAF.IsHammerCocked)
+                    {
+                        // Temporarily uncock hammer1
+                        reCock = true;
+                        Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, false);
+                    }
+                    bool reChamber = false;
+                    FireArmRoundClass reChamberClass = FireArmRoundClass.a20AP;
+                    if (asLAF.Chamber.GetRound() != null)
+                    {
+                        // Temporarily unchamber round
+                        reChamber = true;
+                        reChamberClass = asLAF.Chamber.GetRound().RoundClass;
+                        asLAF.Chamber.SetRound(null);
+                    }
+                    asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                    Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, true);
+                    Mod.LeverActionFirearm_Fire.Invoke(asLAF, null);
+                    if (reCock)
+                    {
+                        Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, true);
+                    }
+                    if (reChamber)
+                    {
+                        asLAF.Chamber.SetRound(reChamberClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                    }
+                }
+            }
+        }
+
         public static void SosigWeaponFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -2152,6 +2213,20 @@ namespace H3MP
                 TNHInstance.levelIndex = packet.ReadInt();
 
                 H3MP_GameManager.TNHInstances.Add(instance, TNHInstance);
+
+                if((TNHInstance.letPeopleJoin || TNHInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(instance))
+                {
+                    GameObject newInstance = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
+                    newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
+                    newInstance.SetActive(true);
+
+                    FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
+                    instanceButton.SetButton();
+                    instanceButton.MaxPointingRange = 5;
+                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance); });
+
+                    Mod.joinTNHInstances.Add(instance, newInstance);
+                }
             }
         }
 

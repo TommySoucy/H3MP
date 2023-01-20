@@ -300,9 +300,15 @@ namespace H3MP
                 currentInstance.playerIDs.Remove(playerID);
                 if (currentInstance.playerIDs.Count == 0)
                 {
-                    TNHInstances.Remove(player.instance);
+                    TNHInstances.Remove(player.instance); 
+                    
+                    if (Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
+                    {
+                        GameObject.Destroy(Mod.joinTNHInstances[instance]);
+                        Mod.joinTNHInstances.Remove(instance);
+                    }
 
-                    if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
+                    if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
                     {
                         Mod.TNHSpectating = false;
                     }
@@ -1208,6 +1214,21 @@ namespace H3MP
                                                                     targetModeSetting, AIDifficultyModifier, radarModeModifier,
                                                                     itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
                 TNHInstances.Add(freeInstance, newInstance);
+
+                if ((newInstance.letPeopleJoin || newInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(freeInstance))
+                {
+                    GameObject newInstanceElement = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
+                    newInstanceElement.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
+                    newInstanceElement.SetActive(true);
+
+                    FVRPointableButton instanceButton = newInstanceElement.AddComponent<FVRPointableButton>();
+                    instanceButton.SetButton();
+                    instanceButton.MaxPointingRange = 5;
+                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance); });
+
+                    Mod.joinTNHInstances.Add(instance, newInstanceElement);
+                }
+
                 activeInstances.Add(freeInstance, 0);
 
                 Mod.modInstance.OnTNHInstanceReceived(newInstance);
@@ -1259,6 +1280,20 @@ namespace H3MP
             }
             TNHInstances.Add(instance.instance, instance);
 
+            if ((instance.letPeopleJoin || instance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(instance.instance))
+            {
+                GameObject newInstanceElement = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
+                newInstanceElement.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance.instance;
+                newInstanceElement.SetActive(true);
+
+                FVRPointableButton instanceButton = newInstanceElement.AddComponent<FVRPointableButton>();
+                instanceButton.SetButton();
+                instanceButton.MaxPointingRange = 5;
+                instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance.instance); });
+
+                Mod.joinTNHInstances.Add(instance.instance, newInstanceElement);
+            }
+
             Mod.modInstance.OnTNHInstanceReceived(instance);
         }
 
@@ -1284,6 +1319,13 @@ namespace H3MP
                 if (currentInstance.playerIDs.Count == 0)
                 {
                     TNHInstances.Remove(H3MP_GameManager.instance);
+
+                    if (Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
+                    {
+                        GameObject.Destroy(Mod.joinTNHInstances[instance]);
+                        Mod.joinTNHInstances.Remove(instance);
+                    }
+
                     Mod.TNHSpectating = false;
                 }
 

@@ -129,7 +129,8 @@ namespace H3MP
         TNHHoldIdentifyEncryption = 112,
         TNHHoldPointBeginPhase = 113,
         TNHHoldPointCompleteHold = 114,
-        sosigPriorityIFFChart = 115
+        sosigPriorityIFFChart = 115,
+        leverActionFirearmFire = 116
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -252,7 +253,8 @@ namespace H3MP
         TNHHoldIdentifyEncryption = 115,
         TNHHoldPointBeginPhase = 116,
         TNHHoldPointCompleteHold = 117,
-        sosigPriorityIFFChart = 118
+        sosigPriorityIFFChart = 118,
+        leverActionFirearmFire = 119
     }
 
     public class H3MP_Packet : IDisposable

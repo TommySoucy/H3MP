@@ -629,6 +629,31 @@ namespace H3MP
             }
         }
 
+        public static void LeverActionFirearmFire(int trackedID, FireArmRoundClass roundClass, bool hammer1, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.leverActionFirearmFire))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)roundClass);
+                packet.Write(hammer1);
+                if(positions == null || positions.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for(int i=0; i<positions.Count;++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void SosigWeaponFire(int trackedID, float recoilMult, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigWeaponFire))
