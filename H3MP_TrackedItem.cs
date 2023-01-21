@@ -139,6 +139,13 @@ namespace H3MP
                 fireFunc = FireRevolver;
                 setFirearmUpdateOverride = SetRevolverUpdateOverride;
             }
+            else if (physObj is RevolvingShotgun)
+            {
+                RevolvingShotgun asRS = (RevolvingShotgun)physObj;
+                updateFunc = UpdateRevolvingShotgun;
+                updateGivenFunc = UpdateGivenRevolvingShotgun;
+                dataObject = asRS;
+            }
             else if (physObj is BAP)
             {
                 BAP asBAP = (BAP)physObj;
@@ -236,12 +243,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is RevolvingShotgun)
-            {
-                updateFunc = UpdateRevolvingShotgun;
-                updateGivenFunc = UpdateGivenRevolvingShotgun;
-                dataObject = physObj as RevolvingShotgun;
-            }
             else if (physObj is Derringer)
             {
                 updateFunc = UpdateDerringer;
@@ -694,6 +695,149 @@ namespace H3MP
             BAP asBAP = dataObject as BAP;
 
             asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+        }
+
+        private bool UpdateRevolvingShotgun()
+        {
+            RevolvingShotgun asRS = dataObject as RevolvingShotgun;
+            bool modified = false;
+
+            int necessarySize = asRS.Chambers.Length * 2 + 2;
+
+            if (data.data == null)
+            {
+                data.data = new byte[necessarySize];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+
+            // Write cur chamber
+            data.data[0] = (byte)asRS.CurChamber;
+
+            modified |= preval0 != data.data[0];
+
+            preval0 = data.data[1];
+
+            // Write cylLoaded
+            data.data[1] = asRS.CylinderLoaded ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[1];
+
+            // Write chambered rounds
+            byte preval1;
+            for (int i = 0; i < asRS.Chambers.Length; ++i)
+            {
+                int firstIndex = i * 2 + 2;
+                preval0 = data.data[firstIndex];
+                preval1 = data.data[firstIndex + 1];
+
+                if (asRS.Chambers[i].GetRound() == null)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)asRS.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                }
+
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenRevolvingShotgun(byte[] newData)
+        {
+            bool modified = false;
+            RevolvingShotgun asRS = dataObject as RevolvingShotgun;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set cur chamber
+                asRS.CurChamber = newData[0];
+
+                // Set cyl loaded
+                bool newCylLoaded = newData[1] == 1;
+                if(newCylLoaded && !asRS.CylinderLoaded)
+                {
+                    // Load cylinder, chambers will be updated separately
+                    asRS.ProxyCylinder.gameObject.SetActive(true);
+                    asRS.PlayAudioEvent(FirearmAudioEventType.MagazineIn);
+                    asRS.CurChamber = 0;
+                    asRS.ProxyCylinder.localRotation = asRS.GetLocalRotationFromCylinder(0);
+                }
+                else if(!newCylLoaded && asRS.CylinderLoaded)
+                {
+                    // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
+                    asRS.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
+                    asRS.EjectDelay = 0.4f;
+                    asRS.CylinderLoaded = false;
+                    asRS.ProxyCylinder.gameObject.SetActive(false);
+                }
+                asRS.CylinderLoaded = newCylLoaded;
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set cur chamber
+                    asRS.CurChamber = newData[0];
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set cyl loaded
+                    bool newCylLoaded = newData[1] == 1;
+                    if (newCylLoaded && !asRS.CylinderLoaded)
+                    {
+                        // Load cylinder, chambers will be updated separately
+                        asRS.ProxyCylinder.gameObject.SetActive(true);
+                        asRS.PlayAudioEvent(FirearmAudioEventType.MagazineIn);
+                        asRS.CurChamber = 0;
+                        asRS.ProxyCylinder.localRotation = asRS.GetLocalRotationFromCylinder(0);
+                    }
+                    else if (!newCylLoaded && asRS.CylinderLoaded)
+                    {
+                        // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
+                        asRS.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
+                        asRS.EjectDelay = 0.4f;
+                        asRS.CylinderLoaded = false;
+                        asRS.ProxyCylinder.gameObject.SetActive(false);
+                    }
+                    asRS.CylinderLoaded = newCylLoaded;
+                }
+            }
+
+            // Set chambers
+            for (int i = 0; i < asRS.Chambers.Length; ++i)
+            {
+                int firstIndex = i * 2 + 2;
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (asRS.Chambers[i].GetRound() != null)
+                    {
+                        asRS.Chambers[i].SetRound(null, false);
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asRS.Chambers[i].GetRound() == null || asRS.Chambers[i].GetRound().RoundClass != roundClass)
+                    {
+                        asRS.Chambers[i].SetRound(roundClass, asRS.Chambers[i].transform.position, asRS.Chambers[i].transform.rotation);
+                        modified = true;
+                    }
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
         }
 
         private bool UpdateRevolver()

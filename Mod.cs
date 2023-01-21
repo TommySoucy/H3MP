@@ -204,6 +204,7 @@ namespace H3MP
         public static readonly MethodInfo TNH_HoldPoint_FailOut = typeof(TNH_HoldPoint).GetMethod("FailOut", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_HoldPoint_BeginPhase = typeof(TNH_HoldPoint).GetMethod("BeginPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo LeverActionFirearm_Fire = typeof(LeverActionFirearm).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo RevolvingShotgun_Fire = typeof(RevolvingShotgun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -709,6 +710,20 @@ namespace H3MP
             MethodInfo fireBreakActionWeaponPatchPostfix = typeof(FireBreakActionWeaponPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(fireBreakActionWeaponPatchOriginal, new HarmonyMethod(fireBreakActionWeaponPatchPrefix), new HarmonyMethod(fireBreakActionWeaponPatchPostfix));
+
+            // FireLeverActionFirearmPatch
+            MethodInfo fireLeverActionFirearmPatchOriginal = typeof(LeverActionFirearm).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireLeverActionFirearmPatchPrefix = typeof(FireLeverActionFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireLeverActionFirearmPatchPostfix = typeof(FireLeverActionFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(fireLeverActionFirearmPatchOriginal, new HarmonyMethod(fireLeverActionFirearmPatchPrefix), new HarmonyMethod(fireLeverActionFirearmPatchPostfix));
+
+            // FireRevolvingShotgunPatch
+            MethodInfo fireRevolvingShotgunPatchOriginal = typeof(RevolvingShotgun).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireRevolvingShotgunPatchPrefix = typeof(FireRevolvingShotgunPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireRevolvingShotgunPatchPostfix = typeof(FireRevolvingShotgunPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(fireRevolvingShotgunPatchOriginal, new HarmonyMethod(fireRevolvingShotgunPatchPrefix), new HarmonyMethod(fireRevolvingShotgunPatchPostfix));
 
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
@@ -2204,6 +2219,7 @@ namespace H3MP
     //TODO: Add patches for FVRGrenade when hasSploded gets set to true, in FVRUpdate, and OnCollisionEnter
     //TODO: Add patch for MF2_Demonade Explode
     //TODO: Add patch for FlameThrower or maybe just for stopfiring and isFiring
+    //TODO: Add patch for revolvingshotgun load/eject cylinder
 
     #region General Patches
     // Patches SteamVR_LoadLevel.Begin() So we can keep track of which scene we are loading
@@ -3842,6 +3858,60 @@ namespace H3MP
 
             positions = null;
             directions = null;
+        }
+    }
+
+    // Patches RevolvingShotgun.Fire so we can skip 
+    class FireRevolvingShotgunPatch
+    {
+        static void Prefix()
+        {
+            ++FirePatch.skipSending;
+        }
+
+        static void Postfix(ref RevolvingShotgun __instance)
+        {
+            --FirePatch.skipSending;
+            --Mod.skipAllInstantiates;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.RevolvingShotgunFire(0, trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.RevolvingShotgunFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
         }
     }
 

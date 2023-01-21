@@ -130,7 +130,8 @@ namespace H3MP
         TNHHoldPointBeginPhase = 113,
         TNHHoldPointCompleteHold = 114,
         sosigPriorityIFFChart = 115,
-        leverActionFirearmFire = 116
+        leverActionFirearmFire = 116,
+        revolvingShotgunFire = 117
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -254,7 +255,9 @@ namespace H3MP
         TNHHoldPointBeginPhase = 116,
         TNHHoldPointCompleteHold = 117,
         sosigPriorityIFFChart = 118,
-        leverActionFirearmFire = 119
+        leverActionFirearmFire = 119,
+        revolvingShotgunFire = 120,
+        revolvingShotgunLoadCyl = 121
     }
 
     public class H3MP_Packet : IDisposable
