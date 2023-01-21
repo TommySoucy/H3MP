@@ -174,6 +174,18 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenDerringer;
                 dataObject = physObj as Derringer;
             }
+            else if (physObj is FlameThrower)
+            {
+                updateFunc = UpdateFlameThrower;
+                updateGivenFunc = UpdateGivenFlameThrower;
+                dataObject = physObj as FlameThrower;
+            }
+            else if (physObj is Flaregun)
+            {
+                updateFunc = UpdateFlaregun;
+                updateGivenFunc = UpdateGivenFlaregun;
+                dataObject = physObj as Flaregun;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -249,18 +261,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is FlameThrower)
-            {
-                updateFunc = UpdateFlameThrower;
-                updateGivenFunc = UpdateGivenFlameThrower;
-                dataObject = physObj as FlameThrower;
-            }
-            else if (physObj is Flaregun)
-            {
-                updateFunc = UpdateFlaregun;
-                updateGivenFunc = UpdateGivenFlaregun;
-                dataObject = physObj as Flaregun;
-            }
             else if (physObj is FlintlockWeapon)
             {
                 updateFunc = UpdateFlintlockWeapon;
@@ -384,6 +384,146 @@ namespace H3MP
         }
 
         #region Type Updates
+
+        private bool UpdateFlaregun()
+        {
+            Flaregun asFG = dataObject as Flaregun;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[3];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write hammer state
+            data.data[0] = (bool)Mod.Flaregun_m_isHammerCocked.GetValue(asFG) ? (byte)1: (byte)0;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+            byte preval0 = data.data[2];
+
+            // Write chambered round class
+            if (asFG.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asFG.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+            }
+
+            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenFlaregun(byte[] newData)
+        {
+            bool modified = false;
+            Flaregun asFG = dataObject as Flaregun;
+
+            // Set hammer state
+            bool preVal = (bool)Mod.Flaregun_m_isHammerCocked.GetValue(asFG);
+
+            asFG.SetHammerCocked(newData[0] == 1);
+
+            modified |= preVal ^ (newData[0] == 1);
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asFG.Chamber.GetRound() != null)
+                {
+                    asFG.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asFG.Chamber.GetRound() == null || asFG.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asFG.Chamber.SetRound(roundClass, asFG.Chamber.transform.position, asFG.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateFlameThrower()
+        {
+            FlameThrower asFT = dataObject as FlameThrower;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[1];
+                modified = true;
+            }
+
+            // Write firing
+            byte preval = data.data[0];
+
+            data.data[0] = (bool)Mod.FlameThrower_m_isFiring.GetValue(asFT) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            return modified;
+        }
+
+        private bool UpdateGivenFlameThrower(byte[] newData)
+        {
+            bool modified = false;
+            FlameThrower asFT = dataObject as FlameThrower;
+
+            // Set firing
+            bool currentFiring = (bool)Mod.FlameThrower_m_isFiring.GetValue(asFT);
+            if (currentFiring && newData[0] == 0)
+            {
+                // Stop firing
+                Mod.FlameThrower_StopFiring.Invoke(asFT, null);
+                modified = true;
+            }
+            else if(!currentFiring && newData[0] == 1)
+            {
+                // Start firing
+                Mod.FlameThrower_m_hasFiredStartSound.SetValue(asFT, true);
+                SM.PlayCoreSound(FVRPooledAudioType.GenericClose, asFT.AudEvent_Ignite, asFT.GetMuzzle().position);
+                asFT.AudSource_FireLoop.volume = 0.4f;
+                float vlerp;
+                if (asFT.UsesValve)
+                {
+                    vlerp = asFT.Valve.ValvePos;
+                }
+                else if (asFT.UsesMF2Valve)
+                {
+                    vlerp = asFT.MF2Valve.Lerp;
+                }
+                else
+                {
+                    vlerp = 0.5f;
+                }
+                asFT.AudSource_FireLoop.pitch = Mathf.Lerp(asFT.AudioPitchRange.x, asFT.AudioPitchRange.y, vlerp);
+                if (!asFT.AudSource_FireLoop.isPlaying)
+                {
+                    asFT.AudSource_FireLoop.Play();
+                }
+                modified = true;
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateLeverActionFirearm()
         {
             LeverActionFirearm asLAF = dataObject as LeverActionFirearm;
@@ -2680,7 +2820,7 @@ namespace H3MP
             bool modified = false;
             FVRFireArmMagazine asMag = dataObject as FVRFireArmMagazine;
 
-            int necessarySize = asMag.m_numRounds * 2 + 6;
+            int necessarySize = asMag.m_numRounds * 2 + 10;
 
             if(data.data == null || data.data.Length < necessarySize)
             {
@@ -2708,13 +2848,13 @@ namespace H3MP
             }
 
             // Write loaded into firearm
-            data.data[necessarySize - 4] = asMag.FireArm != null ? (byte)1 : (byte)0;
+            data.data[necessarySize - 8] = asMag.FireArm != null ? (byte)1 : (byte)0;
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
             // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
             if(asMag.FireArm == null)
             {
-                data.data[necessarySize - 3] = (byte)255;
+                data.data[necessarySize - 7] = (byte)255;
             }
             else
             {
@@ -2722,20 +2862,20 @@ namespace H3MP
                 {
                     if (asMag.FireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                     {
-                        data.data[necessarySize - 3] = (byte)i;
+                        data.data[necessarySize - 7] = (byte)i;
                         break;
                     }
                 }
             }
 
             // Write loaded into AttachableFirearm
-            data.data[necessarySize - 2] = asMag.AttachableFireArm != null ? (byte)1 : (byte)0;
+            data.data[necessarySize - 6] = asMag.AttachableFireArm != null ? (byte)1 : (byte)0;
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
             // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
             if (asMag.AttachableFireArm == null)
             {
-                data.data[necessarySize - 1] = (byte)255;
+                data.data[necessarySize - 5] = (byte)255;
             }
             else
             {
@@ -2743,11 +2883,14 @@ namespace H3MP
                 {
                     if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                     {
-                        data.data[necessarySize - 1] = (byte)i;
+                        data.data[necessarySize - 5] = (byte)i;
                         break;
                     }
                 }
             }
+
+            // Write fuel amount left
+            BitConverter.GetBytes(asMag.FuelAmountLeft).CopyTo(data.data, necessarySize - 4);
 
             return modified;
         }
@@ -2790,7 +2933,7 @@ namespace H3MP
             }
 
             // Load into firearm if necessary
-            if (newData[newData.Length - 4] == 1)
+            if (newData[newData.Length - 8] == 1)
             {
                 if (data.parent != -1)
                 {
@@ -2827,13 +2970,13 @@ namespace H3MP
                                         }
                                     }
                                 }
-                                if (newData[newData.Length - 3] == 255)
+                                if (newData[newData.Length - 7] == 255)
                                 {
                                     asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
                                 }
                                 else
                                 {
-                                    asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 3]);
+                                    asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 7]);
                                 }
                                 modified = true;
                             }
@@ -2857,33 +3000,33 @@ namespace H3MP
                                     }
                                 }
                             }
-                            if (newData[newData.Length - 3] == 255)
+                            if (newData[newData.Length - 7] == 255)
                             {
                                 asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
                             }
                             else
                             {
-                                asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 3]);
+                                asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 7]);
                             }
                             modified = true;
                         }
                         else
                         {
                             // Load into firearm
-                            if (newData[newData.Length - 3] == 255)
+                            if (newData[newData.Length - 7] == 255)
                             {
                                 asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
                             }
                             else
                             {
-                                asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 3]);
+                                asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 7]);
                             }
                             modified = true;
                         }
                     }
                 }
             }
-            else if (newData[newData.Length - 2] == 1)
+            else if (newData[newData.Length - 6] == 1)
             {
                 if (data.parent != -1)
                 {
@@ -2921,7 +3064,7 @@ namespace H3MP
                                         }
                                     }
                                 }
-                                if (newData[newData.Length - 1] == 255)
+                                if (newData[newData.Length - 5] == 255)
                                 {
                                     asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
                                 }
@@ -2951,7 +3094,7 @@ namespace H3MP
                                     }
                                 }
                             }
-                            if (newData[newData.Length - 1] == 255)
+                            if (newData[newData.Length - 5] == 255)
                             {
                                 asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
                             }
@@ -2965,7 +3108,7 @@ namespace H3MP
                         else
                         {
                             // Load into AttachableFireArm
-                            if (newData[newData.Length - 1] == 255)
+                            if (newData[newData.Length - 5] == 255)
                             {
                                 asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
                             }
@@ -3022,6 +3165,12 @@ namespace H3MP
                     modified = true;
                 }
             }
+
+            float preAmount = asMag.FuelAmountLeft;
+
+            asMag.FuelAmountLeft = BitConverter.ToSingle(newData, newData.Length - 4);
+
+            modified |= preAmount != asMag.FuelAmountLeft;
 
             data.data = newData;
 

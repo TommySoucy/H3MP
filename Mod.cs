@@ -169,6 +169,9 @@ namespace H3MP
         public static readonly FieldInfo LeverActionFirearm_m_isHammerCocked = typeof(LeverActionFirearm).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo LeverActionFirearm_m_isHammerCocked2 = typeof(LeverActionFirearm).GetField("m_isHammerCocked2", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Derringer_m_isExternalHammerCocked = typeof(Derringer).GetField("m_isExternalHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FlameThrower_m_isFiring = typeof(FlameThrower).GetField("m_isFiring", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FlameThrower_m_hasFiredStartSound = typeof(FlameThrower).GetField("m_hasFiredStartSound", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Flaregun_m_isHammerCocked = typeof(Flaregun).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -208,6 +211,7 @@ namespace H3MP
         public static readonly MethodInfo RevolvingShotgun_Fire = typeof(RevolvingShotgun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Derringer_CockHammer = typeof(Derringer).GetMethod("CockHammer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Derringer_FireBarrel = typeof(Derringer).GetMethod("FireBarrel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FlameThrower_StopFiring = typeof(FlameThrower).GetMethod("StopFiring", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
