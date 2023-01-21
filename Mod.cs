@@ -168,6 +168,7 @@ namespace H3MP
         public static readonly FieldInfo TNH_HoldPoint_m_systemNode = typeof(TNH_HoldPoint).GetField("m_systemNode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo LeverActionFirearm_m_isHammerCocked = typeof(LeverActionFirearm).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo LeverActionFirearm_m_isHammerCocked2 = typeof(LeverActionFirearm).GetField("m_isHammerCocked2", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Derringer_m_isExternalHammerCocked = typeof(Derringer).GetField("m_isExternalHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -205,6 +206,8 @@ namespace H3MP
         public static readonly MethodInfo TNH_HoldPoint_BeginPhase = typeof(TNH_HoldPoint).GetMethod("BeginPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo LeverActionFirearm_Fire = typeof(LeverActionFirearm).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo RevolvingShotgun_Fire = typeof(RevolvingShotgun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Derringer_CockHammer = typeof(Derringer).GetMethod("CockHammer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Derringer_FireBarrel = typeof(Derringer).GetMethod("FireBarrel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -724,6 +727,13 @@ namespace H3MP
             MethodInfo fireRevolvingShotgunPatchPostfix = typeof(FireRevolvingShotgunPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(fireRevolvingShotgunPatchOriginal, new HarmonyMethod(fireRevolvingShotgunPatchPrefix), new HarmonyMethod(fireRevolvingShotgunPatchPostfix));
+
+            // FireDerringerPatch
+            MethodInfo fireDerringerPatchOriginal = typeof(Derringer).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireDerringerPatchPrefix = typeof(FireDerringerPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireDerringerPatchPostfix = typeof(FireDerringerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(fireDerringerPatchOriginal, new HarmonyMethod(fireDerringerPatchPrefix), new HarmonyMethod(fireDerringerPatchPostfix));
 
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
@@ -3907,6 +3917,60 @@ namespace H3MP
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
                     H3MP_ClientSend.RevolvingShotgunFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches Derringer.FireBarrel so we can skip 
+    class FireDerringerPatch
+    {
+        static void Prefix()
+        {
+            ++FirePatch.skipSending;
+        }
+
+        static void Postfix(ref Derringer __instance, int i)
+        {
+            --FirePatch.skipSending;
+            --Mod.skipAllInstantiates;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.DerringerFire(0, trackedItem.data.trackedID, FirePatch.roundClass, i, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.DerringerFire(trackedItem.data.trackedID, FirePatch.roundClass, i, FirePatch.positions, FirePatch.directions);
                 }
             }
 

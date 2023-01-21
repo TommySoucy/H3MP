@@ -168,6 +168,12 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenLeverActionFirearm;
                 dataObject = LAF;
             }
+            else if (physObj is Derringer)
+            {
+                updateFunc = UpdateDerringer;
+                updateGivenFunc = UpdateGivenDerringer;
+                dataObject = physObj as Derringer;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -243,12 +249,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is Derringer)
-            {
-                updateFunc = UpdateDerringer;
-                updateGivenFunc = UpdateGivenDerringer;
-                dataObject = physObj as Derringer;
-            }
             else if (physObj is FlameThrower)
             {
                 updateFunc = UpdateFlameThrower;
@@ -495,6 +495,115 @@ namespace H3MP
 
             // Set hammer2 state
             Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, newData[5] == 1);
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateDerringer()
+        {
+            Derringer asDerringer = dataObject as Derringer;
+            bool modified = false;
+
+            int necessarySize = asDerringer.Barrels.Count * 2 + 1;
+
+            if (data.data == null)
+            {
+                data.data = new byte[necessarySize];
+                modified = true;
+            }
+
+            // Write hammer state
+            byte preval0 = data.data[0];
+
+            data.data[0] = asDerringer.IsExternalHammerCocked() ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[0];
+
+            // Write chambered rounds
+            byte preval1;
+            for (int i = 0; i < asDerringer.Barrels.Count; ++i)
+            {
+                // Write chambered round
+                int firstIndex = i * 2 + 1;
+                preval0 = data.data[firstIndex];
+                preval1 = data.data[firstIndex + 1];
+
+                if (asDerringer.Barrels[i].Chamber.GetRound() == null)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)asDerringer.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                }
+
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenDerringer(byte[] newData)
+        {
+            bool modified = false;
+            Derringer asDerringer = dataObject as Derringer;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set hammer state
+                if (newData[0] == 1 && !asDerringer.IsExternalHammerCocked())
+                {
+                    Mod.Derringer_CockHammer.Invoke(asDerringer, null);
+                }
+                else if(newData[0] == 0 && asDerringer.IsExternalHammerCocked())
+                {
+                    Mod.Derringer_m_isExternalHammerCocked.SetValue(asDerringer, false);
+                }
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set hammer state
+                    if (newData[0] == 1 && !asDerringer.IsExternalHammerCocked())
+                    {
+                        Mod.Derringer_CockHammer.Invoke(asDerringer, null);
+                    }
+                    else if (newData[0] == 0 && asDerringer.IsExternalHammerCocked())
+                    {
+                        Mod.Derringer_m_isExternalHammerCocked.SetValue(asDerringer, false);
+                    }
+                    modified = true;
+                }
+            }
+
+            // Set barrels
+            for (int i = 0; i < asDerringer.Barrels.Count; ++i)
+            {
+                int firstIndex = i * 2 + 1;
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (asDerringer.Barrels[i].Chamber.GetRound() != null)
+                    {
+                        asDerringer.Barrels[i].Chamber.SetRound(null, false);
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asDerringer.Barrels[i].Chamber.GetRound() == null || asDerringer.Barrels[i].Chamber.GetRound().RoundClass != roundClass)
+                    {
+                        asDerringer.Barrels[i].Chamber.SetRound(roundClass, asDerringer.Barrels[i].Chamber.transform.position, asDerringer.Barrels[i].Chamber.transform.rotation);
+                        modified = true;
+                    }
+                }
+            }
 
             data.data = newData;
 

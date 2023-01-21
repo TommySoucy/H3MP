@@ -548,6 +548,7 @@ namespace H3MP
                 H3MP_ServerHandle.SosigPriorityIFFChart,
                 H3MP_ServerHandle.LeverActionFirearmFire,
                 H3MP_ServerHandle.RevolvingShotgunFire,
+                H3MP_ServerHandle.DerringerFire,
             };
 
             items = new H3MP_TrackedItemData[100];

@@ -627,6 +627,36 @@ namespace H3MP
             H3MP_ServerSend.BreakActionWeaponFire(clientID, packet);
         }
 
+        public static void DerringerFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                int barrelIndex = packet.ReadByte();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for(int i=0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                Derringer asDerringer = H3MP_Server.items[trackedID].physicalItem.physicalObject as Derringer;
+                asDerringer.Barrels[barrelIndex].Chamber.SetRound(roundClass, asDerringer.Barrels[barrelIndex].Chamber.transform.position, asDerringer.Barrels[barrelIndex].Chamber.transform.rotation);
+                Mod.Derringer_FireBarrel.Invoke(asDerringer, new object[] { barrelIndex });
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.DerringerFire(clientID, packet);
+        }
+
         public static void RevolvingShotgunFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

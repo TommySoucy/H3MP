@@ -422,6 +422,7 @@ namespace H3MP
                 H3MP_ClientHandle.SosigPriorityIFFChart,
                 H3MP_ClientHandle.LeverActionFirearmFire,
                 H3MP_ClientHandle.RevolvingShotgunFire,
+                H3MP_ClientHandle.DerringerFire,
             };
 
             // All vanilla scenes can be synced by default

@@ -501,6 +501,32 @@ namespace H3MP
             }
         }
 
+        public static void DerringerFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                int barrelIndex = packet.ReadByte();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                Derringer asDerringer = H3MP_Server.items[trackedID].physicalItem.physicalObject as Derringer;
+                asDerringer.Barrels[barrelIndex].Chamber.SetRound(roundClass, asDerringer.Barrels[barrelIndex].Chamber.transform.position, asDerringer.Barrels[barrelIndex].Chamber.transform.rotation);
+                Mod.Derringer_FireBarrel.Invoke(asDerringer, new object[] { barrelIndex });
+            }
+        }
+
         public static void RevolvingShotgunFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
