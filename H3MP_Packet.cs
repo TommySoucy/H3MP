@@ -1,14 +1,8 @@
 ﻿using FistVR;
-using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
-using System.Threading;
 using UnityEngine;
-using Valve.Newtonsoft.Json.Linq;
-using static FistVR.TNH_PatrolChallenge;
-using static Valve.VR.SteamVR_ExternalCamera;
 
 namespace H3MP
 {
@@ -134,7 +128,8 @@ namespace H3MP
         revolvingShotgunFire = 117,
         derringerFire = 118,
         flintlockWeaponBurnOffOuter = 119,
-        flintlockWeaponFire = 120
+        flintlockWeaponFire = 120,
+        grappleGunFire = 121
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -263,7 +258,8 @@ namespace H3MP
         revolvingShotgunLoadCyl = 121,
         derringerFire = 122,
         flintlockWeaponBurnOffOuter = 123,
-        flintlockWeaponFire = 124
+        flintlockWeaponFire = 124,
+        grappleGunFire = 125
     }
 
     public class H3MP_Packet : IDisposable

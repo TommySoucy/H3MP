@@ -181,6 +181,7 @@ namespace H3MP
         public static readonly FieldInfo GBeamer_m_isCapacitorSwitchedOn = typeof(GBeamer).GetField("m_isCapacitorSwitchedOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo GBeamer_m_isMotorSwitchedOn = typeof(GBeamer).GetField("m_isMotorSwitchedOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo GBeamer_m_capacitorCharge = typeof(GBeamer).GetField("m_capacitorCharge", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GrappleGun_m_curChamber = typeof(GrappleGun).GetField("m_curChamber", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -2266,7 +2267,6 @@ namespace H3MP
     //TODO: Add patches for FVRGrenade when hasSploded gets set to true, in FVRUpdate, and OnCollisionEnter
     //TODO: Add patch for MF2_Demonade Explode
     //TODO: Add patch for FlameThrower or maybe just for stopfiring and isFiring
-    //TODO: Add patch for revolvingshotgun load/eject cylinder
 
     #region General Patches
     // Patches SteamVR_LoadLevel.Begin() So we can keep track of which scene we are loading
@@ -4087,6 +4087,64 @@ namespace H3MP
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
                     H3MP_ClientSend.RevolvingShotgunFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches GrappleGun.Fire so we can skip 
+    class FireGrappleGunPatch
+    {
+        static int preChamber;
+
+        static void Prefix(int ___m_curChamber)
+        {
+            ++FirePatch.skipSending;
+
+            preChamber = ___m_curChamber;
+        }
+
+        static void Postfix(ref GrappleGun __instance)
+        {
+            --FirePatch.skipSending;
+            --Mod.skipAllInstantiates;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.GrappleGunFire(0, trackedItem.data.trackedID, FirePatch.roundClass, preChamber, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.GrappleGunFire(trackedItem.data.trackedID, FirePatch.roundClass, preChamber, FirePatch.positions, FirePatch.directions);
                 }
             }
 

@@ -776,6 +776,37 @@ namespace H3MP
             H3MP_ServerSend.RevolvingShotgunFire(clientID, packet);
         }
 
+        public static void GrappleGunFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                int curChamber = packet.ReadByte();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for(int i=0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                GrappleGun asGG = H3MP_Server.items[trackedID].physicalItem.physicalObject as GrappleGun;
+                Mod.GrappleGun_m_curChamber.SetValue(asGG, curChamber);
+                asGG.Chambers[curChamber].SetRound(roundClass, asGG.Chambers[curChamber].transform.position, asGG.Chambers[curChamber].transform.rotation);
+                asGG.Fire();
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.GrappleGunFire(clientID, packet);
+        }
+
         public static void LeverActionFirearmFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

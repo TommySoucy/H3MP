@@ -636,6 +636,33 @@ namespace H3MP
             }
         }
 
+        public static void GrappleGunFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                int curChamber = packet.ReadByte();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                GrappleGun asGG = H3MP_Client.items[trackedID].physicalItem.physicalObject as GrappleGun;
+                Mod.GrappleGun_m_curChamber.SetValue(asGG, curChamber);
+                asGG.Chambers[curChamber].SetRound(roundClass, asGG.Chambers[curChamber].transform.position, asGG.Chambers[curChamber].transform.rotation);
+                asGG.Fire();
+            }
+        }
+
         public static void LeverActionFirearmFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

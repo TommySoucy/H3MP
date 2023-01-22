@@ -199,6 +199,12 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenGBeamer;
                 dataObject = physObj as GBeamer;
             }
+            else if (physObj is GrappleGun)
+            {
+                updateFunc = UpdateGrappleGun;
+                updateGivenFunc = UpdateGivenGrappleGun;
+                dataObject = physObj as GrappleGun;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -274,12 +280,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is GrappleGun)
-            {
-                updateFunc = UpdateGrappleGun;
-                updateGivenFunc = UpdateGivenGrappleGun;
-                dataObject = physObj as GrappleGun;
-            }
             else if (physObj is HCB)
             {
                 updateFunc = UpdateHCB;
@@ -385,6 +385,143 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateGrappleGun()
+        {
+            GrappleGun asGG = dataObject as GrappleGun;
+            bool modified = false;
+
+            int necessarySize = asGG.Chambers.Length * 2 + 2;
+
+            if (data.data == null)
+            {
+                data.data = new byte[necessarySize];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+
+            // Write cur chamber
+            data.data[0] = (byte)Mod.GrappleGun_m_curChamber.GetValue(asGG);
+
+            modified |= preval0 != data.data[0];
+
+            preval0 = data.data[1];
+
+            // Write mag loaded
+            data.data[1] = asGG.IsMagLoaded ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[1];
+
+            // Write chambered rounds
+            byte preval1;
+            for (int i = 0; i < asGG.Chambers.Length; ++i)
+            {
+                int firstIndex = i * 2 + 2;
+                preval0 = data.data[firstIndex];
+                preval1 = data.data[firstIndex + 1];
+
+                if (asGG.Chambers[i].GetRound() == null)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)asGG.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                }
+
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenGrappleGun(byte[] newData)
+        {
+            bool modified = false;
+            GrappleGun asGG = dataObject as GrappleGun;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set cur chamber
+                Mod.GrappleGun_m_curChamber.SetValue(asGG, newData[0]);
+
+                // Set mag loaded
+                bool newCylLoaded = newData[1] == 1;
+                if (newCylLoaded && !asGG.IsMagLoaded)
+                {
+                    // Load cylinder, chambers will be updated separately
+                    asGG.ProxyMag.gameObject.SetActive(true);
+                    asGG.PlayAudioEvent(FirearmAudioEventType.MagazineIn, 1f);
+                }
+                else if (!newCylLoaded && asGG.IsMagLoaded)
+                {
+                    // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
+                    asGG.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
+                    asGG.EjectDelay = 0.4f;
+                    asGG.ProxyMag.gameObject.SetActive(false);
+                }
+                asGG.IsMagLoaded = newCylLoaded;
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set cur chamber
+                    Mod.GrappleGun_m_curChamber.SetValue(asGG, newData[0]);
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set cyl loaded
+                    bool newCylLoaded = newData[1] == 1;
+                    if (newCylLoaded && !asGG.IsMagLoaded)
+                    {
+                        // Load cylinder, chambers will be updated separately
+                        asGG.ProxyMag.gameObject.SetActive(true);
+                        asGG.PlayAudioEvent(FirearmAudioEventType.MagazineIn, 1f);
+                    }
+                    else if (!newCylLoaded && asGG.IsMagLoaded)
+                    {
+                        // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
+                        asGG.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
+                        asGG.EjectDelay = 0.4f;
+                        asGG.ProxyMag.gameObject.SetActive(false);
+                    }
+                    asGG.IsMagLoaded = newCylLoaded;
+                }
+            }
+
+            // Set chambers
+            for (int i = 0; i < asGG.Chambers.Length; ++i)
+            {
+                int firstIndex = i * 2 + 2;
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (asGG.Chambers[i].GetRound() != null)
+                    {
+                        asGG.Chambers[i].SetRound(null, false);
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asGG.Chambers[i].GetRound() == null || asGG.Chambers[i].GetRound().RoundClass != roundClass)
+                    {
+                        asGG.Chambers[i].SetRound(roundClass, asGG.Chambers[i].transform.position, asGG.Chambers[i].transform.rotation);
+                        modified = true;
+                    }
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateGBeamer()
         {
             GBeamer asGBeamer = dataObject as GBeamer;
