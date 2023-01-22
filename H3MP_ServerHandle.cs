@@ -595,6 +595,94 @@ namespace H3MP
             H3MP_ServerSend.WeaponFire(clientID, packet);
         }
 
+        public static void FlintlockWeaponBurnOffOuter(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                // Override
+                FlintlockBarrel asBarrel = H3MP_Server.items[trackedID].physicalItem.dataObject as FlintlockBarrel;
+                FlintlockWeapon asFlintlockWeapon = H3MP_Server.items[trackedID].physicalItem.physicalObject as FlintlockWeapon;
+                int loadedElementCount = packet.ReadByte();
+                asBarrel.LoadedElements = new List<FlintlockBarrel.LoadedElement>();
+                for (int i=0; i < loadedElementCount; ++i)
+                {
+                    FlintlockBarrel.LoadedElement newElement = new FlintlockBarrel.LoadedElement();
+                    newElement.Type = (FlintlockBarrel.LoadedElementType)packet.ReadByte();
+                    newElement.Position = packet.ReadFloat();
+                }
+                asBarrel.LoadedElements[asBarrel.LoadedElements.Count - 1].PowderAmount = packet.ReadInt();
+                if(packet.ReadBool() && asFlintlockWeapon.RamRod.GetCurBarrel() != asBarrel)
+                {
+                    Mod.FlintlockPseudoRamRod_m_curBarrel.SetValue(asFlintlockWeapon.RamRod, asBarrel);
+                }
+                FireFlintlockWeaponPatch.num2 = packet.ReadFloat();
+                FireFlintlockWeaponPatch.positions = new List<Vector3>();
+                FireFlintlockWeaponPatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for(int i=0; i < count; ++i)
+                {
+                    FireFlintlockWeaponPatch.positions.Add(packet.ReadVector3());
+                    FireFlintlockWeaponPatch.directions.Add(packet.ReadVector3());
+                }
+                FireFlintlockWeaponPatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++FireFlintlockWeaponPatch.burnSkip;
+                asBarrel.BurnOffOuter();
+                --FireFlintlockWeaponPatch.burnSkip;
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.FlintlockWeaponBurnOffOuter(clientID, packet);
+        }
+
+        public static void FlintlockWeaponFire(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            // Update locally
+            if (H3MP_Server.items[trackedID].physicalItem != null)
+            {
+                // Override
+                FlintlockBarrel asBarrel = H3MP_Server.items[trackedID].physicalItem.dataObject as FlintlockBarrel;
+                FlintlockWeapon asFlintlockWeapon = H3MP_Server.items[trackedID].physicalItem.physicalObject as FlintlockWeapon;
+                int loadedElementCount = packet.ReadByte();
+                asBarrel.LoadedElements = new List<FlintlockBarrel.LoadedElement>();
+                for (int i=0; i < loadedElementCount; ++i)
+                {
+                    FlintlockBarrel.LoadedElement newElement = new FlintlockBarrel.LoadedElement();
+                    newElement.Type = (FlintlockBarrel.LoadedElementType)packet.ReadByte();
+                    newElement.Position = packet.ReadFloat();
+                    newElement.PowderAmount = packet.ReadInt();
+                }
+                if(packet.ReadBool() && asFlintlockWeapon.RamRod.GetCurBarrel() != asBarrel)
+                {
+                    Mod.FlintlockPseudoRamRod_m_curBarrel.SetValue(asFlintlockWeapon.RamRod, asBarrel);
+                }
+                FireFlintlockWeaponPatch.num5 = packet.ReadFloat();
+                FireFlintlockWeaponPatch.positions = new List<Vector3>();
+                FireFlintlockWeaponPatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for(int i=0; i < count; ++i)
+                {
+                    FireFlintlockWeaponPatch.positions.Add(packet.ReadVector3());
+                    FireFlintlockWeaponPatch.directions.Add(packet.ReadVector3());
+                }
+                FireFlintlockWeaponPatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++FireFlintlockWeaponPatch.fireSkip;
+                Mod.FlintlockBarrel_Fire.Invoke(asBarrel, null);
+                --FireFlintlockWeaponPatch.fireSkip;
+            }
+
+            // Send to other clients
+            H3MP_ServerSend.FlintlockWeaponFire(clientID, packet);
+        }
+
         public static void BreakActionWeaponFire(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

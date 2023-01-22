@@ -577,16 +577,77 @@ namespace H3MP
 
         public static void WeaponFire(int trackedID, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
         {
-            // TODO: It may be necessary to also pass the round class 
-            //       This is because when a weapon that is controlled by this client in fired in aanother client, it will use up the projectile in its chamber (if it has one)
-            //       The problem is that if it isn't up to date before it gets fired again, the chamber is now empty but we are still calling fire
-            //       This will either cause error or just not fire the weapon. If we pass the round class, we can ensure that our chamber contains the correct
-            //       class, if anything, before firing
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.weaponFire))
             {
                 packet.Write(trackedID);
                 packet.Write((short)roundClass);
                 if(positions == null || positions.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for(int i=0; i<positions.Count;++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void FlintlockWeaponBurnOffOuter(int trackedID, FlintlockBarrel.LoadedElementType[] loadedElementTypes, float[] loadedElementPositions,
+                                                       int powderAmount, bool ramRod, float num2, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.flintlockWeaponBurnOffOuter))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)loadedElementTypes.Length);
+                for(int i=0; i< loadedElementTypes.Length; ++i)
+                {
+                    packet.Write((byte)loadedElementTypes[i]);
+                    packet.Write(loadedElementPositions[i]);
+                }
+                packet.Write(powderAmount);
+                packet.Write(ramRod);
+                packet.Write(num2);
+                if (positions == null || positions.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for(int i=0; i<positions.Count;++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void FlintlockWeaponFire(int trackedID, FlintlockBarrel.LoadedElementType[] loadedElementTypes, float[] loadedElementPositions,
+                                               int[] loadedElementPowderAmounts, bool ramRod, float num5, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.flintlockWeaponFire))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)loadedElementTypes.Length);
+                for(int i=0; i< loadedElementTypes.Length; ++i)
+                {
+                    packet.Write((byte)loadedElementTypes[i]);
+                    packet.Write(loadedElementPositions[i]);
+                    packet.Write(loadedElementPowderAmounts[i]);
+                }
+                packet.Write(ramRod);
+                packet.Write(num5);
+                if (positions == null || positions.Count == 0)
                 {
                     packet.Write((byte)0);
                 }

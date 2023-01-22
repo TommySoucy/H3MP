@@ -76,6 +76,7 @@ namespace H3MP
 
             // For each relevant type for which we may want to store additional data, we set a specific update function and the object ref
             // NOTE: We want to handle a subtype before its parent type (ex.: AttachableFirearmPhysicalObject before FVRFireArmAttachment) 
+            // TODO: Maybe instead of having a big if statement like this, put all of them in a dictionnary for faster lookup
             if (physObj is FVRFireArmMagazine)
             {
                 updateFunc = UpdateMagazine;
@@ -186,6 +187,12 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenFlaregun;
                 dataObject = physObj as Flaregun;
             }
+            else if (physObj is FlintlockWeapon)
+            {
+                updateFunc = UpdateFlintlockWeapon;
+                updateGivenFunc = UpdateGivenFlintlockWeapon;
+                dataObject = physObj.GetComponentInChildren<FlintlockBarrel>();
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -261,12 +268,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is FlintlockWeapon)
-            {
-                updateFunc = UpdateFlintlockWeapon;
-                updateGivenFunc = UpdateGivenFlintlockWeapon;
-                dataObject = physObj as FlintlockWeapon;
-            }
             else if (physObj is GBeamer)
             {
                 updateFunc = UpdateGBeamer;
@@ -384,6 +385,95 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateFlintlockWeapon()
+        {
+            FlintlockWeapon asFLW = physicalObject as FlintlockWeapon;
+            
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[6];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write hammer state
+            data.data[0] = (byte)asFLW.HammerState;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+
+            // Write has flint
+            data.data[1] = asFLW.HasFlint() ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[1];
+
+            preval = data.data[2];
+
+            // Write flint state
+            data.data[2] = (byte)asFLW.FState;
+
+            modified |= preval != data.data[2];
+
+            byte preval0 = data.data[3];
+            byte preval1 = data.data[4];
+            byte preval2 = data.data[5];
+
+            // Write flint uses
+            Vector3 uses = (Vector3)Mod.FlintlockWeapon_m_flintUses.GetValue(asFLW);
+            data.data[3] = (byte)(int)uses.x;
+            data.data[4] = (byte)(int)uses.y;
+            data.data[5] = (byte)(int)uses.z;
+
+            modified |= (preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenFlintlockWeapon(byte[] newData)
+        {
+            bool modified = false;
+            FlintlockWeapon asFLW = physicalObject as FlintlockWeapon;
+
+            // Set hammer state
+            FlintlockWeapon.HState preVal = asFLW.HammerState;
+
+            asFLW.HammerState = (FlintlockWeapon.HState)newData[0];
+
+            modified |= preVal != asFLW.HammerState;
+
+            // Set hasFlint
+            bool preVal0 = asFLW.HasFlint();
+
+            Mod.FlintlockWeapon_m_hasFlint.SetValue(asFLW, newData[1] == 1);
+
+            modified |= preVal0 ^ asFLW.HasFlint();
+
+            // Set flint state
+            FlintlockWeapon.FlintState preVal1 = asFLW.FState;
+
+            asFLW.FState = (FlintlockWeapon.FlintState)newData[2];
+
+            modified |= preVal1 != asFLW.FState;
+
+            Vector3 preUses = (Vector3)Mod.FlintlockWeapon_m_flintUses.GetValue(asFLW);
+
+            // Write flint uses
+            Vector3 uses = Vector3.zero;
+            uses.x = newData[3];
+            uses.y = newData[4];
+            uses.z = newData[5];
+            Mod.FlintlockWeapon_m_flintUses.SetValue(asFLW, uses);
+
+            modified |= !preUses.Equals(uses);
+
+            data.data = newData;
+
+            return modified;
+        }
 
         private bool UpdateFlaregun()
         {

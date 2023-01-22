@@ -934,6 +934,124 @@ namespace H3MP
             }
         }
 
+        public static void FlintlockWeaponBurnOffOuter(int clientID, int trackedID, FlintlockBarrel.LoadedElementType[] loadedElementTypes, float[] loadedElementPositions,
+                                                       int powderAmount, bool ramRod, float num2, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.flintlockWeaponBurnOffOuter))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)loadedElementTypes.Length);
+                for (int i = 0; i < loadedElementTypes.Length; ++i)
+                {
+                    packet.Write((byte)loadedElementTypes[i]);
+                    packet.Write(loadedElementPositions[i]);
+                }
+                packet.Write(powderAmount);
+                packet.Write(ramRod);
+                packet.Write(num2);
+                if (positions == null || positions.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for (int i = 0; i < positions.Count; ++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void FlintlockWeaponBurnOffOuter(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.flintlockWeaponBurnOffOuter);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void FlintlockWeaponFire(int clientID, int trackedID, FlintlockBarrel.LoadedElementType[] loadedElementTypes, float[] loadedElementPositions,
+                                                       int[] loadedElementPowderAmounts, bool ramRod, float num5, List<Vector3> positions, List<Vector3> directions)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.flintlockWeaponFire))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)loadedElementTypes.Length);
+                for (int i = 0; i < loadedElementTypes.Length; ++i)
+                {
+                    packet.Write((byte)loadedElementTypes[i]);
+                    packet.Write(loadedElementPositions[i]);
+                    packet.Write(loadedElementPowderAmounts[i]);
+                }
+                packet.Write(ramRod);
+                packet.Write(num5);
+                if (positions == null || positions.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)positions.Count);
+                    for (int i = 0; i < positions.Count; ++i)
+                    {
+                        packet.Write(positions[i]);
+                        packet.Write(directions[i]);
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void FlintlockWeaponFire(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.flintlockWeaponFire);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
         public static void BreakActionWeaponFire(int clientID, int trackedID, FireArmRoundClass roundClass, int barrelIndex, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.breakActionWeaponFire))

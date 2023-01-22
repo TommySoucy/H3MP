@@ -132,7 +132,9 @@ namespace H3MP
         sosigPriorityIFFChart = 115,
         leverActionFirearmFire = 116,
         revolvingShotgunFire = 117,
-        derringerFire = 118
+        derringerFire = 118,
+        flintlockWeaponBurnOffOuter = 119,
+        flintlockWeaponFire = 120
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -259,7 +261,9 @@ namespace H3MP
         leverActionFirearmFire = 119,
         revolvingShotgunFire = 120,
         revolvingShotgunLoadCyl = 121,
-        derringerFire = 122
+        derringerFire = 122,
+        flintlockWeaponBurnOffOuter = 123,
+        flintlockWeaponFire = 124
     }
 
     public class H3MP_Packet : IDisposable

@@ -172,6 +172,10 @@ namespace H3MP
         public static readonly FieldInfo FlameThrower_m_isFiring = typeof(FlameThrower).GetField("m_isFiring", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FlameThrower_m_hasFiredStartSound = typeof(FlameThrower).GetField("m_hasFiredStartSound", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Flaregun_m_isHammerCocked = typeof(Flaregun).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FlintlockBarrel_m_weapon = typeof(FlintlockBarrel).GetField("m_weapon", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FlintlockPseudoRamRod_m_curBarrel = typeof(FlintlockPseudoRamRod).GetField("m_curBarrel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FlintlockWeapon_m_hasFlint = typeof(FlintlockWeapon).GetField("m_hasFlint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FlintlockWeapon_m_flintUses = typeof(FlintlockWeapon).GetField("m_flintUses", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -212,6 +216,7 @@ namespace H3MP
         public static readonly MethodInfo Derringer_CockHammer = typeof(Derringer).GetMethod("CockHammer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Derringer_FireBarrel = typeof(Derringer).GetMethod("FireBarrel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FlameThrower_StopFiring = typeof(FlameThrower).GetMethod("StopFiring", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FlintlockBarrel_Fire = typeof(FlintlockBarrel).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -651,6 +656,14 @@ namespace H3MP
             MethodInfo firePatchPostfix = typeof(FirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix), new HarmonyMethod(firePatchTranspiler));
+
+            // FireFlintlockWeaponPatch
+            MethodInfo fireFlintlockWeaponPatchBurnOffOuterOriginal = typeof(FlintlockBarrel).GetMethod("BurnOffOuter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireFlintlockWeaponPatchBurnOffOuterPrefix = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponPatchBurnOffOuterTranspiler = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponPatchBurnOffOuterPostfix = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(fireFlintlockWeaponPatchBurnOffOuterOriginal, new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPrefix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPostfix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterTranspiler));
 
             // FireSosigWeaponPatch
             MethodInfo fireSosigWeaponPatchOriginal = typeof(SosigWeapon).GetMethod("FireGun", BindingFlags.Public | BindingFlags.Instance);
@@ -4101,6 +4114,460 @@ namespace H3MP
 
             FirePatch.positions = null;
             FirePatch.directions = null;
+        }
+    }
+
+    // Patches FlintlockBarrel to keep track of fire actions
+    class FireFlintlockWeaponPatch
+    {
+        public static bool overriden;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
+        public static int burnSkip;
+        public static int fireSkip;
+
+        // Update override data
+        public static bool fireSuccessful;
+        public static FlintlockBarrel.LoadedElementType[] loadedElementTypes;
+        public static float[] loadedElementPositions;
+        public static int powderAmount;
+        public static bool ramRod;
+        public static float num2;
+
+        public static int[] loadedElementPowderAmounts;
+        public static float num5;
+
+        static void BurnOffOuterPrefix(FlintlockBarrel __instance)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+
+            if(burnSkip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            fireSuccessful = __instance.LoadedElements.Count > 0 && __instance.LoadedElements[__instance.LoadedElements.Count - 1].Type == FlintlockBarrel.LoadedElementType.Powder;
+            if (fireSuccessful)
+            {
+                loadedElementTypes = new FlintlockBarrel.LoadedElementType[__instance.LoadedElements.Count];
+                loadedElementPositions = new float[__instance.LoadedElements.Count];
+                for(int i=0; i< __instance.LoadedElements.Count; ++i)
+                {
+                    loadedElementTypes[i] = __instance.LoadedElements[i].Type;
+                    loadedElementPositions[i] = __instance.LoadedElements[i].Position;
+                }
+                powderAmount = __instance.LoadedElements[__instance.LoadedElements.Count - 1].PowderAmount;
+                ramRod = ((FlintlockWeapon)Mod.FlintlockBarrel_m_weapon.GetValue(__instance)).RamRod.GetCurBarrel() == __instance;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> BurnOffOuterTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load index 0
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load index 0
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 6)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load index
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert3 = new List<CodeInstruction>();
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load index
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 10)); // Load gameObject
+            toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To get num2
+            List<CodeInstruction> toInsert4 = new List<CodeInstruction>();
+            toInsert4.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load num2
+            toInsert4.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetNum2"))); // Call our GetNum2
+            toInsert4.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set num2
+
+            bool foundFirstPos = false;
+            bool skippedSecondDir = false;
+            bool foundFirstDir = false;
+            bool foundNum2 = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if(!foundNum2 && instruction.opcode == OpCodes.Stloc_S && (int)instruction.operand == 4)
+                {
+                    instructionList.InsertRange(i + 1, toInsert4);
+                    foundNum2 = true;
+                    continue;
+                }
+
+                if (!foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                    foundFirstPos = true;
+                    continue;
+                }
+                if(foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert2);
+                    continue;
+                }
+
+                if(!foundFirstDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert1);
+                    foundFirstDir = true;
+                    continue;
+                }
+                if(foundFirstDir && !skippedSecondDir)
+                {
+                    skippedSecondDir = true;
+                    continue;
+                }
+                if (foundFirstDir && skippedSecondDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert3);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static float GetNum2(float num2)
+        {
+            if (overriden)
+            {
+                return FireFlintlockWeaponPatch.num2;
+            }
+            else
+            {
+                FireFlintlockWeaponPatch.num2 = num2;
+                return num2;
+            }
+        }
+
+        public static float GetNum5(float num5)
+        {
+            if (overriden)
+            {
+                return FireFlintlockWeaponPatch.num5;
+            }
+            else
+            {
+                FireFlintlockWeaponPatch.num5 = num5;
+                return num5;
+            }
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void BurnOffOuterPostfix(ref FlintlockBarrel __instance)
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (burnSkip > 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            FlintlockWeapon FLW = (FlintlockWeapon)Mod.FlintlockBarrel_m_weapon.GetValue(__instance);
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(FLW) ? H3MP_GameManager.trackedItemByItem[FLW] : FLW.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.FlintlockWeaponBurnOffOuter(0, trackedItem.data.trackedID, loadedElementTypes, loadedElementPositions, powderAmount, ramRod, num2, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.FlintlockWeaponBurnOffOuter(trackedItem.data.trackedID, loadedElementTypes, loadedElementPositions, powderAmount, ramRod, num2, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
+        }
+
+        static void FirePrefix(FlintlockBarrel __instance)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+
+            if (fireSkip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            fireSuccessful = __instance.LoadedElements.Count > 0 && __instance.LoadedElements[__instance.LoadedElements.Count - 1].Type == FlintlockBarrel.LoadedElementType.Powder;
+            if (fireSuccessful)
+            {
+                loadedElementTypes = new FlintlockBarrel.LoadedElementType[__instance.LoadedElements.Count];
+                loadedElementPositions = new float[__instance.LoadedElements.Count];
+                loadedElementPowderAmounts = new int[__instance.LoadedElements.Count];
+                for (int i = 0; i < __instance.LoadedElements.Count; ++i)
+                {
+                    loadedElementTypes[i] = __instance.LoadedElements[i].Type;
+                    loadedElementPositions[i] = __instance.LoadedElements[i].Position;
+                    loadedElementPowderAmounts[i] = __instance.LoadedElements[i].PowderAmount;
+                }
+                ramRod = ((FlintlockWeapon)Mod.FlintlockBarrel_m_weapon.GetValue(__instance)).RamRod.GetCurBarrel() == __instance;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> FireTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load index 0
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load index 0
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 11)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_S, 12)); // Load index
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert3 = new List<CodeInstruction>();
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 12)); // Load index
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 15)); // Load gameObject
+            toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To get num5
+            List<CodeInstruction> toInsert4 = new List<CodeInstruction>();
+            toInsert4.Add(new CodeInstruction(OpCodes.Ldloc_S, 9)); // Load num5
+            toInsert4.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetNum5"))); // Call our GetNum5
+            toInsert4.Add(new CodeInstruction(OpCodes.Stloc_S, 9)); // Set num5
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert5 = new List<CodeInstruction>();
+            toInsert5.Add(new CodeInstruction(OpCodes.Ldloc_S, 20)); // Load index
+            toInsert5.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert6 = new List<CodeInstruction>();
+            toInsert6.Add(new CodeInstruction(OpCodes.Ldloc_S, 20)); // Load index
+            toInsert6.Add(new CodeInstruction(OpCodes.Ldloc_S, 22)); // Load gameObject
+            toInsert6.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            bool foundFirstPos = false;
+            bool foundFirstDir = false;
+            bool foundNum5 = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (!foundNum5 && instruction.opcode == OpCodes.Stloc_S && (int)instruction.operand == 9)
+                {
+                    instructionList.InsertRange(i + 1, toInsert4);
+                    foundNum5 = true;
+                    continue;
+                }
+
+                if (!foundFirstPos && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("Muzzle") &&
+                    instructionList[i+1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
+                {
+                    instructionList.InsertRange(i + 2, toInsert0);
+                    foundFirstPos = true;
+                    continue;
+                }
+                if (instruction.opcode == OpCodes.Ldloc_S && (int)instruction.operand == 13)
+                {
+                    instructionList.InsertRange(i + 1, toInsert2);
+                    continue;
+                }
+                if (instruction.opcode == OpCodes.Ldloc_S && (int)instruction.operand == 21)
+                {
+                    instructionList.InsertRange(i + 1, toInsert5);
+                    continue;
+                }
+                
+
+                if (!foundFirstDir && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("Muzzle") &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 2, toInsert1);
+                    foundFirstDir = true;
+                    continue;
+                }
+                if (instruction.opcode == OpCodes.Ldloc_S && (int)instruction.operand == 15 &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_transform") &&
+                    instructionList[i + 2].opcode == OpCodes.Callvirt && instructionList[i + 2].operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 3, toInsert3);
+                    continue;
+                }
+                if (instruction.opcode == OpCodes.Ldloc_S && (int)instruction.operand == 22 &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_transform") &&
+                    instructionList[i + 2].opcode == OpCodes.Callvirt && instructionList[i + 2].operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 3, toInsert6);
+                    break; ;
+                }
+            }
+            return instructionList;
+        }
+
+        static void FirePostfix(ref FlintlockBarrel __instance)
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (fireSkip > 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            FlintlockWeapon FLW = (FlintlockWeapon)Mod.FlintlockBarrel_m_weapon.GetValue(__instance);
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(FLW) ? H3MP_GameManager.trackedItemByItem[FLW] : FLW.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.FlintlockWeaponFire(0, trackedItem.data.trackedID, loadedElementTypes, loadedElementPositions, loadedElementPowderAmounts, ramRod, num5, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.FlintlockWeaponFire(trackedItem.data.trackedID, loadedElementTypes, loadedElementPositions, loadedElementPowderAmounts, ramRod, num5, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
         }
     }
 
