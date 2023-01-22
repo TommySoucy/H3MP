@@ -193,6 +193,12 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenFlintlockWeapon;
                 dataObject = physObj.GetComponentInChildren<FlintlockBarrel>();
             }
+            else if (physObj is GBeamer)
+            {
+                updateFunc = UpdateGBeamer;
+                updateGivenFunc = UpdateGivenGBeamer;
+                dataObject = physObj as GBeamer;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -268,12 +274,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is GBeamer)
-            {
-                updateFunc = UpdateGBeamer;
-                updateGivenFunc = UpdateGivenGBeamer;
-                dataObject = physObj as GBeamer;
-            }
             else if (physObj is GrappleGun)
             {
                 updateFunc = UpdateGrappleGun;
@@ -385,6 +385,97 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateGBeamer()
+        {
+            GBeamer asGBeamer = dataObject as GBeamer;
+            
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[7];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write battery switch state
+            data.data[0] = ((bool)Mod.GBeamer_m_isBatterySwitchedOn.GetValue(asGBeamer)) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+
+            // Write capacitor switch state
+            data.data[1] = ((bool)Mod.GBeamer_m_isCapacitorSwitchedOn.GetValue(asGBeamer)) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[1];
+
+            preval = data.data[2];
+
+            // Write motor switch state
+            data.data[2] = ((bool)Mod.GBeamer_m_isMotorSwitchedOn.GetValue(asGBeamer)) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[2];
+
+            byte preval0 = data.data[3];
+            byte preval1 = data.data[4];
+            byte preval2 = data.data[5];
+            byte preval3 = data.data[6];
+
+            // Write cap charge
+            BitConverter.GetBytes((float)Mod.GBeamer_m_capacitorCharge.GetValue(asGBeamer)).CopyTo(data.data, 3);
+
+            modified |= (preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5] || preval3 != data.data[6]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenGBeamer(byte[] newData)
+        {
+            bool modified = false;
+            GBeamer asGBeamer = dataObject as GBeamer;
+
+            // Set battery switch state
+            bool preVal = (bool)Mod.GBeamer_m_isBatterySwitchedOn.GetValue(asGBeamer);
+            if((preVal && newData[0] == 0) || (!preVal && newData[0] == 1))
+            {
+                // Toggle
+                asGBeamer.BatterySwitch.ToggleSwitch(false);
+                modified = true;
+            }
+
+            // Set capacitor switch state
+            preVal = (bool)Mod.GBeamer_m_isCapacitorSwitchedOn.GetValue(asGBeamer);
+            if((preVal && newData[1] == 0) || (!preVal && newData[1] == 1))
+            {
+                // Toggle
+                asGBeamer.CapacitorSwitch.ToggleSwitch(false);
+                modified = true;
+            }
+
+            // Set motor switch state
+            preVal = (bool)Mod.GBeamer_m_isMotorSwitchedOn.GetValue(asGBeamer);
+            if((preVal && newData[2] == 0) || (!preVal && newData[2] == 1))
+            {
+                // Toggle
+                asGBeamer.MotorSwitch.ToggleSwitch(false);
+                modified = true;
+            }
+
+            float capPreval = (float)Mod.GBeamer_m_capacitorCharge.GetValue(asGBeamer);
+            float newCapCharge = BitConverter.ToSingle(newData, 3);
+            if(capPreval != newCapCharge)
+            {
+                Mod.GBeamer_m_capacitorCharge.SetValue(asGBeamer, newCapCharge);
+                modified = true;
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateFlintlockWeapon()
         {
             FlintlockWeapon asFLW = physicalObject as FlintlockWeapon;

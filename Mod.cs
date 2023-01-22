@@ -2,6 +2,7 @@
 using FistVR;
 using HarmonyLib;
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -176,6 +177,10 @@ namespace H3MP
         public static readonly FieldInfo FlintlockPseudoRamRod_m_curBarrel = typeof(FlintlockPseudoRamRod).GetField("m_curBarrel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FlintlockWeapon_m_hasFlint = typeof(FlintlockWeapon).GetField("m_hasFlint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FlintlockWeapon_m_flintUses = typeof(FlintlockWeapon).GetField("m_flintUses", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GBeamer_m_isBatterySwitchedOn = typeof(GBeamer).GetField("m_isBatterySwitchedOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GBeamer_m_isCapacitorSwitchedOn = typeof(GBeamer).GetField("m_isCapacitorSwitchedOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GBeamer_m_isMotorSwitchedOn = typeof(GBeamer).GetField("m_isMotorSwitchedOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GBeamer_m_capacitorCharge = typeof(GBeamer).GetField("m_capacitorCharge", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -649,6 +654,16 @@ namespace H3MP
 
             harmony.Patch(grabbityPatchOriginal, new HarmonyMethod(grabbityPatchPrefix));
 
+            // GBeamerPatch
+            MethodInfo GBeamerPatchObjectSearchOriginal = typeof(GBeamer).GetMethod("ObjectSearch", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo GBeamerPatchObjectSearchPrefix = typeof(GBeamerPatch).GetMethod("ObjectSearchPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo GBeamerPatchObjectSearchPostfix = typeof(GBeamerPatch).GetMethod("ObjectSearchPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo GBeamerPatchWideShuntOriginal = typeof(GBeamer).GetMethod("WideShunt", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo GBeamerPatchWideShuntTranspiler = typeof(GBeamerPatch).GetMethod("WideShuntTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            harmony.Patch(GBeamerPatchObjectSearchOriginal, new HarmonyMethod(GBeamerPatchObjectSearchPrefix), new HarmonyMethod(GBeamerPatchObjectSearchPostfix));
+            harmony.Patch(GBeamerPatchWideShuntOriginal, null, null, new HarmonyMethod(GBeamerPatchWideShuntTranspiler));
+
             // FirePatch
             MethodInfo firePatchOriginal = typeof(FVRFireArm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo firePatchPrefix = typeof(FirePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -662,8 +677,13 @@ namespace H3MP
             MethodInfo fireFlintlockWeaponPatchBurnOffOuterPrefix = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireFlintlockWeaponPatchBurnOffOuterTranspiler = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireFlintlockWeaponPatchBurnOffOuterPostfix = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponFireOriginal = typeof(FlintlockBarrel).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireFlintlockWeaponFirePrefix = typeof(FireFlintlockWeaponPatch).GetMethod("FirePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponFireTranspiler = typeof(FireFlintlockWeaponPatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponFirePostfix = typeof(FireFlintlockWeaponPatch).GetMethod("FirePostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             harmony.Patch(fireFlintlockWeaponPatchBurnOffOuterOriginal, new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPrefix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPostfix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterTranspiler));
+            harmony.Patch(fireFlintlockWeaponFireOriginal, new HarmonyMethod(fireFlintlockWeaponFirePrefix), new HarmonyMethod(fireFlintlockWeaponFirePostfix), new HarmonyMethod(fireFlintlockWeaponFireTranspiler));
 
             // FireSosigWeaponPatch
             MethodInfo fireSosigWeaponPatchOriginal = typeof(SosigWeapon).GetMethod("FireGun", BindingFlags.Public | BindingFlags.Instance);
@@ -2862,6 +2882,139 @@ namespace H3MP
             }
 
             return true;
+        }
+    }
+
+    // Patches GBeamer to take control of manipulated objects
+    class GBeamerPatch
+    {
+        static bool hadObject;
+
+        static void ObjectSearchPrefix(bool ___m_hasObject)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            hadObject = ___m_hasObject;
+        }
+
+        static void ObjectSearchPostfix(FVRPhysicalObject ___m_obj)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if(!hadObject && ___m_obj != null)
+            {
+                // Just started manipulating this item, take control
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(___m_obj, out H3MP_TrackedItem currentItem) ? currentItem : ___m_obj.GetComponent<H3MP_TrackedItem>();
+                if (trackedItem != null)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        if (trackedItem.data.controller != 0)
+                        {
+                            // Take control
+
+                            // Send to all clients
+                            H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+
+                            // Update locally
+                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
+                            trackedItem.data.SetController(0);
+                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                            H3MP_GameManager.items.Add(trackedItem.data);
+                        }
+                    }
+                    else
+                    {
+                        if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                        {
+                            // Take control
+
+                            // Send to all clients
+                            H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+
+                            // Update locally
+                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
+                            trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                            H3MP_GameManager.items.Add(trackedItem.data);
+                        }
+                    }
+                }
+            }
+        }
+
+        static IEnumerable<CodeInstruction> WideShuntTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To take control of every object we are about to shunt
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load the current physical object
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GBeamerPatch), "TakeControl"))); // Call our TakeControl method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Ldloc_3)
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void TakeControl(FVRPhysicalObject physObj)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            // Just started manipulating this item, take control
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(physObj, out H3MP_TrackedItem currentItem) ? currentItem : physObj.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller != 0)
+                    {
+                        // Take control
+
+                        // Send to all clients
+                        H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+
+                        // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
+                        trackedItem.data.SetController(0);
+                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem.data);
+                    }
+                }
+                else
+                {
+                    if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                    {
+                        // Take control
+
+                        // Send to all clients
+                        H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+
+                        // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
+                        trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem.data);
+                    }
+                }
+            }
         }
     }
     #endregion
