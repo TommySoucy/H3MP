@@ -220,6 +220,12 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenHCB;
                 dataObject = physObj as HCB;
             }
+            else if (physObj is M72)
+            {
+                updateFunc = UpdateM72;
+                updateGivenFunc = UpdateGivenM72;
+                dataObject = physObj as M72;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -295,12 +301,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is M72)
-            {
-                updateFunc = UpdateM72;
-                updateGivenFunc = UpdateGivenM72;
-                dataObject = physObj as M72;
-            }
             else if (physObj is Minigun)
             {
                 updateFunc = UpdateMinigun;
@@ -388,6 +388,143 @@ namespace H3MP
         }
 
         #region Type Updates
+
+        private bool UpdateM72()
+        {
+            M72 asM72 = dataObject as M72;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[4];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write safety
+            data.data[0] = (bool)Mod.M72_m_isSafetyEngaged.GetValue(asM72) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+
+            // Write m_isCapOpen
+            data.data[1] = asM72.CanTubeBeGrabbed()? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[1];
+
+            preval = data.data[2];
+
+            // Write tube state
+            data.data[2] = (byte)asM72.TState;
+
+            modified |= preval != data.data[2];
+
+            preval = data.data[3];
+
+            // Write chamber full
+            data.data[3] = (bool)asM72.Chamber.IsFull ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[3];
+
+            return modified;
+        }
+
+        private bool UpdateGivenM72(byte[] newData)
+        {
+            bool modified = false;
+            M72 asM72 = dataObject as M72;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set safety
+                bool currentSafety = (bool)Mod.M72_m_isSafetyEngaged.GetValue(asM72);
+                if ((currentSafety && newData[0] == 0) || (!currentSafety && newData[0] == 1)) 
+                {
+                    asM72.ToggleSafety();
+                }
+
+                // Set cap
+                if((asM72.CanTubeBeGrabbed() && newData[1] == 0)||(!asM72.CanTubeBeGrabbed() && newData[1] == 1))
+                {
+                    asM72.ToggleCap();
+                }
+
+                // Set Tube state
+                if((asM72.TState == M72.TubeState.Forward || asM72.TState == M72.TubeState.Mid) && newData[2] == 2)
+                {
+                    asM72.TState = M72.TubeState.Rear;
+                    asM72.Tube.transform.localPosition = asM72.Tube_Rear.localPosition;
+                }
+                else if((asM72.TState == M72.TubeState.Mid || asM72.TState == M72.TubeState.Rear) && newData[2] == 0)
+                {
+                    asM72.TState = M72.TubeState.Forward;
+                    asM72.Tube.transform.localPosition = asM72.Tube_Front.localPosition;
+                }
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set safety
+                    bool currentSafety = (bool)Mod.M72_m_isSafetyEngaged.GetValue(asM72);
+                    if ((currentSafety && newData[0] == 0) || (!currentSafety && newData[0] == 1))
+                    {
+                        asM72.ToggleSafety();
+                    }
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set cap
+                    if ((asM72.CanTubeBeGrabbed() && newData[1] == 0) || (!asM72.CanTubeBeGrabbed() && newData[1] == 1))
+                    {
+                        asM72.ToggleCap();
+                    }
+                    modified = true;
+                }
+                if (data.data[2] != newData[2])
+                {
+                    // Set Tube state
+                    if ((asM72.TState == M72.TubeState.Forward || asM72.TState == M72.TubeState.Mid) && newData[2] == 2)
+                    {
+                        asM72.TState = M72.TubeState.Rear;
+                        asM72.Tube.transform.localPosition = asM72.Tube_Rear.localPosition;
+                        modified = true;
+                    }
+                    else if ((asM72.TState == M72.TubeState.Mid || asM72.TState == M72.TubeState.Rear) && newData[2] == 0)
+                    {
+                        asM72.TState = M72.TubeState.Forward;
+                        asM72.Tube.transform.localPosition = asM72.Tube_Front.localPosition;
+                        modified = true;
+                    }
+                }
+            }
+
+            if (newData[3] == 0) // We don't want round in chamber
+            {
+                if (asM72.Chamber.GetRound() != null)
+                {
+                    asM72.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                if (asM72.Chamber.GetRound() == null)
+                {
+                    asM72.Chamber.SetRound(FireArmRoundClass.FragExplosive, asM72.Chamber.transform.position, asM72.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
 
         private bool UpdateOpenBoltReceiver()
         {

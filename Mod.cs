@@ -189,6 +189,7 @@ namespace H3MP
         public static readonly FieldInfo HCB_m_cookedAmount = typeof(HCB).GetField("m_cookedAmount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo OpenBoltReceiver_m_CamBurst = typeof(OpenBoltReceiver).GetField("m_CamBurst", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo OpenBoltReceiver_m_fireSelectorMode = typeof(OpenBoltReceiver).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo M72_m_isSafetyEngaged = typeof(M72).GetField("m_isSafetyEngaged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
