@@ -192,9 +192,12 @@ namespace H3MP
             }
             else if (physObj is Flaregun)
             {
+                Flaregun asFG = physObj as Flaregun;
                 updateFunc = UpdateFlaregun;
                 updateGivenFunc = UpdateGivenFlaregun;
-                dataObject = physObj as Flaregun;
+                dataObject = asFG;
+                fireFunc = FireFlaregun;
+                setFirearmUpdateOverride = SetFlaregunUpdateOverride;
             }
             else if (physObj is FlintlockWeapon)
             {
@@ -222,9 +225,12 @@ namespace H3MP
             }
             else if (physObj is M72)
             {
+                M72 asM72 = physObj as M72;
                 updateFunc = UpdateM72;
                 updateGivenFunc = UpdateGivenM72;
-                dataObject = physObj as M72;
+                dataObject = asM72;
+                fireFunc = FireM72;
+                setFirearmUpdateOverride = SetM72UpdateOverride;
             }
             else if (physObj is Minigun)
             {
@@ -593,6 +599,20 @@ namespace H3MP
             data.data = newData;
 
             return modified;
+        }
+
+        private bool FireM72()
+        {
+            M72 asM72 = dataObject as M72;
+            asM72.Fire();
+            return true;
+        }
+
+        private void SetM72UpdateOverride(FireArmRoundClass roundClass)
+        {
+            M72 asM72 = dataObject as M72;
+
+            asM72.Chamber.SetRound(roundClass, asM72.Chamber.transform.position, asM72.Chamber.transform.rotation);
         }
 
         private bool UpdateOpenBoltReceiver()
@@ -1190,6 +1210,18 @@ namespace H3MP
             data.data = newData;
 
             return modified;
+        }
+
+        private bool FireFlaregun()
+        {
+            Mod.Flaregun_Fire.Invoke((dataObject as Flaregun), null);
+            return true;
+        }
+
+        private void SetFlaregunUpdateOverride(FireArmRoundClass roundClass)
+        {
+            Flaregun asFG = dataObject as Flaregun;
+            asFG.Chamber.SetRound(roundClass, asFG.Chamber.transform.position, asFG.Chamber.transform.rotation);
         }
 
         private bool UpdateFlameThrower()

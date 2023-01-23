@@ -235,6 +235,7 @@ namespace H3MP
         public static readonly MethodInfo FlintlockBarrel_Fire = typeof(FlintlockBarrel).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo HCB_UpdateStrings = typeof(HCB).GetMethod("UpdateStrings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo HCB_ReleaseSled = typeof(HCB).GetMethod("ReleaseSled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Flaregun_Fire = typeof(Flaregun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
