@@ -104,6 +104,15 @@ namespace H3MP
                 fireFunc = asCBW.Fire;
                 setFirearmUpdateOverride = SetCBWUpdateOverride;
             }
+            else if (physObj is OpenBoltReceiver)
+            {
+                ClosedBoltWeapon asOBR = (ClosedBoltWeapon)physObj;
+                updateFunc = UpdateOpenBoltReceiver;
+                updateGivenFunc = UpdateGivenOpenBoltReceiver;
+                dataObject = asOBR;
+                fireFunc = asOBR.Fire;
+                setFirearmUpdateOverride = SetOBRUpdateOverride;
+            }
             else if (physObj is BoltActionRifle)
             {
                 BoltActionRifle asBAR = (BoltActionRifle)physObj;
@@ -286,12 +295,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is OpenBoltReceiver)
-            {
-                updateFunc = UpdateOpenBoltReceiver;
-                updateGivenFunc = UpdateGivenOpenBoltReceiver;
-                dataObject = physObj as OpenBoltReceiver;
-            }
             else if (physObj is M72)
             {
                 updateFunc = UpdateM72;
@@ -385,6 +388,113 @@ namespace H3MP
         }
 
         #region Type Updates
+
+        private bool UpdateOpenBoltReceiver()
+        {
+            OpenBoltReceiver asOBR = dataObject as OpenBoltReceiver;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[5];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write fire mode index
+            data.data[0] = (byte)asOBR.FireSelectorModeIndex;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+
+            // Write camBurst
+            data.data[1] = (byte)(int)Mod.OpenBoltReceiver_m_CamBurst.GetValue(asOBR);
+
+            modified |= preval != data.data[1];
+
+            preval = data.data[2];
+            byte preval0 = data.data[3];
+
+            // Write chambered round class
+            if (asOBR.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asOBR.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+            }
+
+            modified |= (preval != data.data[2] || preval0 != data.data[3]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenOpenBoltReceiver(byte[] newData)
+        {
+            bool modified = false;
+            OpenBoltReceiver asOBR = dataObject as OpenBoltReceiver;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set fire select mode
+                Mod.OpenBoltReceiver_m_fireSelectorMode.SetValue(asOBR, (int)newData[0]);
+
+                // Set camBurst
+                Mod.OpenBoltReceiver_m_CamBurst.SetValue(asOBR, (int)newData[1]);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set fire select mode
+                    Mod.OpenBoltReceiver_m_fireSelectorMode.SetValue(asOBR, (int)newData[0]);
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set camBurst
+                    Mod.OpenBoltReceiver_m_CamBurst.SetValue(asOBR, (int)newData[1]);
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asOBR.Chamber.GetRound() != null)
+                {
+                    asOBR.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asOBR.Chamber.GetRound() == null || asOBR.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private void SetOBRUpdateOverride(FireArmRoundClass roundClass)
+        {
+            OpenBoltReceiver asOBR = dataObject as OpenBoltReceiver;
+
+            asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+        }
+
         private bool UpdateHCB()
         {
             HCB asHCB = dataObject as HCB;
@@ -2521,7 +2631,7 @@ namespace H3MP
             preval = data.data[2];
 
             // Write hammer state
-            data.data[2] = BitConverter.GetBytes(asCBW.IsHammerCocked)[0];
+            data.data[2] = asCBW.IsHammerCocked ? (byte)1 : (byte)0;
 
             modified |= preval != data.data[2];
 
