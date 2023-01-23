@@ -552,6 +552,7 @@ namespace H3MP
                 H3MP_ServerHandle.FlintlockWeaponBurnOffOuter,
                 H3MP_ServerHandle.FlintlockWeaponFire,
                 H3MP_ServerHandle.GrappleGunFire,
+                H3MP_ServerHandle.HCBReleaseSled,
             };
 
             items = new H3MP_TrackedItemData[100];

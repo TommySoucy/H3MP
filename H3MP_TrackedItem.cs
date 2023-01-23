@@ -205,6 +205,12 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenGrappleGun;
                 dataObject = physObj as GrappleGun;
             }
+            else if (physObj is HCB)
+            {
+                //updateFunc = UpdateHCB;
+                //updateGivenFunc = UpdateGivenHCB;
+                dataObject = physObj as HCB;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -280,12 +286,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is HCB)
-            {
-                updateFunc = UpdateHCB;
-                updateGivenFunc = UpdateGivenHCB;
-                dataObject = physObj as HCB;
-            }
             else if (physObj is OpenBoltReceiver)
             {
                 updateFunc = UpdateOpenBoltReceiver;

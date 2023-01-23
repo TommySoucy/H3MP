@@ -663,6 +663,30 @@ namespace H3MP
             }
         }
 
+        public static void HCBReleaseSled(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                float cookedAmount = packet.ReadFloat();
+                FireHCBPatch.position = packet.ReadVector3();
+                FireHCBPatch.direction = packet.ReadVector3();
+                FireHCBPatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++FireHCBPatch.releaseSledSkip;
+                HCB asHCB = H3MP_Client.items[trackedID].physicalItem.physicalObject as HCB;
+                Mod.HCB_m_cookedAmount.SetValue(asHCB, cookedAmount);
+                if (!asHCB.Chamber.IsFull)
+                {
+                    asHCB.Chamber.SetRound(FireArmRoundClass.FMJ, asHCB.Chamber.transform.position, asHCB.Chamber.transform.rotation);
+                }
+                Mod.HCB_ReleaseSled.Invoke(asHCB, null);
+                --FireHCBPatch.releaseSledSkip;
+            }
+        }
+
         public static void LeverActionFirearmFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

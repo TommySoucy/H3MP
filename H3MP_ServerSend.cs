@@ -1307,6 +1307,45 @@ namespace H3MP
             }
         }
 
+        public static void HCBReleaseSled(int clientID, int trackedID, float cookedAmount, Vector3 position, Vector3 direction)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.HCBReleaseSled))
+            {
+                packet.Write(trackedID);
+                packet.Write(cookedAmount);
+                packet.Write(position);
+                packet.Write(direction);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void HCBReleaseSled(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.HCBReleaseSled);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
         public static void SosigWeaponFire(int clientID, int trackedID, float recoilMult, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigWeaponFire))
