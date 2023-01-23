@@ -192,6 +192,7 @@ namespace H3MP
         public static readonly FieldInfo M72_m_isSafetyEngaged = typeof(M72).GetField("m_isSafetyEngaged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Minigun_m_heat = typeof(Minigun).GetField("m_heat", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Minigun_m_motorRate = typeof(Minigun).GetField("m_motorRate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo PotatoGun_m_chamberGas = typeof(PotatoGun).GetField("m_chamberGas", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

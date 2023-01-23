@@ -238,6 +238,15 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenMinigun;
                 dataObject = physObj as Minigun;
             }
+            else if (physObj is PotatoGun)
+            {
+                PotatoGun asPG = physObj as PotatoGun;
+                updateFunc = UpdatePotatoGun;
+                updateGivenFunc = UpdateGivenPotatoGun;
+                dataObject = asPG;
+                fireFunc = FirePotatoGun;
+                setFirearmUpdateOverride = SetPotatoGunUpdateOverride;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -313,12 +322,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is PotatoGun)
-            {
-                updateFunc = UpdatePotatoGun;
-                updateGivenFunc = UpdateGivenPotatoGun;
-                dataObject = physObj as PotatoGun;
-            }
             else if (physObj is RemoteMissileLauncher)
             {
                 updateFunc = UpdateRemoteMissileLauncher;
@@ -394,6 +397,71 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdatePotatoGun()
+        {
+            PotatoGun asPG = dataObject as PotatoGun;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[4];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+            byte preval1 = data.data[1];
+            byte preval2 = data.data[2];
+            byte preval3 = data.data[3];
+
+            // Write m_chamberGas
+            BitConverter.GetBytes((float)Mod.PotatoGun_m_chamberGas.GetValue(asPG)).CopyTo(data.data, 0);
+
+            modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenPotatoGun(byte[] newData)
+        {
+            bool modified = false;
+            PotatoGun asPG = dataObject as PotatoGun;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set m_chamberGas
+                Mod.PotatoGun_m_chamberGas.SetValue(asPG, BitConverter.ToSingle(newData, 0));
+            }
+            else
+            {
+                if (data.data[0] != newData[0] ||data.data[1] != newData[1] ||data.data[2] != newData[2] ||data.data[3] != newData[3])
+                {
+                    // Set m_chamberGas
+                    Mod.PotatoGun_m_chamberGas.SetValue(asPG, BitConverter.ToSingle(newData, 0));
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FirePotatoGun()
+        {
+            PotatoGun asPG = dataObject as PotatoGun;
+            asPG.Fire();
+            return true;
+        }
+
+        private void SetPotatoGunUpdateOverride(FireArmRoundClass roundClass)
+        {
+            PotatoGun asPG = dataObject as PotatoGun;
+
+            asPG.Chamber.SetRound(roundClass, asPG.Chamber.transform.position, asPG.Chamber.transform.rotation);
+        }
+
         private bool UpdateMinigun()
         {
             Minigun asMinigun = dataObject as Minigun;
