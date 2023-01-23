@@ -207,8 +207,8 @@ namespace H3MP
             }
             else if (physObj is HCB)
             {
-                //updateFunc = UpdateHCB;
-                //updateGivenFunc = UpdateGivenHCB;
+                updateFunc = UpdateHCB;
+                updateGivenFunc = UpdateGivenHCB;
                 dataObject = physObj as HCB;
             }
             else if (physObj is LAPD2019)
@@ -385,6 +385,105 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateHCB()
+        {
+            HCB asHCB = dataObject as HCB;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[4];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+
+            // Write m_sledState
+            data.data[0] = (byte)Mod.HCB_m_sledState.GetValue(asHCB);
+
+            modified |= preval0 != data.data[0];
+
+            preval0 = data.data[1];
+
+            // Write chamber accessible
+            data.data[1] = asHCB.Chamber.IsAccessible ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[1];
+
+            // Write chambered rounds
+            preval0 = data.data[2];
+            byte preval1 = data.data[3];
+
+            if (asHCB.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asHCB.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+            }
+
+            modified |= (preval0 != data.data[2] || preval1 != data.data[3]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenHCB(byte[] newData)
+        {
+            bool modified = false;
+            HCB asHCB = dataObject as HCB;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set m_sledState
+                Mod.HCB_m_sledState.SetValue(asHCB, newData[0]);
+
+                // Set chamber accessible
+                asHCB.Chamber.IsAccessible = newData[1] == 1;
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set m_sledState
+                    Mod.HCB_m_sledState.SetValue(asHCB, newData[0]);
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set chamber accessible
+                    asHCB.Chamber.IsAccessible = newData[1] == 1;
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asHCB.Chamber.GetRound() != null)
+                {
+                    asHCB.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asHCB.Chamber.GetRound() == null || asHCB.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asHCB.Chamber.SetRound(roundClass, asHCB.Chamber.transform.position, asHCB.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateGrappleGun()
         {
             GrappleGun asGG = dataObject as GrappleGun;
@@ -490,6 +589,7 @@ namespace H3MP
                         asGG.ProxyMag.gameObject.SetActive(false);
                     }
                     asGG.IsMagLoaded = newCylLoaded;
+                    modified = true;
                 }
             }
 
@@ -1375,6 +1475,7 @@ namespace H3MP
                         asRS.ProxyCylinder.gameObject.SetActive(false);
                     }
                     asRS.CylinderLoaded = newCylLoaded;
+                    modified = true;
                 }
             }
 
