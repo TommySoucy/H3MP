@@ -190,6 +190,8 @@ namespace H3MP
         public static readonly FieldInfo OpenBoltReceiver_m_CamBurst = typeof(OpenBoltReceiver).GetField("m_CamBurst", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo OpenBoltReceiver_m_fireSelectorMode = typeof(OpenBoltReceiver).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo M72_m_isSafetyEngaged = typeof(M72).GetField("m_isSafetyEngaged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Minigun_m_heat = typeof(Minigun).GetField("m_heat", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Minigun_m_motorRate = typeof(Minigun).GetField("m_motorRate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -3972,18 +3974,33 @@ namespace H3MP
         public static List<Vector3> positions;
         public static List<Vector3> directions;
 
+        static Minigun currentMinigun;
+        static H3MP_TrackedItem trackedItem;
+
         // Update override data
         static bool fireSucessful;
         static FireArmRoundClass roundClass;
 
-        static void Prefix(ref Minigun __instance, int ___m_numBullets)
+        static bool Prefix(ref Minigun __instance, int ___m_numBullets)
         {
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
 
             fireSucessful = ___m_numBullets > 0;
+            if (__instance != currentMinigun)
+            {
+                currentMinigun = __instance;
+                trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            }
+            if(trackedItem != null && !overriden && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                fireSucessful = false;
+                return false;
+            }
             roundClass = __instance.LoadedRounds[0].LR_Class;
+
+            return true;
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -4128,7 +4145,6 @@ namespace H3MP
             }
 
             // Get tracked item
-            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null)
             {
                 // Send the fire action to other clients only if we control it

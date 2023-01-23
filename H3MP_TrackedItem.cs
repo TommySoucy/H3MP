@@ -226,6 +226,12 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenM72;
                 dataObject = physObj as M72;
             }
+            else if (physObj is Minigun)
+            {
+                updateFunc = UpdateMinigun;
+                updateGivenFunc = UpdateGivenMinigun;
+                dataObject = physObj as Minigun;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -301,12 +307,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is Minigun)
-            {
-                updateFunc = UpdateMinigun;
-                updateGivenFunc = UpdateGivenMinigun;
-                dataObject = physObj as Minigun;
-            }
             else if (physObj is PotatoGun)
             {
                 updateFunc = UpdatePotatoGun;
@@ -388,6 +388,75 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateMinigun()
+        {
+            Minigun asMinigun = dataObject as Minigun;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[8];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+            byte preval1 = data.data[1];
+            byte preval2 = data.data[2];
+            byte preval3 = data.data[3];
+
+            // Write heat
+            BitConverter.GetBytes((float)Mod.Minigun_m_heat.GetValue(asMinigun)).CopyTo(data.data, 0);
+
+            modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
+
+            preval0 = data.data[4];
+            preval1 = data.data[5];
+            preval2 = data.data[6];
+            preval3 = data.data[7];
+
+            // Write heat
+            BitConverter.GetBytes((float)Mod.Minigun_m_motorRate.GetValue(asMinigun)).CopyTo(data.data, 4);
+
+            modified |= (preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6] || preval3 != data.data[7]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenMinigun(byte[] newData)
+        {
+            bool modified = false;
+            Minigun asMinigun = dataObject as Minigun;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set heat
+                Mod.Minigun_m_heat.SetValue(asMinigun, BitConverter.ToSingle(newData, 0));
+
+                // Set motorrate
+                Mod.Minigun_m_motorRate.SetValue(asMinigun, BitConverter.ToSingle(newData, 4));
+            }
+            else
+            {
+                if (data.data[0] != newData[0] ||data.data[1] != newData[1] ||data.data[2] != newData[2] ||data.data[3] != newData[3])
+                {
+                    // Set heat
+                    Mod.Minigun_m_heat.SetValue(asMinigun, BitConverter.ToSingle(newData, 0));
+                    modified = true;
+                }
+                if (data.data[4] != newData[4] || data.data[5] != newData[5] || data.data[6] != newData[6] || data.data[7] != newData[7])
+                {
+                    // Set motorrate
+                    Mod.Minigun_m_motorRate.SetValue(asMinigun, BitConverter.ToSingle(newData, 4));
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
 
         private bool UpdateM72()
         {
