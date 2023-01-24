@@ -275,6 +275,15 @@ namespace H3MP
                 fireFunc = FireRollingBlock;
                 setFirearmUpdateOverride = SetRollingBlockUpdateOverride;
             }
+            else if (physObj is RPG7)
+            {
+                RPG7 asRPG7 = physObj as RPG7;
+                updateFunc = UpdateRPG7;
+                updateGivenFunc = UpdateGivenRPG7;
+                dataObject = asRPG7;
+                fireFunc = FireRPG7;
+                setFirearmUpdateOverride = SetRPG7UpdateOverride;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -350,12 +359,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is RPG7)
-            {
-                updateFunc = UpdateRPG7;
-                updateGivenFunc = UpdateGivenRPG7;
-                dataObject = physObj as RPG7;
-            }
             else if (physObj is SimpleLauncher)
             {
                 updateFunc = UpdateSimpleLauncher;
@@ -407,6 +410,103 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateRPG7()
+        {
+            RPG7 asRPG7 = (RPG7)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[3];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write hammer state
+            data.data[0] = (bool)Mod.RPG7_m_isHammerCocked.GetValue(asRPG7) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+            byte preval0 = data.data[2];
+
+            // Write chambered round class
+            if (asRPG7.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asRPG7.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+            }
+
+            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenRPG7(byte[] newData)
+        {
+            bool modified = false;
+            RPG7 asRPG7 = (RPG7)dataObject;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set hammer state
+                Mod.RPG7_m_isHammerCocked.SetValue(asRPG7, newData[0] == 1);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set hammer state
+                    Mod.RPG7_m_isHammerCocked.SetValue(asRPG7, newData[0] == 1);
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asRPG7.Chamber.GetRound() != null)
+                {
+                    asRPG7.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asRPG7.Chamber.GetRound() == null || asRPG7.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asRPG7.Chamber.SetRound(roundClass, asRPG7.Chamber.transform.position, asRPG7.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireRPG7()
+        {
+            RPG7 asRPG7 = (RPG7)dataObject;
+            asRPG7.Fire();
+            return true;
+        }
+
+        private void SetRPG7UpdateOverride(FireArmRoundClass roundClass)
+        {
+            RPG7 asRPG7 = (RPG7)dataObject;
+            Mod.RPG7_m_isHammerCocked.SetValue(asRPG7, true);
+            asRPG7.Chamber.SetRound(roundClass, asRPG7.Chamber.transform.position, asRPG7.Chamber.transform.rotation);
+        }
+
         private bool UpdateRollingBlock()
         {
             RollingBlock asRB = (RollingBlock)dataObject;

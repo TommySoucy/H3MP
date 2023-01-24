@@ -198,6 +198,7 @@ namespace H3MP
         public static readonly FieldInfo RemoteMissile_speed = typeof(RemoteMissile).GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo RemoteMissile_tarSpeed = typeof(RemoteMissile).GetField("tarSpeed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo RollingBlock_m_state = typeof(RollingBlock).GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo RPG7_m_isHammerCocked = typeof(RPG7).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
