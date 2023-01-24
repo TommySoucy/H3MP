@@ -603,7 +603,7 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                Derringer asDerringer = H3MP_Server.items[trackedID].physicalItem.physicalObject as Derringer;
+                Derringer asDerringer = H3MP_Client.items[trackedID].physicalItem.physicalObject as Derringer;
                 asDerringer.Barrels[barrelIndex].Chamber.SetRound(roundClass, asDerringer.Barrels[barrelIndex].Chamber.transform.position, asDerringer.Barrels[barrelIndex].Chamber.transform.rotation);
                 Mod.Derringer_FireBarrel.Invoke(asDerringer, new object[] { barrelIndex });
             }
@@ -629,7 +629,7 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                RevolvingShotgun asRS = H3MP_Server.items[trackedID].physicalItem.physicalObject as RevolvingShotgun;
+                RevolvingShotgun asRS = H3MP_Client.items[trackedID].physicalItem.physicalObject as RevolvingShotgun;
                 asRS.CurChamber = curChamber;
                 asRS.Chambers[curChamber].SetRound(roundClass, asRS.Chambers[curChamber].transform.position, asRS.Chambers[curChamber].transform.rotation);
                 Mod.RevolvingShotgun_Fire.Invoke(asRS, null);
@@ -1289,7 +1289,7 @@ namespace H3MP
                 {
                     if (trackedItem.physicalItem != null)
                     {
-                        object remoteMissile = Mod.RemoteMissileLauncher_m_missile.GetValue(H3MP_Server.items[RMLTrackedID].physicalItem.physicalObject as RemoteMissileLauncher);
+                        object remoteMissile = Mod.RemoteMissileLauncher_m_missile.GetValue(H3MP_Client.items[RMLTrackedID].physicalItem.physicalObject as RemoteMissileLauncher);
                         if (remoteMissile != null)
                         {
                             ++RemoteMissileDamagePatch.skip;

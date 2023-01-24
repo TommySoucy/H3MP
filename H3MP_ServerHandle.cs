@@ -2838,7 +2838,7 @@ namespace H3MP
         {
             int RMLTrackedID = packet.ReadInt();
 
-            H3MP_TrackedItemData trackedItem = H3MP_Client.items[RMLTrackedID];
+            H3MP_TrackedItemData trackedItem = H3MP_Server.items[RMLTrackedID];
             if (trackedItem != null)
             {
                 if (trackedItem.controller == H3MP_GameManager.ID)
