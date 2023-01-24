@@ -1730,6 +1730,13 @@ namespace H3MP
             harmony.Patch(sosigTargetPrioritySystemPatchSetAllFriendlyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
             harmony.Patch(sosigTargetPrioritySystemPatchSetAllyMatrixOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
 
+            // SimpleLauncher2CycleModePatch
+            MethodInfo simpleLauncher2CycleModePatchOriginal = typeof(SimpleLauncher2).GetMethod("CycleMode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo simpleLauncher2CycleModePatchPrefix = typeof(SimpleLauncher2CycleModePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(simpleLauncher2CycleModePatchOriginal, harmony, false);
+            harmony.Patch(simpleLauncher2CycleModePatchOriginal, new HarmonyMethod(simpleLauncher2CycleModePatchPrefix));
+
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
             //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -6968,7 +6975,40 @@ namespace H3MP
         }
     }
 
-    TODO: Add simple launcher2 CycleMode patch to prevent it from going into DR mode if not in control
+    // Patches SimpleLauncher2.CycleMode to prevent it from going into DR mode if not in control
+    class SimpleLauncher2CycleModePatch
+    {
+        static bool Prefix(SimpleLauncher2 __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (__instance.Mode == SimpleLauncher2.fMode.sa)
+                {
+                    __instance.Mode = SimpleLauncher2.fMode.tr;
+                }
+                else if (__instance.Mode == SimpleLauncher2.fMode.tr)
+                {
+                    __instance.Mode = SimpleLauncher2.fMode.sa;
+                }
+                else if (__instance.Mode == SimpleLauncher2.fMode.dr)
+                {
+                    __instance.Mode = SimpleLauncher2.fMode.sa;
+                }
+                __instance.SetAnimatedComponent(__instance.ModeSwitch, __instance.ModeVars[(int)__instance.Mode], __instance.ModeSwitch_Interp, __instance.ModeSwitch_Axis);
+                __instance.PlayAudioEvent(FirearmAudioEventType.FireSelector, 1f);
+
+                return false;
+            }
+
+            return true;
+        }
+    }
     #endregion
 
     #region Instatiation Patches
