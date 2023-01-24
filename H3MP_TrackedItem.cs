@@ -257,6 +257,24 @@ namespace H3MP
                 fireFunc = FireRemoteMissileLauncher;
                 setFirearmUpdateOverride = SetRemoteMissileLauncherUpdateOverride;
             }
+            else if (physObj is RGM40)
+            {
+                RGM40 asRGM40 = physObj as RGM40;
+                updateFunc = UpdateRGM40;
+                updateGivenFunc = UpdateGivenRGM40;
+                dataObject = asRGM40;
+                fireFunc = FireRGM40;
+                setFirearmUpdateOverride = SetRGM40UpdateOverride;
+            }
+            else if (physObj is RollingBlock)
+            {
+                RollingBlock asRB = physObj as RollingBlock;
+                updateFunc = UpdateRollingBlock;
+                updateGivenFunc = UpdateGivenRollingBlock;
+                dataObject = asRB;
+                fireFunc = FireRollingBlock;
+                setFirearmUpdateOverride = SetRollingBlockUpdateOverride;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -332,18 +350,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is RGM40)
-            {
-                updateFunc = UpdateRGM40;
-                updateGivenFunc = UpdateGivenRGM40;
-                dataObject = physObj as RGM40;
-            }
-            else if (physObj is RollingBlock)
-            {
-                updateFunc = UpdateRollingBlock;
-                updateGivenFunc = UpdateGivenRollingBlock;
-                dataObject = physObj as RollingBlock;
-            }
             else if (physObj is RPG7)
             {
                 updateFunc = UpdateRPG7;
@@ -401,6 +407,177 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateRollingBlock()
+        {
+            RollingBlock asRB = (RollingBlock)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[3];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write block state
+            data.data[0] = (byte)(int)Mod.RollingBlock_m_state.GetValue(asRB);
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+            byte preval0 = data.data[2];
+
+            // Write chambered round class
+            if (asRB.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asRB.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+            }
+
+            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenRollingBlock(byte[] newData)
+        {
+            bool modified = false;
+            RollingBlock asRB = (RollingBlock)dataObject;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set block state
+                Mod.RollingBlock_m_state.SetValue(asRB, (RollingBlock.RollingBlockState)newData[0]);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set block state
+                    Mod.RollingBlock_m_state.SetValue(asRB, (RollingBlock.RollingBlockState)newData[0]);
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asRB.Chamber.GetRound() != null)
+                {
+                    asRB.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asRB.Chamber.GetRound() == null || asRB.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asRB.Chamber.SetRound(roundClass, asRB.Chamber.transform.position, asRB.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireRollingBlock()
+        {
+            RollingBlock asRB = (RollingBlock)dataObject;
+            Mod.RollingBlock_Fire.Invoke(asRB, null);
+            return true;
+        }
+
+        private void SetRollingBlockUpdateOverride(FireArmRoundClass roundClass)
+        {
+            RollingBlock asRB = (RollingBlock)dataObject;
+
+            asRB.Chamber.SetRound(roundClass, asRB.Chamber.transform.position, asRB.Chamber.transform.rotation);
+        }
+
+        private bool UpdateRGM40()
+        {
+            RGM40 asRGM40 = dataObject as RGM40;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[2];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+            byte preval0 = data.data[1];
+
+            // Write chambered round class
+            if (asRGM40.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asRGM40.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+            }
+
+            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenRGM40(byte[] newData)
+        {
+            bool modified = false;
+            RGM40 asRGM40 = dataObject as RGM40;
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asRGM40.Chamber.GetRound() != null)
+                {
+                    asRGM40.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asRGM40.Chamber.GetRound() == null || asRGM40.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asRGM40.Chamber.SetRound(roundClass, asRGM40.Chamber.transform.position, asRGM40.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireRGM40()
+        {
+            RGM40 asRGM40 = dataObject as RGM40;
+
+            asRGM40.Fire();
+            return true;
+        }
+
+        private void SetRGM40UpdateOverride(FireArmRoundClass roundClass)
+        {
+            RGM40 asRGM40 = dataObject as RGM40;
+
+            asRGM40.Chamber.SetRound(roundClass, asRGM40.Chamber.transform.position, asRGM40.Chamber.transform.rotation);
+        }
+
         private bool UpdateRemoteMissileLauncher()
         {
             RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;

@@ -197,6 +197,7 @@ namespace H3MP
         public static readonly FieldInfo RemoteMissileLauncher_m_missile = typeof(RemoteMissileLauncher).GetField("m_missile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo RemoteMissile_speed = typeof(RemoteMissile).GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo RemoteMissile_tarSpeed = typeof(RemoteMissile).GetField("tarSpeed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo RollingBlock_m_state = typeof(RollingBlock).GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -242,6 +243,7 @@ namespace H3MP
         public static readonly MethodInfo HCB_ReleaseSled = typeof(HCB).GetMethod("ReleaseSled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Flaregun_Fire = typeof(Flaregun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo RemoteMissileLauncher_FireShot = typeof(RemoteMissileLauncher).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo RollingBlock_Fire = typeof(RollingBlock).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
