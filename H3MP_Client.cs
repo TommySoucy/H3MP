@@ -427,6 +427,8 @@ namespace H3MP
                 H3MP_ClientHandle.FlintlockWeaponFire,
                 H3MP_ClientHandle.GrappleGunFire,
                 H3MP_ClientHandle.HCBReleaseSled,
+                H3MP_ClientHandle.RemoteMissileDetonate,
+                H3MP_ClientHandle.RemoteMissileDamage,
             };
 
             // All vanilla scenes can be synced by default

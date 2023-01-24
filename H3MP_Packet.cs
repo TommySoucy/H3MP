@@ -130,7 +130,9 @@ namespace H3MP
         flintlockWeaponBurnOffOuter = 119,
         flintlockWeaponFire = 120,
         grappleGunFire = 121,
-        HCBReleaseSled = 122
+        HCBReleaseSled = 122,
+        remoteMissileDetonate = 123,
+        remoteMissileDamage = 124
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -261,7 +263,9 @@ namespace H3MP
         flintlockWeaponBurnOffOuter = 123,
         flintlockWeaponFire = 124,
         grappleGunFire = 125,
-        HCBReleaseSled = 126
+        HCBReleaseSled = 126,
+        remoteMissileDetonate = 127,
+        remoteMissileDamage = 128
     }
 
     public class H3MP_Packet : IDisposable

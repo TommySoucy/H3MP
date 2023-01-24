@@ -2815,7 +2815,7 @@ namespace H3MP
             int sosigWeaponTrackedID = packet.ReadInt();
             Damage damage = packet.ReadDamage();
 
-            H3MP_TrackedItemData trackedItem = H3MP_Client.items[sosigWeaponTrackedID];
+            H3MP_TrackedItemData trackedItem = H3MP_Server.items[sosigWeaponTrackedID];
             if (trackedItem != null)
             {
                 if (trackedItem.controller == H3MP_GameManager.ID)
@@ -2830,6 +2830,33 @@ namespace H3MP
                 else
                 {
                     H3MP_ServerSend.SosigWeaponDamage(trackedItem, damage);
+                }
+            }
+        }
+
+        public static void RemoteMissileDamage(int clientID, H3MP_Packet packet)
+        {
+            int RMLTrackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData trackedItem = H3MP_Client.items[RMLTrackedID];
+            if (trackedItem != null)
+            {
+                if (trackedItem.controller == H3MP_GameManager.ID)
+                {
+                    if (trackedItem.physicalItem != null)
+                    {
+                        object remoteMissile = Mod.RemoteMissileLauncher_m_missile.GetValue(H3MP_Server.items[RMLTrackedID].physicalItem.physicalObject as RemoteMissileLauncher);
+                        if (remoteMissile != null)
+                        {
+                            ++RemoteMissileDamagePatch.skip;
+                            (remoteMissile as RemoteMissile).Damage(packet.ReadDamage());
+                            --RemoteMissileDamagePatch.skip;
+                        }
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.RemoteMissileDamage(trackedItem, packet);
                 }
             }
         }
@@ -2905,6 +2932,28 @@ namespace H3MP
             }
 
             H3MP_ServerSend.SosigPriorityIFFChart(clientID, trackedID, chart);
+        }
+
+        public static void RemoteMissileDetonate(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Server.items[trackedID] != null)
+            {
+                // Update local;
+                if (H3MP_Server.items[trackedID].physicalItem != null)
+                {
+                    object remoteMissile = Mod.RemoteMissileLauncher_m_missile.GetValue(H3MP_Server.items[trackedID].physicalItem.physicalObject as RemoteMissileLauncher);
+                    if(remoteMissile != null)
+                    {
+                        RemoteMissile actualMissile = remoteMissile as RemoteMissile;
+                        RemoteMissileDetonatePatch.overriden = true;
+                        actualMissile.transform.position = packet.ReadVector3();
+                        actualMissile.Detonante();
+                    }
+                }
+            }
+
+            H3MP_ServerSend.RemoteMissileDetonate(clientID, packet);
         }
     }
 }

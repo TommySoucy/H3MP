@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using static FistVR.sblpCell;
 
 namespace H3MP
 {
@@ -247,6 +248,15 @@ namespace H3MP
                 fireFunc = FirePotatoGun;
                 setFirearmUpdateOverride = SetPotatoGunUpdateOverride;
             }
+            else if (physObj is RemoteMissileLauncher)
+            {
+                RemoteMissileLauncher asRML = physObj as RemoteMissileLauncher;
+                updateFunc = UpdateRemoteMissileLauncher;
+                updateGivenFunc = UpdateGivenRemoteMissileLauncher;
+                dataObject = asRML;
+                fireFunc = FireRemoteMissileLauncher;
+                setFirearmUpdateOverride = SetRemoteMissileLauncherUpdateOverride;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -322,12 +332,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is RemoteMissileLauncher)
-            {
-                updateFunc = UpdateRemoteMissileLauncher;
-                updateGivenFunc = UpdateGivenRemoteMissileLauncher;
-                dataObject = physObj as RemoteMissileLauncher;
-            }
             else if (physObj is RGM40)
             {
                 updateFunc = UpdateRGM40;
@@ -397,6 +401,136 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateRemoteMissileLauncher()
+        {
+            RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
+            bool modified = false;
+
+            object missile = Mod.RemoteMissileLauncher_m_missile.GetValue(asRML);
+
+            if (data.data == null)
+            {
+                data.data = new byte[missile == null ? 3 : 35];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+
+            // Write poweredUp
+            data.data[0] = asRML.IsPoweredUp ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[0];
+
+            preval0 = data.data[1];
+
+            // Write chamber full
+            data.data[1] = asRML.Chamber.IsFull ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[1];
+
+            preval0 = data.data[2];
+
+            // Write has missile
+            data.data[2] = missile == null ? (byte)0 : (byte)1;
+
+            modified |= preval0 != data.data[2];
+
+            if (missile != null)
+            {
+                RemoteMissile actualMissile = missile as RemoteMissile;
+                modified = true;
+
+                // Write missile pos
+                BitConverter.GetBytes(actualMissile.transform.position.x).CopyTo(data.data, 3);
+                BitConverter.GetBytes(actualMissile.transform.position.y).CopyTo(data.data, 7);
+                BitConverter.GetBytes(actualMissile.transform.position.z).CopyTo(data.data, 11);
+
+                // Write missile rot
+                BitConverter.GetBytes(actualMissile.transform.rotation.eulerAngles.x).CopyTo(data.data, 15);
+                BitConverter.GetBytes(actualMissile.transform.rotation.eulerAngles.y).CopyTo(data.data, 19);
+                BitConverter.GetBytes(actualMissile.transform.rotation.eulerAngles.z).CopyTo(data.data, 23);
+
+                // Write target speed
+                BitConverter.GetBytes((float)Mod.RemoteMissile_speed.GetValue(actualMissile)).CopyTo(data.data, 27);
+
+                // Write speed
+                BitConverter.GetBytes((float)Mod.RemoteMissile_tarSpeed.GetValue(actualMissile)).CopyTo(data.data, 31);
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenRemoteMissileLauncher(byte[] newData)
+        {
+            bool modified = false;
+            RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
+
+            // Set powered up
+            if((asRML.IsPoweredUp && newData[0] == 0) || (!asRML.IsPoweredUp && newData[0] == 1))
+            {
+                // Toggle
+                asRML.TogglePower();
+                modified = true;
+            }
+
+            if (newData[1] == 0) // We don't want round in chamber
+            {
+                if (asRML.Chamber.GetRound() != null)
+                {
+                    asRML.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                if (asRML.Chamber.GetRound() == null)
+                {
+                    asRML.Chamber.SetRound(FireArmRoundClass.FragExplosive, asRML.Chamber.transform.position, asRML.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            object missile = Mod.RemoteMissileLauncher_m_missile.GetValue(asRML);
+            if (missile != null)
+            {
+                if (newData[2] == 1)
+                {
+                    RemoteMissile actualMissile = missile as RemoteMissile;
+                    actualMissile.transform.position = new Vector3(BitConverter.ToSingle(newData, 3), BitConverter.ToSingle(newData, 7), BitConverter.ToSingle(newData, 11));
+                    actualMissile.transform.rotation = Quaternion.Euler(BitConverter.ToSingle(newData, 15), BitConverter.ToSingle(newData, 19), BitConverter.ToSingle(newData, 23));
+
+                    Mod.RemoteMissile_speed.SetValue(actualMissile, BitConverter.ToSingle(newData, 27));
+                    Mod.RemoteMissile_tarSpeed.SetValue(actualMissile, BitConverter.ToSingle(newData, 31));
+                } 
+                //else if (newData[2] == 0)
+                //{
+                //    NOTE: This would destroy the current missile we have if the update says we do not want a missile
+                //          The problem is that, once the controller detonates the missile, detonation gets sent, but the latest update which says there is no missile
+                //          gets received first, so the missile would get destroyed here before we receive the detonation, detonation would always fail
+                //          Kept here as an example of update desync
+                //    GameObject.Destroy(actualMissile.gameObject);
+                //}
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireRemoteMissileLauncher()
+        {
+            RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
+            Mod.RemoteMissileLauncher_FireShot.Invoke(asRML, null);
+            return true;
+        }
+
+        private void SetRemoteMissileLauncherUpdateOverride(FireArmRoundClass roundClass)
+        {
+            RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
+
+            asRML.Chamber.SetRound(roundClass, asRML.Chamber.transform.position, asRML.Chamber.transform.rotation);
+        }
+
         private bool UpdatePotatoGun()
         {
             PotatoGun asPG = dataObject as PotatoGun;
@@ -404,7 +538,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[4];
+                data.data = new byte[5];
                 modified = true;
             }
 
@@ -417,6 +551,13 @@ namespace H3MP
             BitConverter.GetBytes((float)Mod.PotatoGun_m_chamberGas.GetValue(asPG)).CopyTo(data.data, 0);
 
             modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
+
+            preval0 = data.data[4];
+
+            // Write chamber full
+            data.data[4] = asPG.Chamber.IsFull ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[4];
 
             return modified;
         }
@@ -439,6 +580,23 @@ namespace H3MP
                 {
                     // Set m_chamberGas
                     Mod.PotatoGun_m_chamberGas.SetValue(asPG, BitConverter.ToSingle(newData, 0));
+                    modified = true;
+                }
+            }
+
+            if (newData[4] == 0) // We don't want round in chamber
+            {
+                if (asPG.Chamber.GetRound() != null)
+                {
+                    asPG.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                if (asPG.Chamber.GetRound() == null)
+                {
+                    asPG.Chamber.SetRound(FireArmRoundClass.FMJ, asPG.Chamber.transform.position, asPG.Chamber.transform.rotation);
                     modified = true;
                 }
             }
@@ -567,7 +725,7 @@ namespace H3MP
             preval = data.data[3];
 
             // Write chamber full
-            data.data[3] = (bool)asM72.Chamber.IsFull ? (byte)1 : (byte)0;
+            data.data[3] = asM72.Chamber.IsFull ? (byte)1 : (byte)0;
 
             modified |= preval != data.data[3];
 

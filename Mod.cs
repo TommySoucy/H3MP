@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using ErosionBrushPlugin;
 using FistVR;
 using HarmonyLib;
 using System;
@@ -193,7 +194,10 @@ namespace H3MP
         public static readonly FieldInfo Minigun_m_heat = typeof(Minigun).GetField("m_heat", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Minigun_m_motorRate = typeof(Minigun).GetField("m_motorRate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo PotatoGun_m_chamberGas = typeof(PotatoGun).GetField("m_chamberGas", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+        public static readonly FieldInfo RemoteMissileLauncher_m_missile = typeof(RemoteMissileLauncher).GetField("m_missile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo RemoteMissile_speed = typeof(RemoteMissile).GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo RemoteMissile_tarSpeed = typeof(RemoteMissile).GetField("tarSpeed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Sosig_SetBodyPose = typeof(Sosig).GetMethod("SetBodyPose", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -237,6 +241,7 @@ namespace H3MP
         public static readonly MethodInfo HCB_UpdateStrings = typeof(HCB).GetMethod("UpdateStrings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo HCB_ReleaseSled = typeof(HCB).GetMethod("ReleaseSled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Flaregun_Fire = typeof(Flaregun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo RemoteMissileLauncher_FireShot = typeof(RemoteMissileLauncher).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -287,7 +292,7 @@ namespace H3MP
                 else if (Input.GetKeyDown(KeyCode.Keypad6))
                 {
                     Dictionary<string, string> map = new Dictionary<string, string>();
-                    foreach(KeyValuePair<string, FVRObject> o in IM.OD)
+                    foreach (KeyValuePair<string, FVRObject> o in IM.OD)
                     {
                         GameObject prefab = null;
                         try
@@ -295,7 +300,7 @@ namespace H3MP
                             prefab = o.Value.GetGameObject();
 
                         }
-                        catch(Exception)
+                        catch (Exception)
                         {
                             Debug.LogError("There was an error trying to retrieve prefab with ID: " + o.Key);
                             continue;
@@ -317,7 +322,7 @@ namespace H3MP
                         }
                         catch (Exception)
                         {
-                            Debug.LogError("There was an error trying to check if prefab with ID: " + o.Key+" is wearable or adding it to the list");
+                            Debug.LogError("There was an error trying to check if prefab with ID: " + o.Key + " is wearable or adding it to the list");
                             continue;
                         }
                     }
@@ -413,7 +418,7 @@ namespace H3MP
 
         private void InitTNHMenu()
         {
-            TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.4418f, 1.04f, 6.2977f), Quaternion.Euler(0,270,0));
+            TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.4418f, 1.04f, 6.2977f), Quaternion.Euler(0, 270, 0));
 
             // Add background pointable
             FVRPointable backgroundPointable = TNHMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
@@ -541,7 +546,7 @@ namespace H3MP
             Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
 
             // If already in a TNH isntance, which could be the case if we are coming back from being in game
-            if(currentTNHInstance != null)
+            if (currentTNHInstance != null)
             {
                 InitTNHUIManager(currentTNHInstance);
             }
@@ -837,6 +842,13 @@ namespace H3MP
 
             PatchVerify.Verify(fireDerringerPatchOriginal, harmony, false);
             harmony.Patch(fireDerringerPatchOriginal, new HarmonyMethod(fireDerringerPatchPrefix), new HarmonyMethod(fireDerringerPatchPostfix));
+
+            // RemoteMissileDetonatePatch
+            MethodInfo remoteMissileDetonatePatchOriginal = typeof(RemoteMissile).GetMethod("Detonante", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo remoteMissileDetonatePatchPrefix = typeof(RemoteMissileDetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(remoteMissileDetonatePatchOriginal, harmony, false);
+            harmony.Patch(remoteMissileDetonatePatchOriginal, new HarmonyMethod(remoteMissileDetonatePatchPrefix));
 
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
@@ -1391,6 +1403,13 @@ namespace H3MP
             PatchVerify.Verify(sosigWeaponDamagePatchOriginal, harmony, false);
             harmony.Patch(sosigWeaponDamagePatchOriginal, new HarmonyMethod(sosigWeaponDamagePatchPrefix));
 
+            // RemoteMissileDamagePatch
+            MethodInfo remoteMissileDamagePatchOriginal = typeof(RemoteMissile).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo remoteMissileDamagePatchPrefix = typeof(RemoteMissileDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(remoteMissileDamagePatchOriginal, harmony, false);
+            harmony.Patch(remoteMissileDamagePatchOriginal, new HarmonyMethod(remoteMissileDamagePatchPrefix));
+
             // SosigWeaponShatterPatch
             MethodInfo sosigWeaponShatterPatchOriginal = typeof(SosigWeapon).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo sosigWeaponShatterPatchPrefix = typeof(SosigWeaponShatterPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1600,7 +1619,7 @@ namespace H3MP
             MethodInfo TAHReticleContactPatchSetContactTypePrefix = typeof(TAHReticleContactPatch).GetMethod("SetContactTypePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TAHReticleContactPatchTickOriginal, harmony, false);
-            harmony.Patch(TAHReticleContactPatchTickOriginal, null ,null, new HarmonyMethod(TAHReticleContactPatchTickTranspiler));
+            harmony.Patch(TAHReticleContactPatchTickOriginal, null, null, new HarmonyMethod(TAHReticleContactPatchTickTranspiler));
             harmony.Patch(TAHReticleContactPatchSetContactTypeOriginal, new HarmonyMethod(TAHReticleContactPatchSetContactTypePrefix));
 
             // TNH_HoldPointPatch
@@ -1761,8 +1780,8 @@ namespace H3MP
             //H3MP_Server.IP = config["IP"].ToString();
             CreateManagerObject(true);
 
-            H3MP_Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]); 
-            
+            H3MP_Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]);
+
             if (SceneManager.GetActiveScene().name.Equals("TakeAndHold_Lobby_2"))
             {
                 Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
@@ -1881,7 +1900,7 @@ namespace H3MP
             }
             else
             {
-                foreach(KeyValuePair<int, GameObject> entry in joinTNHInstances)
+                foreach (KeyValuePair<int, GameObject> entry in joinTNHInstances)
                 {
                     Destroy(entry.Value);
                 }
@@ -1943,7 +1962,7 @@ namespace H3MP
 
         public static void OnTNHSpawnStartEquipClicked()
         {
-            if(GM.TNH_Manager != null)
+            if (GM.TNH_Manager != null)
             {
                 TNH_Manager M = GM.TNH_Manager;
                 TNH_CharacterDef C = M.C;
@@ -2159,7 +2178,7 @@ namespace H3MP
             currentTNHInstancePlayers.Clear();
 
             // Populate player list
-            for(int i=0; i < instance.playerIDs.Count; ++i)
+            for (int i = 0; i < instance.playerIDs.Count; ++i)
             {
                 GameObject newPlayer = Instantiate<GameObject>(TNHPlayerPrefab, TNHPlayerList.transform);
                 if (H3MP_GameManager.players.ContainsKey(instance.playerIDs[i]))
@@ -2230,41 +2249,41 @@ namespace H3MP
             }
             foreach (FVRQuickBeltSlot slot in GM.CurrentPlayerBody.QuickbeltSlots)
             {
-                if(slot.CurObject != null)
+                if (slot.CurObject != null)
                 {
                     slot.CurObject.SetQuickBeltSlot(null);
                 }
             }
             foreach (FVRQuickBeltSlot slot in GM.CurrentPlayerBody.QBSlots_Internal)
             {
-                if(slot.CurObject != null)
+                if (slot.CurObject != null)
                 {
                     slot.CurObject.SetQuickBeltSlot(null);
                 }
             }
             foreach (FVRQuickBeltSlot slot in GM.CurrentPlayerBody.QBSlots_Added)
             {
-                if(slot.CurObject != null)
+                if (slot.CurObject != null)
                 {
                     slot.CurObject.SetQuickBeltSlot(null);
                 }
             }
         }
-        
+
         // MOD: This method will be used to find the ID of which player to give control of this object to
         //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
         public static int GetBestPotentialObjectHost(int currentController)
         {
             if (Mod.currentTNHInstance != null)
             {
-                if(currentController == -1) // This means the potential host could also be us
+                if (currentController == -1) // This means the potential host could also be us
                 {
                     // Going through each like this, we will go through the host of the instance before any other
                     foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                     {
                         // If the player is us and we are not spectating
                         // OR it is another player who is not spectating
-                        if ((playerID == H3MP_GameManager.ID && !Mod.TNHSpectating) || 
+                        if ((playerID == H3MP_GameManager.ID && !Mod.TNHSpectating) ||
                              (H3MP_GameManager.players.ContainsKey(playerID) && H3MP_GameManager.players[playerID].gameObject.activeSelf))
                         {
                             return playerID;
@@ -2289,7 +2308,7 @@ namespace H3MP
                 {
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
                     {
-                        if(player.Key > H3MP_GameManager.ID)
+                        if (player.Key > H3MP_GameManager.ID)
                         {
                             return H3MP_GameManager.ID;
                         }
@@ -2447,7 +2466,7 @@ namespace H3MP
         public static void SetKinematicRecursive(Transform root, bool value)
         {
             Rigidbody rb = root.GetComponent<Rigidbody>();
-            if(rb != null)
+            if (rb != null)
             {
                 H3MP_KinematicMarker marker = rb.GetComponent<H3MP_KinematicMarker>();
 
@@ -2465,7 +2484,7 @@ namespace H3MP
                 }
                 else // If we don't want it kinematic, we only want to unset it on marked children, because unmarked were not set by us
                 {
-                    if(marker != null)
+                    if (marker != null)
                     {
                         ++KinematicPatch.skip;
                         rb.isKinematic = value;
@@ -2475,7 +2494,7 @@ namespace H3MP
                 }
             }
 
-            foreach(Transform child in root.transform)
+            foreach (Transform child in root.transform)
             {
                 SetKinematicRecursive(child, value);
             }
@@ -2497,7 +2516,7 @@ namespace H3MP
 
         public static void Verify(MethodInfo methodInfo, Harmony harmony, bool breaking)
         {
-            if(hashes == null)
+            if (hashes == null)
             {
                 if (File.Exists("BepInEx/Plugins/H3MP/PatchHashes.json"))
                 {
@@ -2519,7 +2538,7 @@ namespace H3MP
         static int GetParamArrHash(ParameterInfo[] paramArr)
         {
             int hash = 0;
-            foreach(ParameterInfo t in paramArr)
+            foreach (ParameterInfo t in paramArr)
             {
                 hash += t.ParameterType.Name.GetHashCode();
             }
@@ -2543,9 +2562,9 @@ namespace H3MP
             }
             int hash = s.GetHashCode();
 
-            if(hashes.TryGetValue(s, out int originalHash))
+            if (hashes.TryGetValue(s, out int originalHash))
             {
-                if(originalHash != hash)
+                if (originalHash != hash)
                 {
                     if (breaking)
                     {
@@ -2557,7 +2576,7 @@ namespace H3MP
                     }
                 }
             }
-            else if(!writeWhenDone)
+            else if (!writeWhenDone)
             {
                 Debug.LogWarning("PatchVerify: " + identifier + " not found in hashes. Most probably a new patch. This warning will remain until new hash file is written.");
             }
@@ -2585,13 +2604,13 @@ namespace H3MP
 
         static void Postfix(ref Rigidbody __instance)
         {
-            if(Mod.managerObject == null || skip > 0)
+            if (Mod.managerObject == null || skip > 0)
             {
                 return;
             }
 
             H3MP_KinematicMarker marker = __instance.GetComponent<H3MP_KinematicMarker>();
-            if(marker != null)
+            if (marker != null)
             {
                 GameObject.Destroy(marker);
             }
@@ -2603,7 +2622,7 @@ namespace H3MP
     {
         static void Prefix(int iff)
         {
-            if(Mod.managerObject == null)
+            if (Mod.managerObject == null)
             {
                 return;
             }
@@ -2626,7 +2645,7 @@ namespace H3MP
         {
             if (value)
             {
-                Debug.LogWarning("SetActivePatch called with true on " + __instance.name+":\n"+Environment.StackTrace);
+                Debug.LogWarning("SetActivePatch called with true on " + __instance.name + ":\n" + Environment.StackTrace);
             }
         }
     }
@@ -2636,7 +2655,7 @@ namespace H3MP
     {
         static void Prefix(Vector3 point)
         {
-            Debug.LogWarning("TeleportToPoint called with point: ("+point.x+","+point.y+","+point.z+"):\n"+Environment.StackTrace);
+            Debug.LogWarning("TeleportToPoint called with point: (" + point.x + "," + point.y + "," + point.z + "):\n" + Environment.StackTrace);
         }
     }
 
@@ -2713,11 +2732,11 @@ namespace H3MP
                 else // Although SosigLinks are FVRPhysicalObjects, they don't have an objectWrapper, so they won't be tracked items
                 {
                     SosigLink sosigLink = ___m_currentInteractable.GetComponent<SosigLink>();
-                    if(sosigLink != null)
+                    if (sosigLink != null)
                     {
                         // We just grabbed a sosig
                         H3MP_TrackedSosig trackedSosig = sosigLink.S.GetComponent<H3MP_TrackedSosig>();
-                        if(trackedSosig != null && trackedSosig.data.trackedID != -1 && trackedSosig.data.localTrackedID == -1)
+                        if (trackedSosig != null && trackedSosig.data.trackedID != -1 && trackedSosig.data.localTrackedID == -1)
                         {
                             if (H3MP_ThreadManager.host)
                             {
@@ -2899,9 +2918,9 @@ namespace H3MP
                         //{
                         //  __instance.RecoverRigidbody();
                         //}
-                        bool primaryHand = __instance == __instance.S.Hand_Primary; 
+                        bool primaryHand = __instance == __instance.S.Hand_Primary;
                         H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
-                        if(trackedSosig.data.trackedID == -1)
+                        if (trackedSosig.data.trackedID == -1)
                         {
                             if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
                             {
@@ -2955,7 +2974,7 @@ namespace H3MP
                         //  __instance.RecoverRigidbody();
                         //}
                         int slotIndex = 0;
-                        for(int i=0; i< __instance.I.Slots.Count; ++i)
+                        for (int i = 0; i < __instance.I.Slots.Count; ++i)
                         {
                             if (__instance.I.Slots[i] == __instance)
                             {
@@ -3087,7 +3106,7 @@ namespace H3MP
 
         static void Prefix(ref SosigHand __instance)
         {
-            if(skip > 0)
+            if (skip > 0)
             {
                 return;
             }
@@ -3205,7 +3224,7 @@ namespace H3MP
                 return;
             }
 
-            if(!hadObject && ___m_obj != null)
+            if (!hadObject && ___m_obj != null)
             {
                 // Just started manipulating this item, take control
                 H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(___m_obj, out H3MP_TrackedItem currentItem) ? currentItem : ___m_obj.GetComponent<H3MP_TrackedItem>();
@@ -3271,7 +3290,7 @@ namespace H3MP
 
         public static void TakeControl(FVRPhysicalObject physObj)
         {
-            if(Mod.managerObject == null)
+            if (Mod.managerObject == null)
             {
                 return;
             }
@@ -3328,12 +3347,12 @@ namespace H3MP
     //       The fire is sent through TCP, while the update is sent through UDP. Although the fire gets sent first, the update gets there first
     //       Other client's chambers then return false from their Fire(), preventing the weapon from firing
     //       On other clients, we use the passed round class to fill the chamber prior to firing, and then set it back to its previous state
-    //       So, it is necessary to send, alongside the fire packet, data to override the latest update with just to ensure we can fire
+    //       So, it is necessary to send, alongside the fire packet, data to override the latest update with just what we need to ensure we can fire
     /* TODO: Fire patches for
      * EncryptionBotAgile.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotCrystal.FirePulseShot // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
      * EncryptionBotHardened.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
-     * RemoteGun.Fire // Will have to be handled unlike other projectiles since it is a player controlled missile
+     * RemoteGun.Fire // THIS IS NOT A REMOTE MISSILE LAUNCHER, NEED TO FIND OUT WHAT IT IS
      * AIFireArm.FireBullet // Will have to check if this is necessary (it is actually used?), it is also an FVRDestroyableObject, need to see how to handle that
      * RonchWeapon.Fire // Considering ronch is an enemy type, we will probably have to make it into its own sync object type with its own lists
      * DodecaLauncher // Uses dodeca missiles
@@ -3995,7 +4014,7 @@ namespace H3MP
                 currentMinigun = __instance;
                 trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
             }
-            if(trackedItem != null && !overriden && trackedItem.data.controller != H3MP_GameManager.ID)
+            if (trackedItem != null && !overriden && trackedItem.data.controller != H3MP_GameManager.ID)
             {
                 fireSucessful = false;
                 return false;
@@ -4612,7 +4631,7 @@ namespace H3MP
 
             //  Get which hammer went down
             bool hammer1 = true;
-            if(!___m_isHammerCocked2 && hammer2Cocked)
+            if (!___m_isHammerCocked2 && hammer2Cocked)
             {
                 hammer1 = false;
             }
@@ -4666,7 +4685,7 @@ namespace H3MP
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
 
-            if(burnSkip > 0 || Mod.managerObject == null)
+            if (burnSkip > 0 || Mod.managerObject == null)
             {
                 return;
             }
@@ -4676,7 +4695,7 @@ namespace H3MP
             {
                 loadedElementTypes = new FlintlockBarrel.LoadedElementType[__instance.LoadedElements.Count];
                 loadedElementPositions = new float[__instance.LoadedElements.Count];
-                for(int i=0; i< __instance.LoadedElements.Count; ++i)
+                for (int i = 0; i < __instance.LoadedElements.Count; ++i)
                 {
                     loadedElementTypes[i] = __instance.LoadedElements[i].Type;
                     loadedElementPositions[i] = __instance.LoadedElements[i].Position;
@@ -4725,7 +4744,7 @@ namespace H3MP
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if(!foundNum2 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("System.Single (4)"))
+                if (!foundNum2 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("System.Single (4)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert4);
                     foundNum2 = true;
@@ -4738,19 +4757,19 @@ namespace H3MP
                     foundFirstPos = true;
                     continue;
                 }
-                if(foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                if (foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 1, toInsert2);
                     continue;
                 }
 
-                if(!foundFirstDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                if (!foundFirstDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 1, toInsert1);
                     foundFirstDir = true;
                     continue;
                 }
-                if(foundFirstDir && !skippedSecondDir)
+                if (foundFirstDir && !skippedSecondDir)
                 {
                     skippedSecondDir = true;
                     continue;
@@ -5005,7 +5024,7 @@ namespace H3MP
                 }
 
                 if (!foundFirstPos && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("Muzzle") &&
-                    instructionList[i+1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 2, toInsert0);
                     foundFirstPos = true;
@@ -5021,7 +5040,7 @@ namespace H3MP
                     instructionList.InsertRange(i + 1, toInsert5);
                     continue;
                 }
-                
+
 
                 if (!foundFirstDir && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("Muzzle") &&
                     instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_forward"))
@@ -5107,7 +5126,7 @@ namespace H3MP
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
 
-            if(Mod.managerObject == null)
+            if (Mod.managerObject == null)
             {
                 return true;
             }
@@ -5184,6 +5203,51 @@ namespace H3MP
         }
     }
 
+    class RemoteMissileDetonatePatch
+    {
+        public static bool overriden;
+
+        static bool Prefix(RemoteMissile __instance, RemoteMissileLauncher ___m_launcher)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(___m_launcher, out trackedItem) ? trackedItem : ___m_launcher.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.controller == H3MP_GameManager.ID)
+                {
+                    // Send to other clients
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.RemoteMissileDetonate(0, trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.RemoteMissileDetonate(trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                }
+                else
+                {
+                    // In the case in which we do not control the launcher, we do not want to detonate if it wasn't an order from the controller
+                    if (overriden)
+                    {
+                        overriden = false;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
     // Patches SosigWeapon.Shatter so we can keep track of the event
     class SosigWeaponShatterPatch
     {
@@ -5242,7 +5306,7 @@ namespace H3MP
             }
 
             H3MP_TrackedSosig trackedSosig = __instance.GetComponent<H3MP_TrackedSosig>();
-            if(trackedSosig != null)
+            if (trackedSosig != null)
             {
                 trackedSosig.data.configTemplate = t;
 
@@ -5273,7 +5337,7 @@ namespace H3MP
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
-            if(trackedSosig != null)
+            if (trackedSosig != null)
             {
                 bool runOriginal = trackedSosig.data.controller == H3MP_GameManager.ID;
                 if (!runOriginal)
@@ -5286,7 +5350,7 @@ namespace H3MP
             }
             return true;
         }
-        
+
         static bool HandPhysUpdatePrefix(ref Sosig __instance)
         {
             // Skip if not connected
@@ -5296,7 +5360,7 @@ namespace H3MP
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
-            if(trackedSosig != null)
+            if (trackedSosig != null)
             {
                 return trackedSosig.data.controller == H3MP_GameManager.ID;
             }
@@ -5316,7 +5380,7 @@ namespace H3MP
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
-            if(trackedSosig != null)
+            if (trackedSosig != null)
             {
                 return trackedSosig.data.controller == H3MP_GameManager.ID;
             }
@@ -5429,7 +5493,7 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null)
             {
-                if(trackedSosig.data.trackedID == -1)
+                if (trackedSosig.data.trackedID == -1)
                 {
                     H3MP_TrackedSosig.unknownBodyStates.Add(trackedSosig.data.localTrackedID, s);
                 }
@@ -5482,7 +5546,7 @@ namespace H3MP
 
         public static void SendFootStepSound(Sosig sosig, FVRPooledAudioType audioType, Vector3 position, Vector2 vol, Vector2 pitch, float delay)
         {
-            if(Mod.managerObject == null)
+            if (Mod.managerObject == null)
             {
                 return;
             }
@@ -5544,7 +5608,7 @@ namespace H3MP
 
         static void SetCurrentOrderPrefix(ref Sosig __instance, Sosig.SosigOrder o)
         {
-            if(sosigSetCurrentOrderSkip > 0)
+            if (sosigSetCurrentOrderSkip > 0)
             {
                 return;
             }
@@ -5578,7 +5642,7 @@ namespace H3MP
             ++SosigSlotDetachPatch.skip;
             ++sosigSetBodyStateSkip;
 
-            if(sosigVaporizeSkip > 0)
+            if (sosigVaporizeSkip > 0)
             {
                 return;
             }
@@ -5627,7 +5691,7 @@ namespace H3MP
                 return;
             }
 
-            for(int i=0; i < __instance.Links.Count; ++i)
+            for (int i = 0; i < __instance.Links.Count; ++i)
             {
                 if (__instance.Links[i] == l)
                 {
@@ -5708,7 +5772,7 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 int linkIndex = -1;
-                for(int i=0; i<__instance.S.Links.Count;++i)
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
                 {
                     if (__instance.S.Links[i] == __instance)
                     {
@@ -5717,13 +5781,13 @@ namespace H3MP
                     }
                 }
 
-                if(linkIndex == -1)
+                if (linkIndex == -1)
                 {
                     Debug.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
                 }
                 else
                 {
-                    if(knownWearableID == null)
+                    if (knownWearableID == null)
                     {
                         knownWearableID = w.name;
                         if (knownWearableID.EndsWith("(Clone)"))
@@ -5775,7 +5839,7 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 int linkIndex = -1;
-                for(int i=0; i<__instance.S.Links.Count;++i)
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
                 {
                     if (__instance.S.Links[i] == __instance)
                     {
@@ -5784,13 +5848,13 @@ namespace H3MP
                     }
                 }
 
-                if(linkIndex == -1)
+                if (linkIndex == -1)
                 {
                     Debug.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
                 }
                 else
                 {
-                    if(knownWearableID == null)
+                    if (knownWearableID == null)
                     {
                         knownWearableID = w.name;
                         if (knownWearableID.EndsWith("(Clone)"))
@@ -5847,7 +5911,7 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 int linkIndex = -1;
-                for(int i=0; i<__instance.S.Links.Count;++i)
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
                 {
                     if (__instance.S.Links[i] == __instance)
                     {
@@ -5856,7 +5920,7 @@ namespace H3MP
                     }
                 }
 
-                if(linkIndex == -1)
+                if (linkIndex == -1)
                 {
                     Debug.LogError("LinkExplodesPrefix called on link whos sosig doesn't have the link");
                 }
@@ -5907,7 +5971,7 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 int linkIndex = -1;
-                for(int i=0; i<__instance.S.Links.Count;++i)
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
                 {
                     if (__instance.S.Links[i] == __instance)
                     {
@@ -5916,7 +5980,7 @@ namespace H3MP
                     }
                 }
 
-                if(linkIndex == -1)
+                if (linkIndex == -1)
                 {
                     Debug.LogError("LinkBreakPrefix called on link whos sosig doesn't have the link");
                 }
@@ -5967,7 +6031,7 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 int linkIndex = -1;
-                for(int i=0; i<__instance.S.Links.Count;++i)
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
                 {
                     if (__instance.S.Links[i] == __instance)
                     {
@@ -5976,7 +6040,7 @@ namespace H3MP
                     }
                 }
 
-                if(linkIndex == -1)
+                if (linkIndex == -1)
                 {
                     Debug.LogError("LinkSeverPrefix called on link whos sosig doesn't have the link");
                 }
@@ -6132,7 +6196,7 @@ namespace H3MP
             }
 
             // Possible if instance has been destroyed but still accessible
-            if(__instance == null)
+            if (__instance == null)
             {
                 return false;
             }
@@ -6164,7 +6228,7 @@ namespace H3MP
                 if (!runOriginal)
                 {
                     // Call AutoMeater update methods we don't want to skip
-                    if(trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].IsFlameThrower)
+                    if (trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].IsFlameThrower)
                     {
                         trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].Tick(Time.deltaTime);
                     }
@@ -6222,7 +6286,7 @@ namespace H3MP
                 }
                 else
                 {
-                    if(trackedAutoMeater.data.trackedID != -1)
+                    if (trackedAutoMeater.data.trackedID != -1)
                     {
                         H3MP_ClientSend.AutoMeaterSetState(trackedAutoMeater.data.trackedID, (byte)s);
                     }
@@ -6348,7 +6412,7 @@ namespace H3MP
 
         public static Vector3 GetMuzzleAngles(Vector3 currentAngles)
         {
-            if(angleOverride)
+            if (angleOverride)
             {
                 angleOverride = false;
                 return muzzleAngles;
@@ -6410,7 +6474,7 @@ namespace H3MP
                     if (trackedAutoMeater.data.controller == 0)
                     {
                         int firearmIndex = -1;
-                        for(int i=0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
+                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
                         {
                             if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
                             {
@@ -6469,7 +6533,7 @@ namespace H3MP
 
         public static void RespawnSubTarg(TNH_EncryptionTarget encryption, int index)
         {
-            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(encryption) ? H3MP_GameManager.trackedEncryptionByEncryption[encryption] : encryption.GetComponent<H3MP_TrackedEncryption>();
                 if (trackedEncryption != null && trackedEncryption.data.controller == H3MP_GameManager.ID)
@@ -6482,7 +6546,7 @@ namespace H3MP
                     }
                     else
                     {
-                        if(trackedEncryption.data.trackedID != -1)
+                        if (trackedEncryption.data.trackedID != -1)
                         {
                             H3MP_ClientSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
                         }
@@ -6497,7 +6561,7 @@ namespace H3MP
     {
         static bool Prefix(ref TNH_EncryptionTarget __instance, ref int ___m_numSubTargsLeft)
         {
-            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
                 if (trackedEncryption != null)
@@ -6517,12 +6581,12 @@ namespace H3MP
 
         static void Prefix(ref TNH_EncryptionTarget __instance, int index, Vector3 point)
         {
-            if(skip > 0)
+            if (skip > 0)
             {
                 return;
             }
 
-            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
                 if (trackedEncryption != null && trackedEncryption.data.controller == H3MP_GameManager.ID)
@@ -6599,15 +6663,15 @@ namespace H3MP
 
         static void Postfix(ref TNH_EncryptionTarget __instance)
         {
-            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
                 if (trackedEncryption != null && trackedEncryption.physicalEncryptionScript.UsesRecursiveSubTarg && trackedEncryption.data.controller == H3MP_GameManager.ID)
                 {
-                    if(trackedEncryption.data.controller == H3MP_GameManager.ID)
+                    if (trackedEncryption.data.controller == H3MP_GameManager.ID)
                     {
                         List<int> indices = new List<int>();
-                        for(int i=0; i < trackedEncryption.physicalEncryptionScript.SubTargs.Count; i++)
+                        for (int i = 0; i < trackedEncryption.physicalEncryptionScript.SubTargs.Count; i++)
                         {
                             if (trackedEncryption.physicalEncryptionScript.SubTargs[i].activeSelf)
                             {
@@ -6636,11 +6700,11 @@ namespace H3MP
     // Patches TNH_EncryptionTarget.ResetGrowth to sync with other clients
     class EncryptionResetGrowthPatch
     {
-        public static int skip; 
+        public static int skip;
 
         static bool Prefix(ref TNH_EncryptionTarget __instance, int index, Vector3 point)
         {
-            if(skip > 0)
+            if (skip > 0)
             {
                 return true;
             }
@@ -6788,7 +6852,7 @@ namespace H3MP
 
         static void LoadBatteryPrefix(ref LAPD2019 __instance, LAPD2019Battery battery)
         {
-            if(loadBatterySkip > 0)
+            if (loadBatterySkip > 0)
             {
                 return;
             }
@@ -6816,7 +6880,7 @@ namespace H3MP
 
         static void ExtractBatteryPrefix(ref LAPD2019 __instance)
         {
-            if(extractBatterySkip > 0)
+            if (extractBatterySkip > 0)
             {
                 return;
             }
@@ -6848,7 +6912,7 @@ namespace H3MP
         public static int BoolArrToInt(bool[] arr)
         {
             int i = 0;
-            for(int index = 0; index < arr.Length; ++index)
+            for (int index = 0; index < arr.Length; ++index)
             {
                 if (arr[index])
                 {
@@ -6861,7 +6925,7 @@ namespace H3MP
         public static bool[] IntToBoolArr(int i)
         {
             bool[] arr = new bool[32];
-            for(int index = arr.Length - 1; index >= 0; --index)
+            for (int index = arr.Length - 1; index >= 0; --index)
             {
                 arr[index] = ((i >> index) | 1) == 1;
             }
@@ -6936,7 +7000,7 @@ namespace H3MP
                     while (currentParent != null)
                     {
                         trackedItem = currentParent.GetComponent<H3MP_TrackedItem>();
-                        if(trackedItem != null)
+                        if (trackedItem != null)
                         {
                             break;
                         }
@@ -6960,7 +7024,7 @@ namespace H3MP
 
         static void Postfix(ref FVRFireArmRound __result)
         {
-            if(incrementedSkip > 0)
+            if (incrementedSkip > 0)
             {
                 Mod.skipAllInstantiates -= incrementedSkip;
             }
@@ -7279,7 +7343,7 @@ namespace H3MP
                 // Destroy any objects that need to be destroyed and remove the data
                 foreach (UnityEngine.Object obj in routineData[currentFile])
                 {
-                    if(obj == null)
+                    if (obj == null)
                     {
                         Debug.LogWarning("SpawnVaultFileRoutinePatch.FinishedRoutine object to be destroyed already null");
                         continue;
@@ -7751,7 +7815,7 @@ namespace H3MP
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (19)"))
                 {
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     break;
                 }
@@ -7787,7 +7851,7 @@ namespace H3MP
                         continue;
                     }
 
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     break;
                 }
@@ -7811,7 +7875,7 @@ namespace H3MP
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (6)"))
                 {
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     break;
                 }
@@ -7980,7 +8044,7 @@ namespace H3MP
                         continue;
                     }
 
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     skipNext3 = true;
                 }
@@ -7992,7 +8056,7 @@ namespace H3MP
                         continue;
                     }
 
-                    instructionList.InsertRange(i+1, toInsert0);
+                    instructionList.InsertRange(i + 1, toInsert0);
 
                     skipNext4 = true;
                 }
@@ -8027,7 +8091,7 @@ namespace H3MP
                         continue;
                     }
 
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     skipNext3 = true;
                 }
@@ -8062,7 +8126,7 @@ namespace H3MP
                         continue;
                     }
 
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     break;
                 }
@@ -8089,7 +8153,7 @@ namespace H3MP
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     break;
                 }
@@ -8116,7 +8180,7 @@ namespace H3MP
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
                 {
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     break;
                 }
@@ -8151,7 +8215,7 @@ namespace H3MP
                         continue;
                     }
 
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     skipNext2 = true;
                 }
@@ -8186,7 +8250,7 @@ namespace H3MP
                         continue;
                     }
 
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     skipNext2 = true;
                 }
@@ -8213,7 +8277,7 @@ namespace H3MP
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
                 {
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     break;
                 }
@@ -8248,7 +8312,7 @@ namespace H3MP
                         continue;
                     }
 
-                    instructionList.InsertRange(i+1, toInsert);
+                    instructionList.InsertRange(i + 1, toInsert);
 
                     skipNext = true;
                 }
@@ -8869,7 +8933,7 @@ namespace H3MP
 
         static bool Prefix(ref SosigLink __instance, Damage d)
         {
-            if(skip > 0)
+            if (skip > 0)
             {
                 return true;
             }
@@ -8881,7 +8945,7 @@ namespace H3MP
             }
 
             // Sosig could have been destroyed by the damage, we can just skip because the destroy order will be sent to other clients
-            if(__instance == null)
+            if (__instance == null)
             {
                 return true;
             }
@@ -8892,14 +8956,14 @@ namespace H3MP
             {
                 if (H3MP_ThreadManager.host)
                 {
-                    if(trackedSosig.data.controller == 0)
+                    if (trackedSosig.data.controller == 0)
                     {
                         return true;
                     }
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to precess it and return the result
-                        for (int i=0; i < __instance.S.Links.Count; ++i)
+                        for (int i = 0; i < __instance.S.Links.Count; ++i)
                         {
                             if (__instance.S.Links[i] == __instance)
                             {
@@ -8910,7 +8974,7 @@ namespace H3MP
                         return false;
                     }
                 }
-                else if(trackedSosig.data.controller == H3MP_Client.singleton.ID)
+                else if (trackedSosig.data.controller == H3MP_Client.singleton.ID)
                 {
                     return true;
                 }
@@ -8979,7 +9043,7 @@ namespace H3MP
             {
                 if (H3MP_ThreadManager.host)
                 {
-                    if(trackedSosig.data.controller == 0)
+                    if (trackedSosig.data.controller == 0)
                     {
                         return true;
                     }
@@ -9002,7 +9066,7 @@ namespace H3MP
                         }
                     }
                 }
-                else if(trackedSosig.data.controller == H3MP_Client.singleton.ID)
+                else if (trackedSosig.data.controller == H3MP_Client.singleton.ID)
                 {
                     return true;
                 }
@@ -9051,7 +9115,7 @@ namespace H3MP
     }
 
     // Patches TNH_ShatterableCrate to keep track of damage to TNH supply boxes
-    class TNH_ShatterableCrateDamagePatch 
+    class TNH_ShatterableCrateDamagePatch
     {
         public static int skip;
         static H3MP_TrackedItem trackedItem;
@@ -9101,7 +9165,7 @@ namespace H3MP
     }
 
     // Patches TNH_ShatterableCrate.Destroy to keep track of destruction
-    class TNH_ShatterableCrateDestroyPatch 
+    class TNH_ShatterableCrateDestroyPatch
     {
         public static int skip;
         static H3MP_TrackedItem trackedItem;
@@ -9277,7 +9341,7 @@ namespace H3MP
             }
         }
     }
-    
+
     // Patches TNH_EncryptionTarget.Damage to keep track of damage taken by an encryption
     class EncryptionDamagePatch
     {
@@ -9356,7 +9420,7 @@ namespace H3MP
 
         static bool Prefix(ref TNH_EncryptionTarget_SubTarget __instance, Damage d)
         {
-            if(skip > 0)
+            if (skip > 0)
             {
                 return true;
             }
@@ -9405,7 +9469,7 @@ namespace H3MP
 
         static bool Prefix(ref SosigWeapon __instance, Damage d)
         {
-            if(skip > 0)
+            if (skip > 0)
             {
                 return true;
             }
@@ -9440,6 +9504,55 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.SosigWeaponDamage(trackedItem.data.trackedID, d);
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    // Patches RemoteMissile.Damage to keep track of damage taken by a remote missile
+    class RemoteMissileDamagePatch
+    {
+        public static int skip;
+
+        static bool Prefix(RemoteMissileLauncher ___m_launcher, Damage d)
+        {
+            if (skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged RemoteMissile, we want to process the damage
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(___m_launcher, out trackedItem) ? trackedItem : ___m_launcher.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Not in control, we want to send the damage to the controller for them to process it and return the result
+                        H3MP_ServerSend.RemoteMissileDamage(trackedItem.data, d);
+                        return false;
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    H3MP_ClientSend.RemoteMissileDamage(trackedItem.data.trackedID, d);
                     return false;
                 }
             }

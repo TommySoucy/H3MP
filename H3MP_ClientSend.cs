@@ -2145,6 +2145,17 @@ namespace H3MP
             }
         }
 
+        public static void RemoteMissileDamage(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.remoteMissileDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void TNHHoldPointBeginAnalyzing(int instance, List<Vector3> data, float tickDownToID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointBeginAnalyzing))
@@ -2184,6 +2195,17 @@ namespace H3MP
             {
                 packet.Write(trackedID);
                 packet.Write(chart);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void RemoteMissileDetonate(int trackedID, Vector3 pos)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.remoteMissileDetonate))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
 
                 SendTCPData(packet);
             }

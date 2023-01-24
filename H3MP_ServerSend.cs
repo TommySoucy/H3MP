@@ -1893,6 +1893,29 @@ namespace H3MP
             }
         }
 
+        public static void RemoteMissileDamage(H3MP_TrackedItemData trackedItem, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.remoteMissileDamage))
+            {
+                packet.Write(trackedItem.trackedID);
+                packet.Write(d);
+
+                SendTCPData(trackedItem.controller, packet);
+            }
+        }
+
+        public static void RemoteMissileDamage(H3MP_TrackedItemData trackedItem, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.remoteMissileDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(trackedItem.controller, packet);
+        }
+
         public static void SosigWearableDamage(H3MP_TrackedSosigData trackedSosig, int linkIndex, int wearableIndex, Damage d)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigWearableDamage))
@@ -3259,6 +3282,43 @@ namespace H3MP
                 {
                     SendTCPDataToAll(clientID, packet);
                 }
+            }
+        }
+
+        public static void RemoteMissileDetonate(int clientID, int trackedID, Vector3 pos)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.remoteMissileDetonate))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void RemoteMissileDetonate(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.remoteMissileDetonate);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
             }
         }
     }
