@@ -6967,6 +6967,8 @@ namespace H3MP
             }
         }
     }
+
+    TODO: Add simple launcher2 CycleMode patch to prevent it from going into DR mode if not in control
     #endregion
 
     #region Instatiation Patches

@@ -284,6 +284,24 @@ namespace H3MP
                 fireFunc = FireRPG7;
                 setFirearmUpdateOverride = SetRPG7UpdateOverride;
             }
+            else if (physObj is SimpleLauncher)
+            {
+                SimpleLauncher asSimpleLauncher = physObj as SimpleLauncher;
+                updateFunc = UpdateSimpleLauncher;
+                updateGivenFunc = UpdateGivenSimpleLauncher;
+                dataObject = asSimpleLauncher;
+                fireFunc = FireSimpleLauncher;
+                setFirearmUpdateOverride = SetSimpleLauncherUpdateOverride;
+            }
+            else if (physObj is SimpleLauncher2)
+            {
+                SimpleLauncher2 asSimpleLauncher = physObj as SimpleLauncher2;
+                updateFunc = UpdateSimpleLauncher2;
+                updateGivenFunc = UpdateGivenSimpleLauncher2;
+                dataObject = asSimpleLauncher;
+                fireFunc = FireSimpleLauncher2;
+                setFirearmUpdateOverride = SetSimpleLauncher2UpdateOverride;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -359,18 +377,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is SimpleLauncher)
-            {
-                updateFunc = UpdateSimpleLauncher;
-                updateGivenFunc = UpdateGivenSimpleLauncher;
-                dataObject = physObj as SimpleLauncher;
-            }
-            else if (physObj is SimpleLauncher2)
-            {
-                updateFunc = UpdateSimpleLauncher2;
-                updateGivenFunc = UpdateGivenSimpleLauncher2;
-                dataObject = physObj as SimpleLauncher2;
-            }
             else if (physObj is SingleActionRevolver)
             {
                 updateFunc = UpdateSingleActionRevolver;
@@ -410,6 +416,194 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateSimpleLauncher2()
+        {
+            SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[3];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write mode
+            data.data[0] = (byte)(int)asSimpleLauncher.Mode;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+            byte preval0 = data.data[2];
+
+            // Write chambered round class
+            if (asSimpleLauncher.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+            }
+
+            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenSimpleLauncher2(byte[] newData)
+        {
+            bool modified = false;
+            SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set mode
+                asSimpleLauncher.Mode = (SimpleLauncher2.fMode)newData[0];
+                if(asSimpleLauncher.Mode == SimpleLauncher2.fMode.dr)
+                {
+                    // Dont want it to go into DR mode if not in control
+                    asSimpleLauncher.Mode = SimpleLauncher2.fMode.tr;
+                }
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set mode
+                    asSimpleLauncher.Mode = (SimpleLauncher2.fMode)newData[0];
+                    if (asSimpleLauncher.Mode == SimpleLauncher2.fMode.dr)
+                    {
+                        // Dont want it to go into DR mode if not in control
+                        asSimpleLauncher.Mode = SimpleLauncher2.fMode.tr;
+                    }
+                    modified = true;
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asSimpleLauncher.Chamber.GetRound() != null)
+                {
+                    asSimpleLauncher.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireSimpleLauncher2()
+        {
+            SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
+            bool wasOnSA = false;
+            if(asSimpleLauncher.Mode == SimpleLauncher2.fMode.sa)
+            {
+                wasOnSA = true;
+                asSimpleLauncher.Mode = SimpleLauncher2.fMode.tr;
+            }
+            asSimpleLauncher.Fire();
+            if (wasOnSA)
+            {
+                asSimpleLauncher.Mode = SimpleLauncher2.fMode.sa;
+            }
+            return true;
+        }
+
+        private void SetSimpleLauncher2UpdateOverride(FireArmRoundClass roundClass)
+        {
+            SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
+            asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+        }
+        
+        private bool UpdateSimpleLauncher()
+        {
+            SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[2];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+            byte preval0 = data.data[1];
+
+            // Write chambered round class
+            if (asSimpleLauncher.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+            }
+
+            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenSimpleLauncher(byte[] newData)
+        {
+            bool modified = false;
+            SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asSimpleLauncher.Chamber.GetRound() != null)
+                {
+                    asSimpleLauncher.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireSimpleLauncher()
+        {
+            SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
+            asSimpleLauncher.Fire();
+            return true;
+        }
+
+        private void SetSimpleLauncherUpdateOverride(FireArmRoundClass roundClass)
+        {
+            SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
+            asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+        }
+
         private bool UpdateRPG7()
         {
             RPG7 asRPG7 = (RPG7)dataObject;
