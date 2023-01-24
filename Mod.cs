@@ -199,6 +199,7 @@ namespace H3MP
         public static readonly FieldInfo RemoteMissile_tarSpeed = typeof(RemoteMissile).GetField("tarSpeed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo RollingBlock_m_state = typeof(RollingBlock).GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo RPG7_m_isHammerCocked = typeof(RPG7).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo SingleActionRevolver_m_isHammerCocked = typeof(SingleActionRevolver).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -245,6 +246,7 @@ namespace H3MP
         public static readonly MethodInfo Flaregun_Fire = typeof(Flaregun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo RemoteMissileLauncher_FireShot = typeof(RemoteMissileLauncher).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo RollingBlock_Fire = typeof(RollingBlock).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo SingleActionRevolver_Fire = typeof(SingleActionRevolver).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -829,6 +831,22 @@ namespace H3MP
 
             PatchVerify.Verify(fireRevolvingShotgunPatchOriginal, harmony, false);
             harmony.Patch(fireRevolvingShotgunPatchOriginal, new HarmonyMethod(fireRevolvingShotgunPatchPrefix), new HarmonyMethod(fireRevolvingShotgunPatchPostfix));
+
+            // FireRevolverPatch
+            MethodInfo fireRevolverPatchOriginal = typeof(Revolver).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireRevolverPatchPrefix = typeof(FireRevolverPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireRevolverPatchPostfix = typeof(FireRevolverPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(fireRevolverPatchOriginal, harmony, false);
+            harmony.Patch(fireRevolverPatchOriginal, new HarmonyMethod(fireRevolverPatchPrefix), new HarmonyMethod(fireRevolverPatchPostfix));
+
+            // FireSingleActionRevolverPatch
+            MethodInfo fireSingleActionRevolverPatchOriginal = typeof(SingleActionRevolver).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireSingleActionRevolverPatchPrefix = typeof(FireSingleActionRevolverPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireSingleActionRevolverPatchPostfix = typeof(FireSingleActionRevolverPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(fireSingleActionRevolverPatchOriginal, harmony, false);
+            harmony.Patch(fireSingleActionRevolverPatchOriginal, new HarmonyMethod(fireSingleActionRevolverPatchPrefix), new HarmonyMethod(fireSingleActionRevolverPatchPostfix));
 
             // FireGrappleGunPatch
             MethodInfo fireGrappleGunPatchOriginal = typeof(GrappleGun).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[0], null);
@@ -4428,6 +4446,114 @@ namespace H3MP
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
                     H3MP_ClientSend.RevolvingShotgunFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches Revolver.Fire so we can track fire action
+    class FireRevolverPatch
+    {
+        static void Prefix()
+        {
+            ++FirePatch.skipSending;
+        }
+
+        static void Postfix(ref Revolver __instance)
+        {
+            --FirePatch.skipSending;
+            --Mod.skipAllInstantiates;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.RevolverFire(0, trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.RevolverFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches SingleActionRevolver.Fire so we can track fire action
+    class FireSingleActionRevolverPatch
+    {
+        static void Prefix()
+        {
+            ++FirePatch.skipSending;
+        }
+
+        static void Postfix(ref SingleActionRevolver __instance)
+        {
+            --FirePatch.skipSending;
+            --Mod.skipAllInstantiates;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance) ? H3MP_GameManager.trackedItemByItem[__instance] : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.SingleActionRevolverFire(0, trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.SingleActionRevolverFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
                 }
             }
 

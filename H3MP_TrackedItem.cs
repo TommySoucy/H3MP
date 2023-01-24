@@ -147,8 +147,13 @@ namespace H3MP
                 updateFunc = UpdateRevolver;
                 updateGivenFunc = UpdateGivenRevolver;
                 dataObject = asRevolver;
-                fireFunc = FireRevolver;
-                setFirearmUpdateOverride = SetRevolverUpdateOverride;
+            }
+            else if (physObj is SingleActionRevolver)
+            {
+                SingleActionRevolver asSAR = (SingleActionRevolver)physObj;
+                updateFunc = UpdateSingleActionRevolver;
+                updateGivenFunc = UpdateGivenSingleActionRevolver;
+                dataObject = asSAR;
             }
             else if (physObj is RevolvingShotgun)
             {
@@ -377,12 +382,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is SingleActionRevolver)
-            {
-                updateFunc = UpdateSingleActionRevolver;
-                updateGivenFunc = UpdateGivenSingleActionRevolver;
-                dataObject = physObj as SingleActionRevolver;
-            }
             else if (physObj is StingerLauncher)
             {
                 updateFunc = UpdateStingerLauncher;
@@ -416,6 +415,116 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateSingleActionRevolver()
+        {
+            SingleActionRevolver asRevolver = dataObject as SingleActionRevolver;
+            bool modified = false;
+
+            int necessarySize = asRevolver.Cylinder.NumChambers * 2 + 2;
+
+            if (data.data == null)
+            {
+                data.data = new byte[necessarySize];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+
+            // Write cur chamber
+            data.data[0] = (byte)asRevolver.CurChamber;
+
+            modified |= preval0 != data.data[0];
+
+            preval0 = data.data[1];
+
+            // Write hammer cocked
+            data.data[1] = (bool)Mod.SingleActionRevolver_m_isHammerCocked.GetValue(asRevolver) ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[1];
+
+            // Write chambered rounds
+            byte preval1;
+            for (int i = 0; i < asRevolver.Cylinder.Chambers.Length; ++i)
+            {
+                int firstIndex = i * 2 + 2;
+                preval0 = data.data[firstIndex];
+                preval1 = data.data[firstIndex + 1];
+
+                if (asRevolver.Cylinder.Chambers[i].GetRound() == null)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)asRevolver.Cylinder.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                }
+
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenSingleActionRevolver(byte[] newData)
+        {
+            bool modified = false;
+            SingleActionRevolver asRevolver = dataObject as SingleActionRevolver;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set cur chamber
+                asRevolver.CurChamber = newData[0];
+
+                // Set hammer cocked
+                Mod.SingleActionRevolver_m_isHammerCocked.SetValue(asRevolver, newData[1] == 1);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set cur chamber
+                    asRevolver.CurChamber = newData[0];
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set hammer cocked
+                    Mod.SingleActionRevolver_m_isHammerCocked.SetValue(asRevolver, newData[1] == 1);
+                    modified = true;
+                }
+            }
+
+            // Set chambers
+            for (int i = 0; i < asRevolver.Cylinder.Chambers.Length; ++i)
+            {
+                int firstIndex = i * 2 + 2;
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (asRevolver.Cylinder.Chambers[i].GetRound() != null)
+                    {
+                        asRevolver.Cylinder.Chambers[i].SetRound(null, false);
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asRevolver.Cylinder.Chambers[i].GetRound() == null || asRevolver.Cylinder.Chambers[i].GetRound().RoundClass != roundClass)
+                    {
+                        asRevolver.Cylinder.Chambers[i].SetRound(roundClass, asRevolver.Cylinder.Chambers[i].transform.position, asRevolver.Cylinder.Chambers[i].transform.rotation);
+                        modified = true;
+                    }
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateSimpleLauncher2()
         {
             SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
@@ -2645,34 +2754,6 @@ namespace H3MP
             data.data = newData;
 
             return modified;
-        }
-
-        private bool FireRevolver()
-        {
-            Revolver asRevolver = dataObject as Revolver;
-            int num2 = data.data[0] + asRevolver.ChamberOffset;
-            if (num2 >= asRevolver.Cylinder.numChambers)
-            {
-                num2 -= asRevolver.Cylinder.numChambers;
-            }
-            Mod.Revolver_Fire.Invoke(dataObject, null);
-            if (GM.CurrentSceneSettings.IsAmmoInfinite || GM.CurrentPlayerBody.IsInfiniteAmmo)
-            {
-                asRevolver.Chambers[num2].IsSpent = false;
-                asRevolver.Chambers[num2].UpdateProxyDisplay();
-            }
-            return true;
-        }
-
-        private void SetRevolverUpdateOverride(FireArmRoundClass roundClass)
-        {
-            Revolver asRevolver = dataObject as Revolver;
-            int num2 = data.data[0] + asRevolver.ChamberOffset;
-            if (num2 >= asRevolver.Cylinder.numChambers)
-            {
-                num2 -= asRevolver.Cylinder.numChambers;
-            }
-            asRevolver.Chambers[num2].SetRound(roundClass, asRevolver.Chambers[num2].transform.position, asRevolver.Chambers[num2].transform.rotation);
         }
 
         private bool UpdateM203()

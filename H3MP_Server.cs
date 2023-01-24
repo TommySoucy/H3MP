@@ -555,6 +555,8 @@ namespace H3MP
                 H3MP_ServerHandle.HCBReleaseSled,
                 H3MP_ServerHandle.RemoteMissileDetonate,
                 H3MP_ServerHandle.RemoteMissileDamage,
+                H3MP_ServerHandle.RevolverFire,
+                H3MP_ServerHandle.SingleActionRevolverFire,
             };
 
             items = new H3MP_TrackedItemData[100];

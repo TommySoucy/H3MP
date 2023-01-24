@@ -429,6 +429,8 @@ namespace H3MP
                 H3MP_ClientHandle.HCBReleaseSled,
                 H3MP_ClientHandle.RemoteMissileDetonate,
                 H3MP_ClientHandle.RemoteMissileDamage,
+                H3MP_ClientHandle.RevolverFire,
+                H3MP_ClientHandle.SingleActionRevolverFire,
             };
 
             // All vanilla scenes can be synced by default

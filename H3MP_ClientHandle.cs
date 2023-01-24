@@ -636,6 +636,72 @@ namespace H3MP
             }
         }
 
+        public static void RevolverFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                int curChamber = packet.ReadByte();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                Revolver asRevolver = H3MP_Client.items[trackedID].physicalItem.physicalObject as Revolver;
+                bool changedOffset = false;
+                int oldOffset = 0;
+                if (asRevolver.ChamberOffset != 0)
+                {
+                    changedOffset = true;
+                    oldOffset = asRevolver.ChamberOffset;
+                    asRevolver.ChamberOffset = 0;
+                }
+                asRevolver.CurChamber = curChamber;
+                asRevolver.Chambers[curChamber].SetRound(roundClass, asRevolver.Chambers[curChamber].transform.position, asRevolver.Chambers[curChamber].transform.rotation);
+                if (changedOffset)
+                {
+                    asRevolver.ChamberOffset = oldOffset;
+                }
+                Mod.Revolver_Fire.Invoke(asRevolver, null);
+            }
+        }
+
+        public static void SingleActionRevolverFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                int curChamber = packet.ReadByte();
+                FirePatch.positions = new List<Vector3>();
+                FirePatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FirePatch.positions.Add(packet.ReadVector3());
+                    FirePatch.directions.Add(packet.ReadVector3());
+                }
+                FirePatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                SingleActionRevolver asRevolver = H3MP_Client.items[trackedID].physicalItem.physicalObject as SingleActionRevolver;
+                asRevolver.CurChamber = curChamber;
+                asRevolver.Cylinder.Chambers[curChamber].SetRound(roundClass, asRevolver.Cylinder.Chambers[curChamber].transform.position, asRevolver.Cylinder.Chambers[curChamber].transform.rotation);
+                Mod.Revolver_Fire.Invoke(asRevolver, null);
+            }
+        }
+
         public static void GrappleGunFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
