@@ -356,7 +356,8 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadMultiply))
                 {
-                    File.Copy("BepInEx/Plugins/H3MP/PatchHashes.json", "BepInEx/Plugins/H3MP/PatchHashes_(" + DateTimeOffset.Now.ToString() + ").json");
+                    string dest = "BepInEx/Plugins/H3MP/PatchHashes" + DateTimeOffset.Now.ToString().Replace("/", ".").Replace(":", ".") + ".json";
+                    File.Copy("BepInEx/Plugins/H3MP/PatchHashes.json", dest);
                     Debug.LogWarning("Writing new hashes to file!");
                     File.WriteAllText("BepInEx/Plugins/H3MP/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
                 }
@@ -2570,10 +2571,7 @@ namespace H3MP
         static Type ILManipulatorType;
         static MethodInfo getInstructionsMethod;
 
-        static bool breaking;
-        static string identifier;
         public static Dictionary<string, int> hashes;
-        public static Dictionary<string, bool> verified = new Dictionary<string, bool>();
         public static bool writeWhenDone;
 
         public static void Verify(MethodInfo methodInfo, Harmony harmony, bool breaking)
@@ -2597,8 +2595,7 @@ namespace H3MP
                 getInstructionsMethod = ILManipulatorType.GetMethod("GetInstructions", BindingFlags.Public | BindingFlags.Instance);
             }
 
-            PatchVerify.breaking = breaking;
-            identifier = methodInfo.DeclaringType.Name + "." + methodInfo.Name + GetParamArrHash(methodInfo.GetParameters()).ToString();
+            string identifier = methodInfo.DeclaringType.Name + "." + methodInfo.Name + GetParamArrHash(methodInfo.GetParameters()).ToString();
 
             // Get IL instructions of the method
             ILGenerator generator = PatchProcessor.CreateILGenerator(methodInfo);
@@ -2623,24 +2620,24 @@ namespace H3MP
                 {
                     if (breaking)
                     {
-                        Debug.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.");
+                        Debug.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.\nOriginal hash: "+originalHash+", new hash: "+hash);
                     }
                     else
                     {
-                        Debug.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.");
+                        Debug.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
                     }
+
+                    hashes[identifier] = hash;
                 }
             }
             else
             {
-
                 hashes.Add(identifier, hash);
                 if (!writeWhenDone)
                 {
                     Debug.LogWarning("PatchVerify: " + identifier + " not found in hashes. Most probably a new patch. This warning will remain until new hash file is written.");
                 }
             }
-            //harmony.Patch(methodInfo, null, null, new HarmonyMethod(typeof(PatchVerify).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static)));
         }
 
         static int GetParamArrHash(ParameterInfo[] paramArr)
@@ -2651,25 +2648,6 @@ namespace H3MP
                 hash += t.ParameterType.Name.GetHashCode();
             }
             return hash;
-        }
-
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
-
-            // NOTE: This transpiler will get called multiple times,
-            //       Harmony obviously does not necessarily support having multiple transpilers patching a single method because they would interfere with each other
-            //       Thing is, this transpiler does not modify the original code, so a sencond transpiler will not be interfered with
-            //       This gets called first when we call verify on the original method, and a second time when we actually patch the method
-            //       In conclusion, we have to handle this being called multiple times, hence the verified dict.
-            if (verified.ContainsKey(identifier))
-            {
-                return instructionList;
-            }
-
-            verified.Add(identifier, true);
-
-            return instructionList;
         }
     }
 
