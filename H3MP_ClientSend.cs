@@ -853,6 +853,19 @@ namespace H3MP
             }
         }
 
+        public static void StingerLauncherFire(int trackedID, Vector3 targetPos, Vector3 position, Vector3 direction)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.stingerLauncherFire))
+            {
+                packet.Write(trackedID);
+                packet.Write(targetPos);
+                packet.Write(position);
+                packet.Write(direction);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void SosigWeaponFire(int trackedID, float recoilMult, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigWeaponFire))
@@ -2206,6 +2219,17 @@ namespace H3MP
             }
         }
 
+        public static void StingerMissileDamage(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.stingerMissileDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void TNHHoldPointBeginAnalyzing(int instance, List<Vector3> data, float tickDownToID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldPointBeginAnalyzing))
@@ -2253,6 +2277,17 @@ namespace H3MP
         public static void RemoteMissileDetonate(int trackedID, Vector3 pos)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.remoteMissileDetonate))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void StingerMissileExplode(int trackedID, Vector3 pos)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.stingerMissileExplode))
             {
                 packet.Write(trackedID);
                 packet.Write(pos);

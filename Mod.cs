@@ -17,6 +17,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using static FistVR.FlintlockBarrel;
+using static UnityEngine.EventSystems.EventTrigger;
 using static Valve.VR.SteamVR_ExternalCamera;
 
 namespace H3MP
@@ -200,6 +201,7 @@ namespace H3MP
         public static readonly FieldInfo RollingBlock_m_state = typeof(RollingBlock).GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo RPG7_m_isHammerCocked = typeof(RPG7).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SingleActionRevolver_m_isHammerCocked = typeof(SingleActionRevolver).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo StingerLauncher_m_hasMissile = typeof(StingerLauncher).GetField("m_hasMissile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -247,6 +249,7 @@ namespace H3MP
         public static readonly MethodInfo RemoteMissileLauncher_FireShot = typeof(RemoteMissileLauncher).GetMethod("FireShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo RollingBlock_Fire = typeof(RollingBlock).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo SingleActionRevolver_Fire = typeof(SingleActionRevolver).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo StingerMissile_Explode = typeof(StingerMissile).GetMethod("Explode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Debug
         bool debug;
@@ -730,6 +733,19 @@ namespace H3MP
             harmony.Patch(fireFlintlockWeaponPatchBurnOffOuterOriginal, new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPrefix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPostfix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterTranspiler));
             harmony.Patch(fireFlintlockWeaponFireOriginal, new HarmonyMethod(fireFlintlockWeaponFirePrefix), new HarmonyMethod(fireFlintlockWeaponFirePostfix), new HarmonyMethod(fireFlintlockWeaponFireTranspiler));
 
+            // FireStingerLauncherPatch
+            MethodInfo fireStingerLauncherOriginal = typeof(StingerLauncher).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireStingerLauncherPrefix = typeof(FireStingerLauncherPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireStingerLauncherTranspiler = typeof(FireStingerLauncherPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireStingerLauncherPostfix = typeof(FireStingerLauncherPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireStingerMissileOriginal = typeof(StingerMissile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireStingerMissilePrefix = typeof(FireStingerLauncherPatch).GetMethod("MissileFirePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(fireStingerLauncherOriginal, harmony, false);
+            PatchVerify.Verify(fireStingerMissileOriginal, harmony, false);
+            harmony.Patch(fireStingerLauncherOriginal, new HarmonyMethod(fireStingerLauncherPrefix), new HarmonyMethod(fireStingerLauncherPostfix), new HarmonyMethod(fireStingerLauncherTranspiler));
+            harmony.Patch(fireStingerMissileOriginal, new HarmonyMethod(fireStingerMissilePrefix));
+
             // FireSosigWeaponPatch
             MethodInfo fireSosigWeaponPatchOriginal = typeof(SosigWeapon).GetMethod("FireGun", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo fireSosigWeaponPatchPrefix = typeof(FireSosigWeaponPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -870,6 +886,13 @@ namespace H3MP
 
             PatchVerify.Verify(remoteMissileDetonatePatchOriginal, harmony, false);
             harmony.Patch(remoteMissileDetonatePatchOriginal, new HarmonyMethod(remoteMissileDetonatePatchPrefix));
+
+            // StingerMissileExplodePatch
+            MethodInfo stingerMissileExplodePatchOriginal = typeof(StingerMissile).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo stingerMissileExplodePatchPrefix = typeof(StingerMissileExplodePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(stingerMissileExplodePatchOriginal, harmony, false);
+            harmony.Patch(stingerMissileExplodePatchOriginal, new HarmonyMethod(stingerMissileExplodePatchPrefix));
 
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
@@ -1430,6 +1453,13 @@ namespace H3MP
 
             PatchVerify.Verify(remoteMissileDamagePatchOriginal, harmony, false);
             harmony.Patch(remoteMissileDamagePatchOriginal, new HarmonyMethod(remoteMissileDamagePatchPrefix));
+
+            // StingerMissileDamagePatch
+            MethodInfo stingerMissileDamagePatchOriginal = typeof(StingerMissile).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo stingerMissileDamagePatchPrefix = typeof(StingerMissileDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(stingerMissileDamagePatchOriginal, harmony, false);
+            harmony.Patch(stingerMissileDamagePatchOriginal, new HarmonyMethod(stingerMissileDamagePatchPrefix));
 
             // SosigWeaponShatterPatch
             MethodInfo sosigWeaponShatterPatchOriginal = typeof(SosigWeapon).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -3480,7 +3510,7 @@ namespace H3MP
             {
                 if (directions != null && directions.Count > index)
                 {
-                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
                     return directions[index];
                 }
                 else
@@ -3684,7 +3714,7 @@ namespace H3MP
             {
                 if (directions != null && directions.Count > index)
                 {
-                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
                     return directions[index];
                 }
                 else
@@ -3911,7 +3941,7 @@ namespace H3MP
             {
                 if (directions != null && directions.Count > index)
                 {
-                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
                     return directions[index];
                 }
                 else
@@ -4111,7 +4141,7 @@ namespace H3MP
             {
                 if (directions != null && directions.Count > index)
                 {
-                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
                     return directions[index];
                 }
                 else
@@ -4289,7 +4319,7 @@ namespace H3MP
             {
                 if (directions != null && directions.Count > index)
                 {
-                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
                     return directions[index];
                 }
                 else
@@ -4368,12 +4398,16 @@ namespace H3MP
             if (Mod.skipNextFires > 0)
             {
                 --Mod.skipNextFires;
+                positions = null;
+                directions = null;
                 return;
             }
 
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
+                positions = null;
+                directions = null;
                 return;
             }
 
@@ -4971,7 +5005,7 @@ namespace H3MP
             {
                 if (directions != null && directions.Count > index)
                 {
-                    gameObject.transform.rotation = Quaternion.LookRotation(direction);
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
                     return directions[index];
                 }
                 else
@@ -5339,6 +5373,158 @@ namespace H3MP
         }
     }
 
+    // Patches StingerLauncher.Fire so we can keep track of fire event
+    class FireStingerLauncherPatch
+    {
+        public static bool overriden;
+        public static Vector3 targetPos;
+        public static Vector3 position;
+        public static Vector3 direction;
+        static H3MP_TrackedItem trackedItem;
+        public static int skip;
+
+        static void Prefix(ref StingerLauncher __instance, AIEntity ___m_targetEntity)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+
+            trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out H3MP_TrackedItem item) ? item : __instance.GetComponent<H3MP_TrackedItem>();
+
+            if (___m_targetEntity != null)
+            {
+                targetPos = ___m_targetEntity.transform.position;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To set missle ref in trackedItem
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load StingerMissile
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "SetStingerMissile"))); // Call our SetStingerMissile method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                    continue;
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_rotation"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert1);
+                    continue;
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Fire"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert2);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SetStingerMissile(StingerMissile missile)
+        {
+            if (trackedItem != null)
+            {
+                trackedItem.stingerMissile = missile;
+                H3MP_StingerReference reference = missile.gameObject.AddComponent<H3MP_StingerReference>();
+                reference.launcher = trackedItem;
+            }
+        }
+
+        public static Vector3 GetPosition(Vector3 position)
+        {
+            if (overriden)
+            {
+                return FireStingerLauncherPatch.position;
+            }
+            else
+            {
+                FireStingerLauncherPatch.position = position;
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                gameObject.transform.rotation = Quaternion.LookRotation(FireStingerLauncherPatch.direction);
+                return FireStingerLauncherPatch.direction;
+            }
+            else
+            {
+                FireStingerLauncherPatch.direction = direction;
+                return direction;
+            }
+        }
+
+        static void Postfix()
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        H3MP_ServerSend.StingerLauncherFire(0, trackedItem.data.trackedID, targetPos, position, direction);
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    H3MP_ClientSend.StingerLauncherFire(trackedItem.data.trackedID, targetPos, position, direction);
+                }
+            }
+        }
+
+        static bool MissileFirePrefix(StingerMissile __instance)
+        {
+            if(Mod.managerObject != null && overriden)
+            {
+                __instance.Fire(targetPos, 12);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    // Patches RemoteMissile.Detonante to keep track of the event and prevent it on non controlling clients
     class RemoteMissileDetonatePatch
     {
         public static bool overriden;
@@ -5363,6 +5549,52 @@ namespace H3MP
                     else
                     {
                         H3MP_ClientSend.RemoteMissileDetonate(trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                }
+                else
+                {
+                    // In the case in which we do not control the launcher, we do not want to detonate if it wasn't an order from the controller
+                    if (overriden)
+                    {
+                        overriden = false;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches StingerMissile.Explode to keep track of the event and prevent it on non controlling clients
+    class StingerMissileExplodePatch
+    {
+        public static bool overriden;
+
+        static bool Prefix(StingerMissile __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_StingerReference>().launcher;
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.controller == H3MP_GameManager.ID)
+                {
+                    // Send to other clients
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.StingerMissileExplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.StingerMissileExplode(trackedItem.data.trackedID, __instance.transform.position);
                     }
                 }
                 else
@@ -9724,6 +9956,55 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.RemoteMissileDamage(trackedItem.data.trackedID, d);
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    // Patches StingerMissile.Damage to keep track of damage taken by a stinger missile
+    class StingerMissileDamagePatch
+    {
+        public static int skip;
+
+        static bool Prefix(StingerMissile __instance, Damage d)
+        {
+            if (skip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control of the damaged StingerMissile, we want to process the damage
+            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_StingerReference>().launcher;
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // Not in control, we want to send the damage to the controller for them to process it and return the result
+                        H3MP_ServerSend.StingerMissileDamage(trackedItem.data, d);
+                        return false;
+                    }
+                }
+                else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    H3MP_ClientSend.StingerMissileDamage(trackedItem.data.trackedID, d);
                     return false;
                 }
             }

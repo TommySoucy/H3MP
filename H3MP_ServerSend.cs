@@ -1358,6 +1358,45 @@ namespace H3MP
             }
         }
 
+        public static void StingerLauncherFire(int clientID, int trackedID, Vector3 targetPos, Vector3 position, Vector3 direction)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.stingerLauncherFire))
+            {
+                packet.Write(trackedID);
+                packet.Write(targetPos);
+                packet.Write(position);
+                packet.Write(direction);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void StingerLauncherFire(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.stingerLauncherFire);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
         public static void GrappleGunFire(int clientID, int trackedID, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.grappleGunFire))
@@ -2009,6 +2048,29 @@ namespace H3MP
         public static void RemoteMissileDamage(H3MP_TrackedItemData trackedItem, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.remoteMissileDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(trackedItem.controller, packet);
+        }
+
+        public static void StingerMissileDamage(H3MP_TrackedItemData trackedItem, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.stingerMissileDamage))
+            {
+                packet.Write(trackedItem.trackedID);
+                packet.Write(d);
+
+                SendTCPData(trackedItem.controller, packet);
+            }
+        }
+
+        public static void StingerMissileDamage(H3MP_TrackedItemData trackedItem, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.stingerMissileDamage);
             for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
@@ -3408,6 +3470,43 @@ namespace H3MP
         public static void RemoteMissileDetonate(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.remoteMissileDetonate);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void StingerMissileExplode(int clientID, int trackedID, Vector3 pos)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.stingerMissileExplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void StingerMissileExplode(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.stingerMissileExplode);
             for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];

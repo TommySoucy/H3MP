@@ -44,6 +44,9 @@ namespace H3MP
         public UnityEngine.Object dataObject;
         public FVRPhysicalObject physicalObject;
 
+        // StingerLauncher specific
+        public StingerMissile stingerMissile;
+
         public bool sendDestroy = true; // To prevent feeback loops
         public static int skipDestroy;
 
@@ -262,6 +265,12 @@ namespace H3MP
                 fireFunc = FireRemoteMissileLauncher;
                 setFirearmUpdateOverride = SetRemoteMissileLauncherUpdateOverride;
             }
+            else if (physObj is StingerLauncher)
+            {
+                updateFunc = UpdateStingerLauncher;
+                updateGivenFunc = UpdateGivenStingerLauncher;
+                dataObject = physObj as StingerLauncher;
+            }
             else if (physObj is RGM40)
             {
                 RGM40 asRGM40 = physObj as RGM40;
@@ -382,12 +391,6 @@ namespace H3MP
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
             /* TODO: All other type of firearms below
-            else if (physObj is StingerLauncher)
-            {
-                updateFunc = UpdateStingerLauncher;
-                updateGivenFunc = UpdateGivenStingerLauncher;
-                dataObject = physObj as StingerLauncher;
-            }
             else if (physObj is MF2_RL)
             {
                 updateFunc = UpdateMF2_RL;
@@ -415,6 +418,54 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateStingerLauncher()
+        {
+            StingerLauncher asSL = dataObject as StingerLauncher;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[1];
+                modified = true;
+            }
+
+            byte preval0 = data.data[0];
+
+            // Write has missile
+            data.data[0] = (bool)Mod.StingerLauncher_m_hasMissile.GetValue(asSL) ? (byte)1 : (byte)0;
+
+            modified |= preval0 != data.data[0];
+
+            return modified;
+        }
+
+        private bool UpdateGivenStingerLauncher(byte[] newData)
+        {
+            bool modified = false;
+            StingerLauncher asSL = dataObject as StingerLauncher;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set has missile
+                Mod.StingerLauncher_m_hasMissile.SetValue(asSL, newData[0] == 1);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set has missile
+                    Mod.StingerLauncher_m_hasMissile.SetValue(asSL, newData[0] == 1);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateSingleActionRevolver()
         {
             SingleActionRevolver asRevolver = dataObject as SingleActionRevolver;

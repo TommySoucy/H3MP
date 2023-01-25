@@ -557,6 +557,9 @@ namespace H3MP
                 H3MP_ServerHandle.RemoteMissileDamage,
                 H3MP_ServerHandle.RevolverFire,
                 H3MP_ServerHandle.SingleActionRevolverFire,
+                H3MP_ServerHandle.StingerLauncherFire,
+                H3MP_ServerHandle.StingerMissileDamage,
+                H3MP_ServerHandle.StingerMissileExplode,
             };
 
             items = new H3MP_TrackedItemData[100];

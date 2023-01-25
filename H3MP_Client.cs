@@ -431,6 +431,9 @@ namespace H3MP
                 H3MP_ClientHandle.RemoteMissileDamage,
                 H3MP_ClientHandle.RevolverFire,
                 H3MP_ClientHandle.SingleActionRevolverFire,
+                H3MP_ClientHandle.StingerLauncherFire,
+                H3MP_ClientHandle.StingerMissileDamage,
+                H3MP_ClientHandle.StingerMissileExplode,
             };
 
             // All vanilla scenes can be synced by default

@@ -702,6 +702,26 @@ namespace H3MP
             }
         }
 
+        public static void StingerLauncherFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                FireStingerLauncherPatch.targetPos = packet.ReadVector3();
+                FireStingerLauncherPatch.position = packet.ReadVector3();
+                FireStingerLauncherPatch.direction = packet.ReadVector3();
+                FireStingerLauncherPatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++FireStingerLauncherPatch.skip;
+                StingerLauncher asStingerLauncher = H3MP_Client.items[trackedID].physicalItem.physicalObject as StingerLauncher;
+                Mod.StingerLauncher_m_hasMissile.SetValue(asStingerLauncher, true);
+                asStingerLauncher.Fire();
+                --FireStingerLauncherPatch.skip;
+            }
+        }
+
         public static void GrappleGunFire(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -1361,6 +1381,29 @@ namespace H3MP
                             ++RemoteMissileDamagePatch.skip;
                             (remoteMissile as RemoteMissile).Damage(packet.ReadDamage());
                             --RemoteMissileDamagePatch.skip;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void StingerMissileDamage(H3MP_Packet packet)
+        {
+            int SLTrackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData trackedItem = H3MP_Client.items[SLTrackedID];
+            if (trackedItem != null)
+            {
+                if (trackedItem.controller == H3MP_GameManager.ID)
+                {
+                    if (trackedItem.physicalItem != null)
+                    {
+                        StingerMissile missile = trackedItem.physicalItem.stingerMissile;
+                        if (missile != null)
+                        {
+                            ++StingerMissileDamagePatch.skip;
+                            missile.Damage(packet.ReadDamage());
+                            --StingerMissileDamagePatch.skip;
                         }
                     }
                 }
@@ -2675,6 +2718,25 @@ namespace H3MP
                         RemoteMissileDetonatePatch.overriden = true;
                         actualMissile.transform.position = packet.ReadVector3();
                         actualMissile.Detonante();
+                    }
+                }
+            }
+        }
+
+        public static void StingerMissileExplode(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                // Update local;
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    StingerMissile missile = H3MP_Client.items[trackedID].physicalItem.stingerMissile;
+                    if (missile != null)
+                    {
+                        StingerMissileExplodePatch.overriden = true;
+                        missile.transform.position = packet.ReadVector3();
+                        Mod.StingerMissile_Explode.Invoke(missile, null);
                     }
                 }
             }
