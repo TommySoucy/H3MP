@@ -316,6 +316,15 @@ namespace H3MP
                 fireFunc = FireSimpleLauncher2;
                 setFirearmUpdateOverride = SetSimpleLauncher2UpdateOverride;
             }
+            else if (physObj is MF2_RL)
+            {
+                MF2_RL asMF2_RL = physObj as MF2_RL;
+                updateFunc = UpdateMF2_RL;
+                updateGivenFunc = UpdateGivenMF2_RL;
+                dataObject = asMF2_RL;
+                fireFunc = FireMF2_RL;
+                setFirearmUpdateOverride = SetMF2_RLUpdateOverride;
+            }
             else if (physObj is LAPD2019)
             {
                 updateFunc = UpdateLAPD2019;
@@ -390,14 +399,6 @@ namespace H3MP
                 dataObject = asInterface;
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
-            /* TODO: All other type of firearms below
-            else if (physObj is MF2_RL)
-            {
-                updateFunc = UpdateMF2_RL;
-                updateGivenFunc = UpdateGivenMF2_RL;
-                dataObject = physObj as MF2_RL;
-            }
-            */
         }
 
         public bool UpdateItemData(byte[] newData = null)
@@ -418,6 +419,79 @@ namespace H3MP
         }
 
         #region Type Updates
+
+        private bool UpdateMF2_RL()
+        {
+            MF2_RL asMF2_RL = (MF2_RL)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[2];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+            byte preval0 = data.data[1];
+
+            // Write chambered round class
+            if (asMF2_RL.Chamber.GetRound() == null)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asMF2_RL.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+            }
+
+            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenMF2_RL(byte[] newData)
+        {
+            bool modified = false;
+            MF2_RL asMF2_RL = (MF2_RL)dataObject;
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asMF2_RL.Chamber.GetRound() != null)
+                {
+                    asMF2_RL.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asMF2_RL.Chamber.GetRound() == null || asMF2_RL.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asMF2_RL.Chamber.SetRound(roundClass, asMF2_RL.Chamber.transform.position, asMF2_RL.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireMF2_RL()
+        {
+            MF2_RL asMF2_RL = (MF2_RL)dataObject;
+            asMF2_RL.Fire();
+            return true;
+        }
+
+        private void SetMF2_RLUpdateOverride(FireArmRoundClass roundClass)
+        {
+            MF2_RL asMF2_RL = (MF2_RL)dataObject;
+            asMF2_RL.Chamber.SetRound(roundClass, asMF2_RL.Chamber.transform.position, asMF2_RL.Chamber.transform.rotation);
+        }
+
         private bool UpdateStingerLauncher()
         {
             StingerLauncher asSL = dataObject as StingerLauncher;
