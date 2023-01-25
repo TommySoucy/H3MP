@@ -76,6 +76,7 @@ namespace H3MP
         //      to keep a ref to the object itself and set delegate update functions
         private void InitItemType()
         {
+            Debug.Log("inititemtype called on " + gameObject.name);
             FVRPhysicalObject physObj = GetComponent<FVRPhysicalObject>();
 
             // For each relevant type for which we may want to store additional data, we set a specific update function and the object ref
@@ -110,7 +111,7 @@ namespace H3MP
             }
             else if (physObj is OpenBoltReceiver)
             {
-                ClosedBoltWeapon asOBR = (ClosedBoltWeapon)physObj;
+                OpenBoltReceiver asOBR = (OpenBoltReceiver)physObj;
                 updateFunc = UpdateOpenBoltReceiver;
                 updateGivenFunc = UpdateGivenOpenBoltReceiver;
                 dataObject = asOBR;

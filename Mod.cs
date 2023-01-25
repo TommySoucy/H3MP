@@ -3402,7 +3402,6 @@ namespace H3MP
     #endregion
 
     #region Action Patches
-    // Patches FVRFireArm.Fire so we can keep track of when a firearm is fired
     // Note: All projectile fire patches are necessary for 2 things: synchronizing fire action,
     //       and making sure that the shot is in same position/direction on all clients
     //       Synchronizing the action is simple, it is the pos/dir that requires transpilers and make these so complex
@@ -3422,6 +3421,7 @@ namespace H3MP
      * RonchWeapon.Fire // Considering ronch is an enemy type, we will probably have to make it into its own sync object type with its own lists
      * DodecaLauncher // Uses dodeca missiles
      */
+    // Patches FVRFireArm.Fire so we can keep track of when a firearm is fired
     class FirePatch
     {
         public static int skipSending;
@@ -7373,6 +7373,7 @@ namespace H3MP
             return true;
         }
     }
+
     #endregion
 
     #region Instatiation Patches
