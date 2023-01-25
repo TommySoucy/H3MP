@@ -419,7 +419,6 @@ namespace H3MP
         }
 
         #region Type Updates
-
         private bool UpdateMF2_RL()
         {
             MF2_RL asMF2_RL = (MF2_RL)dataObject;

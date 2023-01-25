@@ -1,24 +1,18 @@
 ﻿using BepInEx;
-using ErosionBrushPlugin;
 using FistVR;
 using HarmonyLib;
+using HarmonyLib.Public.Patching;
 using System;
-using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Security.Policy;
 using UnityEngine;
-using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
-using static FistVR.FlintlockBarrel;
-using static UnityEngine.EventSystems.EventTrigger;
-using static Valve.VR.SteamVR_ExternalCamera;
 
 namespace H3MP
 {
@@ -637,6 +631,12 @@ namespace H3MP
         {
             var harmony = new HarmonyLib.Harmony("VIP.TommySoucy.H3MP");
 
+            // First patch harmony itself to be able to extract IL code from methods without having to use a transpiler
+            //PatchVerify.writeToMethod = typeof(Harmony).Assembly.GetType("ILManipulator").GetMethod("WriteTo", BindingFlags.Public | BindingFlags.Instance);
+            //MethodInfo applyTranspilersOriginal = typeof(Harmony).Assembly.GetType("ILManipulator").GetMethod("ApplyTranspilers", BindingFlags.NonPublic | BindingFlags.Instance);
+            //MethodInfo applyTranspilersPostfix = typeof(PatchVerify).GetMethod("ApplyTranspilersPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            //harmony.Patch(applyTranspilersOriginal, new HarmonyMethod(applyTranspilersPostfix));
+
             // LoadLevelBeginPatch
             MethodInfo loadLevelBeginPatchOriginal = typeof(SteamVR_LoadLevel).GetMethod("Begin", BindingFlags.Public | BindingFlags.Static);
             MethodInfo loadLevelBeginPatchPrefix = typeof(LoadLevelBeginPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -734,11 +734,11 @@ namespace H3MP
             harmony.Patch(fireFlintlockWeaponFireOriginal, new HarmonyMethod(fireFlintlockWeaponFirePrefix), new HarmonyMethod(fireFlintlockWeaponFirePostfix), new HarmonyMethod(fireFlintlockWeaponFireTranspiler));
 
             // FireStingerLauncherPatch
-            MethodInfo fireStingerLauncherOriginal = typeof(StingerLauncher).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireStingerLauncherOriginal = typeof(StingerLauncher).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { }, null);
             MethodInfo fireStingerLauncherPrefix = typeof(FireStingerLauncherPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireStingerLauncherTranspiler = typeof(FireStingerLauncherPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireStingerLauncherPostfix = typeof(FireStingerLauncherPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireStingerMissileOriginal = typeof(StingerMissile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireStingerMissileOriginal = typeof(StingerMissile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(AIEntity) }, null);
             MethodInfo fireStingerMissilePrefix = typeof(FireStingerLauncherPatch).GetMethod("MissileFirePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(fireStingerLauncherOriginal, harmony, false);
@@ -2567,9 +2567,13 @@ namespace H3MP
     // Used to verify integrity of other patches by checking if there were any changes to the original methods
     class PatchVerify
     {
+        static Type ILManipulatorType;
+        static MethodInfo getInstructionsMethod;
+
         static bool breaking;
         static string identifier;
         public static Dictionary<string, int> hashes;
+        public static Dictionary<string, bool> verified = new Dictionary<string, bool>();
         public static bool writeWhenDone;
 
         public static void Verify(MethodInfo methodInfo, Harmony harmony, bool breaking)
@@ -2587,10 +2591,56 @@ namespace H3MP
                 }
             }
 
+            if (ILManipulatorType == null)
+            {
+                ILManipulatorType = typeof(HarmonyManipulator).Assembly.GetType("HarmonyLib.Internal.Patching.ILManipulator");
+                getInstructionsMethod = ILManipulatorType.GetMethod("GetInstructions", BindingFlags.Public | BindingFlags.Instance);
+            }
+
             PatchVerify.breaking = breaking;
             identifier = methodInfo.DeclaringType.Name + "." + methodInfo.Name + GetParamArrHash(methodInfo.GetParameters()).ToString();
 
-            harmony.Patch(methodInfo, null, null, new HarmonyMethod(typeof(PatchVerify).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static)));
+            // Get IL instructions of the method
+            ILGenerator generator = PatchProcessor.CreateILGenerator(methodInfo);
+            Mono.Cecil.Cil.MethodBody bodyCopy = PatchManager.GetMethodPatcher(methodInfo).CopyOriginal().Definition.Body;
+            object ilManipulator = Activator.CreateInstance(ILManipulatorType, bodyCopy, false);
+            object[] paramArr = new object[] { generator, null };
+            List<CodeInstruction> instructions = (List<CodeInstruction>)getInstructionsMethod.Invoke(ilManipulator, paramArr);
+
+            // Build hash from all instructions
+            string s = "";
+            for (int i = 0; i < instructions.Count; ++i)
+            {
+                CodeInstruction instruction = instructions[i];
+                s += (instruction.opcode == null ? "null opcode" : instruction.opcode.ToString()) + (instruction.operand == null ? "null operand" : instruction.operand.ToString());
+            }
+            int hash = s.GetHashCode();
+
+            // Verify hash
+            if (hashes.TryGetValue(identifier, out int originalHash))
+            {
+                if (originalHash != hash)
+                {
+                    if (breaking)
+                    {
+                        Debug.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.");
+                    }
+                }
+            }
+            else
+            {
+
+                hashes.Add(identifier, hash);
+                if (!writeWhenDone)
+                {
+                    Debug.LogWarning("PatchVerify: " + identifier + " not found in hashes. Most probably a new patch. This warning will remain until new hash file is written.");
+                }
+            }
+            //harmony.Patch(methodInfo, null, null, new HarmonyMethod(typeof(PatchVerify).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static)));
         }
 
         static int GetParamArrHash(ParameterInfo[] paramArr)
@@ -2607,38 +2657,17 @@ namespace H3MP
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
 
-            if (hashes.ContainsKey(identifier))
+            // NOTE: This transpiler will get called multiple times,
+            //       Harmony obviously does not necessarily support having multiple transpilers patching a single method because they would interfere with each other
+            //       Thing is, this transpiler does not modify the original code, so a sencond transpiler will not be interfered with
+            //       This gets called first when we call verify on the original method, and a second time when we actually patch the method
+            //       In conclusion, we have to handle this being called multiple times, hence the verified dict.
+            if (verified.ContainsKey(identifier))
             {
                 return instructionList;
             }
 
-            string s = "";
-            for (int i = 0; i < instructionList.Count; ++i)
-            {
-                CodeInstruction instruction = instructionList[i];
-                s += (instruction.opcode == null ? "null opcode" : instruction.opcode.ToString()) + (instruction.operand == null ? "null operand" : instruction.operand.ToString());
-            }
-            int hash = s.GetHashCode();
-
-            if (hashes.TryGetValue(s, out int originalHash))
-            {
-                if (originalHash != hash)
-                {
-                    if (breaking)
-                    {
-                        Debug.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.");
-                    }
-                }
-            }
-            else if (!writeWhenDone)
-            {
-                Debug.LogWarning("PatchVerify: " + identifier + " not found in hashes. Most probably a new patch. This warning will remain until new hash file is written.");
-            }
-            hashes.Add(identifier, hash);
+            verified.Add(identifier, true);
 
             return instructionList;
         }
@@ -3414,7 +3443,6 @@ namespace H3MP
      * AIFireArm.FireBullet // Will have to check if this is necessary (it is actually used?), it is also an FVRDestroyableObject, need to see how to handle that
      * RonchWeapon.Fire // Considering ronch is an enemy type, we will probably have to make it into its own sync object type with its own lists
      * DodecaLauncher // Uses dodeca missiles
-     * StingerLauncher // Uses stinger missiles
      */
     class FirePatch
     {
