@@ -86,7 +86,7 @@
     <Compile Include="H3MP_ServerHandle.cs" />
     <Compile Include="H3MP_Packet.cs" />
     <Compile Include="H3MP_ServerSend.cs" />
-    <Compile Include="H3MP_StingerReference.cs" />
+    <Compile Include="H3MP_TrackedItemReference.cs" />
     <Compile Include="H3MP_ThreadManager.cs" />
     <Compile Include="H3MP_TimerDestroyer.cs" />
     <Compile Include="H3MP_TNHData.cs" />

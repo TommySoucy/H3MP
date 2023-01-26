@@ -196,6 +196,8 @@ namespace H3MP
         public static readonly FieldInfo RPG7_m_isHammerCocked = typeof(RPG7).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SingleActionRevolver_m_isHammerCocked = typeof(SingleActionRevolver).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo StingerLauncher_m_hasMissile = typeof(StingerLauncher).GetField("m_hasMissile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo PinnedGrenade_m_hasSploded = typeof(PinnedGrenade).GetField("m_hasSploded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo PinnedGrenade_m_rings = typeof(PinnedGrenade).GetField("m_rings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -1785,6 +1787,22 @@ namespace H3MP
 
             PatchVerify.Verify(simpleLauncher2CycleModePatchOriginal, harmony, false);
             harmony.Patch(simpleLauncher2CycleModePatchOriginal, new HarmonyMethod(simpleLauncher2CycleModePatchPrefix));
+
+            // PinnedGrenadePatch
+            MethodInfo pinnedGrenadePatchUpdateOriginal = typeof(PinnedGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo pinnedGrenadePatchFixedUpdateOriginal = typeof(PinnedGrenade).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo pinnedGrenadePatchUpdatePrefix = typeof(PinnedGrenadePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo pinnedGrenadePatchUpdateTranspiler = typeof(PinnedGrenadePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo pinnedGrenadePatchUpdatePostfix = typeof(PinnedGrenadePatch).GetMethod("UpdatePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo pinnedGrenadePatchCollisionOriginal = typeof(PinnedGrenade).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo pinnedGrenadePatchCollisionTranspiler = typeof(PinnedGrenadePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(pinnedGrenadePatchUpdateOriginal, harmony, false);
+            PatchVerify.Verify(pinnedGrenadePatchFixedUpdateOriginal, harmony, false);
+            PatchVerify.Verify(pinnedGrenadePatchCollisionOriginal, harmony, false);
+            harmony.Patch(pinnedGrenadePatchUpdateOriginal, new HarmonyMethod(pinnedGrenadePatchUpdatePrefix), new HarmonyMethod(pinnedGrenadePatchUpdatePostfix), new HarmonyMethod(pinnedGrenadePatchUpdateTranspiler));
+            harmony.Patch(pinnedGrenadePatchFixedUpdateOriginal, new HarmonyMethod(pinnedGrenadePatchUpdatePrefix));
+            harmony.Patch(pinnedGrenadePatchCollisionOriginal, null, null, new HarmonyMethod(pinnedGrenadePatchCollisionTranspiler));
 
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
@@ -5451,8 +5469,8 @@ namespace H3MP
             if (trackedItem != null)
             {
                 trackedItem.stingerMissile = missile;
-                H3MP_StingerReference reference = missile.gameObject.AddComponent<H3MP_StingerReference>();
-                reference.launcher = trackedItem;
+                H3MP_TrackedItemReference reference = missile.gameObject.AddComponent<H3MP_TrackedItemReference>();
+                reference.trackedItemRef = trackedItem;
             }
         }
 
@@ -5588,7 +5606,7 @@ namespace H3MP
                 return true;
             }
 
-            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_StingerReference>().launcher;
+            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItemReference>().trackedItemRef;
             if (trackedItem != null)
             {
                 if (trackedItem.data.controller == H3MP_GameManager.ID)
@@ -7374,6 +7392,226 @@ namespace H3MP
         }
     }
 
+    // Patches PinnedGrenade to sync
+    class PinnedGrenadePatch
+    {
+        // This patch is quite complex because pinned grenades work entirely through updates
+        // Actions like exploding the grenade are not put into a single method we can patch
+        // The state of the grenade must be synced through the item update packets
+        // The main problem is that once our grenade is up to date, if the pin is removed, locally the grenade
+        // may be held by a remote player but logically physicalObject.IsHeld will still be false
+        // causing the local grenade to release its lever and countdown towards explosion while this is not the case 
+        // on the grenade's controller's side. This is only one of a few/many such desync problems caused by this
+        // update structured behavior
+        // The solution to this is to not let update happen to begin with if we are not in control of the grenade
+        // The next problem is how to check if we are in control of the grenade EVERY frame efficiently
+        // The obvious inefficient solution would be to find the item's trackedItem in trackedItemByItem dict every frame, but this would take too long
+        // We want to access our trackedItem in O(1)
+
+        // My solution is hijacking a variable of the PinnedGrenade, in this case its SpawnOnSplode list, to somehow reference the trackedItem
+        // To do this, when we track a PinnedGrenade, I add a new GameObject to the SpawnOnSplode list
+        // This GameObject has its HideFlags set to HideAndDontSave + an index
+        // This index is the index of the tracked item in the trackedItemReferences static array if TrackedItem
+        // So to know if our PinnedGrenade is under our control, we get the last gameObject in the SpawnOnSplode list
+        // We get tis hideflags, if it is > HideAndDontSave, we get index = hideflag - HideAndDontSave, which we then use to get our TrackedItem
+        // We can then check trackedItem.Controller
+        // Note: We also now need to prevent the PinnedGrenade from actually spawning the last item in SpawnOnSplode
+
+        static bool exploded;
+
+        // To prevent FVR(Fixed)Update from happening
+        static bool UpdatePrefix(PinnedGrenade __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            exploded = (bool)Mod.PinnedGrenade_m_hasSploded.GetValue(__instance);
+
+            if (__instance.SpawnOnSplode != null && __instance.SpawnOnSplode.Count > 0)
+            {
+                int index = (int)__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].hideFlags - (int)HideFlags.HideAndDontSave;
+
+                // Return true (run original), if dont have an index, index doesn't fit in references (shouldn't happen?), reference null (shouldn't happen), or we control
+                return index <= 0 || 
+                       H3MP_TrackedItem.trackedItemReferences.Length <= index || 
+                       H3MP_TrackedItem.trackedItemReferences[index] == null || 
+                       H3MP_TrackedItem.trackedItemReferences[index].data.controller == H3MP_GameManager.ID;
+            }
+
+            return true;
+        }
+
+        // To prevent spawning of our added element to SpawnOnSplode
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load index j
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(PinnedGrenade), "SpawnOnSplode"))); // Load SpawnOnSplode
+            toInsert0.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "get_Count"))); // Get count
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load 1
+            toInsert0.Add(new CodeInstruction(OpCodes.Sub)); // Sub. 1 from count
+            Label lastIndexLabel = il.DefineLabel();
+            toInsert0.Add(new CodeInstruction(OpCodes.Beq, lastIndexLabel)); // If last index, break to label lastIndexLabel
+
+            CodeInstruction notLastIndexInstruction = new CodeInstruction(OpCodes.Br);
+            toInsert0.Add(notLastIndexInstruction); // If not last index, break to begin loop as usual
+
+            CodeInstruction controlCheckInstanceLoad = new CodeInstruction(OpCodes.Ldarg_0);
+            controlCheckInstanceLoad.labels.Add(lastIndexLabel);
+            toInsert0.Add(controlCheckInstanceLoad); // Load PinnedGrenade instance (lastIndexLabel)
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PinnedGrenadePatch), "SkipLast"))); // Call our SkipLast method
+            Label skipLabel = il.DefineLabel();
+            toInsert0.Add(new CodeInstruction(OpCodes.Brtrue, skipLabel)); // If skip last, break to label controlledLabel
+
+            toInsert0.Add(notLastIndexInstruction); // If not skip last index, break to begin loop as usual
+
+            CodeInstruction skipLastLoadIndex = new CodeInstruction(OpCodes.Ldloc_S, 4);
+            skipLastLoadIndex.labels.Add(skipLabel);
+            toInsert0.Add(skipLastLoadIndex); // Load index j (controlledLabel)
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load 1
+            toInsert0.Add(new CodeInstruction(OpCodes.Add)); // Add 1 to j
+            toInsert0.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set index j
+            CodeInstruction breakToLoopHead = new CodeInstruction(OpCodes.Br);
+            toInsert0.Add(breakToLoopHead); // Break to loop head, where we will check index j against SpawnOnSplode.Count and break out of loop
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("SpawnOnSplode"))
+                {
+                    breakToLoopHead.operand = instructionList[i - 2].operand;
+                    notLastIndexInstruction.operand = instructionList[i - 1].labels[0];
+                    instructionList.InsertRange(i - 1, toInsert0);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static bool SkipLast(PinnedGrenade grenade)
+        {
+            if(Mod.managerObject == null)
+            {
+                return false;
+            }
+
+            return grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].hideFlags > HideFlags.HideAndDontSave;
+        }
+
+        // To know if grenade exploded in latest update
+        static void UpdatePostfix(PinnedGrenade __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if(!exploded && (bool)Mod.PinnedGrenade_m_hasSploded.GetValue(__instance))
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+                if(trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.PinnedGrenadeExplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.PinnedGrenadeExplode(trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                }
+            }
+        }
+
+        // To prevent collision explosion if not in control
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PinnedGrenadePatch), "GrenadeControlled"))); // Call our GrenadeControlled method
+            CodeInstruction controlledInstruction = new CodeInstruction(OpCodes.Brtrue);
+            toInsert0.Add(controlledInstruction); // If controlled, break to continue as usual
+
+            toInsert0.Add(new CodeInstruction(OpCodes.Ret)); // If not controlled return right away
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("OnCollisionEnter"))
+                {
+                    controlledInstruction.operand = instructionList[i + 1].labels[0];
+                    instructionList.InsertRange(i + 1, toInsert0);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static bool GrenadeControlled(PinnedGrenade grenade)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0)
+            {
+                int index = (int)grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].hideFlags - (int)HideFlags.HideAndDontSave;
+
+                // Return true (controlled), if have an index, index fits in references (should always be true?), reference not null (should always be true), and we control
+                return index > 0 &&
+                       H3MP_TrackedItem.trackedItemReferences.Length > index &&
+                       H3MP_TrackedItem.trackedItemReferences[index] != null &&
+                       H3MP_TrackedItem.trackedItemReferences[index].data.controller == H3MP_GameManager.ID;
+            }
+
+            return true;
+        }
+
+        public static void ExplodePinnedGrenade(PinnedGrenade grenade, Vector3 pos)
+        {
+            Mod.PinnedGrenade_m_hasSploded.SetValue(grenade, true);
+            for (int i = 0; i < grenade.SpawnOnSplode.Count; i++)
+            {
+                if(i == grenade.SpawnOnSplode.Count - 1 && grenade.SpawnOnSplode[i].hideFlags > HideFlags.HideAndDontSave)
+                {
+                    break;
+                }
+
+                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(grenade.SpawnOnSplode[i], pos, Quaternion.identity);
+                Explosion component = gameObject.GetComponent<Explosion>();
+                if (component != null)
+                {
+                    component.IFF = grenade.IFF;
+                }
+                ExplosionSound component2 = gameObject.GetComponent<ExplosionSound>();
+                if (component2 != null)
+                {
+                    component2.IFF = grenade.IFF;
+                }
+                GrenadeExplosion component3 = gameObject.GetComponent<GrenadeExplosion>();
+                if (component3 != null)
+                {
+                    component3.IFF = grenade.IFF;
+                }
+            }
+            if (grenade.IsHeld)
+            {
+                grenade.m_hand.ForceSetInteractable(null);
+                grenade.EndInteraction(grenade.m_hand);
+            }
+            UnityEngine.Object.Destroy(grenade.gameObject);
+        }
+    }
     #endregion
 
     #region Instatiation Patches
@@ -9989,7 +10227,7 @@ namespace H3MP
             }
 
             // If in control of the damaged StingerMissile, we want to process the damage
-            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_StingerReference>().launcher;
+            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItemReference>().trackedItemRef;
             if (trackedItem != null)
             {
                 if (H3MP_ThreadManager.host)

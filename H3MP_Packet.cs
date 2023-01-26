@@ -137,7 +137,8 @@ namespace H3MP
         singleActionRevolverFire = 126,
         stingerLauncherFire = 127,
         stingerMissileDamage = 128,
-        stingerMissileExplode = 129
+        stingerMissileExplode = 129,
+        pinnedGrenadeExplode = 130
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -275,7 +276,8 @@ namespace H3MP
         singleActionRevolverFire = 130,
         stingerLauncherFire = 131,
         stingerMissileDamage = 132,
-        stingerMissileExplode = 133
+        stingerMissileExplode = 133,
+        pinnedGrenadeExplode = 134
     }
 
     public class H3MP_Packet : IDisposable

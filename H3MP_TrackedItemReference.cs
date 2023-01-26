@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace H3MP
 {
-    public class H3MP_StingerReference : MonoBehaviour
+    public class H3MP_TrackedItemReference : MonoBehaviour
     {
-        public H3MP_TrackedItem launcher;
+        public H3MP_TrackedItem trackedItemRef;
     }
 }

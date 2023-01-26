@@ -3101,5 +3101,24 @@ namespace H3MP
 
             H3MP_ServerSend.StingerMissileExplode(clientID, packet);
         }
+
+        public static void PinnedGrenadeExplode(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Server.items[trackedID] != null)
+            {
+                // Update local;
+                if (H3MP_Server.items[trackedID].physicalItem != null)
+                {
+                    PinnedGrenade grenade = H3MP_Server.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
+                    if(grenade != null)
+                    {
+                        PinnedGrenadePatch.ExplodePinnedGrenade(grenade, packet.ReadVector3());
+                    }
+                }
+            }
+
+            H3MP_ServerSend.PinnedGrenadeExplode(clientID, packet);
+        }
     }
 }

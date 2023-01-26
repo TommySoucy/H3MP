@@ -47,6 +47,21 @@ namespace H3MP
         // StingerLauncher specific
         public StingerMissile stingerMissile;
 
+        // TrackedItemReferences array
+        // Used by certain item subtypes who need to get access to their TrackedItem very often (On Update for example)
+        // This is used to bypass having to find the item in a datastructure too often
+        public static H3MP_TrackedItem[] trackedItemReferences = new H3MP_TrackedItem[100];
+        public static List<int> availableTrackedItemRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
+                                                                                    10,11,12,13,14,15,16,17,18,19,
+                                                                                    20,21,22,23,24,25,26,27,28,29,
+                                                                                    30,31,32,33,34,35,36,37,38,39,
+                                                                                    40,41,42,43,44,45,46,47,48,49,
+                                                                                    50,51,52,53,54,55,56,57,58,59,
+                                                                                    60,61,62,63,64,65,66,67,68,69,
+                                                                                    70,71,72,73,74,75,76,77,78,79,
+                                                                                    80,81,82,83,84,85,86,87,88,89,
+                                                                                    90,91,92,93,94,95,96,97,98,99};
+
         public bool sendDestroy = true; // To prevent feeback loops
         public static int skipDestroy;
 
@@ -187,6 +202,34 @@ namespace H3MP
                 updateFunc = UpdateLeverActionFirearm;
                 updateGivenFunc = UpdateGivenLeverActionFirearm;
                 dataObject = LAF;
+            }
+            else if(physicalObject is PinnedGrenade)
+            {
+                PinnedGrenade asPG = (PinnedGrenade)physObj;
+                updateFunc = UpdatePinnedGrenade;
+                updateGivenFunc = UpdateGivenPinnedGrenade;
+                if (asPG.SpawnOnSplode == null)
+                {
+                    asPG.SpawnOnSplode = new List<GameObject>();
+                }
+                GameObject trackedItemRef = new GameObject("PGTrackedItemRef");
+                if (availableTrackedItemRefIndices.Count == 0)
+                {
+                    H3MP_TrackedItem[] tempItems = trackedItemReferences;
+                    trackedItemReferences = new H3MP_TrackedItem[tempItems.Length + 100];
+                    for (int i = 0; i < tempItems.Length; ++i)
+                    {
+                        trackedItemReferences[i] = tempItems[i];
+                    }
+                    for (int i = tempItems.Length; i < trackedItemReferences.Length; ++i)
+                    {
+                        availableTrackedItemRefIndices.Add(i);
+                    }
+                }
+                trackedItemReferences[availableTrackedItemRefIndices.Count - 1] = this;
+                trackedItemRef.hideFlags = HideFlags.HideAndDontSave + availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
+                availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
+                asPG.SpawnOnSplode.Add(trackedItemRef);
             }
             else if (physObj is Derringer)
             {
@@ -420,6 +463,85 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdatePinnedGrenade()
+        {
+            PinnedGrenade asPG = (PinnedGrenade)dataObject;
+            List<PinnedGrenadeRing> rings = Mod.PinnedGrenade_m_rings.GetValue(asPG) as List<PinnedGrenadeRing>;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[rings == null ? 0 : rings.Count + 1];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            data.data[0] = asPG.IsLeverReleased() ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            if (rings != null)
+            {
+                for (int i = 0; i < rings.Count; ++i)
+                {
+                    preval = data.data[i + 1];
+
+                    data.data[i + 1] = rings[i].HasPinDetached() ? (byte)1 : (byte)0;
+
+                    modified |= preval != data.data[i + 1];
+                }
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenPinnedGrenade(byte[] newData)
+        {
+            bool modified = false;
+            PinnedGrenade asPG = (PinnedGrenade)dataObject;
+            List<PinnedGrenadeRing> rings = Mod.PinnedGrenade_m_rings.GetValue(asPG) as List<PinnedGrenadeRing>;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set lever released
+                if (newData[0] == 1 && !asPG.IsLeverReleased())
+                {
+                    asPG.ReleaseLever();
+                }
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set lever released
+                    if (newData[0] == 1 && !asPG.IsLeverReleased())
+                    {
+                        asPG.ReleaseLever();
+                    }
+                    modified = true;
+                }
+            }
+
+            if (rings != null)
+            {
+                for (int i = 0; i < rings.Count; ++i)
+                {
+                    if (newData[i+1] == 1 && !rings[i].HasPinDetached())
+                    {
+                        rings[i].PopOutRoutine();
+                        modified = true;
+                    }
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateMF2_RL()
         {
             MF2_RL asMF2_RL = (MF2_RL)dataObject;

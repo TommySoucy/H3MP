@@ -2295,5 +2295,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void PinnedGrenadeExplode(int trackedID, Vector3 pos)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.pinnedGrenadeExplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

@@ -2741,5 +2741,22 @@ namespace H3MP
                 }
             }
         }
+
+        public static void PinnedGrenadeExplode(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                // Update local;
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    PinnedGrenade grenade = H3MP_Client.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
+                    if (grenade != null)
+                    {
+                        PinnedGrenadePatch.ExplodePinnedGrenade(grenade, packet.ReadVector3());
+                    }
+                }
+            }
+        }
     }
 }
