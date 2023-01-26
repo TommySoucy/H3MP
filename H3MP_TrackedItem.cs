@@ -231,6 +231,34 @@ namespace H3MP
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
                 asPG.SpawnOnSplode.Add(trackedItemRef);
             }
+            else if(physicalObject is FVRGrenade)
+            {
+                FVRGrenade asGrenade = (FVRGrenade)physObj;
+                updateFunc = UpdateGrenade;
+                updateGivenFunc = UpdateGivenGrenade;
+                Dictionary<int, float> timings = Mod.FVRGrenade_FuseTimings.GetValue(asGrenade) as Dictionary<int, float>;
+                if (timings == null)
+                {
+                    timings = new Dictionary<int, float>();
+                    Mod.FVRGrenade_FuseTimings.SetValue(asGrenade, timings);
+                }
+                if (availableTrackedItemRefIndices.Count == 0)
+                {
+                    H3MP_TrackedItem[] tempItems = trackedItemReferences;
+                    trackedItemReferences = new H3MP_TrackedItem[tempItems.Length + 100];
+                    for (int i = 0; i < tempItems.Length; ++i)
+                    {
+                        trackedItemReferences[i] = tempItems[i];
+                    }
+                    for (int i = tempItems.Length; i < trackedItemReferences.Length; ++i)
+                    {
+                        availableTrackedItemRefIndices.Add(i);
+                    }
+                }
+                timings.Add(-1, availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1]);
+                trackedItemReferences[availableTrackedItemRefIndices.Count - 1] = this;
+                availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
+            }
             else if (physObj is Derringer)
             {
                 updateFunc = UpdateDerringer;
@@ -463,6 +491,152 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateGrenade()
+        {
+            FVRGrenade asGrenade = (FVRGrenade)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[asGrenade.Uses2ndPin ? 3 : 2];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            data.data[0] = (bool)Mod.FVRGrenade_m_isLeverReleased.GetValue(asGrenade) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+
+            data.data[1] = (bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[1];
+
+            if (asGrenade.Uses2ndPin)
+            {
+                preval = data.data[2];
+
+                data.data[2] = (bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2) ? (byte)1 : (byte)0;
+
+                modified |= preval != data.data[2];
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenGrenade(byte[] newData)
+        {
+            bool modified = false;
+            FVRGrenade asGrenade = (FVRGrenade)dataObject;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set lever released
+                if (newData[0] == 1 && !(bool)Mod.FVRGrenade_m_isLeverReleased.GetValue(asGrenade))
+                {
+                    asGrenade.ReleaseLever();
+                }
+
+                // Set pin
+                if (newData[1] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin))
+                {
+                    Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin, true);
+                    asGrenade.Pin.transform.SetParent(null);
+                    asGrenade.Pin.PinPiece.transform.SetParent(asGrenade.Pin.transform);
+                    Rigidbody rigidbody = asGrenade.Pin.PinPiece.AddComponent<Rigidbody>();
+                    rigidbody.mass = 0.01f;
+                    HingeJoint component = asGrenade.Pin.GetComponent<HingeJoint>();
+                    component.connectedBody = rigidbody;
+                    asGrenade.Pin.Grenade.PullPin();
+                    Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin, true);
+                    if (asGrenade.Pin.UXGeo_Held != null)
+                    {
+                        UnityEngine.Object.Destroy(asGrenade.Pin.UXGeo_Held);
+                    }
+                }
+
+                // Set pin2
+                if (newData[2] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2))
+                {
+                    Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin2, true);
+                    asGrenade.Pin2.transform.SetParent(null);
+                    asGrenade.Pin2.PinPiece.transform.SetParent(asGrenade.Pin2.transform);
+                    Rigidbody rigidbody = asGrenade.Pin2.PinPiece.AddComponent<Rigidbody>();
+                    rigidbody.mass = 0.01f;
+                    HingeJoint component = asGrenade.Pin2.GetComponent<HingeJoint>();
+                    component.connectedBody = rigidbody;
+                    asGrenade.Pin2.Grenade.PullPin2();
+                    Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin2, true);
+                    if (asGrenade.Pin2.UXGeo_Held != null)
+                    {
+                        UnityEngine.Object.Destroy(asGrenade.Pin2.UXGeo_Held);
+                    }
+                }
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set lever released
+                    if (newData[0] == 1 && !(bool)Mod.FVRGrenade_m_isLeverReleased.GetValue(asGrenade))
+                    {
+                        asGrenade.ReleaseLever();
+                    }
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set pin
+                    if (newData[1] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin))
+                    {
+                        Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin, true);
+                        asGrenade.Pin.transform.SetParent(null);
+                        asGrenade.Pin.PinPiece.transform.SetParent(asGrenade.Pin.transform);
+                        Rigidbody rigidbody = asGrenade.Pin.PinPiece.AddComponent<Rigidbody>();
+                        rigidbody.mass = 0.01f;
+                        HingeJoint component = asGrenade.Pin.GetComponent<HingeJoint>();
+                        component.connectedBody = rigidbody;
+                        asGrenade.Pin.Grenade.PullPin();
+                        Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin, true);
+                        if (asGrenade.Pin.UXGeo_Held != null)
+                        {
+                            UnityEngine.Object.Destroy(asGrenade.Pin.UXGeo_Held);
+                        }
+                    }
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set pin2
+                    if (newData[2] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2))
+                    {
+                        Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin2, true);
+                        asGrenade.Pin2.transform.SetParent(null);
+                        asGrenade.Pin2.PinPiece.transform.SetParent(asGrenade.Pin2.transform);
+                        Rigidbody rigidbody = asGrenade.Pin2.PinPiece.AddComponent<Rigidbody>();
+                        rigidbody.mass = 0.01f;
+                        HingeJoint component = asGrenade.Pin2.GetComponent<HingeJoint>();
+                        component.connectedBody = rigidbody;
+                        asGrenade.Pin2.Grenade.PullPin2();
+                        Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin2, true);
+                        if (asGrenade.Pin2.UXGeo_Held != null)
+                        {
+                            UnityEngine.Object.Destroy(asGrenade.Pin2.UXGeo_Held);
+                        }
+                    }
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdatePinnedGrenade()
         {
             PinnedGrenade asPG = (PinnedGrenade)dataObject;

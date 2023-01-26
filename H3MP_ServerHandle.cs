@@ -3120,5 +3120,24 @@ namespace H3MP
 
             H3MP_ServerSend.PinnedGrenadeExplode(clientID, packet);
         }
+
+        public static void FVRGrenadeExplode(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Server.items[trackedID] != null)
+            {
+                // Update local;
+                if (H3MP_Server.items[trackedID].physicalItem != null)
+                {
+                    FVRGrenade grenade = H3MP_Server.items[trackedID].physicalItem.physicalObject as FVRGrenade;
+                    if(grenade != null)
+                    {
+                        FVRGrenadePatch.ExplodeGrenade(grenade, packet.ReadVector3());
+                    }
+                }
+            }
+
+            H3MP_ServerSend.FVRGrenadeExplode(clientID, packet);
+        }
     }
 }

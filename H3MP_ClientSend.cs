@@ -2306,5 +2306,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void FVRGrenadeExplode(int trackedID, Vector3 pos)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.FVRGrenadeExplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

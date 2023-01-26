@@ -435,6 +435,7 @@ namespace H3MP
                 H3MP_ClientHandle.StingerMissileDamage,
                 H3MP_ClientHandle.StingerMissileExplode,
                 H3MP_ClientHandle.PinnedGrenadeExplode,
+                H3MP_ClientHandle.FVRGrenadeExplode,
             };
 
             // All vanilla scenes can be synced by default

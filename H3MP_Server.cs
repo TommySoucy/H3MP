@@ -561,6 +561,7 @@ namespace H3MP
                 H3MP_ServerHandle.StingerMissileDamage,
                 H3MP_ServerHandle.StingerMissileExplode,
                 H3MP_ServerHandle.PinnedGrenadeExplode,
+                H3MP_ServerHandle.FVRGrenadeExplode,
             };
 
             items = new H3MP_TrackedItemData[100];

@@ -2708,7 +2708,7 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             if (H3MP_Client.items[trackedID] != null)
             {
-                // Update local;
+                // Update local
                 if (H3MP_Client.items[trackedID].physicalItem != null)
                 {
                     object remoteMissile = Mod.RemoteMissileLauncher_m_missile.GetValue(H3MP_Client.items[trackedID].physicalItem.physicalObject as RemoteMissileLauncher);
@@ -2728,7 +2728,7 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             if (H3MP_Client.items[trackedID] != null)
             {
-                // Update local;
+                // Update local
                 if (H3MP_Client.items[trackedID].physicalItem != null)
                 {
                     StingerMissile missile = H3MP_Client.items[trackedID].physicalItem.stingerMissile;
@@ -2747,13 +2747,30 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             if (H3MP_Client.items[trackedID] != null)
             {
-                // Update local;
+                // Update local
                 if (H3MP_Client.items[trackedID].physicalItem != null)
                 {
                     PinnedGrenade grenade = H3MP_Client.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
                     if (grenade != null)
                     {
                         PinnedGrenadePatch.ExplodePinnedGrenade(grenade, packet.ReadVector3());
+                    }
+                }
+            }
+        }
+
+        public static void FVRGrenadeExplode(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                // Update local
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    FVRGrenade grenade = H3MP_Client.items[trackedID].physicalItem.physicalObject as FVRGrenade;
+                    if (grenade != null)
+                    {
+                        FVRGrenadePatch.ExplodeGrenade(grenade, packet.ReadVector3());
                     }
                 }
             }

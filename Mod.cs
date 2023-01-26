@@ -198,6 +198,11 @@ namespace H3MP
         public static readonly FieldInfo StingerLauncher_m_hasMissile = typeof(StingerLauncher).GetField("m_hasMissile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo PinnedGrenade_m_hasSploded = typeof(PinnedGrenade).GetField("m_hasSploded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo PinnedGrenade_m_rings = typeof(PinnedGrenade).GetField("m_rings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRGrenade_FuseTimings = typeof(FVRGrenade).GetField("FuseTimings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRGrenade_m_hasSploded = typeof(FVRGrenade).GetField("m_hasSploded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRGrenade_m_isLeverReleased = typeof(FVRGrenade).GetField("m_isLeverReleased", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRGrenadePin_m_hasBeenPulled = typeof(FVRGrenadePin).GetField("m_hasBeenPulled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRGrenadePin_m_isDying = typeof(FVRGrenadePin).GetField("m_isDying", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -1804,6 +1809,14 @@ namespace H3MP
             harmony.Patch(pinnedGrenadePatchFixedUpdateOriginal, new HarmonyMethod(pinnedGrenadePatchUpdatePrefix));
             harmony.Patch(pinnedGrenadePatchCollisionOriginal, null, null, new HarmonyMethod(pinnedGrenadePatchCollisionTranspiler));
 
+            // FVRGrenadePatch
+            MethodInfo FVRGrenadePatchUpdateOriginal = typeof(FVRGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo FVRGrenadePatchUpdatePrefix = typeof(FVRGrenadePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo FVRGrenadePatchUpdatePostfix = typeof(FVRGrenadePatch).GetMethod("UpdatePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(FVRGrenadePatchUpdateOriginal, harmony, false);
+            harmony.Patch(FVRGrenadePatchUpdateOriginal, new HarmonyMethod(FVRGrenadePatchUpdatePrefix), new HarmonyMethod(FVRGrenadePatchUpdatePostfix));
+
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
             //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -2578,7 +2591,6 @@ namespace H3MP
         }
     }
 
-    //TODO: Add patches for PinnedGrenade when hasSploded gets set to true, in FVRUpdate, and OnCollisionEnter
     //TODO: Add patches for FVRGrenade when hasSploded gets set to true, in FVRUpdate, and OnCollisionEnter
     //TODO: Add patch for MF2_Demonade Explode
 
@@ -7420,14 +7432,14 @@ namespace H3MP
         static bool exploded;
 
         // To prevent FVR(Fixed)Update from happening
-        static bool UpdatePrefix(PinnedGrenade __instance)
+        static bool UpdatePrefix(PinnedGrenade __instance, bool ___m_hasSploded)
         {
             if(Mod.managerObject == null)
             {
                 return true;
             }
 
-            exploded = (bool)Mod.PinnedGrenade_m_hasSploded.GetValue(__instance);
+            exploded = ___m_hasSploded;
 
             if (__instance.SpawnOnSplode != null && __instance.SpawnOnSplode.Count > 0)
             {
@@ -7505,14 +7517,14 @@ namespace H3MP
         }
 
         // To know if grenade exploded in latest update
-        static void UpdatePostfix(PinnedGrenade __instance)
+        static void UpdatePostfix(PinnedGrenade __instance, bool ___m_hasSploded)
         {
             if(Mod.managerObject == null)
             {
                 return;
             }
 
-            if(!exploded && (bool)Mod.PinnedGrenade_m_hasSploded.GetValue(__instance))
+            if(!exploded && ___m_hasSploded)
             {
                 H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
                 if(trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
@@ -7604,12 +7616,119 @@ namespace H3MP
                     component3.IFF = grenade.IFF;
                 }
             }
-            if (grenade.IsHeld)
+            if (grenade.SmokeEmitter != null)
             {
-                grenade.m_hand.ForceSetInteractable(null);
-                grenade.EndInteraction(grenade.m_hand);
+                grenade.SmokeEmitter.Engaged = true;
             }
-            UnityEngine.Object.Destroy(grenade.gameObject);
+            else
+            {
+                if (grenade.IsHeld)
+                {
+                    grenade.m_hand.ForceSetInteractable(null);
+                    grenade.EndInteraction(grenade.m_hand);
+                }
+                UnityEngine.Object.Destroy(grenade.gameObject);
+            }
+        }
+    }
+
+    // Patches FVRGrenade to sync
+    class FVRGrenadePatch
+    {
+        static bool exploded;
+
+        // To prevent FVRUpdate from happening if not in control
+        static bool UpdatePrefix(FVRGrenade __instance, bool ___m_hasSploded, Dictionary<int, float> ___FuseTimings)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            exploded = ___m_hasSploded;
+
+            if (___FuseTimings != null && ___FuseTimings.TryGetValue(-1, out float indexFloat))
+            {
+                // Return true (run original), if dont have an index, index doesn't fit in references (shouldn't happen?), reference null (shouldn't happen), or we control
+                int index = (int)indexFloat;
+                return index <= 0 || 
+                       H3MP_TrackedItem.trackedItemReferences.Length <= index || 
+                       H3MP_TrackedItem.trackedItemReferences[index] == null || 
+                       H3MP_TrackedItem.trackedItemReferences[index].data.controller == H3MP_GameManager.ID;
+            }
+
+            return true;
+        }
+
+        // To know if grenade exploded in latest update
+        static void UpdatePostfix(FVRGrenade __instance, bool ___m_hasSploded)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if(!exploded && ___m_hasSploded)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+                if(trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.FVRGrenadeExplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.FVRGrenadeExplode(trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                }
+            }
+        }
+
+        public static void ExplodeGrenade(FVRGrenade grenade, Vector3 pos)
+        {
+            Mod.FVRGrenade_m_hasSploded.SetValue(grenade, true);
+            if (grenade.ExplosionFX != null)
+            {
+                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(grenade.ExplosionFX, grenade.transform.position, Quaternion.identity);
+                Explosion component = gameObject.GetComponent<Explosion>();
+                if (component != null)
+                {
+                    component.IFF = grenade.IFF;
+                }
+                ExplosionSound component2 = gameObject.GetComponent<ExplosionSound>();
+                if (component2 != null)
+                {
+                    component2.IFF = grenade.IFF;
+                }
+            }
+            if (grenade.ExplosionSoundFX != null)
+            {
+                GameObject gameObject2 = UnityEngine.Object.Instantiate<GameObject>(grenade.ExplosionSoundFX, grenade.transform.position, Quaternion.identity);
+                Explosion component3 = gameObject2.GetComponent<Explosion>();
+                if (component3 != null)
+                {
+                    component3.IFF = grenade.IFF;
+                }
+                ExplosionSound component4 = gameObject2.GetComponent<ExplosionSound>();
+                if (component4 != null)
+                {
+                    component4.IFF = grenade.IFF;
+                }
+            }
+            if (grenade.SmokeEmitter != null)
+            {
+                grenade.SmokeEmitter.Engaged = true;
+            }
+            else
+            {
+                if (grenade.IsHeld)
+                {
+                    grenade.m_hand.ForceSetInteractable(null);
+                    grenade.EndInteraction(grenade.m_hand);
+                }
+                UnityEngine.Object.Destroy(grenade.gameObject);
+            }
         }
     }
     #endregion

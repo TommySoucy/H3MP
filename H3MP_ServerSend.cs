@@ -3559,5 +3559,42 @@ namespace H3MP
                 SendTCPDataToAll(clientID, packet);
             }
         }
+
+        public static void FVRGrenadeExplode(int clientID, int trackedID, Vector3 pos)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.FVRGrenadeExplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void FVRGrenadeExplode(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.FVRGrenadeExplode);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
     }
 }
