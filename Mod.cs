@@ -2591,9 +2591,6 @@ namespace H3MP
         }
     }
 
-    //TODO: Add patches for FVRGrenade when hasSploded gets set to true, in FVRUpdate, and OnCollisionEnter
-    //TODO: Add patch for MF2_Demonade Explode
-
     #region General Patches
     // Used to verify integrity of other patches by checking if there were any changes to the original methods
     class PatchVerify
@@ -7464,13 +7461,14 @@ namespace H3MP
             toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load index j
             toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
             toInsert0.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(PinnedGrenade), "SpawnOnSplode"))); // Load SpawnOnSplode
-            toInsert0.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "get_Count"))); // Get count
+            toInsert0.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(List<GameObject>), "get_Count"))); // Get count
             toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load 1
             toInsert0.Add(new CodeInstruction(OpCodes.Sub)); // Sub. 1 from count
             Label lastIndexLabel = il.DefineLabel();
             toInsert0.Add(new CodeInstruction(OpCodes.Beq, lastIndexLabel)); // If last index, break to label lastIndexLabel
 
-            CodeInstruction notLastIndexInstruction = new CodeInstruction(OpCodes.Br);
+            Label loopStartLabel = il.DefineLabel();
+            CodeInstruction notLastIndexInstruction = new CodeInstruction(OpCodes.Br, loopStartLabel);
             toInsert0.Add(notLastIndexInstruction); // If not last index, break to begin loop as usual
 
             CodeInstruction controlCheckInstanceLoad = new CodeInstruction(OpCodes.Ldarg_0);
@@ -7498,7 +7496,7 @@ namespace H3MP
                 if (instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("SpawnOnSplode"))
                 {
                     breakToLoopHead.operand = instructionList[i - 2].operand;
-                    notLastIndexInstruction.operand = instructionList[i - 1].labels[0];
+                    instructionList[i - 1].labels.Add(loopStartLabel);
                     instructionList.InsertRange(i - 1, toInsert0);
                     break;
                 }
@@ -7549,8 +7547,8 @@ namespace H3MP
             List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
             toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PinnedGrenadePatch), "GrenadeControlled"))); // Call our GrenadeControlled method
-            CodeInstruction controlledInstruction = new CodeInstruction(OpCodes.Brtrue);
-            toInsert0.Add(controlledInstruction); // If controlled, break to continue as usual
+            Label l = il.DefineLabel();
+            toInsert0.Add(new CodeInstruction(OpCodes.Brtrue, l)); // If controlled, break to continue as usual
 
             toInsert0.Add(new CodeInstruction(OpCodes.Ret)); // If not controlled return right away
 
@@ -7560,7 +7558,7 @@ namespace H3MP
 
                 if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("OnCollisionEnter"))
                 {
-                    controlledInstruction.operand = instructionList[i + 1].labels[0];
+                    instructionList[i + 1].labels.Add(l);
                     instructionList.InsertRange(i + 1, toInsert0);
                     break;
                 }
