@@ -29,6 +29,7 @@ namespace H3MP
         public static Dictionary<int, int> unknownIFFChart = new Dictionary<int, int>();
 
         public bool sendDestroy = true; // To prevent feeback loops
+        public bool skipFullDestroy;
 
         private void Awake()
         {
@@ -74,6 +75,11 @@ namespace H3MP
 
         private void OnDestroy()
         {
+            if (skipFullDestroy)
+            {
+                return;
+            }
+
             H3MP_GameManager.trackedSosigBySosig.Remove(physicalSosigScript);
 
             // Set dead body state even if we are destroying because vanilla may try to process damage on it still

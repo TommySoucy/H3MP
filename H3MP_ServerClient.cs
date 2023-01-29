@@ -6,10 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 using FistVR;
-using System.IO;
 using UnityEngine.SceneManagement;
-using Valve.VR.InteractionSystem;
-using FFmpeg.AutoGen;
 
 namespace H3MP
 {
@@ -21,6 +18,7 @@ namespace H3MP
         public H3MP_Player player;
         public TCP tcp;
         public UDP udp;
+        public bool connected;
 
         public H3MP_ServerClient(int ID)
         {
@@ -83,9 +81,9 @@ namespace H3MP
                 try
                 {
                     int byteLength = stream.EndRead(result);
-                    if (byteLength == 0)
+                    if (byteLength == 0 && H3MP_Server.clients[ID].connected)
                     {
-                        H3MP_Server.clients[ID].Disconnect();
+                        H3MP_Server.clients[ID].Disconnect(0);
                         return;
                     }
 
@@ -97,8 +95,10 @@ namespace H3MP
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine($"Client "+ID+" forcibly disconnected");
-                    H3MP_Server.clients[ID].Disconnect();
+                    if (H3MP_Server.clients[ID].connected)
+                    {
+                        H3MP_Server.clients[ID].Disconnect(1);
+                    }
                 }
             }
 
@@ -318,9 +318,22 @@ namespace H3MP
             }
         }
 
-        public void Disconnect()
+        public void Disconnect(int code)
         {
-            Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
+            connected = false;
+
+            switch (code)
+            {
+                case 0:
+                    Console.WriteLine("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected, end of stream.");
+                    break;
+                case 1:
+                    Console.WriteLine("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.");
+                    break;
+                case 2:
+                    Console.WriteLine("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.");
+                    break;
+            }
 
             Mod.RemovePlayerFromLists(ID);
             H3MP_ServerSend.ClientDisconnect(ID);

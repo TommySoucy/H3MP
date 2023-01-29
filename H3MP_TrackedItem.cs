@@ -64,6 +64,7 @@ namespace H3MP
 
         public bool sendDestroy = true; // To prevent feeback loops
         public static int skipDestroy;
+        public bool skipFullDestroy;
 
         private void Awake()
         {
@@ -5375,6 +5376,11 @@ namespace H3MP
 
         private void OnDestroy()
         {
+            if (skipFullDestroy)
+            {
+                return;
+            }
+
             //tracked list so that when we get the tracked ID we can send the destruction to server and only then can we remove it from the list
             H3MP_GameManager.trackedItemByItem.Remove(physicalObject);
             if (physicalObject is SosigWeaponPlayerInterface)

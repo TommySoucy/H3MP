@@ -2032,12 +2032,12 @@ namespace H3MP
 
             foreach (H3MP_TrackedItemData item in itemArrToUse)
             {
-                if(item.physicalItem != null)
+                if(item != null && item.physicalItem != null)
                 {
                     Mod.SetKinematicRecursive(item.physicalItem.transform, false);
                     if (destroyTrackedScript)
                     {
-                        item.physicalItem.sendDestroy = false;
+                        item.physicalItem.skipFullDestroy = true;
                         Destroy(item.physicalItem);
                     }
                 }
@@ -2045,7 +2045,7 @@ namespace H3MP
 
             foreach (H3MP_TrackedSosigData sosig in sosigArrToUse)
             {
-                if(sosig.physicalObject != null)
+                if(sosig != null && sosig.physicalObject != null)
                 {
                     if (GM.CurrentAIManager != null)
                     {
@@ -2054,7 +2054,7 @@ namespace H3MP
                     sosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
                     if (destroyTrackedScript)
                     {
-                        sosig.physicalObject.sendDestroy = false;
+                        sosig.physicalObject.skipFullDestroy = true;
                         Destroy(sosig.physicalObject);
                     }
                 }
@@ -2062,7 +2062,7 @@ namespace H3MP
 
             foreach (H3MP_TrackedAutoMeaterData autoMeater in autoMeaterArrToUse)
             {
-                if(autoMeater.physicalObject != null)
+                if(autoMeater != null && autoMeater.physicalObject != null)
                 {
                     if (GM.CurrentAIManager != null)
                     {
@@ -2071,7 +2071,7 @@ namespace H3MP
                     autoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
                     if (destroyTrackedScript)
                     {
-                        autoMeater.physicalObject.sendDestroy = false;
+                        autoMeater.physicalObject.skipFullDestroy = true;
                         Destroy(autoMeater.physicalObject);
                     }
                 }
@@ -2079,11 +2079,11 @@ namespace H3MP
 
             foreach (H3MP_TrackedEncryptionData encryption in encryptionArrToUse)
             {
-                if(encryption.physicalObject != null)
+                if(encryption != null && encryption.physicalObject != null)
                 {
                     if (destroyTrackedScript)
                     {
-                        encryption.physicalObject.sendDestroy = false;
+                        encryption.physicalObject.skipFullDestroy = true;
                         Destroy(encryption.physicalObject);
                     }
                 }

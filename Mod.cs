@@ -2642,6 +2642,7 @@ namespace H3MP
 
         public static void RemovePlayerFromLists(int playerID)
         {
+            Debug.Log("RemovePlayerFromLists called:\n"+Environment.StackTrace);
             H3MP_PlayerManager player = H3MP_GameManager.players[playerID];
 
             // Manage instance
@@ -2660,7 +2661,7 @@ namespace H3MP
             {
                 H3MP_GameManager.playersByInstanceByScene[player.scene].Remove(player.instance);
             }
-            else if(H3MP_GameManager.playersByInstanceByScene[player.scene].Count == 0)
+            if(H3MP_GameManager.playersByInstanceByScene[player.scene].Count == 0)
             {
                 H3MP_GameManager.playersByInstanceByScene.Remove(player.scene);
             }
@@ -2668,23 +2669,7 @@ namespace H3MP
             // Manage players present
             if (player.scene.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
             {
-                if (!player.gameObject.activeSelf)
-                {
-                    player.gameObject.SetActive(true);
-                    ++H3MP_GameManager.playersPresent;
-
-                    player.SetEntitiesRegistered(true);
-                }
-            }
-            else
-            {
-                if (player.gameObject.activeSelf)
-                {
-                    player.gameObject.SetActive(false);
-                    --H3MP_GameManager.playersPresent;
-
-                    player.SetEntitiesRegistered(false);
-                }
+                --H3MP_GameManager.playersPresent;
             }
 
             RemovePlayerFromSpecificLists(player);

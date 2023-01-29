@@ -105,6 +105,7 @@ namespace H3MP
                 if (clients[i].tcp.socket == null)
                 {
                     clients[i].tcp.Connect(client);
+                    clients[i].connected = true;
                     return;
                 }
             }

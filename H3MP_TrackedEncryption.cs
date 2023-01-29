@@ -20,6 +20,7 @@ namespace H3MP
         public static List<int> unknownDestroyTrackedIDs = new List<int>();
 
         public bool sendDestroy = true; // To prevent feeback loops
+        public bool skipFullDestroy;
 
         private void Awake()
         {
@@ -42,6 +43,11 @@ namespace H3MP
 
         private void OnDestroy()
         {
+            if (skipFullDestroy)
+            {
+                return;
+            }
+
             H3MP_GameManager.trackedEncryptionByEncryption.Remove(physicalEncryptionScript);
 
             if (H3MP_ThreadManager.host)

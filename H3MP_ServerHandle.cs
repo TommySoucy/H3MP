@@ -37,6 +37,12 @@ namespace H3MP
 
         public static void PlayerState(int clientID, H3MP_Packet packet)
         {
+            if(H3MP_Server.clients[clientID] == null || H3MP_Server.clients[clientID].player == null)
+            {
+                // This case is possible if we received player disconnection but we still receive late UDP player state packets
+                return;
+            }
+
             H3MP_Player player = H3MP_Server.clients[clientID].player;
 
             player.position = packet.ReadVector3();
@@ -3144,10 +3150,10 @@ namespace H3MP
 
         public static void ClientDisconnect(int clientID, H3MP_Packet packet)
         {
-            if (H3MP_Server.clients[clientID].tcp == null || H3MP_Server.clients[clientID].tcp.socket == null || // If no client is connected at that index, OR
+            if (H3MP_Server.clients[clientID].connected && // If a client is connected at that index, AND
                 H3MP_Server.clients[clientID].tcp.openTime < packet.ReadLong()) // If it is not a new client we have connected since the client has disconnected
             {
-                H3MP_Server.clients[clientID].Disconnect();
+                H3MP_Server.clients[clientID].Disconnect(3);
             }
         }
     }
