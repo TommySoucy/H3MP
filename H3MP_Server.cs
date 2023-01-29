@@ -56,6 +56,42 @@ namespace H3MP
             }
         }
 
+        public static void Close()
+        {
+            H3MP_ServerSend.ServerClosed();
+
+            H3MP_GameManager.TakeAllPhysicalControl(true);
+
+            clients.Clear();
+            items = null;
+            availableItemIndices = null;
+            sosigs = null;
+            availableSosigIndices = null;
+            autoMeaters = null;
+            availableAutoMeaterIndices = null;
+            encryptions = null;
+            availableEncryptionIndices = null;
+
+            tcpListener.Stop();
+            tcpListener = null;
+            udpListener.Close();
+            udpListener = null;
+
+            H3MP_GameManager.Reset();
+            GameObject.Destroy(Mod.managerObject);
+            SpecificClose();
+        }
+
+        // MOD: This will be called after disconnection to reset specific fields
+        //      For example, here we deal with current TNH data
+        //      If your mod has some H3MP dependent data that you want to get rid of when you close a server, do it here
+        private static void SpecificClose()
+        {
+            Mod.currentTNHInstance = null;
+            Mod.TNHSpectating = false;
+            Mod.currentlyPlayingTNH = false;
+        }
+
         private static void TCPConnectCallback(IAsyncResult result)
         {
             Console.WriteLine("TCP connect callback");
@@ -562,6 +598,7 @@ namespace H3MP
                 H3MP_ServerHandle.StingerMissileExplode,
                 H3MP_ServerHandle.PinnedGrenadeExplode,
                 H3MP_ServerHandle.FVRGrenadeExplode,
+                H3MP_ServerHandle.ClientDisconnect,
             };
 
             items = new H3MP_TrackedItemData[100];

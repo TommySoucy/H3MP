@@ -123,5 +123,13 @@ namespace H3MP
                 }
             }
         }
+
+        private void OnApplicationQuit()
+        {
+            if (host)
+            {
+                H3MP_Server.Close();
+            }
+        }
     }
 }

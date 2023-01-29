@@ -2317,5 +2317,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void ClientDisconnect()
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.clientDisconnect))
+            {
+                DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                packet.Write(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

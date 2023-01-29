@@ -40,6 +40,7 @@ namespace H3MP
         public bool removeFromListOnDestroy = true;
         public string scene;
         public int instance;
+        public byte[] data;
 
         public Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone> hitZones = new Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone>();
 
@@ -93,19 +94,40 @@ namespace H3MP
                     TNH_HoldPoint curHoldPoint = GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
                     List<AutoMeater> curHoldPointTurrets = (List<AutoMeater>)Mod.TNH_HoldPoint_m_activeTurrets.GetValue(curHoldPoint);
                     curHoldPointTurrets.Add(physicalObject.physicalAutoMeaterScript);
+                    data[0] = 0;
                 }
                 else if (Mod.temporarySupplyTurretIDs.ContainsKey(trackedID))
                 {
                     TNH_SupplyPoint curSupplyPoint = GM.TNH_Manager.SupplyPoints[Mod.temporarySupplyTurretIDs[trackedID]];
                     List<AutoMeater> curSupplyPointTurrets = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(curSupplyPoint);
                     curSupplyPointTurrets.Add(physicalObject.physicalAutoMeaterScript);
+                    data[1] = 0;
 
                     Mod.temporarySupplyTurretIDs.Remove(trackedID);
                 }
             }
 
+            ProcessData();
+
             // Initially set itself
             Update(this);
+        }
+
+        // MOD: This will be called at the end of instantiation so mods can use it to process the data array
+        //      Example here is data about the TNH context
+        private void ProcessData()
+        {
+            if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
+            {
+                if (data[0] == 1) // TNH_HoldPoint is in spawn turrets
+                {
+                    ((List<AutoMeater>)Mod.TNH_HoldPoint_m_activeTurrets.GetValue(GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex])).Add(physicalObject.physicalAutoMeaterScript);
+                }
+                else if (data[1] == 1) // TNH_SupplyPoint is in Spawn Take Enemy Group
+                {
+                    ((List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(GM.TNH_Manager.SupplyPoints[BitConverter.ToInt16(data, 2)])).Add(physicalObject.physicalAutoMeaterScript);
+                }
+            }
         }
 
         public static string AutoMeaterIDToItemID(byte ID)

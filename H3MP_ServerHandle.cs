@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Valve.VR.InteractionSystem;
 using static FistVR.TNH_Progression;
 using static H3MP.H3MP_PlayerHitbox;
 using static Valve.VR.SteamVR_ExternalCamera;
@@ -3138,6 +3140,15 @@ namespace H3MP
             }
 
             H3MP_ServerSend.FVRGrenadeExplode(clientID, packet);
+        }
+
+        public static void ClientDisconnect(int clientID, H3MP_Packet packet)
+        {
+            if (H3MP_Server.clients[clientID].tcp == null || H3MP_Server.clients[clientID].tcp.socket == null || // If no client is connected at that index, OR
+                H3MP_Server.clients[clientID].tcp.openTime < packet.ReadLong()) // If it is not a new client we have connected since the client has disconnected
+            {
+                H3MP_Server.clients[clientID].Disconnect();
+            }
         }
     }
 }

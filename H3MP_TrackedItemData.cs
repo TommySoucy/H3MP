@@ -29,6 +29,7 @@ namespace H3MP
         public byte[] identifyingData;
         public byte[] previousData;
         public byte[] data;
+        public byte[] additionalData;
 
         // Item type specific data structure:
         /**
@@ -178,6 +179,8 @@ namespace H3MP
                     Mod.SetKinematicRecursive(physicalItem.transform, true);
                 }
 
+                ProcessAdditionalData();
+
                 // Initially set itself
                 Update(this, true);
             }
@@ -185,6 +188,11 @@ namespace H3MP
             {
                 Debug.LogError("Error while trying to instantiate item: " + itemID+":\n"+e.Message+"\n"+e.StackTrace);
             }
+        }
+
+        // MOD: This will be called at the end of instantiation so mods can use it to process the additionalData array
+        private void ProcessAdditionalData()
+        {
         }
 
         // MOD: If a mod keeps its item prefabs in a different location than IM.OD, this is what should be patched to find it

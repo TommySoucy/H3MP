@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Policy;
@@ -148,6 +149,33 @@ namespace H3MP
             {
                 ++playersPresent;
             }
+        }
+
+        public static void Reset()
+        {
+            foreach(KeyValuePair<int, H3MP_PlayerManager> playerEntry in players)
+            {
+                Destroy(playerEntry.Value.gameObject);
+            }
+            players.Clear();
+            items.Clear();
+            sosigs.Clear();
+            autoMeaters.Clear();
+            encryptions.Clear();
+            trackedItemByItem.Clear();
+            trackedSosigBySosig.Clear();
+            trackedItemBySosigWeapon.Clear();
+            trackedAutoMeaterByAutoMeater.Clear();
+            trackedEncryptionByEncryption.Clear();
+            activeInstances.Clear();
+            TNHInstances.Clear();
+            playersByInstanceByScene.Clear();
+            itemsByInstanceByScene.Clear();
+            sosigsByInstanceByScene.Clear();
+            autoMeatersByInstanceByScene.Clear();
+            encryptionsByInstanceByScene.Clear();
+            ID = 0;
+            instance = 0;
         }
 
         public static void UpdatePlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
@@ -331,6 +359,7 @@ namespace H3MP
 
                     // Remove from currently playing and dead if necessary
                     currentInstance.currentlyPlaying.Remove(playerID);
+                    currentInstance.played.Remove(playerID);
                     currentInstance.dead.Remove(playerID);
                 }
             }
@@ -670,11 +699,21 @@ namespace H3MP
             data.instance = instance;
             data.controller = ID;
 
+            CollectExternalData(data);
+
             // Add to local list
             data.localTrackedID = items.Count;
             items.Add(data);
 
             return trackedItem;
+        }
+
+        // MOD: This will be called upon tracking a new item
+        //      From here you will be able to set specific data on the item
+        //      For more information and example, take a look at CollectExternalData(H3MP_TrackedSosigData)
+        private static void CollectExternalData(H3MP_TrackedItemData trackedItemData)
+        {
+            trackedItemData.additionalData = new byte[0];
         }
 
         // MOD: If you have a type of item (FVRPhysicalObject) that doen't have an ObjectWrapper,
@@ -939,11 +978,49 @@ namespace H3MP
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
 
+            CollectExternalData(data);
+
             // Add to local list
             data.localTrackedID = sosigs.Count;
             sosigs.Add(data);
 
             return trackedSosig;
+        }
+
+        // MOD: This will be called upon tracking a new sosig
+        //      From here you will be able to set specific data on the sosig
+        //      For example, when we spawn sosigs in TNH we set flags so we know if they were in a patrol/holdpoint/supplypoint so we can set 
+        //      this in the trackedSosigData
+        //      Considering multiple mods may be writing data, a mod should probably add an int as an identifier for the data, which will
+        //      be used to find the mod specific data in the data array
+        private static void CollectExternalData(H3MP_TrackedSosigData trackedSosigData)
+        {
+            trackedSosigData.data = new byte[9 + (12 * (TNH_ManagerPatch.patrolPoints == null ? 0 : TNH_ManagerPatch.patrolPoints.Count))];
+
+            // Write TNH context
+            trackedSosigData.data[0] = TNH_HoldPointPatch.inSpawnEnemyGroup ? (byte)1 : (byte)1;
+            //trackedSosigData.data[1] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)1;
+            trackedSosigData.data[1] = TNH_SupplyPointPatch.inSpawnTakeEnemyGroup ? (byte)1 : (byte)1;
+            BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(trackedSosigData.data, 2);
+            //trackedSosigData.data[3] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)1;
+            trackedSosigData.data[4] = TNH_ManagerPatch.inGenerateSentryPatrol ? (byte)1 : (byte)1;
+            trackedSosigData.data[5] = TNH_ManagerPatch.inGeneratePatrol ? (byte)1 : (byte)1;
+            BitConverter.GetBytes((short)TNH_ManagerPatch.patrolIndex).CopyTo(trackedSosigData.data, 6);
+            if(TNH_ManagerPatch.patrolPoints == null || TNH_ManagerPatch.patrolPoints.Count == 0)
+            {
+                trackedSosigData.data[8] = (byte)0;
+            }
+            else
+            {
+                trackedSosigData.data[8] = (byte)TNH_ManagerPatch.patrolPoints.Count;
+                for(int i=0; i< TNH_ManagerPatch.patrolPoints.Count; ++i)
+                {
+                    int index = i * 12 + 9;
+                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].x);
+                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i+4].y);
+                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i+8].z);
+                }
+            }
         }
 
         public static void SyncTrackedAutoMeaters(bool init = false, bool inControl = false)
@@ -1064,6 +1141,8 @@ namespace H3MP
                 data.hitZones.Add(hitZone.Type, hitZone);
             }
 
+            CollectExternalData(data);
+
             // Add to local list
             data.localTrackedID = autoMeaters.Count;
             data.scene = SceneManager.GetActiveScene().name;
@@ -1071,6 +1150,19 @@ namespace H3MP
             autoMeaters.Add(data);
 
             return trackedAutoMeater;
+        }
+
+        // MOD: This will be called upon tracking a new autoMeater
+        //      From here you will be able to set specific data on the autoMeater
+        //      For more info and example, take a look at CollectExternalData(H3MP_TrackedSosigData)
+        private static void CollectExternalData(H3MP_TrackedAutoMeaterData trackedAutoMeaterData)
+        {
+            trackedAutoMeaterData.data = new byte[4];
+
+            // Write TNH context
+            trackedAutoMeaterData.data[0] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)1;
+            trackedAutoMeaterData.data[1] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)1;
+            BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(trackedAutoMeaterData.data, 2);
         }
 
         public static void SyncTrackedEncryptions(bool init = false, bool inControl = false)
@@ -1758,7 +1850,6 @@ namespace H3MP
                                 // We do this because we may not have the most up to date version of items/sosigs since
                                 // clients only send updated data when there are others in their scene
                                 // But we need the most of to date data to instantiate the item/sosig
-                                Debug.Log("Requesting up to date objects from "+player.Key);
                                 H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                             }
                         }
@@ -1864,6 +1955,138 @@ namespace H3MP
                 damage.Dam_TotalEnergetic *= 0.15f;
                 damage.Dam_TotalKinetic *= 0.15f;
                 GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
+            }
+        }
+
+        // MOD: This will get called when the client disconnects from a server
+        //      A mod should postfix this to give control of whatever elements it has that are tracked through H3MP that are under this client's control
+        //      Like TNH below, if we are in a TNH instance, we need to give control of the instance if necessary
+        public static void GiveUpAllControl()
+        {
+            // Get best potential host
+            int newController = Mod.GetBestPotentialObjectHost(ID);
+            if(newController == -1)
+            {
+                // This would mean there is noone in our scene/instance to take control of anything we have
+                return;
+            }
+
+            // Give all items
+            foreach(H3MP_TrackedItemData item in items)
+            {
+                H3MP_ClientSend.GiveControl(item.trackedID, newController);
+            }
+
+            // Give all sosigs
+            foreach(H3MP_TrackedSosigData sosig in sosigs)
+            {
+                H3MP_ClientSend.GiveSosigControl(sosig.trackedID, newController);
+            }
+
+            // Give all automeaters
+            foreach(H3MP_TrackedAutoMeaterData autoMeater in autoMeaters)
+            {
+                H3MP_ClientSend.GiveAutoMeaterControl(autoMeater.trackedID, newController);
+            }
+
+            // Give all encryptions
+            foreach(H3MP_TrackedEncryptionData encryption in encryptions)
+            {
+                H3MP_ClientSend.GiveEncryptionControl(encryption.trackedID, newController);
+            }
+
+            // TNH
+            if(Mod.currentTNHInstance != null)
+            {
+                if(Mod.currentlyPlayingTNH && Mod.currentTNHInstance.controller == ID)
+                {
+                    H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, newController);
+                    H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                }
+
+                // Note: When client disconnects, other clients will be told and will take this client out of
+                //       the various TNH lists like currentlyPlaying, etc. So we don't have to do it here
+            }
+        }
+
+        public static void TakeAllPhysicalControl(bool destroyTrackedScript)
+        {
+            H3MP_TrackedItemData[] itemArrToUse = null;
+            H3MP_TrackedSosigData[] sosigArrToUse = null;
+            H3MP_TrackedAutoMeaterData[] autoMeaterArrToUse = null;
+            H3MP_TrackedEncryptionData[] encryptionArrToUse = null;
+            if (H3MP_ThreadManager.host)
+            {
+                itemArrToUse = H3MP_Server.items;
+                sosigArrToUse = H3MP_Server.sosigs;
+                autoMeaterArrToUse = H3MP_Server.autoMeaters;
+                encryptionArrToUse = H3MP_Server.encryptions;
+            }
+            else
+            {
+                itemArrToUse = H3MP_Client.items;
+                sosigArrToUse = H3MP_Client.sosigs;
+                autoMeaterArrToUse = H3MP_Client.autoMeaters;
+                encryptionArrToUse = H3MP_Client.encryptions;
+            }
+
+            foreach (H3MP_TrackedItemData item in itemArrToUse)
+            {
+                if(item.physicalItem != null)
+                {
+                    Mod.SetKinematicRecursive(item.physicalItem.transform, false);
+                    if (destroyTrackedScript)
+                    {
+                        item.physicalItem.sendDestroy = false;
+                        Destroy(item.physicalItem);
+                    }
+                }
+            }
+
+            foreach (H3MP_TrackedSosigData sosig in sosigArrToUse)
+            {
+                if(sosig.physicalObject != null)
+                {
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(sosig.physicalObject.physicalSosigScript.E);
+                    }
+                    sosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
+                    if (destroyTrackedScript)
+                    {
+                        sosig.physicalObject.sendDestroy = false;
+                        Destroy(sosig.physicalObject);
+                    }
+                }
+            }
+
+            foreach (H3MP_TrackedAutoMeaterData autoMeater in autoMeaterArrToUse)
+            {
+                if(autoMeater.physicalObject != null)
+                {
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(autoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    }
+                    autoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
+                    if (destroyTrackedScript)
+                    {
+                        autoMeater.physicalObject.sendDestroy = false;
+                        Destroy(autoMeater.physicalObject);
+                    }
+                }
+            }
+
+            foreach (H3MP_TrackedEncryptionData encryption in encryptionArrToUse)
+            {
+                if(encryption.physicalObject != null)
+                {
+                    if (destroyTrackedScript)
+                    {
+                        encryption.physicalObject.sendDestroy = false;
+                        Destroy(encryption.physicalObject);
+                    }
+                }
             }
         }
     }

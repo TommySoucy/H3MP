@@ -2775,5 +2775,17 @@ namespace H3MP
                 }
             }
         }
+
+        public static void ClientDisconnect(H3MP_Packet packet)
+        {
+            int ID = packet.ReadInt();
+
+            Mod.RemovePlayerFromLists(ID);
+        }
+
+        public static void ServerClosed(H3MP_Packet packet)
+        {
+            H3MP_Client.singleton.Disconnect(false);
+        }
     }
 }

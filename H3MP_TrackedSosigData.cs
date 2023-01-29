@@ -44,6 +44,9 @@ namespace H3MP
         public bool removeFromListOnDestroy = true;
         public string scene;
         public int instance;
+        public byte[] data;
+
+        public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad;
 
         public IEnumerator Instantiate()
         {
@@ -96,19 +99,64 @@ namespace H3MP
                     TNH_HoldPoint curHoldPoint = GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
                     List<Sosig> curHoldPointSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(curHoldPoint);
                     curHoldPointSosigs.Add(physicalObject.physicalSosigScript);
+                    data[0] = 0;
                 }
                 else if(Mod.temporarySupplySosigIDs.ContainsKey(trackedID))
                 {
                     TNH_SupplyPoint curSupplyPoint = GM.TNH_Manager.SupplyPoints[Mod.temporarySupplySosigIDs[trackedID]];
                     List<Sosig> curSupplyPointSosigs = (List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(curSupplyPoint);
                     curSupplyPointSosigs.Add(physicalObject.physicalSosigScript);
+                    data[1] = 0;
 
                     Mod.temporarySupplySosigIDs.Remove(trackedID);
                 }
             }
 
+            ProcessData();
+
             // Initially set itself
             Update(this);
+        }
+
+        // MOD: This will be called at the end of instantiation so mods can use it to process the data array
+        //      Example here is data about the TNH context
+        private void ProcessData()
+        {
+            if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
+            {
+                if (data[0] == 1) // TNH_HoldPoint is in spawn enemy group
+                {
+                    ((List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex])).Add(physicalObject.physicalSosigScript);
+                }
+                else if (data[1] == 1) // TNH_SupplyPoint is in Spawn Take Enemy Group
+                {
+                    ((List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(GM.TNH_Manager.SupplyPoints[BitConverter.ToInt16(data, 2)])).Add(physicalObject.physicalSosigScript);
+                }
+                else if (data[4] == 1 || data[5] == 1) // TNH_Manager is in generate patrol
+                {
+                    physicalObject.physicalSosigScript.SetAssaultSpeed(Sosig.SosigMoveSpeed.Walking);
+                    int patrolIndex = BitConverter.ToInt16(data, 6);
+                    if (latestSosigPatrolSquad.Key == patrolIndex)
+                    {
+                        latestSosigPatrolSquad.Value.Squad.Add(physicalObject.physicalSosigScript);
+                    }
+                    else
+                    {
+                        latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(patrolIndex, new TNH_Manager.SosigPatrolSquad());
+                        latestSosigPatrolSquad.Value.PatrolPoints = new List<Vector3>();
+                        int pointCount = data[8];
+                        for (int i = 0; i < pointCount; ++i)
+                        {
+                            int firstIndex = i * 12 + 9;
+                            latestSosigPatrolSquad.Value.PatrolPoints.Add(new Vector3(BitConverter.ToSingle(data, firstIndex),
+                                                                                      BitConverter.ToSingle(data, firstIndex + 4),
+                                                                                      BitConverter.ToSingle(data, firstIndex + 8)));
+                        }
+                        latestSosigPatrolSquad.Value.Squad.Add(physicalObject.physicalSosigScript);
+                        ((List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(GM.TNH_Manager)).Add(latestSosigPatrolSquad.Value);
+                    }
+                }
+            }
         }
 
         private IEnumerator EquipWearables()

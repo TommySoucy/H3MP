@@ -3596,5 +3596,23 @@ namespace H3MP
                 SendTCPDataToAll(clientID, packet);
             }
         }
+
+        public static void ClientDisconnect(int clientID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.clientDisconnect))
+            {
+                packet.Write(clientID);
+
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void ServerClosed()
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.serverClosed))
+            {
+                SendTCPDataToAll(packet);
+            }
+        }
     }
 }

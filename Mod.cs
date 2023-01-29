@@ -98,6 +98,7 @@ namespace H3MP
         public static Dictionary<int, int> temporarySupplyTurretIDs = new Dictionary<int, int>();
         public static H3MP_TNHData initTNHData;
 
+        #region Reused NonPublic MemberInfo
         // Reused private FieldInfos
         public static readonly FieldInfo Sosig_m_isOnOffMeshLinkField = typeof(Sosig).GetField("m_isOnOffMeshLink", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Sosig_m_joints = typeof(Sosig).GetField("m_joints", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -251,6 +252,7 @@ namespace H3MP
         public static readonly MethodInfo RollingBlock_Fire = typeof(RollingBlock).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo SingleActionRevolver_Fire = typeof(SingleActionRevolver).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo StingerMissile_Explode = typeof(StingerMissile).GetMethod("Explode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        #endregion
 
         // Debug
         bool debug;
@@ -288,7 +290,17 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.Keypad3))
                 {
-                    SteamVR_LoadLevel.Begin("IndoorRange", false, 0.5f, 0f, 0f, 0f, 1f);
+                    if(Mod.managerObject != null)
+                    {
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_Server.Close();
+                        }
+                        else
+                        {
+                            H3MP_Client.singleton.Disconnect(true);
+                        }
+                    }
                 }
                 else if (Input.GetKeyDown(KeyCode.Keypad4))
                 {
@@ -1645,6 +1657,12 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchOnBotShotFiredPrefix = typeof(TNH_ManagerPatch).GetMethod("OnBotShotFiredPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchAddFVRObjectToTrackedListOriginal = typeof(TNH_Manager).GetMethod("AddFVRObjectToTrackedList", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchAddFVRObjectToTrackedListPrefix = typeof(TNH_ManagerPatch).GetMethod("AddFVRObjectToTrackedListPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerGenerateSentryPatrolOriginal = typeof(TNH_Manager).GetMethod("GenerateSentryPatrol", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerGenerateSentryPatrolPrefix = typeof(TNH_ManagerPatch).GetMethod("GenerateSentryPatrolPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerGenerateSentryPatrolPostfix = typeof(TNH_ManagerPatch).GetMethod("GenerateSentryPatrolPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerGeneratePatrolOriginal = typeof(TNH_Manager).GetMethod("GeneratePatrol", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerGeneratePatrolPrefix = typeof(TNH_ManagerPatch).GetMethod("GeneratePatrolPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerGeneratePatrolPostfix = typeof(TNH_ManagerPatch).GetMethod("GeneratePatrolPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TNH_ManagerPatchPlayerDiedOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchAddTokensOriginal, harmony, true);
@@ -1658,6 +1676,8 @@ namespace H3MP
             PatchVerify.Verify(TNH_ManagerPatchOnShotFiredOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchOnBotShotFiredOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, harmony, true);
+            PatchVerify.Verify(TNH_ManagerGenerateSentryPatrolOriginal, harmony, true);
+            PatchVerify.Verify(TNH_ManagerGeneratePatrolOriginal, harmony, true);
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
@@ -1670,6 +1690,21 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchOnShotFiredOriginal, new HarmonyMethod(TNH_ManagerPatchOnShotFiredPrefix));
             harmony.Patch(TNH_ManagerPatchOnBotShotFiredOriginal, new HarmonyMethod(TNH_ManagerPatchOnBotShotFiredPrefix));
             harmony.Patch(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, new HarmonyMethod(TNH_ManagerPatchAddFVRObjectToTrackedListPrefix));
+            harmony.Patch(TNH_ManagerGenerateSentryPatrolOriginal, new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPrefix), new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPostfix));
+            harmony.Patch(TNH_ManagerGeneratePatrolOriginal, new HarmonyMethod(TNH_ManagerGeneratePatrolPrefix), new HarmonyMethod(TNH_ManagerGeneratePatrolPostfix));
+
+            // TNHSupplyPointPatch
+            MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnTakeEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnTakeEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNHSupplyPointPatchSpawnDefensesOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnDefenses", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNHSupplyPointPatchSpawnDefensesPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnDefensesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNHSupplyPointPatchSpawnDefensesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnDefensesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, harmony, false);
+            PatchVerify.Verify(TNHSupplyPointPatchSpawnDefensesOriginal, harmony, false);
+            harmony.Patch(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix));
+            harmony.Patch(TNHSupplyPointPatchSpawnDefensesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPostfix));
 
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
@@ -1713,6 +1748,13 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchCompleteHoldOriginal = typeof(TNH_HoldPoint).GetMethod("CompleteHold", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchCompleteHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchCompleteHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnHoldEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnTurretsPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnTurretsPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TNH_HoldPointPatchSystemNodeOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchSpawnEntitiesOriginal, harmony, true);
@@ -1728,6 +1770,9 @@ namespace H3MP
             PatchVerify.Verify(TNH_HoldPointPatchFailOutOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchBeginPhaseOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchCompleteHoldOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnTurretsOriginal, harmony, true);
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
             harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
@@ -1742,6 +1787,9 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchFailOutOriginal, new HarmonyMethod(TNH_HoldPointPatchFailOutPrefix));
             harmony.Patch(TNH_HoldPointPatchBeginPhaseOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginPhasePrefix));
             harmony.Patch(TNH_HoldPointPatchCompleteHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchCompleteHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchCompleteHoldPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnTurretsOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPostfix));
 
             // TNHWeaponCrateSpawnObjectsPatch
             MethodInfo TNH_WeaponCrateSpawnObjectsPatchOriginal = typeof(TNH_WeaponCrate).GetMethod("SpawnObjectsRaw", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -2371,10 +2419,11 @@ namespace H3MP
                     // Going through each like this, we will go through the host of the instance before any other
                     foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                     {
-                        // If the player is us and we are not spectating
-                        // OR it is another player who is not spectating
-                        if ((playerID == H3MP_GameManager.ID && !Mod.TNHSpectating) ||
-                             (H3MP_GameManager.players.ContainsKey(playerID) && H3MP_GameManager.players[playerID].gameObject.activeSelf))
+                        // If the player is us and we are **not spectating**??
+                        // OR it is another player who is **not spectating**??
+                        // TODO: Spectators can still be in control of things, can't they? review this
+                        if ((playerID == H3MP_GameManager.ID/* && !Mod.TNHSpectating*/) ||
+                             (H3MP_GameManager.players.ContainsKey(playerID)/* && H3MP_GameManager.players[playerID].gameObject.activeSelf*/))
                         {
                             return playerID;
                         }
@@ -2383,9 +2432,10 @@ namespace H3MP
                 else
                 {
                     // Going through each like this, we will go through the host of the instance before any other
+                    // TODO: Spectators can still be in control of things, can't they? review this
                     foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                     {
-                        if (playerID != currentController && H3MP_GameManager.players[playerID].gameObject.activeSelf)
+                        if (playerID != currentController/* && H3MP_GameManager.players[playerID].gameObject.activeSelf*/)
                         {
                             return playerID;
                         }
@@ -2587,6 +2637,107 @@ namespace H3MP
             foreach (Transform child in root.transform)
             {
                 SetKinematicRecursive(child, value);
+            }
+        }
+
+        public static void RemovePlayerFromLists(int playerID)
+        {
+            H3MP_PlayerManager player = H3MP_GameManager.players[playerID];
+
+            // Manage instance
+            if (H3MP_GameManager.activeInstances.ContainsKey(player.instance))
+            {
+                --H3MP_GameManager.activeInstances[player.instance];
+                if (H3MP_GameManager.activeInstances[player.instance] == 0)
+                {
+                    H3MP_GameManager.activeInstances.Remove(player.instance);
+                }
+            }
+
+            // Manage scene/instance
+            H3MP_GameManager.playersByInstanceByScene[player.scene][player.instance].Remove(player.ID);
+            if (H3MP_GameManager.playersByInstanceByScene[player.scene][player.instance].Count == 0)
+            {
+                H3MP_GameManager.playersByInstanceByScene[player.scene].Remove(player.instance);
+            }
+            else if(H3MP_GameManager.playersByInstanceByScene[player.scene].Count == 0)
+            {
+                H3MP_GameManager.playersByInstanceByScene.Remove(player.scene);
+            }
+
+            // Manage players present
+            if (player.scene.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
+            {
+                if (!player.gameObject.activeSelf)
+                {
+                    player.gameObject.SetActive(true);
+                    ++H3MP_GameManager.playersPresent;
+
+                    player.SetEntitiesRegistered(true);
+                }
+            }
+            else
+            {
+                if (player.gameObject.activeSelf)
+                {
+                    player.gameObject.SetActive(false);
+                    --H3MP_GameManager.playersPresent;
+
+                    player.SetEntitiesRegistered(false);
+                }
+            }
+
+            RemovePlayerFromSpecificLists(player);
+
+            GameObject.Destroy(H3MP_GameManager.players[playerID].gameObject);
+            H3MP_GameManager.players.Remove(playerID);
+        }
+
+        // MOD: Will be called by RemovePlayerFromLists before the player finally gets destroyed
+        //      This is where you would manage the player being removed from the network if you're keeping a reference of them anywhere
+        //      Example here is TNH instances
+        public static void RemovePlayerFromSpecificLists(H3MP_PlayerManager player)
+        {
+            if (H3MP_GameManager.TNHInstances.TryGetValue(player.instance, out H3MP_TNHInstance currentInstance))
+            {
+                int preHost = currentInstance.playerIDs[0];
+                currentInstance.playerIDs.Remove(player.ID);
+                if (currentInstance.playerIDs.Count == 0)
+                {
+                    H3MP_GameManager.TNHInstances.Remove(player.instance);
+
+                    if (Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(player.instance))
+                    {
+                        GameObject.Destroy(Mod.joinTNHInstances[player.instance]);
+                        Mod.joinTNHInstances.Remove(player.instance);
+                    }
+
+                    if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
+                    {
+                        Mod.TNHSpectating = false;
+                    }
+                }
+                else
+                {
+                    // Remove player from active TNH player list
+                    if (Mod.TNHMenu != null && Mod.TNHPlayerList != null && Mod.TNHPlayerPrefab != null &&
+                        Mod.currentTNHInstancePlayers != null && Mod.currentTNHInstancePlayers.ContainsKey(player.ID))
+                    {
+                        Destroy(Mod.currentTNHInstancePlayers[player.ID]);
+                        Mod.currentTNHInstancePlayers.Remove(player.ID);
+
+                        // Switch host if necessary
+                        if (preHost != currentInstance.playerIDs[0])
+                        {
+                            Mod.currentTNHInstancePlayers[currentInstance.playerIDs[0]].transform.GetChild(0).GetComponent<Text>().text += " (Host)";
+                        }
+                    }
+
+                    // Remove from other active lists
+                    currentInstance.currentlyPlaying.Remove(player.ID);
+                    currentInstance.played.Remove(player.ID);
+                    currentInstance.dead.Remove(player.ID);
+                }
             }
         }
     }
@@ -10422,6 +10573,9 @@ namespace H3MP
                         // Keep our own reference
                         Mod.currentTNHInstance.manager = GM.TNH_Manager;
 
+                        // Reset TNH_ManagerPatch data
+                        TNH_ManagerPatch.patrolIndex = -1;
+
                         if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
                             if (Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID)
@@ -11003,6 +11157,11 @@ namespace H3MP
         public static int sosigKillSkip;
         public static bool doInit;
 
+        public static bool inGenerateSentryPatrol;
+        public static bool inGeneratePatrol;
+        public static List<Vector3> patrolPoints;
+        public static int patrolIndex = -1;
+
         static bool PlayerDiedPrefix()
         {
             if (Mod.managerObject != null)
@@ -11534,6 +11693,54 @@ namespace H3MP
             }
             return true;
         }
+
+        static void GenerateSentryPatrolPrefix(List<Vector3> PatrolPoints)
+        {
+            inGenerateSentryPatrol = true;
+            patrolIndex++;
+            patrolPoints = PatrolPoints;
+        }
+
+        static void GenerateSentryPatrolPostfix()
+        {
+            inGenerateSentryPatrol = false;
+        }
+
+        static void GeneratePatrolPrefix(TNH_Manager __instance)
+        {
+            if(Mod.managerObject != null)
+            {
+                inGeneratePatrol = true;
+                patrolIndex++;
+                List<int> list = new List<int>();
+                int i = 0;
+                int num = 0;
+                while (i < 5)
+                {
+                    int item = UnityEngine.Random.Range(0, __instance.HoldPoints.Count);
+                    if (!list.Contains(item))
+                    {
+                        list.Add(item);
+                        i++;
+                    }
+                    num++;
+                    if (num > 200)
+                    {
+                        break;
+                    }
+                }
+                patrolPoints = new List<Vector3>();
+                for (int j = 0; j < list.Count; j++)
+                {
+                    patrolPoints.Add(__instance.HoldPoints[list[j]].SpawnPoints_Sosigs_Defense[UnityEngine.Random.Range(0, __instance.HoldPoints[list[j]].SpawnPoints_Sosigs_Defense.Count)].position);
+                }
+            }
+        }
+
+        static void GeneratePatrolPostfix()
+        {
+            inGeneratePatrol = false;
+        }
     }
 
     // Patches TNH_HoldPoint to keep track of hold point events
@@ -11542,6 +11749,9 @@ namespace H3MP
         public static bool spawnEntitiesSkip;
         public static int beginHoldSkip;
         public static int beginPhaseSkip;
+
+        public static bool inSpawnEnemyGroup;
+        public static bool inSpawnTurrets;
 
         static bool UpdatePrefix(ref TNH_HoldPoint __instance, bool ___m_isInHold, ref TNH_HoldPointSystemNode ___m_systemNode, ref bool ___m_hasPlayedTimeWarning1, ref bool ___m_hasPlayedTimeWarning2,
                                  ref int ___m_numWarnings)
@@ -11947,6 +12157,71 @@ namespace H3MP
             {
                 --TNH_ManagerPatch.completeTokenSkip;
             }
+        }
+
+        static void SpawnEnemyGroupPrefix()
+        {
+            inSpawnEnemyGroup = true;
+        }
+
+        static void SpawnEnemyGroupPostfix()
+        {
+            inSpawnEnemyGroup = false;
+        }
+
+        static void SpawnTurretsPrefix()
+        {
+            inSpawnTurrets = true;
+        }
+
+        static void SpawnTurretsPostfix()
+        {
+            inSpawnTurrets = false;
+        }
+    }
+
+    class TNH_SupplyPointPatch
+    {
+        public static bool inSpawnTakeEnemyGroup;
+        public static bool inSpawnDefenses;
+        public static int supplyPointIndex;
+
+        static void SpawnTakeEnemyGroupPrefix(TNH_SupplyPoint __instance)
+        {
+            inSpawnTakeEnemyGroup = true;
+            supplyPointIndex = -1;
+            for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+            {
+                if (__instance == GM.TNH_Manager.SupplyPoints[i])
+                {
+                    supplyPointIndex = i;
+                    break;
+                }
+            }
+        }
+
+        static void SpawnTakeEnemyGroupPostfix()
+        {
+            inSpawnTakeEnemyGroup = false;
+        }
+
+        static void SpawnDefensesPrefix(TNH_SupplyPoint __instance)
+        {
+            inSpawnDefenses = true;
+            supplyPointIndex = -1;
+            for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+            {
+                if (__instance == GM.TNH_Manager.SupplyPoints[i])
+                {
+                    supplyPointIndex = i;
+                    break;
+                }
+            }
+        }
+
+        static void SpawnDefensesPostfix()
+        {
+            inSpawnDefenses = false;
         }
     }
 

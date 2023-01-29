@@ -137,7 +137,7 @@ namespace H3MP
                     int byteLength = stream.EndRead(result);
                     if (byteLength == 0)
                     {
-                        singleton.Disconnect();
+                        singleton.Disconnect(true);
                         return;
                     }
 
@@ -203,7 +203,7 @@ namespace H3MP
 
             private void Disconnect()
             {
-                singleton.Disconnect();
+                singleton.Disconnect(true);
 
                 stream = null;
                 receiveBuffer = null;
@@ -260,7 +260,7 @@ namespace H3MP
 
                     if(data.Length < 4)
                     {
-                        singleton.Disconnect();
+                        singleton.Disconnect(true);
                         return;
                     }
 
@@ -293,7 +293,7 @@ namespace H3MP
 
             private void Disconnect()
             {
-                singleton.Disconnect();
+                singleton.Disconnect(true);
 
                 endPoint = null;
                 socket = null;
@@ -436,6 +436,8 @@ namespace H3MP
                 H3MP_ClientHandle.StingerMissileExplode,
                 H3MP_ClientHandle.PinnedGrenadeExplode,
                 H3MP_ClientHandle.FVRGrenadeExplode,
+                H3MP_ClientHandle.ClientDisconnect,
+                H3MP_ClientHandle.ServerClosed,
             };
 
             // All vanilla scenes can be synced by default
@@ -791,19 +793,44 @@ namespace H3MP
 
         private void OnApplicationQuit()
         {
-            Disconnect();
+            Disconnect(true);
         }
 
-        private void Disconnect()
+        public void Disconnect(bool sendToServer)
         {
             if (isConnected)
             {
+                if (sendToServer) 
+                {
+                    // Give control of everything we control
+                    H3MP_GameManager.GiveUpAllControl();
+
+                    H3MP_ClientSend.ClientDisconnect();
+                }
+
+                // On our side take physical control of everything
+                H3MP_GameManager.TakeAllPhysicalControl(true);
+
                 isConnected = false;
                 tcp.socket.Close();
                 udp.socket.Close();
 
+                H3MP_GameManager.Reset();
+                SpecificDisconnect();
+                Destroy(Mod.managerObject);
+
                 Debug.Log("Disconnected from server.");
             }
+        }
+
+        // MOD: This will be called after disconnection to reset specific fields
+        //      For example, here we deal with current TNH data
+        //      If your mod has some H3MP dependent data that you want to get rid of when you disconnect from a server, do it here
+        private void SpecificDisconnect()
+        {
+            Mod.currentTNHInstance = null;
+            Mod.TNHSpectating = false;
+            Mod.currentlyPlayingTNH = false;
         }
     }
 }

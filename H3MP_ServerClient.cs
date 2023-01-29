@@ -9,6 +9,7 @@ using FistVR;
 using System.IO;
 using UnityEngine.SceneManagement;
 using Valve.VR.InteractionSystem;
+using FFmpeg.AutoGen;
 
 namespace H3MP
 {
@@ -32,6 +33,8 @@ namespace H3MP
         {
             public TcpClient socket;
 
+            public long openTime;
+
             private readonly int ID;
             private NetworkStream stream;
             private H3MP_Packet receivedData;
@@ -44,6 +47,8 @@ namespace H3MP
 
             public void Connect(TcpClient socket)
             {
+                openTime = Convert.ToInt64((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds);
+
                 this.socket = socket;
                 socket.ReceiveBufferSize = dataBufferSize;
                 socket.SendBufferSize = dataBufferSize;
@@ -90,9 +95,9 @@ namespace H3MP
                     receivedData.Reset(HandleData(data));
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Console.WriteLine($"Error receiving TCP data {ex}");
+                    Console.WriteLine($"Client "+ID+" forcibly disconnected");
                     H3MP_Server.clients[ID].Disconnect();
                 }
             }
@@ -251,7 +256,6 @@ namespace H3MP
 
         public void SendRelevantTrackedObjects()
         {
-            Debug.Log("Sending relevant tracked objects");
             // Send to the clients all items that are already synced and controlled by clients in the same scene and instance
             for (int i = 0; i < H3MP_Server.items.Length; ++i)
             {
@@ -265,7 +269,6 @@ namespace H3MP
                     if ((H3MP_Server.items[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
                         (H3MP_Server.items[i].controller != 0 && H3MP_Server.items[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.items[i].controller].player.instance))
                     {
-                        Debug.Log("\t" + H3MP_Server.items[i].itemID+", trackedID: "+i+", controller: "+ H3MP_Server.items[i].controller+", ID: "+ID);
                         // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                         // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
                         // nullable are still null, which is problematic
@@ -274,7 +277,6 @@ namespace H3MP
                     }
                 }
             }
-            Debug.Log("Relevant tracked items sent, sending relevant tracked sosigs");
             // Send to the clients all sosigs that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
             {
@@ -283,13 +285,11 @@ namespace H3MP
                     if ((H3MP_Server.sosigs[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
                         (H3MP_Server.sosigs[i].controller != 0 && H3MP_Server.sosigs[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.instance))
                     {
-                        Debug.Log("\tSending a sosig");
                         H3MP_Server.sosigs[i].Update();
                         H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, player.instance, ID);
                     }
                 }
             }
-            Debug.Log("Relevant tracked sosigs sent, sending relevant tracked AutoMeaters");
             // Send to the clients all AutoMeaters that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.autoMeaters.Length; ++i)
             {
@@ -298,13 +298,11 @@ namespace H3MP
                     if ((H3MP_Server.autoMeaters[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
                         (H3MP_Server.autoMeaters[i].controller != 0 && H3MP_Server.autoMeaters[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.autoMeaters[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.autoMeaters[i].controller].player.instance))
                     {
-                        Debug.Log("\tSending a AutoMeater");
                         H3MP_Server.autoMeaters[i].Update();
                         H3MP_ServerSend.TrackedAutoMeaterSpecific(H3MP_Server.autoMeaters[i], player.scene, player.instance, ID);
                     }
                 }
             }
-            Debug.Log("Relevant tracked automeaters sent, sending relevant tracked Encryptions");
             // Send to the clients all Encryptions that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.encryptions.Length; ++i)
             {
@@ -313,18 +311,19 @@ namespace H3MP
                     if ((H3MP_Server.encryptions[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
                         (H3MP_Server.encryptions[i].controller != 0 && H3MP_Server.encryptions[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.encryptions[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.encryptions[i].controller].player.instance))
                     {
-                        Debug.Log("\tSending an encryption");
                         H3MP_Server.encryptions[i].Update();
                         H3MP_ServerSend.TrackedEncryptionSpecific(H3MP_Server.encryptions[i], player.scene, player.instance, ID);
                     }
                 }
             }
-            Debug.Log("Relevant tracked Encryptions sent");
         }
 
-        private void Disconnect()
+        public void Disconnect()
         {
             Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
+
+            Mod.RemovePlayerFromLists(ID);
+            H3MP_ServerSend.ClientDisconnect(ID);
 
             player = null;
             tcp.Disconnect();

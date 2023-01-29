@@ -139,7 +139,9 @@ namespace H3MP
         stingerMissileDamage = 128,
         stingerMissileExplode = 129,
         pinnedGrenadeExplode = 130,
-        FVRGrenadeExplode = 131
+        FVRGrenadeExplode = 131,
+        clientDisconnect = 132,
+        serverClosed = 133
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -279,7 +281,8 @@ namespace H3MP
         stingerMissileDamage = 132,
         stingerMissileExplode = 133,
         pinnedGrenadeExplode = 134,
-        FVRGrenadeExplode = 135
+        FVRGrenadeExplode = 135,
+        clientDisconnect = 136
     }
 
     public class H3MP_Packet : IDisposable
@@ -482,6 +485,8 @@ namespace H3MP
                 Write(trackedItem.localTrackedID);
                 Write(trackedItem.scene);
                 Write(trackedItem.instance);
+                Write(trackedItem.additionalData.Length);
+                Write(trackedItem.additionalData);
             }
             else
             {
@@ -594,6 +599,8 @@ namespace H3MP
                 Write(SosigTargetPrioritySystemPatch.BoolArrToInt(trackedSosig.IFFChart));
                 Write(trackedSosig.scene);
                 Write(trackedSosig.instance);
+                Write(trackedSosig.data.Length);
+                Write(trackedSosig.data);
             }
             else
             {
@@ -629,6 +636,8 @@ namespace H3MP
                 Write(trackedAutoMeater.localTrackedID);
                 Write(trackedAutoMeater.scene);
                 Write(trackedAutoMeater.instance);
+                Write(trackedAutoMeater.data.Length);
+                Write(trackedAutoMeater.data);
             }
             else
             {
@@ -991,6 +1000,8 @@ namespace H3MP
             }
 
             // HoldPoint data
+            // NOTE: We don't write the encryptions to the hold data because if encryptions are spawned, we always assume they are spawned in the context
+            //       of the current hold and register them to it anyway
             List<Sosig> holdPointActiveSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(manager.HoldPoints[curHoldIndex]);
             if(holdPointActiveSosigs == null || holdPointActiveSosigs.Count == 0)
             {
@@ -1281,6 +1292,8 @@ namespace H3MP
                 trackedItem.localTrackedID = ReadInt();
                 trackedItem.scene = ReadString();
                 trackedItem.instance = ReadInt();
+                int additionalDataLen = ReadInt();
+                trackedItem.additionalData = ReadBytes(additionalDataLen);
             }
             else
             {
@@ -1367,6 +1380,8 @@ namespace H3MP
                 trackedSosig.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(ReadInt());
                 trackedSosig.scene = ReadString();
                 trackedSosig.instance = ReadInt();
+                int dataLen = ReadInt();
+                trackedSosig.data = ReadBytes(dataLen);
             }
             else
             {
@@ -1506,6 +1521,8 @@ namespace H3MP
                 trackedAutoMeater.localTrackedID = ReadInt();
                 trackedAutoMeater.scene = ReadString();
                 trackedAutoMeater.instance = ReadInt();
+                int dataLen = ReadInt();
+                trackedAutoMeater.data = ReadBytes(dataLen);
             }
             else
             {
@@ -1686,6 +1703,9 @@ namespace H3MP
                 int trackedID = ReadInt();
                 if(arrToUse[trackedID] != null && arrToUse[trackedID].physicalObject != null)
                 {
+                    // Set data flags to zero to ensure this sosig doesn't get added to a patrol when we process its data
+                    arrToUse[trackedID].data[4] = 0;
+                    arrToUse[trackedID].data[5] = 0;
                     patrol.Squad.Add(arrToUse[trackedID].physicalObject.physicalSosigScript);
                 }
             }
