@@ -2785,7 +2785,7 @@ namespace H3MP
 
         public static void ServerClosed(H3MP_Packet packet)
         {
-            H3MP_Client.singleton.Disconnect(false);
+            H3MP_Client.singleton.Disconnect(false, 0);
         }
     }
 }

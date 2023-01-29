@@ -294,11 +294,13 @@ namespace H3MP
                     {
                         if (H3MP_ThreadManager.host)
                         {
+                            Console.WriteLine("Closing server.");
                             H3MP_Server.Close();
                         }
                         else
                         {
-                            H3MP_Client.singleton.Disconnect(true);
+                            Console.WriteLine("Disconnecting from server.");
+                            H3MP_Client.singleton.Disconnect(true, 0);
                         }
                     }
                 }

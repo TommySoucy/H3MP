@@ -137,7 +137,7 @@ namespace H3MP
                     int byteLength = stream.EndRead(result);
                     if (byteLength == 0)
                     {
-                        singleton.Disconnect(true);
+                        singleton.Disconnect(true, 1);
                         return;
                     }
 
@@ -147,10 +147,9 @@ namespace H3MP
                     receivedData.Reset(HandleData(data));
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Debug.Log($"Error receiving TCP data {ex}");
-                    Disconnect();
+                    Disconnect(2);
                 }
             }
 
@@ -201,9 +200,9 @@ namespace H3MP
                 return false;
             }
 
-            private void Disconnect()
+            private void Disconnect(int code)
             {
-                singleton.Disconnect(true);
+                singleton.Disconnect(true, code);
 
                 stream = null;
                 receiveBuffer = null;
@@ -260,16 +259,15 @@ namespace H3MP
 
                     if(data.Length < 4)
                     {
-                        singleton.Disconnect(true);
+                        singleton.Disconnect(true, 1);
                         return;
                     }
 
                     HandleData(data);
                 }
-                catch(Exception ex)
+                catch(Exception)
                 {
-                    Debug.Log($"Error receiving UDP data {ex}");
-                    Disconnect();
+                    Disconnect(2);
                 }
             }
 
@@ -291,9 +289,9 @@ namespace H3MP
                 });
             }
 
-            private void Disconnect()
+            private void Disconnect(int code)
             {
-                singleton.Disconnect(true);
+                singleton.Disconnect(true, code);
 
                 endPoint = null;
                 socket = null;
@@ -793,13 +791,31 @@ namespace H3MP
 
         private void OnApplicationQuit()
         {
-            Disconnect(true);
+            Disconnect(true, -1);
         }
 
-        public void Disconnect(bool sendToServer)
+        public void Disconnect(bool sendToServer, int code)
         {
             if (isConnected)
             {
+                isConnected = false;
+
+                switch (code)
+                {
+                    case 0:
+                        Console.WriteLine("Disconnecting from server.");
+                        break;
+                    case 1:
+                        Console.WriteLine("Disconnecting from server, end of stream.");
+                        break;
+                    case 2:
+                        Console.WriteLine("Disconnecting from server, TCP forced.");
+                        break;
+                    case 3:
+                        Console.WriteLine("Disconnecting from server, UDP forced.");
+                        break;
+                }
+
                 if (sendToServer) 
                 {
                     // Give control of everything we control
@@ -811,15 +827,12 @@ namespace H3MP
                 // On our side take physical control of everything
                 H3MP_GameManager.TakeAllPhysicalControl(true);
 
-                isConnected = false;
                 tcp.socket.Close();
                 udp.socket.Close();
 
                 H3MP_GameManager.Reset();
                 SpecificDisconnect();
                 Destroy(Mod.managerObject);
-
-                Debug.Log("Disconnected from server.");
             }
         }
 
