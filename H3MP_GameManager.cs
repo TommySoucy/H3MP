@@ -1167,7 +1167,6 @@ namespace H3MP
 
         public static void SyncTrackedEncryptions(bool init = false, bool inControl = false)
         {
-            Mod.LogInfo("SyncTrackedEncryptions called with init: " + init + ", in control: " + inControl + ", others: " + (playersPresent > 0));
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
             // while all other encryptions get destroyed. We will receive any encryption that the players inside this scene are controlling

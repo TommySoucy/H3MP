@@ -202,7 +202,7 @@ namespace H3MP
 
             private void Disconnect(int code)
             {
-                singleton.Disconnect(true, code);
+                singleton.Disconnect(false, code);
 
                 stream = null;
                 receiveBuffer = null;
@@ -291,7 +291,7 @@ namespace H3MP
 
             private void Disconnect(int code)
             {
-                singleton.Disconnect(true, code);
+                singleton.Disconnect(false, code);
 
                 endPoint = null;
                 socket = null;

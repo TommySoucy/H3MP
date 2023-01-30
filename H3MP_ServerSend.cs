@@ -132,7 +132,7 @@ namespace H3MP
         {
             if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances) &&
                 instances.TryGetValue(instance, out List<int> otherPlayers) &&
-                otherPlayers.Count > 0)
+                otherPlayers.Count > 0 && (otherPlayers.Count > 1 || otherPlayers[0] != ID))
             {
                 using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerState))
                 {
