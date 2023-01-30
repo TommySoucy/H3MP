@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace H3MP
 {
@@ -95,7 +96,9 @@ namespace H3MP
                                             GM.CurrentPlayerBody.RightHand.position,
                                             GM.CurrentPlayerBody.RightHand.rotation,
                                             GM.CurrentPlayerBody.Health,
-                                            GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
+                                            GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(),
+                                            SceneManager.GetActiveScene().name,
+                                            H3MP_GameManager.instance);
             }
             else
             {

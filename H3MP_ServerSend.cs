@@ -117,49 +117,57 @@ namespace H3MP
             }
         }
 
-        public static void PlayerState(H3MP_Player player)
+        public static void PlayerState(H3MP_Player player, string scene, int instance)
         {
             PlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
                         player.leftHandPos, player.leftHandRot,
                         player.leftHandPos, player.leftHandRot,
-                        player.health, player.maxHealth);
+                        player.health, player.maxHealth, scene, instance);
         }
 
         public static void PlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
                                        Vector3 leftHandPos, Quaternion leftHandRot,
                                        Vector3 rightHandPos, Quaternion rightHandRot,
-                                       float health, int maxHealth)
+                                       float health, int maxHealth, string scene, int instance)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerState))
+            if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(instance, out List<int> otherPlayers) &&
+                otherPlayers.Count > 0)
             {
-                packet.Write(ID);
-                packet.Write(position);
-                packet.Write(rotation);
-                packet.Write(headPos);
-                packet.Write(headRot);
-                packet.Write(torsoPos);
-                packet.Write(torsoRot);
-                packet.Write(leftHandPos);
-                packet.Write(leftHandRot);
-                packet.Write(rightHandPos);
-                packet.Write(rightHandRot);
-                packet.Write(health);
-                packet.Write(maxHealth);
-                byte[] additionalData = H3MP_GameManager.playerStateAddtionalDataSize == -1 ? null : new byte[H3MP_GameManager.playerStateAddtionalDataSize];
-                H3MP_GameManager.WriteAdditionalPlayerState(additionalData);
-                if (additionalData != null && additionalData.Length > 0)
+                using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerState))
                 {
-                    H3MP_GameManager.playerStateAddtionalDataSize = additionalData.Length;
-                    packet.Write((short)additionalData.Length);
-                    packet.Write(additionalData);
-                }
-                else
-                {
-                    H3MP_GameManager.playerStateAddtionalDataSize = 0;
-                    packet.Write((short)0);
-                }
+                    packet.Write(ID);
+                    packet.Write(position);
+                    packet.Write(rotation);
+                    packet.Write(headPos);
+                    packet.Write(headRot);
+                    packet.Write(torsoPos);
+                    packet.Write(torsoRot);
+                    packet.Write(leftHandPos);
+                    packet.Write(leftHandRot);
+                    packet.Write(rightHandPos);
+                    packet.Write(rightHandRot);
+                    packet.Write(health);
+                    packet.Write(maxHealth);
+                    byte[] additionalData = H3MP_GameManager.playerStateAddtionalDataSize == -1 ? null : new byte[H3MP_GameManager.playerStateAddtionalDataSize];
+                    H3MP_GameManager.WriteAdditionalPlayerState(additionalData);
+                    if (additionalData != null && additionalData.Length > 0)
+                    {
+                        H3MP_GameManager.playerStateAddtionalDataSize = additionalData.Length;
+                        packet.Write((short)additionalData.Length);
+                        packet.Write(additionalData);
+                    }
+                    else
+                    {
+                        H3MP_GameManager.playerStateAddtionalDataSize = 0;
+                        packet.Write((short)0);
+                    }
 
-                SendUDPDataToAll(ID, packet);
+                    for (int i = 0; i < otherPlayers.Count; ++i)
+                    {
+                        SendUDPData(otherPlayers[i], packet);
+                    }
+                }
             }
         }
 
