@@ -26,7 +26,7 @@ namespace H3MP
             awoken = true;
             if (sendOnAwake)
             {
-                Debug.Log(gameObject.name + " awoken");
+                Mod.LogInfo(gameObject.name + " awoken");
                 if (H3MP_ThreadManager.host)
                 {
                     // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list

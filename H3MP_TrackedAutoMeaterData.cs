@@ -46,13 +46,13 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Debug.Log("Instantiating AutoMeater " + trackedID);
+            Mod.LogInfo("Instantiating AutoMeater " + trackedID);
             string itemID = AutoMeaterIDToItemID(ID);
             yield return IM.OD[itemID].GetGameObjectAsync();
             GameObject autoMeaterPrefab = IM.OD[itemID].GetGameObject();
             if (autoMeaterPrefab == null)
             {
-                Debug.LogError($"Attempted to instantiate AutoMeater sent from {controller} but failed to get prefab.");
+                Mod.LogError($"Attempted to instantiate AutoMeater sent from {controller} but failed to get prefab.");
                 yield break;
             }
 
@@ -149,7 +149,7 @@ namespace H3MP
                 case 6:
                     return "TurburgertMFRed";
                 default:
-                    Debug.Log("AutoMeaterIDToItemID: Invalid auto meater ID: " + ID);
+                    Mod.LogInfo("AutoMeaterIDToItemID: Invalid auto meater ID: " + ID);
                     return "Turburgert_SMG";
             }
         }

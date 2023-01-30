@@ -94,7 +94,6 @@ namespace H3MP
 
         private static void TCPConnectCallback(IAsyncResult result)
         {
-            Console.WriteLine("TCP connect callback");
             TcpClient client = tcpListener.EndAcceptTcpClient(result);
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
 
@@ -149,7 +148,7 @@ namespace H3MP
             }
             catch(Exception ex)
             {
-                Debug.Log($"Error receiving UDP data: {ex}");
+                Mod.LogInfo($"Error receiving UDP data: {ex}");
             }
         }
 
@@ -164,7 +163,7 @@ namespace H3MP
             }
             catch(Exception ex)
             {
-                Debug.Log($"Error sending UDP data to {clientEndPoint}: {ex}");
+                Mod.LogInfo($"Error sending UDP data to {clientEndPoint}: {ex}");
             }
         }
 
@@ -339,7 +338,7 @@ namespace H3MP
         {
             if (trackedEncryption.trackedID == -1)
             {
-                Debug.Log("Received order to add tracked Encryption");
+                Mod.LogInfo("Received order to add tracked Encryption");
                 // Adjust Encryptions size to acommodate if necessary
                 if (availableEncryptionIndices.Count == 0)
                 {
@@ -650,7 +649,7 @@ namespace H3MP
                                                      80,81,82,83,84,85,86,87,88,89,
                                                      90,91,92,93,94,95,96,97,98,99};
              
-        Debug.Log("Initialized server");
+        Mod.LogInfo("Initialized server");
         }
     }
 }

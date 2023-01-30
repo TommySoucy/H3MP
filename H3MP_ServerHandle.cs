@@ -24,11 +24,11 @@ namespace H3MP
             int instance = packet.ReadInt();
             int IFF = packet.ReadInt();
 
-            Debug.Log($"{H3MP_Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}");
+            Mod.LogInfo($"{H3MP_Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}");
 
             if (clientID != clientIDCheck)
             {
-                Debug.Log($"Player \"{username}\" (ID:{clientID}) has assumed wrong client ID ({clientIDCheck})");
+                Mod.LogInfo($"Player \"{username}\" (ID:{clientID}) has assumed wrong client ID ({clientIDCheck})");
             }
 
             // Spawn player to clients 
@@ -123,7 +123,7 @@ namespace H3MP
 
             H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
 
-            Debug.Log("Synced with player who just joined a scene");
+            Mod.LogInfo("Synced with player who just joined a scene");
         }
 
         public static void PlayerInstance(int clientID, H3MP_Packet packet)
@@ -170,7 +170,7 @@ namespace H3MP
                 H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
             }
 
-            Debug.Log("Synced with player who just joined an instance");
+            Mod.LogInfo("Synced with player who just joined an instance");
         }
 
         public static void AddTNHInstance(int clientID, H3MP_Packet packet)
@@ -1689,7 +1689,7 @@ namespace H3MP
         public static void SosigDies(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
-            Debug.Log("Server handle sosig " + sosigTrackedID + " dies");
+            Mod.LogInfo("Server handle sosig " + sosigTrackedID + " dies");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)
@@ -1710,7 +1710,7 @@ namespace H3MP
         public static void SosigClear(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
-            Debug.Log("Server handle sosig " + sosigTrackedID + " clear");
+            Mod.LogInfo("Server handle sosig " + sosigTrackedID + " clear");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)
@@ -1730,7 +1730,7 @@ namespace H3MP
         {
             int sosigTrackedID = packet.ReadInt();
             Sosig.SosigBodyState bodyState = (Sosig.SosigBodyState)packet.ReadByte();
-            Debug.Log("Server handle sosig " + sosigTrackedID + " sosig state "+ bodyState);
+            Mod.LogInfo("Server handle sosig " + sosigTrackedID + " sosig state "+ bodyState);
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)
@@ -1824,7 +1824,7 @@ namespace H3MP
         {
             int sosigTrackedID = packet.ReadInt();
             byte iff = packet.ReadByte();
-            Debug.Log("Server handle sosig " + sosigTrackedID + " vaporize");
+            Mod.LogInfo("Server handle sosig " + sosigTrackedID + " vaporize");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
@@ -1911,18 +1911,18 @@ namespace H3MP
 
         public static void UpToDateSosigs(int clientID, H3MP_Packet packet)
         {
-            Debug.Log("Server received up to date sosigs packet");
+            Mod.LogInfo("Server received up to date sosigs packet");
             // Reconstruct passed trackedSosigs from packet
             int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedSosigData trackedSosig = packet.ReadTrackedSosig(true);
-                Debug.Log("\tSosig: " + trackedSosig.trackedID + ", updating");
+                Mod.LogInfo("\tSosig: " + trackedSosig.trackedID + ", updating");
                 H3MP_GameManager.UpdateTrackedSosig(trackedSosig, true);
                 if (instantiate)
                 {
-                    Debug.Log("\tInstantiating");
+                    Mod.LogInfo("\tInstantiating");
                     AnvilManager.Run(H3MP_Server.sosigs[trackedSosig.trackedID].Instantiate());
                 }
             }
@@ -1946,18 +1946,18 @@ namespace H3MP
 
         public static void UpToDateEncryptions(int clientID, H3MP_Packet packet)
         {
-            Debug.Log("Server received up to date Encryptions packet");
+            Mod.LogInfo("Server received up to date Encryptions packet");
             // Reconstruct passed trackedEncryptions from packet
             int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedEncryptionData trackedEncryption = packet.ReadTrackedEncryption(true);
-                Debug.Log("\tEncryption: " + trackedEncryption.trackedID + ", updating");
+                Mod.LogInfo("\tEncryption: " + trackedEncryption.trackedID + ", updating");
                 H3MP_GameManager.UpdateTrackedEncryption(trackedEncryption, true);
                 if (instantiate)
                 {
-                    Debug.Log("\tInstantiating");
+                    Mod.LogInfo("\tInstantiating");
                     AnvilManager.Run(H3MP_Server.encryptions[trackedEncryption.trackedID].Instantiate());
                 }
             }
@@ -2016,7 +2016,7 @@ namespace H3MP
 
             if(H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
             {
-                Debug.LogError("H3MP_ServerHandle: Received AddTNHCurrentlyPlaying packet with missing instance");
+                Mod.LogError("H3MP_ServerHandle: Received AddTNHCurrentlyPlaying packet with missing instance");
             }
             else
             {

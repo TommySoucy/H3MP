@@ -26,13 +26,11 @@ namespace H3MP
 
         // Assets
         public static JObject config;
-        public GameObject H3MPMenuPrefab;
         public GameObject TNHMenuPrefab;
         public static GameObject TNHStartEquipButtonPrefab;
         public GameObject playerPrefab;
         public static Material reticleFriendlyContactArrowMat;
         public static Material reticleFriendlyContactIconMat;
-        public GameObject H3MPMenu;
         public static GameObject TNHMenu;
         public static Dictionary<string, string> sosigWearableMap;
 
@@ -254,8 +252,10 @@ namespace H3MP
         public static readonly MethodInfo StingerMissile_Explode = typeof(StingerMissile).GetMethod("Explode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
-        // Debug
+// Debug
+#if DEBUG
         bool debug;
+#endif
         public static Vector3 TNHSpawnPoint;
 
         private void Start()
@@ -269,6 +269,7 @@ namespace H3MP
 
         private void Update()
         {
+#if DEBUG
             if (Input.GetKeyDown(KeyCode.KeypadPeriod))
             {
                 debug = !debug;
@@ -325,7 +326,7 @@ namespace H3MP
                         }
                         catch (Exception)
                         {
-                            Debug.LogError("There was an error trying to retrieve prefab with ID: " + o.Key);
+                            Mod.LogError("There was an error trying to retrieve prefab with ID: " + o.Key);
                             continue;
                         }
                         try
@@ -335,7 +336,7 @@ namespace H3MP
                             {
                                 if (map.ContainsKey(prefab.name))
                                 {
-                                    Debug.LogWarning("Sosig wearable with name: " + prefab.name + " is already in the map with value: " + map[prefab.name] + " and wewanted to add value: " + o.Key);
+                                    Mod.LogWarning("Sosig wearable with name: " + prefab.name + " is already in the map with value: " + map[prefab.name] + " and wewanted to add value: " + o.Key);
                                 }
                                 else
                                 {
@@ -345,7 +346,7 @@ namespace H3MP
                         }
                         catch (Exception)
                         {
-                            Debug.LogError("There was an error trying to check if prefab with ID: " + o.Key + " is wearable or adding it to the list");
+                            Mod.LogError("There was an error trying to check if prefab with ID: " + o.Key + " is wearable or adding it to the list");
                             continue;
                         }
                     }
@@ -379,10 +380,11 @@ namespace H3MP
                 {
                     string dest = "BepInEx/Plugins/H3MP/PatchHashes" + DateTimeOffset.Now.ToString().Replace("/", ".").Replace(":", ".") + ".json";
                     File.Copy("BepInEx/Plugins/H3MP/PatchHashes.json", dest);
-                    Debug.LogWarning("Writing new hashes to file!");
+                    Mod.LogWarning("Writing new hashes to file!");
                     File.WriteAllText("BepInEx/Plugins/H3MP/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
                 }
             }
+#endif
         }
 
         private void SpawnDummyPlayer()
@@ -398,49 +400,14 @@ namespace H3MP
             playerManager.SetIFF(GM.CurrentPlayerBody.GetPlayerIFF());
         }
 
-        private void LoadConfig()
+        public void LoadConfig()
         {
             Logger.LogInfo("Loading config...");
             config = JObject.Parse(File.ReadAllText("BepInEx/Plugins/H3MP/Config.json"));
             Logger.LogInfo("Config loaded");
         }
 
-        private void InitMenu()
-        {
-            Logger.LogInfo("H3MP InitMenu called");
-            H3MPMenu = Instantiate(H3MPMenuPrefab, new Vector3(-1.1418f, 1.3855f, -3.64f), Quaternion.Euler(0, 196.6488f, 0));
-
-            // Add background pointables
-            FVRPointable backgroundPointable = H3MPMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
-            backgroundPointable.MaxPointingRange = 5;
-            backgroundPointable = H3MPMenu.transform.GetChild(1).gameObject.AddComponent<FVRPointable>();
-            backgroundPointable.MaxPointingRange = 5;
-
-            // Init refs
-            mainStatusText = H3MPMenu.transform.GetChild(0).GetChild(3).GetChild(0).GetComponent<Text>();
-            statusLocationText = H3MPMenu.transform.GetChild(1).GetChild(2).GetChild(0).GetComponent<Text>();
-            statusPlayerCountText = H3MPMenu.transform.GetChild(1).GetChild(3).GetChild(0).GetComponent<Text>();
-
-            // Init buttons
-            hostButton = H3MPMenu.transform.GetChild(0).GetChild(1).gameObject;
-            FVRPointableButton currentButton = hostButton.AddComponent<FVRPointableButton>();
-            currentButton.SetButton();
-            currentButton.MaxPointingRange = 5;
-            currentButton.Button.onClick.AddListener(OnHostClicked);
-            connectButton = H3MPMenu.transform.GetChild(0).GetChild(2).gameObject;
-            currentButton = connectButton.AddComponent<FVRPointableButton>();
-            currentButton.SetButton();
-            currentButton.MaxPointingRange = 5;
-            currentButton.Button.onClick.AddListener(OnConnectClicked);
-            joinButton = H3MPMenu.transform.GetChild(1).GetChild(1).gameObject;
-            currentButton = joinButton.AddComponent<FVRPointableButton>();
-            currentButton.SetButton();
-            currentButton.MaxPointingRange = 5;
-            currentButton.Button.onClick.AddListener(OnJoinClicked);
-            Logger.LogInfo("H3MP Menu initialized");
-        }
-
-        private void InitTNHMenu()
+        public void InitTNHMenu()
         {
             TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.4418f, 1.04f, 6.2977f), Quaternion.Euler(0, 270, 0));
 
@@ -612,7 +579,6 @@ namespace H3MP
         {
             AssetBundle assetBundle = AssetBundle.LoadFromFile("BepInEx/Plugins/H3MP/H3MP.ab");
 
-            H3MPMenuPrefab = assetBundle.LoadAsset<GameObject>("H3MPMenu");
             TNHMenuPrefab = assetBundle.LoadAsset<GameObject>("TNHMenu");
             reticleFriendlyContactArrowMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactArrowMat");
             reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
@@ -643,8 +609,6 @@ namespace H3MP
             LoadConfig();
 
             LoadAssets();
-
-            InitMenu();
 
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
@@ -1867,6 +1831,17 @@ namespace H3MP
             PatchVerify.Verify(FVRGrenadePatchUpdateOriginal, harmony, false);
             harmony.Patch(FVRGrenadePatchUpdateOriginal, new HarmonyMethod(FVRGrenadePatchUpdatePrefix), new HarmonyMethod(FVRGrenadePatchUpdatePostfix));
 
+            // WristMenuPatch
+            MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo wristMenuPatchUpdatePrefix = typeof(WristMenuPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo wristMenuPatchAwakeOriginal = typeof(FVRWristMenu2).GetMethod("Awake", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo wristMenuPatchAwakePrefix = typeof(WristMenuPatch).GetMethod("AwakePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(wristMenuPatchUpdateOriginal, harmony, true);
+            PatchVerify.Verify(wristMenuPatchAwakeOriginal, harmony, true);
+            harmony.Patch(wristMenuPatchUpdateOriginal, new HarmonyMethod(wristMenuPatchUpdatePrefix));
+            harmony.Patch(wristMenuPatchAwakeOriginal, new HarmonyMethod(wristMenuPatchAwakePrefix));
+
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
             //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -2339,7 +2314,7 @@ namespace H3MP
             return true;
         }
 
-        private void CreateManagerObject(bool host = false)
+        public void CreateManagerObject(bool host = false)
         {
             if (managerObject == null)
             {
@@ -2355,19 +2330,9 @@ namespace H3MP
             }
         }
 
-        private void OnJoinClicked()
-        {
-            // TODO
-        }
-
         private void OnSceneLoaded(Scene loadedScene, LoadSceneMode loadedSceneMode)
         {
-            if (loadedScene.name.Equals("MainMenu3"))
-            {
-                Logger.LogInfo("H3 Main menu loaded, initializing H3MP menu");
-                InitMenu();
-            }
-            else if (loadedScene.name.Equals("TakeAndHold_Lobby_2"))
+            if (loadedScene.name.Equals("TakeAndHold_Lobby_2"))
             {
                 Logger.LogInfo("TNH lobby loaded, initializing H3MP menu if possible");
                 if (managerObject != null)
@@ -2644,7 +2609,7 @@ namespace H3MP
 
         public static void RemovePlayerFromLists(int playerID)
         {
-            Debug.Log("RemovePlayerFromLists called:\n"+Environment.StackTrace);
+            Mod.LogInfo("RemovePlayerFromLists called:\n"+Environment.StackTrace);
             H3MP_PlayerManager player = H3MP_GameManager.players[playerID];
 
             // Manage instance
@@ -2727,9 +2692,24 @@ namespace H3MP
                 }
             }
         }
+
+        public static void LogInfo(string message)
+        {
+            modInstance.Logger.LogInfo(message);
+        }
+
+        public static void LogWarning(string message)
+        {
+            modInstance.Logger.LogWarning(message);
+        }
+
+        public static void LogError(string message)
+        {
+            modInstance.Logger.LogError(message);
+        }
     }
 
-    #region General Patches
+#region General Patches
     // Used to verify integrity of other patches by checking if there were any changes to the original methods
     class PatchVerify
     {
@@ -2785,11 +2765,11 @@ namespace H3MP
                 {
                     if (breaking)
                     {
-                        Debug.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.\nOriginal hash: "+originalHash+", new hash: "+hash);
+                        Mod.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.\nOriginal hash: "+originalHash+", new hash: "+hash);
                     }
                     else
                     {
-                        Debug.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
+                        Mod.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
                     }
 
                     hashes[identifier] = hash;
@@ -2800,7 +2780,7 @@ namespace H3MP
                 hashes.Add(identifier, hash);
                 if (!writeWhenDone)
                 {
-                    Debug.LogWarning("PatchVerify: " + identifier + " not found in hashes. Most probably a new patch. This warning will remain until new hash file is written.");
+                    Mod.LogWarning("PatchVerify: " + identifier + " not found in hashes. Most probably a new patch. This warning will remain until new hash file is written.");
                 }
             }
         }
@@ -2868,6 +2848,42 @@ namespace H3MP
         }
     }
 
+    // Patches FVRWristMenu2.Update and Awake to add our H3MP section to it
+    class WristMenuPatch
+    {
+        static void UpdatePrefix(FVRWristMenu2 __instance)
+        {
+            if (!H3MP_WristMenuSection.init)
+            {
+                H3MP_WristMenuSection.init = true;
+
+                AddSection(__instance);
+
+                // Regenerate with our new section
+                __instance.RegenerateButtons();
+            }
+        }
+
+        static void AwakePrefix(FVRWristMenu2 __instance)
+        {
+            AddSection(__instance);
+        }
+
+        private static void AddSection(FVRWristMenu2 __instance)
+        {
+            Mod.LogInfo("Initializing wrist menu section");
+            GameObject section = new GameObject("Section_H3MP", typeof(RectTransform));
+            section.transform.SetParent(__instance.MenuGO.transform);
+            section.transform.localPosition = new Vector3(0, 175, 0);
+            section.transform.localRotation = Quaternion.identity;
+            section.transform.localScale = Vector3.one;
+            section.GetComponent<RectTransform>().sizeDelta = new Vector2(350, 60);
+            FVRWristMenuSection sectionScript = section.AddComponent<H3MP_WristMenuSection>();
+            sectionScript.ButtonText = "H3MP";
+            __instance.Sections.Add(sectionScript);
+        }
+    }
+
     // DEBUG PATCH Patches GameObject.SetActive
     class SetActivePatch
     {
@@ -2875,7 +2891,7 @@ namespace H3MP
         {
             if (value)
             {
-                Debug.LogWarning("SetActivePatch called with true on " + __instance.name + ":\n" + Environment.StackTrace);
+                Mod.LogWarning("SetActivePatch called with true on " + __instance.name + ":\n" + Environment.StackTrace);
             }
         }
     }
@@ -2885,13 +2901,13 @@ namespace H3MP
     {
         static void Prefix(Vector3 point)
         {
-            Debug.LogWarning("TeleportToPoint called with point: (" + point.x + "," + point.y + "," + point.z + "):\n" + Environment.StackTrace);
+            Mod.LogWarning("TeleportToPoint called with point: (" + point.x + "," + point.y + "," + point.z + "):\n" + Environment.StackTrace);
         }
     }
 
-    #endregion
+#endregion
 
-    #region Interaction Patches
+#region Interaction Patches
     // Patches FVRViveHand.CurrentInteractable.set to keep track of item held
     class HandCurrentInteractableSetPatch
     {
@@ -3564,9 +3580,9 @@ namespace H3MP
             }
         }
     }
-    #endregion
+#endregion
 
-    #region Action Patches
+#region Action Patches
     // Note: All projectile fire patches are necessary for 2 things: synchronizing fire action,
     //       and making sure that the shot is in same position/direction on all clients
     //       Synchronizing the action is simple, it is the pos/dir that requires transpilers and make these so complex
@@ -6322,7 +6338,7 @@ namespace H3MP
 
                 if (linkIndex == -1)
                 {
-                    Debug.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
+                    Mod.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
                 }
                 else
                 {
@@ -6339,7 +6355,7 @@ namespace H3MP
                         }
                         else
                         {
-                            Debug.LogError("SosigWearable: " + knownWearableID + " not found in map");
+                            Mod.LogError("SosigWearable: " + knownWearableID + " not found in map");
                         }
                     }
                     if (H3MP_ThreadManager.host)
@@ -6389,7 +6405,7 @@ namespace H3MP
 
                 if (linkIndex == -1)
                 {
-                    Debug.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
+                    Mod.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
                 }
                 else
                 {
@@ -6406,7 +6422,7 @@ namespace H3MP
                         }
                         else
                         {
-                            Debug.LogError("SosigWearable: " + knownWearableID + " not found in map");
+                            Mod.LogError("SosigWearable: " + knownWearableID + " not found in map");
                         }
                     }
                     if (H3MP_ThreadManager.host)
@@ -6461,7 +6477,7 @@ namespace H3MP
 
                 if (linkIndex == -1)
                 {
-                    Debug.LogError("LinkExplodesPrefix called on link whos sosig doesn't have the link");
+                    Mod.LogError("LinkExplodesPrefix called on link whos sosig doesn't have the link");
                 }
                 else
                 {
@@ -6521,7 +6537,7 @@ namespace H3MP
 
                 if (linkIndex == -1)
                 {
-                    Debug.LogError("LinkBreakPrefix called on link whos sosig doesn't have the link");
+                    Mod.LogError("LinkBreakPrefix called on link whos sosig doesn't have the link");
                 }
                 else
                 {
@@ -6581,7 +6597,7 @@ namespace H3MP
 
                 if (linkIndex == -1)
                 {
-                    Debug.LogError("LinkSeverPrefix called on link whos sosig doesn't have the link");
+                    Mod.LogError("LinkSeverPrefix called on link whos sosig doesn't have the link");
                 }
                 else
                 {
@@ -7867,9 +7883,9 @@ namespace H3MP
             }
         }
     }
-    #endregion
+#endregion
 
-    #region Instatiation Patches
+#region Instatiation Patches
     // Patches FVRFireArmChamber.EjectRound so we can keep track of when a round is ejected from a chamber
     class ChamberEjectRoundPatch
     {
@@ -8248,7 +8264,7 @@ namespace H3MP
                 {
                     if (obj == null)
                     {
-                        Debug.LogWarning("SpawnVaultFileRoutinePatch.FinishedRoutine object to be destroyed already null");
+                        Mod.LogWarning("SpawnVaultFileRoutinePatch.FinishedRoutine object to be destroyed already null");
                         continue;
                     }
                     ++H3MP_TrackedItem.skipDestroy;
@@ -8319,9 +8335,9 @@ namespace H3MP
             H3MP_GameManager.SyncTrackedItems(__instance.transform, true, null, SceneManager.GetActiveScene().name);
         }
     }
-    #endregion
+#endregion
 
-    #region Damageable Patches
+#region Damageable Patches
     // TODO: Patch IFVRDamageable.Damage and have a way to track damageables so we don't need to have a specific TCP call for each
     //       Or make sure we track damageables, then when we can patch damageable.damage and send the damage and trackedID directly to other clients so they can process it too
 
@@ -10541,9 +10557,9 @@ namespace H3MP
             }
         }
     }
-    #endregion
+#endregion
 
-    #region TNH Patches
+#region TNH Patches
     // Patches GM.set_TNH_Manager() to keep track of TNH Manager instances
     class SetTNHManagerPatch
     {
@@ -11474,7 +11490,7 @@ namespace H3MP
 
                     if (doInit && Mod.currentTNHInstance.manager.AIManager.HasInit)
                     {
-                        Debug.Log("\t\t\tdoing TNH init");
+                        Mod.LogInfo("\t\t\tdoing TNH init");
                         doInit = false;
                         if (Mod.initTNHData != null)
                         {
@@ -11649,7 +11665,7 @@ namespace H3MP
                         else
                         {
                             Mod.TNHSpawnPoint = GM.CurrentPlayerBody.transform.position;
-                            Debug.LogWarning("Not valid supply point or player to spawn on, spawning on default start point, which might be active");
+                            Mod.LogWarning("Not valid supply point or player to spawn on, spawning on default start point, which might be active");
                         }
                     }
                 }
@@ -11829,7 +11845,7 @@ namespace H3MP
                         }
                         if (holdPointIndex == -1)
                         {
-                            Debug.LogError("Holdpoint to be set as sytem node missing from manager");
+                            Mod.LogError("Holdpoint to be set as sytem node missing from manager");
                         }
                         else
                         {
@@ -12282,5 +12298,5 @@ namespace H3MP
             }
         }
     }
-    #endregion
+#endregion
 }

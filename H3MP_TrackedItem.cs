@@ -73,7 +73,7 @@ namespace H3MP
             awoken = true;
             if (sendOnAwake)
             {
-                Debug.Log(gameObject.name + " awoken");
+                Mod.LogInfo(gameObject.name + " awoken");
                 if (H3MP_ThreadManager.host)
                 {
                     // This will also send a packet with the item to be added in the client's global item list
@@ -92,7 +92,7 @@ namespace H3MP
         //      to keep a ref to the object itself and set delegate update functions
         private void InitItemType()
         {
-            Debug.Log("inititemtype called on " + gameObject.name);
+            Mod.LogInfo("inititemtype called on " + gameObject.name);
             FVRPhysicalObject physObj = GetComponent<FVRPhysicalObject>();
 
             // For each relevant type for which we may want to store additional data, we set a specific update function and the object ref

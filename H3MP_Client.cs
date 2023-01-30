@@ -25,7 +25,7 @@ namespace H3MP
                 }
                 else if (_singleton != value)
                 {
-                    Debug.Log($"{nameof(H3MP_Client)} instance already exists, destroying duplicate!");
+                    Mod.LogInfo($"{nameof(H3MP_Client)} instance already exists, destroying duplicate!");
                     Destroy(value);
                 }
             }
@@ -93,14 +93,14 @@ namespace H3MP
                 };
 
                 receiveBuffer = new byte[dataBufferSize];
-                Debug.Log("Making connection to " + singleton.IP + ":" + singleton.port);
+                Mod.LogInfo("Making connection to " + singleton.IP + ":" + singleton.port);
                 socket.BeginConnect(singleton.IP, singleton.port, ConnectCallback, socket);
-                Debug.Log("connection begun");
+                Mod.LogInfo("connection begun");
             }
 
             private void ConnectCallback(IAsyncResult result)
             {
-                Debug.Log("Connect callback");
+                Mod.LogInfo("Connect callback");
                 socket.EndConnect(result);
 
                 if (!socket.Connected)
@@ -126,7 +126,7 @@ namespace H3MP
                 }
                 catch(Exception ex)
                 {
-                    Debug.Log($"Error sending data to server via TCP: {ex}");
+                    Mod.LogInfo($"Error sending data to server via TCP: {ex}");
                 }
             }
 
@@ -246,7 +246,7 @@ namespace H3MP
                 }
                 catch(Exception ex)
                 {
-                    Debug.Log($"Error sending UDP data {ex}");
+                    Mod.LogInfo($"Error sending UDP data {ex}");
                 }
             }
 
@@ -454,7 +454,7 @@ namespace H3MP
 
             encryptions = new H3MP_TrackedEncryptionData[100];
 
-            Debug.Log("Initialized client");
+            Mod.LogInfo("Initialized client");
         }
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
@@ -648,7 +648,7 @@ namespace H3MP
 
         public static void AddTrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption)
         {
-            Debug.Log("Received order to add an Encryption");
+            Mod.LogInfo("Received order to add an Encryption");
             // Adjust Encryptions size to acommodate if necessary
             if (encryptions.Length <= trackedEncryption.trackedID)
             {

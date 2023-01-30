@@ -24,7 +24,7 @@ namespace H3MP
                 }
                 else if (_singleton != value)
                 {
-                    Debug.Log($"{nameof(H3MP_GameManager)} instance already exists, destroying duplicate!");
+                    Mod.LogInfo($"{nameof(H3MP_GameManager)} instance already exists, destroying duplicate!");
                     Destroy(value);
                 }
             }
@@ -85,7 +85,7 @@ namespace H3MP
 
         public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF)
         {
-            Debug.Log($"Spawn player called with ID: {ID}");
+            Mod.LogInfo($"Spawn player called with ID: {ID}");
 
             GameObject player = null;
             // Always spawn if this is host (client is null)
@@ -185,7 +185,7 @@ namespace H3MP
         {
             if (!players.ContainsKey(ID))
             {
-                Debug.LogWarning($"Received UDP order to update player {ID} state but player of this ID hasnt been spawned yet");
+                Mod.LogWarning($"Received UDP order to update player {ID} state but player of this ID hasnt been spawned yet");
                 return;
             }
 
@@ -833,7 +833,7 @@ namespace H3MP
 
         private static H3MP_TrackedSosig MakeSosigTracked(Sosig sosigScript)
         {
-            Debug.Log("MakeSosigTracked called");
+            Mod.LogInfo("MakeSosigTracked called");
             H3MP_TrackedSosig trackedSosig = sosigScript.gameObject.AddComponent<H3MP_TrackedSosig>();
             H3MP_TrackedSosigData data = new H3MP_TrackedSosigData();
             trackedSosig.data = data;
@@ -966,7 +966,7 @@ namespace H3MP
                     }
                     else
                     {
-                        Debug.LogError("SosigWearable: " + data.wearables[i][j] + " not found in map");
+                        Mod.LogError("SosigWearable: " + data.wearables[i][j] + " not found in map");
                     }
                 }
             }
@@ -1126,7 +1126,7 @@ namespace H3MP
             }
             else
             {
-                Debug.LogWarning("Unsupported AutoMeater type tracked");
+                Mod.LogWarning("Unsupported AutoMeater type tracked");
                 data.ID = 7;
             }
             data.sideToSideRotation = autoMeaterScript.SideToSideTransform.localRotation;
@@ -1167,7 +1167,7 @@ namespace H3MP
 
         public static void SyncTrackedEncryptions(bool init = false, bool inControl = false)
         {
-            Debug.Log("SyncTrackedEncryptions called with init: " + init + ", in control: " + inControl + ", others: " + (playersPresent > 0));
+            Mod.LogInfo("SyncTrackedEncryptions called with init: " + init + ", in control: " + inControl + ", others: " + (playersPresent > 0));
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
             // while all other encryptions get destroyed. We will receive any encryption that the players inside this scene are controlling
@@ -1199,14 +1199,14 @@ namespace H3MP
                             }
                             else
                             {
-                                Debug.Log("Sending tracked Encryption: " + trackedEncryption.data.type);
+                                Mod.LogInfo("Sending tracked Encryption: " + trackedEncryption.data.type);
                                 // Tell the server we need to add this Encryption to global tracked Encryptions
                                 H3MP_ClientSend.TrackedEncryption(trackedEncryption.data);
                             }
                         }
                         else
                         {
-                            Debug.Log("trackedEncryption " + trackedEncryption.name + " NOT awoken, setting for late send");
+                            Mod.LogInfo("trackedEncryption " + trackedEncryption.name + " NOT awoken, setting for late send");
                             trackedEncryption.sendOnAwake = true;
                         }
                     }
@@ -1232,7 +1232,7 @@ namespace H3MP
 
         private static H3MP_TrackedEncryption MakeEncryptionTracked(TNH_EncryptionTarget encryption)
         {
-            Debug.Log("MakeEncryptionTracked called");
+            Mod.LogInfo("MakeEncryptionTracked called");
             H3MP_TrackedEncryption trackedEncryption = encryption.gameObject.AddComponent<H3MP_TrackedEncryption>();
             H3MP_TrackedEncryptionData data = new H3MP_TrackedEncryptionData();
             trackedEncryption.data = data;
@@ -1659,7 +1659,7 @@ namespace H3MP
                             // We do this because we may not have the most up to date version of items/sosigs since
                             // clients only send updated data when there are others in their scene
                             // But we need the most of to date data to instantiate the item/sosig
-                            Debug.Log("Requesting up to date objects from " + player.Key);
+                            Mod.LogInfo("Requesting up to date objects from " + player.Key);
                             H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                         }
                     }

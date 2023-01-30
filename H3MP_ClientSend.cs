@@ -1271,7 +1271,7 @@ namespace H3MP
 
         public static void SosigDies(int sosigTrackedID, Damage.DamageClass damClass, Sosig.SosigDeathType deathType)
         {
-            Debug.Log("Client sending sosig " + sosigTrackedID + " dies");
+            Mod.LogInfo("Client sending sosig " + sosigTrackedID + " dies");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigDies))
             {
                 packet.Write(sosigTrackedID);
@@ -1284,7 +1284,7 @@ namespace H3MP
 
         public static void SosigClear(int sosigTrackedID)
         {
-            Debug.Log("Client sending sosig " + sosigTrackedID + " clear");
+            Mod.LogInfo("Client sending sosig " + sosigTrackedID + " clear");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigClear))
             {
                 packet.Write(sosigTrackedID);
@@ -1295,7 +1295,7 @@ namespace H3MP
 
         public static void SosigSetBodyState(int sosigTrackedID, Sosig.SosigBodyState s)
         {
-            Debug.Log("Client sending sosig " + sosigTrackedID + " body state " + s);
+            Mod.LogInfo("Client sending sosig " + sosigTrackedID + " body state " + s);
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigSetBodyState))
             {
                 packet.Write(sosigTrackedID);
@@ -1344,7 +1344,7 @@ namespace H3MP
 
         public static void SosigVaporize(int sosigTrackedID, int iff)
         {
-            Debug.Log("Client sending sosig " + sosigTrackedID + " vaporize");
+            Mod.LogInfo("Client sending sosig " + sosigTrackedID + " vaporize");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigVaporize))
             {
                 packet.Write(sosigTrackedID);
@@ -1397,11 +1397,11 @@ namespace H3MP
 
         public static void UpToDateObjects(bool instantiateOnReceive, int forClient)
         {
-            Debug.Log(H3MP_Client.singleton.ID.ToString()+ " sending up to date objects to server");
+            Mod.LogInfo(H3MP_Client.singleton.ID.ToString()+ " sending up to date objects to server");
             int index = 0;
             while (index < H3MP_GameManager.items.Count)
             {
-                Debug.Log("\tItem Packet");
+                Mod.LogInfo("\tItem Packet");
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateItemRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
@@ -1422,7 +1422,7 @@ namespace H3MP
 
                         trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
 
-                        Debug.Log("\t\tTracked item at: "+trackedItem.trackedID);
+                        Mod.LogInfo("\t\tTracked item at: "+trackedItem.trackedID);
                         trackedItem.Update(true);
                         packet.Write(trackedItem, false, true);
 
@@ -1450,7 +1450,7 @@ namespace H3MP
             index = 0;
             while (index < H3MP_GameManager.sosigs.Count)
             {
-                Debug.Log("\tSosig Packet");
+                Mod.LogInfo("\tSosig Packet");
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateSosigRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
@@ -1471,7 +1471,7 @@ namespace H3MP
 
                         trackedSosig.insuranceCounter = H3MP_TrackedSosigData.insuranceCount;
 
-                        Debug.Log("\t\tTracked sosig at: " + trackedSosig.trackedID);
+                        Mod.LogInfo("\t\tTracked sosig at: " + trackedSosig.trackedID);
                         trackedSosig.Update(true);
                         packet.Write(trackedSosig, false, true);
 
@@ -1499,7 +1499,7 @@ namespace H3MP
             index = 0;
             while (index < H3MP_GameManager.autoMeaters.Count)
             {
-                Debug.Log("\tAutoMeater Packet");
+                Mod.LogInfo("\tAutoMeater Packet");
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateAutoMeatersRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
@@ -1520,7 +1520,7 @@ namespace H3MP
 
                         trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
 
-                        Debug.Log("\t\tTracked AutoMeater at: " + trackedAutoMeater.trackedID);
+                        Mod.LogInfo("\t\tTracked AutoMeater at: " + trackedAutoMeater.trackedID);
                         trackedAutoMeater.Update(true);
                         packet.Write(trackedAutoMeater, false, true);
 
@@ -1548,7 +1548,7 @@ namespace H3MP
             index = 0;
             while (index < H3MP_GameManager.encryptions.Count)
             {
-                Debug.Log("\tEncryption Packet");
+                Mod.LogInfo("\tEncryption Packet");
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateEncryptionsRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
@@ -1569,7 +1569,7 @@ namespace H3MP
 
                         trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
 
-                        Debug.Log("\t\tTracked Encryption at: " + trackedEncryption.trackedID);
+                        Mod.LogInfo("\t\tTracked Encryption at: " + trackedEncryption.trackedID);
                         trackedEncryption.Update(true);
                         packet.Write(trackedEncryption, false, true);
 

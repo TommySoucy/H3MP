@@ -50,12 +50,12 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Debug.Log("Instantiating Sosig "+trackedID);
+            Mod.LogInfo("Instantiating Sosig "+trackedID);
             yield return IM.OD["SosigBody_Default"].GetGameObjectAsync();
             GameObject sosigPrefab = IM.OD["SosigBody_Default"].GetGameObject();
             if (sosigPrefab == null)
             {
-                Debug.LogError($"Attempted to instantiate sosig sent from {controller} but failed to get prefab.");
+                Mod.LogError($"Attempted to instantiate sosig sent from {controller} but failed to get prefab.");
                 yield break;
             }
 
@@ -180,7 +180,7 @@ namespace H3MP
                         }
                         else
                         {
-                            Debug.LogWarning("TrackedSosigData.EquipWearables: Wearable "+ wearables[i][j]+" not found in OD");
+                            Mod.LogWarning("TrackedSosigData.EquipWearables: Wearable "+ wearables[i][j]+" not found in OD");
                         }
                     }
                 }
@@ -209,7 +209,7 @@ namespace H3MP
             }
             else
             {
-                Debug.LogWarning("TrackedSosigData.EquipWearables: Wearable " + ID + " not found in OD");
+                Mod.LogWarning("TrackedSosigData.EquipWearables: Wearable " + ID + " not found in OD");
             }
             yield break;
         }
@@ -459,7 +459,7 @@ namespace H3MP
                         }
                         else
                         {
-                            Debug.LogError("SosigWearable: " + wearables[i][j] + " not found in map");
+                            Mod.LogError("SosigWearable: " + wearables[i][j] + " not found in map");
                         }
                     }
                 }

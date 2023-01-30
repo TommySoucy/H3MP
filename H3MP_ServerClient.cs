@@ -239,7 +239,7 @@ namespace H3MP
 
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
             {
-                Debug.Log("Player " + ID + " join server in scene " + scene);
+                Mod.LogInfo("Player " + ID + " join server in scene " + scene);
                 // Send to the clients all items that are already synced and controlled by clients in the same scene
                 SendRelevantTrackedObjects();
 

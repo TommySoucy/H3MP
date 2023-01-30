@@ -1679,7 +1679,7 @@ namespace H3MP
 
                 if (instance.playerIDs.Contains(newPlayerID))
                 {
-                    Debug.LogWarning("ReadTNHInstance player ID: " + newPlayerID + " already in TNH instance " + instanceID + ":\n" + Environment.StackTrace);
+                    Mod.LogWarning("ReadTNHInstance player ID: " + newPlayerID + " already in TNH instance " + instanceID + ":\n" + Environment.StackTrace);
                     continue;
                 }
 

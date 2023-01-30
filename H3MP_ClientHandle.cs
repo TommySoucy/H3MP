@@ -19,7 +19,7 @@ namespace H3MP
             string msg = packet.ReadString();
             int ID = packet.ReadInt();
 
-            Debug.Log($"Message from server: {msg}");
+            Mod.LogInfo($"Message from server: {msg}");
 
             H3MP_Client.singleton.ID = ID;
             H3MP_GameManager.ID = ID;
@@ -1527,7 +1527,7 @@ namespace H3MP
             {
                 if (trackedEncryption.controller != H3MP_Client.singleton.ID && trackedEncryption.physicalObject != null)
                 {
-                    //TODO
+                    Mod.TNH_EncryptionTarget_m_numHitsLeft.SetValue(trackedEncryption.physicalObject.physicalEncryptionScript, packet.ReadInt());
                 }
             }
         }
@@ -1757,7 +1757,7 @@ namespace H3MP
 
             if (H3MP_GameManager.TNHInstances == null || !H3MP_GameManager.TNHInstances.ContainsKey(instance))
             {
-                Debug.LogError("H3MP_ClientHandle: Received AddTNHCurrentlyPlaying packet with missing instance");
+                Mod.LogError("H3MP_ClientHandle: Received AddTNHCurrentlyPlaying packet with missing instance");
             }
             else
             {

@@ -76,7 +76,7 @@ namespace H3MP
             }
             else
             {
-                Debug.Log("Dummy player has receive damage on " + part);
+                Mod.LogInfo("Dummy player has receive damage on " + part);
             }
         }
 

@@ -31,7 +31,7 @@ namespace H3MP
         {
             if (_action == null)
             {
-                Debug.Log("No action to execute on main thread!");
+                Mod.LogInfo("No action to execute on main thread!");
                 return;
             }
 

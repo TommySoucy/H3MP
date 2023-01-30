@@ -121,7 +121,7 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Debug.Log("Instantiating item " + trackedID+", itemID: "+itemID);
+            Mod.LogInfo("Instantiating item " + trackedID+", itemID: "+itemID);
             GameObject itemPrefab = GetItemPrefab();
             if (itemPrefab == null)
             {
@@ -130,7 +130,7 @@ namespace H3MP
             }
             if (itemPrefab == null)
             {
-                Debug.LogError($"Attempted to instantiate {itemID} sent from {controller} but failed to get item prefab.");
+                Mod.LogError($"Attempted to instantiate {itemID} sent from {controller} but failed to get item prefab.");
                 yield break;
             }
 
@@ -143,7 +143,7 @@ namespace H3MP
             {
                 ++Mod.skipAllInstantiates;
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
-                Debug.Log("\tInstantiated item " + itemObject.name);
+                Mod.LogInfo("\tInstantiated item " + itemObject.name);
                 --Mod.skipAllInstantiates;
                 physicalItem = itemObject.AddComponent<H3MP_TrackedItem>();
                 physicalItem.data = this;
@@ -186,7 +186,7 @@ namespace H3MP
             }
             catch(Exception e)
             {
-                Debug.LogError("Error while trying to instantiate item: " + itemID+":\n"+e.Message+"\n"+e.StackTrace);
+                Mod.LogError("Error while trying to instantiate item: " + itemID+":\n"+e.Message+"\n"+e.StackTrace);
             }
         }
 

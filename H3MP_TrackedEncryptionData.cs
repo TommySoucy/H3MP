@@ -40,7 +40,7 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Debug.Log("Instantiating encryption " + trackedID);
+            Mod.LogInfo("Instantiating encryption " + trackedID);
             GameObject prefab = null;
             if (GM.TNH_Manager == null)
             {
@@ -53,7 +53,7 @@ namespace H3MP
             }
             if(prefab == null)
             {
-                Debug.LogError($"Attempted to instantiate encryption {type} sent from {controller} but failed to get prefab.");
+                Mod.LogError($"Attempted to instantiate encryption {type} sent from {controller} but failed to get prefab.");
                 yield break;
             }
 
@@ -279,7 +279,7 @@ namespace H3MP
                 case TNH_EncryptionType.Swarm:
                     return "TNH_EncryptionTarget_3_Swarm";
                 default:
-                    Debug.LogError("EncryptionTypeToID unhandled type: "+type);
+                    Mod.LogError("EncryptionTypeToID unhandled type: "+type);
                     return "TNH_EncryptionTarget_1_Static";
             }
         }
