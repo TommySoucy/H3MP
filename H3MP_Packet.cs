@@ -141,7 +141,8 @@ namespace H3MP
         pinnedGrenadeExplode = 130,
         FVRGrenadeExplode = 131,
         clientDisconnect = 132,
-        serverClosed = 133
+        serverClosed = 133,
+        initConnectionData = 134
     }
 
     /// <summary>Sent from client to server.</summary>

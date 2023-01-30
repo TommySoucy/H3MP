@@ -715,7 +715,7 @@ namespace H3MP
                 BreakActionWeapon asBAW = H3MP_Server.items[trackedID].physicalItem.physicalObject as BreakActionWeapon;
                 asBAW.Barrels[barrelIndex].Chamber.SetRound(roundClass, asBAW.Barrels[barrelIndex].Chamber.transform.position, asBAW.Barrels[barrelIndex].Chamber.transform.rotation);
                 // NOTE: Only barrel index is used in the Fire method, other arguments are presumably reserved for later,
-                // TODO: will need to add support later if implemented
+                // TODO: Future: will need to add support later if implemented
                 asBAW.Fire(barrelIndex, false, 0);
             }
 
@@ -1536,7 +1536,7 @@ namespace H3MP
 
         public static void AutoMeaterDamageData(int clientID, H3MP_Packet packet)
         {
-            // TODO: if ever there is data we need to pass back from a auto meater damage call
+            // TODO: Future: if ever there is data we need to pass back from a auto meater damage call
         }
 
         public static void SosigWearableDamage(int clientID, H3MP_Packet packet)

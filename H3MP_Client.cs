@@ -436,6 +436,7 @@ namespace H3MP
                 H3MP_ClientHandle.FVRGrenadeExplode,
                 H3MP_ClientHandle.ClientDisconnect,
                 H3MP_ClientHandle.ServerClosed,
+                H3MP_ClientHandle.InitConnectionData,
             };
 
             // All vanilla scenes can be synced by default

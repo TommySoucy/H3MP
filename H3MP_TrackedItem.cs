@@ -97,7 +97,7 @@ namespace H3MP
 
             // For each relevant type for which we may want to store additional data, we set a specific update function and the object ref
             // NOTE: We want to handle a subtype before its parent type (ex.: AttachableFirearmPhysicalObject before FVRFireArmAttachment) 
-            // TODO: Maybe instead of having a big if statement like this, put all of them in a dictionnary for faster lookup
+            // TODO: Optimization: Maybe instead of having a big if statement like this, put all of them in a dictionnary for faster lookup
             if (physObj is FVRFireArmMagazine)
             {
                 updateFunc = UpdateMagazine;

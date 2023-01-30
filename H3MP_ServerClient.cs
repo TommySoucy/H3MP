@@ -250,8 +250,19 @@ namespace H3MP
             // Also send TNH instances
             H3MP_ServerSend.InitTNHInstances(ID);
 
-            // TODO: Implement a way for MODS to send custom connect data like the TNH instances above
-            // This should probably be an array of bytes to which mods can write whatever they want in a method they can patch
+            // Send custom connection data
+            byte[] initData = null;
+            SendInitConnectionData(ID, initData);
+        }
+
+        // MOD: This will get called when the server sends all the data a newly connected client connect needs
+        //      A mod that wants to send its own initial data to process can prefix this to modify data before it gets sent
+        private void SendInitConnectionData(int ID, byte[] data)
+        {
+            if (data != null)
+            {
+                H3MP_ServerSend.InitConnectionData(ID, data);
+            }
         }
 
         public void SendRelevantTrackedObjects()
@@ -259,7 +270,7 @@ namespace H3MP
             // Send to the clients all items that are already synced and controlled by clients in the same scene and instance
             for (int i = 0; i < H3MP_Server.items.Length; ++i)
             {
-                // TODO: In client handle for trackedItem we already check if this item is in our scene before instantiating
+                // TODO: Optimization: In client handle for trackedItem we already check if this item is in our scene before instantiating
                 //       Here we could then ommit this step, but that would mean sending a packet for every item in the game even the 
                 //       the ones from other scenes, which will be useless to the client
                 //       Need to check which one would be more efficient, more packets or checking scene twice

@@ -3077,11 +3077,6 @@ namespace H3MP
                             trackedItem.data.SetController(0);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
-                            // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
-                            //if (trackedItem.data.parent == -1)
-                            //{
-                            //  __instance.RecoverRigidbody();
-                            //}
                         }
                     }
                     else
@@ -3098,11 +3093,6 @@ namespace H3MP
                             trackedItem.data.SetController(H3MP_Client.singleton.ID);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
-                            // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
-                            //if (trackedItem.data.parent == -1)
-                            //{
-                            //  __instance.RecoverRigidbody();
-                            //}
                         }
                     }
                 }
@@ -3137,11 +3127,6 @@ namespace H3MP
                         trackedItem.data.SetController(0);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
-                        // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
-                        //if (trackedItem.data.parent == -1)
-                        //{
-                        //  __instance.RecoverRigidbody();
-                        //}
                         bool primaryHand = __instance == __instance.S.Hand_Primary;
                         H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
                         H3MP_ServerSend.SosigPickUpItem(trackedSosig.data.trackedID, trackedItem.data.trackedID, primaryHand);
@@ -3161,11 +3146,6 @@ namespace H3MP
                         trackedItem.data.SetController(H3MP_Client.singleton.ID);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
-                        // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
-                        //if (trackedItem.data.parent == -1)
-                        //{
-                        //  __instance.RecoverRigidbody();
-                        //}
                         bool primaryHand = __instance == __instance.S.Hand_Primary;
                         H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
                         if (trackedSosig.data.trackedID == -1)
@@ -3216,11 +3196,6 @@ namespace H3MP
                         trackedItem.data.SetController(0);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
-                        // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
-                        //if (trackedItem.data.parent == -1)
-                        //{
-                        //  __instance.RecoverRigidbody();
-                        //}
                         int slotIndex = 0;
                         for (int i = 0; i < __instance.I.Slots.Count; ++i)
                         {
@@ -3247,11 +3222,6 @@ namespace H3MP
                         trackedItem.data.SetController(H3MP_Client.singleton.ID);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
-                        // TODO: Check if necessary to manage the rigidbody ourselves in the case of interacting/dropping in QBS or if the game already does it
-                        //if (trackedItem.data.parent == -1)
-                        //{
-                        //  __instance.RecoverRigidbody();
-                        //}
                         int slotIndex = 0;
                         for (int i = 0; i < __instance.I.Slots.Count; ++i)
                         {
@@ -7915,7 +7885,9 @@ namespace H3MP
                 }
                 else // We are ejecting a whole round, we want the controller of the chamber's parent tracked item to control the round
                 {
-                    // TODO: Maybe have a list trackedItemByChamber, in which we keep any item which have a chamber, which we would put in there in trackedItem awake
+                    // TODO: Optimization: Maybe have a list trackedItemByChamber, in which we keep any item which have a chamber, which we would put in there in trackedItem awake
+                    //       Because right now we just go up the hierarchy until we find the item, maybe its faster? will need to test, but considering the GetComponent overhead
+                    //       we might want to do this differently
                     Transform currentParent = __instance.transform;
                     H3MP_TrackedItem trackedItem = null;
                     while (currentParent != null)
@@ -8340,7 +8312,7 @@ namespace H3MP
 #endregion
 
 #region Damageable Patches
-    // TODO: Patch IFVRDamageable.Damage and have a way to track damageables so we don't need to have a specific TCP call for each
+    // TODO: Optimization?: Patch IFVRDamageable.Damage and have a way to track damageables so we don't need to have a specific TCP call for each
     //       Or make sure we track damageables, then when we can patch damageable.damage and send the damage and trackedID directly to other clients so they can process it too
 
     // Patches BallisticProjectile.Fire to keep a reference to the source firearm
@@ -8906,7 +8878,7 @@ namespace H3MP
                     {
                         // If we don't have a ref to the controller of the item that caused this damage, let the damage be controlled by the
                         // first player we can find in the same scene
-                        // TODO: Keep a dictionary of players using the scene as key
+                        // TODO: Optimization: Keep a dictionary of players using the scene as key
                         int firstPlayerInScene = 0;
                         foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
                         {
@@ -10170,7 +10142,7 @@ namespace H3MP
             return true;
         }
 
-        // TODO: Currently no data is necessary to sync after damage, need review
+        // TODO: Future: Currently no data is necessary to sync after damage, need review
         //static void Postfix(ref AutoMeater __instance)
         //{
         //    // If in control of the damaged sosig link, we want to send the damage results to other clients

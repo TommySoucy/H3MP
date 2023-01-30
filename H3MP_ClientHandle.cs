@@ -2787,5 +2787,13 @@ namespace H3MP
         {
             H3MP_Client.singleton.Disconnect(false, 0);
         }
+
+        // MOD: A mod that sent initial connection data can handle the data on client side here
+        //      Such a mod could patch this handle and access the data by doing the commented lines, then process it however they want
+        public static void InitConnectionData(H3MP_Packet packet)
+        {
+            //int dataLength = packet.ReadInt();
+            //byte[] data = packet.ReadBytes(dataLength);
+        }
     }
 }
