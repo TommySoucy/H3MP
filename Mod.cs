@@ -165,6 +165,7 @@ namespace H3MP
         public static readonly FieldInfo TNH_ShatterableCrate_m_isHoldingToken = typeof(TNH_ShatterableCrate).GetField("m_isHoldingToken", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_HoldPoint_m_warpInTargets = typeof(TNH_HoldPoint).GetField("m_warpInTargets", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_HoldPoint_m_systemNode = typeof(TNH_HoldPoint).GetField("m_systemNode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_HoldPoint_m_state = typeof(TNH_HoldPoint).GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo LeverActionFirearm_m_isHammerCocked = typeof(LeverActionFirearm).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo LeverActionFirearm_m_isHammerCocked2 = typeof(LeverActionFirearm).GetField("m_isHammerCocked2", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Derringer_m_isExternalHammerCocked = typeof(Derringer).GetField("m_isExternalHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -237,6 +238,7 @@ namespace H3MP
         public static readonly MethodInfo TNH_HoldPoint_IdentifyEncryption = typeof(TNH_HoldPoint).GetMethod("IdentifyEncryption", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_HoldPoint_FailOut = typeof(TNH_HoldPoint).GetMethod("FailOut", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_HoldPoint_BeginPhase = typeof(TNH_HoldPoint).GetMethod("BeginPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_HoldPoint_LowerAllBarriers = typeof(TNH_HoldPoint).GetMethod("LowerAllBarriers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo LeverActionFirearm_Fire = typeof(LeverActionFirearm).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo RevolvingShotgun_Fire = typeof(RevolvingShotgun).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Derringer_CockHammer = typeof(Derringer).GetMethod("CockHammer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -11594,20 +11596,6 @@ namespace H3MP
                 ++TNH_HoldPointPatch.beginHoldSkip;
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].BeginHoldChallenge();
                 --TNH_HoldPointPatch.beginHoldSkip;
-                switch (Mod.currentTNHInstance.holdState)
-                {
-                    case TNH_HoldPoint.HoldState.Analyzing:
-                        Mod.TNH_HoldPoint_BeginAnalyzing.Invoke(curHoldPoint, null);
-                        for (int i = 0; i < Mod.currentTNHInstance.warpInData.Count; i += 2)
-                        {
-                            List<GameObject> warpInTargets = (List<GameObject>)Mod.TNH_HoldPoint_m_warpInTargets.GetValue(curHoldPoint);
-                            warpInTargets.Add(UnityEngine.Object.Instantiate<GameObject>(curHoldPoint.M.Prefab_TargetWarpingIn, Mod.currentTNHInstance.warpInData[i], Quaternion.Euler(Mod.currentTNHInstance.warpInData[i + 1])));
-                        }
-                        break;
-                    case TNH_HoldPoint.HoldState.Transition:
-                        //TODO
-                        break;
-                }
 
                 // TP to system node spawn point
                 GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode.position, true);
@@ -11626,6 +11614,32 @@ namespace H3MP
                         curBarrier.SetBarrierPoint(point);
                         Mod.TNH_DestructibleBarrierPoint_SetCoverPointData.Invoke(point, new object[] { Mod.currentTNHInstance.raisedBarrierPrefabIndices[i] });
                     }
+                }
+
+                TNH_HoldPointSystemNode sysNode = (TNH_HoldPointSystemNode)Mod.TNH_HoldPoint_m_systemNode.GetValue(curHoldPoint);
+                switch (Mod.currentTNHInstance.holdState)
+                {
+                    case TNH_HoldPoint.HoldState.Analyzing:
+                        Mod.TNH_HoldPoint_BeginAnalyzing.Invoke(curHoldPoint, null);
+                        for (int i = 0; i < Mod.currentTNHInstance.warpInData.Count; i += 2)
+                        {
+                            List<GameObject> warpInTargets = (List<GameObject>)Mod.TNH_HoldPoint_m_warpInTargets.GetValue(curHoldPoint);
+                            warpInTargets.Add(UnityEngine.Object.Instantiate<GameObject>(curHoldPoint.M.Prefab_TargetWarpingIn, Mod.currentTNHInstance.warpInData[i], Quaternion.Euler(Mod.currentTNHInstance.warpInData[i + 1])));
+                        }
+                        break;
+                    case TNH_HoldPoint.HoldState.Transition:
+                        SM.PlayCoreSound(FVRPooledAudioType.GenericLongRange, curHoldPoint.AUDEvent_HoldWave, curHoldPoint.transform.position);
+                        UnityEngine.Object.Instantiate<GameObject>(curHoldPoint.VFX_HoldWave, sysNode.NodeCenter.position, sysNode.NodeCenter.rotation);
+                        curHoldPoint.M.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Neutralized);
+                        Mod.TNH_HoldPoint_m_state.SetValue(curHoldPoint, TNH_HoldPoint.HoldState.Transition);
+                        Mod.TNH_HoldPoint_LowerAllBarriers.Invoke(curHoldPoint, null);
+                        sysNode.SetNodeMode(TNH_HoldPointSystemNode.SystemNodeMode.Hacking);
+                        break;
+                    case TNH_HoldPoint.HoldState.Hacking:
+                        curHoldPoint.M.EnqueueEncryptionLine(TNH_EncryptionType.Static);
+                        Mod.TNH_HoldPoint_m_state.SetValue(curHoldPoint, TNH_HoldPoint.HoldState.Hacking);
+                        sysNode.SetNodeMode(TNH_HoldPointSystemNode.SystemNodeMode.Indentified);
+                        break;
                 }
             }
             else

@@ -4961,7 +4961,7 @@ namespace H3MP
                                 {
                                     if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                                     {
-                                        //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                        //TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
                                         //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
                                         break;
                                     }
@@ -5025,7 +5025,7 @@ namespace H3MP
                                     {
                                         if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                                         {
-                                            //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                            //TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
                                             //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
                                             break;
                                         }
@@ -5037,7 +5037,7 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                    //TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
                                     //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
                                 }
                                 modified = true;
@@ -5067,7 +5067,7 @@ namespace H3MP
                             }
                             else
                             {
-                                //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
                                 //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
                             }
                             modified = true;
@@ -5081,7 +5081,7 @@ namespace H3MP
                             }
                             else
                             {
-                                //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
                                 //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
                             }
                             modified = true;
@@ -5123,7 +5123,7 @@ namespace H3MP
                         {
                             if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                             {
-                                //TODO: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
                                 //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
                                 break;
                             }
