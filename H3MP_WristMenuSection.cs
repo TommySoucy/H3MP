@@ -16,13 +16,18 @@ namespace H3MP
         // Start page
         private FVRPointableButton BTN_Host;
         private FVRPointableButton BTN_Join;
-        private FVRPointableButton BTN_ReloadConfig;
+        private FVRPointableButton BTN_Options;
 
         // Hosting
         private FVRPointableButton BTN_Close;
 
         // Client
         private FVRPointableButton BTN_Disconnect;
+
+        // Options
+        private FVRPointableButton BTN_ReloadConfig;
+        private FVRPointableButton BTN_ItemInterpolation;
+        private Text TXT_ItemInterpolation;
 
         public override void Enable()
         {
@@ -60,7 +65,7 @@ namespace H3MP
             RectTransform hostRect = hostButton.GetComponent<RectTransform>();
             hostRect.anchorMax = new Vector2(0.5f, 0.5f);
             hostRect.anchorMin = new Vector2(0.5f, 0.5f);
-            hostButton.transform.localPosition = new Vector3(-115,0,0);
+            hostButton.transform.localPosition = new Vector3(0,75,0);
             hostButton.transform.localRotation = Quaternion.identity;
             Destroy(hostButton.GetComponent<FVRWristMenuSectionButton>());
             hostButton.GetComponent<Text>().text = "Host";
@@ -78,16 +83,16 @@ namespace H3MP
             BTN_Join = joinButton.GetComponent<FVRPointableButton>();
             BTN_Join.Button.onClick.AddListener(OnConnectClicked);
 
-            GameObject reloadConfigButton = Instantiate(this.Menu.BaseButton, transform);
-            RectTransform reloadConfigRect = reloadConfigButton.GetComponent<RectTransform>();
-            reloadConfigRect.anchorMax = new Vector2(0.5f, 0.5f);
-            reloadConfigRect.anchorMin = new Vector2(0.5f, 0.5f);
-            reloadConfigButton.transform.localPosition = new Vector3(115, 0, 0);
-            reloadConfigButton.transform.localRotation = Quaternion.identity;
-            Destroy(reloadConfigButton.GetComponent<FVRWristMenuSectionButton>());
-            reloadConfigButton.GetComponent<Text>().text = "Reload\nconfig.";
-            BTN_ReloadConfig = reloadConfigButton.GetComponent<FVRPointableButton>();
-            BTN_ReloadConfig.Button.onClick.AddListener(OnReloadConfigClicked);
+            GameObject optionsButton = Instantiate(this.Menu.BaseButton, transform);
+            RectTransform optionsRect = optionsButton.GetComponent<RectTransform>();
+            optionsRect.anchorMax = new Vector2(0.5f, 0.5f);
+            optionsRect.anchorMin = new Vector2(0.5f, 0.5f);
+            optionsButton.transform.localPosition = new Vector3(0, -75, 0);
+            optionsButton.transform.localRotation = Quaternion.identity;
+            Destroy(optionsButton.GetComponent<FVRWristMenuSectionButton>());
+            optionsButton.GetComponent<Text>().text = "Options";
+            BTN_Options = optionsButton.GetComponent<FVRPointableButton>();
+            BTN_Options.Button.onClick.AddListener(OnOptionsClicked);
 
 
             GameObject closeButton = Instantiate(this.Menu.BaseButton, transform);
@@ -112,6 +117,30 @@ namespace H3MP
             disconnectButton.GetComponent<Text>().text = "Disconnect";
             BTN_Disconnect = disconnectButton.GetComponent<FVRPointableButton>();
             BTN_Disconnect.Button.onClick.AddListener(OnDisconnectClicked);
+
+
+            GameObject reloadConfigButton = Instantiate(this.Menu.BaseButton, transform);
+            RectTransform reloadConfigRect = reloadConfigButton.GetComponent<RectTransform>();
+            reloadConfigRect.anchorMax = new Vector2(0.5f, 0.5f);
+            reloadConfigRect.anchorMin = new Vector2(0.5f, 0.5f);
+            reloadConfigButton.transform.localPosition = new Vector3(0, -115, 0);
+            reloadConfigButton.transform.localRotation = Quaternion.identity;
+            Destroy(reloadConfigButton.GetComponent<FVRWristMenuSectionButton>());
+            reloadConfigButton.GetComponent<Text>().text = "Reload\nconfig.";
+            BTN_ReloadConfig = reloadConfigButton.GetComponent<FVRPointableButton>();
+            BTN_ReloadConfig.Button.onClick.AddListener(OnReloadConfigClicked);
+
+            GameObject itemInterpButton = Instantiate(this.Menu.BaseButton, transform);
+            RectTransform itemInterpRect = itemInterpButton.GetComponent<RectTransform>();
+            itemInterpRect.anchorMax = new Vector2(0.5f, 0.5f);
+            itemInterpRect.anchorMin = new Vector2(0.5f, 0.5f);
+            itemInterpButton.transform.localPosition = new Vector3(0, 75, 0);
+            itemInterpButton.transform.localRotation = Quaternion.identity;
+            Destroy(itemInterpButton.GetComponent<FVRWristMenuSectionButton>());
+            TXT_ItemInterpolation = itemInterpButton.GetComponent<Text>();
+            TXT_ItemInterpolation.text = "Item\ninterpolation\n(ON)";
+            BTN_ItemInterpolation = itemInterpButton.GetComponent<FVRPointableButton>();
+            BTN_ItemInterpolation.Button.onClick.AddListener(OnItemInterpolationClicked);
         }
 
         private void OnHostClicked()
@@ -172,15 +201,37 @@ namespace H3MP
             SetPage(0);
         }
 
+        private void OnOptionsClicked()
+        {
+            // Switch page
+            SetPage(3);
+        }
+
+        private void OnItemInterpolationClicked()
+        {
+            if (H3MP_TrackedItem.interpolated)
+            {
+                H3MP_TrackedItem.interpolated = false;
+                TXT_ItemInterpolation.text = "Item\ninterpolation\n(OFF)";
+            }
+            else
+            {
+                H3MP_TrackedItem.interpolated = true;
+                TXT_ItemInterpolation.text = "Item\ninterpolation\n(ON)";
+            }
+        }
+
         private void SetPage(int index)
         {
             BTN_Host.gameObject.SetActive(index == 0);
             BTN_Join.gameObject.SetActive(index == 0);
-            BTN_ReloadConfig.gameObject.SetActive(index == 0);
+            BTN_Options.gameObject.SetActive(index == 0);
 
             BTN_Close.gameObject.SetActive(index == 1);
 
             BTN_Disconnect.gameObject.SetActive(index == 2);
+
+            BTN_ReloadConfig.gameObject.SetActive(index == 3);
         }
     }
 }

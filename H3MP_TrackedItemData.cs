@@ -216,17 +216,20 @@ namespace H3MP
             rotation = updatedItem.rotation;
             if (physicalItem != null)
             {
-                //if (parent == -1)
-                //{
-                //    physicalItem.transform.position = updatedItem.position;
-                //    physicalItem.transform.rotation = updatedItem.rotation;
-                //}
-                //else
-                //{
-                //    // If parented, the position and rotation are relative, so set it now after parenting
-                //    physicalItem.transform.localPosition = updatedItem.position;
-                //    physicalItem.transform.localRotation = updatedItem.rotation;
-                //}
+                if (!H3MP_TrackedItem.interpolated)
+                {
+                    if (parent == -1)
+                    {
+                        physicalItem.transform.position = updatedItem.position;
+                        physicalItem.transform.rotation = updatedItem.rotation;
+                    }
+                    else
+                    {
+                        // If parented, the position and rotation are relative, so set it now after parenting
+                        physicalItem.transform.localPosition = updatedItem.position;
+                        physicalItem.transform.localRotation = updatedItem.rotation;
+                    }
+                }
 
                 previousActive = active;
                 active = updatedItem.active;

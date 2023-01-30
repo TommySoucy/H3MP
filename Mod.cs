@@ -2876,13 +2876,14 @@ namespace H3MP
             Mod.LogInfo("Initializing wrist menu section");
             GameObject section = new GameObject("Section_H3MP", typeof(RectTransform));
             section.transform.SetParent(__instance.MenuGO.transform);
-            section.transform.localPosition = new Vector3(0, 175, 0);
+            section.transform.localPosition = new Vector3(0, 300, 0);
             section.transform.localRotation = Quaternion.identity;
             section.transform.localScale = Vector3.one;
-            section.GetComponent<RectTransform>().sizeDelta = new Vector2(350, 60);
+            section.GetComponent<RectTransform>().sizeDelta = new Vector2(350, 350);
             FVRWristMenuSection sectionScript = section.AddComponent<H3MP_WristMenuSection>();
             sectionScript.ButtonText = "H3MP";
             __instance.Sections.Add(sectionScript);
+            section.SetActive(false);
         }
     }
 

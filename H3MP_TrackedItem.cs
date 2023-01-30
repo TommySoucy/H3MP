@@ -10,6 +10,7 @@ namespace H3MP
     public class H3MP_TrackedItem : MonoBehaviour
     {
         public static float interpolationSpeed = 12f;
+        public static bool interpolated = true;
 
         public H3MP_TrackedItemData data;
         public bool awoken;
@@ -5339,7 +5340,7 @@ namespace H3MP
 
         private void FixedUpdate()
         {
-            if (physicalObject != null && data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
+            if (interpolated && physicalObject != null && data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
             {
                 if (data.previousPos != null && data.velocity.magnitude < 1f)
                 {
