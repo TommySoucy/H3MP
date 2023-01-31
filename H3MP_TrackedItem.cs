@@ -2607,28 +2607,31 @@ namespace H3MP
             // Set hammer state
             Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, newData[0] == 1);
 
-            // Set chamber2 round
-            chamberClassIndex = BitConverter.ToInt16(newData, 3);
-            if (chamberClassIndex == -1) // We don't want round in chamber
+            if (asLAF.UsesSecondChamber)
             {
-                if (asLAF.Chamber2.GetRound() != null)
+                // Set chamber2 round
+                chamberClassIndex = BitConverter.ToInt16(newData, 3);
+                if (chamberClassIndex == -1) // We don't want round in chamber
                 {
-                    asLAF.Chamber2.SetRound(null, false);
-                    modified = true;
+                    if (asLAF.Chamber2.GetRound() != null)
+                    {
+                        asLAF.Chamber2.SetRound(null, false);
+                        modified = true;
+                    }
                 }
-            }
-            else // We want a round in the chamber
-            {
-                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
-                if (asLAF.Chamber2.GetRound() == null || asLAF.Chamber2.GetRound().RoundClass != roundClass)
+                else // We want a round in the chamber
                 {
-                    asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
-                    modified = true;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asLAF.Chamber2.GetRound() == null || asLAF.Chamber2.GetRound().RoundClass != roundClass)
+                    {
+                        asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                        modified = true;
+                    }
                 }
-            }
 
-            // Set hammer2 state
-            Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, newData[5] == 1);
+                // Set hammer2 state
+                Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, newData[5] == 1);
+            }
 
             data.data = newData;
 
