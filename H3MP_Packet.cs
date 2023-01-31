@@ -487,8 +487,15 @@ namespace H3MP
                 Write(trackedItem.localTrackedID);
                 Write(trackedItem.scene);
                 Write(trackedItem.instance);
-                Write(trackedItem.additionalData.Length);
-                Write(trackedItem.additionalData);
+                if (trackedItem.additionalData == null || trackedItem.additionalData.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedItem.additionalData.Length);
+                    Write(trackedItem.additionalData);
+                }
             }
             else
             {
@@ -601,8 +608,15 @@ namespace H3MP
                 Write(SosigTargetPrioritySystemPatch.BoolArrToInt(trackedSosig.IFFChart));
                 Write(trackedSosig.scene);
                 Write(trackedSosig.instance);
-                Write(trackedSosig.data.Length);
-                Write(trackedSosig.data);
+                if (trackedSosig.data == null || trackedSosig.data.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedSosig.data.Length);
+                    Write(trackedSosig.data);
+                }
             }
             else
             {
@@ -638,8 +652,15 @@ namespace H3MP
                 Write(trackedAutoMeater.localTrackedID);
                 Write(trackedAutoMeater.scene);
                 Write(trackedAutoMeater.instance);
-                Write(trackedAutoMeater.data.Length);
-                Write(trackedAutoMeater.data);
+                if (trackedAutoMeater.data == null || trackedAutoMeater.data.Length == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(trackedAutoMeater.data.Length);
+                    Write(trackedAutoMeater.data);
+                }
             }
             else
             {
@@ -1295,7 +1316,10 @@ namespace H3MP
                 trackedItem.scene = ReadString();
                 trackedItem.instance = ReadInt();
                 int additionalDataLen = ReadInt();
-                trackedItem.additionalData = ReadBytes(additionalDataLen);
+                if (additionalDataLen > 0)
+                {
+                    trackedItem.additionalData = ReadBytes(additionalDataLen);
+                }
             }
             else
             {
@@ -1383,7 +1407,10 @@ namespace H3MP
                 trackedSosig.scene = ReadString();
                 trackedSosig.instance = ReadInt();
                 int dataLen = ReadInt();
-                trackedSosig.data = ReadBytes(dataLen);
+                if (dataLen > 0)
+                {
+                    trackedSosig.data = ReadBytes(dataLen);
+                }
             }
             else
             {
@@ -1524,7 +1551,10 @@ namespace H3MP
                 trackedAutoMeater.scene = ReadString();
                 trackedAutoMeater.instance = ReadInt();
                 int dataLen = ReadInt();
-                trackedAutoMeater.data = ReadBytes(dataLen);
+                if (dataLen > 0)
+                {
+                    trackedAutoMeater.data = ReadBytes(dataLen);
+                }
             }
             else
             {

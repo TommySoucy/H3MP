@@ -1198,14 +1198,12 @@ namespace H3MP
                             }
                             else
                             {
-                                Mod.LogInfo("Sending tracked Encryption: " + trackedEncryption.data.type);
                                 // Tell the server we need to add this Encryption to global tracked Encryptions
                                 H3MP_ClientSend.TrackedEncryption(trackedEncryption.data);
                             }
                         }
                         else
                         {
-                            Mod.LogInfo("trackedEncryption " + trackedEncryption.name + " NOT awoken, setting for late send");
                             trackedEncryption.sendOnAwake = true;
                         }
                     }
@@ -1231,7 +1229,6 @@ namespace H3MP
 
         private static H3MP_TrackedEncryption MakeEncryptionTracked(TNH_EncryptionTarget encryption)
         {
-            Mod.LogInfo("MakeEncryptionTracked called");
             H3MP_TrackedEncryption trackedEncryption = encryption.gameObject.AddComponent<H3MP_TrackedEncryption>();
             H3MP_TrackedEncryptionData data = new H3MP_TrackedEncryptionData();
             trackedEncryption.data = data;
