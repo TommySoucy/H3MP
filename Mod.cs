@@ -297,12 +297,12 @@ namespace H3MP
                     {
                         if (H3MP_ThreadManager.host)
                         {
-                            Console.WriteLine("Closing server.");
+                            Mod.LogInfo("Closing server.");
                             H3MP_Server.Close();
                         }
                         else
                         {
-                            Console.WriteLine("Disconnecting from server.");
+                            Mod.LogInfo("Disconnecting from server.");
                             H3MP_Client.singleton.Disconnect(true, 0);
                         }
                     }
@@ -2611,7 +2611,6 @@ namespace H3MP
 
         public static void RemovePlayerFromLists(int playerID)
         {
-            Mod.LogInfo("RemovePlayerFromLists called:\n"+Environment.StackTrace);
             H3MP_PlayerManager player = H3MP_GameManager.players[playerID];
 
             // Manage instance

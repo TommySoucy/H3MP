@@ -100,7 +100,6 @@ namespace H3MP
 
             private void ConnectCallback(IAsyncResult result)
             {
-                Mod.LogInfo("Connect callback");
                 socket.EndConnect(result);
 
                 if (!socket.Connected)
@@ -804,16 +803,16 @@ namespace H3MP
                 switch (code)
                 {
                     case 0:
-                        Console.WriteLine("Disconnecting from server.");
+                        Mod.LogInfo("Disconnecting from server.");
                         break;
                     case 1:
-                        Console.WriteLine("Disconnecting from server, end of stream.");
+                        Mod.LogInfo("Disconnecting from server, end of stream.");
                         break;
                     case 2:
-                        Console.WriteLine("Disconnecting from server, TCP forced.");
+                        Mod.LogInfo("Disconnecting from server, TCP forced.");
                         break;
                     case 3:
-                        Console.WriteLine("Disconnecting from server, UDP forced.");
+                        Mod.LogInfo("Disconnecting from server, UDP forced.");
                         break;
                 }
 

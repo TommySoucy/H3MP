@@ -44,7 +44,7 @@ namespace H3MP
             udpListener = new UdpClient(port);
             udpListener.BeginReceive(UDPReceiveCallback, null);
 
-            Console.WriteLine($"Server started on: {tcpListener.LocalEndpoint}");
+            Mod.LogInfo($"Server started on: {tcpListener.LocalEndpoint}");
 
             // Just connected, sync if current scene is syncable
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
@@ -97,7 +97,7 @@ namespace H3MP
             TcpClient client = tcpListener.EndAcceptTcpClient(result);
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
 
-            Console.WriteLine($"Incoming connection from {client.Client.RemoteEndPoint}");
+            Mod.LogInfo($"Incoming connection from {client.Client.RemoteEndPoint}");
 
             for (int i = 1; i <= maxClientCount; ++i)
             {
@@ -109,7 +109,7 @@ namespace H3MP
                 }
             }
 
-            Console.WriteLine($"{client.Client.RemoteEndPoint} failed to connect, server full");
+            Mod.LogWarning($"{client.Client.RemoteEndPoint} failed to connect, server full");
         }
 
         private static void UDPReceiveCallback(IAsyncResult result)

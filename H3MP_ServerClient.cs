@@ -72,7 +72,7 @@ namespace H3MP
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine($"Error sending data to player {ID} via TCP: {ex}");
+                    Mod.LogError($"Error sending data to player {ID} via TCP: {ex}");
                 }
             }
 
@@ -336,13 +336,13 @@ namespace H3MP
             switch (code)
             {
                 case 0:
-                    Console.WriteLine("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected, end of stream.");
+                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected, end of stream.");
                     break;
                 case 1:
-                    Console.WriteLine("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.");
+                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.");
                     break;
                 case 2:
-                    Console.WriteLine("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.");
+                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.");
                     break;
             }
 
