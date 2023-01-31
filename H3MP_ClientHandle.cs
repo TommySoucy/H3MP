@@ -698,7 +698,7 @@ namespace H3MP
                 SingleActionRevolver asRevolver = H3MP_Client.items[trackedID].physicalItem.physicalObject as SingleActionRevolver;
                 asRevolver.CurChamber = curChamber;
                 asRevolver.Cylinder.Chambers[curChamber].SetRound(roundClass, asRevolver.Cylinder.Chambers[curChamber].transform.position, asRevolver.Cylinder.Chambers[curChamber].transform.rotation);
-                Mod.Revolver_Fire.Invoke(asRevolver, null);
+                Mod.SingleActionRevolver_Fire.Invoke(asRevolver, null);
             }
         }
 
