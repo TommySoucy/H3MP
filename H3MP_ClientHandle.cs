@@ -2797,6 +2797,66 @@ namespace H3MP
             }
         }
 
+        public static void C4Detonate(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                // Update local
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    C4 c4 = H3MP_Client.items[trackedID].physicalItem.physicalObject as C4;
+                    if (c4 != null)
+                    {
+                        c4.transform.position = packet.ReadVector3();
+                        ++C4DetonatePatch.skip;
+                        c4.Detonate();
+                        --C4DetonatePatch.skip;
+                    }
+                }
+            }
+        }
+
+        public static void ClaymoreMineDetonate(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                // Update local
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    ClaymoreMine cm = H3MP_Client.items[trackedID].physicalItem.physicalObject as ClaymoreMine;
+                    if (cm != null)
+                    {
+                        cm.transform.position = packet.ReadVector3();
+                        ++ClaymoreMineDetonatePatch.skip;
+                        Mod.ClaymoreMine_Detonate.Invoke(cm, null);
+                        --ClaymoreMineDetonatePatch.skip;
+                    }
+                }
+            }
+        }
+
+        public static void SLAMDetonate(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                // Update local
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    SLAM slam = H3MP_Client.items[trackedID].physicalItem.physicalObject as SLAM;
+                    if (slam != null)
+                    {
+                        slam.transform.position = packet.ReadVector3();
+                        ++SLAMDetonatePatch.skip;
+                        slam.Detonate();
+                        --SLAMDetonatePatch.skip;
+                    }
+                }
+            }
+        }
+
         public static void ClientDisconnect(H3MP_Packet packet)
         {
             int ID = packet.ReadInt();

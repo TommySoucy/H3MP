@@ -437,6 +437,9 @@ namespace H3MP
                 H3MP_ClientHandle.ServerClosed,
                 H3MP_ClientHandle.InitConnectionData,
                 H3MP_ClientHandle.BangSnapSplode,
+                H3MP_ClientHandle.C4Detonate,
+                H3MP_ClientHandle.ClaymoreMineDetonate,
+                H3MP_ClientHandle.SLAMDetonate,
             };
 
             // All vanilla scenes can be synced by default

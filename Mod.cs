@@ -206,6 +206,9 @@ namespace H3MP
         public static readonly FieldInfo FVRGrenadePin_m_isDying = typeof(FVRGrenadePin).GetField("m_isDying", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Derringer_m_curBarrel = typeof(Derringer).GetField("m_curBarrel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AttachableTubeFed_m_isHammerCocked = typeof(AttachableTubeFed).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo C4_m_isArmed = typeof(C4).GetField("m_isArmed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo ClaymoreMine_m_isArmed = typeof(ClaymoreMine).GetField("m_isArmed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo ClaymoreMine_m_isPlanted = typeof(ClaymoreMine).GetField("m_isPlanted", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -256,6 +259,7 @@ namespace H3MP
         public static readonly MethodInfo SingleActionRevolver_Fire = typeof(SingleActionRevolver).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo StingerMissile_Explode = typeof(StingerMissile).GetMethod("Explode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo BangSnap_Splode = typeof(BangSnap).GetMethod("Splode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo ClaymoreMine_Detonate = typeof(ClaymoreMine).GetMethod("Detonate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
 // Debug
@@ -1840,6 +1844,27 @@ namespace H3MP
             PatchVerify.Verify(bangSnapPatchCollisionOriginal, harmony, false);
             harmony.Patch(bangSnapPatchSplodeOriginal, new HarmonyMethod(bangSnapPatchSplodePrefix));
             harmony.Patch(bangSnapPatchCollisionOriginal, null ,null, new HarmonyMethod(bangSnapPatchCollisionTranspiler));
+
+            // C4DetonatePatch
+            MethodInfo C4DetonatePatchOriginal = typeof(C4).GetMethod("Detonate", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo C4DetonatePatchPrefix = typeof(C4DetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(C4DetonatePatchOriginal, harmony, false);
+            harmony.Patch(C4DetonatePatchOriginal, new HarmonyMethod(C4DetonatePatchPrefix));
+
+            // ClaymoreMineDetonatePatch
+            MethodInfo claymoreMineDetonatePatchOriginal = typeof(ClaymoreMine).GetMethod("Detonate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo claymoreMineDetonatePatchPrefix = typeof(ClaymoreMineDetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(claymoreMineDetonatePatchOriginal, harmony, false);
+            harmony.Patch(claymoreMineDetonatePatchOriginal, new HarmonyMethod(claymoreMineDetonatePatchPrefix));
+
+            // SLAMDetonatePatch
+            MethodInfo SLAMDetonatePatchOriginal = typeof(SLAM).GetMethod("Detonate", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo SLAMDetonatePatchPrefix = typeof(SLAMDetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(SLAMDetonatePatchOriginal, harmony, false);
+            harmony.Patch(SLAMDetonatePatchOriginal, new HarmonyMethod(SLAMDetonatePatchPrefix));
 
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -7952,6 +7977,87 @@ namespace H3MP
             }
 
             return true;
+        }
+    }
+
+    // Patches C4.Detonate to track detonation
+    class C4DetonatePatch
+    {
+        public static int skip;
+
+        static void Prefix(C4 __instance)
+        {
+            if(skip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.C4Detonate(0, trackedItem.data.trackedID, __instance.transform.position);
+                }
+                else
+                {
+                    H3MP_ClientSend.C4Detonate(trackedItem.data.trackedID, __instance.transform.position);
+                }
+            }
+        }
+    }
+
+    // Patches ClaymoreMine.Detonate to track detonation
+    class ClaymoreMineDetonatePatch
+    {
+        public static int skip;
+
+        static void Prefix(ClaymoreMine __instance)
+        {
+            if(skip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.ClaymoreMineDetonate(0, trackedItem.data.trackedID, __instance.transform.position);
+                }
+                else
+                {
+                    H3MP_ClientSend.ClaymoreMineDetonate(trackedItem.data.trackedID, __instance.transform.position);
+                }
+            }
+        }
+    }
+
+    // Patches SLAM.Detonate to track detonation
+    class SLAMDetonatePatch
+    {
+        public static int skip;
+
+        static void Prefix(ClaymoreMine __instance)
+        {
+            if(skip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SLAMDetonate(0, trackedItem.data.trackedID, __instance.transform.position);
+                }
+                else
+                {
+                    H3MP_ClientSend.SLAMDetonate(trackedItem.data.trackedID, __instance.transform.position);
+                }
+            }
         }
     }
 #endregion

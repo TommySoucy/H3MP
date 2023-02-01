@@ -2330,5 +2330,38 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void C4Detonate(int trackedID, Vector3 position)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.C4Detonate))
+            {
+                packet.Write(trackedID);
+                packet.Write(position);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void ClaymoreMineDetonate(int trackedID, Vector3 position)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.claymoreMineDetonate))
+            {
+                packet.Write(trackedID);
+                packet.Write(position);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SLAMDetonate(int trackedID, Vector3 position)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.SLAMDetonate))
+            {
+                packet.Write(trackedID);
+                packet.Write(position);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

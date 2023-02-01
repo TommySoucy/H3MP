@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using Valve.VR.InteractionSystem.Sample;
 using static FistVR.sblpCell;
 
 namespace H3MP
@@ -209,6 +210,7 @@ namespace H3MP
                 PinnedGrenade asPG = (PinnedGrenade)physObj;
                 updateFunc = UpdatePinnedGrenade;
                 updateGivenFunc = UpdateGivenPinnedGrenade;
+                dataObject = asPG;
                 if (asPG.SpawnOnSplode == null)
                 {
                     asPG.SpawnOnSplode = new List<GameObject>();
@@ -237,6 +239,7 @@ namespace H3MP
                 FVRGrenade asGrenade = (FVRGrenade)physObj;
                 updateFunc = UpdateGrenade;
                 updateGivenFunc = UpdateGivenGrenade;
+                dataObject = asGrenade;
                 Dictionary<int, float> timings = Mod.FVRGrenade_FuseTimings.GetValue(asGrenade) as Dictionary<int, float>;
                 if (timings == null)
                 {
@@ -259,6 +262,27 @@ namespace H3MP
                 timings.Add(-1, availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1]);
                 trackedItemReferences[availableTrackedItemRefIndices.Count - 1] = this;
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
+            }
+            else if(physicalObject is C4)
+            {
+                C4 asC4 = (C4)physObj;
+                updateFunc = UpdateC4;
+                updateGivenFunc = UpdateGivenC4;
+                dataObject = asC4;
+            }
+            else if(physicalObject is ClaymoreMine)
+            {
+                ClaymoreMine asCM = (ClaymoreMine)physObj;
+                updateFunc = UpdateClaymoreMine;
+                updateGivenFunc = UpdateGivenClaymoreMine;
+                dataObject = asCM;
+            }
+            else if(physicalObject is SLAM)
+            {
+                SLAM asSLAM = (SLAM)physObj;
+                updateFunc = UpdateSLAM;
+                updateGivenFunc = UpdateGivenSLAM;
+                dataObject = asSLAM;
             }
             else if (physObj is Derringer)
             {
@@ -492,6 +516,166 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateSLAM()
+        {
+            SLAM asSLAM = (SLAM)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[1];
+                modified = true;
+            }
+
+            // Write armed
+            byte preval = data.data[0];
+
+            data.data[0] = (byte)asSLAM.Mode;
+
+            modified |= preval != data.data[0];
+
+            return modified;
+        }
+
+        private bool UpdateGivenSLAM(byte[] newData)
+        {
+            bool modified = false;
+            SLAM asSLAM = (SLAM)dataObject;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set mode
+                asSLAM.SetMode((SLAM.SLAMMode)newData[0]);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set mode
+                    asSLAM.SetMode((SLAM.SLAMMode)newData[0]);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateClaymoreMine()
+        {
+            ClaymoreMine asCM = (ClaymoreMine)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[2];
+                modified = true;
+            }
+
+            // Write armed
+            byte preval = data.data[0];
+
+            data.data[0] = (bool)Mod.ClaymoreMine_m_isArmed.GetValue(asCM) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            // Write planted
+            preval = data.data[1];
+
+            data.data[1] = (bool)Mod.ClaymoreMine_m_isPlanted.GetValue(asCM) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[1];
+
+            return modified;
+        }
+
+        private bool UpdateGivenClaymoreMine(byte[] newData)
+        {
+            bool modified = false;
+            ClaymoreMine asCM = (ClaymoreMine)dataObject;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set armed
+                Mod.ClaymoreMine_m_isArmed.SetValue(asCM, newData[0] == 1);
+
+                // Set planted
+                Mod.ClaymoreMine_m_isPlanted.SetValue(asCM, newData[1] == 1);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set armed
+                    Mod.ClaymoreMine_m_isArmed.SetValue(asCM, newData[0] == 1);
+                    modified = true;
+                }
+                if (data.data[1] != newData[1])
+                {
+                    // Set planted
+                    Mod.ClaymoreMine_m_isPlanted.SetValue(asCM, newData[1] == 1);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateC4()
+        {
+            C4 asC4 = (C4)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[1];
+                modified = true;
+            }
+
+            // Write armed
+            byte preval = data.data[0];
+
+            data.data[0] = (bool)Mod.C4_m_isArmed.GetValue(asC4) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            return modified;
+        }
+
+        private bool UpdateGivenC4(byte[] newData)
+        {
+            bool modified = false;
+            C4 asC4 = (C4)dataObject;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set armed
+                asC4.SetArmed(newData[0] == 1);
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+                    // Set armed
+                    asC4.SetArmed(newData[0] == 1);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateGrenade()
         {
             FVRGrenade asGrenade = (FVRGrenade)dataObject;
