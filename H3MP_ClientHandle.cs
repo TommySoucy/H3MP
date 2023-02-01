@@ -2788,7 +2788,8 @@ namespace H3MP
                     BangSnap bangSnap = H3MP_Client.items[trackedID].physicalItem.physicalObject as BangSnap;
                     if (bangSnap != null)
                     {
-                        Mod.BangSnap_Splode.Invoke(bangSnap, new object[] { packet.ReadVector3() });
+                        bangSnap.transform.position = packet.ReadVector3();
+                        Mod.BangSnap_Splode.Invoke(bangSnap, null);
                     }
                 }
             }
