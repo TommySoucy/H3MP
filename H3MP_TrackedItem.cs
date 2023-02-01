@@ -533,7 +533,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[4];
+                data.data = new byte[3];
                 modified = true;
             }
 
@@ -601,7 +601,7 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asAG.Chamber.GetRound() != null)
