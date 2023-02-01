@@ -205,7 +205,7 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenLeverActionFirearm;
                 dataObject = LAF;
             }
-            else if(physicalObject is PinnedGrenade)
+            else if(physObj is PinnedGrenade)
             {
                 PinnedGrenade asPG = (PinnedGrenade)physObj;
                 updateFunc = UpdatePinnedGrenade;
@@ -234,7 +234,7 @@ namespace H3MP
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
                 asPG.SpawnOnSplode.Add(trackedItemRef);
             }
-            else if(physicalObject is FVRGrenade)
+            else if(physObj is FVRGrenade)
             {
                 FVRGrenade asGrenade = (FVRGrenade)physObj;
                 updateFunc = UpdateGrenade;
@@ -263,21 +263,22 @@ namespace H3MP
                 trackedItemReferences[availableTrackedItemRefIndices.Count - 1] = this;
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
             }
-            else if(physicalObject is C4)
+            else if(physObj is C4)
             {
+                Mod.LogInfo("\ninit type is C4");
                 C4 asC4 = (C4)physObj;
                 updateFunc = UpdateC4;
                 updateGivenFunc = UpdateGivenC4;
                 dataObject = asC4;
             }
-            else if(physicalObject is ClaymoreMine)
+            else if(physObj is ClaymoreMine)
             {
                 ClaymoreMine asCM = (ClaymoreMine)physObj;
                 updateFunc = UpdateClaymoreMine;
                 updateGivenFunc = UpdateGivenClaymoreMine;
                 dataObject = asCM;
             }
-            else if(physicalObject is SLAM)
+            else if(physObj is SLAM)
             {
                 SLAM asSLAM = (SLAM)physObj;
                 updateFunc = UpdateSLAM;
