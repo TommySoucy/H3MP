@@ -7615,15 +7615,17 @@ namespace H3MP
             CodeInstruction breakToLoopHead = new CodeInstruction(OpCodes.Br);
             toInsert0.Add(breakToLoopHead); // Break to loop head, where we will check index j against SpawnOnSplode.Count and break out of loop
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if (instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("SpawnOnSplode"))
+                if (!applied && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("SpawnOnSplode"))
                 {
                     breakToLoopHead.operand = instructionList[i - 2].operand;
                     instructionList[i - 1].labels.Add(loopStartLabel);
                     instructionList.InsertRange(i - 1, toInsert0);
+                    applied = true;
                 }
 
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (5)"))
