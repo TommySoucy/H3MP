@@ -987,6 +987,7 @@ namespace H3MP
             data.mustard = sosigScript.Mustard;
             data.bodyPose = sosigScript.BodyPose;
             data.IFF = (byte)sosigScript.GetIFF();
+            data.IFFChart = sosigScript.Priority.IFFChart;
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
 

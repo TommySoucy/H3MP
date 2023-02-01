@@ -9,9 +9,6 @@ namespace H3MP
 {
     public class H3MP_TrackedItem : MonoBehaviour
     {
-        // DEBUG:
-        public bool outputFlag;
-
         public static float interpolationSpeed = 12f;
         public static bool interpolated = true;
 
@@ -4854,7 +4851,6 @@ namespace H3MP
             // Write loaded into firearm
             preval0 = data.data[necessarySize - 8];
             data.data[necessarySize - 8] = asMag.FireArm != null ? (byte)1 : (byte)0;
-            if (outputFlag) Mod.LogInfo(data.data[necessarySize - 8].ToString());
             modified |= preval0 != data.data[necessarySize - 8];
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
