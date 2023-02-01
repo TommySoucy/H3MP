@@ -2268,7 +2268,7 @@ namespace H3MP
             byte preval0 = data.data[0];
 
             // Write cur chamber
-            data.data[0] = (byte)Mod.GrappleGun_m_curChamber.GetValue(asGG);
+            data.data[0] = (byte)(int)Mod.GrappleGun_m_curChamber.GetValue(asGG);
 
             modified |= preval0 != data.data[0];
 
