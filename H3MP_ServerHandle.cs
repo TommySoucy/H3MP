@@ -3170,7 +3170,9 @@ namespace H3MP
                     if (bangSnap != null)
                     {
                         bangSnap.transform.position = packet.ReadVector3();
+                        ++BangSnapPatch.skip;
                         Mod.BangSnap_Splode.Invoke(bangSnap, null);
+                        --BangSnapPatch.skip;
                     }
                 }
             }

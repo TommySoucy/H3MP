@@ -7887,10 +7887,12 @@ namespace H3MP
     // Patches BangSnap to send explosion and prevent collision on non controllers
     class BangSnapPatch
     {
+        public static int skip;
+
         // To send explosion
         static void SplodePrefix(BangSnap __instance)
         {
-            if(Mod.managerObject == null)
+            if(skip > 0 || Mod.managerObject == null)
             {
                 return;
             }
