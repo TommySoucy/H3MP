@@ -2777,6 +2777,23 @@ namespace H3MP
             }
         }
 
+        public static void BangSnapSplode(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                // Update local
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    BangSnap bangSnap = H3MP_Client.items[trackedID].physicalItem.physicalObject as BangSnap;
+                    if (bangSnap != null)
+                    {
+                        Mod.BangSnap_Splode.Invoke(bangSnap, new object[] { packet.ReadVector3() });
+                    }
+                }
+            }
+        }
+
         public static void ClientDisconnect(H3MP_Packet packet)
         {
             int ID = packet.ReadInt();

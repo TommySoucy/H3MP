@@ -255,6 +255,7 @@ namespace H3MP
         public static readonly MethodInfo RollingBlock_Fire = typeof(RollingBlock).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo SingleActionRevolver_Fire = typeof(SingleActionRevolver).GetMethod("Fire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo StingerMissile_Explode = typeof(StingerMissile).GetMethod("Explode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo BangSnap_Splode = typeof(BangSnap).GetMethod("Splode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
 // Debug
@@ -1828,6 +1829,17 @@ namespace H3MP
 
             PatchVerify.Verify(FVRGrenadePatchUpdateOriginal, harmony, false);
             harmony.Patch(FVRGrenadePatchUpdateOriginal, new HarmonyMethod(FVRGrenadePatchUpdatePrefix), new HarmonyMethod(FVRGrenadePatchUpdatePostfix));
+
+            // BangSnapPatch
+            MethodInfo bangSnapPatchSplodeOriginal = typeof(BangSnap).GetMethod("Splode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo bangSnapPatchSplodePrefix = typeof(BangSnapPatch).GetMethod("SplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo bangSnapPatchCollisionOriginal = typeof(BangSnap).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo bangSnapPatchCollisionTranspiler = typeof(BangSnapPatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(bangSnapPatchSplodeOriginal, harmony, false);
+            PatchVerify.Verify(bangSnapPatchCollisionOriginal, harmony, false);
+            harmony.Patch(bangSnapPatchSplodeOriginal, new HarmonyMethod(bangSnapPatchSplodePrefix));
+            harmony.Patch(bangSnapPatchCollisionOriginal, null ,null, new HarmonyMethod(bangSnapPatchCollisionTranspiler));
 
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -7869,6 +7881,75 @@ namespace H3MP
                 }
                 UnityEngine.Object.Destroy(grenade.gameObject);
             }
+        }
+    }
+
+    // Patches BangSnap to send explosion and prevent collision on non controllers
+    class BangSnapPatch
+    {
+        // To send explosion
+        static void SplodePrefix(BangSnap __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.BangSnapSplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                }
+                else
+                {
+                    H3MP_ClientSend.BangSnapSplode(trackedItem.data.trackedID, __instance.transform.position);
+                }
+            }
+        }
+
+        // To prevent collision explosion if not in control
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load BangSnap instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BangSnapPatch), "Controlled"))); // Call our Controlled method
+            Label l = il.DefineLabel();
+            toInsert0.Add(new CodeInstruction(OpCodes.Brtrue, l)); // If controlled, break to continue as usual
+
+            toInsert0.Add(new CodeInstruction(OpCodes.Ret)); // If not controlled return right away
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Brtrue)
+                {
+                    instructionList[i + 1].labels.Add(l);
+                    instructionList.InsertRange(i + 1, toInsert0);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static bool Controlled(BangSnap bangSnap)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(bangSnap, out trackedItem) ? trackedItem : bangSnap.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null)
+            {
+                return trackedItem.data.controller == H3MP_GameManager.ID;
+            }
+
+            return true;
         }
     }
 #endregion

@@ -2319,5 +2319,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void BangSnapSplode(int trackedID, Vector3 position)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.bangSnapSplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(position);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

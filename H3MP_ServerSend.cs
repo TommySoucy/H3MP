@@ -3604,6 +3604,43 @@ namespace H3MP
             }
         }
 
+        public static void BangSnapSplode(int clientID, int trackedID, Vector3 pos)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.bangSnapSplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void BangSnapSplode(int clientID, H3MP_Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.bangSnapSplode);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
         public static void ClientDisconnect(int clientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.clientDisconnect))

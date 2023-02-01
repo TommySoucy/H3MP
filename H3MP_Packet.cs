@@ -142,7 +142,8 @@ namespace H3MP
         FVRGrenadeExplode = 131,
         clientDisconnect = 132,
         serverClosed = 133,
-        initConnectionData = 134
+        initConnectionData = 134,
+        bangSnapSplode = 135
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -282,7 +283,8 @@ namespace H3MP
         stingerMissileExplode = 132,
         pinnedGrenadeExplode = 133,
         FVRGrenadeExplode = 134,
-        clientDisconnect = 135
+        clientDisconnect = 135,
+        bangSnapSplode = 136
     }
 
     public class H3MP_Packet : IDisposable

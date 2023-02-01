@@ -599,6 +599,7 @@ namespace H3MP
                 H3MP_ServerHandle.PinnedGrenadeExplode,
                 H3MP_ServerHandle.FVRGrenadeExplode,
                 H3MP_ServerHandle.ClientDisconnect,
+                H3MP_ServerHandle.BangSnapSplode,
             };
 
             items = new H3MP_TrackedItemData[100];

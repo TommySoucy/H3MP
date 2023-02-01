@@ -3157,5 +3157,24 @@ namespace H3MP
                 H3MP_Server.clients[clientID].Disconnect(3);
             }
         }
+
+        public static void BangSnapSplode(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Server.items[trackedID] != null)
+            {
+                // Update local
+                if (H3MP_Server.items[trackedID].physicalItem != null)
+                {
+                    BangSnap bangSnap = H3MP_Server.items[trackedID].physicalItem.physicalObject as BangSnap;
+                    if (bangSnap != null)
+                    {
+                        Mod.BangSnap_Splode.Invoke(bangSnap, new object[] { packet.ReadVector3() });
+                    }
+                }
+            }
+
+            H3MP_ServerSend.BangSnapSplode(clientID, packet);
+        }
     }
 }
