@@ -1162,20 +1162,6 @@ namespace H3MP
             PatchVerify.Verify(demonadeDamageablePatchOriginal, harmony, false);
             harmony.Patch(demonadeDamageablePatchOriginal, null, null, new HarmonyMethod(demonadeDamageablePatchTranspiler));
 
-            // PinnedGrenadeDamageablePatch
-            MethodInfo pinnedGrenadeDamageablePatchOriginal = typeof(PinnedGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo pinnedGrenadeDamageablePatchTranspiler = typeof(PinnedGrenadeDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
-
-            PatchVerify.Verify(pinnedGrenadeDamageablePatchOriginal, harmony, false);
-            harmony.Patch(pinnedGrenadeDamageablePatchOriginal, null, null, new HarmonyMethod(pinnedGrenadeDamageablePatchTranspiler));
-
-            // PinnedGrenadeCollisionDamageablePatch
-            MethodInfo pinnedGrenadeCollisionDamageablePatchOriginal = typeof(PinnedGrenade).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo pinnedGrenadeCollisionDamageablePatchTranspiler = typeof(PinnedGrenadeCollisionDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
-
-            PatchVerify.Verify(pinnedGrenadeCollisionDamageablePatchOriginal, harmony, false);
-            harmony.Patch(pinnedGrenadeCollisionDamageablePatchOriginal, null, null, new HarmonyMethod(pinnedGrenadeCollisionDamageablePatchTranspiler));
-
             // SosigWeaponDamageablePatch
             MethodInfo sosigWeaponDamageablePatchOriginal = typeof(SosigWeapon).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo sosigWeaponDamageablePatchTranspiler = typeof(SosigWeaponDamageablePatch).GetMethod("ExplosionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -7592,6 +7578,10 @@ namespace H3MP
         static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 5)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
 
             List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
             toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load index j
@@ -7634,6 +7624,11 @@ namespace H3MP
                     breakToLoopHead.operand = instructionList[i - 2].operand;
                     instructionList[i - 1].labels.Add(loopStartLabel);
                     instructionList.InsertRange(i - 1, toInsert0);
+                }
+
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (5)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
                     break;
                 }
             }
@@ -7679,6 +7674,10 @@ namespace H3MP
         static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
 
             List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
             toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
@@ -7696,6 +7695,11 @@ namespace H3MP
                 {
                     instructionList[i + 1].labels.Add(l);
                     instructionList.InsertRange(i + 1, toInsert0);
+                }
+
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
                     break;
                 }
             }
@@ -8509,52 +8513,6 @@ namespace H3MP
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load explosion gameobject
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load MF2_Demonade instance
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
-
-            for (int i = 0; i < instructionList.Count; ++i)
-            {
-                CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Stloc_1)
-                {
-                    instructionList.InsertRange(i + 1, toInsert);
-                }
-            }
-            return instructionList;
-        }
-    }
-
-    // Patches PinnedGrenade.FVRUpdate to ignore latest IFVRDamageable if necessary
-    class PinnedGrenadeDamageablePatch
-    {
-        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
-            List<CodeInstruction> toInsert = new List<CodeInstruction>();
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 5)); // Load explosion gameobject
-            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
-
-            for (int i = 0; i < instructionList.Count; ++i)
-            {
-                CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (5)"))
-                {
-                    instructionList.InsertRange(i + 1, toInsert);
-                }
-            }
-            return instructionList;
-        }
-    }
-
-    // Patches PinnedGrenade.OnCollisionEnter to ignore latest IFVRDamageable if necessary
-    class PinnedGrenadeCollisionDamageablePatch
-    {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
-            List<CodeInstruction> toInsert = new List<CodeInstruction>();
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load explosion gameobject
-            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
 
             for (int i = 0; i < instructionList.Count; ++i)
