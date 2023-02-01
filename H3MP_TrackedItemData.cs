@@ -147,7 +147,14 @@ namespace H3MP
                 physicalItem.data = this;
                 physicalItem.physicalObject = itemObject.GetComponent<FVRPhysicalObject>();
 
-                H3MP_GameManager.trackedItemByItem.Add(physicalItem.physicalObject, physicalItem);
+                if (H3MP_GameManager.trackedItemByItem.TryGetValue(physicalItem.physicalObject, out H3MP_TrackedItem t))
+                {
+                    Mod.LogError("Error at instantiation of: " + itemID + ": Item's physical object already exists in trackedItemByItem\n\tTrackedID: "+ t.data.trackedID);
+                }
+                else
+                {
+                    H3MP_GameManager.trackedItemByItem.Add(physicalItem.physicalObject, physicalItem);
+                }
                 if (physicalItem.physicalObject is SosigWeaponPlayerInterface)
                 {
                     H3MP_GameManager.trackedItemBySosigWeapon.Add((physicalItem.physicalObject as SosigWeaponPlayerInterface).W, physicalItem);

@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using Anvil;
+using BepInEx;
 using FistVR;
 using HarmonyLib;
 using HarmonyLib.Public.Patching;
@@ -203,6 +204,8 @@ namespace H3MP
         public static readonly FieldInfo FVRGrenade_m_isLeverReleased = typeof(FVRGrenade).GetField("m_isLeverReleased", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRGrenadePin_m_hasBeenPulled = typeof(FVRGrenadePin).GetField("m_hasBeenPulled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRGrenadePin_m_isDying = typeof(FVRGrenadePin).GetField("m_isDying", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Derringer_m_curBarrel = typeof(Derringer).GetField("m_curBarrel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AttachableTubeFed_m_isHammerCocked = typeof(AttachableTubeFed).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -1095,6 +1098,13 @@ namespace H3MP
 
             PatchVerify.Verify(IDSpawnedFromPatchOriginal, harmony, true);
             harmony.Patch(IDSpawnedFromPatchOriginal, null, new HarmonyMethod(IDSpawnedFromPatchPostfix));
+
+            // AnvilPrefabSpawnPatch
+            MethodInfo anvilPrefabSpawnPatchOriginal = typeof(AnvilPrefabSpawn).GetMethod("InstantiateAndZero", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo anvilPrefabSpawnPatchPrefix = typeof(AnvilPrefabSpawnPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(anvilPrefabSpawnPatchOriginal, harmony, true);
+            harmony.Patch(anvilPrefabSpawnPatchOriginal, new HarmonyMethod(anvilPrefabSpawnPatchPrefix));
 
             // ProjectileFirePatch
             MethodInfo projectileFirePatchOriginal = typeof(BallisticProjectile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(float), typeof(Vector3), typeof(FVRFireArm), typeof(bool) }, null);
@@ -3593,7 +3603,7 @@ namespace H3MP
             ++Mod.skipAllInstantiates;
 
             FVRFireArmRound round = chamber.GetRound();
-            if (round == null)
+            if (round == null || round.IsSpent)
             {
                 fireSuccessful = false;
             }
@@ -4816,7 +4826,7 @@ namespace H3MP
     // Patches Derringer.FireBarrel so we can skip 
     class FireDerringerPatch
     {
-        static void Prefix()
+        static void Prefix(ref Derringer __instance)
         {
             ++FirePatch.skipSending;
         }
@@ -7857,7 +7867,7 @@ namespace H3MP
     }
 #endregion
 
-#region Instatiation Patches
+#region Instantiation Patches
     // Patches FVRFireArmChamber.EjectRound so we can keep track of when a round is ejected from a chamber
     class ChamberEjectRoundPatch
     {
@@ -7866,7 +7876,7 @@ namespace H3MP
 
         static void Prefix(ref FVRFireArmChamber __instance, ref FVRFireArmRound ___m_round, bool ForceCaseLessEject)
         {
-            // Skip if not connected or no one to send data to
+            // Skip if not connected
             if (Mod.managerObject == null)
             {
                 return;
@@ -8309,9 +8319,37 @@ namespace H3MP
             H3MP_GameManager.SyncTrackedItems(__instance.transform, true, null, SceneManager.GetActiveScene().name);
         }
     }
-#endregion
 
-#region Damageable Patches
+    // Patches AnvilPrefabSpawn.InstantiateAndZero so we know when we spawn items from an anvil prefab spawn
+    class AnvilPrefabSpawnPatch
+    {
+        static bool Prefix(AnvilPrefabSpawn __instance, GameObject result)
+        {
+            // Skip if not connected or no one else in the scene/instance
+            if (Mod.managerObject == null || !H3MP_GameManager.PlayersPresentSlow())
+            {
+                return true;
+            }
+
+            // If the item is marked as being there when we arrived in the scene
+            // And if it can be tracked
+            // Then we don't even want to instantiate it because it will already have been instantiated and tracked in this scene/instance  
+            if (__instance.GetComponent<H3MP_TrackedItemReference>() != null)
+            {
+                FVRPhysicalObject physObj = result.GetComponent<FVRPhysicalObject>();
+                if(physObj != null && H3MP_GameManager.IsObjectIdentifiable(physObj))
+                {
+                    Mod.LogInfo("Skipping AnvilPrefabSpawn instantiate on " + __instance.name);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+    #endregion
+
+    #region Damageable Patches
     // TODO: Optimization?: Patch IFVRDamageable.Damage and have a way to track damageables so we don't need to have a specific TCP call for each
     //       Or make sure we track damageables, then when we can patch damageable.damage and send the damage and trackedID directly to other clients so they can process it too
 

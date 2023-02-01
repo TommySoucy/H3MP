@@ -732,7 +732,7 @@ namespace H3MP
             byte preval0 = data.data[1];
 
             // Write chambered round class
-            if (asMF2_RL.Chamber.GetRound() == null)
+            if (asMF2_RL.Chamber.GetRound() == null || asMF2_RL.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
             }
@@ -872,7 +872,7 @@ namespace H3MP
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
 
-                if (asRevolver.Cylinder.Chambers[i].GetRound() == null)
+                if (asRevolver.Cylinder.Chambers[i].GetRound() == null || asRevolver.Cylinder.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
                 }
@@ -969,7 +969,7 @@ namespace H3MP
             byte preval0 = data.data[2];
 
             // Write chambered round class
-            if (asSimpleLauncher.Chamber.GetRound() == null)
+            if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
             }
@@ -1078,7 +1078,7 @@ namespace H3MP
             byte preval0 = data.data[1];
 
             // Write chambered round class
-            if (asSimpleLauncher.Chamber.GetRound() == null)
+            if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
             }
@@ -1157,7 +1157,7 @@ namespace H3MP
             byte preval0 = data.data[2];
 
             // Write chambered round class
-            if (asRPG7.Chamber.GetRound() == null)
+            if (asRPG7.Chamber.GetRound() == null || asRPG7.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
             }
@@ -1254,7 +1254,7 @@ namespace H3MP
             byte preval0 = data.data[2];
 
             // Write chambered round class
-            if (asRB.Chamber.GetRound() == null)
+            if (asRB.Chamber.GetRound() == null || asRB.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
             }
@@ -1344,7 +1344,7 @@ namespace H3MP
             byte preval0 = data.data[1];
 
             // Write chambered round class
-            if (asRGM40.Chamber.GetRound() == null)
+            if (asRGM40.Chamber.GetRound() == null || asRGM40.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
             }
@@ -1872,7 +1872,7 @@ namespace H3MP
             byte preval0 = data.data[3];
 
             // Write chambered round class
-            if (asOBR.Chamber.GetRound() == null)
+            if (asOBR.Chamber.GetRound() == null || asOBR.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
@@ -1978,7 +1978,7 @@ namespace H3MP
             preval0 = data.data[2];
             byte preval1 = data.data[3];
 
-            if (asHCB.Chamber.GetRound() == null)
+            if (asHCB.Chamber.GetRound() == null || asHCB.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
@@ -2083,7 +2083,7 @@ namespace H3MP
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
 
-                if (asGG.Chambers[i].GetRound() == null)
+                if (asGG.Chambers[i].GetRound() == null || asGG.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
                 }
@@ -2389,7 +2389,7 @@ namespace H3MP
             byte preval0 = data.data[2];
 
             // Write chambered round class
-            if (asFG.Chamber.GetRound() == null)
+            if (asFG.Chamber.GetRound() == null || asFG.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
             }
@@ -2533,7 +2533,7 @@ namespace H3MP
             byte preval0 = data.data[0];
             byte preval1 = data.data[1];
 
-            if (asLAF.Chamber.GetRound() == null)
+            if (asLAF.Chamber.GetRound() == null || asLAF.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
             }
@@ -2557,7 +2557,7 @@ namespace H3MP
                 preval0 = data.data[3];
                 preval1 = data.data[4];
 
-                if (asLAF.Chamber2.GetRound() == null)
+                if (asLAF.Chamber2.GetRound() == null || asLAF.Chamber2.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
                 }
@@ -2667,7 +2667,7 @@ namespace H3MP
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
 
-                if (asDerringer.Barrels[i].Chamber.GetRound() == null)
+                if (asDerringer.Barrels[i].Chamber.GetRound() == null || asDerringer.Barrels[i].Chamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
                 }
@@ -2770,7 +2770,7 @@ namespace H3MP
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
 
-                if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null)
+                if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null || asBreakActionWeapon.Barrels[i].Chamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
                 }
@@ -2857,7 +2857,7 @@ namespace H3MP
             byte preval0 = data.data[3];
 
             // Write chambered round class
-            if (asBAP.Chamber.GetRound() == null)
+            if (asBAP.Chamber.GetRound() == null || asBAP.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
@@ -2978,7 +2978,7 @@ namespace H3MP
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
 
-                if (asRS.Chambers[i].GetRound() == null)
+                if (asRS.Chambers[i].GetRound() == null || asRS.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
                 }
@@ -3115,7 +3115,7 @@ namespace H3MP
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
 
-                if (asRevolver.Chambers[i].GetRound() == null)
+                if (asRevolver.Chambers[i].GetRound() == null || asRevolver.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
                 }
@@ -3196,7 +3196,7 @@ namespace H3MP
             byte preval0 = data.data[1];
 
             // Write chambered round class
-            if (asM203.Chamber.GetRound() == null)
+            if (asM203.Chamber.GetRound() == null || asM203.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
             }
@@ -3274,7 +3274,7 @@ namespace H3MP
             byte preval0 = data.data[2];
 
             // Write chambered round class
-            if (asGP25.Chamber.GetRound() == null)
+            if (asGP25.Chamber.GetRound() == null || asGP25.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
             }
@@ -3361,7 +3361,7 @@ namespace H3MP
             byte preval = data.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)(int)typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asATF);
+            data.data[0] = asATF.IsSafetyEngaged ? (byte)1 : (byte)0;
 
             modified |= preval != data.data[0];
 
@@ -3376,7 +3376,7 @@ namespace H3MP
             byte preval0 = data.data[3];
 
             // Write chambered round class
-            if (asATF.Chamber.GetRound() == null)
+            if (asATF.Chamber.GetRound() == null || asATF.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
@@ -3416,8 +3416,11 @@ namespace H3MP
             {
                 modified = true;
 
-                // Set fire select mode
-                typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asATF, (int)newData[0]);
+                // Set safety
+                if ((newData[0] == 1 && !asATF.IsSafetyEngaged) || (newData[0] == 0 && asATF.IsSafetyEngaged))
+                {
+                    asATF.ToggleSafety();
+                }
 
                 // Set bolt pos
                 asATF.Bolt.LastPos = asATF.Bolt.CurPos;
@@ -3434,9 +3437,12 @@ namespace H3MP
             {
                 if (data.data[0] != newData[0])
                 {
-                    // Set fire select mode
-                    typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asATF, (int)newData[0]);
-                    modified = true;
+                    // Set safety
+                    if ((newData[0] == 1 && !asATF.IsSafetyEngaged) || (newData[0] == 0 && asATF.IsSafetyEngaged))
+                    {
+                        asATF.ToggleSafety();
+                        modified = true;
+                    }
                 }
                 if (data.data[4] != newData[4])
                 {
@@ -3457,7 +3463,7 @@ namespace H3MP
             {
                 if (asATF.IsHammerCocked)
                 {
-                    typeof(TubeFedShotgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asATF, BitConverter.ToBoolean(newData, 1));
+                    Mod.AttachableTubeFed_m_isHammerCocked.SetValue(asATF, newData[1] == 1);
                     modified = true;
                 }
             }
@@ -3543,7 +3549,7 @@ namespace H3MP
             byte preval0 = data.data[4];
 
             // Write chambered round class
-            if (asACBW.Chamber.GetRound() == null)
+            if (asACBW.Chamber.GetRound() == null || asACBW.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
@@ -3665,7 +3671,7 @@ namespace H3MP
             byte preval0 = data.data[2];
 
             // Write chambered round class
-            if (asABA.Chamber.GetRound() == null)
+            if (asABA.Chamber.GetRound() == null || asABA.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
             }
@@ -3879,7 +3885,7 @@ namespace H3MP
                 int firstIndex = i * 2 + 1;
                 preval = data.data[firstIndex];
                 preval0 = data.data[firstIndex + 1];
-                if (asLAPD2019.Chambers[i].GetRound() == null)
+                if (asLAPD2019.Chambers[i].GetRound() == null || asLAPD2019.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
                 }
@@ -4080,7 +4086,7 @@ namespace H3MP
             byte preval0 = data.data[4];
 
             // Write chambered round class
-            if(asCBW.Chamber.GetRound() == null)
+            if(asCBW.Chamber.GetRound() == null || asCBW.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
@@ -4211,7 +4217,7 @@ namespace H3MP
             byte preval0 = data.data[4];
 
             // Write chambered round class
-            if (asHandgun.Chamber.GetRound() == null)
+            if (asHandgun.Chamber.GetRound() == null || asHandgun.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
@@ -4323,7 +4329,7 @@ namespace H3MP
             byte preval = data.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)(int)typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asTFS);
+            data.data[0] = asTFS.IsSafetyEngaged ? (byte)1 : (byte)0;
 
             modified |= preval != data.data[0];
 
@@ -4338,7 +4344,7 @@ namespace H3MP
             byte preval0 = data.data[3];
 
             // Write chambered round class
-            if(asTFS.Chamber.GetRound() == null)
+            if(asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
@@ -4347,7 +4353,7 @@ namespace H3MP
                 BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3]);
 
             preval = data.data[4];
 
@@ -4378,8 +4384,11 @@ namespace H3MP
             {
                 modified = true;
 
-                // Set fire select mode
-                typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, (int)newData[0]);
+                // Set safety
+                if (asTFS.HasSafety && ((newData[0] == 1 && !asTFS.IsSafetyEngaged) || (newData[0] == 0 && asTFS.IsSafetyEngaged)))
+                {
+                    asTFS.ToggleSafety();
+                }
 
                 // Set bolt pos
                 asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
@@ -4396,8 +4405,11 @@ namespace H3MP
             {
                 if (data.data[0] != newData[0])
                 {
-                    // Set fire select mode
-                    typeof(TubeFedShotgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, (int)newData[0]);
+                    // Set safety
+                    if (asTFS.HasSafety && ((newData[0] == 1 && !asTFS.IsSafetyEngaged) || (newData[0] == 0 && asTFS.IsSafetyEngaged)))
+                    {
+                        asTFS.ToggleSafety();
+                    }
                     modified = true;
                 }
                 if (data.data[4] != newData[4])
@@ -4419,7 +4431,7 @@ namespace H3MP
             {
                 if (asTFS.IsHammerCocked)
                 {
-                    typeof(TubeFedShotgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, BitConverter.ToBoolean(newData, 1));
+                    typeof(TubeFedShotgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, false);
                     modified = true;
                 }
             }
@@ -4493,7 +4505,7 @@ namespace H3MP
             byte preval0 = data.data[3];
 
             // Write chambered round class
-            if(asBAR.Chamber.GetRound() == null)
+            if(asBAR.Chamber.GetRound() == null || asBAR.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
@@ -5293,7 +5305,7 @@ namespace H3MP
                 preval0 = data.data[i * 2];
                 preval1 = data.data[i * 2 + 1];
 
-                if (asSpeedloader.Chambers[i].IsLoaded)
+                if (asSpeedloader.Chambers[i].IsLoaded && !asSpeedloader.Chambers[i].IsSpent)
                 {
                     BitConverter.GetBytes((short)asSpeedloader.Chambers[i].LoadedClass).CopyTo(data.data, i * 2);
                 }

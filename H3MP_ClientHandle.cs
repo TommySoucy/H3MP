@@ -605,6 +605,7 @@ namespace H3MP
                 ++Mod.skipNextFires;
                 Derringer asDerringer = H3MP_Client.items[trackedID].physicalItem.physicalObject as Derringer;
                 asDerringer.Barrels[barrelIndex].Chamber.SetRound(roundClass, asDerringer.Barrels[barrelIndex].Chamber.transform.position, asDerringer.Barrels[barrelIndex].Chamber.transform.rotation);
+                Mod.Derringer_m_curBarrel.SetValue(asDerringer, barrelIndex);
                 Mod.Derringer_FireBarrel.Invoke(asDerringer, new object[] { barrelIndex });
             }
         }

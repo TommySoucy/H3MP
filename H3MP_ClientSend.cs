@@ -1397,11 +1397,9 @@ namespace H3MP
 
         public static void UpToDateObjects(bool instantiateOnReceive, int forClient)
         {
-            Mod.LogInfo(H3MP_Client.singleton.ID.ToString()+ " sending up to date objects to server");
             int index = 0;
             while (index < H3MP_GameManager.items.Count)
             {
-                Mod.LogInfo("\tItem Packet");
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateItemRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
@@ -1422,7 +1420,6 @@ namespace H3MP
 
                         trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
 
-                        Mod.LogInfo("\t\tTracked item at: "+trackedItem.trackedID);
                         trackedItem.Update(true);
                         packet.Write(trackedItem, false, true);
 
@@ -1450,7 +1447,6 @@ namespace H3MP
             index = 0;
             while (index < H3MP_GameManager.sosigs.Count)
             {
-                Mod.LogInfo("\tSosig Packet");
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateSosigRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
@@ -1471,7 +1467,6 @@ namespace H3MP
 
                         trackedSosig.insuranceCounter = H3MP_TrackedSosigData.insuranceCount;
 
-                        Mod.LogInfo("\t\tTracked sosig at: " + trackedSosig.trackedID);
                         trackedSosig.Update(true);
                         packet.Write(trackedSosig, false, true);
 
@@ -1499,7 +1494,6 @@ namespace H3MP
             index = 0;
             while (index < H3MP_GameManager.autoMeaters.Count)
             {
-                Mod.LogInfo("\tAutoMeater Packet");
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateAutoMeatersRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
@@ -1520,7 +1514,6 @@ namespace H3MP
 
                         trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
 
-                        Mod.LogInfo("\t\tTracked AutoMeater at: " + trackedAutoMeater.trackedID);
                         trackedAutoMeater.Update(true);
                         packet.Write(trackedAutoMeater, false, true);
 
@@ -1548,7 +1541,6 @@ namespace H3MP
             index = 0;
             while (index < H3MP_GameManager.encryptions.Count)
             {
-                Mod.LogInfo("\tEncryption Packet");
                 using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.updateEncryptionsRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
@@ -1569,7 +1561,6 @@ namespace H3MP
 
                         trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
 
-                        Mod.LogInfo("\t\tTracked Encryption at: " + trackedEncryption.trackedID);
                         trackedEncryption.Update(true);
                         packet.Write(trackedEncryption, false, true);
 

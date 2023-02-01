@@ -1,4 +1,5 @@
-﻿using FistVR;
+﻿using Anvil;
+using FistVR;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -660,9 +661,20 @@ namespace H3MP
             }
             else
             {
-                foreach (Transform child in root)
+                AnvilPrefabSpawn aps = root.GetComponent<AnvilPrefabSpawn>();
+                if (aps != null)
                 {
-                    SyncTrackedItems(child, controlEverything, null, scene);
+                    if (!controlEverything)
+                    {
+                        aps.gameObject.AddComponent<H3MP_TrackedItemReference>();
+                    }
+                }
+                else
+                {
+                    foreach (Transform child in root)
+                    {
+                        SyncTrackedItems(child, controlEverything, null, scene);
+                    }
                 }
             }
         }
@@ -1808,12 +1820,20 @@ namespace H3MP
                 }
 
                 // Check if there are other players where we are going
-                if(playersByInstanceByScene.TryGetValue(SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> relevantInstances))
+                if(playersByInstanceByScene.TryGetValue(LoadLevelBeginPatch.loadingLevel, out Dictionary<int, List<int>> relevantInstances))
                 {
                     if(relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
                     {
-                        controlOverride = relevantPlayers.Count > 0;
+                        controlOverride = relevantPlayers.Count == 0;
                     }
+                    else
+                    {
+                        controlOverride = true;
+                    }
+                }
+                else
+                {
+                    controlOverride = true;
                 }
             }
             else // Finished loading

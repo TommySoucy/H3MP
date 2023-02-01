@@ -78,26 +78,36 @@ namespace H3MP
 
             private void ReceiveCallback(IAsyncResult result)
             {
+                int byteLength = 0;
+                byte[] data = null;
                 try
                 {
-                    int byteLength = stream.EndRead(result);
+                    byteLength = stream.EndRead(result);
                     if (byteLength == 0 && H3MP_Server.clients[ID].connected)
                     {
                         H3MP_Server.clients[ID].Disconnect(0);
                         return;
                     }
 
-                    byte[] data = new byte[byteLength];
+                    data = new byte[byteLength];
                     Array.Copy(receiveBuffer, data, byteLength);
 
                     receivedData.Reset(HandleData(data));
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     if (H3MP_Server.clients[ID].connected)
                     {
-                        H3MP_Server.clients[ID].Disconnect(1);
+                        Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
+                        if(data != null)
+                        {
+                            for(int i=0; i < byteLength; ++i)
+                            {
+                                Mod.LogWarning("data[" + i + "] = " + data[i]);
+                            }
+                        }
+                        H3MP_Server.clients[ID].Disconnect(1, ex);
                     }
                 }
             }
@@ -329,7 +339,7 @@ namespace H3MP
             }
         }
 
-        public void Disconnect(int code)
+        public void Disconnect(int code, Exception ex = null)
         {
             connected = false;
 
@@ -340,6 +350,7 @@ namespace H3MP
                     break;
                 case 1:
                     Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.");
+                    Mod.LogWarning("Exception: " + ex.Message + "\n" + ex.StackTrace);
                     break;
                 case 2:
                     Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.");
