@@ -9,6 +9,9 @@ namespace H3MP
 {
     public class H3MP_TrackedItem : MonoBehaviour
     {
+        // DEBUG:
+        public bool outputFlag;
+
         public static float interpolationSpeed = 12f;
         public static bool interpolated = true;
 
@@ -4802,7 +4805,7 @@ namespace H3MP
             bool modified = false;
             FVRFireArmMagazine asMag = dataObject as FVRFireArmMagazine;
 
-            int necessarySize = asMag.m_numRounds * 2 + 10;
+            int necessarySize = asMag.m_capacity * 2 + 10;
 
             if(data.data == null || data.data.Length < necessarySize)
             {
@@ -4830,37 +4833,52 @@ namespace H3MP
             }
 
             // Write loaded into firearm
+            preval0 = data.data[necessarySize - 8];
             data.data[necessarySize - 8] = asMag.FireArm != null ? (byte)1 : (byte)0;
+            if (outputFlag) Mod.LogInfo(data.data[necessarySize - 8].ToString());
+            modified |= preval0 != data.data[necessarySize - 8];
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
             // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
-            if(asMag.FireArm == null)
+            preval0 = data.data[necessarySize - 7];
+            if (asMag.FireArm == null)
             {
                 data.data[necessarySize - 7] = (byte)255;
             }
             else
             {
+                bool found = false;
                 for (int i = 0; i < asMag.FireArm.SecondaryMagazineSlots.Length; ++i)
                 {
                     if (asMag.FireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                     {
+                        found = true;
                         data.data[necessarySize - 7] = (byte)i;
                         break;
                     }
                 }
+                if (!found)
+                {
+                    data.data[necessarySize - 7] = (byte)255;
+                }
             }
+            modified |= preval0 != data.data[necessarySize - 7];
 
             // Write loaded into AttachableFirearm
+            preval0 = data.data[necessarySize - 6];
             data.data[necessarySize - 6] = asMag.AttachableFireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != data.data[necessarySize - 6];
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
             // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
+            preval0 = data.data[necessarySize - 5];
             if (asMag.AttachableFireArm == null)
             {
                 data.data[necessarySize - 5] = (byte)255;
             }
             else
             {
+                bool found = false;
                 for (int i = 0; i < asMag.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
                 {
                     if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
@@ -4869,10 +4887,20 @@ namespace H3MP
                         break;
                     }
                 }
+                if (!found)
+                {
+                    data.data[necessarySize - 5] = (byte)255;
+                }
             }
+            modified |= preval0 != data.data[necessarySize - 5];
 
             // Write fuel amount left
+            preval0 = data.data[necessarySize - 4];
+            preval1 = data.data[necessarySize - 3];
+            byte preval2 = data.data[necessarySize - 2];
+            byte preval3 = data.data[necessarySize - 1];
             BitConverter.GetBytes(asMag.FuelAmountLeft).CopyTo(data.data, necessarySize - 4);
+            modified |= (preval0 != data.data[necessarySize - 4] || preval1 != data.data[necessarySize - 3] || preval2 != data.data[necessarySize - 2] || preval3 != data.data[necessarySize - 1]);
 
             return modified;
         }
@@ -5164,7 +5192,7 @@ namespace H3MP
             bool modified = false;
             FVRFireArmClip asClip = dataObject as FVRFireArmClip;
 
-            int necessarySize = asClip.m_numRounds * 2 + 3;
+            int necessarySize = asClip.m_capacity * 2 + 3;
 
             if (data.data == null || data.data.Length < necessarySize)
             {
@@ -5192,7 +5220,9 @@ namespace H3MP
             }
 
             // Write loaded into firearm
-            BitConverter.GetBytes(asClip.FireArm != null).CopyTo(data.data, necessarySize - 1);
+            preval0 = data.data[necessarySize - 1];
+            data.data[necessarySize - 1] = asClip.FireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != data.data[necessarySize - 1];
 
             return modified;
         }
