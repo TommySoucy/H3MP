@@ -8610,7 +8610,7 @@ namespace H3MP
     // Patches Explosion.Explode to ignore latest IFVRDamageable if necessary
     class ExplosionDamageablePatch
     {
-        public static void AddControllerReference(GameObject dest, GameObject src = null)
+        public static void AddControllerReference(GameObject dest, Component src = null)
         {
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
@@ -8618,7 +8618,7 @@ namespace H3MP
                 return;
             }
 
-            GameObject srcToUse = src == null ? dest : src;
+            GameObject srcToUse = src == null ? dest : src.gameObject;
             H3MP_TrackedItem trackedItem = srcToUse.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null)
             {
