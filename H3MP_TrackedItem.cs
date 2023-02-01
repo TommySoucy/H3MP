@@ -306,6 +306,15 @@ namespace H3MP
                 fireFunc = FireFlaregun;
                 setFirearmUpdateOverride = SetFlaregunUpdateOverride;
             }
+            else if (physObj is Airgun)
+            {
+                Airgun asAG = (Airgun)physObj;
+                updateFunc = UpdateAirgun;
+                updateGivenFunc = UpdateGivenAirgun;
+                dataObject = asAG;
+                fireFunc = FireAirgun;
+                setFirearmUpdateOverride = SetAirgunUpdateOverride;
+            }
             else if (physObj is FlintlockWeapon)
             {
                 updateFunc = UpdateFlintlockWeapon;
@@ -517,6 +526,120 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateAirgun()
+        {
+            Airgun asAG = dataObject as Airgun;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[4];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write hammer state
+            data.data[0] = asAG.IsHammerCocked ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            preval = data.data[1];
+            byte preval0 = data.data[2];
+
+            // Write chambered round class
+            if (asAG.Chamber.GetRound() == null || asAG.Chamber.GetRound().IsSpent)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asAG.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+            }
+
+            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenAirgun(byte[] newData)
+        {
+            bool modified = false;
+            Airgun asAG = dataObject as Airgun;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set hammer
+                if (newData[0] == 1 && !asAG.IsHammerCocked)
+                {
+                    asAG.CockHammer();
+                }
+                else if (newData[0] == 0 && asAG.IsHammerCocked)
+                {
+                    Mod.Airgun_m_isHammerCocked.SetValue(asAG, false);
+                }
+            }
+            else
+            {
+                if (data.data[0] != newData[0])
+                {
+
+                    // Set hammer
+                    if (newData[0] == 1 && !asAG.IsHammerCocked)
+                    {
+                        asAG.CockHammer();
+                        modified = true;
+                    }
+                    else if (newData[0] == 0 && asAG.IsHammerCocked)
+                    {
+                        Mod.Airgun_m_isHammerCocked.SetValue(asAG, false);
+                        modified = true;
+                    }
+                }
+            }
+
+            // Set chamber
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asAG.Chamber.GetRound() != null)
+                {
+                    asAG.Chamber.SetRound(null, false);
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asAG.Chamber.GetRound() == null || asAG.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    asAG.Chamber.SetRound(roundClass, asAG.Chamber.transform.position, asAG.Chamber.transform.rotation);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireAirgun()
+        {
+            Airgun asAG = dataObject as Airgun;
+            Mod.Airgun_DropHammer.Invoke(asAG, null);
+            return true;
+        }
+
+        private void SetAirgunUpdateOverride(FireArmRoundClass roundClass)
+        {
+            Airgun asAG = dataObject as Airgun;
+
+            asAG.CockHammer();
+            asAG.Chamber.SetRound(roundClass, asAG.Chamber.transform.position, asAG.Chamber.transform.rotation);
+        }
+
         private bool UpdateSLAM()
         {
             SLAM asSLAM = (SLAM)dataObject;
