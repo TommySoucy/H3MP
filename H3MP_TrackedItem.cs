@@ -1418,6 +1418,25 @@ namespace H3MP
                 data.data = new byte[missile == null ? 3 : 35];
                 modified = true;
             }
+            else
+            {
+                if(missile == null)
+                {
+                    if(data.data.Length == 35)
+                    {
+                        data.data = new byte[3];
+                        modified = true;
+                    }
+                }
+                else
+                {
+                    if (data.data.Length == 3)
+                    {
+                        data.data = new byte[35];
+                        modified = true;
+                    }
+                }
+            }
 
             byte preval0 = data.data[0];
 
