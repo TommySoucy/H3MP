@@ -97,9 +97,15 @@ namespace H3MP
             FVRPhysicalObject physObj = GetComponent<FVRPhysicalObject>();
 
             // For each relevant type for which we may want to store additional data, we set a specific update function and the object ref
-            // NOTE: We want to handle a subtype before its parent type (ex.: AttachableFirearmPhysicalObject before FVRFireArmAttachment) 
+            // NOTE: We want to handle a subtype before its parent type (ex.: sblpCell before FVRFireArmMagazine) 
             // TODO: Optimization: Maybe instead of having a big if statement like this, put all of them in a dictionnary for faster lookup
-            if (physObj is FVRFireArmMagazine)
+            if (physObj is sblpCell)
+            {
+                updateFunc = UpdateSBLPCell;
+                updateGivenFunc = UpdateGivenSBLPCell;
+                dataObject = physObj as sblpCell;
+            }
+            else if (physObj is FVRFireArmMagazine)
             {
                 updateFunc = UpdateMagazine;
                 updateGivenFunc = UpdateGivenMagazine;
@@ -296,6 +302,12 @@ namespace H3MP
                 updateFunc = UpdateFlameThrower;
                 updateGivenFunc = UpdateGivenFlameThrower;
                 dataObject = physObj as FlameThrower;
+            }
+            else if (physObj is sblp)
+            {
+                updateFunc = UpdateLaserGun;
+                updateGivenFunc = UpdateGivenLaserGun;
+                dataObject = physObj as sblp;
             }
             else if (physObj is Flaregun)
             {
@@ -526,6 +538,415 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateSBLPCell()
+        {
+            bool modified = false;
+            sblpCell asCell = dataObject as sblpCell;
+
+            if (data.data == null)
+            {
+                data.data = new byte[9];
+                modified = true;
+            }
+
+            // Write loaded into firearm
+            byte preval0 = data.data[0];
+            data.data[0] = asCell.FireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != data.data[0];
+
+            // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
+            // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
+            preval0 = data.data[1];
+            if (asCell.FireArm == null)
+            {
+                data.data[1] = (byte)255;
+            }
+            else
+            {
+                bool found = false;
+                for (int i = 0; i < asCell.FireArm.SecondaryMagazineSlots.Length; ++i)
+                {
+                    if (asCell.FireArm.SecondaryMagazineSlots[i].Magazine == asCell)
+                    {
+                        found = true;
+                        data.data[1] = (byte)i;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    data.data[1] = (byte)255;
+                }
+            }
+            modified |= preval0 != data.data[1];
+
+            // Write loaded into AttachableFirearm
+            preval0 = data.data[2];
+            data.data[2] = asCell.AttachableFireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != data.data[2];
+
+            // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
+            // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
+            preval0 = data.data[3];
+            if (asCell.AttachableFireArm == null)
+            {
+                data.data[3] = (byte)255;
+            }
+            else
+            {
+                bool found = false;
+                for (int i = 0; i < asCell.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                {
+                    if (asCell.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asCell)
+                    {
+                        data.data[3] = (byte)i;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    data.data[3] = (byte)255;
+                }
+            }
+            modified |= preval0 != data.data[3];
+
+            // Write fuel amount left
+            preval0 = data.data[4];
+            byte preval1 = data.data[5];
+            byte preval2 = data.data[6];
+            byte preval3 = data.data[7];
+            BitConverter.GetBytes(asCell.FuelAmountLeft).CopyTo(data.data, 4);
+            modified |= (preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6] || preval3 != data.data[7]);
+
+            // Write PL
+            preval0 = data.data[8];
+            data.data[8] = (byte)asCell.PL;
+            modified |= preval0 != data.data[8];
+
+            return modified;
+        }
+
+        private bool UpdateGivenSBLPCell(byte[] newData)
+        {
+            bool modified = false;
+            sblpCell asCell = dataObject as sblpCell;
+
+            if (data.data == null)
+            {
+                modified = true;
+            }
+
+            // Load into firearm if necessary
+            if (newData[0] == 1)
+            {
+                if (data.parent != -1)
+                {
+                    H3MP_TrackedItemData parentTrackedItemData = null;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        parentTrackedItemData = H3MP_Server.items[data.parent];
+                    }
+                    else
+                    {
+                        parentTrackedItemData = H3MP_Client.items[data.parent];
+                    }
+
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is FVRFireArm)
+                    {
+                        // We want to be loaded in a firearm, we have a parent, it is a firearm
+                        if (asCell.FireArm != null)
+                        {
+                            if (asCell.FireArm != parentTrackedItemData.physicalItem.dataObject)
+                            {
+                                // Unload from current, load into new firearm
+                                if (asCell.FireArm.Magazine == asCell)
+                                {
+                                    asCell.FireArm.EjectMag(true);
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < asCell.FireArm.SecondaryMagazineSlots.Length; ++i)
+                                    {
+                                        if (asCell.FireArm.SecondaryMagazineSlots[i].Magazine == asCell)
+                                        {
+                                            asCell.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (newData[1] == 255)
+                                {
+                                    asCell.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                }
+                                else
+                                {
+                                    asCell.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[1]);
+                                }
+                                modified = true;
+                            }
+                        }
+                        else if (asCell.AttachableFireArm != null)
+                        {
+                            // Unload from current, load into new firearm
+                            if (asCell.AttachableFireArm.Magazine == asCell)
+                            {
+                                asCell.AttachableFireArm.EjectMag(true);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < asCell.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                                {
+                                    if (asCell.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asCell)
+                                    {
+                                        // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                        //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (newData[1] == 255)
+                            {
+                                asCell.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                            }
+                            else
+                            {
+                                asCell.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[1]);
+                            }
+                            modified = true;
+                        }
+                        else
+                        {
+                            // Load into firearm
+                            if (newData[1] == 255)
+                            {
+                                asCell.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                            }
+                            else
+                            {
+                                asCell.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[1]);
+                            }
+                            modified = true;
+                        }
+                    }
+                }
+            }
+            else if (newData[2] == 1)
+            {
+                if (data.parent != -1)
+                {
+                    H3MP_TrackedItemData parentTrackedItemData = null;
+                    if (H3MP_ThreadManager.host)
+                    {
+                        parentTrackedItemData = H3MP_Server.items[data.parent];
+                    }
+                    else
+                    {
+                        parentTrackedItemData = H3MP_Client.items[data.parent];
+                    }
+
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is AttachableFirearmPhysicalObject)
+                    {
+                        // We want to be loaded in a AttachableFireArm, we have a parent, it is a AttachableFireArm
+                        if (asCell.AttachableFireArm != null)
+                        {
+                            if (asCell.AttachableFireArm != (parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA)
+                            {
+                                // Unload from current, load into new AttachableFireArm
+                                if (asCell.AttachableFireArm.Magazine == asCell)
+                                {
+                                    asCell.AttachableFireArm.EjectMag(true);
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < asCell.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                                    {
+                                        if (asCell.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asCell)
+                                        {
+                                            // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                            //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (newData[3] == 255)
+                                {
+                                    asCell.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                }
+                                else
+                                {
+                                    // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                    //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                                }
+                                modified = true;
+                            }
+                        }
+                        else if (asCell.FireArm != null)
+                        {
+                            // Unload from current firearm, load into new AttachableFireArm
+                            if (asCell.FireArm.Magazine == asCell)
+                            {
+                                asCell.FireArm.EjectMag(true);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < asCell.FireArm.SecondaryMagazineSlots.Length; ++i)
+                                {
+                                    if (asCell.FireArm.SecondaryMagazineSlots[i].Magazine == asCell)
+                                    {
+                                        asCell.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (newData[3] == 255)
+                            {
+                                asCell.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                            }
+                            else
+                            {
+                                // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                            }
+                            modified = true;
+                        }
+                        else
+                        {
+                            // Load into AttachableFireArm
+                            if (newData[3] == 255)
+                            {
+                                asCell.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                            }
+                            else
+                            {
+                                // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                            }
+                            modified = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (asCell.FireArm != null)
+                {
+                    // Don't want to be loaded, but we are loaded, unload
+                    if (asCell.FireArm.Magazine == asCell)
+                    {
+                        asCell.FireArm.EjectMag(true);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < asCell.FireArm.SecondaryMagazineSlots.Length; ++i)
+                        {
+                            if (asCell.FireArm.SecondaryMagazineSlots[i].Magazine == asCell)
+                            {
+                                asCell.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                break;
+                            }
+                        }
+                    }
+                    modified = true;
+                }
+                else if (asCell.AttachableFireArm != null)
+                {
+                    if (asCell.AttachableFireArm.Magazine == asCell)
+                    {
+                        asCell.AttachableFireArm.EjectMag(true);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < asCell.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                        {
+                            if (asCell.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asCell)
+                            {
+                                // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                break;
+                            }
+                        }
+                    }
+                    modified = true;
+                }
+            }
+
+            float preAmount = asCell.FuelAmountLeft;
+
+            asCell.FuelAmountLeft = BitConverter.ToSingle(newData, 4);
+
+            modified |= preAmount != asCell.FuelAmountLeft;
+
+            sblpCell.PLevel preLevel = asCell.PL;
+
+            asCell.PL = (sblpCell.PLevel)newData[8];
+
+            modified |= preLevel != asCell.PL;
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateLaserGun()
+        {
+            sblp asLG = dataObject as sblp;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[3];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            // Write m_isShotEngaged
+            data.data[0] = (bool)Mod.sblp_m_isShotEngaged.GetValue(asLG) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            return modified;
+        }
+
+        private bool UpdateGivenLaserGun(byte[] newData)
+        {
+            bool modified = false;
+            sblp asLG = dataObject as sblp;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set m_isShotEngaged
+                if (newData[0] == 1 && !(bool)Mod.sblp_m_isShotEngaged.GetValue(asLG))
+                {
+                    Mod.sblp_TryToEngageShot.Invoke(asLG, null);
+                }
+                else if (newData[0] == 0 && (bool)Mod.sblp_m_isShotEngaged.GetValue(asLG))
+                {
+                    Mod.sblp_TryToDisengageShot.Invoke(asLG, null);
+                }
+            }
+            else
+            {
+                // Set m_isShotEngaged
+                if (newData[0] == 1 && !(bool)Mod.sblp_m_isShotEngaged.GetValue(asLG))
+                {
+                    Mod.sblp_TryToEngageShot.Invoke(asLG, null);
+                    modified = true;
+                }
+                else if (newData[0] == 0 && (bool)Mod.sblp_m_isShotEngaged.GetValue(asLG))
+                {
+                    Mod.sblp_TryToDisengageShot.Invoke(asLG, null);
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
         private bool UpdateAirgun()
         {
             Airgun asAG = dataObject as Airgun;
@@ -583,20 +1004,16 @@ namespace H3MP
             }
             else
             {
-                if (data.data[0] != newData[0])
+                // Set hammer
+                if (newData[0] == 1 && !asAG.IsHammerCocked)
                 {
-
-                    // Set hammer
-                    if (newData[0] == 1 && !asAG.IsHammerCocked)
-                    {
-                        asAG.CockHammer();
-                        modified = true;
-                    }
-                    else if (newData[0] == 0 && asAG.IsHammerCocked)
-                    {
-                        Mod.Airgun_m_isHammerCocked.SetValue(asAG, false);
-                        modified = true;
-                    }
+                    asAG.CockHammer();
+                    modified = true;
+                }
+                else if (newData[0] == 0 && asAG.IsHammerCocked)
+                {
+                    Mod.Airgun_m_isHammerCocked.SetValue(asAG, false);
+                    modified = true;
                 }
             }
 
@@ -888,54 +1305,45 @@ namespace H3MP
             }
             else
             {
-                if (data.data[0] != newData[0])
+                // Set lever released
+                if (newData[0] == 1 && !(bool)Mod.FVRGrenade_m_isLeverReleased.GetValue(asGrenade))
                 {
-                    // Set lever released
-                    if (newData[0] == 1 && !(bool)Mod.FVRGrenade_m_isLeverReleased.GetValue(asGrenade))
+                    asGrenade.ReleaseLever();
+                    modified = true;
+                }
+                // Set pin
+                if (newData[1] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin))
+                {
+                    Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin, true);
+                    asGrenade.Pin.transform.SetParent(null);
+                    asGrenade.Pin.PinPiece.transform.SetParent(asGrenade.Pin.transform);
+                    Rigidbody rigidbody = asGrenade.Pin.PinPiece.AddComponent<Rigidbody>();
+                    rigidbody.mass = 0.01f;
+                    HingeJoint component = asGrenade.Pin.GetComponent<HingeJoint>();
+                    component.connectedBody = rigidbody;
+                    asGrenade.Pin.Grenade.PullPin();
+                    Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin, true);
+                    if (asGrenade.Pin.UXGeo_Held != null)
                     {
-                        asGrenade.ReleaseLever();
+                        UnityEngine.Object.Destroy(asGrenade.Pin.UXGeo_Held);
                     }
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                // Set pin2
+                if (newData[2] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2))
                 {
-                    // Set pin
-                    if (newData[1] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin))
+                    Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin2, true);
+                    asGrenade.Pin2.transform.SetParent(null);
+                    asGrenade.Pin2.PinPiece.transform.SetParent(asGrenade.Pin2.transform);
+                    Rigidbody rigidbody = asGrenade.Pin2.PinPiece.AddComponent<Rigidbody>();
+                    rigidbody.mass = 0.01f;
+                    HingeJoint component = asGrenade.Pin2.GetComponent<HingeJoint>();
+                    component.connectedBody = rigidbody;
+                    asGrenade.Pin2.Grenade.PullPin2();
+                    Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin2, true);
+                    if (asGrenade.Pin2.UXGeo_Held != null)
                     {
-                        Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin, true);
-                        asGrenade.Pin.transform.SetParent(null);
-                        asGrenade.Pin.PinPiece.transform.SetParent(asGrenade.Pin.transform);
-                        Rigidbody rigidbody = asGrenade.Pin.PinPiece.AddComponent<Rigidbody>();
-                        rigidbody.mass = 0.01f;
-                        HingeJoint component = asGrenade.Pin.GetComponent<HingeJoint>();
-                        component.connectedBody = rigidbody;
-                        asGrenade.Pin.Grenade.PullPin();
-                        Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin, true);
-                        if (asGrenade.Pin.UXGeo_Held != null)
-                        {
-                            UnityEngine.Object.Destroy(asGrenade.Pin.UXGeo_Held);
-                        }
-                    }
-                    modified = true;
-                }
-                if (data.data[1] != newData[1])
-                {
-                    // Set pin2
-                    if (newData[2] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2))
-                    {
-                        Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin2, true);
-                        asGrenade.Pin2.transform.SetParent(null);
-                        asGrenade.Pin2.PinPiece.transform.SetParent(asGrenade.Pin2.transform);
-                        Rigidbody rigidbody = asGrenade.Pin2.PinPiece.AddComponent<Rigidbody>();
-                        rigidbody.mass = 0.01f;
-                        HingeJoint component = asGrenade.Pin2.GetComponent<HingeJoint>();
-                        component.connectedBody = rigidbody;
-                        asGrenade.Pin2.Grenade.PullPin2();
-                        Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin2, true);
-                        if (asGrenade.Pin2.UXGeo_Held != null)
-                        {
-                            UnityEngine.Object.Destroy(asGrenade.Pin2.UXGeo_Held);
-                        }
+                        UnityEngine.Object.Destroy(asGrenade.Pin2.UXGeo_Held);
                     }
                     modified = true;
                 }
@@ -997,13 +1405,10 @@ namespace H3MP
             }
             else
             {
-                if (data.data[0] != newData[0])
+                // Set lever released
+                if (newData[0] == 1 && !asPG.IsLeverReleased())
                 {
-                    // Set lever released
-                    if (newData[0] == 1 && !asPG.IsLeverReleased())
-                    {
-                        asPG.ReleaseLever();
-                    }
+                    asPG.ReleaseLever();
                     modified = true;
                 }
             }
@@ -2097,40 +2502,31 @@ namespace H3MP
             }
             else
             {
-                if (data.data[0] != newData[0])
+                // Set safety
+                bool currentSafety = (bool)Mod.M72_m_isSafetyEngaged.GetValue(asM72);
+                if ((currentSafety && newData[0] == 0) || (!currentSafety && newData[0] == 1))
                 {
-                    // Set safety
-                    bool currentSafety = (bool)Mod.M72_m_isSafetyEngaged.GetValue(asM72);
-                    if ((currentSafety && newData[0] == 0) || (!currentSafety && newData[0] == 1))
-                    {
-                        asM72.ToggleSafety();
-                    }
+                    asM72.ToggleSafety();
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                // Set cap
+                if ((asM72.CanTubeBeGrabbed() && newData[1] == 0) || (!asM72.CanTubeBeGrabbed() && newData[1] == 1))
                 {
-                    // Set cap
-                    if ((asM72.CanTubeBeGrabbed() && newData[1] == 0) || (!asM72.CanTubeBeGrabbed() && newData[1] == 1))
-                    {
-                        asM72.ToggleCap();
-                    }
+                    asM72.ToggleCap();
+                }
+                modified = true;
+                // Set Tube state
+                if ((asM72.TState == M72.TubeState.Forward || asM72.TState == M72.TubeState.Mid) && newData[2] == 2)
+                {
+                    asM72.TState = M72.TubeState.Rear;
+                    asM72.Tube.transform.localPosition = asM72.Tube_Rear.localPosition;
                     modified = true;
                 }
-                if (data.data[2] != newData[2])
+                else if ((asM72.TState == M72.TubeState.Mid || asM72.TState == M72.TubeState.Rear) && newData[2] == 0)
                 {
-                    // Set Tube state
-                    if ((asM72.TState == M72.TubeState.Forward || asM72.TState == M72.TubeState.Mid) && newData[2] == 2)
-                    {
-                        asM72.TState = M72.TubeState.Rear;
-                        asM72.Tube.transform.localPosition = asM72.Tube_Rear.localPosition;
-                        modified = true;
-                    }
-                    else if ((asM72.TState == M72.TubeState.Mid || asM72.TState == M72.TubeState.Rear) && newData[2] == 0)
-                    {
-                        asM72.TState = M72.TubeState.Forward;
-                        asM72.Tube.transform.localPosition = asM72.Tube_Front.localPosition;
-                        modified = true;
-                    }
+                    asM72.TState = M72.TubeState.Forward;
+                    asM72.Tube.transform.localPosition = asM72.Tube_Front.localPosition;
+                    modified = true;
                 }
             }
 
@@ -2462,26 +2858,24 @@ namespace H3MP
                     Mod.GrappleGun_m_curChamber.SetValue(asGG, newData[0]);
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                // Set cyl loaded
+                bool newCylLoaded = newData[1] == 1;
+                if (newCylLoaded && !asGG.IsMagLoaded)
                 {
-                    // Set cyl loaded
-                    bool newCylLoaded = newData[1] == 1;
-                    if (newCylLoaded && !asGG.IsMagLoaded)
-                    {
-                        // Load cylinder, chambers will be updated separately
-                        asGG.ProxyMag.gameObject.SetActive(true);
-                        asGG.PlayAudioEvent(FirearmAudioEventType.MagazineIn, 1f);
-                    }
-                    else if (!newCylLoaded && asGG.IsMagLoaded)
-                    {
-                        // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
-                        asGG.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
-                        asGG.EjectDelay = 0.4f;
-                        asGG.ProxyMag.gameObject.SetActive(false);
-                    }
-                    asGG.IsMagLoaded = newCylLoaded;
+                    // Load cylinder, chambers will be updated separately
+                    asGG.ProxyMag.gameObject.SetActive(true);
+                    asGG.PlayAudioEvent(FirearmAudioEventType.MagazineIn, 1f);
                     modified = true;
                 }
+                else if (!newCylLoaded && asGG.IsMagLoaded)
+                {
+                    // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
+                    asGG.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
+                    asGG.EjectDelay = 0.4f;
+                    asGG.ProxyMag.gameObject.SetActive(false);
+                    modified = true;
+                }
+                asGG.IsMagLoaded = newCylLoaded;
             }
 
             // Set chambers
@@ -3030,17 +3424,15 @@ namespace H3MP
             }
             else
             {
-                if (data.data[0] != newData[0])
+                // Set hammer state
+                if (newData[0] == 1 && !asDerringer.IsExternalHammerCocked())
                 {
-                    // Set hammer state
-                    if (newData[0] == 1 && !asDerringer.IsExternalHammerCocked())
-                    {
-                        Mod.Derringer_CockHammer.Invoke(asDerringer, null);
-                    }
-                    else if (newData[0] == 0 && asDerringer.IsExternalHammerCocked())
-                    {
-                        Mod.Derringer_m_isExternalHammerCocked.SetValue(asDerringer, false);
-                    }
+                    Mod.Derringer_CockHammer.Invoke(asDerringer, null);
+                    modified = true;
+                }
+                else if (newData[0] == 0 && asDerringer.IsExternalHammerCocked())
+                {
+                    Mod.Derringer_m_isExternalHammerCocked.SetValue(asDerringer, false);
                     modified = true;
                 }
             }
@@ -3360,29 +3752,27 @@ namespace H3MP
                     asRS.CurChamber = newData[0];
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                // Set cyl loaded
+                bool newCylLoaded = newData[1] == 1;
+                if (newCylLoaded && !asRS.CylinderLoaded)
                 {
-                    // Set cyl loaded
-                    bool newCylLoaded = newData[1] == 1;
-                    if (newCylLoaded && !asRS.CylinderLoaded)
-                    {
-                        // Load cylinder, chambers will be updated separately
-                        asRS.ProxyCylinder.gameObject.SetActive(true);
-                        asRS.PlayAudioEvent(FirearmAudioEventType.MagazineIn);
-                        asRS.CurChamber = 0;
-                        asRS.ProxyCylinder.localRotation = asRS.GetLocalRotationFromCylinder(0);
-                    }
-                    else if (!newCylLoaded && asRS.CylinderLoaded)
-                    {
-                        // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
-                        asRS.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
-                        asRS.EjectDelay = 0.4f;
-                        asRS.CylinderLoaded = false;
-                        asRS.ProxyCylinder.gameObject.SetActive(false);
-                    }
-                    asRS.CylinderLoaded = newCylLoaded;
+                    // Load cylinder, chambers will be updated separately
+                    asRS.ProxyCylinder.gameObject.SetActive(true);
+                    asRS.PlayAudioEvent(FirearmAudioEventType.MagazineIn);
+                    asRS.CurChamber = 0;
+                    asRS.ProxyCylinder.localRotation = asRS.GetLocalRotationFromCylinder(0);
                     modified = true;
                 }
+                else if (!newCylLoaded && asRS.CylinderLoaded)
+                {
+                    // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
+                    asRS.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
+                    asRS.EjectDelay = 0.4f;
+                    asRS.CylinderLoaded = false;
+                    asRS.ProxyCylinder.gameObject.SetActive(false);
+                    modified = true;
+                }
+                asRS.CylinderLoaded = newCylLoaded;
             }
 
             // Set chambers
@@ -3762,14 +4152,11 @@ namespace H3MP
             }
             else
             {
-                if (data.data[0] != newData[0])
+                // Set safety
+                if ((newData[0] == 1 && !asATF.IsSafetyEngaged) || (newData[0] == 0 && asATF.IsSafetyEngaged))
                 {
-                    // Set safety
-                    if ((newData[0] == 1 && !asATF.IsSafetyEngaged) || (newData[0] == 0 && asATF.IsSafetyEngaged))
-                    {
-                        asATF.ToggleSafety();
-                        modified = true;
-                    }
+                    asATF.ToggleSafety();
+                    modified = true;
                 }
                 if (data.data[4] != newData[4])
                 {
@@ -4730,13 +5117,10 @@ namespace H3MP
             }
             else 
             {
-                if (data.data[0] != newData[0])
+                // Set safety
+                if (asTFS.HasSafety && ((newData[0] == 1 && !asTFS.IsSafetyEngaged) || (newData[0] == 0 && asTFS.IsSafetyEngaged)))
                 {
-                    // Set safety
-                    if (asTFS.HasSafety && ((newData[0] == 1 && !asTFS.IsSafetyEngaged) || (newData[0] == 0 && asTFS.IsSafetyEngaged)))
-                    {
-                        asTFS.ToggleSafety();
-                    }
+                    asTFS.ToggleSafety();
                     modified = true;
                 }
                 if (data.data[4] != newData[4])

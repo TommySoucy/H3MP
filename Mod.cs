@@ -210,6 +210,7 @@ namespace H3MP
         public static readonly FieldInfo ClaymoreMine_m_isArmed = typeof(ClaymoreMine).GetField("m_isArmed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo ClaymoreMine_m_isPlanted = typeof(ClaymoreMine).GetField("m_isPlanted", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Airgun_m_isHammerCocked = typeof(Airgun).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo sblp_m_isShotEngaged = typeof(sblp).GetField("m_isShotEngaged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -262,6 +263,8 @@ namespace H3MP
         public static readonly MethodInfo BangSnap_Splode = typeof(BangSnap).GetMethod("Splode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo ClaymoreMine_Detonate = typeof(ClaymoreMine).GetMethod("Detonate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Airgun_DropHammer = typeof(Airgun).GetMethod("DropHammer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo sblp_TryToEngageShot = typeof(sblp).GetMethod("TryToEngageShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo sblp_TryToDisengageShot = typeof(sblp).GetMethod("TryToDisengageShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
 // Debug
