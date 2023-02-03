@@ -33,6 +33,8 @@ namespace H3MP
         public delegate void FireAttachableFirearmChamberRound(FireArmRoundClass roundClass);
         public delegate FVRFireArmChamber FireAttachableFirearmGetChamber();
         public delegate void UpdateParent();
+        public delegate void UpdateAttachmentInterface(FVRFireArmAttachment att, ref bool modified);
+        public delegate void UpdateAttachmentInterfaceWithGiven(FVRFireArmAttachment att, byte[] newData, ref bool modified);
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
@@ -42,9 +44,12 @@ namespace H3MP
         public FireAttachableFirearmGetChamber attachableFirearmGetChamberFunc; // Returns the chamber of the corresponding attachable firearm
         public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding sosig weapon
         public UpdateParent updateParentFunc; // Update the item's state depending on current parent
+        public UpdateAttachmentInterface attachmentInterfaceUpdateFunc; // Update the attachment's attachment interface
+        public UpdateAttachmentInterfaceWithGiven attachmentInterfaceUpdateGivenFunc; // Update the attachment's attachment interface
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public UnityEngine.Object dataObject;
         public FVRPhysicalObject physicalObject;
+        public int attachmentInterfaceDataSize;
 
         // StingerLauncher specific
         public StingerMissile stingerMissile;
@@ -509,6 +514,64 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenAttachment;
                 updateParentFunc = UpdateAttachmentParent;
                 dataObject = asAttachment;
+
+                // Init interface
+                // TODO: Future: Add support for the following if necessary
+                //       Amplifier
+                //       AttachableForegrip
+                //       AttachableMeleeWeaponInterface
+                //       AttachableStock
+                //       HandgunRailAdapter
+                //       HoloSight
+                //       MuzzleDeviceInterface
+                //       RailCam
+                //       RedDotSight
+                //       SmartTrigger
+                if (asAttachment.AttachmentInterface != null)
+                {
+                    if(asAttachment.AttachmentInterface is AttachableBipodInterface)
+                    {
+                        attachmentInterfaceUpdateFunc = UpdateAttachableBipod;
+                        attachmentInterfaceUpdateGivenFunc = UpdateGivenAttachableBipod;
+                        attachmentInterfaceDataSize = 1;
+                    }
+                    else if(asAttachment.AttachmentInterface is FlagPoseSwitcher)
+                    {
+                        attachmentInterfaceUpdateFunc = UpdateFlagPoseSwitcher;
+                        attachmentInterfaceUpdateGivenFunc = UpdateGivenFlagPoseSwitcher;
+                        attachmentInterfaceDataSize = 2;
+                    }
+                    else if(asAttachment.AttachmentInterface is FlipSight)
+                    {
+                        attachmentInterfaceUpdateFunc = UpdateFlipSight;
+                        attachmentInterfaceUpdateGivenFunc = UpdateGivenFlipSight;
+                        attachmentInterfaceDataSize = 1;
+                    }
+                    else if(asAttachment.AttachmentInterface is FlipSightY)
+                    {
+                        attachmentInterfaceUpdateFunc = UpdateFlipSightY;
+                        attachmentInterfaceUpdateGivenFunc = UpdateGivenFlipSightY;
+                        attachmentInterfaceDataSize = 1;
+                    }
+                    else if(asAttachment.AttachmentInterface is LAM)
+                    {
+                        attachmentInterfaceUpdateFunc = UpdateLAM;
+                        attachmentInterfaceUpdateGivenFunc = UpdateGivenLAM;
+                        attachmentInterfaceDataSize = 1;
+                    }
+                    else if(asAttachment.AttachmentInterface is LaserPointer)
+                    {
+                        attachmentInterfaceUpdateFunc = UpdateLaserPointer;
+                        attachmentInterfaceUpdateGivenFunc = UpdateGivenLaserPointer;
+                        attachmentInterfaceDataSize = 1;
+                    }
+                    else if(asAttachment.AttachmentInterface is TacticalFlashlight)
+                    {
+                        attachmentInterfaceUpdateFunc = UpdateTacticalFlashlight;
+                        attachmentInterfaceUpdateGivenFunc = UpdateGivenTacticalFlashlight;
+                        attachmentInterfaceDataSize = 1;
+                    }
+                }
             }
             else if (physObj is SosigWeaponPlayerInterface)
             {
@@ -5343,7 +5406,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[1];
+                data.data = new byte[1 + attachmentInterfaceDataSize];
                 modified = true;
             }
 
@@ -5373,6 +5436,12 @@ namespace H3MP
                 }
             }
 
+            // Do interface update
+            if(attachmentInterfaceUpdateFunc != null)
+            {
+                attachmentInterfaceUpdateFunc(asAttachment, ref modified);
+            }
+
             return modified || (preIndex != data.data[0]);
         }
 
@@ -5383,7 +5452,7 @@ namespace H3MP
 
             if (data.data == null || data.data.Length != newData.Length)
             {
-                data.data = new byte[1];
+                data.data = new byte[1 + attachmentInterfaceDataSize];
                 data.data[0] = 255;
                 currentMountIndex = 255;
                 modified = true;
@@ -5453,6 +5522,12 @@ namespace H3MP
                 }
             }
 
+            // Do interface update
+            if (attachmentInterfaceUpdateGivenFunc != null)
+            {
+                attachmentInterfaceUpdateGivenFunc(asAttachment, newData, ref modified);
+            }
+
             return modified || (preMountIndex != currentMountIndex);
         }
 
@@ -5506,6 +5581,202 @@ namespace H3MP
                 //       This will be handled on update
             }
             // else, on update we will detach from any current mount if this is the case, no need to handle this here
+        }
+
+        private void UpdateAttachableBipod(FVRFireArmAttachment att, ref bool modified)
+        {
+            AttachableBipodInterface asInterface = att.AttachmentInterface as AttachableBipodInterface;
+
+            // Write expanded
+            byte preval = data.data[1];
+            data.data[1] = (bool)Mod.FVRFireArmBipod_m_isBipodExpanded.GetValue(asInterface.Bipod) ? (byte)1 : (byte)0;
+            modified |= preval != data.data[1];
+        }
+
+        private void UpdateGivenAttachableBipod(FVRFireArmAttachment att, byte[] newData, ref bool modified)
+        {
+            AttachableBipodInterface asInterface = att.AttachmentInterface as AttachableBipodInterface;
+
+            // Set expanded
+            bool expanded = (bool)Mod.FVRFireArmBipod_m_isBipodExpanded.GetValue(asInterface.Bipod);
+            if ((newData[1] == 1 && !expanded) || (newData[1] == 0 && expanded))
+            {
+                asInterface.Bipod.Toggle();
+                modified = true;
+            }
+        }
+
+        private void UpdateFlagPoseSwitcher(FVRFireArmAttachment att, ref bool modified)
+        {
+            FlagPoseSwitcher asInterface = att.AttachmentInterface as FlagPoseSwitcher;
+
+            // Write index
+            byte preval0 = data.data[1];
+            byte preval1 = data.data[2];
+            BitConverter.GetBytes((short)(int)Mod.FlagPoseSwitcher_m_index.GetValue(asInterface)).CopyTo(data.data, 1);
+            modified |= (preval0 != data.data[1] || preval1 != data.data[2]);
+        }
+
+        private void UpdateGivenFlagPoseSwitcher(FVRFireArmAttachment att, byte[] newData, ref bool modified)
+        {
+            FlagPoseSwitcher asInterface = att.AttachmentInterface as FlagPoseSwitcher;
+
+            // Set index
+            int index = (int)Mod.FlagPoseSwitcher_m_index.GetValue(asInterface);
+            int newIndex = BitConverter.ToInt16(newData, 1);
+            if (newIndex != index)
+            {
+                Mod.FlagPoseSwitcher_m_index.SetValue(asInterface, newIndex);
+                asInterface.Flag.localPosition = asInterface.Poses[newIndex].localPosition;
+                asInterface.Flag.localRotation = asInterface.Poses[newIndex].localRotation;
+                modified = true;
+            }
+        }
+
+        private void UpdateFlipSight(FVRFireArmAttachment att, ref bool modified)
+        {
+            FlipSight asInterface = att.AttachmentInterface as FlipSight;
+
+            // Write up
+            byte preval0 = data.data[1];
+            data.data[1] = asInterface.IsUp ? (byte)1 : (byte)0;
+            modified |= preval0 != data.data[1];
+        }
+
+        private void UpdateGivenFlipSight(FVRFireArmAttachment att, byte[] newData, ref bool modified)
+        {
+            FlipSight asInterface = att.AttachmentInterface as FlipSight;
+
+            // Set up
+            if ((newData[1] == 1 && !asInterface.IsUp)||(newData[1] == 0 && asInterface.IsUp))
+            {
+                Mod.FlipSight_Flip.Invoke(asInterface, null);
+                modified = true;
+            }
+        }
+
+        private void UpdateFlipSightY(FVRFireArmAttachment att, ref bool modified)
+        {
+            FlipSightY asInterface = att.AttachmentInterface as FlipSightY;
+
+            // Write up
+            byte preval0 = data.data[1];
+            data.data[1] = asInterface.IsUp ? (byte)1 : (byte)0;
+            modified |= preval0 != data.data[1];
+        }
+
+        private void UpdateGivenFlipSightY(FVRFireArmAttachment att, byte[] newData, ref bool modified)
+        {
+            FlipSightY asInterface = att.AttachmentInterface as FlipSightY;
+
+            // Set up
+            if ((newData[1] == 1 && !asInterface.IsUp)||(newData[1] == 0 && asInterface.IsUp))
+            {
+                Mod.FlipSightY_Flip.Invoke(asInterface, null);
+                modified = true;
+            }
+        }
+
+        private void UpdateLAM(FVRFireArmAttachment att, ref bool modified)
+        {
+            LAM asInterface = att.AttachmentInterface as LAM;
+
+            // Write state
+            byte preval0 = data.data[1];
+            data.data[1] = (byte)asInterface.LState;
+            modified |= preval0 != data.data[1];
+        }
+
+        private void UpdateGivenLAM(FVRFireArmAttachment att, byte[] newData, ref bool modified)
+        {
+            LAM asInterface = att.AttachmentInterface as LAM;
+
+            // Set state
+            if ((LAM.LAMState)newData[1] != asInterface.LState)
+            {
+                asInterface.LState = (LAM.LAMState)newData[1];
+
+                if (asInterface.LState == LAM.LAMState.Off)
+                {
+                    SM.PlayCoreSound(FVRPooledAudioType.GenericClose, asInterface.AudEvent_LAMOFF, base.transform.position);
+                }
+                else
+                {
+                    SM.PlayCoreSound(FVRPooledAudioType.GenericClose, asInterface.AudEvent_LAMON, base.transform.position);
+                }
+                if (asInterface.LState == LAM.LAMState.Laser || asInterface.LState == LAM.LAMState.LaserLight)
+                {
+                    asInterface.BeamHitPoint.SetActive(true);
+                    asInterface.BeamEffect.SetActive(true);
+                }
+                else
+                {
+                    asInterface.BeamHitPoint.SetActive(false);
+                    asInterface.BeamEffect.SetActive(false);
+                }
+                if (asInterface.LState == LAM.LAMState.Light || asInterface.LState == LAM.LAMState.LaserLight)
+                {
+                    asInterface.LightParts.SetActive(true);
+                    if (GM.CurrentSceneSettings.IsSceneLowLight)
+                    {
+                        ((Light)Mod.AlloyAreaLight_get_Light.Invoke(asInterface.FlashlightLight, null)).intensity = 2f;
+                    }
+                    else
+                    {
+                        ((Light)Mod.AlloyAreaLight_get_Light.Invoke(asInterface.FlashlightLight, null)).intensity = 0.5f;
+                    }
+                }
+                else
+                {
+                    asInterface.LightParts.SetActive(false);
+                }
+
+                modified = true;
+            }
+        }
+
+        private void UpdateLaserPointer(FVRFireArmAttachment att, ref bool modified)
+        {
+            LaserPointer asInterface = att.AttachmentInterface as LaserPointer;
+
+            // Write on
+            byte preval0 = data.data[1];
+            data.data[1] = asInterface.BeamHitPoint.activeSelf ? (byte)1 : (byte)0;
+            modified |= preval0 != data.data[1];
+        }
+
+        private void UpdateGivenLaserPointer(FVRFireArmAttachment att, byte[] newData, ref bool modified)
+        {
+            LaserPointer asInterface = att.AttachmentInterface as LaserPointer;
+
+            // Set up
+            if ((newData[1] == 1 && !asInterface.BeamHitPoint.activeSelf) || (newData[1] == 0 && asInterface.BeamHitPoint.activeSelf))
+            {
+                Mod.LaserPointer_ToggleOn.Invoke(asInterface, null);
+                modified = true;
+            }
+        }
+
+        private void UpdateTacticalFlashlight(FVRFireArmAttachment att, ref bool modified)
+        {
+            TacticalFlashlight asInterface = att.AttachmentInterface as TacticalFlashlight;
+
+            // Write on
+            byte preval0 = data.data[1];
+            data.data[1] = asInterface.LightParts.activeSelf ? (byte)1 : (byte)0;
+            modified |= preval0 != data.data[1];
+        }
+
+        private void UpdateGivenTacticalFlashlight(FVRFireArmAttachment att, byte[] newData, ref bool modified)
+        {
+            TacticalFlashlight asInterface = att.AttachmentInterface as TacticalFlashlight;
+
+            // Set up
+            if ((newData[1] == 1 && !asInterface.LightParts.activeSelf) || (newData[1] == 0 && asInterface.LightParts.activeSelf))
+            {
+                Mod.TacticalFlashlight_ToggleOn.Invoke(asInterface, null);
+                modified = true;
+            }
         }
 
         private bool UpdateMagazine()

@@ -211,6 +211,8 @@ namespace H3MP
         public static readonly FieldInfo ClaymoreMine_m_isPlanted = typeof(ClaymoreMine).GetField("m_isPlanted", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Airgun_m_isHammerCocked = typeof(Airgun).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo sblp_m_isShotEngaged = typeof(sblp).GetField("m_isShotEngaged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRFireArmBipod_m_isBipodExpanded = typeof(FVRFireArmBipod).GetField("m_isBipodExpanded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FlagPoseSwitcher_m_index = typeof(FlagPoseSwitcher).GetField("m_index", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -265,6 +267,11 @@ namespace H3MP
         public static readonly MethodInfo Airgun_DropHammer = typeof(Airgun).GetMethod("DropHammer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo sblp_TryToEngageShot = typeof(sblp).GetMethod("TryToEngageShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo sblp_TryToDisengageShot = typeof(sblp).GetMethod("TryToDisengageShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FlipSight_Flip = typeof(FlipSight).GetMethod("Flip", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FlipSightY_Flip = typeof(FlipSightY).GetMethod("Flip", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo LaserPointer_ToggleOn = typeof(LaserPointer).GetMethod("ToggleOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TacticalFlashlight_ToggleOn = typeof(TacticalFlashlight).GetMethod("ToggleOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo AlloyAreaLight_get_Light = typeof(AlloyAreaLight).GetMethod("get_Light", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
 // Debug
