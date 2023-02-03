@@ -1774,10 +1774,17 @@ namespace H3MP
 
             // KinematicPatch
             MethodInfo kinematicPatchOriginal = typeof(Rigidbody).GetMethod("set_isKinematic", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo kinematicPatchPrefix = typeof(KinematicPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo kinematicPatchPrefix = typeof(KinematicPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(kinematicPatchOriginal, harmony, true);
-            harmony.Patch(kinematicPatchOriginal, null, new HarmonyMethod(kinematicPatchPrefix));
+            harmony.Patch(kinematicPatchOriginal, new HarmonyMethod(kinematicPatchPrefix));
+
+            // PhysicalObjectRBPatch
+            MethodInfo physicalObjectRBOriginal = typeof(FVRPhysicalObject).GetMethod("RecoverRigidbody", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo physicalObjectRBPostfix = typeof(PhysicalObjectRBPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(physicalObjectRBOriginal, harmony, true);
+            harmony.Patch(physicalObjectRBOriginal, null, new HarmonyMethod(physicalObjectRBPostfix));
 
             // SetPlayerIFFPatch
             MethodInfo setPlayerIFFPatchOriginal = typeof(FVRPlayerBody).GetMethod("SetPlayerIFF", BindingFlags.Public | BindingFlags.Instance);
@@ -2617,20 +2624,21 @@ namespace H3MP
             {
                 H3MP_KinematicMarker marker = rb.GetComponent<H3MP_KinematicMarker>();
 
-                // If we want to make kinematic we can just set it and mark all children
+                // If we want to make kinematic we can just set it and mark
                 if (value)
                 {
                     if (marker == null)
                     {
                         marker = rb.gameObject.AddComponent<H3MP_KinematicMarker>();
                     }
-                    marker.state = rb.isKinematic;
                     ++KinematicPatch.skip;
                     rb.isKinematic = value;
                     --KinematicPatch.skip;
                 }
                 else // If we don't want it kinematic, we only want to unset it on marked children, because unmarked were not set by us
                 {
+                    // For example, a piece of an item that is not a tracked item itself but is a child of a tracked item
+                    // got set to kinematic by the game, will have its marker destroyed so we don't set it to non kinematic
                     if (marker != null)
                     {
                         ++KinematicPatch.skip;
@@ -2851,17 +2859,69 @@ namespace H3MP
     {
         public static int skip;
 
-        static void Postfix(ref Rigidbody __instance)
+        static bool Prefix(ref Rigidbody __instance, bool value)
         {
             if (Mod.managerObject == null || skip > 0)
+            {
+                return true;
+            }
+
+            // If game is setting this as kinematic
+            if (value)
+            {
+                // Check if we have a marker (meaning H3MP set it as kinematic due to no control)
+                H3MP_KinematicMarker marker = __instance.GetComponent<H3MP_KinematicMarker>();
+                if (marker != null)
+                {
+                    // Destroy the marker because the game has now set its own kinematic value, so when we take control of the item
+                    // we don't want to set it to non kinematic
+                    GameObject.Destroy(marker);
+                }
+            }
+            else // Game is setting this as non-kinematic
+            {
+                // Check if this is a tracked item under our control
+                H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+                if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+                {
+                    // Return false because we don't want to set this to non-kinematic
+                    // Consider the case of an item getting detached from another by some vanilla process
+                    // When that is done, the process sets the rigidbody as non-kinematic
+                    // But if this item is not under our control, we want it to remain kinematic, otherwise physics are going to break things
+                    return false;
+                }
+                else
+                {
+                    // We can destroy an existing marker right away because the rigidbody will now be non-kinematic anyway
+                    // So when we take control of the item, we don't need to set the kinematic value, so no need for the marker anymore
+                    H3MP_KinematicMarker marker = __instance.GetComponent<H3MP_KinematicMarker>();
+                    if (marker != null)
+                    {
+                        GameObject.Destroy(marker);
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches FVRPhysicalObject.RecoverRigidbody to make sure a non-controlled RB is kinematic
+    class PhysicalObjectRBPatch
+    {
+        static void Postfix(FVRPhysicalObject __instance)
+        {
+            if (Mod.managerObject == null)
             {
                 return;
             }
 
-            H3MP_KinematicMarker marker = __instance.GetComponent<H3MP_KinematicMarker>();
-            if (marker != null)
+            // Check if this is a tracked item under our control
+            H3MP_TrackedItem trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
             {
-                GameObject.Destroy(marker);
+                // If tracked and not controller, set kinematic
+                __instance.RootRigidbody.isKinematic = true;
             }
         }
     }

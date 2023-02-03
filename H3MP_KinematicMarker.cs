@@ -8,6 +8,5 @@ namespace H3MP
 {
     public class H3MP_KinematicMarker : MonoBehaviour
     {
-        public bool state = true;
     }
 }
