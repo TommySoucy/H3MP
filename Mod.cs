@@ -182,7 +182,7 @@ namespace H3MP
         public static readonly FieldInfo GBeamer_m_isMotorSwitchedOn = typeof(GBeamer).GetField("m_isMotorSwitchedOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo GBeamer_m_capacitorCharge = typeof(GBeamer).GetField("m_capacitorCharge", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo GrappleGun_m_curChamber = typeof(GrappleGun).GetField("m_curChamber", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        public static readonly FieldInfo HCB_m_sledState = typeof(HCB).GetField("sledState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo HCB_m_sledState = typeof(HCB).GetField("m_sledState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo HCB_m_cookedAmount = typeof(HCB).GetField("m_cookedAmount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo OpenBoltReceiver_m_CamBurst = typeof(OpenBoltReceiver).GetField("m_CamBurst", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo OpenBoltReceiver_m_fireSelectorMode = typeof(OpenBoltReceiver).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

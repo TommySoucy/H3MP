@@ -2686,7 +2686,7 @@ namespace H3MP
             byte preval0 = data.data[0];
 
             // Write m_sledState
-            data.data[0] = (byte)Mod.HCB_m_sledState.GetValue(asHCB);
+            data.data[0] = (byte)(int)Mod.HCB_m_sledState.GetValue(asHCB);
 
             modified |= preval0 != data.data[0];
 
@@ -3561,7 +3561,7 @@ namespace H3MP
             byte preval = data.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)Mod.BAP_m_fireSelectorMode.GetValue(asBAP);
+            data.data[0] = (byte)(int)Mod.BAP_m_fireSelectorMode.GetValue(asBAP);
 
             modified |= preval != data.data[0];
 
