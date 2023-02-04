@@ -846,7 +846,6 @@ namespace H3MP
 
         private static H3MP_TrackedSosig MakeSosigTracked(Sosig sosigScript)
         {
-            Mod.LogInfo("MakeSosigTracked called");
             H3MP_TrackedSosig trackedSosig = sosigScript.gameObject.AddComponent<H3MP_TrackedSosig>();
             H3MP_TrackedSosigData data = new H3MP_TrackedSosigData();
             trackedSosig.data = data;

@@ -1731,7 +1731,6 @@ namespace H3MP
         {
             int sosigTrackedID = packet.ReadInt();
             Sosig.SosigBodyState bodyState = (Sosig.SosigBodyState)packet.ReadByte();
-            Mod.LogInfo("Server handle sosig " + sosigTrackedID + " sosig state "+ bodyState);
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)

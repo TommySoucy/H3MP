@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -645,6 +646,8 @@ namespace H3MP
             LoadAssets();
 
             SceneManager.sceneLoaded += OnSceneLoaded;
+
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)4080;
         }
 
         private void DoPatching()
@@ -990,13 +993,13 @@ namespace H3MP
             PatchVerify.Verify(sosigLinkRegisterWearablePatchOriginal, harmony, false);
             PatchVerify.Verify(sosigLinkDeRegisterWearablePatchOriginal, harmony, false);
             //PatchVerify.Verify(sosigLinkExplodesPatchOriginal, harmony, false);
-            //PatchVerify.Verify(sosigLinkBreakPatchOriginal, harmony, false);
+            PatchVerify.Verify(sosigLinkBreakPatchOriginal, harmony, false);
             //PatchVerify.Verify(sosigLinkSeverPatchOriginal, harmony, false);
             //PatchVerify.Verify(sosigLinkVaporizePatchOriginal, harmony, false);
             harmony.Patch(sosigLinkRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkRegisterWearablePatchPrefix));
             harmony.Patch(sosigLinkDeRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkDeRegisterWearablePatchPrefix));
             //harmony.Patch(sosigLinkExplodesPatchOriginal, new HarmonyMethod(sosigLinkExplodesPatchPrefix), new HarmonyMethod(sosigLinkExplodesPatchPosfix));
-            //harmony.Patch(sosigLinkBreakPatchOriginal, new HarmonyMethod(sosigLinkBreakPatchPrefix), new HarmonyMethod(sosigLinkBreakPatchPosfix));
+            harmony.Patch(sosigLinkBreakPatchOriginal, new HarmonyMethod(sosigLinkBreakPatchPrefix), new HarmonyMethod(sosigLinkBreakPatchPosfix));
             //harmony.Patch(sosigLinkSeverPatchOriginal, new HarmonyMethod(sosigLinkSeverPatchPrefix), new HarmonyMethod(sosigLinkSeverPatchPosfix));
             //harmony.Patch(sosigLinkVaporizePatchOriginal, new HarmonyMethod(sosigLinkVaporizePatchPrefix), new HarmonyMethod(sosigLinkVaporizePatchPosfix));
 
@@ -6609,7 +6612,7 @@ namespace H3MP
             --SosigActionPatch.sosigSetBodyStateSkip;
         }
 
-        static void LinkBreakPrefix(ref SosigLink __instance, bool isStart, Damage.DamageClass damClass)
+        static bool LinkBreakPrefix(ref SosigLink __instance, bool isStart, Damage.DamageClass damClass)
         {
             ++SosigActionPatch.sosigDiesSkip;
             ++SosigHandDropPatch.skip;
@@ -6618,18 +6621,23 @@ namespace H3MP
 
             if (sosigLinkBreakSkip > 0)
             {
-                return;
+                return true;
             }
 
             // Skip if not connected
             if (Mod.managerObject == null)
             {
-                return;
+                return true;
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null)
             {
+                if(trackedSosig.data.controller != H3MP_GameManager.ID)
+                {
+                    return false;
+                }
+
                 int linkIndex = -1;
                 for (int i = 0; i < __instance.S.Links.Count; ++i)
                 {
@@ -6659,6 +6667,8 @@ namespace H3MP
                     }
                 }
             }
+
+            return true;
         }
 
         static void LinkBreakPostfix()

@@ -96,56 +96,18 @@ namespace H3MP
                     receivedData.Reset(HandleData(data));
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
-                catch (ArgumentException ex)
+                catch (Exception ex)
                 {
                     if (H3MP_Server.clients[ID].connected)
                     {
-                        Mod.LogWarning("ReceiveCallback ArgumentException, Client " + ID+" would normally be forcibly disconnected: "+ex);
-                        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
-                        //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
-                        //if(data != null)
-                        //{
-                        //    for(int i=0; i < byteLength; ++i)
-                        //    {
-                        //        Mod.LogWarning("data[" + i + "] = " + data[i]);
-                        //    }
-                        //}
-                        //H3MP_Server.clients[ID].Disconnect(1, ex);
-                    }
-                }
-                catch (IOException ex)
-                {
-                    if (H3MP_Server.clients[ID].connected)
-                    {
-                        Mod.LogWarning("ReceiveCallback IOException, Client " + ID+" would normally be forcibly disconnected: "+ex);
-                        stream = socket.GetStream();
-                        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
-                        //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
-                        //if(data != null)
-                        //{
-                        //    for(int i=0; i < byteLength; ++i)
-                        //    {
-                        //        Mod.LogWarning("data[" + i + "] = " + data[i]);
-                        //    }
-                        //}
-                        //H3MP_Server.clients[ID].Disconnect(1, ex);
-                    }
-                }
-                catch (ObjectDisposedException ex)
-                {
-                    if (H3MP_Server.clients[ID].connected)
-                    {
-                        Mod.LogWarning("ReceiveCallback ObjectDisposedException, Client " + ID+" would normally be forcibly disconnected: "+ex);
-                        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
-                        //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
-                        //if(data != null)
-                        //{
-                        //    for(int i=0; i < byteLength; ++i)
-                        //    {
-                        //        Mod.LogWarning("data[" + i + "] = " + data[i]);
-                        //    }
-                        //}
-                        //H3MP_Server.clients[ID].Disconnect(1, ex);
+                        if (data != null)
+                        {
+                            for (int i = 0; i < byteLength; ++i)
+                            {
+                                Mod.LogWarning("data[" + i + "] = " + data[i]);
+                            }
+                        }
+                        H3MP_Server.clients[ID].Disconnect(1, ex);
                     }
                 }
             }
@@ -388,7 +350,7 @@ namespace H3MP
                     break;
                 case 1:
                     Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.");
-                    Mod.LogWarning("Exception: " + ex.Message + "\n" + ex.StackTrace);
+                    Mod.LogWarning("Exception: " + ex.Message + "\n" + ex);
                     break;
                 case 2:
                     Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.");

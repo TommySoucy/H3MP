@@ -50,7 +50,6 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Mod.LogInfo("Instantiating Sosig "+trackedID);
             yield return IM.OD["SosigBody_Default"].GetGameObjectAsync();
             GameObject sosigPrefab = IM.OD["SosigBody_Default"].GetGameObject();
             if (sosigPrefab == null)
@@ -87,7 +86,7 @@ namespace H3MP
             --SosigIFFPatch.skip;
 
             // Set IFFChart
-            H3MP_Server.sosigs[trackedID].physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
+            physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
 
             // Check if in temporary lists
             if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
@@ -193,6 +192,11 @@ namespace H3MP
             if (IM.OD.ContainsKey(ID))
             {
                 yield return IM.OD[ID].GetGameObjectAsync();
+                if(physicalObject == null || physicalObject.physicalSosigScript.Links[linkIndex] == null)
+                {
+                    // Sosig or sosig link could have been destroyed between iterations
+                    yield break;
+                }
                 ++Mod.skipAllInstantiates;
                 GameObject outfitItemObject = GameObject.Instantiate(IM.OD[ID].GetGameObject(), physicalObject.physicalSosigScript.Links[linkIndex].transform.position, physicalObject.physicalSosigScript.Links[linkIndex].transform.rotation, physicalObject.physicalSosigScript.Links[linkIndex].transform);
                 --Mod.skipAllInstantiates;

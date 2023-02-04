@@ -353,7 +353,10 @@ namespace H3MP
                     trackedSosig.physicalObject.sendDestroy = false;
                     foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
                     {
-                        GameObject.Destroy(link.gameObject);
+                        if (link != null)
+                        {
+                            GameObject.Destroy(link.gameObject);
+                        }
                     }
                     GameObject.Destroy(trackedSosig.physicalObject.gameObject);
                 }
@@ -1730,9 +1733,12 @@ namespace H3MP
                 Vector3 edgeNormal = packet.ReadVector3();
                 float scale = packet.ReadFloat();
                 byte linkIndex = packet.ReadByte();
-                ++SosigActionPatch.sosigRequestHitDecalSkip;
-                trackedSosig.physicalObject.physicalSosigScript.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex]);
-                --SosigActionPatch.sosigRequestHitDecalSkip;
+                if (trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex] != null)
+                {
+                    ++SosigActionPatch.sosigRequestHitDecalSkip;
+                    trackedSosig.physicalObject.physicalSosigScript.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalObject.physicalSosigScript.Links[linkIndex]);
+                    --SosigActionPatch.sosigRequestHitDecalSkip;
+                }
             }
         }
 
