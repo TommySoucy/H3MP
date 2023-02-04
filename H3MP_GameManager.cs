@@ -706,6 +706,7 @@ namespace H3MP
             data.position = trackedItem.transform.position;
             data.rotation = trackedItem.transform.rotation;
             data.active = trackedItem.gameObject.activeInHierarchy;
+            data.underActiveControl = IsControlled(trackedItem.physicalObject);
 
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;

@@ -21,6 +21,8 @@ namespace H3MP
         public int controller = 0; // Client controlling this item, 0 for host
         public bool active;
         private bool previousActive;
+        public bool underActiveControl;
+        private bool previousActiveControl;
         public string scene;
         public int instance;
 
@@ -179,6 +181,9 @@ namespace H3MP
                     }
                 }
 
+                previousActiveControl = underActiveControl;
+                underActiveControl = updatedItem.underActiveControl;
+
                 if (initial)
                 {
                     SetInitialData();
@@ -227,15 +232,17 @@ namespace H3MP
 
             previousActive = active;
             active = physicalItem.gameObject.activeInHierarchy;
+            previousActiveControl = underActiveControl;
+            underActiveControl = H3MP_GameManager.IsControlled(physicalItem.physicalObject);
 
             // Note: UpdateData() must be done first in this expression, otherwise, if active/position/rotation is different,
             // it will return true before making the call
-            return UpdateData() || previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+            return UpdateData() || previousActive != active || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation);
         }
 
         public bool NeedsUpdate()
         {
-            return previousActive != active || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
+            return previousActive != active || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
         }
 
         public void SetParent(H3MP_TrackedItemData newParent, bool physicallyParent)

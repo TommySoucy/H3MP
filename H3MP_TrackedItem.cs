@@ -6801,7 +6801,8 @@ namespace H3MP
 
         private void OnDestroy()
         {
-            if (skipFullDestroy)
+            // Don't want to destroy if controlled by someone else and under their active control
+            if (skipFullDestroy || (data.controller != H3MP_GameManager.ID && data.underActiveControl))
             {
                 return;
             }

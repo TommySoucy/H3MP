@@ -475,6 +475,7 @@ namespace H3MP
                 Write(trackedItem.data);
             }
             Write(trackedItem.active);
+            Write(trackedItem.underActiveControl);
 
             // TODO: Optimization: Make which data we send dependent on what updated, cause we shouldn't send the entire data array if there was no update in it
 
@@ -1309,6 +1310,7 @@ namespace H3MP
                 trackedItem.data = ReadBytes(dataLength);
             }
             trackedItem.active = ReadBool();
+            trackedItem.underActiveControl = ReadBool();
 
             if (full)
             {
