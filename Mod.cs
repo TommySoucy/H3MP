@@ -10796,7 +10796,7 @@ namespace H3MP
 
         static void Prefix(ref UberShatterable __instance, Vector3 point, Vector3 dir, float intensity)
         {
-            if(skip > 0 || Mod.managerObject != null)
+            if(skip > 0 || Mod.managerObject == null)
             {
                 return;
             }

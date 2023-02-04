@@ -100,7 +100,8 @@ namespace H3MP
                 {
                     if (H3MP_Server.clients[ID].connected)
                     {
-                        Mod.LogWarning("ReceiveCallback ArgumentException, Client " + ID+" would normally be forcibly disconnected: "+ex.Message);
+                        Mod.LogWarning("ReceiveCallback ArgumentException, Client " + ID+" would normally be forcibly disconnected: "+ex);
+                        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                         //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
                         //if(data != null)
                         //{
@@ -116,7 +117,9 @@ namespace H3MP
                 {
                     if (H3MP_Server.clients[ID].connected)
                     {
-                        Mod.LogWarning("ReceiveCallback IOException, Client " + ID+" would normally be forcibly disconnected: "+ex.Message);
+                        Mod.LogWarning("ReceiveCallback IOException, Client " + ID+" would normally be forcibly disconnected: "+ex);
+                        stream = socket.GetStream();
+                        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                         //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
                         //if(data != null)
                         //{
@@ -132,7 +135,8 @@ namespace H3MP
                 {
                     if (H3MP_Server.clients[ID].connected)
                     {
-                        Mod.LogWarning("ReceiveCallback ObjectDisposedException, Client " + ID+" would normally be forcibly disconnected: "+ex.Message);
+                        Mod.LogWarning("ReceiveCallback ObjectDisposedException, Client " + ID+" would normally be forcibly disconnected: "+ex);
+                        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                         //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
                         //if(data != null)
                         //{

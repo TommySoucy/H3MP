@@ -1796,7 +1796,7 @@ namespace H3MP
 
         public static void UberShatterableShatter(int trackedID, Vector3 point, Vector3 dir, float intensity)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.uberShatterableShatter))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.uberShatterableShatter))
             {
                 packet.Write(trackedID);
                 packet.Write(point);
