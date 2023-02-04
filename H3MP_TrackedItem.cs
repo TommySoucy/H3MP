@@ -5458,16 +5458,8 @@ namespace H3MP
                 modified = true;
             }
 
-            // If mount doesn't actually change, just return now
-            byte mountIndex = newData[0];
-            if(currentMountIndex == mountIndex)
-            {
-                return modified;
-            }
-            data.data[0] = mountIndex;
-
             byte preMountIndex = currentMountIndex;
-            if (mountIndex == 255)
+            if (newData[0] == 255)
             {
                 // Should not be mounted, check if currently is
                 if(asAttachment.curMount != null)
@@ -5501,9 +5493,9 @@ namespace H3MP
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > mountIndex)
+                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[mountIndex];
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
                     }
                 }
 
@@ -5517,7 +5509,7 @@ namespace H3MP
                     }
 
                     asAttachment.AttachToMount(mount, true);
-                    currentMountIndex = mountIndex;
+                    currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
                 }
             }
@@ -5527,6 +5519,8 @@ namespace H3MP
             {
                 attachmentInterfaceUpdateGivenFunc(asAttachment, newData, ref modified);
             }
+
+            data.data = newData;
 
             return modified || (preMountIndex != currentMountIndex);
         }

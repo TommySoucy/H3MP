@@ -99,15 +99,16 @@ namespace H3MP
                 {
                     if (H3MP_Server.clients[ID].connected)
                     {
-                        Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
-                        if(data != null)
-                        {
-                            for(int i=0; i < byteLength; ++i)
-                            {
-                                Mod.LogWarning("data[" + i + "] = " + data[i]);
-                            }
-                        }
-                        H3MP_Server.clients[ID].Disconnect(1, ex);
+                        Mod.LogWarning("Client "+ID+" would normally be dorcibly disconnected: "+ex.Message);
+                        //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
+                        //if(data != null)
+                        //{
+                        //    for(int i=0; i < byteLength; ++i)
+                        //    {
+                        //        Mod.LogWarning("data[" + i + "] = " + data[i]);
+                        //    }
+                        //}
+                        //H3MP_Server.clients[ID].Disconnect(1, ex);
                     }
                 }
             }
