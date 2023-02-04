@@ -935,7 +935,7 @@ namespace H3MP
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 H3MP_Client.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundClass);
-                H3MP_Client.items[trackedID].physicalItem.attachableFirearmFunc(firedFromInterface);
+                H3MP_Client.items[trackedID].physicalItem.attachableFirearmFireFunc(firedFromInterface);
             }
         }
 

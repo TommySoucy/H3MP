@@ -1,6 +1,7 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
+using System.Net.Mail;
 using System.Reflection;
 using UnityEngine;
 using Valve.VR.InteractionSystem.Sample;
@@ -39,7 +40,7 @@ namespace H3MP
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
         public FirearmUpdateOverrideSetter setFirearmUpdateOverride; // Set fire update override data
-        public FireAttachableFirearm attachableFirearmFunc; // Fires the corresponding attachable firearm type
+        public FireAttachableFirearm attachableFirearmFireFunc; // Fires the corresponding attachable firearm type
         public FireAttachableFirearmChamberRound attachableFirearmChamberRoundFunc; // Loads the chamber of the attachable firearm with round of class
         public FireAttachableFirearmGetChamber attachableFirearmGetChamberFunc; // Returns the chamber of the corresponding attachable firearm
         public FireSosigGun sosigWeaponfireFunc; // Fires the corresponding sosig weapon
@@ -468,7 +469,7 @@ namespace H3MP
                 {
                     updateFunc = UpdateAttachableBreakActions;
                     updateGivenFunc = UpdateGivenAttachableBreakActions;
-                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableBreakActions).Fire;
+                    attachableFirearmFireFunc = (asAttachableFirearmPhysicalObject.FA as AttachableBreakActions).Fire;
                     attachableFirearmChamberRoundFunc = AttachableBreakActionsChamberRound;
                     attachableFirearmGetChamberFunc = AttachableBreakActionsGetChamber;
                 }
@@ -476,7 +477,7 @@ namespace H3MP
                 {
                     updateFunc = UpdateAttachableClosedBoltWeapon;
                     updateGivenFunc = UpdateGivenAttachableClosedBoltWeapon;
-                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableClosedBoltWeapon).Fire;
+                    attachableFirearmFireFunc = (asAttachableFirearmPhysicalObject.FA as AttachableClosedBoltWeapon).Fire;
                     attachableFirearmChamberRoundFunc = AttachableClosedBoltWeaponChamberRound;
                     attachableFirearmGetChamberFunc = AttachableClosedBoltWeaponGetChamber;
                 }
@@ -484,7 +485,7 @@ namespace H3MP
                 {
                     updateFunc = UpdateAttachableTubeFed;
                     updateGivenFunc = UpdateGivenAttachableTubeFed;
-                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as AttachableTubeFed).Fire;
+                    attachableFirearmFireFunc = (asAttachableFirearmPhysicalObject.FA as AttachableTubeFed).Fire;
                     attachableFirearmChamberRoundFunc = AttachableTubeFedChamberRound;
                     attachableFirearmGetChamberFunc = AttachableTubeFedGetChamber;
                 }
@@ -492,7 +493,7 @@ namespace H3MP
                 {
                     updateFunc = UpdateGP25;
                     updateGivenFunc = UpdateGivenGP25;
-                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as GP25).Fire;
+                    attachableFirearmFireFunc = (asAttachableFirearmPhysicalObject.FA as GP25).Fire;
                     attachableFirearmChamberRoundFunc = GP25ChamberRound;
                     attachableFirearmGetChamberFunc = GP25GetChamber;
                 }
@@ -500,7 +501,7 @@ namespace H3MP
                 {
                     updateFunc = UpdateM203;
                     updateGivenFunc = UpdateGivenM203;
-                    attachableFirearmFunc = (asAttachableFirearmPhysicalObject.FA as M203).Fire;
+                    attachableFirearmFireFunc = (asAttachableFirearmPhysicalObject.FA as M203).Fire;
                     attachableFirearmChamberRoundFunc = M203ChamberRound;
                     attachableFirearmGetChamberFunc = M203GetChamber;
                 }
@@ -3968,24 +3969,51 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[2];
+                data.data = new byte[3];
                 modified = true;
             }
 
-            byte preval = data.data[0];
-            byte preval0 = data.data[1];
+            byte preIndex = data.data[0];
+
+            // Write attached mount index
+            if (asM203.Attachment.curMount == null)
+            {
+                data.data[0] = 255;
+            }
+            else
+            {
+                // Find the mount and set it
+                bool found = false;
+                for (int i = 0; i < asM203.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                {
+                    if (asM203.Attachment.curMount.Parent.AttachmentMounts[i] == asM203.Attachment.curMount)
+                    {
+                        data.data[0] = (byte)i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    data.data[0] = 255;
+                }
+            }
+            modified |= preIndex != data.data[0];
+
+            byte preval = data.data[1];
+            byte preval0 = data.data[2];
 
             // Write chambered round class
             if (asM203.Chamber.GetRound() == null || asM203.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
             }
             else
             {
-                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
             }
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+            modified |= (preval != data.data[1] || preval0 != data.data[2]);
 
             return modified;
         }
@@ -3995,8 +4023,66 @@ namespace H3MP
             bool modified = data.data == null;
             M203 asM203 = dataObject as M203;
 
+            byte preMountIndex = currentMountIndex;
+            if (newData[0] == 255)
+            {
+                // Should not be mounted, check if currently is
+                if (asM203.Attachment.curMount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    asM203.Attachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+                    currentMountIndex = 255;
+
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
+                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    if (data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.SetKinematicRecursive(asM203.Attachment.transform, true);
+                    }
+                }
+            }
+            else
+            {
+                // Find mount instance we want to be mounted to
+                FVRFireArmAttachmentMount mount = null;
+                H3MP_TrackedItemData parentTrackedItemData = null;
+                if (H3MP_ThreadManager.host)
+                {
+                    parentTrackedItemData = H3MP_Server.items[data.parent];
+                }
+                else
+                {
+                    parentTrackedItemData = H3MP_Client.items[data.parent];
+                }
+
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                {
+                    // We want to be mounted, we have a parent
+                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    {
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                    }
+                }
+
+                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                if (mount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    if (asM203.Attachment.curMount != null)
+                    {
+                        asM203.Attachment.DetachFromMount();
+                    }
+
+                    asM203.Attachment.AttachToMount(mount, true);
+                    currentMountIndex = newData[0];
+                    --data.ignoreParentChanged;
+                }
+            }
+            modified |= preMountIndex != currentMountIndex;
+
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asM203.Chamber.GetRound() != null)
@@ -4039,31 +4125,58 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[3];
+                data.data = new byte[4];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preIndex = data.data[0];
+
+            // Write attached mount index
+            if (asGP25.Attachment.curMount == null)
+            {
+                data.data[0] = 255;
+            }
+            else
+            {
+                // Find the mount and set it
+                bool found = false;
+                for (int i = 0; i < asGP25.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                {
+                    if (asGP25.Attachment.curMount.Parent.AttachmentMounts[i] == asGP25.Attachment.curMount)
+                    {
+                        data.data[0] = (byte)i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    data.data[0] = 255;
+                }
+            }
+            modified |= preIndex != data.data[0];
+
+            byte preval = data.data[1];
 
             // Write safety
-            data.data[0] = (byte)(asGP25.m_safetyEngaged ? 1:0);
+            data.data[1] = (byte)(asGP25.m_safetyEngaged ? 1:0);
 
-            modified |= preval != data.data[0];
+            modified |= preval != data.data[1];
 
-            preval = data.data[1];
-            byte preval0 = data.data[2];
+            preval = data.data[2];
+            byte preval0 = data.data[3];
 
             // Write chambered round class
             if (asGP25.Chamber.GetRound() == null || asGP25.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3]);
 
             return modified;
         }
@@ -4073,25 +4186,83 @@ namespace H3MP
             bool modified = false;
             GP25 asGP25 = dataObject as GP25;
 
+            byte preMountIndex = currentMountIndex;
+            if (newData[0] == 255)
+            {
+                // Should not be mounted, check if currently is
+                if (asGP25.Attachment.curMount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    asGP25.Attachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+                    currentMountIndex = 255;
+
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
+                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    if (data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.SetKinematicRecursive(asGP25.Attachment.transform, true);
+                    }
+                }
+            }
+            else
+            {
+                // Find mount instance we want to be mounted to
+                FVRFireArmAttachmentMount mount = null;
+                H3MP_TrackedItemData parentTrackedItemData = null;
+                if (H3MP_ThreadManager.host)
+                {
+                    parentTrackedItemData = H3MP_Server.items[data.parent];
+                }
+                else
+                {
+                    parentTrackedItemData = H3MP_Client.items[data.parent];
+                }
+
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                {
+                    // We want to be mounted, we have a parent
+                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    {
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                    }
+                }
+
+                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                if (mount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    if (asGP25.Attachment.curMount != null)
+                    {
+                        asGP25.Attachment.DetachFromMount();
+                    }
+
+                    asGP25.Attachment.AttachToMount(mount, true);
+                    currentMountIndex = newData[0];
+                    --data.ignoreParentChanged;
+                }
+            }
+            modified |= preMountIndex != currentMountIndex;
+
             if (data.data == null)
             {
                 modified = true;
 
                 // Set safety
-                asGP25.m_safetyEngaged = newData[0] == 1;
+                asGP25.m_safetyEngaged = newData[1] == 1;
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (data.data[1] != newData[1])
                 {
                     // Set safety
-                    asGP25.m_safetyEngaged = newData[0] == 1;
+                    asGP25.m_safetyEngaged = newData[1] == 1;
                     modified = true;
                 }
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asGP25.Chamber.GetRound() != null)
@@ -4134,54 +4305,81 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[6];
+                data.data = new byte[7];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preIndex = data.data[0];
+
+            // Write attached mount index
+            if (asATF.Attachment.curMount == null)
+            {
+                data.data[0] = 255;
+            }
+            else
+            {
+                // Find the mount and set it
+                bool found = false;
+                for (int i = 0; i < asATF.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                {
+                    if (asATF.Attachment.curMount.Parent.AttachmentMounts[i] == asATF.Attachment.curMount)
+                    {
+                        data.data[0] = (byte)i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    data.data[0] = 255;
+                }
+            }
+            modified |= preIndex != data.data[0];
+
+            byte preval = data.data[1];
 
             // Write fire mode index
-            data.data[0] = asATF.IsSafetyEngaged ? (byte)1 : (byte)0;
-
-            modified |= preval != data.data[0];
-
-            preval = data.data[1];
-
-            // Write hammer state
-            data.data[1] = BitConverter.GetBytes(asATF.IsHammerCocked)[0];
+            data.data[1] = asATF.IsSafetyEngaged ? (byte)1 : (byte)0;
 
             modified |= preval != data.data[1];
 
             preval = data.data[2];
-            byte preval0 = data.data[3];
+
+            // Write hammer state
+            data.data[2] = BitConverter.GetBytes(asATF.IsHammerCocked)[0];
+
+            modified |= preval != data.data[2];
+
+            preval = data.data[3];
+            byte preval0 = data.data[4];
 
             // Write chambered round class
             if (asATF.Chamber.GetRound() == null || asATF.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
             }
 
             modified |= (preval != data.data[3] || preval0 != data.data[4]);
 
-            preval = data.data[4];
+            preval = data.data[5];
 
             // Write bolt handle pos
-            data.data[4] = (byte)asATF.Bolt.CurPos;
+            data.data[5] = (byte)asATF.Bolt.CurPos;
 
-            modified |= preval != data.data[4];
+            modified |= preval != data.data[5];
 
             if (asATF.HasHandle)
             {
-                preval = data.data[5];
+                preval = data.data[6];
 
                 // Write bolt handle pos
-                data.data[5] = (byte)asATF.Handle.CurPos;
+                data.data[6] = (byte)asATF.Handle.CurPos;
 
-                modified |= preval != data.data[5];
+                modified |= preval != data.data[6];
             }
 
             return modified;
@@ -4192,55 +4390,113 @@ namespace H3MP
             bool modified = false;
             AttachableTubeFed asATF = dataObject as AttachableTubeFed;
 
+            byte preMountIndex = currentMountIndex;
+            if (newData[0] == 255)
+            {
+                // Should not be mounted, check if currently is
+                if (asATF.Attachment.curMount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    asATF.Attachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+                    currentMountIndex = 255;
+
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
+                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    if (data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.SetKinematicRecursive(asATF.Attachment.transform, true);
+                    }
+                }
+            }
+            else
+            {
+                // Find mount instance we want to be mounted to
+                FVRFireArmAttachmentMount mount = null;
+                H3MP_TrackedItemData parentTrackedItemData = null;
+                if (H3MP_ThreadManager.host)
+                {
+                    parentTrackedItemData = H3MP_Server.items[data.parent];
+                }
+                else
+                {
+                    parentTrackedItemData = H3MP_Client.items[data.parent];
+                }
+
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                {
+                    // We want to be mounted, we have a parent
+                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    {
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                    }
+                }
+
+                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                if (mount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    if (asATF.Attachment.curMount != null)
+                    {
+                        asATF.Attachment.DetachFromMount();
+                    }
+
+                    asATF.Attachment.AttachToMount(mount, true);
+                    currentMountIndex = newData[0];
+                    --data.ignoreParentChanged;
+                }
+            }
+            modified |= preMountIndex != currentMountIndex;
+
             if (data.data == null)
             {
                 modified = true;
 
                 // Set safety
-                if ((newData[0] == 1 && !asATF.IsSafetyEngaged) || (newData[0] == 0 && asATF.IsSafetyEngaged))
+                if ((newData[1] == 1 && !asATF.IsSafetyEngaged) || (newData[1] == 0 && asATF.IsSafetyEngaged))
                 {
                     asATF.ToggleSafety();
                 }
 
                 // Set bolt pos
                 asATF.Bolt.LastPos = asATF.Bolt.CurPos;
-                asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[4];
+                asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[5];
 
                 if (asATF.HasHandle)
                 {
                     // Set handle pos
                     asATF.Handle.LastPos = asATF.Handle.CurPos;
-                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[5];
+                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[6];
                 }
             }
             else
             {
                 // Set safety
-                if ((newData[0] == 1 && !asATF.IsSafetyEngaged) || (newData[0] == 0 && asATF.IsSafetyEngaged))
+                if ((newData[1] == 1 && !asATF.IsSafetyEngaged) || (newData[1] == 0 && asATF.IsSafetyEngaged))
                 {
                     asATF.ToggleSafety();
                     modified = true;
                 }
-                if (data.data[4] != newData[4])
+                if (data.data[4] != newData[5])
                 {
                     // Set bolt pos
                     asATF.Bolt.LastPos = asATF.Bolt.CurPos;
-                    asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[4];
+                    asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[5];
                 }
-                if (asATF.HasHandle && data.data[5] != newData[5])
+                if (asATF.HasHandle && data.data[6] != newData[6])
                 {
                     // Set handle pos
                     asATF.Handle.LastPos = asATF.Handle.CurPos;
-                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[5];
+                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[6];
                 }
             }
 
             // Set hammer state
-            if (newData[1] == 0)
+            if (newData[2] == 0)
             {
                 if (asATF.IsHammerCocked)
                 {
-                    Mod.AttachableTubeFed_m_isHammerCocked.SetValue(asATF, newData[1] == 1);
+                    Mod.AttachableTubeFed_m_isHammerCocked.SetValue(asATF, newData[2] == 1);
                     modified = true;
                 }
             }
@@ -4254,7 +4510,7 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asATF.Chamber.GetRound() != null)
@@ -4297,45 +4553,72 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[5];
+                data.data = new byte[6];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preIndex = data.data[0];
+
+            // Write attached mount index
+            if (asACBW.Attachment.curMount == null)
+            {
+                data.data[0] = 255;
+            }
+            else
+            {
+                // Find the mount and set it
+                bool found = false;
+                for (int i = 0; i < asACBW.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                {
+                    if (asACBW.Attachment.curMount.Parent.AttachmentMounts[i] == asACBW.Attachment.curMount)
+                    {
+                        data.data[0] = (byte)i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    data.data[0] = 255;
+                }
+            }
+            modified |= preIndex != data.data[0];
+
+            byte preval = data.data[1];
 
             // Write fire mode index
-            data.data[0] = (byte)asACBW.FireSelectorModeIndex;
-
-            modified |= preval != data.data[0];
-
-            preval = data.data[1];
-
-            // Write camBurst
-            data.data[1] = (byte)(int)typeof(AttachableClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asACBW);
+            data.data[1] = (byte)asACBW.FireSelectorModeIndex;
 
             modified |= preval != data.data[1];
 
             preval = data.data[2];
 
-            // Write hammer state
-            data.data[2] = BitConverter.GetBytes(asACBW.IsHammerCocked)[0];
+            // Write camBurst
+            data.data[2] = (byte)(int)typeof(AttachableClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asACBW);
 
             modified |= preval != data.data[2];
 
             preval = data.data[3];
-            byte preval0 = data.data[4];
+
+            // Write hammer state
+            data.data[3] = BitConverter.GetBytes(asACBW.IsHammerCocked)[0];
+
+            modified |= preval != data.data[3];
+
+            preval = data.data[4];
+            byte preval0 = data.data[5];
 
             // Write chambered round class
             if (asACBW.Chamber.GetRound() == null || asACBW.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4]);
+            modified |= (preval != data.data[4] || preval0 != data.data[5]);
 
             return modified;
         }
@@ -4345,38 +4628,97 @@ namespace H3MP
             bool modified = false;
             AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
 
+            byte preMountIndex = currentMountIndex;
+            if (newData[0] == 255)
+            {
+                // Should not be mounted, check if currently is
+                if (asACBW.Attachment.curMount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    asACBW.Attachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+                    currentMountIndex = 255;
+
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
+                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    if (data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.SetKinematicRecursive(asACBW.Attachment.transform, true);
+                    }
+                }
+            }
+            else
+            {
+                // Find mount instance we want to be mounted to
+                FVRFireArmAttachmentMount mount = null;
+                H3MP_TrackedItemData parentTrackedItemData = null;
+                if (H3MP_ThreadManager.host)
+                {
+                    parentTrackedItemData = H3MP_Server.items[data.parent];
+                }
+                else
+                {
+                    parentTrackedItemData = H3MP_Client.items[data.parent];
+                }
+
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                {
+                    // We want to be mounted, we have a parent
+                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    {
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                    }
+                }
+
+                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                if (mount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    if (asACBW.Attachment.curMount != null)
+                    {
+                        asACBW.Attachment.DetachFromMount();
+                    }
+
+                    asACBW.Attachment.AttachToMount(mount, true);
+                    currentMountIndex = newData[0];
+                    --data.ignoreParentChanged;
+                }
+            }
+            modified |= preMountIndex != currentMountIndex;
+
             if (data.data == null)
             {
                 modified = true;
 
                 // Set fire select mode
-                typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[0]);
+                // TODO: Remove all MemberInfo fetching like this from updates, add to all the other ones in Mod
+                typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[1]);
 
                 // Set camBurst
-                typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[1]);
+                typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[2]);
             }
             else
             {
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[0]);
+                    typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[1]);
                     modified = true;
                 }
                 if (data.data[1] != newData[1])
                 {
                     // Set camBurst
-                    typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[1]);
+                    typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[2]);
                     modified = true;
                 }
             }
 
             // Set hammer state
-            if (newData[2] == 0)
+            if (newData[3] == 0)
             {
                 if (asACBW.IsHammerCocked)
                 {
-                    typeof(ClosedBoltWeapon).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, BitConverter.ToBoolean(newData, 2));
+                    typeof(ClosedBoltWeapon).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, BitConverter.ToBoolean(newData, 3));
                     modified = true;
                 }
             }
@@ -4390,7 +4732,7 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asACBW.Chamber.GetRound() != null)
@@ -4433,31 +4775,58 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[1];
+                data.data = new byte[4];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preIndex = data.data[0];
+
+            // Write attached mount index
+            if (asABA.Attachment.curMount == null)
+            {
+                data.data[0] = 255;
+            }
+            else
+            {
+                // Find the mount and set it
+                bool found = false;
+                for (int i = 0; i < asABA.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                {
+                    if (asABA.Attachment.curMount.Parent.AttachmentMounts[i] == asABA.Attachment.curMount)
+                    {
+                        data.data[0] = (byte)i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    data.data[0] = 255;
+                }
+            }
+            modified |= preIndex != data.data[0];
+
+            byte preval = data.data[1];
 
             // Write breachOpen
-            data.data[0] = ((bool)Mod.AttachableBreakActions_m_isBreachOpen.GetValue(asABA)) ? (byte)1 : (byte)0;
+            data.data[1] = ((bool)Mod.AttachableBreakActions_m_isBreachOpen.GetValue(asABA)) ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != data.data[1];
 
-            preval = data.data[1];
-            byte preval0 = data.data[2];
+            preval = data.data[2];
+            byte preval0 = data.data[3];
 
             // Write chambered round class
             if (asABA.Chamber.GetRound() == null || asABA.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3]);
 
             return modified;
         }
@@ -4467,37 +4836,76 @@ namespace H3MP
             bool modified = false;
             AttachableBreakActions asABA = dataObject as AttachableBreakActions;
 
-            if (data.data == null)
+            byte preMountIndex = currentMountIndex;
+            if (newData[0] == 255)
             {
-                modified = true;
-
-                // Set breachOpen
-                bool current = ((bool)Mod.AttachableBreakActions_m_isBreachOpen.GetValue(asABA));
-                bool newVal = newData[0] == 1;
-                if ((current && !newVal) || (!current && newVal))
+                // Should not be mounted, check if currently is
+                if (asABA.Attachment.curMount != null)
                 {
-                    asABA.ToggleBreach();
+                    ++data.ignoreParentChanged;
+                    asABA.Attachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+                    currentMountIndex = 255;
+
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
+                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    if (data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.SetKinematicRecursive(asABA.Attachment.transform, true);
+                    }
                 }
-                Mod.AttachableBreakActions_m_isBreachOpen.SetValue(asABA, newVal);
             }
             else
             {
-                if (data.data[0] != newData[0])
+                // Find mount instance we want to be mounted to
+                FVRFireArmAttachmentMount mount = null;
+                H3MP_TrackedItemData parentTrackedItemData = null;
+                if (H3MP_ThreadManager.host)
                 {
-                    // Set breachOpen
-                    bool current = ((bool)Mod.AttachableBreakActions_m_isBreachOpen.GetValue(asABA));
-                    bool newVal = newData[0] == 1;
-                    if ((current && !newVal)||(!current && newVal))
+                    parentTrackedItemData = H3MP_Server.items[data.parent];
+                }
+                else
+                {
+                    parentTrackedItemData = H3MP_Client.items[data.parent];
+                }
+
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                {
+                    // We want to be mounted, we have a parent
+                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
                     {
-                        asABA.ToggleBreach();
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
                     }
-                    Mod.AttachableBreakActions_m_isBreachOpen.SetValue(asABA, newVal);
-                    modified = true;
+                }
+
+                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                if (mount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    if (asABA.Attachment.curMount != null)
+                    {
+                        asABA.Attachment.DetachFromMount();
+                    }
+
+                    asABA.Attachment.AttachToMount(mount, true);
+                    currentMountIndex = newData[0];
+                    --data.ignoreParentChanged;
                 }
             }
+            modified |= preMountIndex != currentMountIndex;
+
+            // Set breachOpen
+            bool current = ((bool)Mod.AttachableBreakActions_m_isBreachOpen.GetValue(asABA));
+            bool newVal = newData[1] == 1;
+            if ((current && !newVal)||(!current && newVal))
+            {
+                asABA.ToggleBreach();
+                modified = true;
+            }
+            Mod.AttachableBreakActions_m_isBreachOpen.SetValue(asABA, newVal);
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asABA.Chamber.GetRound() != null)
