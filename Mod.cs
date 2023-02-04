@@ -1481,6 +1481,13 @@ namespace H3MP
             PatchVerify.Verify(sosigWeaponShatterPatchOriginal, harmony, false);
             harmony.Patch(sosigWeaponShatterPatchOriginal, new HarmonyMethod(sosigWeaponShatterPatchPrefix));
 
+            // UberShatterableShatterPatch
+            MethodInfo uberShatterableShatterPatchOriginal = typeof(UberShatterable).GetMethod("Shatter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo uberShatterableShatterPatchPatchPrefix = typeof(UberShatterableShatterPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(uberShatterableShatterPatchOriginal, harmony, false);
+            harmony.Patch(uberShatterableShatterPatchOriginal, new HarmonyMethod(uberShatterableShatterPatchPatchPrefix));
+
             // EncryptionRespawnRandSubPatch
             MethodInfo encryptionRespawnRandSubPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("RespawnRandomSubTarg", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo encryptionRespawnRandSubPatchTranspiler = typeof(EncryptionRespawnRandSubPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
