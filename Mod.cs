@@ -213,6 +213,18 @@ namespace H3MP
         public static readonly FieldInfo sblp_m_isShotEngaged = typeof(sblp).GetField("m_isShotEngaged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRFireArmBipod_m_isBipodExpanded = typeof(FVRFireArmBipod).GetField("m_isBipodExpanded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FlagPoseSwitcher_m_index = typeof(FlagPoseSwitcher).GetField("m_index", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AttachableClosedBoltWeapon_m_CamBurst = typeof(AttachableClosedBoltWeapon).GetField("m_CamBurst", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AttachableClosedBoltWeapon_m_fireSelectorMode = typeof(AttachableClosedBoltWeapon).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AttachableClosedBoltWeapon_m_isHammerCocked = typeof(AttachableClosedBoltWeapon).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo ClosedBoltWeapon_m_CamBurst = typeof(ClosedBoltWeapon).GetField("m_CamBurst", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo ClosedBoltWeapon_m_fireSelectorMode = typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo ClosedBoltWeapon_m_isHammerCocked = typeof(ClosedBoltWeapon).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Handgun_m_CamBurst = typeof(Handgun).GetField("m_CamBurst", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Handgun_m_isHammerCocked = typeof(Handgun).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Handgun_m_fireSelectorMode = typeof(Handgun).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TubeFedShotgun_m_fireSelectorMode = typeof(TubeFedShotgun).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo BoltActionRifle_m_fireSelectorMode = typeof(BoltActionRifle).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo BoltActionRifle_m_isHammerCocked = typeof(BoltActionRifle).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

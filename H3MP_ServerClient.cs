@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using UnityEngine;
 using FistVR;
 using UnityEngine.SceneManagement;
+using System.IO;
 
 namespace H3MP
 {
@@ -95,11 +96,43 @@ namespace H3MP
                     receivedData.Reset(HandleData(data));
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
-                catch (Exception ex)
+                catch (ArgumentException ex)
                 {
                     if (H3MP_Server.clients[ID].connected)
                     {
-                        Mod.LogWarning("Client "+ID+" would normally be dorcibly disconnected: "+ex.Message);
+                        Mod.LogWarning("ReceiveCallback ArgumentException, Client " + ID+" would normally be forcibly disconnected: "+ex.Message);
+                        //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
+                        //if(data != null)
+                        //{
+                        //    for(int i=0; i < byteLength; ++i)
+                        //    {
+                        //        Mod.LogWarning("data[" + i + "] = " + data[i]);
+                        //    }
+                        //}
+                        //H3MP_Server.clients[ID].Disconnect(1, ex);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    if (H3MP_Server.clients[ID].connected)
+                    {
+                        Mod.LogWarning("ReceiveCallback IOException, Client " + ID+" would normally be forcibly disconnected: "+ex.Message);
+                        //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
+                        //if(data != null)
+                        //{
+                        //    for(int i=0; i < byteLength; ++i)
+                        //    {
+                        //        Mod.LogWarning("data[" + i + "] = " + data[i]);
+                        //    }
+                        //}
+                        //H3MP_Server.clients[ID].Disconnect(1, ex);
+                    }
+                }
+                catch (ObjectDisposedException ex)
+                {
+                    if (H3MP_Server.clients[ID].connected)
+                    {
+                        Mod.LogWarning("ReceiveCallback ObjectDisposedException, Client " + ID+" would normally be forcibly disconnected: "+ex.Message);
                         //Mod.LogWarning("Forcibly disconnecting " + ID + ": byteLength: " + byteLength);
                         //if(data != null)
                         //{

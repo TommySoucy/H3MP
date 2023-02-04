@@ -4594,7 +4594,7 @@ namespace H3MP
             preval = data.data[2];
 
             // Write camBurst
-            data.data[2] = (byte)(int)typeof(AttachableClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asACBW);
+            data.data[2] = (byte)(int)Mod.AttachableClosedBoltWeapon_m_CamBurst.GetValue(asACBW);
 
             modified |= preval != data.data[2];
 
@@ -4691,24 +4691,23 @@ namespace H3MP
                 modified = true;
 
                 // Set fire select mode
-                // TODO: Remove all MemberInfo fetching like this from updates, add to all the other ones in Mod
-                typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[1]);
+                Mod.AttachableClosedBoltWeapon_m_fireSelectorMode.SetValue(asACBW, (int)newData[1]);
 
                 // Set camBurst
-                typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[2]);
+                Mod.AttachableClosedBoltWeapon_m_CamBurst.SetValue(asACBW, (int)newData[2]);
             }
             else
             {
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[1]);
+                    Mod.AttachableClosedBoltWeapon_m_fireSelectorMode.SetValue(asACBW, (int)newData[1]);
                     modified = true;
                 }
                 if (data.data[1] != newData[1])
                 {
                     // Set camBurst
-                    typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, (int)newData[2]);
+                    Mod.AttachableClosedBoltWeapon_m_CamBurst.SetValue(asACBW, (int)newData[2]);
                     modified = true;
                 }
             }
@@ -4718,7 +4717,7 @@ namespace H3MP
             {
                 if (asACBW.IsHammerCocked)
                 {
-                    typeof(ClosedBoltWeapon).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asACBW, BitConverter.ToBoolean(newData, 3));
+                    Mod.AttachableClosedBoltWeapon_m_isHammerCocked.SetValue(asACBW, BitConverter.ToBoolean(newData, 3));
                     modified = true;
                 }
             }
@@ -5185,7 +5184,7 @@ namespace H3MP
             byte preval0 = data.data[1];
 
             // Write shots left
-            BitConverter.GetBytes((short)(int)typeof(SosigWeapon).GetField("m_shotsLeft", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asInterface.W)).CopyTo(data.data, 0);
+            BitConverter.GetBytes((short)(int)Mod.SosigWeapon_m_shotsLeft.GetValue(asInterface.W)).CopyTo(data.data, 0);
 
             modified |= (preval != data.data[0] || preval0 != data.data[1]);
 
@@ -5209,7 +5208,7 @@ namespace H3MP
                 modified = true;
 
                 // Set shots left
-                typeof(SosigWeapon).GetField("m_shotsLeft", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asInterface.W, BitConverter.ToInt16(newData, 0));
+                Mod.SosigWeapon_m_shotsLeft.SetValue(asInterface.W, BitConverter.ToInt16(newData, 0));
 
                 // Set MechaState
                 asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
@@ -5219,7 +5218,7 @@ namespace H3MP
                 if (data.data[0] != newData[0] || data.data[1] != newData[1])
                 {
                     // Set shots left
-                    typeof(SosigWeapon).GetField("m_shotsLeft", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asInterface.W, BitConverter.ToInt16(newData, 0));
+                    Mod.SosigWeapon_m_shotsLeft.SetValue(asInterface.W, BitConverter.ToInt16(newData, 0));
                     modified = true;
                 }
                 if (data.data[2] != newData[2])
@@ -5256,7 +5255,7 @@ namespace H3MP
             preval = data.data[1];
 
             // Write camBurst
-            data.data[1] = (byte)(int)typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asCBW);
+            data.data[1] = (byte)(int)Mod.ClosedBoltWeapon_m_CamBurst.GetValue(asCBW);
 
             modified |= preval != data.data[1];
 
@@ -5295,23 +5294,23 @@ namespace H3MP
                 modified = true;
 
                 // Set fire select mode
-                typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, (int)newData[0]);
+                Mod.ClosedBoltWeapon_m_fireSelectorMode.SetValue(asCBW, (int)newData[0]);
 
                 // Set camBurst
-                typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, (int)newData[1]);
+                Mod.ClosedBoltWeapon_m_CamBurst.SetValue(asCBW, (int)newData[1]);
             }
             else 
             {
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(ClosedBoltWeapon).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, (int)newData[0]);
+                    Mod.ClosedBoltWeapon_m_fireSelectorMode.SetValue(asCBW, (int)newData[0]);
                     modified = true;
                 }
                 if (data.data[1] != newData[1])
                 {
                     // Set camBurst
-                    typeof(ClosedBoltWeapon).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, (int)newData[1]);
+                    Mod.ClosedBoltWeapon_m_CamBurst.SetValue(asCBW, (int)newData[1]);
                     modified = true;
                 }
             }
@@ -5321,7 +5320,7 @@ namespace H3MP
             {
                 if (asCBW.IsHammerCocked)
                 {
-                    typeof(ClosedBoltWeapon).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asCBW, BitConverter.ToBoolean(newData, 2));
+                    Mod.ClosedBoltWeapon_m_isHammerCocked.SetValue(asCBW, BitConverter.ToBoolean(newData, 2));
                     modified = true;
                 }
             }
@@ -5387,14 +5386,14 @@ namespace H3MP
             preval = data.data[1];
 
             // Write camBurst
-            data.data[1] = (byte)(int)typeof(Handgun).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asHandgun);
+            data.data[1] = (byte)(int)Mod.Handgun_m_CamBurst.GetValue(asHandgun);
 
             modified |= preval != data.data[1];
 
             preval = data.data[2];
 
             // Write hammer state
-            data.data[2] = BitConverter.GetBytes((bool)typeof(Handgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asHandgun))[0];
+            data.data[2] = BitConverter.GetBytes((bool)Mod.Handgun_m_isHammerCocked.GetValue(asHandgun))[0];
 
             modified |= preval != data.data[2];
 
@@ -5426,36 +5425,35 @@ namespace H3MP
                 modified = true;
 
                 // Set fire select mode
-                typeof(Handgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asHandgun, (int)newData[0]);
+                Mod.Handgun_m_fireSelectorMode.SetValue(asHandgun, (int)newData[0]);
 
                 // Set camBurst
-                typeof(Handgun).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asHandgun, (int)newData[1]);
+                Mod.Handgun_m_CamBurst.SetValue(asHandgun, (int)newData[1]);
             }
             else 
             {
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(Handgun).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asHandgun, (int)newData[0]);
+                    Mod.Handgun_m_fireSelectorMode.SetValue(asHandgun, (int)newData[0]);
                     modified = true;
                 }
                 if (data.data[1] != newData[1])
                 {
                     // Set camBurst
-                    typeof(Handgun).GetField("m_CamBurst", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asHandgun, (int)newData[1]);
+                    Mod.Handgun_m_CamBurst.SetValue(asHandgun, (int)newData[1]);
                     modified = true;
                 }
             }
 
-            FieldInfo hammerCockedField = typeof(Handgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance);
-            bool isHammerCocked = (bool)hammerCockedField.GetValue(asHandgun);
+            bool isHammerCocked = (bool)Mod.Handgun_m_isHammerCocked.GetValue(asHandgun);
 
             // Set hammer state
             if (newData[2] == 0)
             {
                 if (isHammerCocked)
                 {
-                    hammerCockedField.SetValue(asHandgun, BitConverter.ToBoolean(newData, 2));
+                    Mod.Handgun_m_isHammerCocked.SetValue(asHandgun, BitConverter.ToBoolean(newData, 2));
                     modified = true;
                 }
             }
@@ -5613,7 +5611,7 @@ namespace H3MP
             {
                 if (asTFS.IsHammerCocked)
                 {
-                    typeof(TubeFedShotgun).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asTFS, false);
+                    Mod.TubeFedShotgun_m_fireSelectorMode.SetValue(asTFS, false);
                     modified = true;
                 }
             }
@@ -5672,7 +5670,7 @@ namespace H3MP
             byte preval = data.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)(int)typeof(BoltActionRifle).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(asBAR);
+            data.data[0] = (byte)(int)Mod.BoltActionRifle_m_fireSelectorMode.GetValue(asBAR);
 
             modified |= preval != data.data[0];
 
@@ -5725,7 +5723,7 @@ namespace H3MP
                 modified = true;
 
                 // Set fire select mode
-                typeof(BoltActionRifle).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asBAR, (int)newData[0]);
+                Mod.BoltActionRifle_m_fireSelectorMode.SetValue(asBAR, (int)newData[0]);
 
                 // Set bolt handle state
                 asBAR.LastBoltHandleState = asBAR.CurBoltHandleState;
@@ -5740,7 +5738,7 @@ namespace H3MP
                 if (data.data[0] != newData[0])
                 {
                     // Set fire select mode
-                    typeof(BoltActionRifle).GetField("m_fireSelectorMode", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asBAR, (int)newData[0]);
+                    Mod.BoltActionRifle_m_fireSelectorMode.SetValue(asBAR, (int)newData[0]);
                     modified = true;
                 }
                 if (data.data[4] != newData[4])
@@ -5762,7 +5760,7 @@ namespace H3MP
             {
                 if (asBAR.IsHammerCocked)
                 {
-                    typeof(BoltActionRifle).GetField("m_isHammerCocked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(asBAR, BitConverter.ToBoolean(newData, 1));
+                    Mod.BoltActionRifle_m_isHammerCocked.SetValue(asBAR, BitConverter.ToBoolean(newData, 1));
                     modified = true;
                 }
             }
