@@ -4517,6 +4517,7 @@ namespace H3MP
         public static List<Vector3> directions;
 
         // Update override data
+        static bool fireSuccessful;
         static FireArmRoundClass roundClass;
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -4548,7 +4549,7 @@ namespace H3MP
                 }
 
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
-                    instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 2, toInsert1);
                     break;
@@ -4650,7 +4651,15 @@ namespace H3MP
             ++Mod.skipAllInstantiates;
 
             H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.Attachment, out H3MP_TrackedItem item) ? item : __instance.Attachment.GetComponent<H3MP_TrackedItem>();
-            roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
+            if(trackedItem != null && trackedItem.attachableFirearmGetChamberFunc().GetRound() != null)
+            {
+                fireSuccessful = true;
+                roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
+            }
+            else
+            {
+                fireSuccessful = false;
+            }
         }
 
         static void Postfix(ref AttachableFirearm __instance, bool firedFromInterface)
@@ -4668,7 +4677,7 @@ namespace H3MP
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
+            if (!fireSuccessful || Mod.managerObject == null || H3MP_GameManager.playersPresent == 0)
             {
                 positions = null;
                 directions = null;
