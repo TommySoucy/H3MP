@@ -417,32 +417,44 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[trackedID];
-            trackedSosig.removeFromListOnDestroy = removeFromList;
 
-            if (trackedSosig.physicalObject != null)
+            if (trackedSosig != null)
             {
-                H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosigScript);
-                trackedSosig.physicalObject.sendDestroy = false;
-                foreach(SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
+
+                trackedSosig.removeFromListOnDestroy = removeFromList;
+
+                if (trackedSosig.physicalObject != null)
                 {
-                    GameObject.Destroy(link.gameObject);
+                    H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosigScript);
+                    trackedSosig.physicalObject.sendDestroy = false;
+                    foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
+                    {
+                        if (link != null)
+                        {
+                            GameObject.Destroy(link.gameObject);
+                        }
+                    }
+                    GameObject.Destroy(trackedSosig.physicalObject.gameObject);
                 }
-                GameObject.Destroy(trackedSosig.physicalObject.gameObject);
-            }
 
-            if (trackedSosig.localTrackedID != -1)
-            {
-                H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-            }
+                if (trackedSosig.localTrackedID != -1)
+                {
+                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
+                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                }
 
-            // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
-            if (removeFromList && H3MP_Server.sosigs[trackedID] != null)
+                // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
+                if (removeFromList && H3MP_Server.sosigs[trackedID] != null)
+                {
+                    H3MP_Server.sosigs[trackedID] = null;
+                    H3MP_Server.availableSosigIndices.Add(trackedID);
+                    H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
+                }
+            }
+            else
             {
-                H3MP_Server.sosigs[trackedID] = null;
-                H3MP_Server.availableSosigIndices.Add(trackedID);
-                H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
+                Mod.LogWarning("Server received order to destroy sosig but it was already null in H3MP_Server.sosigs, trackedID: "+trackedID);
             }
 
             H3MP_ServerSend.DestroySosig(trackedID, removeFromList, clientID);

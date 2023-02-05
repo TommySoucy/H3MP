@@ -1751,6 +1751,10 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnTurretsPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnTurretsPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchDeletionBurstOriginal = typeof(TNH_HoldPoint).GetMethod("DeletionBurst", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchDeletionBurstPrefix = typeof(TNH_HoldPointPatch).GetMethod("DeletionBurstPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchDeleteAllActiveEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("DeleteAllActiveEntities", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchDeleteAllActiveEntitiesPrefix = typeof(TNH_HoldPointPatch).GetMethod("DeleteAllActiveEntitiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TNH_HoldPointPatchSystemNodeOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchSpawnEntitiesOriginal, harmony, true);
@@ -1769,6 +1773,8 @@ namespace H3MP
             PatchVerify.Verify(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchSpawnTurretsOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchDeletionBurstOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchDeleteAllActiveEntitiesOriginal, harmony, true);
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
             harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
@@ -1786,6 +1792,8 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
             harmony.Patch(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
             harmony.Patch(TNH_HoldPointPatchSpawnTurretsOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPostfix));
+            harmony.Patch(TNH_HoldPointPatchDeletionBurstOriginal, new HarmonyMethod(TNH_HoldPointPatchDeletionBurstPrefix));
+            harmony.Patch(TNH_HoldPointPatchDeleteAllActiveEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteAllActiveEntitiesPrefix));
 
             // TNHWeaponCrateSpawnObjectsPatch
             MethodInfo TNH_WeaponCrateSpawnObjectsPatchOriginal = typeof(TNH_WeaponCrate).GetMethod("SpawnObjectsRaw", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -12487,6 +12495,26 @@ namespace H3MP
         static void SpawnTurretsPostfix()
         {
             inSpawnTurrets = false;
+        }
+
+        static bool DeletionBurstPrefix(TNH_HoldPoint __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            return Mod.currentTNHInstance == null || Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID;
+        }
+
+        static bool DeleteAllActiveEntitiesPrefix(TNH_HoldPoint __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            return Mod.currentTNHInstance == null || Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID;
         }
     }
 
