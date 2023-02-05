@@ -15,6 +15,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
+using static FistVR.RemoteGun;
 
 namespace H3MP
 {
@@ -1922,6 +1923,12 @@ namespace H3MP
 
             //harmony.Patch(setActivePatchOriginal, new HarmonyMethod(setActivePatchPrefix));
 
+            //// ChamberSetRound
+            //MethodInfo chamberSetRoundPatchOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool) }, null);
+            //MethodInfo chamberSetRoundPatchPrefix = typeof(ChamberSetRoundPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            //harmony.Patch(chamberSetRoundPatchOriginal, new HarmonyMethod(chamberSetRoundPatchPrefix));
+
             if (PatchVerify.writeWhenDone)
             {
                 File.WriteAllText("BepInEx/Plugins/H3MP/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
@@ -3026,6 +3033,15 @@ namespace H3MP
         }
     }
 
+    // DEBUG PATCH Patches FVRFireArmChamber.SetRound(FVRFireArmRound, bool)
+    class ChamberSetRoundPatch
+    {
+        static void Prefix(FVRFireArmRound round)
+        {
+            Mod.LogWarning("ChamberSetRound called with round type: "+ round.RoundType+", class: "+ round.RoundClass);
+        }
+    }
+
 #endregion
 
 #region Interaction Patches
@@ -3704,6 +3720,7 @@ namespace H3MP
         // Update override data
         public static bool fireSuccessful;
         public static FireArmRoundClass roundClass;
+        public static FireArmRoundType roundType;
 
         static void Prefix(FVRFireArmChamber chamber)
         {
@@ -3720,6 +3737,7 @@ namespace H3MP
             {
                 fireSuccessful = true;
                 roundClass = round.RoundClass;
+                roundType = round.RoundType;
             }
         }
 
@@ -3885,12 +3903,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, roundClass, positions, directions);
+                        H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, roundType, roundClass, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID, roundClass, positions, directions);
+                    H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID, roundType, roundClass, positions, directions);
                 }
             }
 
@@ -4111,6 +4129,7 @@ namespace H3MP
         static bool fireSucessful;
         static int curChamber;
         static FireArmRoundClass roundClass;
+        static FireArmRoundType roundType;
 
         static void Prefix(ref LAPD2019 __instance, bool ___m_isCapacitorCharged)
         {
@@ -4121,6 +4140,7 @@ namespace H3MP
             curChamber = __instance.CurChamber;
             if (__instance.Chambers[__instance.CurChamber].GetRound() != null)
             {
+                roundType = __instance.Chambers[__instance.CurChamber].GetRound().RoundType;
                 roundClass = __instance.Chambers[__instance.CurChamber].GetRound().RoundClass;
                 fireSucessful = true;
             }
@@ -4310,12 +4330,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.LAPD2019Fire(0, trackedItem.data.trackedID, curChamber, roundClass, positions, directions);
+                        H3MP_ServerSend.LAPD2019Fire(0, trackedItem.data.trackedID, curChamber, roundType, roundClass, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.LAPD2019Fire(trackedItem.data.trackedID, curChamber, roundClass, positions, directions);
+                    H3MP_ClientSend.LAPD2019Fire(trackedItem.data.trackedID, curChamber, roundType, roundClass, positions, directions);
                 }
             }
 
@@ -4532,6 +4552,7 @@ namespace H3MP
 
         // Update override data
         static bool fireSuccessful;
+        static FireArmRoundType roundType;
         static FireArmRoundClass roundClass;
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -4668,6 +4689,7 @@ namespace H3MP
             if(trackedItem != null && trackedItem.attachableFirearmGetChamberFunc().GetRound() != null)
             {
                 fireSuccessful = true;
+                roundType = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundType;
                 roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
             }
             else
@@ -4707,12 +4729,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.AttachableFirearmFire(0, trackedItem.data.trackedID, roundClass, firedFromInterface, positions, directions);
+                        H3MP_ServerSend.AttachableFirearmFire(0, trackedItem.data.trackedID, roundType, roundClass, firedFromInterface, positions, directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.AttachableFirearmFire(trackedItem.data.trackedID, roundClass, firedFromInterface, positions, directions);
+                    H3MP_ClientSend.AttachableFirearmFire(trackedItem.data.trackedID, roundType, roundClass, firedFromInterface, positions, directions);
                 }
             }
 
@@ -4761,12 +4783,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.RevolvingShotgunFire(0, trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                        H3MP_ServerSend.RevolvingShotgunFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.RevolvingShotgunFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    H3MP_ClientSend.RevolvingShotgunFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
                 }
             }
 
@@ -4815,12 +4837,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.RevolverFire(0, trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                        H3MP_ServerSend.RevolverFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.RevolverFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    H3MP_ClientSend.RevolverFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
                 }
             }
 
@@ -4869,12 +4891,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.SingleActionRevolverFire(0, trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                        H3MP_ServerSend.SingleActionRevolverFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.SingleActionRevolverFire(trackedItem.data.trackedID, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    H3MP_ClientSend.SingleActionRevolverFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
                 }
             }
 
@@ -4927,12 +4949,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.GrappleGunFire(0, trackedItem.data.trackedID, FirePatch.roundClass, preChamber, FirePatch.positions, FirePatch.directions);
+                        H3MP_ServerSend.GrappleGunFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, preChamber, FirePatch.positions, FirePatch.directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.GrappleGunFire(trackedItem.data.trackedID, FirePatch.roundClass, preChamber, FirePatch.positions, FirePatch.directions);
+                    H3MP_ClientSend.GrappleGunFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, preChamber, FirePatch.positions, FirePatch.directions);
                 }
             }
 
@@ -4981,12 +5003,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.DerringerFire(0, trackedItem.data.trackedID, FirePatch.roundClass, i, FirePatch.positions, FirePatch.directions);
+                        H3MP_ServerSend.DerringerFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, i, FirePatch.positions, FirePatch.directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.DerringerFire(trackedItem.data.trackedID, FirePatch.roundClass, i, FirePatch.positions, FirePatch.directions);
+                    H3MP_ClientSend.DerringerFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, i, FirePatch.positions, FirePatch.directions);
                 }
             }
 
@@ -5035,12 +5057,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.BreakActionWeaponFire(0, trackedItem.data.trackedID, FirePatch.roundClass, b, FirePatch.positions, FirePatch.directions);
+                        H3MP_ServerSend.BreakActionWeaponFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, b, FirePatch.positions, FirePatch.directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.BreakActionWeaponFire(trackedItem.data.trackedID, FirePatch.roundClass, b, FirePatch.positions, FirePatch.directions);
+                    H3MP_ClientSend.BreakActionWeaponFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, b, FirePatch.positions, FirePatch.directions);
                 }
             }
 
@@ -5102,12 +5124,12 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.LeverActionFirearmFire(0, trackedItem.data.trackedID, FirePatch.roundClass, hammer1, FirePatch.positions, FirePatch.directions);
+                        H3MP_ServerSend.LeverActionFirearmFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, hammer1, FirePatch.positions, FirePatch.directions);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.LeverActionFirearmFire(trackedItem.data.trackedID, FirePatch.roundClass, hammer1, FirePatch.positions, FirePatch.directions);
+                    H3MP_ClientSend.LeverActionFirearmFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, hammer1, FirePatch.positions, FirePatch.directions);
                 }
             }
 

@@ -584,11 +584,12 @@ namespace H3MP
             }
         }
 
-        public static void WeaponFire(int trackedID, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
+        public static void WeaponFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.weaponFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 if(positions == null || positions.Count == 0)
                 {
@@ -674,11 +675,12 @@ namespace H3MP
             }
         }
 
-        public static void BreakActionWeaponFire(int trackedID, FireArmRoundClass roundClass, int barrelIndex, List<Vector3> positions, List<Vector3> directions)
+        public static void BreakActionWeaponFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, int barrelIndex, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.breakActionWeaponFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 packet.Write((byte)barrelIndex);
                 if(positions == null || positions.Count == 0)
@@ -699,11 +701,12 @@ namespace H3MP
             }
         }
 
-        public static void DerringerFire(int trackedID, FireArmRoundClass roundClass, int barrelIndex, List<Vector3> positions, List<Vector3> directions)
+        public static void DerringerFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, int barrelIndex, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.derringerFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 packet.Write((byte)barrelIndex);
                 if(positions == null || positions.Count == 0)
@@ -724,11 +727,12 @@ namespace H3MP
             }
         }
 
-        public static void LeverActionFirearmFire(int trackedID, FireArmRoundClass roundClass, bool hammer1, List<Vector3> positions, List<Vector3> directions)
+        public static void LeverActionFirearmFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, bool hammer1, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.leverActionFirearmFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 packet.Write(hammer1);
                 if(positions == null || positions.Count == 0)
@@ -749,11 +753,12 @@ namespace H3MP
             }
         }
 
-        public static void RevolvingShotgunFire(int trackedID, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
+        public static void RevolvingShotgunFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.revolvingShotgunFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 packet.Write((byte)curChamber);
                 if(positions == null || positions.Count == 0)
@@ -774,11 +779,12 @@ namespace H3MP
             }
         }
 
-        public static void RevolverFire(int trackedID, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
+        public static void RevolverFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.revolverFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 packet.Write((byte)curChamber);
                 if(positions == null || positions.Count == 0)
@@ -799,11 +805,12 @@ namespace H3MP
             }
         }
 
-        public static void SingleActionRevolverFire(int trackedID, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
+        public static void SingleActionRevolverFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.singleActionRevolverFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 packet.Write((byte)curChamber);
                 if(positions == null || positions.Count == 0)
@@ -824,11 +831,12 @@ namespace H3MP
             }
         }
 
-        public static void GrappleGunFire(int trackedID, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
+        public static void GrappleGunFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, int curChamber, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.grappleGunFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 packet.Write((byte)curChamber);
                 if(positions == null || positions.Count == 0)
@@ -899,12 +907,13 @@ namespace H3MP
             }
         }
 
-        public static void LAPD2019Fire(int trackedID, int chamberIndex, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
+        public static void LAPD2019Fire(int trackedID, int chamberIndex, FireArmRoundType roundType, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.LAPD2019Fire))
             {
                 packet.Write(trackedID);
                 packet.Write(chamberIndex);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 if (positions == null || positions.Count == 0)
                 {
@@ -965,11 +974,12 @@ namespace H3MP
             }
         }
 
-        public static void AttachableFirearmFire(int trackedID, FireArmRoundClass roundClass, bool firedFromInterface, List<Vector3> positions, List<Vector3> directions)
+        public static void AttachableFirearmFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, bool firedFromInterface, List<Vector3> positions, List<Vector3> directions)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.attachableFirearmFire))
             {
                 packet.Write(trackedID);
+                packet.Write((short)roundType);
                 packet.Write((short)roundClass);
                 packet.Write(firedFromInterface);
                 if (positions == null || positions.Count == 0)

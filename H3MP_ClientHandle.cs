@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.VR.InteractionSystem;
+using static FistVR.RemoteGun;
 
 namespace H3MP
 {
@@ -465,6 +466,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 FirePatch.positions = new List<Vector3>();
                 FirePatch.directions = new List<Vector3>();
@@ -478,7 +480,7 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                H3MP_Client.items[trackedID].physicalItem.setFirearmUpdateOverride(roundClass);
+                H3MP_Client.items[trackedID].physicalItem.setFirearmUpdateOverride(roundType, roundClass);
                 H3MP_Client.items[trackedID].physicalItem.fireFunc();
             }
         }
@@ -571,6 +573,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 int barrelIndex = packet.ReadByte();
                 FirePatch.positions = new List<Vector3>();
@@ -586,7 +589,10 @@ namespace H3MP
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 BreakActionWeapon asBAW = H3MP_Client.items[trackedID].physicalItem.physicalObject as BreakActionWeapon;
+                FireArmRoundType prevRoundType = asBAW.Barrels[barrelIndex].Chamber.RoundType;
+                asBAW.Barrels[barrelIndex].Chamber.RoundType = roundType;
                 asBAW.Barrels[barrelIndex].Chamber.SetRound(roundClass, asBAW.Barrels[barrelIndex].Chamber.transform.position, asBAW.Barrels[barrelIndex].Chamber.transform.rotation);
+                asBAW.Barrels[barrelIndex].Chamber.RoundType = prevRoundType;
                 asBAW.Fire(barrelIndex, false, 0);
             }
         }
@@ -597,6 +603,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 int barrelIndex = packet.ReadByte();
                 FirePatch.positions = new List<Vector3>();
@@ -612,7 +619,10 @@ namespace H3MP
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 Derringer asDerringer = H3MP_Client.items[trackedID].physicalItem.physicalObject as Derringer;
+                FireArmRoundType prevRoundType = asDerringer.Barrels[barrelIndex].Chamber.RoundType;
+                asDerringer.Barrels[barrelIndex].Chamber.RoundType = roundType;
                 asDerringer.Barrels[barrelIndex].Chamber.SetRound(roundClass, asDerringer.Barrels[barrelIndex].Chamber.transform.position, asDerringer.Barrels[barrelIndex].Chamber.transform.rotation);
+                asDerringer.Barrels[barrelIndex].Chamber.RoundType = prevRoundType;
                 Mod.Derringer_m_curBarrel.SetValue(asDerringer, barrelIndex);
                 Mod.Derringer_FireBarrel.Invoke(asDerringer, new object[] { barrelIndex });
             }
@@ -624,6 +634,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 int curChamber = packet.ReadByte();
                 FirePatch.positions = new List<Vector3>();
@@ -640,7 +651,10 @@ namespace H3MP
                 ++Mod.skipNextFires;
                 RevolvingShotgun asRS = H3MP_Client.items[trackedID].physicalItem.physicalObject as RevolvingShotgun;
                 asRS.CurChamber = curChamber;
+                FireArmRoundType prevRoundType = asRS.Chambers[curChamber].RoundType;
+                asRS.Chambers[curChamber].RoundType = roundType;
                 asRS.Chambers[curChamber].SetRound(roundClass, asRS.Chambers[curChamber].transform.position, asRS.Chambers[curChamber].transform.rotation);
+                asRS.Chambers[curChamber].RoundType = prevRoundType;
                 Mod.RevolvingShotgun_Fire.Invoke(asRS, null);
             }
         }
@@ -651,6 +665,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 int curChamber = packet.ReadByte();
                 FirePatch.positions = new List<Vector3>();
@@ -675,7 +690,10 @@ namespace H3MP
                     asRevolver.ChamberOffset = 0;
                 }
                 asRevolver.CurChamber = curChamber;
+                FireArmRoundType prevRoundType = asRevolver.Chambers[curChamber].RoundType;
+                asRevolver.Chambers[curChamber].RoundType = roundType;
                 asRevolver.Chambers[curChamber].SetRound(roundClass, asRevolver.Chambers[curChamber].transform.position, asRevolver.Chambers[curChamber].transform.rotation);
+                asRevolver.Chambers[curChamber].RoundType = prevRoundType;
                 if (changedOffset)
                 {
                     asRevolver.ChamberOffset = oldOffset;
@@ -690,6 +708,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 int curChamber = packet.ReadByte();
                 FirePatch.positions = new List<Vector3>();
@@ -706,7 +725,10 @@ namespace H3MP
                 ++Mod.skipNextFires;
                 SingleActionRevolver asRevolver = H3MP_Client.items[trackedID].physicalItem.physicalObject as SingleActionRevolver;
                 asRevolver.CurChamber = curChamber;
+                FireArmRoundType prevRoundType = asRevolver.Cylinder.Chambers[curChamber].RoundType;
+                asRevolver.Cylinder.Chambers[curChamber].RoundType = roundType;
                 asRevolver.Cylinder.Chambers[curChamber].SetRound(roundClass, asRevolver.Cylinder.Chambers[curChamber].transform.position, asRevolver.Cylinder.Chambers[curChamber].transform.rotation);
+                asRevolver.Cylinder.Chambers[curChamber].RoundType = prevRoundType;
                 Mod.SingleActionRevolver_Fire.Invoke(asRevolver, null);
             }
         }
@@ -737,6 +759,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 int curChamber = packet.ReadByte();
                 FirePatch.positions = new List<Vector3>();
@@ -753,7 +776,10 @@ namespace H3MP
                 ++Mod.skipNextFires;
                 GrappleGun asGG = H3MP_Client.items[trackedID].physicalItem.physicalObject as GrappleGun;
                 Mod.GrappleGun_m_curChamber.SetValue(asGG, curChamber);
+                FireArmRoundType prevRoundType = asGG.Chambers[curChamber].RoundType;
+                asGG.Chambers[curChamber].RoundType = roundType;
                 asGG.Chambers[curChamber].SetRound(roundClass, asGG.Chambers[curChamber].transform.position, asGG.Chambers[curChamber].transform.rotation);
+                asGG.Chambers[curChamber].RoundType = prevRoundType;
                 asGG.Fire();
             }
         }
@@ -789,6 +815,7 @@ namespace H3MP
             // Update locally
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 bool hammer1 = packet.ReadBool();
                 FirePatch.positions = new List<Vector3>();
@@ -806,7 +833,10 @@ namespace H3MP
                 LeverActionFirearm asLAF = H3MP_Client.items[trackedID].physicalItem.dataObject as LeverActionFirearm;
                 if (hammer1)
                 {
+                    FireArmRoundType prevRoundType = asLAF.Chamber.RoundType;
+                    asLAF.Chamber.RoundType = roundType;
                     asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                    asLAF.Chamber.RoundType = prevRoundType;
                     Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, true);
                     Mod.LeverActionFirearm_Fire.Invoke(asLAF, null);
                 }
@@ -828,7 +858,10 @@ namespace H3MP
                         reChamberClass = asLAF.Chamber.GetRound().RoundClass;
                         asLAF.Chamber.SetRound(null);
                     }
+                    FireArmRoundType prevRoundType = asLAF.Chamber.RoundType;
+                    asLAF.Chamber2.RoundType = roundType;
                     asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                    asLAF.Chamber2.RoundType = prevRoundType;
                     Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, true);
                     Mod.LeverActionFirearm_Fire.Invoke(asLAF, null);
                     if (reCock)
@@ -880,6 +913,7 @@ namespace H3MP
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
                 int chamberIndex = packet.ReadInt();
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 FireLAPD2019Patch.positions = new List<Vector3>();
                 FireLAPD2019Patch.directions = new List<Vector3>();
@@ -895,7 +929,10 @@ namespace H3MP
                 ++Mod.skipNextFires;
                 LAPD2019 asLAPD2019 = H3MP_Client.items[trackedID].physicalItem.physicalObject as LAPD2019;
                 asLAPD2019.CurChamber = chamberIndex;
+                FireArmRoundType prevRoundType = asLAPD2019.Chambers[asLAPD2019.CurChamber].RoundType;
+                asLAPD2019.Chambers[asLAPD2019.CurChamber].RoundType = roundType;
                 asLAPD2019.Chambers[asLAPD2019.CurChamber].SetRound(roundClass, asLAPD2019.Chambers[asLAPD2019.CurChamber].transform.position, asLAPD2019.Chambers[asLAPD2019.CurChamber].transform.rotation);
+                asLAPD2019.Chambers[asLAPD2019.CurChamber].RoundType = prevRoundType;
                 Mod.LAPD2019_Fire.Invoke((LAPD2019)H3MP_Client.items[trackedID].physicalItem.physicalObject, null);
             }
         }
@@ -928,6 +965,7 @@ namespace H3MP
 
             if (H3MP_Client.items[trackedID].physicalItem != null)
             {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
                 bool firedFromInterface = packet.ReadBool();
                 FireAttachableFirearmPatch.positions = new List<Vector3>();
@@ -942,7 +980,7 @@ namespace H3MP
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                H3MP_Client.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundClass);
+                H3MP_Client.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundType, roundClass);
                 H3MP_Client.items[trackedID].physicalItem.attachableFirearmFireFunc(firedFromInterface);
             }
         }
