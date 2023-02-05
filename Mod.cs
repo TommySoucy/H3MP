@@ -2647,32 +2647,42 @@ namespace H3MP
 
         public static void SetKinematicRecursive(Transform root, bool value)
         {
-            Rigidbody rb = root.GetComponent<Rigidbody>();
-            if (rb != null)
+            // TODO: Review: We make the assumption that a rigidbody that is not active does not need to be managed
+            //               This is because of UberShatterable shards being inactive until the core is shattered
+            //               If we managed the shards' rigidbodies we would have set them as kinematic if not controlled
+            //               and once activated on shatter, that would remain because the game doesn't set kinematic or recover a rigidbody
+            //               to make them physical, it just enables them. By only managing active objects, we won't set them as kinematic
+            //               even if uncontrolled, then, once shattered, they will be activ as the game intends.
+            //               Will need to review to make sure this doesn't interfere with another process.
+            if (root.gameObject.activeSelf)
             {
-                H3MP_KinematicMarker marker = rb.GetComponent<H3MP_KinematicMarker>();
+                Rigidbody rb = root.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    H3MP_KinematicMarker marker = rb.GetComponent<H3MP_KinematicMarker>();
 
-                // If we want to make kinematic we can just set it and mark
-                if (value)
-                {
-                    if (marker == null)
+                    // If we want to make kinematic we can just set it and mark
+                    if (value)
                     {
-                        marker = rb.gameObject.AddComponent<H3MP_KinematicMarker>();
-                    }
-                    ++KinematicPatch.skip;
-                    rb.isKinematic = value;
-                    --KinematicPatch.skip;
-                }
-                else // If we don't want it kinematic, we only want to unset it on marked children, because unmarked were not set by us
-                {
-                    // For example, a piece of an item that is not a tracked item itself but is a child of a tracked item
-                    // got set to kinematic by the game, will have its marker destroyed so we don't set it to non kinematic
-                    if (marker != null)
-                    {
+                        if (marker == null)
+                        {
+                            marker = rb.gameObject.AddComponent<H3MP_KinematicMarker>();
+                        }
                         ++KinematicPatch.skip;
                         rb.isKinematic = value;
                         --KinematicPatch.skip;
-                        Destroy(marker);
+                    }
+                    else // If we don't want it kinematic, we only want to unset it on marked children, because unmarked were not set by us
+                    {
+                        // For example, a piece of an item that is not a tracked item itself but is a child of a tracked item
+                        // got set to kinematic by the game, will have its marker destroyed so we don't set it to non kinematic
+                        if (marker != null)
+                        {
+                            ++KinematicPatch.skip;
+                            rb.isKinematic = value;
+                            --KinematicPatch.skip;
+                            Destroy(marker);
+                        }
                     }
                 }
             }

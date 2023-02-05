@@ -580,9 +580,9 @@ namespace H3MP
         {
             otherTrackedItem.controller = newController;
 
-            if(children != null)
+            if(otherTrackedItem.children != null)
             {
-                foreach(H3MP_TrackedItemData child in children)
+                foreach(H3MP_TrackedItemData child in otherTrackedItem.children)
                 {
                     SetControllerRecursive(child, newController);
                 }
