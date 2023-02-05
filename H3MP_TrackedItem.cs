@@ -5916,7 +5916,7 @@ namespace H3MP
                 }
 
                 // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null)
+                if (mount != null && mount != asAttachment.curMount)
                 {
                     ++data.ignoreParentChanged;
                     if (asAttachment.curMount != null)
@@ -6042,8 +6042,8 @@ namespace H3MP
                     }
                 }
 
-                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null)
+                // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
+                if (mount != null && mount != asAttachment.curMount)
                 {
                     ++data.ignoreParentChanged;
                     if (asAttachment.curMount != null)
