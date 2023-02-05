@@ -1031,9 +1031,9 @@ namespace H3MP
                 for(int i=0; i< TNH_ManagerPatch.patrolPoints.Count; ++i)
                 {
                     int index = i * 12 + 9;
-                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].x);
-                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i+4].y);
-                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i+8].z);
+                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].x).CopyTo(trackedSosigData.data, index);
+                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].y).CopyTo(trackedSosigData.data, index + 4);
+                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].z).CopyTo(trackedSosigData.data, index + 8);
                 }
             }
         }

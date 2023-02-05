@@ -1290,7 +1290,6 @@ namespace H3MP
 
         public static void SosigDies(int sosigTrackedID, Damage.DamageClass damClass, Sosig.SosigDeathType deathType)
         {
-            Mod.LogInfo("Client sending sosig " + sosigTrackedID + " dies");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigDies))
             {
                 packet.Write(sosigTrackedID);
@@ -1303,7 +1302,6 @@ namespace H3MP
 
         public static void SosigClear(int sosigTrackedID)
         {
-            Mod.LogInfo("Client sending sosig " + sosigTrackedID + " clear");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigClear))
             {
                 packet.Write(sosigTrackedID);
@@ -1314,7 +1312,6 @@ namespace H3MP
 
         public static void SosigSetBodyState(int sosigTrackedID, Sosig.SosigBodyState s)
         {
-            Mod.LogInfo("Client sending sosig " + sosigTrackedID + " body state " + s);
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigSetBodyState))
             {
                 packet.Write(sosigTrackedID);
@@ -1363,7 +1360,6 @@ namespace H3MP
 
         public static void SosigVaporize(int sosigTrackedID, int iff)
         {
-            Mod.LogInfo("Client sending sosig " + sosigTrackedID + " vaporize");
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigVaporize))
             {
                 packet.Write(sosigTrackedID);
