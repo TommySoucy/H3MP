@@ -1318,7 +1318,7 @@ namespace H3MP
                                                                     itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
                 TNHInstances.Add(freeInstance, newInstance);
 
-                if ((newInstance.letPeopleJoin || newInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(freeInstance))
+                if ((newInstance.letPeopleJoin || newInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && Mod.joinTNHInstances != null && !Mod.joinTNHInstances.ContainsKey(freeInstance))
                 {
                     GameObject newInstanceElement = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
                     newInstanceElement.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
