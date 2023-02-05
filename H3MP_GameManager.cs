@@ -1383,7 +1383,7 @@ namespace H3MP
             }
             TNHInstances.Add(instance.instance, instance);
 
-            if ((instance.letPeopleJoin || instance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(instance.instance))
+            if ((instance.letPeopleJoin || instance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && Mod.joinTNHInstances != null && !Mod.joinTNHInstances.ContainsKey(instance.instance))
             {
                 GameObject newInstanceElement = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
                 newInstanceElement.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance.instance;
