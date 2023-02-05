@@ -1513,24 +1513,27 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[2];
+                data.data = new byte[4];
                 modified = true;
             }
 
             byte preval = data.data[0];
             byte preval0 = data.data[1];
+            byte preval1 = data.data[2];
+            byte preval2 = data.data[3];
 
             // Write chambered round class
             if (asMF2_RL.Chamber.GetRound() == null || asMF2_RL.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asMF2_RL.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asMF2_RL.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asMF2_RL.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
             }
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+            modified |= (preval != data.data[0] || preval0 != data.data[1] || preval1 != data.data[2] || preval2 != data.data[3]);
 
             return modified;
         }
@@ -1541,7 +1544,8 @@ namespace H3MP
             MF2_RL asMF2_RL = (MF2_RL)dataObject;
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 0);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asMF2_RL.Chamber.GetRound() != null)
@@ -1552,10 +1556,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asMF2_RL.Chamber.GetRound() == null || asMF2_RL.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asMF2_RL.Chamber.SetRound(roundClass, asMF2_RL.Chamber.transform.position, asMF2_RL.Chamber.transform.rotation);
+                    if (asMF2_RL.Chamber.RoundType == roundType)
+                    {
+                        asMF2_RL.Chamber.SetRound(roundClass, asMF2_RL.Chamber.transform.position, asMF2_RL.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asMF2_RL.Chamber.RoundType;
+                        asMF2_RL.Chamber.RoundType = roundType;
+                        asMF2_RL.Chamber.SetRound(roundClass, asMF2_RL.Chamber.transform.position, asMF2_RL.Chamber.transform.rotation);
+                        asMF2_RL.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -1634,7 +1649,7 @@ namespace H3MP
             SingleActionRevolver asRevolver = dataObject as SingleActionRevolver;
             bool modified = false;
 
-            int necessarySize = asRevolver.Cylinder.NumChambers * 2 + 2;
+            int necessarySize = asRevolver.Cylinder.NumChambers * 4 + 2;
 
             if (data.data == null)
             {
@@ -1658,22 +1673,27 @@ namespace H3MP
 
             // Write chambered rounds
             byte preval1;
+            byte preval2;
+            byte preval3;
             for (int i = 0; i < asRevolver.Cylinder.Chambers.Length; ++i)
             {
-                int firstIndex = i * 2 + 2;
+                int firstIndex = i * 4 + 2;
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
+                preval2 = data.data[firstIndex + 2];
+                preval3 = data.data[firstIndex + 3];
 
                 if (asRevolver.Cylinder.Chambers[i].GetRound() == null || asRevolver.Cylinder.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asRevolver.Cylinder.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asRevolver.Cylinder.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asRevolver.Cylinder.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
             }
 
             return modified;
@@ -1713,8 +1733,9 @@ namespace H3MP
             // Set chambers
             for (int i = 0; i < asRevolver.Cylinder.Chambers.Length; ++i)
             {
-                int firstIndex = i * 2 + 2;
-                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                int firstIndex = i * 4 + 2;
+                short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
                     if (asRevolver.Cylinder.Chambers[i].GetRound() != null)
@@ -1725,10 +1746,21 @@ namespace H3MP
                 }
                 else // We want a round in the chamber
                 {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                     FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                     if (asRevolver.Cylinder.Chambers[i].GetRound() == null || asRevolver.Cylinder.Chambers[i].GetRound().RoundClass != roundClass)
                     {
-                        asRevolver.Cylinder.Chambers[i].SetRound(roundClass, asRevolver.Cylinder.Chambers[i].transform.position, asRevolver.Cylinder.Chambers[i].transform.rotation);
+                        if (asRevolver.Cylinder.Chambers[i].RoundType == roundType)
+                        {
+                            asRevolver.Cylinder.Chambers[i].SetRound(roundClass, asRevolver.Cylinder.Chambers[i].transform.position, asRevolver.Cylinder.Chambers[i].transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asRevolver.Cylinder.Chambers[i].RoundType;
+                            asRevolver.Cylinder.Chambers[i].RoundType = roundType;
+                            asRevolver.Cylinder.Chambers[i].SetRound(roundClass, asRevolver.Cylinder.Chambers[i].transform.position, asRevolver.Cylinder.Chambers[i].transform.rotation);
+                            asRevolver.Cylinder.Chambers[i].RoundType = prevRoundType;
+                        }
                         modified = true;
                     }
                 }
@@ -1746,7 +1778,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[3];
+                data.data = new byte[5];
                 modified = true;
             }
 
@@ -1759,18 +1791,21 @@ namespace H3MP
 
             preval = data.data[1];
             byte preval0 = data.data[2];
+            byte preval1 = data.data[3];
+            byte preval2 = data.data[4];
 
             // Write chambered round class
             if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+            modified |= (preval != data.data[1] || preval0 != data.data[2] || preval1 != data.data[3] || preval2 != data.data[4]);
 
             return modified;
         }
@@ -1808,7 +1843,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 1);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asSimpleLauncher.Chamber.GetRound() != null)
@@ -1819,10 +1855,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+                    if (asSimpleLauncher.Chamber.RoundType == roundType)
+                    {
+                        asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asSimpleLauncher.Chamber.RoundType;
+                        asSimpleLauncher.Chamber.RoundType = roundType;
+                        asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+                        asSimpleLauncher.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -1865,24 +1912,27 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[2];
+                data.data = new byte[4];
                 modified = true;
             }
 
             byte preval = data.data[0];
             byte preval0 = data.data[1];
+            byte preval1 = data.data[2];
+            byte preval2 = data.data[3];
 
             // Write chambered round class
             if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
             }
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+            modified |= (preval != data.data[0] || preval0 != data.data[1] || preval1 != data.data[2] || preval2 != data.data[3]);
 
             return modified;
         }
@@ -1893,7 +1943,8 @@ namespace H3MP
             SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 0);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asSimpleLauncher.Chamber.GetRound() != null)
@@ -1904,10 +1955,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+                    if (asSimpleLauncher.Chamber.RoundType == roundType)
+                    {
+                        asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asSimpleLauncher.Chamber.RoundType;
+                        asSimpleLauncher.Chamber.RoundType = roundType;
+                        asSimpleLauncher.Chamber.SetRound(roundClass, asSimpleLauncher.Chamber.transform.position, asSimpleLauncher.Chamber.transform.rotation);
+                        asSimpleLauncher.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -1940,7 +2002,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[3];
+                data.data = new byte[5];
                 modified = true;
             }
 
@@ -1953,18 +2015,21 @@ namespace H3MP
 
             preval = data.data[1];
             byte preval0 = data.data[2];
+            byte preval1 = data.data[3];
+            byte preval2 = data.data[4];
 
             // Write chambered round class
             if (asRPG7.Chamber.GetRound() == null || asRPG7.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asRPG7.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asRPG7.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asRPG7.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+            modified |= (preval != data.data[1] || preval0 != data.data[2] || preval1 != data.data[3] || preval2 != data.data[4]);
 
             return modified;
         }
@@ -1992,7 +2057,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 1);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asRPG7.Chamber.GetRound() != null)
@@ -2003,10 +2069,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asRPG7.Chamber.GetRound() == null || asRPG7.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asRPG7.Chamber.SetRound(roundClass, asRPG7.Chamber.transform.position, asRPG7.Chamber.transform.rotation);
+                    if (asRPG7.Chamber.RoundType == roundType)
+                    {
+                        asRPG7.Chamber.SetRound(roundClass, asRPG7.Chamber.transform.position, asRPG7.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asRPG7.Chamber.RoundType;
+                        asRPG7.Chamber.RoundType = roundType;
+                        asRPG7.Chamber.SetRound(roundClass, asRPG7.Chamber.transform.position, asRPG7.Chamber.transform.rotation);
+                        asRPG7.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -2040,7 +2117,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[3];
+                data.data = new byte[5];
                 modified = true;
             }
 
@@ -2053,18 +2130,21 @@ namespace H3MP
 
             preval = data.data[1];
             byte preval0 = data.data[2];
+            byte preval1 = data.data[3];
+            byte preval2 = data.data[4];
 
             // Write chambered round class
             if (asRB.Chamber.GetRound() == null || asRB.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asRB.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asRB.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asRB.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+            modified |= (preval != data.data[1] || preval0 != data.data[2] || preval != data.data[3] || preval0 != data.data[4]);
 
             return modified;
         }
@@ -2092,7 +2172,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 1);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asRB.Chamber.GetRound() != null)
@@ -2103,10 +2184,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asRB.Chamber.GetRound() == null || asRB.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asRB.Chamber.SetRound(roundClass, asRB.Chamber.transform.position, asRB.Chamber.transform.rotation);
+                    if (asRB.Chamber.RoundType == roundType)
+                    {
+                        asRB.Chamber.SetRound(roundClass, asRB.Chamber.transform.position, asRB.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asRB.Chamber.RoundType;
+                        asRB.Chamber.RoundType = roundType;
+                        asRB.Chamber.SetRound(roundClass, asRB.Chamber.transform.position, asRB.Chamber.transform.rotation);
+                        asRB.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -2140,24 +2232,27 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[2];
+                data.data = new byte[4];
                 modified = true;
             }
 
             byte preval = data.data[0];
             byte preval0 = data.data[1];
+            byte preval1 = data.data[2];
+            byte preval2 = data.data[3];
 
             // Write chambered round class
             if (asRGM40.Chamber.GetRound() == null || asRGM40.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asRGM40.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asRGM40.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asRGM40.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
             }
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+            modified |= (preval != data.data[0] || preval0 != data.data[1] || preval1 != data.data[2] || preval2 != data.data[3]);
 
             return modified;
         }
@@ -2168,7 +2263,8 @@ namespace H3MP
             RGM40 asRGM40 = dataObject as RGM40;
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 0);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asRGM40.Chamber.GetRound() != null)
@@ -2179,10 +2275,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asRGM40.Chamber.GetRound() == null || asRGM40.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asRGM40.Chamber.SetRound(roundClass, asRGM40.Chamber.transform.position, asRGM40.Chamber.transform.rotation);
+                    if (asRGM40.Chamber.RoundType == roundType)
+                    {
+                        asRGM40.Chamber.SetRound(roundClass, asRGM40.Chamber.transform.position, asRGM40.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asRGM40.Chamber.RoundType;
+                        asRGM40.Chamber.RoundType = roundType;
+                        asRGM40.Chamber.SetRound(roundClass, asRGM40.Chamber.transform.position, asRGM40.Chamber.transform.rotation);
+                        asRGM40.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -2676,7 +2783,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[5];
+                data.data = new byte[6];
                 modified = true;
             }
 
@@ -2696,18 +2803,21 @@ namespace H3MP
 
             preval = data.data[2];
             byte preval0 = data.data[3];
+            byte preval1 = data.data[4];
+            byte preval2 = data.data[5];
 
             // Write chambered round class
             if (asOBR.Chamber.GetRound() == null || asOBR.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asOBR.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asOBR.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asOBR.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
 
             return modified;
         }
@@ -2744,7 +2854,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asOBR.Chamber.GetRound() != null)
@@ -2755,10 +2866,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asOBR.Chamber.GetRound() == null || asOBR.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+                    if (asOBR.Chamber.RoundType == roundType)
+                    {
+                        asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asOBR.Chamber.RoundType;
+                        asOBR.Chamber.RoundType = roundType;
+                        asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+                        asOBR.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -2785,7 +2907,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[4];
+                data.data = new byte[6];
                 modified = true;
             }
 
@@ -2806,17 +2928,20 @@ namespace H3MP
             // Write chambered rounds
             preval0 = data.data[2];
             byte preval1 = data.data[3];
+            byte preval2 = data.data[4];
+            byte preval3 = data.data[5];
 
             if (asHCB.Chamber.GetRound() == null || asHCB.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asHCB.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asHCB.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asHCB.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval0 != data.data[2] || preval1 != data.data[3]);
+            modified |= (preval0 != data.data[2] || preval1 != data.data[3] || preval2 != data.data[4] || preval3 != data.data[5]);
 
             return modified;
         }
@@ -2853,7 +2978,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asHCB.Chamber.GetRound() != null)
@@ -2864,10 +2990,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asHCB.Chamber.GetRound() == null || asHCB.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asHCB.Chamber.SetRound(roundClass, asHCB.Chamber.transform.position, asHCB.Chamber.transform.rotation);
+                    if (asHCB.Chamber.RoundType == roundType)
+                    {
+                        asHCB.Chamber.SetRound(roundClass, asHCB.Chamber.transform.position, asHCB.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asHCB.Chamber.RoundType;
+                        asHCB.Chamber.RoundType = roundType;
+                        asHCB.Chamber.SetRound(roundClass, asHCB.Chamber.transform.position, asHCB.Chamber.transform.rotation);
+                        asHCB.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -2882,7 +3019,7 @@ namespace H3MP
             GrappleGun asGG = dataObject as GrappleGun;
             bool modified = false;
 
-            int necessarySize = asGG.Chambers.Length * 2 + 2;
+            int necessarySize = asGG.Chambers.Length * 4 + 2;
 
             if (data.data == null)
             {
@@ -2906,22 +3043,27 @@ namespace H3MP
 
             // Write chambered rounds
             byte preval1;
+            byte preval2;
+            byte preval3;
             for (int i = 0; i < asGG.Chambers.Length; ++i)
             {
-                int firstIndex = i * 2 + 2;
+                int firstIndex = i * 4 + 2;
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
+                preval2 = data.data[firstIndex + 2];
+                preval3 = data.data[firstIndex + 3];
 
                 if (asGG.Chambers[i].GetRound() == null || asGG.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asGG.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asGG.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asGG.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
             }
 
             return modified;
@@ -2987,8 +3129,9 @@ namespace H3MP
             // Set chambers
             for (int i = 0; i < asGG.Chambers.Length; ++i)
             {
-                int firstIndex = i * 2 + 2;
-                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                int firstIndex = i * 4 + 2;
+                short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
                     if (asGG.Chambers[i].GetRound() != null)
@@ -2999,10 +3142,21 @@ namespace H3MP
                 }
                 else // We want a round in the chamber
                 {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                     FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                     if (asGG.Chambers[i].GetRound() == null || asGG.Chambers[i].GetRound().RoundClass != roundClass)
                     {
-                        asGG.Chambers[i].SetRound(roundClass, asGG.Chambers[i].transform.position, asGG.Chambers[i].transform.rotation);
+                        if (asGG.Chambers[i].RoundType == roundType)
+                        {
+                            asGG.Chambers[i].SetRound(roundClass, asGG.Chambers[i].transform.position, asGG.Chambers[i].transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asGG.Chambers[i].RoundType;
+                            asGG.Chambers[i].RoundType = roundType;
+                            asGG.Chambers[i].SetRound(roundClass, asGG.Chambers[i].transform.position, asGG.Chambers[i].transform.rotation);
+                            asGG.Chambers[i].RoundType = prevRoundType;
+                        }
                         modified = true;
                     }
                 }
@@ -3201,7 +3355,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[3];
+                data.data = new byte[5];
                 modified = true;
             }
 
@@ -3218,11 +3372,12 @@ namespace H3MP
             // Write chambered round class
             if (asFG.Chamber.GetRound() == null || asFG.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asFG.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asFG.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asFG.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
             }
 
             modified |= (preval != data.data[1] || preval0 != data.data[2]);
@@ -3243,7 +3398,8 @@ namespace H3MP
             modified |= preVal ^ (newData[0] == 1);
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 1);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asFG.Chamber.GetRound() != null)
@@ -3254,10 +3410,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asFG.Chamber.GetRound() == null || asFG.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asFG.Chamber.SetRound(roundClass, asFG.Chamber.transform.position, asFG.Chamber.transform.rotation);
+                    if (asFG.Chamber.RoundType == roundType)
+                    {
+                        asFG.Chamber.SetRound(roundClass, asFG.Chamber.transform.position, asFG.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asFG.Chamber.RoundType;
+                        asFG.Chamber.RoundType = roundType;
+                        asFG.Chamber.SetRound(roundClass, asFG.Chamber.transform.position, asFG.Chamber.transform.rotation);
+                        asFG.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -3356,55 +3523,61 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[6];
+                data.data = new byte[10];
                 modified = true;
             }
 
             // Write chamber round
             byte preval0 = data.data[0];
             byte preval1 = data.data[1];
+            byte preval2 = data.data[2];
+            byte preval3 = data.data[3];
 
             if (asLAF.Chamber.GetRound() == null || asLAF.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asLAF.Chamber.GetRound().RoundClass).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asLAF.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asLAF.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
             }
 
-            modified |= (preval0 != data.data[0] || preval1 != data.data[1]);
+            modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
 
             // Write hammer state
-            preval0 = data.data[2];
+            preval0 = data.data[4];
 
-            data.data[2] = asLAF.IsHammerCocked ? (byte)1 : (byte)0;
+            data.data[4] = asLAF.IsHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[2];
+            modified |= preval0 != data.data[4];
 
             if (asLAF.UsesSecondChamber)
             {
                 // Write chamber2 round
-                preval0 = data.data[3];
-                preval1 = data.data[4];
+                preval0 = data.data[5];
+                preval1 = data.data[6];
+                preval2 = data.data[7];
+                preval3 = data.data[8];
 
                 if (asLAF.Chamber2.GetRound() == null || asLAF.Chamber2.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 7);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(data.data, 3);
+                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(data.data, 5);
+                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(data.data, 7);
                 }
 
-                modified |= (preval0 != data.data[3] || preval1 != data.data[4]);
+                modified |= (preval0 != data.data[5] || preval1 != data.data[6] || preval2 != data.data[7] || preval3 != data.data[8]);
 
                 // Write hammer2 state
-                preval0 = data.data[5];
+                preval0 = data.data[9];
 
-                data.data[5] = ((bool)Mod.LeverActionFirearm_m_isHammerCocked2.GetValue(asLAF)) ? (byte)1 : (byte)0;
+                data.data[9] = ((bool)Mod.LeverActionFirearm_m_isHammerCocked2.GetValue(asLAF)) ? (byte)1 : (byte)0;
 
-                modified |= preval0 != data.data[5];
+                modified |= preval0 != data.data[9];
             }
 
             return modified;
@@ -3416,7 +3589,8 @@ namespace H3MP
             LeverActionFirearm asLAF = dataObject as LeverActionFirearm;
 
             // Set chamber round
-            short chamberClassIndex = BitConverter.ToInt16(newData, 0);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 0);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asLAF.Chamber.GetRound() != null)
@@ -3427,21 +3601,33 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asLAF.Chamber.GetRound() == null || asLAF.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                    if (asLAF.Chamber.RoundType == roundType)
+                    {
+                        asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asLAF.Chamber.RoundType;
+                        asLAF.Chamber.RoundType = roundType;
+                        asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                        asLAF.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
 
             // Set hammer state
-            Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, newData[0] == 1);
+            Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, newData[4] == 1);
 
             if (asLAF.UsesSecondChamber)
             {
                 // Set chamber2 round
-                chamberClassIndex = BitConverter.ToInt16(newData, 3);
+                chamberTypeIndex = BitConverter.ToInt16(newData, 5);
+                chamberClassIndex = BitConverter.ToInt16(newData, 7);
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
                     if (asLAF.Chamber2.GetRound() != null)
@@ -3452,16 +3638,27 @@ namespace H3MP
                 }
                 else // We want a round in the chamber
                 {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                     FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                     if (asLAF.Chamber2.GetRound() == null || asLAF.Chamber2.GetRound().RoundClass != roundClass)
                     {
-                        asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                        if (asLAF.Chamber2.RoundType == roundType)
+                        {
+                            asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asLAF.Chamber2.RoundType;
+                            asLAF.Chamber2.RoundType = roundType;
+                            asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                            asLAF.Chamber2.RoundType = prevRoundType;
+                        }
                         modified = true;
                     }
                 }
 
                 // Set hammer2 state
-                Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, newData[5] == 1);
+                Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, newData[9] == 1);
             }
 
             data.data = newData;
@@ -3474,7 +3671,7 @@ namespace H3MP
             Derringer asDerringer = dataObject as Derringer;
             bool modified = false;
 
-            int necessarySize = asDerringer.Barrels.Count * 2 + 1;
+            int necessarySize = asDerringer.Barrels.Count * 4 + 1;
 
             if (data.data == null)
             {
@@ -3491,23 +3688,28 @@ namespace H3MP
 
             // Write chambered rounds
             byte preval1;
+            byte preval2;
+            byte preval3;
             for (int i = 0; i < asDerringer.Barrels.Count; ++i)
             {
                 // Write chambered round
-                int firstIndex = i * 2 + 1;
+                int firstIndex = i * 4 + 1;
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
+                preval2 = data.data[firstIndex + 2];
+                preval3 = data.data[firstIndex + 3];
 
                 if (asDerringer.Barrels[i].Chamber.GetRound() == null || asDerringer.Barrels[i].Chamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asDerringer.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asDerringer.Barrels[i].Chamber.GetRound().RoundType).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asDerringer.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
             }
 
             return modified;
@@ -3550,8 +3752,9 @@ namespace H3MP
             // Set barrels
             for (int i = 0; i < asDerringer.Barrels.Count; ++i)
             {
-                int firstIndex = i * 2 + 1;
-                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                int firstIndex = i * 4 + 1;
+                short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
                     if (asDerringer.Barrels[i].Chamber.GetRound() != null)
@@ -3562,10 +3765,21 @@ namespace H3MP
                 }
                 else // We want a round in the chamber
                 {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                     FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                     if (asDerringer.Barrels[i].Chamber.GetRound() == null || asDerringer.Barrels[i].Chamber.GetRound().RoundClass != roundClass)
                     {
-                        asDerringer.Barrels[i].Chamber.SetRound(roundClass, asDerringer.Barrels[i].Chamber.transform.position, asDerringer.Barrels[i].Chamber.transform.rotation);
+                        if (asDerringer.Barrels[i].Chamber.RoundType == roundType)
+                        {
+                            asDerringer.Barrels[i].Chamber.SetRound(roundClass, asDerringer.Barrels[i].Chamber.transform.position, asDerringer.Barrels[i].Chamber.transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asDerringer.Barrels[i].Chamber.RoundType;
+                            asDerringer.Barrels[i].Chamber.RoundType = roundType;
+                            asDerringer.Barrels[i].Chamber.SetRound(roundClass, asDerringer.Barrels[i].Chamber.transform.position, asDerringer.Barrels[i].Chamber.transform.rotation);
+                            asDerringer.Barrels[i].Chamber.RoundType = prevRoundType;
+                        }
                         modified = true;
                     }
                 }
@@ -3581,7 +3795,7 @@ namespace H3MP
             BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
             bool modified = false;
 
-            int necessarySize = asBreakActionWeapon.Barrels.Length * 3;
+            int necessarySize = asBreakActionWeapon.Barrels.Length * 5;
 
             if (data.data == null)
             {
@@ -3592,30 +3806,35 @@ namespace H3MP
             // Write chambered rounds
             byte preval0;
             byte preval1;
+            byte preval2;
+            byte preval3;
             for (int i = 0; i < asBreakActionWeapon.Barrels.Length; ++i)
             {
                 // Write chambered round
-                int firstIndex = i * 3;
+                int firstIndex = i * 5;
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
+                preval2 = data.data[firstIndex + 2];
+                preval3 = data.data[firstIndex + 3];
 
                 if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null || asBreakActionWeapon.Barrels[i].Chamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundType).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
 
                 // Write hammer state
-                preval0 = data.data[firstIndex + 2];
+                preval0 = data.data[firstIndex + 4];
 
-                data.data[firstIndex + 2] = asBreakActionWeapon.Barrels[i].m_isHammerCocked ? (byte)1 : (byte)0;
+                data.data[firstIndex + 4] = asBreakActionWeapon.Barrels[i].m_isHammerCocked ? (byte)1 : (byte)0;
 
-                modified |= preval0 != data.data[firstIndex + 2];
+                modified |= preval0 != data.data[firstIndex + 4];
             }
 
             return modified;
@@ -3629,8 +3848,9 @@ namespace H3MP
             // Set barrels
             for (int i = 0; i < asBreakActionWeapon.Barrels.Length; ++i)
             {
-                int firstIndex = i * 3;
-                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                int firstIndex = i * 5;
+                short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
                     if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() != null)
@@ -3641,15 +3861,26 @@ namespace H3MP
                 }
                 else // We want a round in the chamber
                 {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                     FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                     if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null || asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundClass != roundClass)
                     {
-                        asBreakActionWeapon.Barrels[i].Chamber.SetRound(roundClass, asBreakActionWeapon.Barrels[i].Chamber.transform.position, asBreakActionWeapon.Barrels[i].Chamber.transform.rotation);
+                        if (asBreakActionWeapon.Barrels[i].Chamber.RoundType == roundType)
+                        {
+                            asBreakActionWeapon.Barrels[i].Chamber.SetRound(roundClass, asBreakActionWeapon.Barrels[i].Chamber.transform.position, asBreakActionWeapon.Barrels[i].Chamber.transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asBreakActionWeapon.Barrels[i].Chamber.RoundType;
+                            asBreakActionWeapon.Barrels[i].Chamber.RoundType = roundType;
+                            asBreakActionWeapon.Barrels[i].Chamber.SetRound(roundClass, asBreakActionWeapon.Barrels[i].Chamber.transform.position, asBreakActionWeapon.Barrels[i].Chamber.transform.rotation);
+                            asBreakActionWeapon.Barrels[i].Chamber.RoundType = prevRoundType;
+                        }
                         modified = true;
                     }
                 }
 
-                asBreakActionWeapon.Barrels[i].m_isHammerCocked = newData[firstIndex + 2] == 1;
+                asBreakActionWeapon.Barrels[i].m_isHammerCocked = newData[firstIndex + 4] == 1;
             }
 
             data.data = newData;
@@ -3664,7 +3895,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[4];
+                data.data = new byte[6];
                 modified = true;
             }
 
@@ -3684,18 +3915,21 @@ namespace H3MP
 
             preval = data.data[2];
             byte preval0 = data.data[3];
+            byte preval1 = data.data[4];
+            byte preval2 = data.data[5];
 
             // Write chambered round class
             if (asBAP.Chamber.GetRound() == null || asBAP.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asBAP.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asBAP.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asBAP.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
 
             return modified;
         }
@@ -3741,7 +3975,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asBAP.Chamber.GetRound() != null)
@@ -3752,10 +3987,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asBAP.Chamber.GetRound() == null || asBAP.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+                    if (asBAP.Chamber.RoundType == roundType)
+                    {
+                        asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asBAP.Chamber.RoundType;
+                        asBAP.Chamber.RoundType = roundType;
+                        asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+                        asBAP.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -3780,7 +4026,7 @@ namespace H3MP
             RevolvingShotgun asRS = dataObject as RevolvingShotgun;
             bool modified = false;
 
-            int necessarySize = asRS.Chambers.Length * 2 + 2;
+            int necessarySize = asRS.Chambers.Length * 4 + 2;
 
             if (data.data == null)
             {
@@ -3804,22 +4050,27 @@ namespace H3MP
 
             // Write chambered rounds
             byte preval1;
+            byte preval2;
+            byte preval3;
             for (int i = 0; i < asRS.Chambers.Length; ++i)
             {
-                int firstIndex = i * 2 + 2;
+                int firstIndex = i * 4 + 2;
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
+                preval2 = data.data[firstIndex + 2];
+                preval3 = data.data[firstIndex + 3];
 
                 if (asRS.Chambers[i].GetRound() == null || asRS.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asRS.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asRS.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asRS.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
             }
 
             return modified;
@@ -3891,8 +4142,9 @@ namespace H3MP
             // Set chambers
             for (int i = 0; i < asRS.Chambers.Length; ++i)
             {
-                int firstIndex = i * 2 + 2;
-                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                int firstIndex = i * 4 + 2;
+                short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
                     if (asRS.Chambers[i].GetRound() != null)
@@ -3903,10 +4155,21 @@ namespace H3MP
                 }
                 else // We want a round in the chamber
                 {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                     FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                     if (asRS.Chambers[i].GetRound() == null || asRS.Chambers[i].GetRound().RoundClass != roundClass)
                     {
-                        asRS.Chambers[i].SetRound(roundClass, asRS.Chambers[i].transform.position, asRS.Chambers[i].transform.rotation);
+                        if (asRS.Chambers[i].RoundType == roundType)
+                        {
+                            asRS.Chambers[i].SetRound(roundClass, asRS.Chambers[i].transform.position, asRS.Chambers[i].transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asRS.Chambers[i].RoundType;
+                            asRS.Chambers[i].RoundType = roundType;
+                            asRS.Chambers[i].SetRound(roundClass, asRS.Chambers[i].transform.position, asRS.Chambers[i].transform.rotation);
+                            asRS.Chambers[i].RoundType = prevRoundType;
+                        }
                         modified = true;
                     }
                 }
@@ -3922,7 +4185,7 @@ namespace H3MP
             Revolver asRevolver = dataObject as Revolver;
             bool modified = false;
 
-            int necessarySize = asRevolver.Cylinder.numChambers * 2 + 1;
+            int necessarySize = asRevolver.Cylinder.numChambers * 4 + 1;
 
             if (data.data == null)
             {
@@ -3939,22 +4202,27 @@ namespace H3MP
 
             // Write chambered rounds
             byte preval1;
+            byte preval2;
+            byte preval3;
             for (int i = 0; i < asRevolver.Chambers.Length; ++i)
             {
-                int firstIndex = i * 2 + 1;
+                int firstIndex = i * 4 + 1;
                 preval0 = data.data[firstIndex];
                 preval1 = data.data[firstIndex + 1];
+                preval2 = data.data[firstIndex + 2];
+                preval3 = data.data[firstIndex + 3];
 
                 if (asRevolver.Chambers[i].GetRound() == null || asRevolver.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asRevolver.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asRevolver.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asRevolver.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1]);
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
             }
 
             return modified;
@@ -3985,8 +4253,9 @@ namespace H3MP
             // Set chambers
             for (int i = 0; i < asRevolver.Chambers.Length; ++i)
             {
-                int firstIndex = i * 2 + 1;
-                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex);
+                int firstIndex = i * 4 + 1;
+                short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
                     if (asRevolver.Chambers[i].GetRound() != null)
@@ -3997,10 +4266,21 @@ namespace H3MP
                 }
                 else // We want a round in the chamber
                 {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                     FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                     if (asRevolver.Chambers[i].GetRound() == null || asRevolver.Chambers[i].GetRound().RoundClass != roundClass)
                     {
-                        asRevolver.Chambers[i].SetRound(roundClass, asRevolver.Chambers[i].transform.position, asRevolver.Chambers[i].transform.rotation);
+                        if (asRevolver.Chambers[i].RoundType == roundType)
+                        {
+                            asRevolver.Chambers[i].SetRound(roundClass, asRevolver.Chambers[i].transform.position, asRevolver.Chambers[i].transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asRevolver.Chambers[i].RoundType;
+                            asRevolver.Chambers[i].RoundType = roundType;
+                            asRevolver.Chambers[i].SetRound(roundClass, asRevolver.Chambers[i].transform.position, asRevolver.Chambers[i].transform.rotation);
+                            asRevolver.Chambers[i].RoundType = prevRoundType;
+                        }
                         modified = true;
                     }
                 }
@@ -4018,7 +4298,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[3];
+                data.data = new byte[5];
                 modified = true;
             }
 
@@ -4051,18 +4331,21 @@ namespace H3MP
 
             byte preval = data.data[1];
             byte preval0 = data.data[2];
+            byte preval1 = data.data[3];
+            byte preval2 = data.data[4];
 
             // Write chambered round class
             if (asM203.Chamber.GetRound() == null || asM203.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+            modified |= (preval != data.data[1] || preval0 != data.data[2] || preval1 != data.data[3] || preval2 != data.data[4]);
 
             return modified;
         }
@@ -4131,7 +4414,8 @@ namespace H3MP
             modified |= preMountIndex != currentMountIndex;
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 1);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 1);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asM203.Chamber.GetRound() != null)
@@ -4142,10 +4426,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asM203.Chamber.GetRound() == null || asM203.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
+                    if (asM203.Chamber.RoundType == roundType)
+                    {
+                        asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asM203.Chamber.RoundType;
+                        asM203.Chamber.RoundType = roundType;
+                        asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
+                        asM203.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -4177,7 +4472,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[4];
+                data.data = new byte[6];
                 modified = true;
             }
 
@@ -4217,18 +4512,21 @@ namespace H3MP
 
             preval = data.data[2];
             byte preval0 = data.data[3];
+            byte preval1 = data.data[4];
+            byte preval2 = data.data[5];
 
             // Write chambered round class
             if (asGP25.Chamber.GetRound() == null || asGP25.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
 
             return modified;
         }
@@ -4314,7 +4612,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asGP25.Chamber.GetRound() != null)
@@ -4325,10 +4624,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asGP25.Chamber.GetRound() == null || asGP25.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+                    if (asGP25.Chamber.RoundType == roundType)
+                    {
+                        asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asGP25.Chamber.RoundType;
+                        asGP25.Chamber.RoundType = roundType;
+                        asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+                        asGP25.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -4360,7 +4670,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[7];
+                data.data = new byte[9];
                 modified = true;
             }
 
@@ -4407,34 +4717,37 @@ namespace H3MP
 
             preval = data.data[3];
             byte preval0 = data.data[4];
+            byte preval1 = data.data[5];
+            byte preval2 = data.data[6];
 
             // Write chambered round class
             if (asATF.Chamber.GetRound() == null || asATF.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 5);
             }
             else
             {
-                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundType).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundClass).CopyTo(data.data, 5);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4]);
+            modified |= (preval != data.data[3] || preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6]);
 
-            preval = data.data[5];
+            preval = data.data[7];
 
             // Write bolt handle pos
-            data.data[5] = (byte)asATF.Bolt.CurPos;
+            data.data[7] = (byte)asATF.Bolt.CurPos;
 
-            modified |= preval != data.data[5];
+            modified |= preval != data.data[7];
 
             if (asATF.HasHandle)
             {
-                preval = data.data[6];
+                preval = data.data[8];
 
                 // Write bolt handle pos
-                data.data[6] = (byte)asATF.Handle.CurPos;
+                data.data[8] = (byte)asATF.Handle.CurPos;
 
-                modified |= preval != data.data[6];
+                modified |= preval != data.data[8];
             }
 
             return modified;
@@ -4515,13 +4828,13 @@ namespace H3MP
 
                 // Set bolt pos
                 asATF.Bolt.LastPos = asATF.Bolt.CurPos;
-                asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[5];
+                asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[7];
 
                 if (asATF.HasHandle)
                 {
                     // Set handle pos
                     asATF.Handle.LastPos = asATF.Handle.CurPos;
-                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[6];
+                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[8];
                 }
             }
             else
@@ -4532,17 +4845,17 @@ namespace H3MP
                     asATF.ToggleSafety();
                     modified = true;
                 }
-                if (data.data[4] != newData[5])
+                if (data.data[7] != newData[7])
                 {
                     // Set bolt pos
                     asATF.Bolt.LastPos = asATF.Bolt.CurPos;
-                    asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[5];
+                    asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[7];
                 }
-                if (asATF.HasHandle && data.data[6] != newData[6])
+                if (asATF.HasHandle && data.data[8] != newData[8])
                 {
                     // Set handle pos
                     asATF.Handle.LastPos = asATF.Handle.CurPos;
-                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[6];
+                    asATF.Handle.CurPos = (AttachableTubeFedFore.BoltPos)newData[8];
                 }
             }
 
@@ -4565,7 +4878,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 3);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 5);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asATF.Chamber.GetRound() != null)
@@ -4576,10 +4890,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asATF.Chamber.GetRound() == null || asATF.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
+                    if (asATF.Chamber.RoundType == roundType)
+                    {
+                        asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asATF.Chamber.RoundType;
+                        asATF.Chamber.RoundType = roundType;
+                        asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
+                        asATF.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -4611,7 +4936,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[6];
+                data.data = new byte[8];
                 modified = true;
             }
 
@@ -4665,18 +4990,21 @@ namespace H3MP
 
             preval = data.data[4];
             byte preval0 = data.data[5];
+            byte preval1 = data.data[6];
+            byte preval2 = data.data[7];
 
             // Write chambered round class
             if (asACBW.Chamber.GetRound() == null || asACBW.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 6);
             }
             else
             {
-                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundType).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 6);
             }
 
-            modified |= (preval != data.data[4] || preval0 != data.data[5]);
+            modified |= (preval != data.data[4] || preval0 != data.data[5] || preval1 != data.data[5] || preval2 != data.data[6]);
 
             return modified;
         }
@@ -4789,7 +5117,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 4);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 6);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asACBW.Chamber.GetRound() != null)
@@ -4800,10 +5129,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asACBW.Chamber.GetRound() == null || asACBW.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
+                    if (asACBW.Chamber.RoundType == roundType)
+                    {
+                        asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asACBW.Chamber.RoundType;
+                        asACBW.Chamber.RoundType = roundType;
+                        asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
+                        asACBW.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -4835,7 +5175,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[4];
+                data.data = new byte[6];
                 modified = true;
             }
 
@@ -4875,18 +5215,21 @@ namespace H3MP
 
             preval = data.data[2];
             byte preval0 = data.data[3];
+            byte preval1 = data.data[4];
+            byte preval2 = data.data[5];
 
             // Write chambered round class
             if (asABA.Chamber.GetRound() == null || asABA.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
 
             return modified;
         }
@@ -4965,7 +5308,8 @@ namespace H3MP
             Mod.AttachableBreakActions_m_isBreachOpen.SetValue(asABA, newVal);
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asABA.Chamber.GetRound() != null)
@@ -4976,10 +5320,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asABA.Chamber.GetRound() == null || asABA.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
+                    if (asABA.Chamber.RoundType == roundType)
+                    {
+                        asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asABA.Chamber.RoundType;
+                        asABA.Chamber.RoundType = roundType;
+                        asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
+                        asABA.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -5114,7 +5469,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[15];
+                data.data = new byte[26];
                 modified = true;
             }
 
@@ -5126,41 +5481,46 @@ namespace H3MP
             modified |= preval != data.data[0];
 
             byte preval0;
+            byte preval1;
+            byte preval2;
 
             // Write chambered round classes
             for(int i=0; i < 5; ++i)
             {
-                int firstIndex = i * 2 + 1;
+                int firstIndex = i * 4 + 1;
                 preval = data.data[firstIndex];
                 preval0 = data.data[firstIndex + 1];
+                preval1 = data.data[firstIndex + 2];
+                preval2 = data.data[firstIndex + 3];
                 if (asLAPD2019.Chambers[i].GetRound() == null || asLAPD2019.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asLAPD2019.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asLAPD2019.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asLAPD2019.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
                 }
 
-                modified |= (preval != data.data[firstIndex] || preval0 != data.data[firstIndex + 1]);
+                modified |= (preval != data.data[firstIndex] || preval0 != data.data[firstIndex + 1] || preval1 != data.data[firstIndex + 2] || preval2 != data.data[firstIndex + 3]);
             }
 
-            preval = data.data[11];
-            preval0 = data.data[12];
-            byte preval1 = data.data[13];
-            byte preval2 = data.data[14];
+            preval = data.data[21];
+            preval0 = data.data[22];
+            preval1 = data.data[23];
+            preval2 = data.data[24];
 
             // Write capacitor charge
-            BitConverter.GetBytes((float)Mod.LAPD2019_m_capacitorCharge.GetValue(asLAPD2019)).CopyTo(data.data, 11);
+            BitConverter.GetBytes((float)Mod.LAPD2019_m_capacitorCharge.GetValue(asLAPD2019)).CopyTo(data.data, 21);
 
-            modified |= (preval != data.data[11] || preval0 != data.data[12] || preval1 != data.data[13] || preval2 != data.data[14]);
+            modified |= (preval != data.data[21] || preval0 != data.data[22] || preval1 != data.data[23] || preval2 != data.data[24]);
 
-            preval = data.data[15];
+            preval = data.data[25];
 
             // Write capacitor charged
-            data.data[15] = (bool)Mod.LAPD2019_m_isCapacitorCharged.GetValue(asLAPD2019) ? (byte)1 : (byte)0;
+            data.data[25] = (bool)Mod.LAPD2019_m_isCapacitorCharged.GetValue(asLAPD2019) ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[15];
+            modified |= preval != data.data[25];
 
             return modified;
         }
@@ -5178,10 +5538,10 @@ namespace H3MP
                 asLAPD2019.CurChamber = newData[0];
 
                 // Set capacitor charge
-                Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, BitConverter.ToSingle(newData, 11));
+                Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, BitConverter.ToSingle(newData, 21));
 
                 // Set capacitor charged
-                Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, newData[15] == 1);
+                Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, newData[25] == 1);
             }
             else
             {
@@ -5191,16 +5551,16 @@ namespace H3MP
                     asLAPD2019.CurChamber = newData[0];
                     modified = true;
                 }
-                if (data.data[11] != newData[11] || data.data[12] != newData[12] || data.data[13] != newData[13] || data.data[14] != newData[14])
+                if (data.data[21] != newData[21] || data.data[22] != newData[22] || data.data[23] != newData[23] || data.data[24] != newData[24])
                 {
                     // Set capacitor charge
-                    Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, BitConverter.ToSingle(newData, 11));
+                    Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, BitConverter.ToSingle(newData, 21));
                     modified = true;
                 }
-                if (data.data[15] != newData[15])
+                if (data.data[25] != newData[25])
                 {
                     // Set capacitor charged
-                    Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, newData[15] == 1);
+                    Mod.LAPD2019_m_capacitorCharge.SetValue(asLAPD2019, newData[25] == 1);
                     modified = true;
                 }
             }
@@ -5208,7 +5568,8 @@ namespace H3MP
             // Set chambers
             for (int i = 0; i < 5; ++i)
             {
-                short chamberClassIndex = BitConverter.ToInt16(newData, i * 2 + 1);
+                short chamberTypeIndex = BitConverter.ToInt16(newData, i * 4 + 1);
+                short chamberClassIndex = BitConverter.ToInt16(newData, i * 4 + 3);
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
                     if (asLAPD2019.Chambers[i].GetRound() != null)
@@ -5219,10 +5580,21 @@ namespace H3MP
                 }
                 else // We want a round in the chamber
                 {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                     FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                     if (asLAPD2019.Chambers[i].GetRound() == null || asLAPD2019.Chambers[i].GetRound().RoundClass != roundClass)
                     {
-                        asLAPD2019.Chambers[i].SetRound(roundClass, asLAPD2019.Chambers[i].transform.position, asLAPD2019.Chambers[i].transform.rotation);
+                        if (asLAPD2019.Chambers[i].RoundType == roundType)
+                        {
+                            asLAPD2019.Chambers[i].SetRound(roundClass, asLAPD2019.Chambers[i].transform.position, asLAPD2019.Chambers[i].transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asLAPD2019.Chambers[i].RoundType;
+                            asLAPD2019.Chambers[i].RoundType = roundType;
+                            asLAPD2019.Chambers[i].SetRound(roundClass, asLAPD2019.Chambers[i].transform.position, asLAPD2019.Chambers[i].transform.rotation);
+                            asLAPD2019.Chambers[i].RoundType = prevRoundType;
+                        }
                         modified = true;
                     }
                 }
@@ -5305,7 +5677,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[5];
+                data.data = new byte[7];
                 modified = true;
             }
 
@@ -5332,18 +5704,21 @@ namespace H3MP
 
             preval = data.data[3];
             byte preval0 = data.data[4];
+            byte preval1 = data.data[5];
+            byte preval2 = data.data[6];
 
             // Write chambered round class
             if(asCBW.Chamber.GetRound() == null || asCBW.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 5);
             }
             else
             {
-                BitConverter.GetBytes((short)asCBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asCBW.Chamber.GetRound().RoundType).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asCBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 5);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4]);
+            modified |= (preval != data.data[3] || preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6]);
 
             return modified;
         }
@@ -5398,7 +5773,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 3);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 5);
             if(chamberClassIndex == -1) // We don't want round in chamber
             {
                 if(asCBW.Chamber.GetRound() != null)
@@ -5409,10 +5785,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass) chamberClassIndex;
                 if (asCBW.Chamber.GetRound() == null || asCBW.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+                    if (asCBW.Chamber.RoundType == roundType)
+                    {
+                        asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asCBW.Chamber.RoundType;
+                        asCBW.Chamber.RoundType = roundType;
+                        asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+                        asCBW.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -5439,7 +5826,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[5];
+                data.data = new byte[7];
                 modified = true;
             }
 
@@ -5466,18 +5853,21 @@ namespace H3MP
 
             preval = data.data[3];
             byte preval0 = data.data[4];
+            byte preval1 = data.data[5];
+            byte preval2 = data.data[6];
 
             // Write chambered round class
             if (asHandgun.Chamber.GetRound() == null || asHandgun.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 5);
             }
             else
             {
-                BitConverter.GetBytes((short)asHandgun.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asHandgun.Chamber.GetRound().RoundType).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asHandgun.Chamber.GetRound().RoundClass).CopyTo(data.data, 5);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4]);
+            modified |= (preval != data.data[3] || preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6]);
 
             return modified;
         }
@@ -5534,7 +5924,8 @@ namespace H3MP
             }
 
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 3);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 3);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 5);
             if(chamberClassIndex == -1) // We don't want round in chamber
             {
                 if(asHandgun.Chamber.GetRound() != null)
@@ -5545,10 +5936,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass) chamberClassIndex;
                 if (asHandgun.Chamber.GetRound() == null || asHandgun.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+                    if (asHandgun.Chamber.RoundType == roundType)
+                    {
+                        asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asHandgun.Chamber.RoundType;
+                        asHandgun.Chamber.RoundType = roundType;
+                        asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+                        asHandgun.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -5575,7 +5977,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[6];
+                data.data = new byte[8];
                 modified = true;
             }
 
@@ -5595,34 +5997,37 @@ namespace H3MP
 
             preval = data.data[2];
             byte preval0 = data.data[3];
+            byte preval1 = data.data[4];
+            byte preval2 = data.data[5];
 
             // Write chambered round class
             if(asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval != data.data[4] || preval0 != data.data[5]);
 
-            preval = data.data[4];
+            preval = data.data[6];
 
             // Write bolt handle pos
-            data.data[4] = (byte)asTFS.Bolt.CurPos;
+            data.data[6] = (byte)asTFS.Bolt.CurPos;
 
-            modified |= preval != data.data[4];
+            modified |= preval != data.data[6];
 
             if (asTFS.HasHandle)
             {
-                preval = data.data[5];
+                preval = data.data[7];
 
                 // Write bolt handle pos
-                data.data[5] = (byte)asTFS.Handle.CurPos;
+                data.data[7] = (byte)asTFS.Handle.CurPos;
 
-                modified |= preval != data.data[5];
+                modified |= preval != data.data[7];
             }
 
             return modified;
@@ -5645,13 +6050,13 @@ namespace H3MP
 
                 // Set bolt pos
                 asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
-                asTFS.Bolt.CurPos = (TubeFedShotgunBolt.BoltPos)newData[4];
+                asTFS.Bolt.CurPos = (TubeFedShotgunBolt.BoltPos)newData[6];
 
                 if (asTFS.HasHandle)
                 {
                     // Set handle pos
                     asTFS.Handle.LastPos = asTFS.Handle.CurPos;
-                    asTFS.Handle.CurPos = (TubeFedShotgunHandle.BoltPos)newData[5];
+                    asTFS.Handle.CurPos = (TubeFedShotgunHandle.BoltPos)newData[7];
                 }
             }
             else 
@@ -5662,17 +6067,17 @@ namespace H3MP
                     asTFS.ToggleSafety();
                     modified = true;
                 }
-                if (data.data[4] != newData[4])
+                if (data.data[6] != newData[6])
                 {
                     // Set bolt pos
                     asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
-                    asTFS.Bolt.CurPos = (TubeFedShotgunBolt.BoltPos)newData[4];
+                    asTFS.Bolt.CurPos = (TubeFedShotgunBolt.BoltPos)newData[6];
                 }
-                if (asTFS.HasHandle && data.data[5] != newData[5])
+                if (asTFS.HasHandle && data.data[7] != newData[7])
                 {
                     // Set handle pos
                     asTFS.Handle.LastPos = asTFS.Handle.CurPos;
-                    asTFS.Handle.CurPos = (TubeFedShotgunHandle.BoltPos)newData[5];
+                    asTFS.Handle.CurPos = (TubeFedShotgunHandle.BoltPos)newData[7];
                 }
             }
 
@@ -5695,7 +6100,8 @@ namespace H3MP
             }
             
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if(chamberClassIndex == -1) // We don't want round in chamber
             {
                 if(asTFS.Chamber.GetRound() != null)
@@ -5706,10 +6112,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass) chamberClassIndex;
                 if (asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                    if (asTFS.Chamber.RoundType == roundType)
+                    {
+                        asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asTFS.Chamber.RoundType;
+                        asTFS.Chamber.RoundType = roundType;
+                        asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                        asTFS.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -5736,7 +6153,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[6];
+                data.data = new byte[8];
                 modified = true;
             }
 
@@ -5756,32 +6173,35 @@ namespace H3MP
 
             preval = data.data[2];
             byte preval0 = data.data[3];
+            byte preval1 = data.data[4];
+            byte preval2 = data.data[5];
 
             // Write chambered round class
             if(asBAR.Chamber.GetRound() == null || asBAR.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asBAR.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asBAR.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asBAR.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
 
-            preval = data.data[4];
+            preval = data.data[6];
 
             // Write bolt handle state
-            data.data[4] = (byte)asBAR.CurBoltHandleState;
+            data.data[6] = (byte)asBAR.CurBoltHandleState;
 
-            modified |= preval != data.data[4];
+            modified |= preval != data.data[6];
 
-            preval = data.data[5];
+            preval = data.data[7];
 
             // Write bolt handle rot
-            data.data[5] = (byte)asBAR.BoltHandle.HandleRot;
+            data.data[7] = (byte)asBAR.BoltHandle.HandleRot;
 
-            modified |= preval != data.data[5];
+            modified |= preval != data.data[7];
 
             return modified;
         }
@@ -5800,11 +6220,11 @@ namespace H3MP
 
                 // Set bolt handle state
                 asBAR.LastBoltHandleState = asBAR.CurBoltHandleState;
-                asBAR.CurBoltHandleState = (BoltActionRifle_Handle.BoltActionHandleState)newData[4];
+                asBAR.CurBoltHandleState = (BoltActionRifle_Handle.BoltActionHandleState)newData[6];
 
                 // Set bolt handle rot
                 asBAR.BoltHandle.LastHandleRot = asBAR.BoltHandle.HandleRot;
-                asBAR.BoltHandle.HandleRot = (BoltActionRifle_Handle.BoltActionHandleRot)newData[5];
+                asBAR.BoltHandle.HandleRot = (BoltActionRifle_Handle.BoltActionHandleRot)newData[7];
             }
             else 
             {
@@ -5814,17 +6234,17 @@ namespace H3MP
                     Mod.BoltActionRifle_m_fireSelectorMode.SetValue(asBAR, (int)newData[0]);
                     modified = true;
                 }
-                if (data.data[4] != newData[4])
+                if (data.data[6] != newData[6])
                 {
                     // Set bolt handle state
                     asBAR.LastBoltHandleState = asBAR.CurBoltHandleState;
-                    asBAR.CurBoltHandleState = (BoltActionRifle_Handle.BoltActionHandleState)newData[4];
+                    asBAR.CurBoltHandleState = (BoltActionRifle_Handle.BoltActionHandleState)newData[6];
                 }
-                if (data.data[5] != newData[5])
+                if (data.data[7] != newData[7])
                 {
                     // Set bolt handle rot
                     asBAR.BoltHandle.LastHandleRot = asBAR.BoltHandle.HandleRot;
-                    asBAR.BoltHandle.HandleRot = (BoltActionRifle_Handle.BoltActionHandleRot)newData[5];
+                    asBAR.BoltHandle.HandleRot = (BoltActionRifle_Handle.BoltActionHandleRot)newData[7];
                 }
             }
 
@@ -5847,7 +6267,8 @@ namespace H3MP
             }
             
             // Set chamber
-            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if(chamberClassIndex == -1) // We don't want round in chamber
             {
                 if(asBAR.Chamber.GetRound() != null)
@@ -5858,10 +6279,21 @@ namespace H3MP
             }
             else // We want a round in the chamber
             {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
                 FireArmRoundClass roundClass = (FireArmRoundClass) chamberClassIndex;
                 if (asBAR.Chamber.GetRound() == null || asBAR.Chamber.GetRound().RoundClass != roundClass)
                 {
-                    asBAR.Chamber.SetRound(roundClass, asBAR.Chamber.transform.position, asBAR.Chamber.transform.rotation);
+                    if (asBAR.Chamber.RoundType == roundType)
+                    {
+                        asBAR.Chamber.SetRound(roundClass, asBAR.Chamber.transform.position, asBAR.Chamber.transform.rotation);
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asBAR.Chamber.RoundType;
+                        asBAR.Chamber.RoundType = roundType;
+                        asBAR.Chamber.SetRound(roundClass, asBAR.Chamber.transform.position, asBAR.Chamber.transform.rotation);
+                        asBAR.Chamber.RoundType = prevRoundType;
+                    }
                     modified = true;
                 }
             }
@@ -6017,6 +6449,7 @@ namespace H3MP
             float newRot = BitConverter.ToSingle(newData, 1);
             if(asAttachment.CatchRot != newRot)
             {
+                asAttachment.CatchRot = newRot;
                 asAttachment.transform.localEulerAngles = new Vector3(0f, 0f, newRot);
                 modified = true;
             }
