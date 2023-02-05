@@ -508,6 +508,14 @@ namespace H3MP
                 updateParentFunc = UpdateAttachableFirearmParent;
                 dataObject = asAttachableFirearmPhysicalObject.FA;
             }
+            else if (physObj is Suppressor)
+            {
+                Suppressor asAttachment = (Suppressor)physObj;
+                updateFunc = UpdateSuppressor;
+                updateGivenFunc = UpdateGivenSuppressor;
+                updateParentFunc = UpdateAttachmentParent;
+                dataObject = asAttachment;
+            }
             else if (physObj is FVRFireArmAttachment)
             {
                 FVRFireArmAttachment asAttachment = (FVRFireArmAttachment)physObj;
@@ -5803,6 +5811,135 @@ namespace H3MP
             BoltActionRifle asBar = dataObject as BoltActionRifle;
 
             asBar.Chamber.SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
+        }
+
+        private bool UpdateSuppressor()
+        {
+            bool modified = false;
+            Suppressor asAttachment = dataObject as Suppressor;
+
+            if (data.data == null)
+            {
+                data.data = new byte[5];
+                modified = true;
+            }
+
+            byte preIndex = data.data[0];
+
+            // Write attached mount index
+            if (asAttachment.curMount == null)
+            {
+                data.data[0] = 255;
+            }
+            else
+            {
+                // Find the mount and set it
+                bool found = false;
+                for (int i = 0; i < asAttachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                {
+                    if (asAttachment.curMount.Parent.AttachmentMounts[i] == asAttachment.curMount)
+                    {
+                        data.data[0] = (byte)i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    data.data[0] = 255;
+                }
+            }
+
+            byte[] preVals = new byte[4];
+            preVals[1] = data.data[1];
+            preVals[2] = data.data[2];
+            preVals[3] = data.data[3];
+            preVals[4] = data.data[4];
+            BitConverter.GetBytes(asAttachment.CatchRot).CopyTo(data.data, 1);
+            modified |= (preVals[1] != data.data[1] || preVals[2] != data.data[2] || preVals[3] != data.data[3] || preVals[4] != data.data[4]);
+
+            return modified || (preIndex != data.data[0]);
+        }
+
+        private bool UpdateGivenSuppressor(byte[] newData)
+        {
+            bool modified = false;
+            Suppressor asAttachment = dataObject as Suppressor;
+
+            if (data.data == null || data.data.Length != newData.Length)
+            {
+                data.data = new byte[1 + attachmentInterfaceDataSize];
+                data.data[0] = 255;
+                currentMountIndex = 255;
+                modified = true;
+            }
+
+            byte preMountIndex = currentMountIndex;
+            if (newData[0] == 255)
+            {
+                // Should not be mounted, check if currently is
+                if (asAttachment.curMount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    asAttachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+                    currentMountIndex = 255;
+
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
+                    if (data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.SetKinematicRecursive(asAttachment.transform, true);
+                    }
+                }
+            }
+            else
+            {
+                // Find mount instance we want to be mounted to
+                FVRFireArmAttachmentMount mount = null;
+                H3MP_TrackedItemData parentTrackedItemData = null;
+                if (H3MP_ThreadManager.host)
+                {
+                    parentTrackedItemData = H3MP_Server.items[data.parent];
+                }
+                else
+                {
+                    parentTrackedItemData = H3MP_Client.items[data.parent];
+                }
+
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                {
+                    // We want to be mounted, we have a parent
+                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    {
+                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                    }
+                }
+
+                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                if (mount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    if (asAttachment.curMount != null)
+                    {
+                        asAttachment.DetachFromMount();
+                    }
+
+                    asAttachment.AttachToMount(mount, true);
+                    currentMountIndex = newData[0];
+                    --data.ignoreParentChanged;
+                }
+            }
+
+            float newRot = BitConverter.ToSingle(newData, 1);
+            if(asAttachment.CatchRot != newRot)
+            {
+                asAttachment.transform.localEulerAngles = new Vector3(0f, 0f, newRot);
+                modified = true;
+            }
+
+            data.data = newData;
+
+            return modified || (preMountIndex != currentMountIndex);
         }
 
         private bool UpdateAttachment()
