@@ -5851,12 +5851,12 @@ namespace H3MP
             }
 
             byte[] preVals = new byte[4];
-            preVals[1] = data.data[1];
-            preVals[2] = data.data[2];
-            preVals[3] = data.data[3];
-            preVals[4] = data.data[4];
+            preVals[0] = data.data[1];
+            preVals[1] = data.data[2];
+            preVals[2] = data.data[3];
+            preVals[3] = data.data[4];
             BitConverter.GetBytes(asAttachment.CatchRot).CopyTo(data.data, 1);
-            modified |= (preVals[1] != data.data[1] || preVals[2] != data.data[2] || preVals[3] != data.data[3] || preVals[4] != data.data[4]);
+            modified |= (preVals[0] != data.data[1] || preVals[1] != data.data[2] || preVals[2] != data.data[3] || preVals[3] != data.data[4]);
 
             return modified || (preIndex != data.data[0]);
         }
@@ -5868,7 +5868,7 @@ namespace H3MP
 
             if (data.data == null || data.data.Length != newData.Length)
             {
-                data.data = new byte[1 + attachmentInterfaceDataSize];
+                data.data = new byte[5];
                 data.data[0] = 255;
                 currentMountIndex = 255;
                 modified = true;
@@ -5892,7 +5892,7 @@ namespace H3MP
                     }
                 }
             }
-            else
+            else if(data.parent != -1)
             {
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
@@ -5927,6 +5927,22 @@ namespace H3MP
                     asAttachment.AttachToMount(mount, true);
                     currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
+                }
+            }
+            else // We have mount index but no parent index
+            {
+                // Detach from any mount we are still on
+                if(asAttachment.curMount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    asAttachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
+                    if (data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.SetKinematicRecursive(asAttachment.transform, true);
+                    }
                 }
             }
 
@@ -6005,7 +6021,7 @@ namespace H3MP
             if (newData[0] == 255)
             {
                 // Should not be mounted, check if currently is
-                if(asAttachment.curMount != null)
+                if (asAttachment.curMount != null)
                 {
                     ++data.ignoreParentChanged;
                     asAttachment.DetachFromMount();
@@ -6019,7 +6035,7 @@ namespace H3MP
                     }
                 }
             }
-            else
+            else if (data.parent != -1)
             {
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
@@ -6042,7 +6058,7 @@ namespace H3MP
                     }
                 }
 
-                // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
+                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
                 if (mount != null && mount != asAttachment.curMount)
                 {
                     ++data.ignoreParentChanged;
@@ -6054,6 +6070,22 @@ namespace H3MP
                     asAttachment.AttachToMount(mount, true);
                     currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
+                }
+            }
+            else // We have mount index but no parent index
+            {
+                // Detach from any mount we are still on
+                if (asAttachment.curMount != null)
+                {
+                    ++data.ignoreParentChanged;
+                    asAttachment.DetachFromMount();
+                    --data.ignoreParentChanged;
+
+                    // Detach from mount will recover rigidbody, set as kinematic if not controller
+                    if (data.controller != H3MP_GameManager.ID)
+                    {
+                        Mod.SetKinematicRecursive(asAttachment.transform, true);
+                    }
                 }
             }
 
