@@ -603,6 +603,7 @@ namespace H3MP
                 H3MP_ServerHandle.C4Detonate,
                 H3MP_ServerHandle.ClaymoreMineDetonate,
                 H3MP_ServerHandle.SLAMDetonate,
+                H3MP_ServerHandle.Ping,
             };
 
             items = new H3MP_TrackedItemData[100];

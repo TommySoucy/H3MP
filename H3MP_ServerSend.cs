@@ -86,6 +86,15 @@ namespace H3MP
             }
         }
 
+        public static void Ping(int toClient, long time)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.ping))
+            {
+                packet.Write(time);
+                SendTCPData(toClient, packet);
+            }
+        }
+
         public static void SpawnPlayer(int clientID, H3MP_Player player, string scene, int instance, int IFF)
         {
             SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation, IFF);

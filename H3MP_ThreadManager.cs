@@ -16,6 +16,11 @@ namespace H3MP
         private static readonly List<Action> executeCopiedOnMainThread = new List<Action>();
         private static bool actionToExecuteOnMainThread = false;
 
+
+        public static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly float pingTime = 1;
+        private static float pingTimer = pingTime;
+
         private void Update()
         {
             UpdateMain();
@@ -59,6 +64,16 @@ namespace H3MP
                 for (int i = 0; i < executeCopiedOnMainThread.Count; i++)
                 {
                     executeCopiedOnMainThread[i]();
+                }
+            }
+
+            if (!host)
+            {
+                pingTimer -= Time.deltaTime;
+                if (pingTimer <= 0)
+                {
+                    pingTimer = pingTime;
+                    H3MP_ClientSend.Ping(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
                 }
             }
         }

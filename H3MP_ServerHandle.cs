@@ -35,6 +35,13 @@ namespace H3MP
             H3MP_Server.clients[clientID].SendIntoGame(username, scene, instance, IFF);
         }
 
+        public static void Ping(int clientID, H3MP_Packet packet)
+        {
+            long time = packet.ReadLong();
+            H3MP_Server.clients[clientID].ping = Convert.ToInt64((DateTime.Now.ToUniversalTime() - H3MP_ThreadManager.epoch).TotalMilliseconds) - time;
+            H3MP_ServerSend.Ping(clientID, time);
+        }
+
         public static void PlayerState(int clientID, H3MP_Packet packet)
         {
             if(H3MP_Server.clients[clientID] == null || H3MP_Server.clients[clientID].player == null)

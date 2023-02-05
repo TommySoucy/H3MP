@@ -28,6 +28,11 @@ namespace H3MP
             H3MP_Client.singleton.udp.Connect(((IPEndPoint)H3MP_Client.singleton.tcp.socket.Client.LocalEndPoint).Port);
         }
 
+        public static void Ping(H3MP_Packet packet)
+        {
+            H3MP_GameManager.ping = Convert.ToInt64((DateTime.Now.ToUniversalTime() - H3MP_ThreadManager.epoch).TotalMilliseconds) - packet.ReadLong();
+        }
+
         public static void SpawnPlayer(H3MP_Packet packet)
         {
             int ID = packet.ReadInt();

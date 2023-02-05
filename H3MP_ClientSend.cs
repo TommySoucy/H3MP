@@ -40,6 +40,15 @@ namespace H3MP
             }
         }
 
+        public static void Ping(long time)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.ping))
+            {
+                packet.Write(time);
+                SendTCPData(packet);
+            }
+        }
+
         public static void PlayerState(Vector3 playerPos, Quaternion playerRot, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
                                        Vector3 leftHandPos, Quaternion leftHandRot,
                                        Vector3 rightHandPos, Quaternion rightHandRot,
@@ -2313,8 +2322,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.clientDisconnect))
             {
-                DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                packet.Write(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
+                packet.Write(Convert.ToInt64((DateTime.Now.ToUniversalTime() - H3MP_ThreadManager.epoch).TotalMilliseconds));
 
                 SendTCPData(packet);
             }

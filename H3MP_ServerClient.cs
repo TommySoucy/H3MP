@@ -20,6 +20,7 @@ namespace H3MP
         public TCP tcp;
         public UDP udp;
         public bool connected;
+        public long ping;
 
         public H3MP_ServerClient(int ID)
         {
@@ -46,7 +47,7 @@ namespace H3MP
 
             public void Connect(TcpClient socket)
             {
-                openTime = Convert.ToInt64((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds);
+                openTime = Convert.ToInt64((DateTime.Now.ToUniversalTime() - H3MP_ThreadManager.epoch).TotalMilliseconds);
 
                 this.socket = socket;
                 socket.ReceiveBufferSize = dataBufferSize;

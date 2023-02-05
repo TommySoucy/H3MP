@@ -440,6 +440,7 @@ namespace H3MP
                 H3MP_ClientHandle.C4Detonate,
                 H3MP_ClientHandle.ClaymoreMineDetonate,
                 H3MP_ClientHandle.SLAMDetonate,
+                H3MP_ClientHandle.Ping,
             };
 
             // All vanilla scenes can be synced by default

@@ -146,7 +146,8 @@ namespace H3MP
         bangSnapSplode = 135,
         C4Detonate = 136,
         claymoreMineDetonate = 137,
-        SLAMDetonate = 138
+        SLAMDetonate = 138,
+        ping = 139
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -290,7 +291,8 @@ namespace H3MP
         bangSnapSplode = 136,
         C4Detonate = 137,
         claymoreMineDetonate = 138,
-        SLAMDetonate = 139
+        SLAMDetonate = 139,
+        ping = 140
     }
 
     public class H3MP_Packet : IDisposable
@@ -418,6 +420,12 @@ namespace H3MP
         /// <summary>Adds a float to the packet.</summary>
         /// <param name="_value">The float to add.</param>
         public void Write(float _value)
+        {
+            buffer.AddRange(BitConverter.GetBytes(_value));
+        }
+        /// <summary>Adds a double to the packet.</summary>
+        /// <param name="_value">The double to add.</param>
+        public void Write(double _value)
         {
             buffer.AddRange(BitConverter.GetBytes(_value));
         }
@@ -1230,6 +1238,27 @@ namespace H3MP
             else
             {
                 throw new Exception("Could not read value of type 'float'!");
+            }
+        }
+
+        /// <summary>Reads a double from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public double ReadDouble(bool _moveReadPos = true)
+        {
+            if (buffer.Count > readPos)
+            {
+                // If there are unread bytes
+                double _value = BitConverter.ToDouble(readableBuffer, readPos); // Convert the bytes to a double
+                if (_moveReadPos)
+                {
+                    // If _moveReadPos is true
+                    readPos += 8; // Increase readPos by 8
+                }
+                return _value; // Return the double
+            }
+            else
+            {
+                throw new Exception("Could not read value of type 'double'!");
             }
         }
 

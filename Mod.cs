@@ -646,19 +646,11 @@ namespace H3MP
             LoadAssets();
 
             SceneManager.sceneLoaded += OnSceneLoaded;
-
-            ServicePointManager.SecurityProtocol = (SecurityProtocolType)4080;
         }
 
         private void DoPatching()
         {
             var harmony = new HarmonyLib.Harmony("VIP.TommySoucy.H3MP");
-
-            // First patch harmony itself to be able to extract IL code from methods without having to use a transpiler
-            //PatchVerify.writeToMethod = typeof(Harmony).Assembly.GetType("ILManipulator").GetMethod("WriteTo", BindingFlags.Public | BindingFlags.Instance);
-            //MethodInfo applyTranspilersOriginal = typeof(Harmony).Assembly.GetType("ILManipulator").GetMethod("ApplyTranspilers", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo applyTranspilersPostfix = typeof(PatchVerify).GetMethod("ApplyTranspilersPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //harmony.Patch(applyTranspilersOriginal, new HarmonyMethod(applyTranspilersPostfix));
 
             // LoadLevelBeginPatch
             MethodInfo loadLevelBeginPatchOriginal = typeof(SteamVR_LoadLevel).GetMethod("Begin", BindingFlags.Public | BindingFlags.Static);

@@ -60,6 +60,8 @@ namespace H3MP
         public static int playerStateAddtionalDataSize = -1;
         public static int instance = 0;
 
+        public static long ping = -1;
+
         //public GameObject localPlayerPrefab;
         public GameObject playerPrefab;
 
