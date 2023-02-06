@@ -7408,7 +7408,7 @@ namespace H3MP
         static void Postfix(ref TNH_EncryptionTarget __instance, int i)
         {
             // Instance could be null if destroyed by the method, in which case we don't need to send anything, the destruction will be sent instead
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && __instance != null && wasActive && !__instance.SubTargs[i].activeSelf)
+            if (Mod.managerObject != null && __instance != null && wasActive && !__instance.SubTargs[i].activeSelf)
             {
                 H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
                 if (trackedEncryption != null)
