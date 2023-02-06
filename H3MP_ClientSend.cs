@@ -2146,9 +2146,9 @@ namespace H3MP
             }
         }
 
-        public static void EncryptionRecursiveInit(int trackedID, List<int> indices)
+        public static void EncryptionInit(int trackedID, List<int> indices)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionRecursiveInit))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionInit))
             {
                 packet.Write(trackedID);
                 if(indices == null || indices.Count == 0)

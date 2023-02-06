@@ -313,6 +313,58 @@ namespace H3MP
                     RemoveFromLocal();
                 }
             }
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownInit.ContainsKey(localTrackedID))
+            {
+                List<int> indices = H3MP_TrackedEncryption.unknownInit[localTrackedID];
+
+                H3MP_ClientSend.EncryptionInit(trackedID, indices);
+
+                H3MP_TrackedEncryption.unknownInit.Remove(localTrackedID);
+            }
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownSpawnSubTarg.ContainsKey(localTrackedID))
+            {
+                List<int> indices = H3MP_TrackedEncryption.unknownSpawnSubTarg[localTrackedID];
+
+                for (int i = 0; i < indices.Count; ++i) 
+                {
+                    H3MP_ClientSend.EncryptionRespawnSubTarg(trackedID, indices[i]);
+                }
+
+                H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localTrackedID);
+            }
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownDisableSubTarg.ContainsKey(localTrackedID))
+            {
+                List<int> indices = H3MP_TrackedEncryption.unknownDisableSubTarg[localTrackedID];
+
+                for (int i = 0; i < indices.Count; ++i) 
+                {
+                    H3MP_ClientSend.EncryptionDisableSubtarg(trackedID, indices[i]);
+                }
+
+                H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localTrackedID);
+            }
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownSpawnGrowth.ContainsKey(localTrackedID))
+            {
+                List<KeyValuePair<int, Vector3>> indices = H3MP_TrackedEncryption.unknownSpawnGrowth[localTrackedID];
+
+                for (int i = 0; i < indices.Count; ++i) 
+                {
+                    H3MP_ClientSend.EncryptionSpawnGrowth(trackedID, indices[i].Key, indices[i].Value);
+                }
+
+                H3MP_TrackedEncryption.unknownSpawnGrowth.Remove(localTrackedID);
+            }
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownResetGrowth.ContainsKey(localTrackedID))
+            {
+                List<KeyValuePair<int, Vector3>> indices = H3MP_TrackedEncryption.unknownResetGrowth[localTrackedID];
+
+                for (int i = 0; i < indices.Count; ++i) 
+                {
+                    H3MP_ClientSend.EncryptionResetGrowth(trackedID, indices[i].Key, indices[i].Value);
+                }
+
+                H3MP_TrackedEncryption.unknownResetGrowth.Remove(localTrackedID);
+            }
 
             if (localTrackedID != -1)
             {
@@ -342,6 +394,11 @@ namespace H3MP
             // Manage unknown lists
             H3MP_TrackedEncryption.unknownControlTrackedIDs.Remove(localTrackedID);
             H3MP_TrackedEncryption.unknownDestroyTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedEncryption.unknownInit.Remove(localTrackedID);
+            H3MP_TrackedEncryption.unknownSpawnGrowth.Remove(localTrackedID);
+            H3MP_TrackedEncryption.unknownResetGrowth.Remove(localTrackedID);
+            H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localTrackedID);
+            H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localTrackedID);
 
             // Remove
             H3MP_GameManager.encryptions[localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];

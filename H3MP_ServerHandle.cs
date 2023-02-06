@@ -420,7 +420,6 @@ namespace H3MP
 
             if (trackedSosig != null)
             {
-
                 trackedSosig.removeFromListOnDestroy = removeFromList;
 
                 if (trackedSosig.physicalObject != null)
@@ -465,28 +464,36 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
-            trackedAutoMeater.removeFromListOnDestroy = removeFromList;
 
-            if (trackedAutoMeater.physicalObject != null)
+            if (trackedAutoMeater != null)
             {
-                H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(trackedAutoMeater.physicalObject.physicalAutoMeaterScript);
-                trackedAutoMeater.physicalObject.sendDestroy = false;
-                GameObject.Destroy(trackedAutoMeater.physicalObject.gameObject);
+                trackedAutoMeater.removeFromListOnDestroy = removeFromList;
+
+                if (trackedAutoMeater.physicalObject != null)
+                {
+                    H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(trackedAutoMeater.physicalObject.physicalAutoMeaterScript);
+                    trackedAutoMeater.physicalObject.sendDestroy = false;
+                    GameObject.Destroy(trackedAutoMeater.physicalObject.gameObject);
+                }
+
+                if (trackedAutoMeater.localTrackedID != -1)
+                {
+                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
+                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                }
+
+                // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
+                if (removeFromList && H3MP_Server.autoMeaters[trackedID] != null)
+                {
+                    H3MP_Server.autoMeaters[trackedID] = null;
+                    H3MP_Server.availableAutoMeaterIndices.Add(trackedID);
+                    H3MP_GameManager.autoMeatersByInstanceByScene[trackedAutoMeater.scene][trackedAutoMeater.instance].Remove(trackedID);
+                }
             }
-
-            if (trackedAutoMeater.localTrackedID != -1)
+            else
             {
-                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
-                H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-            }
-
-            // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
-            if (removeFromList && H3MP_Server.autoMeaters[trackedID] != null)
-            {
-                H3MP_Server.autoMeaters[trackedID] = null;
-                H3MP_Server.availableAutoMeaterIndices.Add(trackedID);
-                H3MP_GameManager.autoMeatersByInstanceByScene[trackedAutoMeater.scene][trackedAutoMeater.instance].Remove(trackedID);
+                Mod.LogWarning("Server received order to destroy autoMeater but it was already null in H3MP_Server.autoMeaters, trackedID: " + trackedID);
             }
 
             H3MP_ServerSend.DestroyAutoMeater(trackedID, removeFromList, clientID);
@@ -497,28 +504,36 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[trackedID];
-            trackedEncryption.removeFromListOnDestroy = removeFromList;
 
-            if (trackedEncryption.physicalObject != null)
+            if (trackedEncryption != null)
             {
-                H3MP_GameManager.trackedEncryptionByEncryption.Remove(trackedEncryption.physicalObject.physicalEncryptionScript);
-                trackedEncryption.physicalObject.sendDestroy = false;
-                GameObject.Destroy(trackedEncryption.physicalObject.gameObject);
+                trackedEncryption.removeFromListOnDestroy = removeFromList;
+
+                if (trackedEncryption.physicalObject != null)
+                {
+                    H3MP_GameManager.trackedEncryptionByEncryption.Remove(trackedEncryption.physicalObject.physicalEncryptionScript);
+                    trackedEncryption.physicalObject.sendDestroy = false;
+                    GameObject.Destroy(trackedEncryption.physicalObject.gameObject);
+                }
+
+                if (trackedEncryption.localTrackedID != -1)
+                {
+                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
+                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
+                    H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+                }
+
+                // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
+                if (removeFromList && H3MP_Server.encryptions[trackedID] != null)
+                {
+                    H3MP_Server.encryptions[trackedID] = null;
+                    H3MP_Server.availableEncryptionIndices.Add(trackedID);
+                    H3MP_GameManager.encryptionsByInstanceByScene[trackedEncryption.scene][trackedEncryption.instance].Remove(trackedID);
+                }
             }
-
-            if (trackedEncryption.localTrackedID != -1)
+            else
             {
-                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
-                H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
-            }
-
-            // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
-            if (removeFromList && H3MP_Server.encryptions[trackedID] != null)
-            {
-                H3MP_Server.encryptions[trackedID] = null;
-                H3MP_Server.availableEncryptionIndices.Add(trackedID);
-                H3MP_GameManager.encryptionsByInstanceByScene[trackedEncryption.scene][trackedEncryption.instance].Remove(trackedID);
+                Mod.LogWarning("Server received order to destroy encryption but it was already null in H3MP_Server.encryptions, trackedID: " + trackedID);
             }
 
             H3MP_ServerSend.DestroyEncryption(trackedID, removeFromList, clientID);
@@ -559,6 +574,10 @@ namespace H3MP
                     H3MP_Server.availableItemIndices.Add(trackedID);
                     H3MP_GameManager.itemsByInstanceByScene[trackedItem.scene][trackedItem.instance].Remove(trackedID);
                 }
+            }
+            else
+            {
+                Mod.LogWarning("Server received order to destroy sosig but it was already null in H3MP_Server.sosigs, trackedID: " + trackedID);
             }
 
             H3MP_ServerSend.DestroyItem(trackedID, removeFromList, clientID);
@@ -2857,7 +2876,7 @@ namespace H3MP
                 H3MP_Server.encryptions[trackedID].subTargsActive[index] = true;
 
                 H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(true);
-                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript));
+                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript) + 1);
             }
 
             H3MP_ServerSend.EncryptionRespawnSubTarg(trackedID, index, clientID);
@@ -2888,7 +2907,7 @@ namespace H3MP
             H3MP_ServerSend.EncryptionSpawnGrowth(trackedID, index, point, clientID);
         }
 
-        public static void EncryptionRecursiveInit(int clientID, H3MP_Packet packet)
+        public static void EncryptionInit(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
             int count = packet.ReadInt();
@@ -2908,7 +2927,7 @@ namespace H3MP
                 Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, count);
             }
 
-            H3MP_ServerSend.EncryptionRecursiveInit(trackedID, indices, clientID);
+            H3MP_ServerSend.EncryptionInit(clientID, trackedID, indices);
         }
 
         public static void EncryptionResetGrowth(int clientID, H3MP_Packet packet)
@@ -2943,6 +2962,7 @@ namespace H3MP
                 H3MP_Server.encryptions[trackedID].subTargsActive[index] = false;
 
                 H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
+                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript) - 1);
             }
 
             H3MP_ServerSend.EncryptionDisableSubtarg(trackedID, index, clientID);

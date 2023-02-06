@@ -393,7 +393,7 @@ namespace H3MP
                 H3MP_ClientHandle.EncryptionDamageData,
                 H3MP_ClientHandle.EncryptionRespawnSubTarg,
                 H3MP_ClientHandle.EncryptionSpawnGrowth,
-                H3MP_ClientHandle.EncryptionRecursiveInit,
+                H3MP_ClientHandle.EncryptionInit,
                 H3MP_ClientHandle.EncryptionResetGrowth,
                 H3MP_ClientHandle.EncryptionDisableSubtarg,
                 H3MP_ClientHandle.EncryptionSubDamage,
@@ -715,7 +715,7 @@ namespace H3MP
                         AnvilManager.Run(trackedEncryption.Instantiate());
                     }
                 }
-                else // This is an initial update sosig data
+                else // This is an initial update encryption data
                 {
                     H3MP_TrackedEncryptionData trackedEncryptionData = encryptions[trackedEncryption.trackedID];
 

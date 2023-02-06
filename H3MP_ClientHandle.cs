@@ -341,6 +341,10 @@ namespace H3MP
                     H3MP_GameManager.itemsByInstanceByScene[trackedItem.scene][trackedItem.instance].Remove(trackedID);
                 }
             }
+            else
+            {
+                Mod.LogWarning("Client received order to destroy item but it was already null in H3MP_Server.items, trackedID: " + trackedID);
+            }
         }
 
         public static void DestroySosig(H3MP_Packet packet)
@@ -383,6 +387,10 @@ namespace H3MP
                     Mod.temporarySupplySosigIDs.Remove(trackedID);
                 }
             }
+            else
+            {
+                Mod.LogWarning("Server received order to destroy sosig but it was already null in H3MP_Server.sosigs, trackedID: " + trackedID);
+            }
         }
 
         public static void DestroyAutoMeater(H3MP_Packet packet)
@@ -418,6 +426,10 @@ namespace H3MP
                     Mod.temporarySupplyTurretIDs.Remove(trackedID);
                 }
             }
+            else
+            {
+                Mod.LogWarning("Server received order to destroy autoMeater but it was already null in H3MP_Server.autoMeaters, trackedID: " + trackedID);
+            }
         }
 
         public static void DestroyEncryption(H3MP_Packet packet)
@@ -449,6 +461,10 @@ namespace H3MP
                     H3MP_Client.encryptions[trackedID] = null;
                     H3MP_GameManager.encryptionsByInstanceByScene[trackedEncryption.scene][trackedEncryption.instance].Remove(trackedID);
                 }
+            }
+            else
+            {
+                Mod.LogWarning("Server received order to destroy encryption but it was already null in H3MP_Server.encryptions, trackedID: " + trackedID);
             }
         }
 
@@ -2432,7 +2448,7 @@ namespace H3MP
                 H3MP_Client.encryptions[trackedID].subTargsActive[index] = true;
 
                 H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(true);
-                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript));
+                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript) + 1);
             }
         }
 
@@ -2459,7 +2475,7 @@ namespace H3MP
             }
         }
 
-        public static void EncryptionRecursiveInit(H3MP_Packet packet)
+        public static void EncryptionInit(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
             int count = packet.ReadInt();
@@ -2510,6 +2526,7 @@ namespace H3MP
                 H3MP_Client.encryptions[trackedID].subTargsActive[index] = false;
 
                 H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
+                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript) - 1);
             }
         }
 

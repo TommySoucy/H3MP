@@ -237,7 +237,7 @@ namespace H3MP
                         playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
                     {
                         int index = 0;
-                        while (index < inner.Value.Count - 1)
+                        while (index < inner.Value.Count)
                         {
                             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItems))
                             {
@@ -246,7 +246,7 @@ namespace H3MP
                                 packet.Write((short)0);
 
                                 short count = 0;
-                                for (int i = index; i < inner.Value.Count; ++i)
+                                for (int i = index; i < inner.Value.Count; ++i, ++index)
                                 {
                                     H3MP_TrackedItemData trackedItem = H3MP_Server.items[inner.Value[i]];
                                     if (trackedItem != null)
@@ -311,8 +311,6 @@ namespace H3MP
                                             }
                                         }
                                     }
-
-                                    index = i;
                                 }
 
                                 if (count == 0)
@@ -345,7 +343,7 @@ namespace H3MP
                         playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
                     {
                         int index = 0;
-                        while (index < inner.Value.Count - 1)
+                        while (index < inner.Value.Count)
                         {
                             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedSosigs))
                             {
@@ -354,7 +352,7 @@ namespace H3MP
                                 packet.Write((short)0);
 
                                 short count = 0;
-                                for (int i = index; i < inner.Value.Count; ++i)
+                                for (int i = index; i < inner.Value.Count; ++i, ++index)
                                 {
                                     H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[inner.Value[i]];
                                     if (trackedSosig != null)
@@ -419,8 +417,6 @@ namespace H3MP
                                             }
                                         }
                                     }
-
-                                    index = i;
                                 }
 
                                 if (count == 0)
@@ -453,7 +449,7 @@ namespace H3MP
                         playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
                     {
                         int index = 0;
-                        while (index < inner.Value.Count - 1)
+                        while (index < inner.Value.Count)
                         {
                             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedAutoMeaters))
                             {
@@ -462,7 +458,7 @@ namespace H3MP
                                 packet.Write((short)0);
 
                                 short count = 0;
-                                for (int i = index; i < inner.Value.Count; ++i)
+                                for (int i = index; i < inner.Value.Count; ++i, ++index)
                                 {
                                     H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[inner.Value[i]];
                                     if (trackedAutoMeater != null)
@@ -527,8 +523,6 @@ namespace H3MP
                                             }
                                         }
                                     }
-
-                                    index = i;
                                 }
 
                                 if (count == 0)
@@ -561,7 +555,7 @@ namespace H3MP
                         playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
                     {
                         int index = 0;
-                        while (index < inner.Value.Count - 1)
+                        while (index < inner.Value.Count)
                         {
                             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedEncryptions))
                             {
@@ -570,7 +564,7 @@ namespace H3MP
                                 packet.Write((short)0);
 
                                 short count = 0;
-                                for (int i = index; i < inner.Value.Count; ++i)
+                                for (int i = index; i < inner.Value.Count; ++i, ++index)
                                 {
                                     H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[inner.Value[i]];
                                     if (trackedEncryption != null)
@@ -635,8 +629,6 @@ namespace H3MP
                                             }
                                         }
                                     }
-
-                                    index = i;
                                 }
 
                                 if (count == 0)
@@ -3135,11 +3127,11 @@ namespace H3MP
             }
         }
 
-        public static void EncryptionRecursiveInit(int instance, List<int> indices, int clientID = 0)
+        public static void EncryptionInit(int clientID, int trackedID, List<int> indices)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionRecursiveInit))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionInit))
             {
-                packet.Write(instance);
+                packet.Write(trackedID);
                 if (indices == null || indices.Count == 0)
                 {
                     packet.Write(0);

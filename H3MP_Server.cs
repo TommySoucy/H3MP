@@ -557,7 +557,7 @@ namespace H3MP
                 H3MP_ServerHandle.EncryptionDamageData,
                 H3MP_ServerHandle.EncryptionRespawnSubTarg,
                 H3MP_ServerHandle.EncryptionSpawnGrowth,
-                H3MP_ServerHandle.EncryptionRecursiveInit,
+                H3MP_ServerHandle.EncryptionInit,
                 H3MP_ServerHandle.EncryptionResetGrowth,
                 H3MP_ServerHandle.EncryptionDisableSubtarg,
                 H3MP_ServerHandle.EncryptionSubDamage,
