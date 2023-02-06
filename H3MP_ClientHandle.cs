@@ -2443,12 +2443,15 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             int index = packet.ReadInt();
 
-            if (H3MP_Client.encryptions[trackedID] != null && H3MP_Client.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Client.encryptions[trackedID] != null)
             {
                 H3MP_Client.encryptions[trackedID].subTargsActive[index] = true;
 
-                H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(true);
-                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript) + 1);
+                if (H3MP_Client.encryptions[trackedID].physicalObject != null)
+                {
+                    H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(true);
+                    Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript) + 1);
+                }
             }
         }
 
@@ -2458,20 +2461,24 @@ namespace H3MP
             int index = packet.ReadInt();
             Vector3 point = packet.ReadVector3();
 
-            if (H3MP_Client.encryptions[trackedID] != null && H3MP_Client.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Client.encryptions[trackedID] != null)
             {
                 H3MP_Client.encryptions[trackedID].tendrilsActive[index] = true;
                 H3MP_Client.encryptions[trackedID].growthPoints[index] = point;
                 H3MP_Client.encryptions[trackedID].subTargsPos[index] = point;
                 H3MP_Client.encryptions[trackedID].subTargsActive[index] = true;
                 H3MP_Client.encryptions[trackedID].tendrilFloats[index] = 1f;
-                Vector3 forward = point - H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
-                H3MP_Client.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
-                H3MP_Client.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
-                ++EncryptionSpawnGrowthPatch.skip;
-                Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { index, point });
-                --EncryptionSpawnGrowthPatch.skip;
+                if (H3MP_Client.encryptions[trackedID].physicalObject != null)
+                {
+                    Vector3 forward = point - H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
+                    H3MP_Client.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    H3MP_Client.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+
+                    ++EncryptionSpawnGrowthPatch.skip;
+                    Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { index, point });
+                    --EncryptionSpawnGrowthPatch.skip;
+                }
             }
         }
 
@@ -2485,14 +2492,20 @@ namespace H3MP
                 indices.Add(packet.ReadInt());
             }
 
-            if (H3MP_Client.encryptions[trackedID] != null && H3MP_Client.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Client.encryptions[trackedID] != null)
             {
                 for (int i = 0; i < count; ++i)
                 {
                     H3MP_Client.encryptions[trackedID].subTargsActive[indices[i]] = true;
-                    H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
                 }
-                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, count);
+                if (H3MP_Client.encryptions[trackedID].physicalObject != null)
+                {
+                    for (int i = 0; i < count; ++i)
+                    {
+                        H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
+                    }
+                    Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, count);
+                }
             }
         }
 
@@ -2502,17 +2515,20 @@ namespace H3MP
             int index = packet.ReadInt();
             Vector3 point = packet.ReadVector3();
 
-            if (H3MP_Client.encryptions[trackedID] != null && H3MP_Client.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Client.encryptions[trackedID] != null)
             {
                 H3MP_Client.encryptions[trackedID].growthPoints[index] = point;
                 H3MP_Client.encryptions[trackedID].tendrilFloats[index] = 0;
-                Vector3 forward = point - H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
-                H3MP_Client.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
-                H3MP_Client.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+                if (H3MP_Client.encryptions[trackedID].physicalObject != null)
+                {
+                    Vector3 forward = point - H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
+                    H3MP_Client.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    H3MP_Client.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
-                ++EncryptionResetGrowthPatch.skip;
-                Mod.TNH_EncryptionTarget_ResetGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { index, point });
-                --EncryptionResetGrowthPatch.skip;
+                    ++EncryptionResetGrowthPatch.skip;
+                    Mod.TNH_EncryptionTarget_ResetGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { index, point });
+                    --EncryptionResetGrowthPatch.skip;
+                }
             }
         }
 
@@ -2521,12 +2537,15 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             int index = packet.ReadInt();
 
-            if (H3MP_Client.encryptions[trackedID] != null && H3MP_Client.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Client.encryptions[trackedID] != null)
             {
                 H3MP_Client.encryptions[trackedID].subTargsActive[index] = false;
 
-                H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
-                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript) - 1);
+                if (H3MP_Client.encryptions[trackedID].physicalObject != null)
+                {
+                    H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
+                    Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript) - 1);
+                }
             }
         }
 

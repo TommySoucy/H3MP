@@ -2871,12 +2871,15 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             int index = packet.ReadInt();
 
-            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Server.encryptions[trackedID] != null)
             {
                 H3MP_Server.encryptions[trackedID].subTargsActive[index] = true;
 
-                H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(true);
-                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript) + 1);
+                if (H3MP_Server.encryptions[trackedID].physicalObject != null)
+                {
+                    H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(true);
+                    Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript) + 1);
+                }
             }
 
             H3MP_ServerSend.EncryptionRespawnSubTarg(trackedID, index, clientID);
@@ -2888,20 +2891,23 @@ namespace H3MP
             int index = packet.ReadInt();
             Vector3 point = packet.ReadVector3();
 
-            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Server.encryptions[trackedID] != null)
             {
                 H3MP_Server.encryptions[trackedID].tendrilsActive[index] = true;
                 H3MP_Server.encryptions[trackedID].growthPoints[index] = point;
                 H3MP_Server.encryptions[trackedID].subTargsPos[index] = point;
                 H3MP_Server.encryptions[trackedID].subTargsActive[index] = true;
                 H3MP_Server.encryptions[trackedID].tendrilFloats[index] = 1f;
-                Vector3 forward = point - H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
-                H3MP_Server.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
-                H3MP_Server.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+                if (H3MP_Server.encryptions[trackedID].physicalObject != null)
+                {
+                    Vector3 forward = point - H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
+                    H3MP_Server.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    H3MP_Server.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
-                ++EncryptionSpawnGrowthPatch.skip;
-                Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { index, point});
-                --EncryptionSpawnGrowthPatch.skip;
+                    ++EncryptionSpawnGrowthPatch.skip;
+                    Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { index, point });
+                    --EncryptionSpawnGrowthPatch.skip;
+                }
             }
 
             H3MP_ServerSend.EncryptionSpawnGrowth(trackedID, index, point, clientID);
@@ -2917,14 +2923,21 @@ namespace H3MP
                 indices.Add(packet.ReadInt());
             }
 
-            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Server.encryptions[trackedID] != null)
             {
-                for(int i=0; i < count; ++i)
+                for (int i = 0; i < count; ++i)
                 {
                     H3MP_Server.encryptions[trackedID].subTargsActive[indices[i]] = true;
-                    H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
                 }
-                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, count);
+
+                if (H3MP_Server.encryptions[trackedID].physicalObject != null)
+                {
+                    for (int i = 0; i < count; ++i)
+                    {
+                        H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
+                    }
+                    Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, count);
+                }
             }
 
             H3MP_ServerSend.EncryptionInit(clientID, trackedID, indices);
@@ -2936,17 +2949,20 @@ namespace H3MP
             int index = packet.ReadInt();
             Vector3 point = packet.ReadVector3();
 
-            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Server.encryptions[trackedID] != null)
             {
                 H3MP_Server.encryptions[trackedID].growthPoints[index] = point;
                 H3MP_Server.encryptions[trackedID].tendrilFloats[index] = 0;
-                Vector3 forward = point - H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
-                H3MP_Server.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
-                H3MP_Server.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+                if (H3MP_Server.encryptions[trackedID].physicalObject != null)
+                {
+                    Vector3 forward = point - H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
+                    H3MP_Server.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    H3MP_Server.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
-                ++EncryptionResetGrowthPatch.skip;
-                Mod.TNH_EncryptionTarget_ResetGrowth.Invoke(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] {index, point});
-                --EncryptionResetGrowthPatch.skip;
+                    ++EncryptionResetGrowthPatch.skip;
+                    Mod.TNH_EncryptionTarget_ResetGrowth.Invoke(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { index, point });
+                    --EncryptionResetGrowthPatch.skip;
+                }
             }
 
             H3MP_ServerSend.EncryptionResetGrowth(trackedID, index, point, clientID);
@@ -2957,12 +2973,15 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             int index = packet.ReadInt();
 
-            if (H3MP_Server.encryptions[trackedID] != null && H3MP_Server.encryptions[trackedID].physicalObject != null)
+            if (H3MP_Server.encryptions[trackedID] != null)
             {
                 H3MP_Server.encryptions[trackedID].subTargsActive[index] = false;
 
-                H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
-                Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript) - 1);
+                if (H3MP_Server.encryptions[trackedID].physicalObject != null)
+                {
+                    H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
+                    Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, (int)Mod.TNH_EncryptionTarget_m_numSubTargsLeft.GetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript) - 1);
+                }
             }
 
             H3MP_ServerSend.EncryptionDisableSubtarg(trackedID, index, clientID);

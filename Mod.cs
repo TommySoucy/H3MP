@@ -7393,60 +7393,48 @@ namespace H3MP
     {
         static bool wasActive;
 
-        static bool Prefix(ref TNH_EncryptionTarget __instance, int i)
+        static void Prefix(ref TNH_EncryptionTarget __instance, int i)
         {
             if (Mod.managerObject != null)
             {
                 H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
                 if (trackedEncryption != null)
                 {
-                    if (trackedEncryption.data.controller != H3MP_GameManager.ID)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        wasActive = __instance.SubTargs[i].activeSelf;
-                    }
+                    wasActive = __instance.SubTargs[i].activeSelf;
                 }
             }
-
-            return true;
         }
 
         static void Postfix(ref TNH_EncryptionTarget __instance, int i)
         {
-            // Instance could be null if destroyed by the method, in which case we don't need to send anything
+            // Instance could be null if destroyed by the method, in which case we don't need to send anything, the destruction will be sent instead
             if (Mod.managerObject != null && Mod.currentTNHInstance != null && __instance != null && wasActive && !__instance.SubTargs[i].activeSelf)
             {
                 H3MP_TrackedEncryption trackedEncryption = H3MP_GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? H3MP_GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<H3MP_TrackedEncryption>();
                 if (trackedEncryption != null)
                 {
-                    if (trackedEncryption.data.controller == H3MP_GameManager.ID)
-                    {
-                        trackedEncryption.data.subTargsActive[i] = false;
+                    trackedEncryption.data.subTargsActive[i] = false;
 
-                        if (H3MP_ThreadManager.host)
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                    }
+                    else
+                    {
+                        if (trackedEncryption.data.trackedID == -1)
                         {
-                            H3MP_ServerSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
-                        }
-                        else
-                        {
-                            if (trackedEncryption.data.trackedID == -1)
+                            if (H3MP_TrackedEncryption.unknownDisableSubTarg.TryGetValue(trackedEncryption.data.localTrackedID, out List<int> l))
                             {
-                                if (H3MP_TrackedEncryption.unknownDisableSubTarg.TryGetValue(trackedEncryption.data.localTrackedID, out List<int> l))
-                                {
-                                    l.Add(i);
-                                }
-                                else
-                                {
-                                    H3MP_TrackedEncryption.unknownDisableSubTarg.Add(trackedEncryption.data.localTrackedID, new List<int>() { i });
-                                }
+                                l.Add(i);
                             }
                             else
                             {
-                                H3MP_ClientSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                                H3MP_TrackedEncryption.unknownDisableSubTarg.Add(trackedEncryption.data.localTrackedID, new List<int>() { i });
                             }
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
                         }
                     }
                 }
