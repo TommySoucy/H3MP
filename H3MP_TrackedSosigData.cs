@@ -617,7 +617,7 @@ namespace H3MP
             int oldLocalTrackedID = H3MP_GameManager.sosigs[localTrackedID].localTrackedID;
             H3MP_GameManager.sosigs[localTrackedID].localTrackedID = localTrackedID;
             H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-            if (H3MP_GameManager.sosigs.Count > 0 && oldLocalTrackedID != localTrackedID && H3MP_GameManager.sosigs[localTrackedID].trackedID == -1)
+            if (!H3MP_ThreadManager.host && H3MP_GameManager.sosigs.Count > 0 && oldLocalTrackedID != localTrackedID && H3MP_GameManager.sosigs[localTrackedID].trackedID == -1)
             {
                 int originalLocalTrackedID = -1;
                 if (H3MP_Client.tempLocalSosigOriginalIDs.ContainsKey(oldLocalTrackedID))

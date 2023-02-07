@@ -59,6 +59,7 @@ namespace H3MP
         public static int playersPresent = 0;
         public static int playerStateAddtionalDataSize = -1;
         public static int instance = 0;
+        public static bool sceneLoading;
 
         public static long ping = -1;
 
@@ -1782,6 +1783,8 @@ namespace H3MP
 
             if (loading) // Just started loading
             {
+                sceneLoading = true;
+
                 if (playersPresent > 0)
                 {
                     giveControlOfDestroyed = true;
@@ -1841,6 +1844,8 @@ namespace H3MP
             }
             else // Finished loading
             {
+                sceneLoading = false;
+
                 --Mod.skipAllInstantiates;
 
                 giveControlOfDestroyed = false;

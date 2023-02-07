@@ -412,7 +412,7 @@ namespace H3MP
             int oldLocalTrackedID = H3MP_GameManager.encryptions[localTrackedID].localTrackedID;
             H3MP_GameManager.encryptions[localTrackedID].localTrackedID = localTrackedID;
             H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
-            if (H3MP_GameManager.encryptions.Count > 0 && oldLocalTrackedID != localTrackedID && H3MP_GameManager.encryptions[localTrackedID].trackedID == -1)
+            if (!H3MP_ThreadManager.host && H3MP_GameManager.encryptions.Count > 0 && oldLocalTrackedID != localTrackedID && H3MP_GameManager.encryptions[localTrackedID].trackedID == -1)
             {
                 int originalLocalTrackedID = -1;
                 if (H3MP_Client.tempLocalEncryptionOriginalIDs.ContainsKey(oldLocalTrackedID))

@@ -7230,7 +7230,6 @@ namespace H3MP
                     if (instruction.operand.ToString().Contains("get_activeSelf"))
                     {
                         instructionList.InsertRange(i + 2, toInsert);
-                        Mod.LogInfo("EncryptionRespawnRandSubPatch transpiler applied");
                         break;
                     }
                 }

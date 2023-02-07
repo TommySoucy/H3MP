@@ -245,8 +245,8 @@ namespace H3MP
             }
 
             // Also spawn host player in this client
-            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), SceneManager.GetActiveScene().name, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF);
-            inControl &= !scene.Equals(SceneManager.GetActiveScene().name);
+            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF);
+            inControl &= !scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name);
 
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
             {
