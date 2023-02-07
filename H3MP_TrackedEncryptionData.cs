@@ -400,10 +400,33 @@ namespace H3MP
             H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localTrackedID);
             H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localTrackedID);
 
-            // Remove
+            // Remove from temp lists if in there
+            if (!H3MP_ThreadManager.host && H3MP_Client.tempLocalEncryptionOriginalIDs.ContainsKey(localTrackedID))
+            {
+                H3MP_Client.tempLocalEncryptions.Remove(H3MP_Client.tempLocalEncryptionOriginalIDs[localTrackedID]);
+                H3MP_Client.tempLocalEncryptionOriginalIDs.Remove(localTrackedID);
+            }
+
+            // Remove from actual local encryptions list and update the localTrackedID of the encryption we are moving
             H3MP_GameManager.encryptions[localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-            H3MP_GameManager.encryptions[localTrackedID].localTrackedID = localTrackedID;
+            int oldLocalTrackedID = H3MP_GameManager.encryptions[localTrackedID].localTrackedID;
             H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+            if (H3MP_GameManager.encryptions.Count > 1 && H3MP_GameManager.encryptions[localTrackedID].trackedID == -1)
+            {
+                int originalLocalTrackedID = -1;
+                if (H3MP_Client.tempLocalEncryptionOriginalIDs.ContainsKey(oldLocalTrackedID))
+                {
+                    originalLocalTrackedID = H3MP_Client.tempLocalEncryptionOriginalIDs[oldLocalTrackedID];
+                    H3MP_Client.tempLocalEncryptionOriginalIDs.Remove(oldLocalTrackedID);
+                    H3MP_Client.tempLocalEncryptions.Remove(oldLocalTrackedID);
+                }
+                else
+                {
+                    originalLocalTrackedID = oldLocalTrackedID;
+                }
+                H3MP_Client.tempLocalEncryptionOriginalIDs.Add(localTrackedID, originalLocalTrackedID);
+                H3MP_Client.tempLocalEncryptions.Add(originalLocalTrackedID, H3MP_GameManager.encryptions[localTrackedID]);
+            }
             localTrackedID = -1;
         }
     }

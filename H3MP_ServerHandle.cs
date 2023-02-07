@@ -451,10 +451,6 @@ namespace H3MP
                     H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
                 }
             }
-            else
-            {
-                Mod.LogWarning("Server received order to destroy sosig but it was already null in H3MP_Server.sosigs, trackedID: "+trackedID);
-            }
 
             H3MP_ServerSend.DestroySosig(trackedID, removeFromList, clientID);
         }
@@ -491,10 +487,6 @@ namespace H3MP
                     H3MP_GameManager.autoMeatersByInstanceByScene[trackedAutoMeater.scene][trackedAutoMeater.instance].Remove(trackedID);
                 }
             }
-            else
-            {
-                Mod.LogWarning("Server received order to destroy autoMeater but it was already null in H3MP_Server.autoMeaters, trackedID: " + trackedID);
-            }
 
             H3MP_ServerSend.DestroyAutoMeater(trackedID, removeFromList, clientID);
         }
@@ -530,10 +522,6 @@ namespace H3MP
                     H3MP_Server.availableEncryptionIndices.Add(trackedID);
                     H3MP_GameManager.encryptionsByInstanceByScene[trackedEncryption.scene][trackedEncryption.instance].Remove(trackedID);
                 }
-            }
-            else
-            {
-                Mod.LogWarning("Server received order to destroy encryption but it was already null in H3MP_Server.encryptions, trackedID: " + trackedID);
             }
 
             H3MP_ServerSend.DestroyEncryption(trackedID, removeFromList, clientID);
@@ -574,10 +562,6 @@ namespace H3MP
                     H3MP_Server.availableItemIndices.Add(trackedID);
                     H3MP_GameManager.itemsByInstanceByScene[trackedItem.scene][trackedItem.instance].Remove(trackedID);
                 }
-            }
-            else
-            {
-                Mod.LogWarning("Server received order to destroy sosig but it was already null in H3MP_Server.sosigs, trackedID: " + trackedID);
             }
 
             H3MP_ServerSend.DestroyItem(trackedID, removeFromList, clientID);

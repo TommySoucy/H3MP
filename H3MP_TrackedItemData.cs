@@ -564,10 +564,34 @@ namespace H3MP
             H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localTrackedID);
             H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localTrackedID);
 
-            // Remove
+            // Remove from temp lists if in there
+            if (!H3MP_ThreadManager.host && H3MP_Client.tempLocalItemOriginalIDs.ContainsKey(localTrackedID))
+            {
+                H3MP_Client.tempLocalItems.Remove(H3MP_Client.tempLocalItemOriginalIDs[localTrackedID]);
+                H3MP_Client.tempLocalItemOriginalIDs.Remove(localTrackedID);
+            }
+
+            // Remove from actual local items list and update the localTrackedID of the item we are moving
             H3MP_GameManager.items[localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+            int oldLocalTrackedID = H3MP_GameManager.items[localTrackedID].localTrackedID;
             H3MP_GameManager.items[localTrackedID].localTrackedID = localTrackedID;
             H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+            if (H3MP_GameManager.items.Count > 1 && H3MP_GameManager.items[localTrackedID].trackedID == -1)
+            {
+                int originalLocalTrackedID = -1;
+                if (H3MP_Client.tempLocalItemOriginalIDs.ContainsKey(oldLocalTrackedID))
+                {
+                    originalLocalTrackedID = H3MP_Client.tempLocalItemOriginalIDs[oldLocalTrackedID];
+                    H3MP_Client.tempLocalItemOriginalIDs.Remove(oldLocalTrackedID);
+                    H3MP_Client.tempLocalItems.Remove(oldLocalTrackedID);
+                }
+                else
+                {
+                    originalLocalTrackedID = oldLocalTrackedID;
+                }
+                H3MP_Client.tempLocalItemOriginalIDs.Add(localTrackedID, originalLocalTrackedID);
+                H3MP_Client.tempLocalItems.Add(originalLocalTrackedID, H3MP_GameManager.items[localTrackedID]);
+            }
             localTrackedID = -1;
         }
 

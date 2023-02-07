@@ -10928,15 +10928,21 @@ namespace H3MP
                         }
                         else
                         {
-                            if (H3MP_ThreadManager.host)
+                            // Others may not be playing yet but we don't want to take over if the instance host is in the process of joining
+                            // So only take control if we are the instance host or if the host is not yet loading into the scene/instance
+                            if (Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID ||
+                                !H3MP_GameManager.playersByInstanceByScene[SceneManager.GetActiveScene().name][H3MP_GameManager.instance].Contains(Mod.currentTNHInstance.playerIDs[0]))
                             {
-                                Mod.currentTNHInstance.controller = 0;
-                                H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, 0);
-                            }
-                            else
-                            {
-                                Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
-                                H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, H3MP_Client.singleton.ID);
+                                if (H3MP_ThreadManager.host)
+                                {
+                                    Mod.currentTNHInstance.controller = 0;
+                                    H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, 0);
+                                }
+                                else
+                                {
+                                    Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
+                                    H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, H3MP_Client.singleton.ID);
+                                }
                             }
                         }
 
@@ -10949,17 +10955,16 @@ namespace H3MP
                         Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, H3MP_GameManager.ID);
 
                         // If was manager controller, give manager control to next currently playing
-                        if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                        if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
-                            int nextID = Mod.currentTNHInstance.currentlyPlaying.Count > 0 ? Mod.currentTNHInstance.currentlyPlaying[0] : -1;
                             if (H3MP_ThreadManager.host)
                             {
-                                H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, nextID);
+                                H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
                                 H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
                             }
                             else
                             {
-                                H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, nextID);
+                                H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
                                 H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
                             }
                         }

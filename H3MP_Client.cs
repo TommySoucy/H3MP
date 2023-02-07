@@ -48,6 +48,15 @@ namespace H3MP
         public static H3MP_TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
         public static H3MP_TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
 
+        public static Dictionary<int, int> tempLocalItemOriginalIDs = new Dictionary<int, int>();
+        public static Dictionary<int, H3MP_TrackedItemData> tempLocalItems = new Dictionary<int, H3MP_TrackedItemData>();
+        public static Dictionary<int, int> tempLocalSosigOriginalIDs = new Dictionary<int, int>();
+        public static Dictionary<int, H3MP_TrackedSosigData> tempLocalSosigs = new Dictionary<int, H3MP_TrackedSosigData>();
+        public static Dictionary<int, int> tempLocalAutoMeaterOriginalIDs = new Dictionary<int, int>();
+        public static Dictionary<int, H3MP_TrackedAutoMeaterData> tempLocalAutoMeaters = new Dictionary<int, H3MP_TrackedAutoMeaterData>();
+        public static Dictionary<int, int> tempLocalEncryptionOriginalIDs = new Dictionary<int, int>();
+        public static Dictionary<int, H3MP_TrackedEncryptionData> tempLocalEncryptions = new Dictionary<int, H3MP_TrackedEncryptionData>();
+
         private void Awake()
         {
             singleton = this;
@@ -464,6 +473,7 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
         {
+            Mod.LogInfo("Client AddTrackedItem");
             // Adjust items size to acommodate if necessary
             if (items.Length <= trackedItem.trackedID)
             {
@@ -472,12 +482,16 @@ namespace H3MP
 
             if (trackedItem.controller == H3MP_Client.singleton.ID)
             {
+                // Get our item. If the local tracked ID has changed since we requested its tracked ID, it will be in the tempLocalItems dict
+                // otherwise we will be able to get it from the local items list using the original local tracked ID we sent to the server
+                H3MP_TrackedItemData actualTrackedItem = tempLocalItems.TryGetValue(trackedItem.localTrackedID, out actualTrackedItem) ? actualTrackedItem : H3MP_GameManager.items[trackedItem.localTrackedID];
+
                 // If we already control the item it is because we are the one who sent the item to the server
                 // We just need to update the tracked ID of the item
-                H3MP_GameManager.items[trackedItem.localTrackedID].trackedID = trackedItem.trackedID;
+                actualTrackedItem.trackedID = trackedItem.trackedID;
 
                 // Add the item to client global list
-                items[trackedItem.trackedID] = H3MP_GameManager.items[trackedItem.localTrackedID];
+                items[trackedItem.trackedID] = actualTrackedItem;
 
                 items[trackedItem.trackedID].OnTrackedIDReceived();
             }
@@ -525,15 +539,19 @@ namespace H3MP
 
             if (trackedSosig.controller == H3MP_Client.singleton.ID)
             {
+                // Get our sosig. If the local tracked ID has changed since we requested its tracked ID, it will be in the tempLocalSosigs dict
+                // otherwise we will be able to get it from the local sosigs list using the original local tracked ID we sent to the server
+                H3MP_TrackedSosigData actualTrackedSosig = tempLocalSosigs.TryGetValue(trackedSosig.localTrackedID, out actualTrackedSosig) ? actualTrackedSosig : H3MP_GameManager.sosigs[trackedSosig.localTrackedID];
+
                 // If we already control the sosig it is because we are the one who sent the sosig to the server
                 // We just need to update the tracked ID of the sosig
-                H3MP_GameManager.sosigs[trackedSosig.localTrackedID].trackedID = trackedSosig.trackedID;
+                actualTrackedSosig.trackedID = trackedSosig.trackedID;
 
                 // Add the sosig to client global list
-                sosigs[trackedSosig.trackedID] = H3MP_GameManager.sosigs[trackedSosig.localTrackedID];
+                sosigs[trackedSosig.trackedID] = actualTrackedSosig;
 
                 // Send queued up orders
-                sosigs[trackedSosig.trackedID].OnTrackedIDReceived();
+                actualTrackedSosig.OnTrackedIDReceived();
 
                 // Only send latest data if not destroyed
                 if (sosigs[trackedSosig.trackedID] != null)
@@ -607,15 +625,19 @@ namespace H3MP
 
             if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
             {
+                // Get our autoMeater. If the local tracked ID has changed since we requested its tracked ID, it will be in the tempLocalAutoMeaters dict
+                // otherwise we will be able to get it from the local autoMeaters list using the original local tracked ID we sent to the server
+                H3MP_TrackedAutoMeaterData actualTrackedAutoMeater = tempLocalAutoMeaters.TryGetValue(trackedAutoMeater.localTrackedID, out actualTrackedAutoMeater) ? actualTrackedAutoMeater : H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID];
+
                 // If we already control the AutoMeater it is because we are the one who sent the AutoMeater to the server
                 // We just need to update the tracked ID of the AutoMeater
-                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].trackedID = trackedAutoMeater.trackedID;
+                actualTrackedAutoMeater.trackedID = trackedAutoMeater.trackedID;
 
                 // Add the AutoMeater to client global list
-                autoMeaters[trackedAutoMeater.trackedID] = H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID];
+                autoMeaters[trackedAutoMeater.trackedID] = actualTrackedAutoMeater;
 
                 // Send queued up orders
-                autoMeaters[trackedAutoMeater.trackedID].OnTrackedIDReceived();
+                actualTrackedAutoMeater.OnTrackedIDReceived();
             }
             else
             {
@@ -653,7 +675,6 @@ namespace H3MP
 
         public static void AddTrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption)
         {
-            Mod.LogInfo("Received order to add an Encryption");
             // Adjust Encryptions size to acommodate if necessary
             if (encryptions.Length <= trackedEncryption.trackedID)
             {
@@ -662,15 +683,19 @@ namespace H3MP
 
             if (trackedEncryption.controller == H3MP_Client.singleton.ID)
             {
+                // Get our encryption. If the local tracked ID has changed since we requested its tracked ID, it will be in the tempLocalEncryptions dict
+                // otherwise we will be able to get it from the local autoMeaters list using the original local tracked ID we sent to the server
+                H3MP_TrackedEncryptionData actualTrackedEncryption = tempLocalEncryptions.TryGetValue(trackedEncryption.localTrackedID, out actualTrackedEncryption) ? actualTrackedEncryption : H3MP_GameManager.encryptions[trackedEncryption.localTrackedID];
+
                 // If we already control the Encryption it is because we are the one who sent the Encryption to the server
                 // We just need to update the tracked ID of the Encryption
-                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].trackedID = trackedEncryption.trackedID;
+                actualTrackedEncryption.trackedID = trackedEncryption.trackedID;
 
                 // Add the Encryption to client global list
-                encryptions[trackedEncryption.trackedID] = H3MP_GameManager.encryptions[trackedEncryption.localTrackedID];
+                encryptions[trackedEncryption.trackedID] = actualTrackedEncryption;
 
                 // Send queued up orders
-                encryptions[trackedEncryption.trackedID].OnTrackedIDReceived();
+                actualTrackedEncryption.OnTrackedIDReceived();
 
                 // Only send latest data if not destroyed
                 if (encryptions[trackedEncryption.trackedID] != null)
