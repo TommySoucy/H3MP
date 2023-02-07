@@ -310,7 +310,7 @@ namespace H3MP
             int oldLocalTrackedID = H3MP_GameManager.autoMeaters[localTrackedID].localTrackedID;
             H3MP_GameManager.autoMeaters[localTrackedID].localTrackedID = localTrackedID;
             H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-            if (H3MP_GameManager.autoMeaters.Count > 1 && H3MP_GameManager.autoMeaters[localTrackedID].trackedID == -1)
+            if (H3MP_GameManager.autoMeaters.Count > 0 && oldLocalTrackedID != localTrackedID && H3MP_GameManager.autoMeaters[localTrackedID].trackedID == -1)
             {
                 int originalLocalTrackedID = -1;
                 if (H3MP_Client.tempLocalAutoMeaterOriginalIDs.ContainsKey(oldLocalTrackedID))

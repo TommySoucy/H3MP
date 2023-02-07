@@ -473,7 +473,6 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
         {
-            Mod.LogInfo("Client AddTrackedItem");
             // Adjust items size to acommodate if necessary
             if (items.Length <= trackedItem.trackedID)
             {

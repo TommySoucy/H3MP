@@ -1919,7 +1919,7 @@ namespace H3MP
             // Clear any tracked object that we are supposed to be controlling that doesn't have a physicalItem assigned
             // These can build up in certain cases. The main one is when we load into a level which contains items that are inactive by default
             // These items will never be awoken, they will therefore be tracked but not synced with other clients. When we leave the scene, these items 
-            // may be destroyed but heir OnDestroy will not be called because they were never awoken, meaning they will still be in the items list
+            // may be destroyed but their OnDestroy will not be called because they were never awoken, meaning they will still be in the items list
             for(int i=0; i < items.Count; ++i)
             {
                 if (items[i].physicalItem == null)
