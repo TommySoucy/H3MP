@@ -359,11 +359,40 @@ namespace H3MP
             }
 
             Mod.RemovePlayerFromLists(ID);
+            SpecificDisconnect();
             H3MP_ServerSend.ClientDisconnect(ID);
 
             player = null;
             tcp.Disconnect();
             udp.Disconnect();
+        }
+
+        // MOD: This will be called after disconnection to reset specific fields
+        //      For example, here we deal with current TNH data
+        //      If your mod has some H3MP dependent data that you want to get rid of when you disconnect from a server, do it here
+        private void SpecificDisconnect()
+        {
+            if (H3MP_GameManager.TNHInstances.TryGetValue(player.instance, out H3MP_TNHInstance TNHInstance) && TNHInstance.currentlyPlaying.Contains(ID)) // TNH_Manager was set to null and we are currently playing
+            {
+                TNHInstance.RemoveCurrentlyPlaying(true, ID);
+
+                // If was manager controller, give manager control to next currently playing
+                if (TNHInstance.controller == ID && TNHInstance.currentlyPlaying.Count > 0)
+                {
+                    // TODO: Review: Here, the controller would usually send TNH data, but since the controller doesn't exist anymore
+                    //               the new controlelr will never receive the TNH data, in which case we should make sure the new controller can still take
+                    //               over with the data it currently has about the instance
+                    TNHInstance.controller = TNHInstance.currentlyPlaying[0];
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHController(TNHInstance.instance, TNHInstance.currentlyPlaying[0]);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHController(TNHInstance.instance, TNHInstance.currentlyPlaying[0]);
+                    }
+                }
+            }
         }
     }
 }

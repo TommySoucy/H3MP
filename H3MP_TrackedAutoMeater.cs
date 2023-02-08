@@ -35,6 +35,8 @@ namespace H3MP
                 else
                 {
                     // Tell the server we need to add this item to global tracked AutoMeaters
+                    data.localWaitingIndex = H3MP_Client.localAutoMeaterCounter++;
+                    H3MP_Client.waitingLocalAutoMeaters.Add(data.localWaitingIndex, data);
                     H3MP_ClientSend.TrackedAutoMeater(data);
                 }
             }
@@ -51,7 +53,7 @@ namespace H3MP
 
             if (H3MP_ThreadManager.host)
             {
-                if (H3MP_GameManager.giveControlOfDestroyed)
+                if (H3MP_GameManager.giveControlOfDestroyed > 0)
                 {
                     // We just want to give control of our auto meaters to another client (usually because leaving scene with other clients left inside)
                     if (data.controller == 0)
@@ -114,7 +116,7 @@ namespace H3MP
             else
             {
                 bool removeFromLocal = true;
-                if (H3MP_GameManager.giveControlOfDestroyed)
+                if (H3MP_GameManager.giveControlOfDestroyed > 0)
                 {
                     if (data.controller == H3MP_Client.singleton.ID)
                     {

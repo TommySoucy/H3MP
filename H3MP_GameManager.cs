@@ -50,7 +50,7 @@ namespace H3MP
         public static Dictionary<string, Dictionary<int, List<int>>> autoMeatersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> encryptionsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
 
-        public static bool giveControlOfDestroyed;
+        public static int giveControlOfDestroyed;
         public static bool controlOverride;
 
         public static int ID = 0;
@@ -60,6 +60,7 @@ namespace H3MP
         public static int playerStateAddtionalDataSize = -1;
         public static int instance = 0;
         public static bool sceneLoading;
+        public static int instanceAtSceneLoadStart;
 
         public static long ping = -1;
 
@@ -637,6 +638,9 @@ namespace H3MP
                                 else
                                 {
                                     // Tell the server we need to add this item to global tracked items
+                                    trackedItem.data.localWaitingIndex = H3MP_Client.localItemCounter++;
+                                    Mod.LogInfo("Client tracking a new item, sending to server with local waiting index: " + trackedItem.data.localWaitingIndex);
+                                    H3MP_Client.waitingLocalItems.Add(trackedItem.data.localWaitingIndex, trackedItem.data);
                                     H3MP_ClientSend.TrackedItem(trackedItem.data);
                                 }
                             }
@@ -819,6 +823,8 @@ namespace H3MP
                             else
                             {
                                 // Tell the server we need to add this item to global tracked items
+                                trackedSosig.data.localWaitingIndex = H3MP_Client.localSosigCounter++;
+                                H3MP_Client.waitingLocalSosigs.Add(trackedSosig.data.localWaitingIndex, trackedSosig.data);
                                 H3MP_ClientSend.TrackedSosig(trackedSosig.data);
                             }
                         }
@@ -1071,6 +1077,8 @@ namespace H3MP
                             else
                             {
                                 // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
+                                trackedAutoMeater.data.localWaitingIndex = H3MP_Client.localAutoMeaterCounter++;
+                                H3MP_Client.waitingLocalAutoMeaters.Add(trackedAutoMeater.data.localWaitingIndex, trackedAutoMeater.data);
                                 H3MP_ClientSend.TrackedAutoMeater(trackedAutoMeater.data);
                             }
                         }
@@ -1215,6 +1223,8 @@ namespace H3MP
                             else
                             {
                                 // Tell the server we need to add this Encryption to global tracked Encryptions
+                                trackedEncryption.data.localWaitingIndex = H3MP_Client.localEncryptionCounter++;
+                                H3MP_Client.waitingLocalEncryptions.Add(trackedEncryption.data.localWaitingIndex, trackedEncryption.data);
                                 H3MP_ClientSend.TrackedEncryption(trackedEncryption.data);
                             }
                         }
@@ -1403,13 +1413,18 @@ namespace H3MP
 
         public static void AddInstance(int instance)
         {
-            activeInstances.Add(instance, 0);
+            // The instance could have already been created in UpdatePlayerInstance
+            if (!activeInstances.ContainsKey(instance))
+            {
+                activeInstances.Add(instance, 0);
+            }
 
             Mod.modInstance.OnInstanceReceived(instance);
         }
 
         public static void SetInstance(int instance)
         {
+            Mod.LogInfo("Changing instance from " + H3MP_GameManager.instance + " to " + instance);
             // Remove ourselves from the previous instance and manage dicts accordingly
             --activeInstances[H3MP_GameManager.instance];
             if(activeInstances[H3MP_GameManager.instance] == 0 && H3MP_GameManager.instance != 0)
@@ -1441,10 +1456,8 @@ namespace H3MP
             // Set locally
             H3MP_GameManager.instance = instance;
 
-            bool isNewInstance = false;
             if (!activeInstances.ContainsKey(instance))
             {
-                isNewInstance = true;
                 activeInstances.Add(instance, 0);
             }
             ++activeInstances[instance];
@@ -1470,33 +1483,50 @@ namespace H3MP
                 }
             }
 
-            // Item we do not control: Destroy, giveControlOfDestroyed = true will ensure destruction does not get sent
-            // Item we control: Destroy, giveControlOfDestroyed = true will ensure item's control is passed on if necessary
-            // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these to new instance
-            giveControlOfDestroyed = true;
-            H3MP_TrackedItemData[] itemArrToUse = null;
-            H3MP_TrackedSosigData[] sosigArrToUse = null;
-            H3MP_TrackedAutoMeaterData[] autoMeaterArrToUse = null;
-            H3MP_TrackedEncryptionData[] encryptionArrToUse = null;
-            if (H3MP_ThreadManager.host)
+            bool bringItems = !H3MP_GameManager.playersByInstanceByScene.TryGetValue(sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> ci) ||
+                              !ci.TryGetValue(instance, out List<int> op) || op.Count == 0;
+
+            // If we switch instance while loading a new scene, we will want to update control override
+            // because when we started loading the scene, we didn't necessarily know in which instance we would end up
+            if (sceneLoading)
             {
-                itemArrToUse = H3MP_Server.items;
-                sosigArrToUse = H3MP_Server.sosigs;
-                autoMeaterArrToUse = H3MP_Server.autoMeaters;
-                encryptionArrToUse = H3MP_Server.encryptions;
+                controlOverride = bringItems;
             }
-            else
+            else // Scene not currently loading, we don't want to manage items if we are loading into a new scene so only do it in this case
             {
-                itemArrToUse = H3MP_Client.items;
-                sosigArrToUse = H3MP_Client.sosigs;
-                autoMeaterArrToUse = H3MP_Client.autoMeaters;
-                encryptionArrToUse = H3MP_Client.encryptions;
-            }
-            for (int i = itemArrToUse.Length - 1; i >= 0; --i)
-            {
-                if (itemArrToUse[i] != null && itemArrToUse[i].physicalItem != null)
+                // Item we do not control: Destroy, giveControlOfDestroyed = true will ensure destruction does not get sent
+                // Item we control: Destroy, giveControlOfDestroyed = true will ensure item's control is passed on if necessary
+                // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these to new instance
+                ++giveControlOfDestroyed;
+                H3MP_TrackedItemData[] itemArrToUse = null;
+                H3MP_TrackedSosigData[] sosigArrToUse = null;
+                H3MP_TrackedAutoMeaterData[] autoMeaterArrToUse = null;
+                H3MP_TrackedEncryptionData[] encryptionArrToUse = null;
+                if (H3MP_ThreadManager.host)
                 {
-                    if (IsControlled(itemArrToUse[i].physicalItem.physicalObject))
+                    itemArrToUse = H3MP_Server.items;
+                    sosigArrToUse = H3MP_Server.sosigs;
+                    autoMeaterArrToUse = H3MP_Server.autoMeaters;
+                    encryptionArrToUse = H3MP_Server.encryptions;
+                }
+                else
+                {
+                    itemArrToUse = H3MP_Client.items;
+                    sosigArrToUse = H3MP_Client.sosigs;
+                    autoMeaterArrToUse = H3MP_Client.autoMeaters;
+                    encryptionArrToUse = H3MP_Client.encryptions;
+                }
+                List<H3MP_TrackedItemData> filteredItems = new List<H3MP_TrackedItemData>();
+                for (int i = itemArrToUse.Length - 1; i >= 0; --i)
+                {
+                    if (itemArrToUse[i] != null && itemArrToUse[i].physicalItem != null)
+                    {
+                        filteredItems.Add(itemArrToUse[i]);
+                    }
+                }
+                for (int i = 0; i < filteredItems.Count; ++i)
+                {
+                    if (IsControlled(filteredItems[i].physicalItem.physicalObject))
                     {
                         // Send destruction without removing from global list
                         // We just don't want the other clients to have the item on their side anymore if they had it
@@ -1511,13 +1541,13 @@ namespace H3MP
                     }
                     else // Not being interacted with, just destroy on our side and give control
                     {
-                        if (isNewInstance)
+                        if (bringItems)
                         {
-                            GameObject go = itemArrToUse[i].physicalItem.gameObject;
-                            bool hadNoParent = itemArrToUse[i].physicalItem.data.parent == -1;
+                            GameObject go = filteredItems[i].physicalItem.gameObject;
+                            bool hadNoParent = filteredItems[i].physicalItem.data.parent == -1;
 
                             // Destroy just the tracked script because we want to make a copy for ourselves
-                            DestroyImmediate(itemArrToUse[i].physicalItem);
+                            DestroyImmediate(filteredItems[i].physicalItem);
 
                             // Only sync the top parent of items. The children will also get retracked as children
                             if (hadNoParent)
@@ -1530,16 +1560,22 @@ namespace H3MP
                             // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
                             // like we do now if we didn't do immediate because OnDestroy() gets called later
                             // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                            DestroyImmediate(itemArrToUse[i].physicalItem.gameObject);
+                            DestroyImmediate(filteredItems[i].physicalItem.gameObject);
                         }
                     }
                 }
-            }
-            for (int i = sosigArrToUse.Length - 1; i >= 0; --i)
-            {
-                if (sosigArrToUse[i] != null && sosigArrToUse[i].physicalObject != null)
+
+                List<H3MP_TrackedSosigData> filteredSosigs = new List<H3MP_TrackedSosigData>();
+                for (int i = sosigArrToUse.Length - 1; i >= 0; --i)
                 {
-                    if (IsControlled(sosigArrToUse[i].physicalObject.physicalSosigScript))
+                    if (sosigArrToUse[i] != null && sosigArrToUse[i].physicalObject != null)
+                    {
+                        filteredSosigs.Add(sosigArrToUse[i]);
+                    }
+                }
+                for (int i = 0; i < filteredSosigs.Count; ++i)
+                {
+                    if (IsControlled(filteredSosigs[i].physicalObject.physicalSosigScript))
                     {
                         // Send destruction without removing from global list
                         // We just don't want the other clients to have the sosig on their side anymore if they had it
@@ -1554,12 +1590,12 @@ namespace H3MP
                     }
                     else // Not being interacted with, just destroy on our side and give control
                     {
-                        if (isNewInstance)
+                        if (bringItems)
                         {
-                            GameObject go = sosigArrToUse[i].physicalObject.gameObject;
+                            GameObject go = filteredSosigs[i].physicalObject.gameObject;
 
                             // Destroy just the tracked script because we want to make a copy for ourselves
-                            DestroyImmediate(sosigArrToUse[i].physicalObject);
+                            DestroyImmediate(filteredSosigs[i].physicalObject);
 
                             // Retrack sosig
                             SyncTrackedSosigs(go.transform, true, SceneManager.GetActiveScene().name);
@@ -1569,16 +1605,22 @@ namespace H3MP
                             // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
                             // like we do now if we didn't do immediate because OnDestroy() gets called later
                             // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                            DestroyImmediate(sosigArrToUse[i].physicalObject.gameObject);
+                            DestroyImmediate(filteredSosigs[i].physicalObject.gameObject);
                         }
                     }
                 }
-            }
-            for (int i = autoMeaterArrToUse.Length - 1; i >= 0; --i)
-            {
-                if (autoMeaterArrToUse[i] != null && autoMeaterArrToUse[i].physicalObject != null)
+
+                List<H3MP_TrackedAutoMeaterData> filteredAutoMeaters = new List<H3MP_TrackedAutoMeaterData>();
+                for (int i = autoMeaterArrToUse.Length - 1; i >= 0; --i)
                 {
-                    if (IsControlled(autoMeaterArrToUse[i].physicalObject.physicalAutoMeaterScript))
+                    if (autoMeaterArrToUse[i] != null && autoMeaterArrToUse[i].physicalObject != null)
+                    {
+                        filteredAutoMeaters.Add(autoMeaterArrToUse[i]);
+                    }
+                }
+                for (int i = 0; i < filteredAutoMeaters.Count; ++i)
+                {
+                    if (IsControlled(filteredAutoMeaters[i].physicalObject.physicalAutoMeaterScript))
                     {
                         // Send destruction without removing from global list
                         // We just don't want the other clients to have the sosig on their side anymore if they had it
@@ -1593,12 +1635,12 @@ namespace H3MP
                     }
                     else // Not being interacted with, just destroy on our side and give control
                     {
-                        if (isNewInstance)
+                        if (bringItems)
                         {
-                            GameObject go = autoMeaterArrToUse[i].physicalObject.gameObject;
+                            GameObject go = filteredAutoMeaters[i].physicalObject.gameObject;
 
                             // Destroy just the tracked script because we want to make a copy for ourselves
-                            DestroyImmediate(autoMeaterArrToUse[i].physicalObject);
+                            DestroyImmediate(filteredAutoMeaters[i].physicalObject);
 
                             // Retrack sosig
                             SyncTrackedAutoMeaters(go.transform, true, SceneManager.GetActiveScene().name);
@@ -1608,21 +1650,27 @@ namespace H3MP
                             // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
                             // like we do now if we didn't do immediate because OnDestroy() gets called later
                             // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                            DestroyImmediate(autoMeaterArrToUse[i].physicalObject.gameObject);
+                            DestroyImmediate(filteredAutoMeaters[i].physicalObject.gameObject);
                         }
                     }
                 }
-            }
-            for (int i = encryptionArrToUse.Length - 1; i >= 0; --i)
-            {
-                if (encryptionArrToUse[i] != null && encryptionArrToUse[i].physicalObject != null)
+
+                List<H3MP_TrackedEncryptionData> filteredEncryptions = new List<H3MP_TrackedEncryptionData>();
+                for (int i = encryptionArrToUse.Length - 1; i >= 0; --i)
                 {
-                    if (isNewInstance)
+                    if (encryptionArrToUse[i] != null && encryptionArrToUse[i].physicalObject != null)
                     {
-                        GameObject go = encryptionArrToUse[i].physicalObject.gameObject;
+                        filteredEncryptions.Add(encryptionArrToUse[i]);
+                    }
+                }
+                for (int i = 0; i < filteredEncryptions.Count; ++i)
+                {
+                    if (bringItems)
+                    {
+                        GameObject go = filteredEncryptions[i].physicalObject.gameObject;
 
                         // Destroy just the tracked script because we want to make a copy for ourselves
-                        DestroyImmediate(encryptionArrToUse[i].physicalObject);
+                        DestroyImmediate(filteredEncryptions[i].physicalObject);
 
                         // Retrack sosig
                         SyncTrackedEncryptions(go.transform, true, SceneManager.GetActiveScene().name);
@@ -1632,11 +1680,11 @@ namespace H3MP
                         // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
                         // like we do now if we didn't do immediate because OnDestroy() gets called later
                         // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                        DestroyImmediate(encryptionArrToUse[i].physicalObject.gameObject);
+                        DestroyImmediate(filteredEncryptions[i].physicalObject.gameObject);
                     }
                 }
+                --giveControlOfDestroyed;
             }
-            giveControlOfDestroyed = false;
 
             // Send update to other clients
             if (H3MP_ThreadManager.host)
@@ -1645,7 +1693,7 @@ namespace H3MP
             }
             else
             {
-                H3MP_ClientSend.PlayerInstance(instance);
+                H3MP_ClientSend.PlayerInstance(instance, sceneLoading);
             }
 
             // Set players active and playersPresent
@@ -1665,7 +1713,7 @@ namespace H3MP
 
                         player.Value.SetEntitiesRegistered(true);
 
-                        if (H3MP_ThreadManager.host)
+                        if (H3MP_ThreadManager.host && !sceneLoading)
                         {
                             // Request most up to date items from the client
                             // We do this because we may not have the most up to date version of items/sosigs since
@@ -1783,12 +1831,11 @@ namespace H3MP
 
             if (loading) // Just started loading
             {
+                Mod.LogInfo("Switching scene, from " + SceneManager.GetActiveScene().name + " to " + LoadLevelBeginPatch.loadingLevel);
                 sceneLoading = true;
+                instanceAtSceneLoadStart = instance;
 
-                if (playersPresent > 0)
-                {
-                    giveControlOfDestroyed = true;
-                }
+                ++giveControlOfDestroyed;
 
                 // Send an update to all other clients so they can decide whether they can see this client
                 if (H3MP_ThreadManager.host)
@@ -1816,6 +1863,22 @@ namespace H3MP
                     {
                         Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID);
                         Mod.currentlyPlayingTNH = false;
+
+                        // If was manager controller, give manager control to next currently playing
+                        if (Mod.currentTNHInstance.controller == ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+                        {
+                            Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
+                            if (H3MP_ThreadManager.host)
+                            {
+                                H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
+                                H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
+                                H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                            }
+                        }
                     }
                     Mod.currentTNHInstance = null;
                     Mod.TNHSpectating = false;
@@ -1823,10 +1886,11 @@ namespace H3MP
                     Mod.temporaryHoldTurretIDs.Clear();
                     Mod.temporarySupplySosigIDs.Clear();
                     Mod.temporarySupplyTurretIDs.Clear();
+                    Mod.currentlyPlayingTNH = false;
                 }
 
                 // Check if there are other players where we are going
-                if(playersByInstanceByScene.TryGetValue(LoadLevelBeginPatch.loadingLevel, out Dictionary<int, List<int>> relevantInstances))
+                if (playersByInstanceByScene.TryGetValue(LoadLevelBeginPatch.loadingLevel, out Dictionary<int, List<int>> relevantInstances))
                 {
                     if(relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
                     {
@@ -1844,11 +1908,12 @@ namespace H3MP
             }
             else // Finished loading
             {
+                Mod.LogInfo("Arrived in scene: " + SceneManager.GetActiveScene().name);
                 sceneLoading = false;
 
                 --Mod.skipAllInstantiates;
 
-                giveControlOfDestroyed = false;
+                --giveControlOfDestroyed;
 
                 Scene loadedScene = SceneManager.GetActiveScene();
 
@@ -1870,10 +1935,10 @@ namespace H3MP
 
                             if (H3MP_ThreadManager.host)
                             {
-                                // Request most up to date items from the client
-                                // We do this because we may not have the most up to date version of items/sosigs since
+                                // Request most up to date objects from the client
+                                // We do this because we may not have the most up to date version of objects since
                                 // clients only send updated data when there are others in their scene
-                                // But we need the most of to date data to instantiate the item/sosig
+                                // But we need the most of to date data to instantiate the object
                                 H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                             }
                         }

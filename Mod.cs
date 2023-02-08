@@ -8,15 +8,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
-using static FistVR.RemoteGun;
-using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -1651,6 +1648,7 @@ namespace H3MP
             PatchVerify.Verify(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerGenerateSentryPatrolOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerGeneratePatrolOriginal, harmony, true);
+            //PatchVerify.Verify(TNH_ManagerGenerateSpawnSosigOriginal, harmony, true);
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
@@ -1665,6 +1663,7 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, new HarmonyMethod(TNH_ManagerPatchAddFVRObjectToTrackedListPrefix));
             harmony.Patch(TNH_ManagerGenerateSentryPatrolOriginal, new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPrefix), new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPostfix));
             harmony.Patch(TNH_ManagerGeneratePatrolOriginal, new HarmonyMethod(TNH_ManagerGeneratePatrolPrefix), new HarmonyMethod(TNH_ManagerGeneratePatrolPostfix));
+            //harmony.Patch(TNH_ManagerGenerateSpawnSosigOriginal, new HarmonyMethod(TNH_ManagerGenerateSpawnSosigPrefix));
 
             // TNHSupplyPointPatch
             MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1738,6 +1737,8 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchDeleteSosigsPrefix = typeof(TNH_HoldPointPatch).GetMethod("DeleteSosigsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchDeleteTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("DeleteTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchDeleteTurretsPrefix = typeof(TNH_HoldPointPatch).GetMethod("DeleteTurretsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnSystemNodeOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnSystemNode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TNH_HoldPointPatchSystemNodeOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchSpawnEntitiesOriginal, harmony, true);
@@ -1761,6 +1762,7 @@ namespace H3MP
             PatchVerify.Verify(TNH_HoldPointPatchDeleteAllActiveTargetsOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchDeleteSosigsOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchDeleteTurretsOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnSystemNodeOriginal, harmony, true);
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
             harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
@@ -1783,6 +1785,7 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchDeleteAllActiveTargetsOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteAllActiveTargetsPrefix));
             harmony.Patch(TNH_HoldPointPatchDeleteSosigsOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteSosigsPrefix));
             harmony.Patch(TNH_HoldPointPatchDeleteTurretsOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteTurretsPrefix));
+            harmony.Patch(TNH_HoldPointPatchSpawnSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnSystemNodePrefix));
 
             // TNHWeaponCrateSpawnObjectsPatch
             MethodInfo TNH_WeaponCrateSpawnObjectsPatchOriginal = typeof(TNH_WeaponCrate).GetMethod("SpawnObjectsRaw", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -10903,8 +10906,11 @@ namespace H3MP
 
                         if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
+                            Mod.LogInfo("Joined TNH and other players");
                             if (Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID)
                             {
+                                Mod.LogInfo("\tWe are instance host, taking control");
+                                Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
                                 if (H3MP_ThreadManager.host)
                                 {
                                     H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, 0);
@@ -10927,19 +10933,21 @@ namespace H3MP
                         }
                         else
                         {
+                            Mod.LogInfo("Joined TNH and no other players");
                             // Others may not be playing yet but we don't want to take over if the instance host is in the process of joining
                             // So only take control if we are the instance host or if the host is not yet loading into the scene/instance
                             if (Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID ||
-                                !H3MP_GameManager.playersByInstanceByScene[SceneManager.GetActiveScene().name][H3MP_GameManager.instance].Contains(Mod.currentTNHInstance.playerIDs[0]))
+                                !H3MP_GameManager.playersByInstanceByScene.TryGetValue(SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> instances) ||
+                                !instances.TryGetValue(H3MP_GameManager.instance, out List<int> players) || !players.Contains(Mod.currentTNHInstance.playerIDs[0]))
                             {
+                                Mod.LogInfo("\tWe are instance host or instance host not joining yet");
+                                Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
                                 if (H3MP_ThreadManager.host)
                                 {
-                                    Mod.currentTNHInstance.controller = 0;
                                     H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, 0);
                                 }
                                 else
                                 {
-                                    Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
                                     H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, H3MP_Client.singleton.ID);
                                 }
                             }
@@ -10948,7 +10956,7 @@ namespace H3MP
                         Mod.currentTNHInstance.AddCurrentlyPlaying(true, H3MP_GameManager.ID);
                         Mod.currentlyPlayingTNH = true;
                     }
-                    else // TNH_Manager was set to null
+                    else if(Mod.currentlyPlayingTNH) // TNH_Manager was set to null and we are currently playing
                     {
                         Mod.currentlyPlayingTNH = false;
                         Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, H3MP_GameManager.ID);
@@ -10956,6 +10964,7 @@ namespace H3MP
                         // If was manager controller, give manager control to next currently playing
                         if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
+                            Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
                             if (H3MP_ThreadManager.host)
                             {
                                 H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
@@ -11621,7 +11630,9 @@ namespace H3MP
             // We want to prevent call to SetPhase unless we are controller
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                // Only set phase if controller and not initialized with given data
+                // If doInit, we will initialize with given data from a previous TNH game controller
+                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
                 {
                     if (H3MP_ThreadManager.host)
                     {
@@ -11817,7 +11828,6 @@ namespace H3MP
 
                     if (doInit && Mod.currentTNHInstance.manager.AIManager.HasInit)
                     {
-                        Mod.LogInfo("\t\t\tdoing TNH init");
                         doInit = false;
                         if (Mod.initTNHData != null)
                         {
@@ -11857,7 +11867,7 @@ namespace H3MP
                     InitJoinTNH();
                     if(Mod.initTNHData != null)
                     {
-                        Mod.currentTNHInstance.controller = H3MP_ThreadManager.host ? 0 : H3MP_GameManager.ID;
+                        Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
                         Mod.initTNHData = null;
                     }
                 }
@@ -11911,6 +11921,7 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
+            ++TNH_HoldPointPatch.spawnEntitiesIncrementalSkip;
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
             if (Mod.currentTNHInstance.holdOngoing)
@@ -12009,6 +12020,7 @@ namespace H3MP
                     }
                 }
             }
+            --TNH_HoldPointPatch.spawnEntitiesIncrementalSkip;
 
             // If this is the first time we join this game, give the player a button 
             // with which they can spawn their own starting equipment
@@ -12083,11 +12095,20 @@ namespace H3MP
         {
             inGeneratePatrol = false;
         }
+
+        static void SpawnEnemySosigPrefix()
+        {
+            if(Mod.managerObject != null)
+            {
+                Mod.LogWarning("Manager spawned enemy sosig: "+Environment.StackTrace);
+            }
+        }
     }
 
     // Patches TNH_HoldPoint to keep track of hold point events
     public class TNH_HoldPointPatch
     {
+        public static int spawnEntitiesIncrementalSkip;
         public static bool spawnEntitiesSkip;
         public static int beginHoldSkip;
         public static int beginPhaseSkip;
@@ -12153,7 +12174,7 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance != null)
                 {
-                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
                     {
                         int holdPointIndex = -1;
                         for(int i=0; i<__instance.M.HoldPoints.Count;++i)
@@ -12209,6 +12230,11 @@ namespace H3MP
 
         static bool SpawnTakeChallengeEntitiesPrefix()
         {
+            if (spawnEntitiesIncrementalSkip > 0 || TNH_ManagerPatch.doInit)
+            {
+                return false;
+            }
+
             if (spawnEntitiesSkip)
             {
                 spawnEntitiesSkip = false;
@@ -12278,7 +12304,7 @@ namespace H3MP
             // It will also prevent raising barriers if we are not the controller of the instance
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
                 {
                     int num = howMany;
                     TNH_HoldPoint holdPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
@@ -12336,7 +12362,7 @@ namespace H3MP
             // This patch will prevent BarrierPoints from being shuffled so barriers can be identified across clients
             if(Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
                 {
                     if(Mod.currentTNHInstance.raisedBarrierPrefabIndices == null)
                     {
@@ -12349,7 +12375,7 @@ namespace H3MP
 
         static void CompletePhasePostfix()
         {
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
             {
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Transition;
 
@@ -12367,7 +12393,7 @@ namespace H3MP
         static bool SpawnTargetGroupPrefix()
         {
             // Skip if connected, have TNH instance, and we are not controller
-            if(Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            if(Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
             {
                 Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex], null);
                 return false;
@@ -12395,7 +12421,7 @@ namespace H3MP
         static bool SpawnWarpInMarkersPrefix()
         {
             // Skip if connected, have TNH instance, and we are not controller
-            return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
+            return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit;
         }
 
         static void BeginAnalyzingPostfix(ref TNH_HoldPoint __instance, ref List<GameObject> ___m_warpInTargets, float ___m_tickDownToIdentification)
@@ -12430,7 +12456,7 @@ namespace H3MP
 
         static void FailOutPrefix()
         {
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
             {
                 Mod.currentTNHInstance.holdOngoing = false;
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
@@ -12453,7 +12479,7 @@ namespace H3MP
                 return;
             }
 
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
             {
                 Mod.currentTNHInstance.holdOngoing = true;
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
@@ -12529,7 +12555,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID;
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
         }
 
         static bool DeleteAllActiveEntitiesPrefix()
@@ -12539,7 +12565,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID;
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
         }
 
         static bool DeleteAllActiveTargetsPrefix()
@@ -12549,7 +12575,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID;
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
         }
 
         static bool DeleteSosigsPrefix()
@@ -12559,7 +12585,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID;
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
         }
 
         static bool DeleteTurretsPrefix()
@@ -12569,7 +12595,15 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID;
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
+        }
+
+        static void SpawnSystemNodePrefix()
+        {
+            if(Mod.managerObject != null)
+            {
+                Mod.LogWarning("SpawnSystemNodePrefix called: "+Environment.StackTrace);
+            }
         }
     }
 

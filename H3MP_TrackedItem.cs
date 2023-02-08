@@ -91,6 +91,8 @@ namespace H3MP
                 else
                 {
                     // Tell the server we need to add this item to global tracked items
+                    data.localWaitingIndex = H3MP_Client.localItemCounter++;
+                    H3MP_Client.waitingLocalItems.Add(data.localWaitingIndex, data);
                     H3MP_ClientSend.TrackedItem(data);
                 }
             }
@@ -7484,7 +7486,7 @@ namespace H3MP
 
             if (H3MP_ThreadManager.host)
             {
-                if (H3MP_GameManager.giveControlOfDestroyed)
+                if (H3MP_GameManager.giveControlOfDestroyed > 0)
                 {
                     // We just want to give control of our items to another client (usually because leaving scene with other clients left inside)
                     if (data.controller == 0)
@@ -7548,7 +7550,7 @@ namespace H3MP
             else
             {
                 bool removeFromLocal = true;
-                if (H3MP_GameManager.giveControlOfDestroyed)
+                if (H3MP_GameManager.giveControlOfDestroyed > 0)
                 {
                     if (data.controller == H3MP_Client.singleton.ID)
                     {

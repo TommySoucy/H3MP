@@ -33,6 +33,7 @@ namespace H3MP
         public SosigConfigTemplate configTemplate;
         public H3MP_TrackedSosig physicalObject;
         public int localTrackedID;
+        public uint localWaitingIndex = uint.MaxValue;
         public bool previousActive;
         public bool active;
         public List<List<string>> wearables;
@@ -605,34 +606,10 @@ namespace H3MP
             H3MP_TrackedSosig.unknownTNHKills.Remove(localTrackedID);
             H3MP_TrackedSosig.unknownIFFChart.Remove(localTrackedID);
 
-            // Remove from temp lists if in there
-            if (!H3MP_ThreadManager.host && H3MP_Client.tempLocalSosigOriginalIDs.ContainsKey(localTrackedID))
-            {
-                H3MP_Client.tempLocalSosigs.Remove(H3MP_Client.tempLocalSosigOriginalIDs[localTrackedID]);
-                H3MP_Client.tempLocalSosigOriginalIDs.Remove(localTrackedID);
-            }
-
             // Remove from actual local sosigs list and update the localTrackedID of the sosig we are moving
             H3MP_GameManager.sosigs[localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-            int oldLocalTrackedID = H3MP_GameManager.sosigs[localTrackedID].localTrackedID;
             H3MP_GameManager.sosigs[localTrackedID].localTrackedID = localTrackedID;
             H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-            if (!H3MP_ThreadManager.host && H3MP_GameManager.sosigs.Count > 0 && oldLocalTrackedID != localTrackedID && H3MP_GameManager.sosigs[localTrackedID].trackedID == -1)
-            {
-                int originalLocalTrackedID = -1;
-                if (H3MP_Client.tempLocalSosigOriginalIDs.ContainsKey(oldLocalTrackedID))
-                {
-                    originalLocalTrackedID = H3MP_Client.tempLocalSosigOriginalIDs[oldLocalTrackedID];
-                    H3MP_Client.tempLocalSosigOriginalIDs.Remove(oldLocalTrackedID);
-                    H3MP_Client.tempLocalSosigs.Remove(oldLocalTrackedID);
-                }
-                else
-                {
-                    originalLocalTrackedID = oldLocalTrackedID;
-                }
-                H3MP_Client.tempLocalSosigOriginalIDs.Add(localTrackedID, originalLocalTrackedID);
-                H3MP_Client.tempLocalSosigs.Add(originalLocalTrackedID, H3MP_GameManager.sosigs[localTrackedID]);
-            }
             localTrackedID = -1;
         }
     }

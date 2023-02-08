@@ -411,6 +411,12 @@ namespace H3MP
         {
             buffer.AddRange(BitConverter.GetBytes(_value));
         }
+        /// <summary>Adds an uint to the packet.</summary>
+        /// <param name="_value">The uint to add.</param>
+        public void Write(uint _value)
+        {
+            buffer.AddRange(BitConverter.GetBytes(_value));
+        }
         /// <summary>Adds a long to the packet.</summary>
         /// <param name="_value">The long to add.</param>
         public void Write(long _value)
@@ -513,6 +519,7 @@ namespace H3MP
                     Write(trackedItem.additionalData.Length);
                     Write(trackedItem.additionalData);
                 }
+                Write(trackedItem.localWaitingIndex);
             }
             else
             {
@@ -634,6 +641,7 @@ namespace H3MP
                     Write(trackedSosig.data.Length);
                     Write(trackedSosig.data);
                 }
+                Write(trackedSosig.localWaitingIndex);
             }
             else
             {
@@ -678,6 +686,7 @@ namespace H3MP
                     Write(trackedAutoMeater.data.Length);
                     Write(trackedAutoMeater.data);
                 }
+                Write(trackedAutoMeater.localWaitingIndex);
             }
             else
             {
@@ -792,6 +801,7 @@ namespace H3MP
                 }
                 Write(trackedEncryption.scene);
                 Write(trackedEncryption.instance);
+                Write(trackedEncryption.localWaitingIndex);
             }
             else
             {
@@ -1199,6 +1209,27 @@ namespace H3MP
             }
         }
 
+        /// <summary>Reads an uint from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public uint ReadUInt(bool _moveReadPos = true)
+        {
+            if (buffer.Count > readPos)
+            {
+                // If there are unread bytes
+                uint _value = BitConverter.ToUInt32(readableBuffer, readPos); // Convert the bytes to an int
+                if (_moveReadPos)
+                {
+                    // If _moveReadPos is true
+                    readPos += 4; // Increase readPos by 4
+                }
+                return _value; // Return the int
+            }
+            else
+            {
+                throw new Exception("Could not read value of type 'uint'!");
+            }
+        }
+
         /// <summary>Reads a long from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
         public long ReadLong(bool _moveReadPos = true)
@@ -1359,6 +1390,7 @@ namespace H3MP
                 {
                     trackedItem.additionalData = ReadBytes(additionalDataLen);
                 }
+                trackedItem.localWaitingIndex = ReadUInt();
             }
             else
             {
@@ -1450,6 +1482,7 @@ namespace H3MP
                 {
                     trackedSosig.data = ReadBytes(dataLen);
                 }
+                trackedSosig.localWaitingIndex = ReadUInt();
             }
             else
             {
@@ -1594,6 +1627,7 @@ namespace H3MP
                 {
                     trackedAutoMeater.data = ReadBytes(dataLen);
                 }
+                trackedAutoMeater.localWaitingIndex = ReadUInt();
             }
             else
             {
@@ -1684,6 +1718,7 @@ namespace H3MP
                 }
                 trackedEncryption.scene = ReadString();
                 trackedEncryption.instance = ReadInt();
+                trackedEncryption.localWaitingIndex = ReadUInt();
             }
             else
             {

@@ -33,6 +33,7 @@ namespace H3MP
         public float upDownJointTargetPos;
         public H3MP_TrackedAutoMeater physicalObject;
         public int localTrackedID;
+        public uint localWaitingIndex = uint.MaxValue;
         public bool previousActive;
         public bool active;
         public byte previousIFF;
@@ -298,34 +299,10 @@ namespace H3MP
             H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localTrackedID);
             H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Remove(localTrackedID);
 
-            // Remove from temp lists if in there
-            if (!H3MP_ThreadManager.host && H3MP_Client.tempLocalAutoMeaterOriginalIDs.ContainsKey(localTrackedID))
-            {
-                H3MP_Client.tempLocalAutoMeaters.Remove(H3MP_Client.tempLocalAutoMeaterOriginalIDs[localTrackedID]);
-                H3MP_Client.tempLocalAutoMeaterOriginalIDs.Remove(localTrackedID);
-            }
-
             // Remove from actual local items list and update the localTrackedID of the autoMeater we are moving
             H3MP_GameManager.autoMeaters[localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-            int oldLocalTrackedID = H3MP_GameManager.autoMeaters[localTrackedID].localTrackedID;
             H3MP_GameManager.autoMeaters[localTrackedID].localTrackedID = localTrackedID;
             H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-            if (!H3MP_ThreadManager.host && H3MP_GameManager.autoMeaters.Count > 0 && oldLocalTrackedID != localTrackedID && H3MP_GameManager.autoMeaters[localTrackedID].trackedID == -1)
-            {
-                int originalLocalTrackedID = -1;
-                if (H3MP_Client.tempLocalAutoMeaterOriginalIDs.ContainsKey(oldLocalTrackedID))
-                {
-                    originalLocalTrackedID = H3MP_Client.tempLocalAutoMeaterOriginalIDs[oldLocalTrackedID];
-                    H3MP_Client.tempLocalAutoMeaterOriginalIDs.Remove(oldLocalTrackedID);
-                    H3MP_Client.tempLocalAutoMeaters.Remove(oldLocalTrackedID);
-                }
-                else
-                {
-                    originalLocalTrackedID = oldLocalTrackedID;
-                }
-                H3MP_Client.tempLocalAutoMeaterOriginalIDs.Add(localTrackedID, originalLocalTrackedID);
-                H3MP_Client.tempLocalAutoMeaters.Add(originalLocalTrackedID, H3MP_GameManager.autoMeaters[localTrackedID]);
-            }
             localTrackedID = -1;
         }
     }

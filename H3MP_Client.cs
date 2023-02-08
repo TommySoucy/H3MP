@@ -48,14 +48,14 @@ namespace H3MP
         public static H3MP_TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
         public static H3MP_TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
 
-        public static Dictionary<int, int> tempLocalItemOriginalIDs = new Dictionary<int, int>();
-        public static Dictionary<int, H3MP_TrackedItemData> tempLocalItems = new Dictionary<int, H3MP_TrackedItemData>();
-        public static Dictionary<int, int> tempLocalSosigOriginalIDs = new Dictionary<int, int>();
-        public static Dictionary<int, H3MP_TrackedSosigData> tempLocalSosigs = new Dictionary<int, H3MP_TrackedSosigData>();
-        public static Dictionary<int, int> tempLocalAutoMeaterOriginalIDs = new Dictionary<int, int>();
-        public static Dictionary<int, H3MP_TrackedAutoMeaterData> tempLocalAutoMeaters = new Dictionary<int, H3MP_TrackedAutoMeaterData>();
-        public static Dictionary<int, int> tempLocalEncryptionOriginalIDs = new Dictionary<int, int>();
-        public static Dictionary<int, H3MP_TrackedEncryptionData> tempLocalEncryptions = new Dictionary<int, H3MP_TrackedEncryptionData>();
+        public static uint localItemCounter = 0;
+        public static Dictionary<uint, H3MP_TrackedItemData> waitingLocalItems = new Dictionary<uint, H3MP_TrackedItemData>();
+        public static uint localSosigCounter = 0;
+        public static Dictionary<uint, H3MP_TrackedSosigData> waitingLocalSosigs = new Dictionary<uint, H3MP_TrackedSosigData>();
+        public static uint localAutoMeaterCounter = 0;
+        public static Dictionary<uint, H3MP_TrackedAutoMeaterData> waitingLocalAutoMeaters = new Dictionary<uint, H3MP_TrackedAutoMeaterData>();
+        public static uint localEncryptionCounter = 0;
+        public static Dictionary<uint, H3MP_TrackedEncryptionData> waitingLocalEncryptions = new Dictionary<uint, H3MP_TrackedEncryptionData>();
 
         private void Awake()
         {
@@ -468,6 +468,11 @@ namespace H3MP
 
             encryptions = new H3MP_TrackedEncryptionData[100];
 
+            localItemCounter = 0;
+            localSosigCounter = 0;
+            localAutoMeaterCounter = 0;
+            localEncryptionCounter = 0;
+
             Mod.LogInfo("Initialized client");
         }
 
@@ -481,18 +486,17 @@ namespace H3MP
 
             if (trackedItem.controller == H3MP_Client.singleton.ID)
             {
-                // Get our item. If the local tracked ID has changed since we requested its tracked ID, it will be in the tempLocalItems dict
-                // otherwise we will be able to get it from the local items list using the original local tracked ID we sent to the server
-                H3MP_TrackedItemData actualTrackedItem = tempLocalItems.TryGetValue(trackedItem.localTrackedID, out actualTrackedItem) ? actualTrackedItem : H3MP_GameManager.items[trackedItem.localTrackedID];
+                // Get our item
+                H3MP_TrackedItemData actualTrackedItem = waitingLocalItems[trackedItem.localWaitingIndex];
+                waitingLocalItems.Remove(trackedItem.localWaitingIndex);
 
-                // If we already control the item it is because we are the one who sent the item to the server
-                // We just need to update the tracked ID of the item
+                // Set its new tracked ID
                 actualTrackedItem.trackedID = trackedItem.trackedID;
 
                 // Add the item to client global list
-                items[trackedItem.trackedID] = actualTrackedItem;
+                items[actualTrackedItem.trackedID] = actualTrackedItem;
 
-                items[trackedItem.trackedID].OnTrackedIDReceived();
+                actualTrackedItem.OnTrackedIDReceived();
             }
             else
             {
@@ -538,12 +542,11 @@ namespace H3MP
 
             if (trackedSosig.controller == H3MP_Client.singleton.ID)
             {
-                // Get our sosig. If the local tracked ID has changed since we requested its tracked ID, it will be in the tempLocalSosigs dict
-                // otherwise we will be able to get it from the local sosigs list using the original local tracked ID we sent to the server
-                H3MP_TrackedSosigData actualTrackedSosig = tempLocalSosigs.TryGetValue(trackedSosig.localTrackedID, out actualTrackedSosig) ? actualTrackedSosig : H3MP_GameManager.sosigs[trackedSosig.localTrackedID];
+                // Get our sosig
+                H3MP_TrackedSosigData actualTrackedSosig = waitingLocalSosigs[trackedSosig.localWaitingIndex];
+                waitingLocalSosigs.Remove(trackedSosig.localWaitingIndex);
 
-                // If we already control the sosig it is because we are the one who sent the sosig to the server
-                // We just need to update the tracked ID of the sosig
+                // Set its new tracked ID
                 actualTrackedSosig.trackedID = trackedSosig.trackedID;
 
                 // Add the sosig to client global list
@@ -624,12 +627,11 @@ namespace H3MP
 
             if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
             {
-                // Get our autoMeater. If the local tracked ID has changed since we requested its tracked ID, it will be in the tempLocalAutoMeaters dict
-                // otherwise we will be able to get it from the local autoMeaters list using the original local tracked ID we sent to the server
-                H3MP_TrackedAutoMeaterData actualTrackedAutoMeater = tempLocalAutoMeaters.TryGetValue(trackedAutoMeater.localTrackedID, out actualTrackedAutoMeater) ? actualTrackedAutoMeater : H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID];
-
-                // If we already control the AutoMeater it is because we are the one who sent the AutoMeater to the server
-                // We just need to update the tracked ID of the AutoMeater
+                // Get our autoMeater.
+                H3MP_TrackedAutoMeaterData actualTrackedAutoMeater = waitingLocalAutoMeaters[trackedAutoMeater.localWaitingIndex];
+                waitingLocalAutoMeaters.Remove(trackedAutoMeater.localWaitingIndex);
+                
+                // Set its tracked ID
                 actualTrackedAutoMeater.trackedID = trackedAutoMeater.trackedID;
 
                 // Add the AutoMeater to client global list
@@ -682,12 +684,11 @@ namespace H3MP
 
             if (trackedEncryption.controller == H3MP_Client.singleton.ID)
             {
-                // Get our encryption. If the local tracked ID has changed since we requested its tracked ID, it will be in the tempLocalEncryptions dict
-                // otherwise we will be able to get it from the local autoMeaters list using the original local tracked ID we sent to the server
-                H3MP_TrackedEncryptionData actualTrackedEncryption = tempLocalEncryptions.TryGetValue(trackedEncryption.localTrackedID, out actualTrackedEncryption) ? actualTrackedEncryption : H3MP_GameManager.encryptions[trackedEncryption.localTrackedID];
-
-                // If we already control the Encryption it is because we are the one who sent the Encryption to the server
-                // We just need to update the tracked ID of the Encryption
+                // Get our encryption.
+                H3MP_TrackedEncryptionData actualTrackedEncryption = waitingLocalEncryptions[trackedEncryption.localWaitingIndex];
+                waitingLocalEncryptions.Remove(trackedEncryption.localWaitingIndex);
+                
+                // Set tis tracked ID
                 actualTrackedEncryption.trackedID = trackedEncryption.trackedID;
 
                 // Add the Encryption to client global list
@@ -870,9 +871,29 @@ namespace H3MP
         //      If your mod has some H3MP dependent data that you want to get rid of when you disconnect from a server, do it here
         private void SpecificDisconnect()
         {
+            if (Mod.currentlyPlayingTNH) // TNH_Manager was set to null and we are currently playing
+            {
+                Mod.currentlyPlayingTNH = false;
+                Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, H3MP_GameManager.ID);
+
+                // If was manager controller, give manager control to next currently playing
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+                {
+                    Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
+                        H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
+                        H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                    }
+                }
+            }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
-            Mod.currentlyPlayingTNH = false;
         }
     }
 }
