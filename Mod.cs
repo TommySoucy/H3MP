@@ -11495,6 +11495,7 @@ namespace H3MP
         public static int completeTokenSkip;
         public static int sosigKillSkip;
         public static bool doInit;
+        public static int initSkip;
 
         public static bool inGenerateSentryPatrol;
         public static bool inGeneratePatrol;
@@ -11632,7 +11633,7 @@ namespace H3MP
             {
                 // Only set phase if controller and not initialized with given data
                 // If doInit, we will initialize with given data from a previous TNH game controller
-                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
+                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && initSkip == 0)
                 {
                     if (H3MP_ThreadManager.host)
                     {
@@ -11921,7 +11922,7 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
-            ++TNH_HoldPointPatch.spawnEntitiesIncrementalSkip;
+            ++initSkip;
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
             if (Mod.currentTNHInstance.holdOngoing)
@@ -12020,7 +12021,7 @@ namespace H3MP
                     }
                 }
             }
-            --TNH_HoldPointPatch.spawnEntitiesIncrementalSkip;
+            --initSkip;
 
             // If this is the first time we join this game, give the player a button 
             // with which they can spawn their own starting equipment
@@ -12108,7 +12109,6 @@ namespace H3MP
     // Patches TNH_HoldPoint to keep track of hold point events
     public class TNH_HoldPointPatch
     {
-        public static int spawnEntitiesIncrementalSkip;
         public static bool spawnEntitiesSkip;
         public static int beginHoldSkip;
         public static int beginPhaseSkip;
@@ -12174,7 +12174,7 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance != null)
                 {
-                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
+                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && TNH_ManagerPatch.initSkip == 0)
                     {
                         int holdPointIndex = -1;
                         for(int i=0; i<__instance.M.HoldPoints.Count;++i)
@@ -12230,7 +12230,7 @@ namespace H3MP
 
         static bool SpawnTakeChallengeEntitiesPrefix()
         {
-            if (spawnEntitiesIncrementalSkip > 0 || TNH_ManagerPatch.doInit)
+            if (TNH_ManagerPatch.initSkip > 0)
             {
                 return false;
             }
@@ -12304,7 +12304,7 @@ namespace H3MP
             // It will also prevent raising barriers if we are not the controller of the instance
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
                 {
                     int num = howMany;
                     TNH_HoldPoint holdPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
@@ -12362,7 +12362,7 @@ namespace H3MP
             // This patch will prevent BarrierPoints from being shuffled so barriers can be identified across clients
             if(Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
+                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
                 {
                     if(Mod.currentTNHInstance.raisedBarrierPrefabIndices == null)
                     {
@@ -12375,7 +12375,7 @@ namespace H3MP
 
         static void CompletePhasePostfix()
         {
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
             {
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Transition;
 
@@ -12393,7 +12393,7 @@ namespace H3MP
         static bool SpawnTargetGroupPrefix()
         {
             // Skip if connected, have TNH instance, and we are not controller
-            if(Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
+            if(Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
             {
                 Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex], null);
                 return false;
@@ -12421,7 +12421,7 @@ namespace H3MP
         static bool SpawnWarpInMarkersPrefix()
         {
             // Skip if connected, have TNH instance, and we are not controller
-            return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit;
+            return Mod.managerObject == null || Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
         }
 
         static void BeginAnalyzingPostfix(ref TNH_HoldPoint __instance, ref List<GameObject> ___m_warpInTargets, float ___m_tickDownToIdentification)
@@ -12456,7 +12456,7 @@ namespace H3MP
 
         static void FailOutPrefix()
         {
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
             {
                 Mod.currentTNHInstance.holdOngoing = false;
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
@@ -12479,7 +12479,7 @@ namespace H3MP
                 return;
             }
 
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
             {
                 Mod.currentTNHInstance.holdOngoing = true;
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
@@ -12555,7 +12555,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
         }
 
         static bool DeleteAllActiveEntitiesPrefix()
@@ -12565,7 +12565,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
         }
 
         static bool DeleteAllActiveTargetsPrefix()
@@ -12575,7 +12575,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
         }
 
         static bool DeleteSosigsPrefix()
@@ -12585,7 +12585,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
         }
 
         static bool DeleteTurretsPrefix()
@@ -12595,7 +12595,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
         }
 
         static void SpawnSystemNodePrefix()
