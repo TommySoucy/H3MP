@@ -69,7 +69,6 @@ namespace H3MP
 
             try
             {
-                Mod.LogInfo("Instantiating item "+trackedID+" with itemID?: "+itemID);
                 ++Mod.skipAllInstantiates;
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
                 --Mod.skipAllInstantiates;

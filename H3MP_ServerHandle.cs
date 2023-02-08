@@ -1754,7 +1754,6 @@ namespace H3MP
         public static void SosigDies(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
-            Mod.LogInfo("Server handle sosig " + sosigTrackedID + " dies");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)
@@ -1775,7 +1774,6 @@ namespace H3MP
         public static void SosigClear(int clientID, H3MP_Packet packet)
         {
             int sosigTrackedID = packet.ReadInt();
-            Mod.LogInfo("Server handle sosig " + sosigTrackedID + " clear");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null)

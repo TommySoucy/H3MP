@@ -1019,14 +1019,14 @@ namespace H3MP
             MethodInfo sosigRequestHitDecalEdgePatchOriginal = typeof(Sosig).GetMethod("RequestHitDecal", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(SosigLink) }, null);
             MethodInfo sosigRequestHitDecalEdgePatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalEdgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            //PatchVerify.Verify(sosigDiesPatchOriginal, harmony, false);
+            PatchVerify.Verify(sosigDiesPatchOriginal, harmony, false);
             PatchVerify.Verify(sosigBodyStatePatchOriginal, harmony, false);
             PatchVerify.Verify(sosigBodyUpdatePatchOriginal, harmony, true);
             PatchVerify.Verify(sosigSpeechUpdatePatchOriginal, harmony, false);
             PatchVerify.Verify(sosigSetCurrentOrderPatchOriginal, harmony, false);
             PatchVerify.Verify(sosigRequestHitDecalPatchOriginal, harmony, false);
             PatchVerify.Verify(sosigRequestHitDecalEdgePatchOriginal, harmony, false);
-            //harmony.Patch(sosigDiesPatchOriginal, new HarmonyMethod(sosigDiesPatchPrefix), new HarmonyMethod(sosigDiesPatchPosfix));
+            harmony.Patch(sosigDiesPatchOriginal, new HarmonyMethod(sosigDiesPatchPrefix), new HarmonyMethod(sosigDiesPatchPosfix));
             harmony.Patch(sosigBodyStatePatchOriginal, new HarmonyMethod(sosigBodyStatePatchPrefix));
             harmony.Patch(sosigBodyUpdatePatchOriginal, null, null, new HarmonyMethod(sosigBodyUpdatePatchTranspiler));
             harmony.Patch(sosigSpeechUpdatePatchOriginal, null, null, new HarmonyMethod(sosigSpeechUpdatePatchTranspiler));
@@ -1737,8 +1737,8 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchDeleteSosigsPrefix = typeof(TNH_HoldPointPatch).GetMethod("DeleteSosigsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchDeleteTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("DeleteTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchDeleteTurretsPrefix = typeof(TNH_HoldPointPatch).GetMethod("DeleteTurretsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_HoldPointPatchSpawnSystemNodeOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnSystemNode", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo TNH_HoldPointPatchSpawnSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            //MethodInfo TNH_HoldPointPatchSpawnSystemNodeOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnSystemNode", BindingFlags.NonPublic | BindingFlags.Instance);
+            //MethodInfo TNH_HoldPointPatchSpawnSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TNH_HoldPointPatchSystemNodeOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchSpawnEntitiesOriginal, harmony, true);
@@ -1762,7 +1762,7 @@ namespace H3MP
             PatchVerify.Verify(TNH_HoldPointPatchDeleteAllActiveTargetsOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchDeleteSosigsOriginal, harmony, true);
             PatchVerify.Verify(TNH_HoldPointPatchDeleteTurretsOriginal, harmony, true);
-            PatchVerify.Verify(TNH_HoldPointPatchSpawnSystemNodeOriginal, harmony, true);
+            //PatchVerify.Verify(TNH_HoldPointPatchSpawnSystemNodeOriginal, harmony, true);
             harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
             harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
             harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
@@ -1785,7 +1785,7 @@ namespace H3MP
             harmony.Patch(TNH_HoldPointPatchDeleteAllActiveTargetsOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteAllActiveTargetsPrefix));
             harmony.Patch(TNH_HoldPointPatchDeleteSosigsOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteSosigsPrefix));
             harmony.Patch(TNH_HoldPointPatchDeleteTurretsOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteTurretsPrefix));
-            harmony.Patch(TNH_HoldPointPatchSpawnSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnSystemNodePrefix));
+            //harmony.Patch(TNH_HoldPointPatchSpawnSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnSystemNodePrefix));
 
             // TNHWeaponCrateSpawnObjectsPatch
             MethodInfo TNH_WeaponCrateSpawnObjectsPatchOriginal = typeof(TNH_WeaponCrate).GetMethod("SpawnObjectsRaw", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -12203,21 +12203,18 @@ namespace H3MP
                                 break;
                             }
                         }
-                        if (holdPointIndex == -1)
+
+                        // Update locally
+                        Mod.currentTNHInstance.curHoldIndex = holdPointIndex;
+
+                        if (H3MP_ThreadManager.host)
                         {
-                            Mod.LogError("Holdpoint to be set as sytem node missing from manager");
+                            H3MP_ServerSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, GM.TNHOptions.LastPlayedChar, progressionIndex, progressionEndlessIndex, (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager), holdPointIndex);
                         }
                         else
                         {
-                            if (H3MP_ThreadManager.host)
-                            {
-                                H3MP_ServerSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, GM.TNHOptions.LastPlayedChar, progressionIndex, progressionEndlessIndex, (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager), holdPointIndex);
-                            }
-                            else
-                            {
 
-                                H3MP_ClientSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, GM.TNHOptions.LastPlayedChar, progressionIndex, progressionEndlessIndex, (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager), holdPointIndex);
-                            }
+                            H3MP_ClientSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, GM.TNHOptions.LastPlayedChar, progressionIndex, progressionEndlessIndex, (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager), holdPointIndex);
                         }
                     }
                     else

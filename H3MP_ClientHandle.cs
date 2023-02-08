@@ -2233,6 +2233,8 @@ namespace H3MP
 
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
             {
+                Mod.currentTNHInstance.curHoldIndex = holdPointIndex;
+
                 TNH_CharacterDef C = null;
                 try
                 {

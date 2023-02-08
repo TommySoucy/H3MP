@@ -639,7 +639,6 @@ namespace H3MP
                                 {
                                     // Tell the server we need to add this item to global tracked items
                                     trackedItem.data.localWaitingIndex = H3MP_Client.localItemCounter++;
-                                    Mod.LogInfo("Client tracking a new item, sending to server with local waiting index: " + trackedItem.data.localWaitingIndex);
                                     H3MP_Client.waitingLocalItems.Add(trackedItem.data.localWaitingIndex, trackedItem.data);
                                     H3MP_ClientSend.TrackedItem(trackedItem.data);
                                 }
@@ -1020,27 +1019,30 @@ namespace H3MP
             trackedSosigData.data = new byte[9 + (12 * (TNH_ManagerPatch.patrolPoints == null ? 0 : TNH_ManagerPatch.patrolPoints.Count))];
 
             // Write TNH context
-            trackedSosigData.data[0] = TNH_HoldPointPatch.inSpawnEnemyGroup ? (byte)1 : (byte)1;
-            //trackedSosigData.data[1] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)1;
-            trackedSosigData.data[1] = TNH_SupplyPointPatch.inSpawnTakeEnemyGroup ? (byte)1 : (byte)1;
+            trackedSosigData.data[0] = TNH_HoldPointPatch.inSpawnEnemyGroup ? (byte)1 : (byte)0;
+            //trackedSosigData.data[1] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)0;
+            trackedSosigData.data[1] = TNH_SupplyPointPatch.inSpawnTakeEnemyGroup ? (byte)1 : (byte)0;
             BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(trackedSosigData.data, 2);
-            //trackedSosigData.data[3] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)1;
-            trackedSosigData.data[4] = TNH_ManagerPatch.inGenerateSentryPatrol ? (byte)1 : (byte)1;
-            trackedSosigData.data[5] = TNH_ManagerPatch.inGeneratePatrol ? (byte)1 : (byte)1;
-            BitConverter.GetBytes((short)TNH_ManagerPatch.patrolIndex).CopyTo(trackedSosigData.data, 6);
-            if(TNH_ManagerPatch.patrolPoints == null || TNH_ManagerPatch.patrolPoints.Count == 0)
+            //trackedSosigData.data[3] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)0;
+            trackedSosigData.data[4] = TNH_ManagerPatch.inGenerateSentryPatrol ? (byte)1 : (byte)0;
+            trackedSosigData.data[5] = TNH_ManagerPatch.inGeneratePatrol ? (byte)1 : (byte)0;
+            if (TNH_ManagerPatch.inGenerateSentryPatrol || TNH_ManagerPatch.inGeneratePatrol)
             {
-                trackedSosigData.data[8] = (byte)0;
-            }
-            else
-            {
-                trackedSosigData.data[8] = (byte)TNH_ManagerPatch.patrolPoints.Count;
-                for(int i=0; i< TNH_ManagerPatch.patrolPoints.Count; ++i)
+                BitConverter.GetBytes((short)TNH_ManagerPatch.patrolIndex).CopyTo(trackedSosigData.data, 6);
+                if (TNH_ManagerPatch.patrolPoints == null || TNH_ManagerPatch.patrolPoints.Count == 0)
                 {
-                    int index = i * 12 + 9;
-                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].x).CopyTo(trackedSosigData.data, index);
-                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].y).CopyTo(trackedSosigData.data, index + 4);
-                    BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].z).CopyTo(trackedSosigData.data, index + 8);
+                    trackedSosigData.data[8] = (byte)0;
+                }
+                else
+                {
+                    trackedSosigData.data[8] = (byte)TNH_ManagerPatch.patrolPoints.Count;
+                    for (int i = 0; i < TNH_ManagerPatch.patrolPoints.Count; ++i)
+                    {
+                        int index = i * 12 + 9;
+                        BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].x).CopyTo(trackedSosigData.data, index);
+                        BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].y).CopyTo(trackedSosigData.data, index + 4);
+                        BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].z).CopyTo(trackedSosigData.data, index + 8);
+                    }
                 }
             }
         }
