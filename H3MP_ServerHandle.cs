@@ -445,6 +445,7 @@ namespace H3MP
                     H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
                     H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
                     H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                    trackedSosig.localTrackedID = -1;
                 }
 
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
