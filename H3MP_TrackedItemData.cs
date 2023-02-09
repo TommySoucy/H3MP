@@ -407,7 +407,7 @@ namespace H3MP
 
         public void OnTrackedIDReceived()
         {
-            if (H3MP_TrackedItem.unknownDestroyTrackedIDs.Contains(localTrackedID))
+            if (H3MP_TrackedItem.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 H3MP_ClientSend.DestroyItem(trackedID);
 
@@ -417,16 +417,16 @@ namespace H3MP
                 // Remove from local
                 RemoveFromLocal();
             }
-            if (localTrackedID != -1 && H3MP_TrackedItem.unknownControlTrackedIDs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedItem.unknownControlTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                int newController = H3MP_TrackedItem.unknownControlTrackedIDs[localTrackedID];
+                int newController = H3MP_TrackedItem.unknownControlTrackedIDs[localWaitingIndex];
 
                 H3MP_ClientSend.GiveControl(trackedID, newController);
 
                 // Also change controller locally
                 SetController(newController);
 
-                H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localTrackedID);
+                H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
 
                 // Remove from local
                 if (H3MP_GameManager.ID != controller)
@@ -434,9 +434,9 @@ namespace H3MP
                     RemoveFromLocal();
                 }
             }
-            if (localTrackedID != -1 && H3MP_TrackedItem.unknownTrackedIDs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedItem.unknownTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                KeyValuePair<int, bool> parentPair = H3MP_TrackedItem.unknownTrackedIDs[localTrackedID];
+                KeyValuePair<uint, bool> parentPair = H3MP_TrackedItem.unknownTrackedIDs[localWaitingIndex];
                 if (parentPair.Value)
                 {
                     H3MP_TrackedItemData parentItemData = null;
@@ -470,7 +470,7 @@ namespace H3MP
                 }
                 else
                 {
-                    if(parentPair.Key == -1)
+                    if(parentPair.Key == uint.MaxValue)
                     {
                         // We were detached from current parent
                         // Update other clients
@@ -499,11 +499,11 @@ namespace H3MP
                     }
                 }
 
-                H3MP_TrackedItem.unknownTrackedIDs.Remove(localTrackedID);
+                H3MP_TrackedItem.unknownTrackedIDs.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && H3MP_TrackedItem.unknownParentTrackedIDs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedItem.unknownParentTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                List<int> childrenList = H3MP_TrackedItem.unknownParentTrackedIDs[localTrackedID];
+                List<int> childrenList = H3MP_TrackedItem.unknownParentTrackedIDs[localWaitingIndex];
                 H3MP_TrackedItemData[] arrToUse = null;
                 if (H3MP_ThreadManager.host)
                 {
@@ -531,7 +531,7 @@ namespace H3MP
                         arrToUse[childID].SetParent(this, false);
                     }
                 }
-                H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localTrackedID);
+                H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
             }
 
             if(localTrackedID != -1)
@@ -560,10 +560,10 @@ namespace H3MP
         public void RemoveFromLocal()
         {
             // Manage unknown lists
-            H3MP_TrackedItem.unknownTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedItem.unknownTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
 
             // Remove from actual local items list and update the localTrackedID of the item we are moving
             H3MP_GameManager.items[localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1]; 

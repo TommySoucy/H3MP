@@ -481,14 +481,14 @@ namespace H3MP
 
         public void OnTrackedIDReceived()
         {
-            if (H3MP_TrackedSosig.unknownTNHKills.ContainsKey(localTrackedID))
+            if (H3MP_TrackedSosig.unknownTNHKills.ContainsKey(localWaitingIndex))
             {
-                H3MP_ClientSend.TNHSosigKill(H3MP_TrackedSosig.unknownTNHKills[localTrackedID], trackedID);
+                H3MP_ClientSend.TNHSosigKill(H3MP_TrackedSosig.unknownTNHKills[localWaitingIndex], trackedID);
 
                 // Remove from local
-                H3MP_TrackedSosig.unknownTNHKills.Remove(localTrackedID);
+                H3MP_TrackedSosig.unknownTNHKills.Remove(localWaitingIndex);
             }
-            if (H3MP_TrackedSosig.unknownDestroyTrackedIDs.Contains(localTrackedID))
+            if (H3MP_TrackedSosig.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 H3MP_ClientSend.DestroySosig(trackedID);
 
@@ -498,16 +498,16 @@ namespace H3MP
                 // Remove from local
                 RemoveFromLocal();
             }
-            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownControlTrackedIDs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownControlTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                int newController = H3MP_TrackedSosig.unknownControlTrackedIDs[localTrackedID];
+                int newController = H3MP_TrackedSosig.unknownControlTrackedIDs[localWaitingIndex];
 
                 H3MP_ClientSend.GiveSosigControl(trackedID, newController);
 
                 // Also change controller locally
                 controller = newController;
 
-                H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localTrackedID);
+                H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localWaitingIndex);
 
                 // Remove from local
                 if (H3MP_GameManager.ID != controller)
@@ -515,9 +515,9 @@ namespace H3MP
                     RemoveFromLocal();
                 }
             }
-            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                List<KeyValuePair<int, KeyValuePair<int, int>>> upper = H3MP_TrackedSosig.unknownItemInteractTrackedIDs[localTrackedID];
+                List<KeyValuePair<int, KeyValuePair<int, int>>> upper = H3MP_TrackedSosig.unknownItemInteractTrackedIDs[localWaitingIndex];
 
                 for(int i = 0; i < upper.Count; i++)
                 {
@@ -538,37 +538,37 @@ namespace H3MP
                     }
                 }
 
-                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localTrackedID);
+                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownSetIFFs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownSetIFFs.ContainsKey(localWaitingIndex))
             {
-                int newIFF = H3MP_TrackedSosig.unknownSetIFFs[localTrackedID];
+                int newIFF = H3MP_TrackedSosig.unknownSetIFFs[localWaitingIndex];
 
                 H3MP_ClientSend.SosigSetIFF(trackedID, newIFF);
 
-                H3MP_TrackedSosig.unknownSetIFFs.Remove(localTrackedID);
+                H3MP_TrackedSosig.unknownSetIFFs.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownSetOriginalIFFs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownSetOriginalIFFs.ContainsKey(localWaitingIndex))
             {
-                int newIFF = H3MP_TrackedSosig.unknownSetOriginalIFFs[localTrackedID];
+                int newIFF = H3MP_TrackedSosig.unknownSetOriginalIFFs[localWaitingIndex];
 
                 H3MP_ClientSend.SosigSetOriginalIFF(trackedID, newIFF);
 
-                H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localTrackedID);
+                H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownBodyStates.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownBodyStates.ContainsKey(localWaitingIndex))
             {
-                Sosig.SosigBodyState newBodyState = H3MP_TrackedSosig.unknownBodyStates[localTrackedID];
+                Sosig.SosigBodyState newBodyState = H3MP_TrackedSosig.unknownBodyStates[localWaitingIndex];
 
                 H3MP_ClientSend.SosigSetBodyState(trackedID, newBodyState);
 
-                H3MP_TrackedSosig.unknownBodyStates.Remove(localTrackedID);
+                H3MP_TrackedSosig.unknownBodyStates.Remove(localWaitingIndex);
             }
-            if(localTrackedID != -1 && H3MP_TrackedSosig.unknownIFFChart.ContainsKey(localTrackedID))
+            if(localTrackedID != -1 && H3MP_TrackedSosig.unknownIFFChart.ContainsKey(localWaitingIndex))
             {
-                H3MP_ClientSend.SosigPriorityIFFChart(trackedID, H3MP_TrackedSosig.unknownIFFChart[localTrackedID]);
+                H3MP_ClientSend.SosigPriorityIFFChart(trackedID, H3MP_TrackedSosig.unknownIFFChart[localWaitingIndex]);
 
-                H3MP_TrackedSosig.unknownIFFChart.Remove(localTrackedID);
+                H3MP_TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
             }
 
             if (localTrackedID != -1)
@@ -597,14 +597,14 @@ namespace H3MP
         public void RemoveFromLocal()
         {
             // Manage unknown lists
-            H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedSosig.unknownDestroyTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedSosig.unknownSetIFFs.Remove(localTrackedID);
-            H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localTrackedID);
-            H3MP_TrackedSosig.unknownBodyStates.Remove(localTrackedID);
-            H3MP_TrackedSosig.unknownTNHKills.Remove(localTrackedID);
-            H3MP_TrackedSosig.unknownIFFChart.Remove(localTrackedID);
+            H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownSetIFFs.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownBodyStates.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownTNHKills.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
 
             // Remove from actual local sosigs list and update the localTrackedID of the sosig we are moving
             H3MP_GameManager.sosigs[localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];

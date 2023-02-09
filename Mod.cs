@@ -3310,13 +3310,13 @@ namespace H3MP
                         H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
                         if (trackedSosig.data.trackedID == -1)
                         {
-                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
+                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
                             {
-                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localTrackedID].Add(new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 1 : 0)));
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 1 : 0)));
                             }
                             else
                             {
-                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localTrackedID, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 1 : 0)) });
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 1 : 0)) });
                             }
                         }
                         else
@@ -3394,13 +3394,13 @@ namespace H3MP
                         H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.I.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.I.S] : __instance.I.S.GetComponent<H3MP_TrackedSosig>();
                         if (trackedSosig.data.trackedID == -1)
                         {
-                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
+                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
                             {
-                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localTrackedID].Add(new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)));
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)));
                             }
                             else
                             {
-                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localTrackedID, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)) });
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)) });
                             }
                         }
                         else
@@ -3459,13 +3459,13 @@ namespace H3MP
                     }
                     if (trackedSosig.data.trackedID == -1)
                     {
-                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
+                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
                         {
-                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localTrackedID].Add(new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)));
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)));
                         }
                         else
                         {
-                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localTrackedID, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)) });
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)) });
                         }
                     }
                     else
@@ -3505,13 +3505,13 @@ namespace H3MP
                 {
                     if (trackedSosig.data.trackedID == -1)
                     {
-                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localTrackedID))
+                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
                         {
-                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localTrackedID].Add(new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(__instance.S.Hand_Primary == __instance ? 1 : 0, 0)));
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(__instance.S.Hand_Primary == __instance ? 1 : 0, 0)));
                         }
                         else
                         {
-                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localTrackedID, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(__instance.S.Hand_Primary == __instance ? 1 : 0, 0)) });
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(__instance.S.Hand_Primary == __instance ? 1 : 0, 0)) });
                         }
                     }
                     else
@@ -6118,7 +6118,7 @@ namespace H3MP
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
-            if (trackedSosig != null)
+            if (trackedSosig != null && trackedSosig.data.trackedID != -1)
             {
                 if (H3MP_ThreadManager.host)
                 {
@@ -6197,7 +6197,7 @@ namespace H3MP
             {
                 if (trackedSosig.data.trackedID == -1)
                 {
-                    H3MP_TrackedSosig.unknownBodyStates.Add(trackedSosig.data.localTrackedID, s);
+                    H3MP_TrackedSosig.unknownBodyStates.Add(trackedSosig.data.localWaitingIndex, s);
                 }
                 else
                 {
@@ -6840,7 +6840,7 @@ namespace H3MP
             {
                 if (trackedSosig.data.trackedID == -1)
                 {
-                    H3MP_TrackedSosig.unknownSetIFFs.Add(trackedSosig.data.localTrackedID, i);
+                    H3MP_TrackedSosig.unknownSetIFFs.Add(trackedSosig.data.localWaitingIndex, i);
                 }
                 else
                 {
@@ -6875,7 +6875,7 @@ namespace H3MP
             {
                 if (trackedSosig.data.trackedID == -1)
                 {
-                    H3MP_TrackedSosig.unknownSetOriginalIFFs.Add(trackedSosig.data.localTrackedID, i);
+                    H3MP_TrackedSosig.unknownSetOriginalIFFs.Add(trackedSosig.data.localWaitingIndex, i);
                 }
                 else
                 {
@@ -7257,13 +7257,13 @@ namespace H3MP
                     {
                         if (trackedEncryption.data.trackedID == -1)
                         {
-                            if(H3MP_TrackedEncryption.unknownSpawnSubTarg.TryGetValue(trackedEncryption.data.localTrackedID, out List<int> l))
+                            if(H3MP_TrackedEncryption.unknownSpawnSubTarg.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<int> l))
                             {
                                 l.Add(index);
                             }
                             else
                             {
-                                H3MP_TrackedEncryption.unknownSpawnSubTarg.Add(trackedEncryption.data.localTrackedID, new List<int>() { index });
+                                H3MP_TrackedEncryption.unknownSpawnSubTarg.Add(trackedEncryption.data.localWaitingIndex, new List<int>() { index });
                             }
                         }
                         else
@@ -7310,13 +7310,13 @@ namespace H3MP
                     {
                         if (trackedEncryption.data.trackedID == -1)
                         {
-                            if (H3MP_TrackedEncryption.unknownSpawnGrowth.TryGetValue(trackedEncryption.data.localTrackedID, out List<KeyValuePair<int, Vector3>> l))
+                            if (H3MP_TrackedEncryption.unknownSpawnGrowth.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<KeyValuePair<int, Vector3>> l))
                             {
                                 l.Add(new KeyValuePair<int, Vector3>(index, point));
                             }
                             else
                             {
-                                H3MP_TrackedEncryption.unknownSpawnGrowth.Add(trackedEncryption.data.localTrackedID, new List<KeyValuePair<int, Vector3>>() { new KeyValuePair<int, Vector3>(index, point) });
+                                H3MP_TrackedEncryption.unknownSpawnGrowth.Add(trackedEncryption.data.localWaitingIndex, new List<KeyValuePair<int, Vector3>>() { new KeyValuePair<int, Vector3>(index, point) });
                             }
                         }
                         else
@@ -7362,13 +7362,13 @@ namespace H3MP
                         {
                             if (trackedEncryption.data.trackedID == -1)
                             {
-                                if (H3MP_TrackedEncryption.unknownResetGrowth.TryGetValue(trackedEncryption.data.localTrackedID, out List<KeyValuePair<int, Vector3>> l))
+                                if (H3MP_TrackedEncryption.unknownResetGrowth.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<KeyValuePair<int, Vector3>> l))
                                 {
                                     l.Add(new KeyValuePair<int, Vector3>(index, point));
                                 }
                                 else
                                 {
-                                    H3MP_TrackedEncryption.unknownResetGrowth.Add(trackedEncryption.data.localTrackedID, new List<KeyValuePair<int, Vector3>>() { new KeyValuePair<int, Vector3>(index, point) });
+                                    H3MP_TrackedEncryption.unknownResetGrowth.Add(trackedEncryption.data.localWaitingIndex, new List<KeyValuePair<int, Vector3>>() { new KeyValuePair<int, Vector3>(index, point) });
                                 }
                             }
                             else
@@ -7425,13 +7425,13 @@ namespace H3MP
                     {
                         if (trackedEncryption.data.trackedID == -1)
                         {
-                            if (H3MP_TrackedEncryption.unknownDisableSubTarg.TryGetValue(trackedEncryption.data.localTrackedID, out List<int> l))
+                            if (H3MP_TrackedEncryption.unknownDisableSubTarg.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<int> l))
                             {
                                 l.Add(i);
                             }
                             else
                             {
-                                H3MP_TrackedEncryption.unknownDisableSubTarg.Add(trackedEncryption.data.localTrackedID, new List<int>() { i });
+                                H3MP_TrackedEncryption.unknownDisableSubTarg.Add(trackedEncryption.data.localWaitingIndex, new List<int>() { i });
                             }
                         }
                         else
@@ -7552,13 +7552,13 @@ namespace H3MP
                 }
                 else // Unknown tracked ID, keep for late update
                 {
-                    if (H3MP_TrackedSosig.unknownIFFChart.ContainsKey(trackedSosig.data.localTrackedID))
+                    if (H3MP_TrackedSosig.unknownIFFChart.ContainsKey(trackedSosig.data.localWaitingIndex))
                     {
-                        H3MP_TrackedSosig.unknownIFFChart[trackedSosig.data.localTrackedID] = BoolArrToInt(__instance.IFFChart);
+                        H3MP_TrackedSosig.unknownIFFChart[trackedSosig.data.localWaitingIndex] = BoolArrToInt(__instance.IFFChart);
                     }
                     else
                     {
-                        H3MP_TrackedSosig.unknownIFFChart.Add(trackedSosig.data.localTrackedID, BoolArrToInt(__instance.IFFChart));
+                        H3MP_TrackedSosig.unknownIFFChart.Add(trackedSosig.data.localWaitingIndex, BoolArrToInt(__instance.IFFChart));
                     }
                 }
             }
@@ -7954,13 +7954,13 @@ namespace H3MP
                     {
                         if (trackedEncryption.data.trackedID == -1)
                         {
-                            if (H3MP_TrackedEncryption.unknownInit.ContainsKey(trackedEncryption.data.localTrackedID))
+                            if (H3MP_TrackedEncryption.unknownInit.ContainsKey(trackedEncryption.data.localWaitingIndex))
                             {
-                                H3MP_TrackedEncryption.unknownInit[trackedEncryption.data.localTrackedID] = indices;
+                                H3MP_TrackedEncryption.unknownInit[trackedEncryption.data.localWaitingIndex] = indices;
                             }
                             else
                             {
-                                H3MP_TrackedEncryption.unknownInit.Add(trackedEncryption.data.localTrackedID, indices);
+                                H3MP_TrackedEncryption.unknownInit.Add(trackedEncryption.data.localWaitingIndex, indices);
                             }
                         }
                         else
@@ -11607,7 +11607,7 @@ namespace H3MP
                 {
                     if (trackedSosig.data.trackedID == -1)
                     {
-                        H3MP_TrackedSosig.unknownTNHKills.Add(trackedSosig.data.localTrackedID, Mod.currentTNHInstance.instance);
+                        H3MP_TrackedSosig.unknownTNHKills.Add(trackedSosig.data.localWaitingIndex, Mod.currentTNHInstance.instance);
                     }
                     else
                     {

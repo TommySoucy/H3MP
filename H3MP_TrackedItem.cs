@@ -20,10 +20,10 @@ namespace H3MP
         public bool sendOnAwake;
 
         // Unknown tracked ID queues
-        public static Dictionary<int, KeyValuePair<int, bool>> unknownTrackedIDs = new Dictionary<int, KeyValuePair<int, bool>>();
-        public static Dictionary<int, List<int>> unknownParentTrackedIDs = new Dictionary<int, List<int>>();
-        public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
-        public static List<int> unknownDestroyTrackedIDs = new List<int>();
+        public static Dictionary<uint, KeyValuePair<uint, bool>> unknownTrackedIDs = new Dictionary<uint, KeyValuePair<uint, bool>>();
+        public static Dictionary<uint, List<int>> unknownParentTrackedIDs = new Dictionary<uint, List<int>>();
+        public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
+        public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
 
         // Update
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
@@ -7562,9 +7562,9 @@ namespace H3MP
                             {
                                 if (data.trackedID == -1)
                                 {
-                                    if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                                    if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
                                     {
-                                        unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                        unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
                                     }
 
                                     // We want to keep it in local until we give destruction order
@@ -7593,13 +7593,13 @@ namespace H3MP
                         {
                             if (data.trackedID == -1)
                             {
-                                if (unknownControlTrackedIDs.ContainsKey(data.localTrackedID))
+                                if (unknownControlTrackedIDs.ContainsKey(data.localWaitingIndex))
                                 {
-                                    unknownControlTrackedIDs[data.localTrackedID] = otherPlayer;
+                                    unknownControlTrackedIDs[data.localWaitingIndex] = otherPlayer;
                                 }
                                 else
                                 {
-                                    unknownControlTrackedIDs.Add(data.localTrackedID, otherPlayer);
+                                    unknownControlTrackedIDs.Add(data.localWaitingIndex, otherPlayer);
                                 }
 
                                 // We want to keep it in local until we give control
@@ -7621,9 +7621,9 @@ namespace H3MP
                     {
                         if (data.trackedID == -1)
                         {
-                            if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                            if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
                             {
-                                unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
                             }
 
                             // We want to keep it in local until we give destruction order
@@ -7693,14 +7693,14 @@ namespace H3MP
                     bool haveParentID = parentTrackedItem.data.trackedID != -1;
                     if (data.trackedID == -1)
                     {
-                        KeyValuePair<int, bool> parentIDPair = new KeyValuePair<int, bool>(haveParentID ? parentTrackedItem.data.trackedID : parentTrackedItem.data.localTrackedID, haveParentID);
-                        if (unknownTrackedIDs.ContainsKey(data.localTrackedID))
+                        KeyValuePair<uint, bool> parentIDPair = new KeyValuePair<uint, bool>(haveParentID ? (uint)parentTrackedItem.data.trackedID : parentTrackedItem.data.localWaitingIndex, haveParentID);
+                        if (unknownTrackedIDs.ContainsKey(data.localWaitingIndex))
                         {
-                            unknownTrackedIDs[data.localTrackedID] = parentIDPair;
+                            unknownTrackedIDs[data.localWaitingIndex] = parentIDPair;
                         }
                         else
                         {
-                            unknownTrackedIDs.Add(data.localTrackedID, parentIDPair);
+                            unknownTrackedIDs.Add(data.localWaitingIndex, parentIDPair);
                         }
                     }
                     else
@@ -7726,13 +7726,13 @@ namespace H3MP
                         }
                         else
                         {
-                            if (unknownParentTrackedIDs.ContainsKey(parentTrackedItem.data.localTrackedID))
+                            if (unknownParentTrackedIDs.ContainsKey(parentTrackedItem.data.localWaitingIndex))
                             {
-                                unknownParentTrackedIDs[parentTrackedItem.data.localTrackedID].Add(data.trackedID);
+                                unknownParentTrackedIDs[parentTrackedItem.data.localWaitingIndex].Add(data.trackedID);
                             }
                             else
                             {
-                                unknownParentTrackedIDs.Add(parentTrackedItem.data.localTrackedID, new List<int>() { data.trackedID });
+                                unknownParentTrackedIDs.Add(parentTrackedItem.data.localWaitingIndex, new List<int>() { data.trackedID });
                             }
                         }
                     }
@@ -7741,14 +7741,14 @@ namespace H3MP
                 {
                     if (data.trackedID == -1)
                     {
-                        KeyValuePair<int, bool> parentIDPair = new KeyValuePair<int, bool>(-1, false);
-                        if (unknownTrackedIDs.ContainsKey(data.localTrackedID))
+                        KeyValuePair<uint, bool> parentIDPair = new KeyValuePair<uint, bool>(uint.MaxValue, false);
+                        if (unknownTrackedIDs.ContainsKey(data.localWaitingIndex))
                         {
-                            unknownTrackedIDs[data.localTrackedID] = parentIDPair;
+                            unknownTrackedIDs[data.localWaitingIndex] = parentIDPair;
                         }
                         else
                         {
-                            unknownTrackedIDs.Add(data.localTrackedID, parentIDPair);
+                            unknownTrackedIDs.Add(data.localWaitingIndex, parentIDPair);
                         }
                     }
                     else

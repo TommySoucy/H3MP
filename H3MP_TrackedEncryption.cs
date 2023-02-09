@@ -16,13 +16,13 @@ namespace H3MP
         public bool sendOnAwake;
 
         // Unknown tracked ID queues
-        public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
-        public static List<int> unknownDestroyTrackedIDs = new List<int>();
-        public static Dictionary<int, List<int>> unknownInit = new Dictionary<int, List<int>>();
-        public static Dictionary<int, List<int>> unknownSpawnSubTarg = new Dictionary<int, List<int>>();
-        public static Dictionary<int, List<int>> unknownDisableSubTarg = new Dictionary<int, List<int>>();
-        public static Dictionary<int, List<KeyValuePair<int, Vector3>>> unknownSpawnGrowth = new Dictionary<int, List<KeyValuePair<int, Vector3>>>();
-        public static Dictionary<int, List<KeyValuePair<int, Vector3>>> unknownResetGrowth = new Dictionary<int, List<KeyValuePair<int, Vector3>>>();
+        public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
+        public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
+        public static Dictionary<uint, List<int>> unknownInit = new Dictionary<uint, List<int>>();
+        public static Dictionary<uint, List<int>> unknownSpawnSubTarg = new Dictionary<uint, List<int>>();
+        public static Dictionary<uint, List<int>> unknownDisableSubTarg = new Dictionary<uint, List<int>>();
+        public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownSpawnGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
+        public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownResetGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
 
         public bool sendDestroy = true; // To prevent feeback loops
         public bool skipFullDestroy;
@@ -189,9 +189,9 @@ namespace H3MP
                             {
                                 if (data.trackedID == -1)
                                 {
-                                    if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                                    if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
                                     {
-                                        unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                        unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
                                     }
 
                                     // We want to keep it in local until we give destruction order
@@ -220,13 +220,13 @@ namespace H3MP
                         {
                             if (data.trackedID == -1)
                             {
-                                if (unknownControlTrackedIDs.ContainsKey(data.localTrackedID))
+                                if (unknownControlTrackedIDs.ContainsKey(data.localWaitingIndex))
                                 {
-                                    unknownControlTrackedIDs[data.localTrackedID] = otherPlayer;
+                                    unknownControlTrackedIDs[data.localWaitingIndex] = otherPlayer;
                                 }
                                 else
                                 {
-                                    unknownControlTrackedIDs.Add(data.localTrackedID, otherPlayer);
+                                    unknownControlTrackedIDs.Add(data.localWaitingIndex, otherPlayer);
                                 }
 
                                 // We want to keep it in local until we give control
@@ -248,9 +248,9 @@ namespace H3MP
                     {
                         if (data.trackedID == -1)
                         {
-                            if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                            if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
                             {
-                                unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
                             }
 
                             // We want to keep it in local until we give destruction order

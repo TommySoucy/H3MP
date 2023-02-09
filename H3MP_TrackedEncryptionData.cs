@@ -287,7 +287,7 @@ namespace H3MP
 
         public void OnTrackedIDReceived()
         {
-            if (H3MP_TrackedEncryption.unknownDestroyTrackedIDs.Contains(localTrackedID))
+            if (H3MP_TrackedEncryption.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 H3MP_ClientSend.DestroyEncryption(trackedID);
 
@@ -297,16 +297,16 @@ namespace H3MP
                 // Remove from local
                 RemoveFromLocal();
             }
-            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownControlTrackedIDs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownControlTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                int newController = H3MP_TrackedEncryption.unknownControlTrackedIDs[localTrackedID];
+                int newController = H3MP_TrackedEncryption.unknownControlTrackedIDs[localWaitingIndex];
 
                 H3MP_ClientSend.GiveEncryptionControl(trackedID, newController);
 
                 // Also change controller locally
                 controller = newController;
 
-                H3MP_TrackedEncryption.unknownControlTrackedIDs.Remove(localTrackedID);
+                H3MP_TrackedEncryption.unknownControlTrackedIDs.Remove(localWaitingIndex);
 
                 // Remove from local
                 if (H3MP_GameManager.ID != controller)
@@ -314,57 +314,57 @@ namespace H3MP
                     RemoveFromLocal();
                 }
             }
-            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownInit.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownInit.ContainsKey(localWaitingIndex))
             {
-                List<int> indices = H3MP_TrackedEncryption.unknownInit[localTrackedID];
+                List<int> indices = H3MP_TrackedEncryption.unknownInit[localWaitingIndex];
 
                 H3MP_ClientSend.EncryptionInit(trackedID, indices);
 
-                H3MP_TrackedEncryption.unknownInit.Remove(localTrackedID);
+                H3MP_TrackedEncryption.unknownInit.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownSpawnSubTarg.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownSpawnSubTarg.ContainsKey(localWaitingIndex))
             {
-                List<int> indices = H3MP_TrackedEncryption.unknownSpawnSubTarg[localTrackedID];
+                List<int> indices = H3MP_TrackedEncryption.unknownSpawnSubTarg[localWaitingIndex];
 
                 for (int i = 0; i < indices.Count; ++i) 
                 {
                     H3MP_ClientSend.EncryptionRespawnSubTarg(trackedID, indices[i]);
                 }
 
-                H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localTrackedID);
+                H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownDisableSubTarg.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownDisableSubTarg.ContainsKey(localWaitingIndex))
             {
-                List<int> indices = H3MP_TrackedEncryption.unknownDisableSubTarg[localTrackedID];
+                List<int> indices = H3MP_TrackedEncryption.unknownDisableSubTarg[localWaitingIndex];
 
                 for (int i = 0; i < indices.Count; ++i) 
                 {
                     H3MP_ClientSend.EncryptionDisableSubtarg(trackedID, indices[i]);
                 }
 
-                H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localTrackedID);
+                H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownSpawnGrowth.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownSpawnGrowth.ContainsKey(localWaitingIndex))
             {
-                List<KeyValuePair<int, Vector3>> indices = H3MP_TrackedEncryption.unknownSpawnGrowth[localTrackedID];
+                List<KeyValuePair<int, Vector3>> indices = H3MP_TrackedEncryption.unknownSpawnGrowth[localWaitingIndex];
 
                 for (int i = 0; i < indices.Count; ++i) 
                 {
                     H3MP_ClientSend.EncryptionSpawnGrowth(trackedID, indices[i].Key, indices[i].Value);
                 }
 
-                H3MP_TrackedEncryption.unknownSpawnGrowth.Remove(localTrackedID);
+                H3MP_TrackedEncryption.unknownSpawnGrowth.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownResetGrowth.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownResetGrowth.ContainsKey(localWaitingIndex))
             {
-                List<KeyValuePair<int, Vector3>> indices = H3MP_TrackedEncryption.unknownResetGrowth[localTrackedID];
+                List<KeyValuePair<int, Vector3>> indices = H3MP_TrackedEncryption.unknownResetGrowth[localWaitingIndex];
 
                 for (int i = 0; i < indices.Count; ++i) 
                 {
                     H3MP_ClientSend.EncryptionResetGrowth(trackedID, indices[i].Key, indices[i].Value);
                 }
 
-                H3MP_TrackedEncryption.unknownResetGrowth.Remove(localTrackedID);
+                H3MP_TrackedEncryption.unknownResetGrowth.Remove(localWaitingIndex);
             }
 
             if (localTrackedID != -1)
@@ -393,13 +393,13 @@ namespace H3MP
         public void RemoveFromLocal()
         {
             // Manage unknown lists
-            H3MP_TrackedEncryption.unknownControlTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedEncryption.unknownDestroyTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedEncryption.unknownInit.Remove(localTrackedID);
-            H3MP_TrackedEncryption.unknownSpawnGrowth.Remove(localTrackedID);
-            H3MP_TrackedEncryption.unknownResetGrowth.Remove(localTrackedID);
-            H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localTrackedID);
-            H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localTrackedID);
+            H3MP_TrackedEncryption.unknownControlTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedEncryption.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedEncryption.unknownInit.Remove(localWaitingIndex);
+            H3MP_TrackedEncryption.unknownSpawnGrowth.Remove(localWaitingIndex);
+            H3MP_TrackedEncryption.unknownResetGrowth.Remove(localWaitingIndex);
+            H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
+            H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
 
             // Remove from actual local encryptions list and update the localTrackedID of the encryption we are moving
             H3MP_GameManager.encryptions[localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];

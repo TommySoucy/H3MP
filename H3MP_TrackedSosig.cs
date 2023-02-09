@@ -19,14 +19,14 @@ namespace H3MP
         public bool sendOnAwake;
 
         // Unknown tracked ID queues
-        public static Dictionary<int, int> unknownControlTrackedIDs = new Dictionary<int, int>();
-        public static List<int> unknownDestroyTrackedIDs = new List<int>();
-        public static Dictionary<int, List<KeyValuePair<int, KeyValuePair<int, int>>>> unknownItemInteractTrackedIDs = new Dictionary<int, List<KeyValuePair<int, KeyValuePair<int, int>>>>();
-        public static Dictionary<int, int> unknownSetIFFs = new Dictionary<int, int>();
-        public static Dictionary<int, int> unknownSetOriginalIFFs = new Dictionary<int, int>();
-        public static Dictionary<int, Sosig.SosigBodyState> unknownBodyStates = new Dictionary<int, Sosig.SosigBodyState>();
-        public static Dictionary<int, int> unknownTNHKills = new Dictionary<int, int>();
-        public static Dictionary<int, int> unknownIFFChart = new Dictionary<int, int>();
+        public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
+        public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
+        public static Dictionary<uint, List<KeyValuePair<int, KeyValuePair<int, int>>>> unknownItemInteractTrackedIDs = new Dictionary<uint, List<KeyValuePair<int, KeyValuePair<int, int>>>>();
+        public static Dictionary<uint, int> unknownSetIFFs = new Dictionary<uint, int>();
+        public static Dictionary<uint, int> unknownSetOriginalIFFs = new Dictionary<uint, int>();
+        public static Dictionary<uint, Sosig.SosigBodyState> unknownBodyStates = new Dictionary<uint, Sosig.SosigBodyState>();
+        public static Dictionary<uint, int> unknownTNHKills = new Dictionary<uint, int>();
+        public static Dictionary<uint, int> unknownIFFChart = new Dictionary<uint, int>();
 
         public bool sendDestroy = true; // To prevent feeback loops
         public bool skipFullDestroy;
@@ -166,9 +166,9 @@ namespace H3MP
                             {
                                 if (data.trackedID == -1)
                                 {
-                                    if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                                    if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
                                     {
-                                        unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                        unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
                                     }
 
                                     // We want to keep it in local until we give destruction order
@@ -197,13 +197,13 @@ namespace H3MP
                         {
                             if (data.trackedID == -1)
                             {
-                                if (unknownControlTrackedIDs.ContainsKey(data.localTrackedID))
+                                if (unknownControlTrackedIDs.ContainsKey(data.localWaitingIndex))
                                 {
-                                    unknownControlTrackedIDs[data.localTrackedID] = otherPlayer;
+                                    unknownControlTrackedIDs[data.localWaitingIndex] = otherPlayer;
                                 }
                                 else
                                 {
-                                    unknownControlTrackedIDs.Add(data.localTrackedID, otherPlayer);
+                                    unknownControlTrackedIDs.Add(data.localWaitingIndex, otherPlayer);
                                 }
 
                                 // We want to keep it in local until we give control
@@ -225,9 +225,9 @@ namespace H3MP
                     {
                         if (data.trackedID == -1)
                         {
-                            if (!unknownDestroyTrackedIDs.Contains(data.localTrackedID))
+                            if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
                             {
-                                unknownDestroyTrackedIDs.Add(data.localTrackedID);
+                                unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
                             }
 
                             // We want to keep it in local until we give destruction order

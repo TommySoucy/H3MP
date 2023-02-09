@@ -242,7 +242,7 @@ namespace H3MP
 
         public void OnTrackedIDReceived()
         {
-            if (H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Contains(localTrackedID))
+            if (H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 H3MP_ClientSend.DestroySosig(trackedID);
 
@@ -252,16 +252,16 @@ namespace H3MP
                 // Remove from local
                 RemoveFromLocal();
             }
-            if (localTrackedID != -1 && H3MP_TrackedAutoMeater.unknownControlTrackedIDs.ContainsKey(localTrackedID))
+            if (localTrackedID != -1 && H3MP_TrackedAutoMeater.unknownControlTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                int newController = H3MP_TrackedAutoMeater.unknownControlTrackedIDs[localTrackedID];
+                int newController = H3MP_TrackedAutoMeater.unknownControlTrackedIDs[localWaitingIndex];
 
                 H3MP_ClientSend.GiveAutoMeaterControl(trackedID, newController);
 
                 // Also change controller locally
                 controller = newController;
 
-                H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localTrackedID);
+                H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localWaitingIndex);
 
                 // Remove from local
                 if (H3MP_GameManager.ID != controller)
@@ -296,8 +296,8 @@ namespace H3MP
         public void RemoveFromLocal()
         {
             // Manage unknown lists
-            H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localTrackedID);
-            H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Remove(localTrackedID);
+            H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localWaitingIndex);
+            H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
 
             // Remove from actual local items list and update the localTrackedID of the autoMeater we are moving
             H3MP_GameManager.autoMeaters[localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
