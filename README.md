@@ -4,7 +4,7 @@ As the title says, this is a mod that adds multiplayer to the virtual reality ga
 
 ## Installation
 
-1. Download install the latest version of [BepinEx](https://github.com/BepInEx/BepInEx/releases)
+1. Download and install the latest version of [BepinEx](https://github.com/BepInEx/BepInEx/releases)
 2. Download the [latest release of H3MP](https://github.com/TommySoucy/H3MP/releases)
 3. Put both H3MP.dll and the H3MP folder from the zip file into the plugins folder (H3VR\BepInEx\plugins)
 
@@ -20,7 +20,7 @@ To join a server, you will have to have set the IP and port of the server in you
 
 In the wristmenu, some options are available:
 
-- **_Reload config_**: Explained above, will reload the config file if you modified it since starting the game. Useful if you modified it and don't want to have to restart the game.
+- **_Reload config_**: Will reload the config file if you modified it since starting the game. Useful if you modified it and don't want to have to restart the game.
 
 - **_Item interpolate_**: This will toggle item interpolation. Item interpolation is the smoothing of item movement to prevent everything from looking "jagged". Turning it off will ensure that items are positionned/rotated exactly as you receive the data from another client. Due to latency, this will make item movement look extremely low FPS.
 
