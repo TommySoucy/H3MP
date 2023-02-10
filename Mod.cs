@@ -135,6 +135,7 @@ namespace H3MP
         public static readonly FieldInfo TNH_Manager_m_seed = typeof(TNH_Manager).GetField("m_seed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_patrolSquads = typeof(TNH_Manager).GetField("m_patrolSquads", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_hasInit = typeof(TNH_Manager).GetField("m_hasInit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_miscEnemies = typeof(TNH_Manager).GetField("m_miscEnemies", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_HoldPoint_m_activeSosigs = typeof(TNH_HoldPoint).GetField("m_activeSosigs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_HoldPoint_m_activeTurrets = typeof(TNH_HoldPoint).GetField("m_activeTurrets", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_SupplyPoint_m_activeSosigs = typeof(TNH_SupplyPoint).GetField("m_activeSosigs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -1616,10 +1617,10 @@ namespace H3MP
             // TNH_ManagerPatch
             MethodInfo TNH_ManagerPatchPlayerDiedOriginal = typeof(TNH_Manager).GetMethod("PlayerDied", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchPlayerDiedPrefix = typeof(TNH_ManagerPatch).GetMethod("PlayerDiedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_ManagerPatchAddTokensOriginal = typeof(TNH_Manager).GetMethod("AddTokens", BindingFlags.Public | BindingFlags.Instance);
-            //MethodInfo TNH_ManagerPatchAddTokensPrefix = typeof(TNH_ManagerPatch).GetMethod("AddTokensPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_ManagerPatchSosigKillOriginal = typeof(TNH_Manager).GetMethod("OnSosigKill", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_ManagerPatchSosigKillPrefix = typeof(TNH_ManagerPatch).GetMethod("OnSosigKillPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchAddTokensOriginal = typeof(TNH_Manager).GetMethod("AddTokens", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchAddTokensPrefix = typeof(TNH_ManagerPatch).GetMethod("AddTokensPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchSosigKillOriginal = typeof(TNH_Manager).GetMethod("OnSosigKill", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchSosigKillPrefix = typeof(TNH_ManagerPatch).GetMethod("OnSosigKillPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseOriginal = typeof(TNH_Manager).GetMethod("SetPhase", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSetPhasePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhasePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchUpdateOriginal = typeof(TNH_Manager).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -1636,8 +1637,8 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchSetPhaseCompleteOriginal = typeof(TNH_Manager).GetMethod("SetPhase_Completed", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSetPhaseCompletePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhaseCompletePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseCompletePostfix = typeof(TNH_ManagerPatch).GetMethod("SetPhaseCompletePostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_ManagerPatchSetLevelOriginal = typeof(TNH_Manager).GetMethod("SetLevel", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_ManagerPatchSetLevelPrefix = typeof(TNH_ManagerPatch).GetMethod("SetLevelPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchSetLevelOriginal = typeof(TNH_Manager).GetMethod("SetLevel", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerPatchSetLevelPrefix = typeof(TNH_ManagerPatch).GetMethod("SetLevelPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchOnShotFiredOriginal = typeof(TNH_Manager).GetMethod("OnShotFired", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchOnShotFiredPrefix = typeof(TNH_ManagerPatch).GetMethod("OnShotFiredPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchOnBotShotFiredOriginal = typeof(TNH_Manager).GetMethod("OnBotShotFired", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1652,28 +1653,27 @@ namespace H3MP
             MethodInfo TNH_ManagerGeneratePatrolPostfix = typeof(TNH_ManagerPatch).GetMethod("GeneratePatrolPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TNH_ManagerPatchPlayerDiedOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_ManagerPatchAddTokensOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_ManagerPatchSosigKillOriginal, harmony, true);
+            PatchVerify.Verify(TNH_ManagerPatchAddTokensOriginal, harmony, true);
+            PatchVerify.Verify(TNH_ManagerPatchSosigKillOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchSetPhaseOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchUpdateOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchInitBeginEquipOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchSetPhaseTakeOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchSetPhaseHoldOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchSetPhaseCompleteOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_ManagerPatchSetLevelOriginal, harmony, true);
+            PatchVerify.Verify(TNH_ManagerPatchSetLevelOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchOnShotFiredOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchOnBotShotFiredOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerGenerateSentryPatrolOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerGeneratePatrolOriginal, harmony, true);
-            ////PatchVerify.Verify(TNH_ManagerGenerateSpawnSosigOriginal, harmony, true);
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
-            //harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
-            //harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
+            harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
+            harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
             harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix));
             harmony.Patch(TNH_ManagerPatchUpdateOriginal, new HarmonyMethod(TNH_ManagerPatchUpdatePrefix)/*, new HarmonyMethod(TNH_ManagerPatchUpdatePostfix)*/);
             harmony.Patch(TNH_ManagerPatchInitBeginEquipOriginal, new HarmonyMethod(TNH_ManagerPatchInitBeginEquipPrefix));
-            //harmony.Patch(TNH_ManagerPatchSetLevelOriginal, new HarmonyMethod(TNH_ManagerPatchSetLevelPrefix));
+            harmony.Patch(TNH_ManagerPatchSetLevelOriginal, new HarmonyMethod(TNH_ManagerPatchSetLevelPrefix));
             harmony.Patch(TNH_ManagerPatchSetPhaseTakeOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePrefix), new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePostfix));
             harmony.Patch(TNH_ManagerPatchSetPhaseHoldOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhaseHoldPrefix), new HarmonyMethod(TNH_ManagerPatchSetPhaseHoldPostfix));
             harmony.Patch(TNH_ManagerPatchSetPhaseCompleteOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhaseCompletePrefix), new HarmonyMethod(TNH_ManagerPatchSetPhaseCompletePostfix));
@@ -1682,7 +1682,6 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, new HarmonyMethod(TNH_ManagerPatchAddFVRObjectToTrackedListPrefix));
             harmony.Patch(TNH_ManagerGenerateSentryPatrolOriginal, new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPrefix), new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPostfix));
             harmony.Patch(TNH_ManagerGeneratePatrolOriginal, new HarmonyMethod(TNH_ManagerGeneratePatrolPrefix), new HarmonyMethod(TNH_ManagerGeneratePatrolPostfix));
-            ////harmony.Patch(TNH_ManagerGenerateSpawnSosigOriginal, new HarmonyMethod(TNH_ManagerGenerateSpawnSosigPrefix));
 
             // TNHSupplyPointPatch
             MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1713,44 +1712,46 @@ namespace H3MP
             harmony.Patch(TAHReticleContactPatchSetContactTypeOriginal, new HarmonyMethod(TAHReticleContactPatchSetContactTypePrefix));
 
             // TNH_HoldPointPatch
-            //MethodInfo TNH_HoldPointPatchSystemNodeOriginal = typeof(TNH_HoldPoint).GetMethod("ConfigureAsSystemNode", BindingFlags.Public | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("ConfigureAsSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchSpawnEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeChallengeEntities", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchSpawnEntitiesPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTakeChallengeEntitiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchBeginHoldOriginal = typeof(TNH_HoldPoint).GetMethod("BeginHoldChallenge", BindingFlags.Public | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchBeginHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSystemNodeOriginal = typeof(TNH_HoldPoint).GetMethod("ConfigureAsSystemNode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("ConfigureAsSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeChallengeEntities", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnEntitiesPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTakeChallengeEntitiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchBeginHoldOriginal = typeof(TNH_HoldPoint).GetMethod("BeginHoldChallenge", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchBeginHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             //MethodInfo TNH_HoldPointPatchBeginHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchRaiseRandomBarriersOriginal = typeof(TNH_HoldPoint).GetMethod("RaiseRandomBarriers", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPrefix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPostfix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchRaiseSetCoverPointDataOriginal = typeof(TNH_DestructibleBarrierPoint).GetMethod("SetCoverPointData", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchRaiseSetCoverPointDataPrefix = typeof(TNH_HoldPointPatch).GetMethod("BarrierSetCoverPointDataPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchRaiseCompletePhaseOriginal = typeof(TNH_HoldPoint).GetMethod("CompletePhase", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchRaiseCompletePhasePostfix = typeof(TNH_HoldPointPatch).GetMethod("CompletePhasePostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchUpdateOriginal = typeof(TNH_HoldPoint).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchUpdatePrefix = typeof(TNH_HoldPointPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchBeginAnalyzingOriginal = typeof(TNH_HoldPoint).GetMethod("BeginAnalyzing", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchBeginAnalyzingPostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginAnalyzingPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchSpawnWarpInMarkersOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnWarpInMarkers", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchSpawnWarpInMarkersPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnWarpInMarkersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchSpawnTargetGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTargetGroup", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchSpawnTargetGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTargetGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchIdentifyEncryptionOriginal = typeof(TNH_HoldPoint).GetMethod("IdentifyEncryption", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchIdentifyEncryptionPostfix = typeof(TNH_HoldPointPatch).GetMethod("IdentifyEncryptionPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchFailOutOriginal = typeof(TNH_HoldPoint).GetMethod("FailOut", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchFailOutPrefix = typeof(TNH_HoldPointPatch).GetMethod("FailOutPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchBeginPhaseOriginal = typeof(TNH_HoldPoint).GetMethod("BeginPhase", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchBeginPhasePrefix = typeof(TNH_HoldPointPatch).GetMethod("BeginPhasePrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchCompleteHoldOriginal = typeof(TNH_HoldPoint).GetMethod("CompleteHold", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchCompleteHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchCompleteHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnHoldEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
-            //MethodInfo TNH_HoldPointPatchSpawnTurretsPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_HoldPointPatchSpawnTurretsPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchRaiseRandomBarriersOriginal = typeof(TNH_HoldPoint).GetMethod("RaiseRandomBarriers", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPrefix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchRaiseRandomBarriersPostfix = typeof(TNH_HoldPointPatch).GetMethod("RaiseRandomBarriersPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchRaiseSetCoverPointDataOriginal = typeof(TNH_DestructibleBarrierPoint).GetMethod("SetCoverPointData", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchRaiseSetCoverPointDataPrefix = typeof(TNH_HoldPointPatch).GetMethod("BarrierSetCoverPointDataPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchCompletePhaseOriginal = typeof(TNH_HoldPoint).GetMethod("CompletePhase", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchCompletePhasePrefix = typeof(TNH_HoldPointPatch).GetMethod("CompletePhasePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchUpdateOriginal = typeof(TNH_HoldPoint).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchUpdatePrefix = typeof(TNH_HoldPointPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchBeginAnalyzingOriginal = typeof(TNH_HoldPoint).GetMethod("BeginAnalyzing", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchBeginAnalyzingPostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginAnalyzingPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnWarpInMarkersOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnWarpInMarkers", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnWarpInMarkersPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnWarpInMarkersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnTargetGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTargetGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnTargetGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTargetGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchIdentifyEncryptionOriginal = typeof(TNH_HoldPoint).GetMethod("IdentifyEncryption", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchIdentifyEncryptionPostfix = typeof(TNH_HoldPointPatch).GetMethod("IdentifyEncryptionPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchFailOutOriginal = typeof(TNH_HoldPoint).GetMethod("FailOut", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchFailOutPrefix = typeof(TNH_HoldPointPatch).GetMethod("FailOutPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchBeginPhaseOriginal = typeof(TNH_HoldPoint).GetMethod("BeginPhase", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchBeginPhasePostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginPhasePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchShutDownHoldPointOriginal = typeof(TNH_HoldPoint).GetMethod("ShutDownHoldPoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchShutDownHoldPointPrefix = typeof(TNH_HoldPointPatch).GetMethod("ShutDownHoldPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchCompleteHoldOriginal = typeof(TNH_HoldPoint).GetMethod("CompleteHold", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchCompleteHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchCompleteHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnHoldEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_HoldPointPatchSpawnTurretsPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnTurretsPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             //MethodInfo TNH_HoldPointPatchDeletionBurstOriginal = typeof(TNH_HoldPoint).GetMethod("DeletionBurst", BindingFlags.NonPublic | BindingFlags.Instance);
             //MethodInfo TNH_HoldPointPatchDeletionBurstPrefix = typeof(TNH_HoldPointPatch).GetMethod("DeletionBurstPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             //MethodInfo TNH_HoldPointPatchDeleteAllActiveEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("DeleteAllActiveEntities", BindingFlags.Public | BindingFlags.Instance);
@@ -1764,46 +1765,48 @@ namespace H3MP
             ////MethodInfo TNH_HoldPointPatchSpawnSystemNodeOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnSystemNode", BindingFlags.NonPublic | BindingFlags.Instance);
             ////MethodInfo TNH_HoldPointPatchSpawnSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            //PatchVerify.Verify(TNH_HoldPointPatchSystemNodeOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchSpawnEntitiesOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchBeginHoldOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchRaiseRandomBarriersOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchRaiseSetCoverPointDataOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchRaiseCompletePhaseOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchUpdateOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchBeginAnalyzingOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchSpawnWarpInMarkersOriginal, harmony, false);
-            //PatchVerify.Verify(TNH_HoldPointPatchSpawnTargetGroupOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchIdentifyEncryptionOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchFailOutOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchBeginPhaseOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchCompleteHoldOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, harmony, true);
-            //PatchVerify.Verify(TNH_HoldPointPatchSpawnTurretsOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSystemNodeOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnEntitiesOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchBeginHoldOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchRaiseRandomBarriersOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchRaiseSetCoverPointDataOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchCompletePhaseOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchUpdateOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchBeginAnalyzingOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnWarpInMarkersOriginal, harmony, false);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnTargetGroupOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchIdentifyEncryptionOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchFailOutOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchBeginPhaseOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchShutDownHoldPointOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchCompleteHoldOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, harmony, true);
+            PatchVerify.Verify(TNH_HoldPointPatchSpawnTurretsOriginal, harmony, true);
             //PatchVerify.Verify(TNH_HoldPointPatchDeletionBurstOriginal, harmony, true);
             //PatchVerify.Verify(TNH_HoldPointPatchDeleteAllActiveEntitiesOriginal, harmony, true);
             //PatchVerify.Verify(TNH_HoldPointPatchDeleteAllActiveTargetsOriginal, harmony, true);
             //PatchVerify.Verify(TNH_HoldPointPatchDeleteSosigsOriginal, harmony, true);
             //PatchVerify.Verify(TNH_HoldPointPatchDeleteTurretsOriginal, harmony, true);
             ////PatchVerify.Verify(TNH_HoldPointPatchSpawnSystemNodeOriginal, harmony, true);
-            //harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
-            //harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
-            //harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix));
-            //harmony.Patch(TNH_HoldPointPatchRaiseRandomBarriersOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseRandomBarriersPrefix), new HarmonyMethod(TNH_HoldPointPatchRaiseRandomBarriersPostfix));
-            //harmony.Patch(TNH_HoldPointPatchRaiseSetCoverPointDataOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseSetCoverPointDataPrefix));
-            //harmony.Patch(TNH_HoldPointPatchRaiseCompletePhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchRaiseCompletePhasePostfix));
-            //harmony.Patch(TNH_HoldPointPatchUpdateOriginal, new HarmonyMethod(TNH_HoldPointPatchUpdatePrefix));
-            //harmony.Patch(TNH_HoldPointPatchBeginAnalyzingOriginal, null, new HarmonyMethod(TNH_HoldPointPatchBeginAnalyzingPostfix));
-            //harmony.Patch(TNH_HoldPointPatchSpawnWarpInMarkersOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnWarpInMarkersPrefix));
-            //harmony.Patch(TNH_HoldPointPatchSpawnTargetGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnTargetGroupPrefix));
-            //harmony.Patch(TNH_HoldPointPatchIdentifyEncryptionOriginal, null, new HarmonyMethod(TNH_HoldPointPatchIdentifyEncryptionPostfix));
-            //harmony.Patch(TNH_HoldPointPatchFailOutOriginal, new HarmonyMethod(TNH_HoldPointPatchFailOutPrefix));
-            //harmony.Patch(TNH_HoldPointPatchBeginPhaseOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginPhasePrefix));
-            //harmony.Patch(TNH_HoldPointPatchCompleteHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchCompleteHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchCompleteHoldPostfix));
-            //harmony.Patch(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
-            //harmony.Patch(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
-            //harmony.Patch(TNH_HoldPointPatchSpawnTurretsOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPostfix));
+            harmony.Patch(TNH_HoldPointPatchSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSystemNodePrefix));
+            harmony.Patch(TNH_HoldPointPatchSpawnEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEntitiesPrefix));
+            harmony.Patch(TNH_HoldPointPatchBeginHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPrefix)/*, new HarmonyMethod(TNH_HoldPointPatchBeginHoldPostfix)*/);
+            harmony.Patch(TNH_HoldPointPatchRaiseRandomBarriersOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseRandomBarriersPrefix), new HarmonyMethod(TNH_HoldPointPatchRaiseRandomBarriersPostfix));
+            harmony.Patch(TNH_HoldPointPatchRaiseSetCoverPointDataOriginal, new HarmonyMethod(TNH_HoldPointPatchRaiseSetCoverPointDataPrefix));
+            harmony.Patch(TNH_HoldPointPatchCompletePhaseOriginal, new HarmonyMethod(TNH_HoldPointPatchCompletePhasePrefix));
+            harmony.Patch(TNH_HoldPointPatchUpdateOriginal, new HarmonyMethod(TNH_HoldPointPatchUpdatePrefix));
+            harmony.Patch(TNH_HoldPointPatchBeginAnalyzingOriginal, null, new HarmonyMethod(TNH_HoldPointPatchBeginAnalyzingPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnWarpInMarkersOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnWarpInMarkersPrefix));
+            harmony.Patch(TNH_HoldPointPatchSpawnTargetGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnTargetGroupPrefix));
+            harmony.Patch(TNH_HoldPointPatchIdentifyEncryptionOriginal, null, new HarmonyMethod(TNH_HoldPointPatchIdentifyEncryptionPostfix));
+            harmony.Patch(TNH_HoldPointPatchFailOutOriginal, new HarmonyMethod(TNH_HoldPointPatchFailOutPrefix));
+            harmony.Patch(TNH_HoldPointPatchBeginPhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchBeginPhasePostfix));
+            harmony.Patch(TNH_HoldPointPatchShutDownHoldPointOriginal, new HarmonyMethod(TNH_HoldPointPatchShutDownHoldPointPrefix));
+            harmony.Patch(TNH_HoldPointPatchCompleteHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchCompleteHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchCompleteHoldPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnTurretsOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPostfix));
             //harmony.Patch(TNH_HoldPointPatchDeletionBurstOriginal, new HarmonyMethod(TNH_HoldPointPatchDeletionBurstPrefix));
             //harmony.Patch(TNH_HoldPointPatchDeleteAllActiveEntitiesOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteAllActiveEntitiesPrefix));
             //harmony.Patch(TNH_HoldPointPatchDeleteAllActiveTargetsOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteAllActiveTargetsPrefix));
@@ -11591,14 +11594,12 @@ namespace H3MP
         public static int completeTokenSkip;
         public static int sosigKillSkip;
         public static bool doInit;
-        public static int initSkip;
 
         public static bool inGenerateSentryPatrol;
         public static bool inGeneratePatrol;
         public static List<Vector3> patrolPoints;
         public static int patrolIndex = -1;
 
-        On hold start we want to TP player to hold point UNLESS WE ARE DEAD AND NOT SPECTATING
         static bool PlayerDiedPrefix()
         {
             if (Mod.managerObject != null)
@@ -11742,7 +11743,7 @@ namespace H3MP
 
                         return false;
                     }
-                    else // last live player but we are controller, call SetPhase_Dead like normal
+                    else // last live player but we are controller
                     {
                         Mod.currentTNHInstance.Reset();
                     }
@@ -11864,10 +11865,8 @@ namespace H3MP
             return true;
         }
 
-        static bool SetLevelPrefix(int level)
+        static void SetLevelPrefix(int level)
         {
-            // Update TNH:
-            //  New Level index
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
@@ -11880,33 +11879,8 @@ namespace H3MP
                     {
                         H3MP_ClientSend.TNHSetLevel(Mod.currentTNHInstance.instance, level);
                     }
-
-                    return true;
-                }
-                else // Not controller
-                {
-                    TNH_Progression progression = (TNH_Progression)Mod.TNH_Manager_m_curProgression.GetValue(Mod.currentTNHInstance.manager);
-
-                    // Could be null if we receive set level from controller before we set it in delayed init
-                    // If it is null here though, the progression setting will be handled when we receive TNH data from controller
-                    if (progression != null)
-                    { 
-                        if (Mod.currentTNHInstance.manager.ProgressionMode == TNHSetting_ProgressionType.FiveHold || level < progression.Levels.Count)
-                        {
-                            Mod.TNH_Manager_m_curLevel.SetValue(Mod.currentTNHInstance.manager, progression.Levels[Mod.currentTNHInstance.level]);
-                        }
-                        else
-                        {
-                            TNH_Progression endlessProgression = (TNH_Progression)Mod.TNH_Manager_m_curProgressionEndless.GetValue(Mod.currentTNHInstance.manager);
-                            Mod.TNH_Manager_m_curLevel.SetValue(Mod.currentTNHInstance.manager, endlessProgression.Levels[UnityEngine.Random.Range(0, endlessProgression.Levels.Count)]);
-                        }
-                    }
-
-                    return false;
                 }
             }
-
-            return true;
         }
 
         static bool SetPhaseTakePrefix()
@@ -11942,7 +11916,7 @@ namespace H3MP
                     {
                         TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
                         TNH_SupplyPoint.SupplyPanelType panelType = Mod.currentTNHInstance.supplyPanelTypes[i];
-                        // Here we pass false to spawn sosigs,turrents, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                        // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
                         tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
                         spawnToken = false;
                         TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
@@ -12307,8 +12281,6 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
-            TODO: Review that this sets everything
-            ++initSkip;
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
             if (Mod.currentTNHInstance.holdOngoing)
@@ -12316,9 +12288,9 @@ namespace H3MP
                 // Set the hold
                 TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
-                ++TNH_HoldPointPatch.beginHoldSkip;
+                ++TNH_HoldPointPatch.beginHoldSendSkip;
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].BeginHoldChallenge();
-                --TNH_HoldPointPatch.beginHoldSkip;
+                --TNH_HoldPointPatch.beginHoldSendSkip;
 
                 // TP to system node spawn point
                 GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode.position, true);
@@ -12407,11 +12379,6 @@ namespace H3MP
                     }
                 }
             }
-            --initSkip;
-
-            // Init join TNH essentially replaces delayedInit so need to set hasInit to true otherwise, if we get control, delayed init will happen and init
-            // the manager a second time
-            Mod.TNH_Manager_m_hasInit.SetValue(Mod.currentTNHInstance.manager, true);
 
             // If this is the first time we join this game, give the player a button 
             // with which they can spawn their own starting equipment
@@ -12434,6 +12401,7 @@ namespace H3MP
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.currentlyPlaying.Count > 1)
             {
                 // Don't want to spawn starting equipment right away if there are already players in our TNH instance
+                // We will spawn start equip spawn button when we init
                 return false;
             }
             return true;
@@ -12500,7 +12468,7 @@ namespace H3MP
     public class TNH_HoldPointPatch
     {
         public static bool spawnEntitiesSkip;
-        public static int beginHoldSkip;
+        public static int beginHoldSendSkip;
         public static int beginPhaseSkip;
 
         public static bool inSpawnEnemyGroup;
@@ -12564,7 +12532,7 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance != null)
                 {
-                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && TNH_ManagerPatch.initSkip == 0)
+                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                     {
                         int holdPointIndex = -1;
                         for(int i=0; i<__instance.M.HoldPoints.Count;++i)
@@ -12575,36 +12543,19 @@ namespace H3MP
                                 break;
                             }
                         }
-                        int progressionIndex = -1;
-                        for(int i=0; i<__instance.M.C.Progressions.Count;++i)
-                        {
-                            if (__instance.M.C.Progressions[i] == (TNH_Progression)Mod.TNH_Manager_m_curProgression.GetValue(__instance.M))
-                            {
-                                progressionIndex = i;
-                                break;
-                            }
-                        }
-                        int progressionEndlessIndex = -1;
-                        for(int i=0; i<__instance.M.C.Progressions_Endless.Count;++i)
-                        {
-                            if (__instance.M.C.Progressions_Endless[i] == (TNH_Progression)Mod.TNH_Manager_m_curProgressionEndless.GetValue(__instance.M))
-                            {
-                                progressionEndlessIndex = i;
-                                break;
-                            }
-                        }
 
                         // Update locally
                         Mod.currentTNHInstance.curHoldIndex = holdPointIndex;
+                        Mod.currentTNHInstance.level = (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager);
 
                         if (H3MP_ThreadManager.host)
                         {
-                            H3MP_ServerSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, GM.TNHOptions.LastPlayedChar, progressionIndex, progressionEndlessIndex, (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager), holdPointIndex);
+                            H3MP_ServerSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.level, holdPointIndex);
                         }
                         else
                         {
 
-                            H3MP_ClientSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, GM.TNHOptions.LastPlayedChar, progressionIndex, progressionEndlessIndex, (int)Mod.TNH_Manager_m_level.GetValue(GM.TNH_Manager), holdPointIndex);
+                            H3MP_ClientSend.TNHHoldPointSystemNode(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.level, holdPointIndex);
                         }
                     }
                     else
@@ -12617,55 +12568,68 @@ namespace H3MP
 
         static bool SpawnTakeChallengeEntitiesPrefix()
         {
-            if (TNH_ManagerPatch.initSkip > 0)
-            {
-                return false;
-            }
-
-            if (spawnEntitiesSkip)
-            {
-                spawnEntitiesSkip = false;
-                return false;
-            }
-
-            return true;
+            // Skip if in TNH and not controller
+            return Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID;
         }
 
-        static bool BeginHoldPrefix()
+        static bool BeginHoldPrefix(TNH_HoldPoint __instance, List<Sosig> ___m_activeSosigs, List<AutoMeater> ___m_activeTurrets, List<TNH_EncryptionTarget> ___m_activeTargets,
+                                    ref int ___m_phaseIndex, ref int ___m_maxPhases, ref bool ___m_isInHold, ref int ___m_numWarnings)
         {
-            if(beginHoldSkip > 0)
-            {
-                return true;
-            }
-
-            ++beginPhaseSkip;
+            //++beginPhaseSkip;
 
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
+                // Update locally
+                Mod.currentTNHInstance.holdOngoing = true;
+                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+
                 if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
-                    // Update locally
-                    Mod.currentTNHInstance.holdOngoing = true;
-                    Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
-
-                    if (H3MP_ThreadManager.host)
+                    if (beginHoldSendSkip == 0)
                     {
-                        H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true, true, 0);
-                    }
-                    else
-                    {
-                        H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true);
+                        // Send update
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true, true, 0);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, true);
+                        }
                     }
                 }
                 else
                 {
-                    if (H3MP_ThreadManager.host)
+                    // Deletion burst
+                    ___m_activeSosigs.Clear();
+                    (Mod.TNH_Manager_m_miscEnemies.GetValue(Mod.currentTNHInstance.manager) as List<GameObject>).Clear();
+
+                    // DeleteAllActiveEntities
+                    ___m_activeTargets.Clear();
+                    Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(__instance, null);
+                    Mod.TNH_HoldPoint_DeleteBarriers.Invoke(__instance, null);
+                    //(Mod.TNH_HoldPoint_m_activeSosigs.GetValue(__instance) as List<Sosig>).Clear(); Done in deletion burst
+                    ___m_activeTurrets.Clear();
+
+                    __instance.NavBlockers.SetActive(true);
+                    ___m_phaseIndex = 0;
+                    ___m_maxPhases = __instance.H.Phases.Count;
+                    __instance.M.EnqueueLine(TNH_VoiceLineID.BASE_IntrusionDetectedInitiatingLockdown);
+                    __instance.M.EnqueueLine(TNH_VoiceLineID.AI_InterfacingWithSystemNode);
+                    __instance.M.EnqueueLine(TNH_VoiceLineID.BASE_ResponseTeamEnRoute);
+                    ___m_isInHold = true;
+                    ___m_numWarnings = 0;
+
+                    if (beginHoldSendSkip == 0)
                     {
-                        H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, false, Mod.currentTNHInstance.controller);
-                    }
-                    else
-                    {
-                        H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false);
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, false, Mod.currentTNHInstance.controller);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false);
+                        }
                     }
 
                     return false;
@@ -12677,12 +12641,29 @@ namespace H3MP
 
         static void BeginHoldPostfix()
         {
-            if(beginHoldSkip > 0)
+            if(beginHoldSendSkip > 0)
             {
                 return;
             }
 
             --beginPhaseSkip;
+        }
+
+        static void BeginPhasePostfix()
+        {
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.TNHHoldPointBeginPhase(Mod.currentTNHInstance.instance);
+                }
+                else
+                {
+                    H3MP_ClientSend.TNHHoldPointBeginPhase(Mod.currentTNHInstance.instance);
+                }
+            }
         }
 
         static bool RaiseRandomBarriersPrefix(int howMany)
@@ -12691,7 +12672,7 @@ namespace H3MP
             // It will also prevent raising barriers if we are not the controller of the instance
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
                     int num = howMany;
                     TNH_HoldPoint holdPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager);
@@ -12712,6 +12693,20 @@ namespace H3MP
 
                         // Set the list in TNHInstance, which will be sent alongside begin hold
                         Mod.currentTNHInstance.raisedBarriers.Add(index);
+                    }
+                }
+                else // Not controller, use instance data
+                {
+                    for (int i = 0; i < Mod.currentTNHInstance.raisedBarriers.Count; ++i)
+                    {
+                        TNH_DestructibleBarrierPoint point = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].BarrierPoints[Mod.currentTNHInstance.raisedBarriers[i]];
+                        TNH_DestructibleBarrierPoint.BarrierDataSet barrierDataSet = point.BarrierDataSets[Mod.currentTNHInstance.raisedBarrierPrefabIndices[i]];
+                        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(barrierDataSet.BarrierPrefab, point.transform.position, point.transform.rotation);
+                        TNH_DestructibleBarrier curBarrier = gameObject.GetComponent<TNH_DestructibleBarrier>();
+                        Mod.TNH_DestructibleBarrierPoint_m_curBarrier.SetValue(point, curBarrier);
+                        curBarrier.InitToPlace(point.transform.position, point.transform.forward);
+                        curBarrier.SetBarrierPoint(point);
+                        Mod.TNH_DestructibleBarrierPoint_SetCoverPointData.Invoke(point, new object[] { Mod.currentTNHInstance.raisedBarrierPrefabIndices[i] });
                     }
                 }
 
@@ -12749,7 +12744,7 @@ namespace H3MP
             // This patch will prevent BarrierPoints from being shuffled so barriers can be identified across clients
             if(Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
+                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
                     if(Mod.currentTNHInstance.raisedBarrierPrefabIndices == null)
                     {
@@ -12758,57 +12753,6 @@ namespace H3MP
                     Mod.currentTNHInstance.raisedBarrierPrefabIndices.Add(index);
                 }
             }
-        }
-
-        static void CompletePhasePostfix()
-        {
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
-            {
-                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Transition;
-
-                if (H3MP_ThreadManager.host)
-                {
-                    H3MP_ServerSend.TNHHoldCompletePhase(Mod.currentTNHInstance.instance);
-                }
-                else
-                {
-                    H3MP_ClientSend.TNHHoldCompletePhase(Mod.currentTNHInstance.instance);
-                }
-            }
-        }
-
-        static bool SpawnTargetGroupPrefix()
-        {
-            // Skip if connected, have TNH instance, and we are not controller
-            if(Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
-            {
-                Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex], null);
-                return false;
-            }
-            return true;
-        }
-
-        static void IdentifyEncryptionPostfix()
-        {
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
-            {
-                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Hacking;
-
-                if (H3MP_ThreadManager.host)
-                {
-                    H3MP_ServerSend.TNHHoldIdentifyEncryption(0, Mod.currentTNHInstance.instance);
-                }
-                else
-                {
-                    H3MP_ClientSend.TNHHoldIdentifyEncryption(Mod.currentTNHInstance.instance);
-                }
-            }
-        }
-
-        static bool SpawnWarpInMarkersPrefix()
-        {
-            // Skip if connected, have TNH instance, and we are not controller
-            return Mod.managerObject == null || Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
         }
 
         static void BeginAnalyzingPostfix(ref TNH_HoldPoint __instance, ref List<GameObject> ___m_warpInTargets, float ___m_tickDownToIdentification)
@@ -12822,7 +12766,7 @@ namespace H3MP
                     // Build data list
                     Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Analyzing;
                     Mod.currentTNHInstance.warpInData = new List<Vector3>();
-                    foreach(GameObject target in ___m_warpInTargets)
+                    foreach (GameObject target in ___m_warpInTargets)
                     {
                         Mod.currentTNHInstance.warpInData.Add(target.transform.position);
                         Mod.currentTNHInstance.warpInData.Add(target.transform.rotation.eulerAngles);
@@ -12834,63 +12778,143 @@ namespace H3MP
                     }
                     else
                     {
-                        Mod.LogInfo("Client sending BeginAnalyzing order with " + Mod.currentTNHInstance.warpInData.Count + " warpin data count");
                         H3MP_ClientSend.TNHHoldPointBeginAnalyzing(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.warpInData, ___m_tickDownToIdentification);
                     }
                 }
             }
         }
 
-        static void FailOutPrefix()
+        static bool CompletePhasePrefix(TNH_HoldPoint __instance, List<Sosig> ___m_activeSosigs, TNH_HoldPointSystemNode ___m_systemNode, ref int ___m_phaseIndex,
+                                        ref TNH_HoldPoint.HoldState ___m_state, ref float ___m_tickDownTransition)
         {
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                Mod.currentTNHInstance.holdOngoing = false;
-                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Transition;
 
-                if (H3MP_ThreadManager.host)
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
-                    H3MP_ServerSend.TNHHoldPointFailOut(Mod.currentTNHInstance.instance);
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.TNHHoldCompletePhase(Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHHoldCompletePhase(Mod.currentTNHInstance.instance);
+                    }
                 }
                 else
                 {
-                    H3MP_ClientSend.TNHHoldPointFailOut(Mod.currentTNHInstance.instance);
+                    // Deletion burst
+                    ___m_activeSosigs.Clear();
+                    (Mod.TNH_Manager_m_miscEnemies.GetValue(Mod.currentTNHInstance.manager) as List<GameObject>).Clear();
+
+                    SM.PlayCoreSound(FVRPooledAudioType.GenericLongRange, __instance.AUDEvent_HoldWave, __instance.transform.position);
+                    UnityEngine.Object.Instantiate<GameObject>(__instance.VFX_HoldWave, ___m_systemNode.NodeCenter.position, ___m_systemNode.NodeCenter.rotation);
+                    Mod.currentTNHInstance.manager.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Neutralized);
+                    Mod.currentTNHInstance.manager.Increment(2, (int)Mod.currentTNHInstance.tickDownToFailure, false);
+                    ++___m_phaseIndex;
+                    ___m_state = TNH_HoldPoint.HoldState.Transition;
+                    ___m_tickDownTransition = 5f;
+                    Mod.TNH_HoldPoint_LowerAllBarriers.Invoke(__instance, null);
+                    ___m_systemNode.SetNodeMode(TNH_HoldPointSystemNode.SystemNodeMode.Hacking);
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        static bool SpawnTargetGroupPrefix()
+        {
+            // Skip if connected, have TNH instance, and we are not controller
+            return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
+        }
+
+        static void IdentifyEncryptionPostfix()
+        {
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Hacking;
+
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.TNHHoldIdentifyEncryption(0, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHHoldIdentifyEncryption(Mod.currentTNHInstance.instance);
+                    }
                 }
             }
         }
 
-        static void BeginPhasePrefix()
+        static bool SpawnWarpInMarkersPrefix()
         {
-            if(beginPhaseSkip > 0)
-            {
-                return;
-            }
+            // Skip if connected, have TNH instance, and we are not controller
+            return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
+        }
 
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0)
+        static void FailOutPrefix()
+        {
+            // Note that this is a prefix, sending failout to non controlelrs will be done before we make the HoldPointCompleted->SetLevel call
+            // inside failout. So non controllers are going to call their own failout which will increment their level
+            // but it will be overriden by the controller sending a SetLevel directly after this
+            // If it were a postfix instead, non controllers would end up with an incorrect m_level
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                Mod.currentTNHInstance.holdOngoing = true;
+                Mod.currentTNHInstance.holdOngoing = false;
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
 
-                if (H3MP_ThreadManager.host)
+                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
-                    H3MP_ServerSend.TNHHoldPointBeginPhase(Mod.currentTNHInstance.instance);
-                }
-                else
-                {
-                    H3MP_ClientSend.TNHHoldPointBeginPhase(Mod.currentTNHInstance.instance);
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.TNHHoldPointFailOut(Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHHoldPointFailOut(Mod.currentTNHInstance.instance);
+                    }
                 }
             }
+        }
+
+        static bool ShutDownHoldPointPrefix(TNH_HoldPoint __instance, List<Sosig> ___m_activeSosigs, List<AutoMeater> ___m_activeTurrets, List<TNH_EncryptionTarget> ___m_activeTargets,
+                                            ref TNH_HoldPoint.HoldState ___m_state, ref int ___m_phaseIndex, ref int ___m_maxPhases, ref bool ___m_isInHold,
+                                            ref TNH_HoldChallenge.Phase ___m_curPhase)
+        {
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+            {
+                ___m_isInHold = false;
+                ___m_state = TNH_HoldPoint.HoldState.Beginning;
+                __instance.NavBlockers.SetActive(false);
+                ___m_phaseIndex = 0;
+                ___m_maxPhases = 0;
+                ___m_curPhase = null;
+                Mod.TNH_HoldPoint_DeleteSystemNode.Invoke(__instance, null);
+                ___m_activeTargets.Clear();
+                ___m_activeSosigs.Clear();
+                ___m_activeTurrets.Clear();
+                Mod.TNH_HoldPoint_LowerAllBarriers.Invoke(__instance, null);
+
+                return false;
+            }
+
+            return true;
         }
 
         static void CompleteHoldPrefix()
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
+                Mod.currentTNHInstance.holdOngoing = false;
+                Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+
                 if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
-                    Mod.currentTNHInstance.holdOngoing = false;
-                    Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
-
                     if (H3MP_ThreadManager.host)
                     {
                         H3MP_ServerSend.TNHHoldPointCompleteHold(Mod.currentTNHInstance.instance);
@@ -12942,7 +12966,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID);
         }
 
         static bool DeleteAllActiveEntitiesPrefix()
@@ -12952,7 +12976,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID);
         }
 
         static bool DeleteAllActiveTargetsPrefix()
@@ -12962,7 +12986,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID);
         }
 
         static bool DeleteSosigsPrefix()
@@ -12972,7 +12996,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID);
         }
 
         static bool DeleteTurretsPrefix()
@@ -12982,7 +13006,7 @@ namespace H3MP
                 return true;
             }
 
-            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.doInit && TNH_ManagerPatch.initSkip == 0);
+            return Mod.currentTNHInstance == null || (Mod.currentTNHInstance.controller == H3MP_GameManager.ID);
         }
 
         static void SpawnSystemNodePrefix()
