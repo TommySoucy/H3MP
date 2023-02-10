@@ -1791,7 +1791,12 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHData))
             {
                 packet.Write(instance);
-                packet.Write(manager);
+                bool hasInit = (bool)Mod.TNH_Manager_m_hasInit.GetValue(manager);
+                packet.Write(hasInit);
+                if (hasInit)
+                {
+                    packet.Write(manager);
+                }
 
                 SendTCPData(packet);
             }
@@ -2044,11 +2049,12 @@ namespace H3MP
             }
         }
 
-        public static void TNHSetPhaseTake(int instance, List<int> activeSupplyPointIndices, List<TNH_SupplyPoint.SupplyPanelType> types)
+        public static void TNHSetPhaseTake(int instance, int holdIndex, List<int> activeSupplyPointIndices, List<TNH_SupplyPoint.SupplyPanelType> types)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHSetPhaseTake))
             {
                 packet.Write(instance);
+                packet.Write(holdIndex);
                 packet.Write(activeSupplyPointIndices.Count);
                 foreach(int index in activeSupplyPointIndices)
                 {
@@ -2058,6 +2064,16 @@ namespace H3MP
                 {
                     packet.Write((byte)type);
                 }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TNHSetPhaseHold(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHSetPhaseHold))
+            {
+                packet.Write(instance);
 
                 SendTCPData(packet);
             }

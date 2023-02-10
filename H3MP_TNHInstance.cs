@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.VR.InteractionSystem;
 
@@ -27,7 +28,7 @@ namespace H3MP
         public bool spawnedStartEquip; // Whether this client has already gotten its start equip spawned
         public int curHoldIndex;
         public int level;
-        public TNH_Phase phase;
+        public TNH_Phase phase = TNH_Phase.StartUp;
         public List<int> activeSupplyPointIndices;
         public List<TNH_SupplyPoint.SupplyPanelType> supplyPanelTypes;
         public List<int> raisedBarriers;
@@ -84,9 +85,9 @@ namespace H3MP
             this.levelIndex = levelIndex;
         }
 
-        public void AddCurrentlyPlaying(bool send, int ID)
+        public void AddCurrentlyPlaying(bool send, int ID, bool fromServer = false)
         {
-            if (!H3MP_GameManager.TNHInstances[instance].letPeopleJoin && H3MP_GameManager.TNHInstances[instance].currentlyPlaying.Count == 0 &&
+            if (!letPeopleJoin && currentlyPlaying.Count == 0 &&
                 Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
             {
                 GameObject.Destroy(Mod.joinTNHInstances[instance]);
@@ -110,6 +111,29 @@ namespace H3MP
                 H3MP_GameManager.UpdatePlayerHidden(H3MP_GameManager.players[ID]);
             }
 
+            if (fromServer) // Only manage controller if server made this call
+            {
+                if (ID == playerIDs[0])
+                {
+                    controller = ID;
+                    H3MP_ServerSend.SetTNHController(instance, ID);
+                }
+                else // The player who got added is not instance host
+                {
+                    if(currentlyPlaying.Count == 1)
+                    {
+                        if (!H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_Server.clients[ID].player.scene, out Dictionary<int, List<int>> instances) ||
+                            !instances.TryGetValue(instance, out List<int> players) || !players.Contains(playerIDs[0]))
+                        {
+                            controller = ID;
+                            H3MP_ServerSend.SetTNHController(instance, ID);
+                        }
+                        //else // Instance host loading, just wait for them
+                    }
+                    //else // The player is not the only one
+                }
+            }
+
             if (send)
             {
                 // Send to other clients
@@ -124,7 +148,7 @@ namespace H3MP
             }
         }
 
-        public void RemoveCurrentlyPlaying(bool send, int ID)
+        public void RemoveCurrentlyPlaying(bool send, int ID, bool fromServer = false)
         {
             if ((letPeopleJoin || currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(instance))
             {
@@ -146,6 +170,25 @@ namespace H3MP
             {
                 Reset();
             }
+            else if (fromServer) // If the server is the one who removed a player
+            {
+                if (currentlyPlaying.Contains(playerIDs[0]))
+                {
+                    H3MP_ServerSend.SetTNHController(instance, playerIDs[0]);
+                }
+                else // New instance host is not currently playing
+                {
+                    int currentLowest = int.MaxValue;
+                    for (int i = 0; i < currentlyPlaying.Count; ++i)
+                    {
+                        if (currentlyPlaying[i] < currentLowest)
+                        {
+                            currentLowest = currentlyPlaying[i];
+                        }
+                    }
+                    H3MP_ServerSend.SetTNHController(instance, currentLowest);
+                }
+            }
 
             if (send)
             {
@@ -165,6 +208,7 @@ namespace H3MP
         {
             dead.Clear();
             played.Clear();
+            controller = -1;
             tokenCount = 0;
             holdOngoing = false;
             holdState = TNH_HoldPoint.HoldState.Beginning;

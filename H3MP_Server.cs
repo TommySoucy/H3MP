@@ -604,6 +604,7 @@ namespace H3MP
                 H3MP_ServerHandle.ClaymoreMineDetonate,
                 H3MP_ServerHandle.SLAMDetonate,
                 H3MP_ServerHandle.Ping,
+                H3MP_ServerHandle.TNHSetPhaseHold,
             };
 
             items = new H3MP_TrackedItemData[100];

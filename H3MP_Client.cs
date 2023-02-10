@@ -450,6 +450,7 @@ namespace H3MP
                 H3MP_ClientHandle.ClaymoreMineDetonate,
                 H3MP_ClientHandle.SLAMDetonate,
                 H3MP_ClientHandle.Ping,
+                H3MP_ClientHandle.TNHSetPhaseHold,
             };
 
             // All vanilla scenes can be synced by default
@@ -877,20 +878,22 @@ namespace H3MP
                 Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, H3MP_GameManager.ID);
 
                 // If was manager controller, give manager control to next currently playing
-                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
-                {
-                    Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
-                    if (H3MP_ThreadManager.host)
-                    {
-                        H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                        H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                    }
-                    else
-                    {
-                        H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                        H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                    }
-                }
+                // HANDLED BY SERVER
+                //if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+                //{
+                //    Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
+                //    bool hasInit = (bool)Mod.TNH_Manager_m_hasInit.GetValue(Mod.currentTNHInstance.manager);
+                //    if (H3MP_ThreadManager.host)
+                //    {
+                //        H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
+                //        H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                //    }
+                //    else
+                //    {
+                //        H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
+                //        H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                //    }
+                //}
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;

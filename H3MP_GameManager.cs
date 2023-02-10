@@ -223,6 +223,7 @@ namespace H3MP
 
         public static void UpdatePlayerScene(int playerID, string sceneName)
         {
+            Mod.LogInfo("Player " + playerID + " joining scene " + sceneName);
             H3MP_PlayerManager player = players[playerID];
 
             // Remove from scene/instance
@@ -316,6 +317,7 @@ namespace H3MP
 
         public static void UpdatePlayerInstance(int playerID, int instance)
         {
+            Mod.LogInfo("Player " + playerID + " joining instance " + instance);
             H3MP_PlayerManager player = players[playerID];
 
             if (activeInstances.ContainsKey(player.instance))
@@ -732,7 +734,13 @@ namespace H3MP
         //      For more information and example, take a look at CollectExternalData(H3MP_TrackedSosigData)
         private static void CollectExternalData(H3MP_TrackedItemData trackedItemData)
         {
-            trackedItemData.additionalData = new byte[0];
+            trackedItemData.additionalData = new byte[3];
+
+            trackedItemData.additionalData[0] = TNH_SupplyPointPatch.inSpawnBoxes ? (byte)1 : (byte)0;
+            if (TNH_SupplyPointPatch.inSpawnBoxes)
+            {
+                BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(trackedItemData.additionalData, 1);
+            }
         }
 
         // MOD: If you have a type of item (FVRPhysicalObject) that doen't have an ObjectWrapper,
@@ -1863,24 +1871,25 @@ namespace H3MP
                     SetInstance(0);
                     if (Mod.currentlyPlayingTNH)
                     {
-                        Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID);
+                        Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID, H3MP_ThreadManager.host);
                         Mod.currentlyPlayingTNH = false;
 
                         // If was manager controller, give manager control to next currently playing
-                        if (Mod.currentTNHInstance.controller == ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
-                        {
-                            Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
-                            if (H3MP_ThreadManager.host)
-                            {
-                                H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                                H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                            }
-                            else
-                            {
-                                H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                                H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                            }
-                        }
+                        // NOW HANDLED BY SERVER
+                        //if (Mod.currentTNHInstance.controller == ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+                        //{
+                        //    Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
+                        //    if (H3MP_ThreadManager.host)
+                        //    {
+                        //        H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
+                        //        H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                        //    }
+                        //    else
+                        //    {
+                        //        H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
+                        //        H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                        //    }
+                        //}
                     }
                     Mod.currentTNHInstance = null;
                     Mod.TNHSpectating = false;
@@ -2089,11 +2098,17 @@ namespace H3MP
             // TNH
             if(Mod.currentTNHInstance != null)
             {
-                if(Mod.currentlyPlayingTNH && Mod.currentTNHInstance.controller == ID)
+
+                if (Mod.currentlyPlayingTNH)
                 {
-                    H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, newController);
-                    H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                    Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID);
                 }
+
+                //if(Mod.currentlyPlayingTNH && Mod.currentTNHInstance.controller == ID)
+                //{
+                //    H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, newController);
+                //    H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
+                //}
 
                 // Note: When client disconnects, other clients will be told and will take this client out of
                 //       the various TNH lists like currentlyPlaying, etc. So we don't have to do it here

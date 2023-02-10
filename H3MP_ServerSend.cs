@@ -2751,7 +2751,12 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHData))
             {
                 packet.Write(controller);
-                packet.Write(manager);
+                bool hasInit = (bool)Mod.TNH_Manager_m_hasInit.GetValue(manager);
+                packet.Write(hasInit);
+                if (hasInit)
+                {
+                    packet.Write(manager);
+                }
 
                 SendTCPData(controller, packet);
             }
@@ -2961,11 +2966,12 @@ namespace H3MP
             }
         }
 
-        public static void TNHSetPhaseTake(int instance, List<int> activeSupplyPointIndices, List<TNH_SupplyPoint.SupplyPanelType> types, int clientID = 0)
+        public static void TNHSetPhaseTake(int instance, int holdIndex, List<int> activeSupplyPointIndices, List<TNH_SupplyPoint.SupplyPanelType> types, int clientID = 0)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHSetPhaseTake))
             {
                 packet.Write(instance);
+                packet.Write(holdIndex);
                 packet.Write(activeSupplyPointIndices.Count);
                 foreach (int index in activeSupplyPointIndices)
                 {
@@ -2975,6 +2981,23 @@ namespace H3MP
                 {
                     packet.Write((byte)type);
                 }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void TNHSetPhaseHold(int instance, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHSetPhaseHold))
+            {
+                packet.Write(instance);
 
                 if (clientID == 0)
                 {

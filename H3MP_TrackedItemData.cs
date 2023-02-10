@@ -127,6 +127,13 @@ namespace H3MP
         // MOD: This will be called at the end of instantiation so mods can use it to process the additionalData array
         private void ProcessAdditionalData()
         {
+            if (Mod.currentTNHInstance != null && Mod.currentlyPlayingTNH)
+            {
+                if (additionalData[0] == 1)
+                {
+                    (Mod.TNH_SupplyPoint_m_spawnBoxes.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[BitConverter.ToInt16(additionalData, 1)]) as List<GameObject>).Add(physicalItem.gameObject);
+                }
+            }
         }
 
         // MOD: If a mod keeps its item prefabs in a different location than IM.OD, this is what should be patched to find it

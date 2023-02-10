@@ -1,22 +1,14 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using Valve.VR.InteractionSystem;
-using static FistVR.RemoteGun;
-using static FistVR.TNH_Progression;
-using static H3MP.H3MP_PlayerHitbox;
-using static Valve.VR.SteamVR_ExternalCamera;
-using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
     internal class H3MP_ServerHandle
     {
+        TODO: Make sure that current tnh manager's state is not updated if it has not been init yet
         public static void WelcomeReceived(int clientID, H3MP_Packet packet)
         {
             int clientIDCheck = packet.ReadInt();
@@ -2083,9 +2075,7 @@ namespace H3MP
             }
             else
             {
-                H3MP_GameManager.TNHInstances[instance].AddCurrentlyPlaying(false, clientID);
-
-                H3MP_ServerSend.AddTNHCurrentlyPlaying(instance, clientID);
+                H3MP_GameManager.TNHInstances[instance].AddCurrentlyPlaying(true, clientID, true);
             }
         }
 
@@ -2095,13 +2085,7 @@ namespace H3MP
 
             if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance currentInstance))
             {
-                currentInstance.RemoveCurrentlyPlaying(false, clientID);
-                if (currentInstance.currentlyPlaying.Count == 0)
-                {
-                    currentInstance.Reset();
-                }
-
-                H3MP_ServerSend.RemoveTNHCurrentlyPlaying(instance, clientID);
+                currentInstance.RemoveCurrentlyPlaying(true, clientID, true);
             }
         }
 
@@ -2345,17 +2329,7 @@ namespace H3MP
                 {
                     Mod.LogInfo("\tWe were controller, new one is not us, giving up control");
                     H3MP_ServerSend.TNHData(instance, Mod.currentTNHInstance.manager);
-
-                    //++SetTNHManagerPatch.skip;
-                    //Mod.currentTNHInstance.manager.enabled = false;
-                    //--SetTNHManagerPatch.skip;
                 }
-                //else if(newController == H3MP_GameManager.ID && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
-                //{
-                //    ++SetTNHManagerPatch.skip;
-                //    Mod.currentTNHInstance.manager.enabled = true;
-                //    --SetTNHManagerPatch.skip;
-                //}
             }
 
             H3MP_GameManager.TNHInstances[instance].controller = newController;
@@ -2369,15 +2343,19 @@ namespace H3MP
 
             if(GM.TNH_Manager != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
             {
-                H3MP_TNHData data = packet.ReadTNHData();
+                bool hasInit = packet.ReadBool();
+                if (hasInit)
+                {
+                    H3MP_TNHData data = packet.ReadTNHData();
 
-                if (TNH_ManagerPatch.doInit)
-                {
-                    Mod.initTNHData = data;
-                }
-                else
-                {
-                    Mod.InitTNHData(data);
+                    if (TNH_ManagerPatch.doInit)
+                    {
+                        Mod.initTNHData = data;
+                    }
+                    else
+                    {
+                        Mod.InitTNHData(data);
+                    }
                 }
             }
             else if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance currentInstance))
@@ -2392,10 +2370,18 @@ namespace H3MP
             int ID = packet.ReadInt();
 
             // Process dead
-            bool allDead = false;
             H3MP_TNHInstance TNHinstance = H3MP_GameManager.TNHInstances[instance];
-            TNHinstance.dead.Add(ID); 
-            if (TNHinstance.dead.Count >= TNHinstance.currentlyPlaying.Count)
+            TNHinstance.dead.Add(ID);
+            bool allDead = true;
+            for(int i=0; i < TNHinstance.currentlyPlaying.Count; ++i)
+            {
+                if (!TNHinstance.dead.Contains(TNHinstance.currentlyPlaying[i]))
+                {
+                    allDead = false;
+                    break;
+                }
+            }
+            if (allDead)
             {
                 // Set visibility of all of the previously dead players
                 foreach(int playerID in TNHinstance.dead)
@@ -2407,7 +2393,6 @@ namespace H3MP
                 }
 
                 TNHinstance.Reset();
-                allDead = true;
             }
 
             // Set player visibility if still necessary
@@ -2415,7 +2400,7 @@ namespace H3MP
             {
                 if (allDead)
                 {
-                    GM.TNH_Manager.PlayerDied();
+                    ((List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(Mod.currentTNHInstance.manager)).Clear();
                 }
                 else
                 {
@@ -2538,45 +2523,44 @@ namespace H3MP
             int levelIndex = packet.ReadInt();
             int holdPointIndex = packet.ReadInt();
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
-            {
-                Mod.currentTNHInstance.curHoldIndex = holdPointIndex;
-
-                TNH_CharacterDef C = null;
-                try
-                {
-                    C = Mod.currentTNHInstance.manager.CharDB.GetDef((TNH_Char)charIndex);
-                }
-                catch
-                {
-                    C = Mod.currentTNHInstance.manager.CharDB.GetDef(TNH_Char.DD_BeginnerBlake);
-                }
-                TNH_Progression currentProgression = null;
-                if(progressionIndex != -1)
-                {
-                    currentProgression = C.Progressions[progressionIndex];
-                }
-                else // progressionEndlessIndex != -1
-                {
-                    currentProgression = C.Progressions_Endless[progressionEndlessIndex];
-                }
-                TNH_Progression.Level curLevel = currentProgression.Levels[levelIndex];
-                TNH_HoldPoint holdPoint = Mod.currentTNHInstance.manager.HoldPoints[holdPointIndex];
-
-                if (Mod.currentTNHInstance.holdOngoing)
-                {
-                    Mod.TNH_HoldPoint_CompleteHold.Invoke((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager), null);
-                    Mod.currentTNHInstance.holdOngoing = false;
-                }
-
-                Mod.TNH_Manager_m_curHoldIndex.SetValue(Mod.currentTNHInstance.manager, holdPointIndex);
-                Mod.currentTNHInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Hold);
-                holdPoint.ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
-                Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(holdPoint.SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
-            }
-            else if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
                 actualInstance.curHoldIndex = holdPointIndex;
+
+                if(actualInstance.manager != null)
+                {
+                    TNH_CharacterDef C = null;
+                    try
+                    {
+                        C = actualInstance.manager.CharDB.GetDef((TNH_Char)charIndex);
+                    }
+                    catch
+                    {
+                        C = actualInstance.manager.CharDB.GetDef(TNH_Char.DD_BeginnerBlake);
+                    }
+                    TNH_Progression currentProgression = null;
+                    if (progressionIndex != -1)
+                    {
+                        currentProgression = C.Progressions[progressionIndex];
+                    }
+                    else // progressionEndlessIndex != -1
+                    {
+                        currentProgression = C.Progressions_Endless[progressionEndlessIndex];
+                    }
+                    TNH_Progression.Level curLevel = currentProgression.Levels[levelIndex];
+                    TNH_HoldPoint holdPoint = actualInstance.manager.HoldPoints[holdPointIndex];
+
+                    if (actualInstance.holdOngoing)
+                    {
+                        Mod.TNH_HoldPoint_CompleteHold.Invoke((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(actualInstance.manager), null);
+                        actualInstance.holdOngoing = false;
+                    }
+
+                    Mod.TNH_Manager_m_curHoldIndex.SetValue(actualInstance.manager, holdPointIndex);
+                    actualInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Hold);
+                    holdPoint.ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+                    actualInstance.manager.TAHReticle.RegisterTrackedObject(holdPoint.SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
+                }
             }
 
             H3MP_ServerSend.TNHHoldPointSystemNode(instance, charIndex, progressionIndex, progressionEndlessIndex, levelIndex, holdPointIndex, clientID);
@@ -2727,6 +2711,7 @@ namespace H3MP
         public static void TNHSetPhaseTake(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
+            int holdIndex = packet.ReadInt();
             int activeSupplyCount = packet.ReadInt();
             List<int> activeIndices = new List<int>();
             for(int i=0; i < activeSupplyCount; ++i)
@@ -2739,22 +2724,37 @@ namespace H3MP
                 types.Add((TNH_SupplyPoint.SupplyPanelType)packet.ReadByte());
             }
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
-                Mod.currentTNHInstance.phase = TNH_Phase.Take;
-                Mod.currentTNHInstance.activeSupplyPointIndices = activeIndices;
-                Mod.currentTNHInstance.supplyPanelTypes = types;
-
-                Mod.TNH_Manager_SetPhase_Take.Invoke(Mod.currentTNHInstance.manager, null);
-            }
-            else if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
-            {
+                actualInstance.curHoldIndex = holdIndex;
                 actualInstance.phase = TNH_Phase.Take;
                 actualInstance.activeSupplyPointIndices = activeIndices;
                 actualInstance.supplyPanelTypes = types;
+
+                if(actualInstance.manager != null)
+                {
+                    Mod.TNH_Manager_SetPhase_Take.Invoke(Mod.currentTNHInstance.manager, null);
+                }
             }
 
-            H3MP_ServerSend.TNHSetPhaseTake(instance, activeIndices, types, clientID);
+            H3MP_ServerSend.TNHSetPhaseTake(instance, holdIndex, activeIndices, types, clientID);
+        }
+
+        public static void TNHSetPhaseHold(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.phase = TNH_Phase.Hold;
+
+                if(actualInstance.manager != null)
+                {
+                    Mod.TNH_Manager_SetPhase_Hold.Invoke(Mod.currentTNHInstance.manager, null);
+                }
+            }
+
+            H3MP_ServerSend.TNHSetPhaseHold(instance, clientID);
         }
 
         public static void TNHHoldCompletePhase(int clientID, H3MP_Packet packet)
@@ -2849,7 +2849,14 @@ namespace H3MP
 
             if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
+                // Update data
                 actualInstance.phase = (TNH_Phase)p;
+
+                // Update state
+                if(actualInstance.manager != null)
+                {
+                    actualInstance.manager.Phase = (TNH_Phase)p;
+                }
             }
 
             H3MP_ServerSend.TNHSetPhase(instance, p, clientID);
