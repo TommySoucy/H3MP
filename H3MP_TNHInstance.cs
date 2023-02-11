@@ -139,7 +139,7 @@ namespace H3MP
                 // Send to other clients
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.AddTNHCurrentlyPlaying(instance);
+                    H3MP_ServerSend.AddTNHCurrentlyPlaying(instance, ID);
                 }
                 else
                 {
