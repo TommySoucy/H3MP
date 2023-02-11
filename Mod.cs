@@ -11594,6 +11594,7 @@ namespace H3MP
         public static int completeTokenSkip;
         public static int sosigKillSkip;
         public static bool doInit;
+        public static bool inDelayedInit;
 
         public static bool inGenerateSentryPatrol;
         public static bool inGeneratePatrol;
@@ -11888,9 +11889,12 @@ namespace H3MP
             Mod.LogInfo("SetPhaseTakePrefix called");
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
+                // Note that SetPhase_Take will only ever be called on a non controller if if it an order from another client
+                // This implies that it will not be called if we just joined a game that has already been inited unless it is a new take phase
                 if (Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
                 {
                     Mod.LogInfo("\tnot controller, setting data");
+                    Mod.currentTNHInstance.phase = TNH_Phase.Take;
                     Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
 
                     if (Mod.currentTNHInstance.manager.RadarMode == TNHModifier_RadarMode.Standard)
@@ -11926,6 +11930,13 @@ namespace H3MP
                     {
                         Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);
                     }
+
+                    return false;
+                }
+                else if(inDelayedInit && Mod.currentTNHInstance.phase != TNH_Phase.StartUp)
+                {
+                    // We are controller finishing our init in a TNH instance that has already been inited
+                    InitJoinTNH();
 
                     return false;
                 }
@@ -12232,6 +12243,16 @@ namespace H3MP
                     }
                 }
             }
+        }
+
+        static void DelayedInitPrefix(bool ___m_hasInit)
+        {
+            inDelayedInit = true;
+        }
+
+        static void DelayedInitPostfix(bool ___m_hasInit)
+        {
+            inDelayedInit = false;
         }
 
         static bool OnShotFiredPrefix()

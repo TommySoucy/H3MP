@@ -122,7 +122,7 @@ namespace H3MP
                 {
                     if(currentlyPlaying.Count == 1)
                     {
-                        if (!H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_Server.clients[ID].player.scene, out Dictionary<int, List<int>> instances) ||
+                        if (!H3MP_GameManager.playersByInstanceByScene.TryGetValue(ID == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[ID].player.scene, out Dictionary<int, List<int>> instances) ||
                             !instances.TryGetValue(instance, out List<int> players) || !players.Contains(playerIDs[0]))
                         {
                             controller = ID;
