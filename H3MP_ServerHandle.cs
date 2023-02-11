@@ -2336,33 +2336,6 @@ namespace H3MP
             H3MP_ServerSend.SetTNHController(instance, newController, clientID);
         }
 
-        public static void TNHData(int clientID, H3MP_Packet packet)
-        {
-            int instance = packet.ReadInt();
-
-            if(GM.TNH_Manager != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
-            {
-                bool hasInit = packet.ReadBool();
-                if (hasInit)
-                {
-                    H3MP_TNHData data = packet.ReadTNHData();
-
-                    if (TNH_ManagerPatch.doInit)
-                    {
-                        Mod.initTNHData = data;
-                    }
-                    else
-                    {
-                        Mod.InitTNHData(data);
-                    }
-                }
-            }
-            else if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance currentInstance))
-            {
-                H3MP_ServerSend.TNHData(currentInstance.controller, packet);
-            }
-        }
-
         public static void TNHPlayerDied(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();

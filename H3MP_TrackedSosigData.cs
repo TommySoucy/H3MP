@@ -90,29 +90,6 @@ namespace H3MP
             // Set IFFChart
             physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
 
-            // Check if in temporary lists
-            if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
-            {
-                if (Mod.temporaryHoldSosigIDs.Contains(trackedID))
-                {
-                    Mod.temporaryHoldSosigIDs.Remove(trackedID);
-
-                    TNH_HoldPoint curHoldPoint = GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
-                    List<Sosig> curHoldPointSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(curHoldPoint);
-                    curHoldPointSosigs.Add(physicalObject.physicalSosigScript);
-                    data[0] = 0;
-                }
-                else if(Mod.temporarySupplySosigIDs.ContainsKey(trackedID))
-                {
-                    TNH_SupplyPoint curSupplyPoint = GM.TNH_Manager.SupplyPoints[Mod.temporarySupplySosigIDs[trackedID]];
-                    List<Sosig> curSupplyPointSosigs = (List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(curSupplyPoint);
-                    curSupplyPointSosigs.Add(physicalObject.physicalSosigScript);
-                    data[1] = 0;
-
-                    Mod.temporarySupplySosigIDs.Remove(trackedID);
-                }
-            }
-
             ProcessData();
 
             // Initially set itself

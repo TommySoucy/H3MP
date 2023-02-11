@@ -371,7 +371,7 @@ namespace H3MP
                 H3MP_ClientHandle.SetTNHLevelIndex,
                 H3MP_ClientHandle.AddInstance,
                 H3MP_ClientHandle.SetTNHController,
-                H3MP_ClientHandle.TNHData,
+                null, // OLD TNHDATA
                 H3MP_ClientHandle.TNHPlayerDied,
                 H3MP_ClientHandle.TNHAddTokens,
                 H3MP_ClientHandle.TNHSetLevel,

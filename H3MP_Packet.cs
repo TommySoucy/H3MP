@@ -69,7 +69,7 @@ namespace H3MP
         setTNHLevelIndex = 58,
         addInstance = 59,
         setTNHController = 60,
-        TNHData = 61,
+        TNHData = 61, // UNUSED
         TNHPlayerDied = 62,
         TNHAddTokens = 63,
         TNHSetLevel = 64,
@@ -213,7 +213,7 @@ namespace H3MP
         setTNHLevelIndex = 57,
         addInstance = 58,
         setTNHController = 59,
-        TNHData = 60,
+        TNHData = 60, // UNUSED
         TNHPlayerDied = 61,
         TNHAddTokens = 62,
         TNHSetLevel = 63,
@@ -972,157 +972,6 @@ namespace H3MP
             Write(patrol.CurPatrolPointIndex);
             Write(patrol.IsPatrollingUp);
         }
-        /// <summary>Adds a H3MP_TNHData to the packet.</summary>
-        /// <param name="instance">The TNH_Manager to take teh data from.</param>
-        public void Write(TNH_Manager manager)
-        {
-            Write((int)Mod.TNH_Manager_m_level.GetValue(manager));
-            Write((short)manager.Phase);
-            int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(manager);
-            Write(curHoldIndex);
-            Write((int)Mod.TNH_Manager_m_lastHoldIndex.GetValue(manager));
-            int seed = (int)Mod.TNH_Manager_m_seed.GetValue(manager);
-            if (seed < 0)
-            {
-                TNH_PointSequence curPointSequence = (TNH_PointSequence)Mod.TNH_Manager_m_curPointSequence.GetValue(manager);
-                bool pointSequenceFound = false;
-                for(int i=0; i<manager.PossibleSequnces.Count;++i)
-                {
-                    if(curPointSequence == manager.PossibleSequnces[i])
-                    {
-                        Write(i);
-                        pointSequenceFound = true;
-                        break;
-                    }
-                }
-                if (!pointSequenceFound)
-                {
-                    Write(0);
-                }
-            }
-            else
-            {
-                Write(seed);
-            }
-            Write(GM.TNHOptions.LastPlayedChar);
-            TNH_Progression curProgression = (TNH_Progression)Mod.TNH_Manager_m_curProgression.GetValue(manager);
-            bool found = false;
-            for (int i = 0; i < manager.C.Progressions.Count; ++i)
-            {
-                if (curProgression == manager.C.Progressions[i])
-                {
-                    Write(i);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                Write(0);
-            }
-            TNH_Progression curProgressionEndless = (TNH_Progression)Mod.TNH_Manager_m_curProgressionEndless.GetValue(manager);
-            found = false;
-            for (int i = 0; i < manager.C.Progressions_Endless.Count; ++i)
-            {
-                if (curProgressionEndless == manager.C.Progressions_Endless[i])
-                {
-                    Write(i);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                Write(0);
-            }
-
-            // Patrols
-            List<TNH_Manager.SosigPatrolSquad> patrols = (List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(manager);
-            if (patrols == null || patrols.Count == 0)
-            {
-                Write(0);
-            }
-            else
-            {
-                Write(patrols.Count);
-                for (int i = 0; i < patrols.Count; ++i)
-                {
-                    Write(patrols[i]);
-                }
-            }
-
-            // HoldPoint data
-            // NOTE: We don't write the encryptions to the hold data because if encryptions are spawned, we always assume they are spawned in the context
-            //       of the current hold and register them to it anyway
-            List<Sosig> holdPointActiveSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(manager.HoldPoints[curHoldIndex]);
-            if(holdPointActiveSosigs == null || holdPointActiveSosigs.Count == 0)
-            {
-                Write(0);
-            }
-            else
-            {
-                Write(holdPointActiveSosigs.Count);
-                for(int i=0; i < holdPointActiveSosigs.Count; ++i)
-                {
-                    Write(holdPointActiveSosigs[i].GetComponent<H3MP_TrackedSosig>().data.trackedID);
-                }
-            }
-            List<AutoMeater> holdPointActiveAutoMeaters = (List<AutoMeater>)Mod.TNH_HoldPoint_m_activeTurrets.GetValue(manager.HoldPoints[curHoldIndex]);
-            if(holdPointActiveAutoMeaters == null || holdPointActiveAutoMeaters.Count == 0)
-            {
-                Write(0);
-            }
-            else
-            {
-                Write(holdPointActiveAutoMeaters.Count);
-                for(int i=0; i < holdPointActiveAutoMeaters.Count; ++i)
-                {
-                    Write(holdPointActiveAutoMeaters[i].GetComponent<H3MP_TrackedAutoMeater>().data.trackedID);
-                }
-            }
-
-            // Supply points data
-            List<int> activeSupplyPointsIndices = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(manager); 
-            if(activeSupplyPointsIndices == null)
-            {
-                Write(0);
-            }
-            else
-            {
-                Write(activeSupplyPointsIndices.Count);
-            }
-            foreach (int index in activeSupplyPointsIndices)
-            {
-                Write(index);
-                TNH_SupplyPoint currentSupplyPoint = manager.SupplyPoints[index];
-                List<Sosig> supplyPointActiveSosigs = (List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(currentSupplyPoint);
-                if (supplyPointActiveSosigs == null || supplyPointActiveSosigs.Count == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(supplyPointActiveSosigs.Count);
-                    for (int i = 0; i < supplyPointActiveSosigs.Count; ++i)
-                    {
-                        Write(supplyPointActiveSosigs[i].GetComponent<H3MP_TrackedSosig>().data.trackedID);
-                    }
-                }
-                List<AutoMeater> supplyPointActiveAutoMeaters = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(currentSupplyPoint);
-                if (supplyPointActiveAutoMeaters == null || supplyPointActiveAutoMeaters.Count == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(supplyPointActiveAutoMeaters.Count);
-                    for (int i = 0; i < supplyPointActiveAutoMeaters.Count; ++i)
-                    {
-                        Write(supplyPointActiveAutoMeaters[i].GetComponent<H3MP_TrackedAutoMeater>().data.trackedID);
-                    }
-                }
-            }
-        }
         #endregion
 
         #region Read Data
@@ -1826,57 +1675,6 @@ namespace H3MP
             patrol.IsPatrollingUp = ReadBool();
 
             return patrol;
-        }
-
-        /// <summary>Reads a H3MP_TNHData from the packet.</summary>
-        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public H3MP_TNHData ReadTNHData(bool _moveReadPos = true)
-        {
-            H3MP_TNHData data = new H3MP_TNHData();
-
-            data.levelIndex = ReadInt();
-            data.phase = (TNH_Phase)ReadShort();
-            data.curHoldIndex = ReadInt();
-            data.lastHoldIndex = ReadInt();
-            data.sequenceIndex = ReadInt();
-            data.charIndex = ReadInt();
-            data.progressionIndex = ReadInt();
-            data.progressionEndlessIndex = ReadInt();
-            data.patrols = new TNH_Manager.SosigPatrolSquad[ReadInt()];
-            for (int i = 0; i < data.patrols.Length; ++i)
-            {
-                data.patrols[i] = ReadTNHSosigPatrol();
-            }
-            data.activeHoldSosigIDs = new int[ReadInt()];
-            for (int i = 0; i< data.activeHoldSosigIDs.Length; ++i)
-            {
-                data.activeHoldSosigIDs[i] = ReadInt();
-            }
-            data.activeHoldTurretIDs = new int[ReadInt()];
-            for (int i = 0; i< data.activeHoldTurretIDs.Length; ++i)
-            {
-                data.activeHoldTurretIDs[i] = ReadInt();
-            }
-            int activeSupplyCount = ReadInt();
-            data.activeSupplyIndices = new int[activeSupplyCount];
-            data.supplyPointsSosigIDs = new int[activeSupplyCount][];
-            data.supplyPointsTurretIDs = new int[activeSupplyCount][];
-            for(int i=0; i < activeSupplyCount; ++i)
-            {
-                data.activeSupplyIndices[i] = ReadInt();
-                data.supplyPointsSosigIDs[i] = new int[ReadInt()];
-                for (int j = 0; j < data.supplyPointsSosigIDs[i].Length; ++j)
-                {
-                    data.supplyPointsSosigIDs[i][j] = ReadInt();
-                }
-                data.supplyPointsTurretIDs[i] = new int[ReadInt()];
-                for (int j = 0; j < data.supplyPointsTurretIDs[i].Length; ++j)
-                {
-                    data.supplyPointsTurretIDs[i][j] = ReadInt();
-                }
-            }
-
-            return data;
         }
         #endregion
 

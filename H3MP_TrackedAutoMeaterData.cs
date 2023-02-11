@@ -85,29 +85,6 @@ namespace H3MP
                 hitZones.Add(hitZone.Type, hitZone);
             }
 
-            // Check if in temporary lists
-            if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
-            {
-                if (Mod.temporaryHoldTurretIDs.Contains(trackedID))
-                {
-                    Mod.temporaryHoldTurretIDs.Remove(trackedID);
-
-                    TNH_HoldPoint curHoldPoint = GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
-                    List<AutoMeater> curHoldPointTurrets = (List<AutoMeater>)Mod.TNH_HoldPoint_m_activeTurrets.GetValue(curHoldPoint);
-                    curHoldPointTurrets.Add(physicalObject.physicalAutoMeaterScript);
-                    data[0] = 0;
-                }
-                else if (Mod.temporarySupplyTurretIDs.ContainsKey(trackedID))
-                {
-                    TNH_SupplyPoint curSupplyPoint = GM.TNH_Manager.SupplyPoints[Mod.temporarySupplyTurretIDs[trackedID]];
-                    List<AutoMeater> curSupplyPointTurrets = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(curSupplyPoint);
-                    curSupplyPointTurrets.Add(physicalObject.physicalAutoMeaterScript);
-                    data[1] = 0;
-
-                    Mod.temporarySupplyTurretIDs.Remove(trackedID);
-                }
-            }
-
             ProcessData();
 
             // Initially set itself

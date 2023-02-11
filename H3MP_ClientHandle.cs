@@ -379,9 +379,6 @@ namespace H3MP
                 {
                     H3MP_Client.sosigs[trackedID] = null;
                     H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
-
-                    Mod.temporaryHoldSosigIDs.Remove(trackedID);
-                    Mod.temporarySupplySosigIDs.Remove(trackedID);
                 }
             }
         }
@@ -414,9 +411,6 @@ namespace H3MP
                 {
                     H3MP_Client.autoMeaters[trackedID] = null;
                     H3MP_GameManager.autoMeatersByInstanceByScene[trackedAutoMeater.scene][trackedAutoMeater.instance].Remove(trackedID);
-
-                    Mod.temporaryHoldTurretIDs.Remove(trackedID);
-                    Mod.temporarySupplyTurretIDs.Remove(trackedID);
                 }
             }
         }
@@ -2057,33 +2051,6 @@ namespace H3MP
             }
 
             H3MP_GameManager.TNHInstances[instance].controller = newController;
-        }
-
-        public static void TNHData(H3MP_Packet packet)
-        {
-            int instance = packet.ReadInt();
-
-            if (GM.TNH_Manager != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
-            {
-                bool hasInit = packet.ReadBool();
-                if (hasInit)
-                {
-                    H3MP_TNHData data = packet.ReadTNHData();
-
-                    if (TNH_ManagerPatch.doInit)
-                    {
-                        Mod.initTNHData = data;
-                    }
-                    else
-                    {
-                        Mod.InitTNHData(data);
-                    }
-                }
-            }
-            else
-            {
-                H3MP_ClientSend.TNHData(packet);
-            }
         }
 
         public static void TNHPlayerDied(H3MP_Packet packet)

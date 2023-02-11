@@ -92,11 +92,6 @@ namespace H3MP
         public static Dictionary<int, GameObject> currentTNHInstancePlayers;
         public static TNH_UIManager currentTNHUIManager;
         public static GameObject TNHStartEquipButton;
-        public static List<int> temporaryHoldSosigIDs = new List<int>();
-        public static List<int> temporaryHoldTurretIDs = new List<int>();
-        public static Dictionary<int, int> temporarySupplySosigIDs = new Dictionary<int, int>();
-        public static Dictionary<int, int> temporarySupplyTurretIDs = new Dictionary<int, int>();
-        public static H3MP_TNHData initTNHData;
 
         #region Reused NonPublic MemberInfo
         // Reused private FieldInfos
@@ -1625,7 +1620,6 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchSetPhasePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhasePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchUpdateOriginal = typeof(TNH_Manager).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchUpdatePrefix = typeof(TNH_ManagerPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            //MethodInfo TNH_ManagerPatchUpdatePostfix = typeof(TNH_ManagerPatch).GetMethod("UpdatePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchInitBeginEquipOriginal = typeof(TNH_Manager).GetMethod("InitBeginningEquipment", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchInitBeginEquipPrefix = typeof(TNH_ManagerPatch).GetMethod("InitBeginEquipPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseTakeOriginal = typeof(TNH_Manager).GetMethod("SetPhase_Take", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1671,7 +1665,7 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
             harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix));
-            harmony.Patch(TNH_ManagerPatchUpdateOriginal, new HarmonyMethod(TNH_ManagerPatchUpdatePrefix)/*, new HarmonyMethod(TNH_ManagerPatchUpdatePostfix)*/);
+            harmony.Patch(TNH_ManagerPatchUpdateOriginal, new HarmonyMethod(TNH_ManagerPatchUpdatePrefix));
             harmony.Patch(TNH_ManagerPatchInitBeginEquipOriginal, new HarmonyMethod(TNH_ManagerPatchInitBeginEquipPrefix));
             harmony.Patch(TNH_ManagerPatchSetLevelOriginal, new HarmonyMethod(TNH_ManagerPatchSetLevelPrefix));
             harmony.Patch(TNH_ManagerPatchSetPhaseTakeOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePrefix), new HarmonyMethod(TNH_ManagerPatchSetPhaseTakePostfix));
@@ -2186,10 +2180,6 @@ namespace H3MP
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
-            Mod.temporaryHoldSosigIDs.Clear();
-            Mod.temporaryHoldTurretIDs.Clear();
-            Mod.temporarySupplySosigIDs.Clear();
-            Mod.temporarySupplyTurretIDs.Clear();
         }
 
         public static void OnTNHSpawnStartEquipClicked()
@@ -2554,137 +2544,6 @@ namespace H3MP
                 }
             }
             return -1;
-        }
-
-        public static void InitTNHData(H3MP_TNHData data)
-        {
-            GM.TNH_Manager.Phase = data.phase;
-            Mod.TNH_Manager_m_curPointSequence.SetValue(GM.TNH_Manager, GM.TNH_Manager.PossibleSequnces[data.sequenceIndex]);
-            TNH_CharacterDef c = null;
-            try
-            {
-                c = GM.TNH_Manager.CharDB.GetDef((TNH_Char)GM.TNHOptions.LastPlayedChar);
-            }
-            catch
-            {
-                c = GM.TNH_Manager.CharDB.GetDef(TNH_Char.DD_BeginnerBlake);
-            }
-            Mod.TNH_Manager_m_curProgression.SetValue(GM.TNH_Manager, c.Progressions[data.progressionIndex]);
-            Mod.TNH_Manager_m_curProgressionEndless.SetValue(GM.TNH_Manager, c.Progressions_Endless[data.progressionEndlessIndex]);
-            Mod.TNH_Manager_m_level.SetValue(GM.TNH_Manager, data.levelIndex);
-            Mod.TNH_Manager_SetLevel.Invoke(GM.TNH_Manager, new object[] { data.levelIndex });
-            Mod.TNH_Manager_m_curHoldIndex.SetValue(GM.TNH_Manager, data.curHoldIndex);
-            Mod.TNH_Manager_m_lastHoldIndex.SetValue(GM.TNH_Manager, data.lastHoldIndex);
-            TNH_HoldPoint curHoldPoint = GM.TNH_Manager.HoldPoints[data.curHoldIndex];
-            Mod.TNH_Manager_m_curHoldPoint.SetValue(GM.TNH_Manager, curHoldPoint);
-            TNH_Progression.Level level = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager);
-            curHoldPoint.T = level.TakeChallenge;
-            curHoldPoint.H = level.HoldChallenge;
-
-            List<TNH_Manager.SosigPatrolSquad> patrolSquads = (List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(GM.TNH_Manager);
-            patrolSquads.Clear();
-            foreach (TNH_Manager.SosigPatrolSquad patrol in data.patrols)
-            {
-                patrolSquads.Add(patrol);
-            }
-
-            H3MP_TrackedSosigData[] sosigArrToUse = null;
-            H3MP_TrackedAutoMeaterData[] autoMeaterArrToUse = null;
-            if (H3MP_ThreadManager.host)
-            {
-                sosigArrToUse = H3MP_Server.sosigs;
-                autoMeaterArrToUse = H3MP_Server.autoMeaters;
-            }
-            else
-            {
-                sosigArrToUse = H3MP_Client.sosigs;
-                autoMeaterArrToUse = H3MP_Client.autoMeaters;
-            }
-            List<Sosig> curHoldPointSosigs = (List<Sosig>)Mod.TNH_HoldPoint_m_activeSosigs.GetValue(curHoldPoint);
-            curHoldPointSosigs.Clear();
-            for (int i = 0; i < data.activeHoldSosigIDs.Length; ++i)
-            {
-                int sosigID = data.activeHoldSosigIDs[i];
-                if (sosigArrToUse[sosigID] != null)
-                {
-                    if (sosigArrToUse[sosigID].physicalObject != null)
-                    {
-                        curHoldPointSosigs.Add(sosigArrToUse[sosigID].physicalObject.physicalSosigScript);
-                    }
-                    else
-                    {
-                        Mod.temporaryHoldSosigIDs.Add(sosigID);
-                    }
-                }
-            }
-            List<AutoMeater> curHoldPointTurrets = (List<AutoMeater>)Mod.TNH_HoldPoint_m_activeTurrets.GetValue(curHoldPoint);
-            curHoldPointTurrets.Clear();
-            for (int i = 0; i < data.activeHoldTurretIDs.Length; ++i)
-            {
-                int autoMeaterID = data.activeHoldTurretIDs[i];
-                if (autoMeaterArrToUse[autoMeaterID] != null)
-                {
-                    if (autoMeaterArrToUse[autoMeaterID].physicalObject != null)
-                    {
-                        curHoldPointTurrets.Add(autoMeaterArrToUse[autoMeaterID].physicalObject.physicalAutoMeaterScript);
-                    }
-                    else
-                    {
-                        Mod.temporaryHoldTurretIDs.Add(autoMeaterID);
-                    }
-                }
-            }
-
-            if (Mod.currentTNHInstance.activeSupplyPointIndices == null)
-            {
-                Mod.currentTNHInstance.activeSupplyPointIndices = new List<int>();
-            }
-            else
-            {
-                Mod.currentTNHInstance.activeSupplyPointIndices.Clear();
-            }
-            for (int i = 0; i < data.activeSupplyIndices.Length; ++i)
-            {
-                Mod.currentTNHInstance.activeSupplyPointIndices.Add(data.activeSupplyIndices[i]);
-                TNH_SupplyPoint curSupplyPoint = GM.TNH_Manager.SupplyPoints[data.activeSupplyIndices[i]];
-                List<Sosig> curSupplyPointSosigs = (List<Sosig>)Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(curSupplyPoint);
-                curSupplyPointSosigs.Clear();
-                for (int j = 0; j < data.supplyPointsSosigIDs[i].Length; ++j)
-                {
-                    int sosigID = data.supplyPointsSosigIDs[i][j];
-                    if (sosigArrToUse[sosigID] != null)
-                    {
-                        // We might not yet have an instance of the sosig if we just joined 
-                        if (sosigArrToUse[sosigID].physicalObject != null)
-                        {
-                            curSupplyPointSosigs.Add(sosigArrToUse[sosigID].physicalObject.physicalSosigScript);
-                        }
-                        else
-                        {
-                            // In this case we want to keep the IDs for later so we can add them once they are instantiated
-                            Mod.temporarySupplySosigIDs.Add(sosigID, data.activeSupplyIndices[i]);
-                        }
-                    }
-                }
-                List<AutoMeater> curSupplyPointTurrets = (List<AutoMeater>)Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(curSupplyPoint);
-                curSupplyPointTurrets.Clear();
-                for (int j = 0; j < data.supplyPointsTurretIDs[i].Length; ++j)
-                {
-                    int autoMeaterID = data.supplyPointsTurretIDs[i][j];
-                    if (autoMeaterArrToUse[autoMeaterID] != null)
-                    {
-                        if (autoMeaterArrToUse[autoMeaterID].physicalObject != null)
-                        {
-                            curSupplyPointTurrets.Add(autoMeaterArrToUse[autoMeaterID].physicalObject.physicalAutoMeaterScript);
-                        }
-                        else
-                        {
-                            // In this case we want to keep the IDs for later so we can add them once they are instantiated
-                            Mod.temporarySupplyTurretIDs.Add(autoMeaterID, data.activeSupplyIndices[i]);
-                        }
-                    }
-                }
-            }
         }
 
         public static void SetKinematicRecursive(Transform root, bool value)
@@ -11593,7 +11452,6 @@ namespace H3MP
         public static int addTokensSkip;
         public static int completeTokenSkip;
         public static int sosigKillSkip;
-        public static bool doInit;
         public static bool inDelayedInit;
 
         public static bool inGenerateSentryPatrol;
@@ -12198,51 +12056,13 @@ namespace H3MP
                     if (Mod.currentTNHInstance.phase != TNH_Phase.StartUp && !hadInit &&
                         (bool)Mod.TNH_Manager_m_hasInit.GetValue(Mod.currentTNHInstance.manager) && Mod.currentTNHInstance.manager.AIManager.HasInit)
                     {
-                        //// It is possible we do not have data if we are not meant to be the controller of the TNH instance
-                        //if (Mod.initTNHData != null)
-                        //{
-                        //    Mod.InitTNHData(Mod.initTNHData);
-                        //}
                         InitJoinTNH();
-                        //if (Mod.initTNHData != null)
-                        //{
-                        //    Mod.currentTNHInstance.controller = H3MP_ThreadManager.host ? 0 : H3MP_GameManager.ID;
-                        //    Mod.initTNHData = null;
-                        //}
                     }
 
                     return false;
                 }
             }
             return true;
-        }
-
-        static void UpdatePostfix()
-        {
-            // Skip if not connected
-            if (Mod.managerObject == null)
-            {
-                return;
-            }
-
-            if (Mod.currentTNHInstance != null)
-            {
-                if (doInit && Mod.currentTNHInstance.manager.AIManager.HasInit)
-                {
-                    doInit = false;
-                    // It is possible we do not have data if we are not meant to be the controller of the TNH instance
-                    if (Mod.initTNHData != null)
-                    {
-                        Mod.InitTNHData(Mod.initTNHData);
-                    }
-                    InitJoinTNH();
-                    if(Mod.initTNHData != null)
-                    {
-                        Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
-                        Mod.initTNHData = null;
-                    }
-                }
-            }
         }
 
         static void DelayedInitPrefix(bool ___m_hasInit)

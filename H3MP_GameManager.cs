@@ -1024,7 +1024,7 @@ namespace H3MP
         //      be used to find the mod specific data in the data array
         private static void CollectExternalData(H3MP_TrackedSosigData trackedSosigData)
         {
-            trackedSosigData.data = new byte[9 + (12 * (TNH_ManagerPatch.patrolPoints == null ? 0 : TNH_ManagerPatch.patrolPoints.Count))];
+            trackedSosigData.data = new byte[9 + (12 * ((TNH_ManagerPatch.inGenerateSentryPatrol || TNH_ManagerPatch.inGeneratePatrol) ? (TNH_ManagerPatch.patrolPoints == null ? 0 : TNH_ManagerPatch.patrolPoints.Count):0))];
 
             // Write TNH context
             trackedSosigData.data[0] = TNH_HoldPointPatch.inSpawnEnemyGroup ? (byte)1 : (byte)0;
@@ -1893,10 +1893,6 @@ namespace H3MP
                     }
                     Mod.currentTNHInstance = null;
                     Mod.TNHSpectating = false;
-                    Mod.temporaryHoldSosigIDs.Clear();
-                    Mod.temporaryHoldTurretIDs.Clear();
-                    Mod.temporarySupplySosigIDs.Clear();
-                    Mod.temporarySupplyTurretIDs.Clear();
                     Mod.currentlyPlayingTNH = false;
                 }
 
