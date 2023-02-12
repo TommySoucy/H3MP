@@ -12623,8 +12623,11 @@ namespace H3MP
                     Mod.currentTNHInstance.warpInData = new List<Vector3>();
                     foreach (GameObject target in ___m_warpInTargets)
                     {
-                        Mod.currentTNHInstance.warpInData.Add(target.transform.position);
-                        Mod.currentTNHInstance.warpInData.Add(target.transform.rotation.eulerAngles);
+                        if (target != null)
+                        {
+                            Mod.currentTNHInstance.warpInData.Add(target.transform.position);
+                            Mod.currentTNHInstance.warpInData.Add(target.transform.rotation.eulerAngles);
+                        }
                     }
 
                     if (H3MP_ThreadManager.host)
@@ -12705,7 +12708,7 @@ namespace H3MP
                 }
                 else
                 {
-                    // Delet all active warpins here because IdentifyEncryption calls SpawnTargetGroup which usually calls delete warpins
+                    // Delete all active warpins here because IdentifyEncryption calls SpawnTargetGroup which usually calls delete warpins
                     // but the call will be blocked by non controllers, just do it here for convenience
                     Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(__instance, null);
                 }
