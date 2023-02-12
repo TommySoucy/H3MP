@@ -1645,6 +1645,9 @@ namespace H3MP
             MethodInfo TNH_ManagerGeneratePatrolOriginal = typeof(TNH_Manager).GetMethod("GeneratePatrol", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerGeneratePatrolPrefix = typeof(TNH_ManagerPatch).GetMethod("GeneratePatrolPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerGeneratePatrolPostfix = typeof(TNH_ManagerPatch).GetMethod("GeneratePatrolPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerDelayedInitOriginal = typeof(TNH_Manager).GetMethod("DelayedInit", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerDelayedInitPrefix = typeof(TNH_ManagerPatch).GetMethod("DelayedInitPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerDelayedInitPostfix = typeof(TNH_ManagerPatch).GetMethod("DelayedInitPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TNH_ManagerPatchPlayerDiedOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchAddTokensOriginal, harmony, true);
@@ -1661,6 +1664,7 @@ namespace H3MP
             PatchVerify.Verify(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerGenerateSentryPatrolOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerGeneratePatrolOriginal, harmony, true);
+            PatchVerify.Verify(TNH_ManagerDelayedInitOriginal, harmony, true);
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
@@ -1676,6 +1680,7 @@ namespace H3MP
             harmony.Patch(TNH_ManagerPatchAddFVRObjectToTrackedListOriginal, new HarmonyMethod(TNH_ManagerPatchAddFVRObjectToTrackedListPrefix));
             harmony.Patch(TNH_ManagerGenerateSentryPatrolOriginal, new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPrefix), new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPostfix));
             harmony.Patch(TNH_ManagerGeneratePatrolOriginal, new HarmonyMethod(TNH_ManagerGeneratePatrolPrefix), new HarmonyMethod(TNH_ManagerGeneratePatrolPostfix));
+            harmony.Patch(TNH_ManagerDelayedInitOriginal, new HarmonyMethod(TNH_ManagerDelayedInitPrefix), new HarmonyMethod(TNH_ManagerDelayedInitPostfix));
 
             // TNHSupplyPointPatch
             MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -11453,6 +11458,7 @@ namespace H3MP
         public static int completeTokenSkip;
         public static int sosigKillSkip;
         public static bool inDelayedInit;
+        static bool skipNextSetPhaseTake;
 
         public static bool inGenerateSentryPatrol;
         public static bool inGeneratePatrol;
@@ -11744,14 +11750,12 @@ namespace H3MP
 
         static bool SetPhaseTakePrefix()
         {
-            Mod.LogInfo("SetPhaseTakePrefix called");
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 // Note that SetPhase_Take will only ever be called on a non controller if if it an order from another client
                 // This implies that it will not be called if we just joined a game that has already been inited unless it is a new take phase
                 if (Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
                 {
-                    Mod.LogInfo("\tnot controller, setting data");
                     Mod.currentTNHInstance.phase = TNH_Phase.Take;
                     Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
 
@@ -11796,6 +11800,8 @@ namespace H3MP
                     // We are controller finishing our init in a TNH instance that has already been inited
                     InitJoinTNH();
 
+                    skipNextSetPhaseTake = true;
+
                     return false;
                 }
             }
@@ -11805,6 +11811,12 @@ namespace H3MP
 
         static void SetPhaseTakePostfix()
         {
+            if (skipNextSetPhaseTake)
+            {
+                skipNextSetPhaseTake = false;
+                return;
+            }
+
             // If we are controller collect data and send set phase take order
             if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
             {
@@ -12124,6 +12136,8 @@ namespace H3MP
         {
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
+            Mod.TNH_Manager_m_curHoldIndex.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.curHoldIndex);
+            Mod.TNH_Manager_m_activeSupplyPointIndicies.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.activeSupplyPointIndices);
             if (Mod.currentTNHInstance.holdOngoing)
             {
                 // Set the hold

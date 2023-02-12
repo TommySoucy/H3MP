@@ -2501,42 +2501,6 @@ namespace H3MP
                 {
                     Mod.TNH_Manager_SetLevel.Invoke(actualInstance.manager, new object[] { levelIndex });
                 }
-
-                // CALL TO ConfigureAsSystemNode NOW HANDLED BY MANAGER SETPHASE_TAKE PATCH
-                //if(actualInstance.manager != null)
-                //{
-                //    TNH_CharacterDef C = null;
-                //    try
-                //    {
-                //        C = actualInstance.manager.CharDB.GetDef((TNH_Char)charIndex);
-                //    }
-                //    catch
-                //    {
-                //        C = actualInstance.manager.CharDB.GetDef(TNH_Char.DD_BeginnerBlake);
-                //    }
-                //    TNH_Progression currentProgression = null;
-                //    if (progressionIndex != -1)
-                //    {
-                //        currentProgression = C.Progressions[progressionIndex];
-                //    }
-                //    else // progressionEndlessIndex != -1
-                //    {
-                //        currentProgression = C.Progressions_Endless[progressionEndlessIndex];
-                //    }
-                //    TNH_Progression.Level curLevel = currentProgression.Levels[levelIndex];
-                //    TNH_HoldPoint holdPoint = actualInstance.manager.HoldPoints[holdPointIndex];
-
-                //    if (actualInstance.holdOngoing)
-                //    {
-                //        Mod.TNH_HoldPoint_CompleteHold.Invoke((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(actualInstance.manager), null);
-                //        actualInstance.holdOngoing = false;
-                //    }
-
-                //    Mod.TNH_Manager_m_curHoldIndex.SetValue(actualInstance.manager, holdPointIndex);
-                //    actualInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Hold);
-                //    holdPoint.ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
-                //    actualInstance.manager.TAHReticle.RegisterTrackedObject(holdPoint.SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
-                //}
             }
 
             H3MP_ServerSend.TNHHoldPointSystemNode(instance, levelIndex, holdPointIndex, clientID);

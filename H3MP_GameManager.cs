@@ -1859,7 +1859,7 @@ namespace H3MP
                     H3MP_ClientSend.PlayerScene(LoadLevelBeginPatch.loadingLevel);
                 }
 
-                ++Mod.skipAllInstantiates;
+                //++Mod.skipAllInstantiates;
 
                 // Get out of TNH instance 
                 // This makes assumption that player must go through main menu to leave TNH
@@ -1873,23 +1873,6 @@ namespace H3MP
                     {
                         Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID, H3MP_ThreadManager.host);
                         Mod.currentlyPlayingTNH = false;
-
-                        // If was manager controller, give manager control to next currently playing
-                        // NOW HANDLED BY SERVER
-                        //if (Mod.currentTNHInstance.controller == ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
-                        //{
-                        //    Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
-                        //    if (H3MP_ThreadManager.host)
-                        //    {
-                        //        H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                        //        H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                        //    }
-                        //    else
-                        //    {
-                        //        H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                        //        H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                        //    }
-                        //}
                     }
                     Mod.currentTNHInstance = null;
                     Mod.TNHSpectating = false;
@@ -1918,7 +1901,7 @@ namespace H3MP
                 Mod.LogInfo("Arrived in scene: " + SceneManager.GetActiveScene().name);
                 sceneLoading = false;
 
-                --Mod.skipAllInstantiates;
+                //--Mod.skipAllInstantiates;
 
                 --giveControlOfDestroyed;
 
@@ -1962,10 +1945,10 @@ namespace H3MP
 
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
-                    SyncTrackedSosigs();
-                    SyncTrackedAutoMeaters();
-                    SyncTrackedItems();
-                    SyncTrackedEncryptions();
+                    //SyncTrackedSosigs();
+                    //SyncTrackedAutoMeaters();
+                    //SyncTrackedItems();
+                    //SyncTrackedEncryptions();
 
                     controlOverride = false;
 

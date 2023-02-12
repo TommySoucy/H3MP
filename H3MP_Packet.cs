@@ -1646,36 +1646,6 @@ namespace H3MP
 
             return instance;
         }
-
-        /// <summary>Reads a H3MP_TNHInstance from the packet.</summary>
-        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public TNH_Manager.SosigPatrolSquad ReadTNHSosigPatrol(bool _moveReadPos = true)
-        {
-            TNH_Manager.SosigPatrolSquad patrol = new TNH_Manager.SosigPatrolSquad();
-
-            H3MP_TrackedSosigData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.sosigs : H3MP_Client.sosigs;
-            int squadSize = ReadInt();
-            for(int i=0; i < squadSize; ++i)
-            {
-                int trackedID = ReadInt();
-                if(arrToUse[trackedID] != null && arrToUse[trackedID].physicalObject != null)
-                {
-                    // Set data flags to zero to ensure this sosig doesn't get added to a patrol when we process its data
-                    arrToUse[trackedID].data[4] = 0;
-                    arrToUse[trackedID].data[5] = 0;
-                    patrol.Squad.Add(arrToUse[trackedID].physicalObject.physicalSosigScript);
-                }
-            }
-            int patrolPointCount = ReadInt();
-            for (int i = 0; i < patrolPointCount; ++i)
-            {
-                patrol.PatrolPoints.Add(ReadVector3());
-            }
-            patrol.CurPatrolPointIndex = ReadInt();
-            patrol.IsPatrollingUp = ReadBool();
-
-            return patrol;
-        }
         #endregion
 
         private bool disposed = false;
