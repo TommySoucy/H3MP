@@ -12686,7 +12686,7 @@ namespace H3MP
             return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
         }
 
-        static void IdentifyEncryptionPostfix()
+        static void IdentifyEncryptionPostfix(TNH_HoldPoint __instance)
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
@@ -12702,6 +12702,12 @@ namespace H3MP
                     {
                         H3MP_ClientSend.TNHHoldIdentifyEncryption(Mod.currentTNHInstance.instance);
                     }
+                }
+                else
+                {
+                    // Delet all active warpins here because IdentifyEncryption calls SpawnTargetGroup which usually calls delete warpins
+                    // but the call will be blocked by non controllers, just do it here for convenience
+                    Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(__instance, null);
                 }
             }
         }
@@ -12739,7 +12745,7 @@ namespace H3MP
 
         static bool ShutDownHoldPointPrefix(TNH_HoldPoint __instance, List<Sosig> ___m_activeSosigs, List<AutoMeater> ___m_activeTurrets, List<TNH_EncryptionTarget> ___m_activeTargets,
                                             ref TNH_HoldPoint.HoldState ___m_state, ref int ___m_phaseIndex, ref int ___m_maxPhases, ref bool ___m_isInHold,
-                                            ref TNH_HoldChallenge.Phase ___m_curPhase)
+                                            ref TNH_HoldChallenge.Phase ___m_curPhase, List<GameObject> ___m_warpInTargets)
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
             {
@@ -12751,6 +12757,8 @@ namespace H3MP
                 ___m_curPhase = null;
                 Mod.TNH_HoldPoint_DeleteSystemNode.Invoke(__instance, null);
                 ___m_activeTargets.Clear();
+                Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(__instance, null);
+                ___m_warpInTargets.Clear();
                 ___m_activeSosigs.Clear();
                 ___m_activeTurrets.Clear();
                 Mod.TNH_HoldPoint_LowerAllBarriers.Invoke(__instance, null);
