@@ -2084,11 +2084,11 @@ namespace H3MP
             TNHMenuPages[4].SetActive(true);
 
             setLatestInstance = true;
-            H3MP_GameManager.AddNewTNHInstance(H3MP_GameManager.ID, TNHMenuLPJ, (int)GM.TNHOptions.ProgressionTypeSetting,
-                                               (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
-                                               (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
-                                               (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
-                                               (int)TNH_UIManager_m_currentLevelIndex.GetValue(Mod.currentTNHUIManager));
+            H3MP_ServerSend.AddTNHInstance(H3MP_GameManager.AddNewTNHInstance(H3MP_GameManager.ID, TNHMenuLPJ, (int)GM.TNHOptions.ProgressionTypeSetting,
+                                           (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
+                                           (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
+                                           (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
+                                           (int)TNH_UIManager_m_currentLevelIndex.GetValue(Mod.currentTNHUIManager)));
         }
 
         private void OnTNHHostCancelClicked()
@@ -10856,77 +10856,22 @@ namespace H3MP
                 {
                     if (GM.TNH_Manager != null)
                     {
-                        Mod.LogInfo("Set TNH Manager");
                         // Keep our own reference
                         Mod.currentTNHInstance.manager = GM.TNH_Manager;
 
                         // Reset TNH_ManagerPatch data
                         TNH_ManagerPatch.patrolIndex = -1;
 
-                        // HANDLED BY SERVER
-                        //if (Mod.currentTNHInstance.playerIDs[0] == H3MP_GameManager.ID)
-                        //{
-                        //    Mod.LogInfo("\tWe are instance host, taking control");
-                        //    Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
-                        //    if (H3MP_ThreadManager.host)
-                        //    {
-                        //        H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, 0);
-                        //    }
-                        //    else
-                        //    {
-                        //        H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, H3MP_Client.singleton.ID);
-                        //    }
-                        //}
-                        //else
-                        //{
-                        //    Mod.LogInfo("\tNot instance host");
-                        //    if (Mod.currentTNHInstance.currentlyPlaying.Count == 0)
-                        //    {
-                        //        Mod.LogInfo("\t\tOnly player");
-                        //        if (!H3MP_GameManager.playersByInstanceByScene.TryGetValue(SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> instances) ||
-                        //            !instances.TryGetValue(H3MP_GameManager.instance, out List<int> players) || !players.Contains(Mod.currentTNHInstance.playerIDs[0]))
-                        //        {
-                        //            Mod.LogInfo("\t\t\tInstance host not already loading, taking control");
-                        //            Mod.currentTNHInstance.controller = H3MP_GameManager.ID;
-                        //            if (H3MP_ThreadManager.host)
-                        //            {
-                        //                H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, 0);
-                        //            }
-                        //            else
-                        //            {
-                        //                H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, H3MP_Client.singleton.ID);
-                        //            }
-                        //        }
-                        //        // else, wait for init
-                        //    }
-                        //    // else, wait for init
-                        //}
-
                         Mod.currentTNHInstance.AddCurrentlyPlaying(true, H3MP_GameManager.ID, H3MP_ThreadManager.host);
                         Mod.currentlyPlayingTNH = true;
+
+                        // Anytime we join, if the phase is already passed StartUp it means initial equip has already been 
+                        // spawned normally for someone, we want a button instead
                     }
                     else if(Mod.currentlyPlayingTNH) // TNH_Manager was set to null and we are currently playing
                     {
-                        Mod.LogInfo("Unset TNH Manager");
                         Mod.currentlyPlayingTNH = false;
                         Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, H3MP_GameManager.ID, H3MP_ThreadManager.host);
-
-                        // If was manager controller, give manager control to next currently playing
-                        // HANDLED BY SERVER
-                        //if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
-                        //{
-                        //    Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
-                        //    if (H3MP_ThreadManager.host)
-                        //    {
-                        //        H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                        //        H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                        //    }
-                        //    else
-                        //    {
-                        //        H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                        //        H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                        //    }
-                        //}
                     }
                 }
                 else // We just set TNH_Manager but we are not in a TNH instance
@@ -12239,8 +12184,14 @@ namespace H3MP
 
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.currentlyPlaying.Count > 1)
             {
-                // Don't want to spawn starting equipment right away if there are already players in our TNH instance
-                // We will spawn start equip spawn button when we init
+                // We want to get inital equipment but there are already players in game, spawn init equip spawn button instead
+                if (!Mod.currentTNHInstance.spawnedStartEquip)
+                {
+                    Mod.currentTNHInstance.spawnedStartEquip = true;
+                    Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
+                    Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
+                }
+
                 return false;
             }
             return true;
