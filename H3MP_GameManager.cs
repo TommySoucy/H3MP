@@ -667,24 +667,6 @@ namespace H3MP
                     }
                 }
             }
-            else
-            {
-                AnvilPrefabSpawn aps = root.GetComponent<AnvilPrefabSpawn>();
-                if (aps != null)
-                {
-                    if (!controlEverything)
-                    {
-                        aps.gameObject.AddComponent<H3MP_TrackedItemReference>();
-                    }
-                }
-                else
-                {
-                    foreach (Transform child in root)
-                    {
-                        SyncTrackedItems(child, controlEverything, null, scene);
-                    }
-                }
-            }
         }
 
         private static H3MP_TrackedItem MakeItemTracked(FVRPhysicalObject physObj, H3MP_TrackedItemData parent)

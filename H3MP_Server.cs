@@ -338,7 +338,6 @@ namespace H3MP
         {
             if (trackedEncryption.trackedID == -1)
             {
-                Mod.LogInfo("Received order to add tracked Encryption");
                 // Adjust Encryptions size to acommodate if necessary
                 if (availableEncryptionIndices.Count == 0)
                 {

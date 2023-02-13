@@ -41,7 +41,6 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Mod.LogInfo("Instantiating encryption " + trackedID);
             GameObject prefab = null;
             if (GM.TNH_Manager == null)
             {

@@ -51,7 +51,6 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Mod.LogInfo("Instantiating sosig");
             yield return IM.OD["SosigBody_Default"].GetGameObjectAsync();
             GameObject sosigPrefab = IM.OD["SosigBody_Default"].GetGameObject();
             if (sosigPrefab == null)

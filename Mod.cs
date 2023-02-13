@@ -8581,20 +8581,8 @@ namespace H3MP
                 return true;
             }
 
-            // If the item is marked as being there when we arrived in the scene
-            // And if it can be tracked
-            // Then we don't even want to instantiate it because it will already have been instantiated and tracked in this scene/instance  
-            if (__instance.GetComponent<H3MP_TrackedItemReference>() != null)
-            {
-                FVRPhysicalObject physObj = result.GetComponent<FVRPhysicalObject>();
-                if(physObj != null && H3MP_GameManager.IsObjectIdentifiable(physObj))
-                {
-                    Mod.LogInfo("Skipping AnvilPrefabSpawn instantiate on " + __instance.name);
-                    return false;
-                }
-            }
-
-            return true;
+            // If this item prefab spawn attempts to spawn an item while we are loading and we don't have control of the items, prevent spawning
+            return !H3MP_GameManager.sceneLoading || H3MP_GameManager.controlOverride;
         }
     }
     #endregion
@@ -11859,12 +11847,10 @@ namespace H3MP
 
         static bool SetPhaseHoldPrefix()
         {
-            Mod.LogInfo("SetPhaseHoldPrefix called");
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 if (Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
                 {
-                    Mod.LogInfo("\tnot controller, setting data");
                     Mod.currentTNHInstance.manager.Phase = TNH_Phase.Hold;
 
                     ((List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(Mod.currentTNHInstance.manager)).Clear();
@@ -11940,12 +11926,10 @@ namespace H3MP
 
         static bool SetPhaseCompletePrefix()
         {
-            Mod.LogInfo("SetPhaseCompletePrefix called");
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 if (Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
                 {
-                    Mod.LogInfo("\tnot controller, setting data");
                     Mod.currentTNHInstance.manager.Phase = TNH_Phase.Completed;
 
                     ((List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(Mod.currentTNHInstance.manager)).Clear();
