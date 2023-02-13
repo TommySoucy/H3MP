@@ -444,7 +444,7 @@ namespace H3MP
                     Mod.currentTNHInstancePlayers != null && !Mod.currentTNHInstancePlayers.ContainsKey(playerID))
                 {
                     GameObject newPlayerElement = Instantiate<GameObject>(Mod.TNHPlayerPrefab, Mod.TNHPlayerList.transform);
-                    newPlayerElement.transform.GetChild(0).GetComponent<Text>().text = Mod.config["Username"].ToString();
+                    newPlayerElement.transform.GetChild(0).GetComponent<Text>().text = player.username;
                     newPlayerElement.SetActive(true);
 
                     Mod.currentTNHInstancePlayers.Add(playerID, newPlayerElement);

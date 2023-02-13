@@ -2084,11 +2084,16 @@ namespace H3MP
             TNHMenuPages[4].SetActive(true);
 
             setLatestInstance = true;
-            H3MP_ServerSend.AddTNHInstance(H3MP_GameManager.AddNewTNHInstance(H3MP_GameManager.ID, TNHMenuLPJ, (int)GM.TNHOptions.ProgressionTypeSetting,
-                                           (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
-                                           (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
-                                           (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
-                                           (int)TNH_UIManager_m_currentLevelIndex.GetValue(Mod.currentTNHUIManager)));
+
+            H3MP_TNHInstance newTNHInstance = H3MP_GameManager.AddNewTNHInstance(H3MP_GameManager.ID, TNHMenuLPJ, (int)GM.TNHOptions.ProgressionTypeSetting,
+                                              (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
+                                              (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
+                                              (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
+                                              (int)TNH_UIManager_m_currentLevelIndex.GetValue(Mod.currentTNHUIManager));
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.AddTNHInstance(newTNHInstance);
+            }
         }
 
         private void OnTNHHostCancelClicked()
