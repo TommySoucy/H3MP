@@ -11690,7 +11690,7 @@ namespace H3MP
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                // Note that SetPhase_Take will only ever be called on a non controller if if it an order from another client
+                // Note that SetPhase_Take will only ever be called on a non controller if it an order from another client
                 // This implies that it will not be called if we just joined a game that has already been inited unless it is a new take phase
                 if (Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
                 {
