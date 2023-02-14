@@ -84,10 +84,15 @@ namespace H3MP
 
             H3MP_GameManager.trackedSosigBySosig.Remove(physicalSosigScript);
 
-            // Set sosig as dead before destroying so it gets processed properly
-            ++SosigActionPatch.sosigDiesSkip;
-            physicalSosigScript.SosigDies(Damage.DamageClass.Abstract, Sosig.SosigDeathType.Unknown);
-            --SosigActionPatch.sosigDiesSkip;
+            // Only call sosig dies if not scene loading, otherwise their body get destroyed before the script(?) and we get null refs 
+            // TODO: Review: We might want to instead just check if their body still exists, and only call SosigDies if it does
+            if (!H3MP_GameManager.sceneLoading)
+            {
+                // Set sosig as dead before destroying so it gets processed properly
+                ++SosigActionPatch.sosigDiesSkip;
+                physicalSosigScript.SosigDies(Damage.DamageClass.Abstract, Sosig.SosigDeathType.Unknown);
+                --SosigActionPatch.sosigDiesSkip;
+            }
 
             if (H3MP_ThreadManager.host)
             {

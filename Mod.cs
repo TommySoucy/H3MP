@@ -10884,8 +10884,11 @@ namespace H3MP
                 {
                     if (GM.TNH_Manager == null)
                     {
-                        // Just left a TNH game, must set instance to 0
-                        H3MP_GameManager.SetInstance(0);
+                        if (H3MP_GameManager.instance != 0)
+                        {
+                            // Just left a TNH game, must set instance to 0
+                            H3MP_GameManager.SetInstance(0);
+                        }
                     }
                     else
                     {
@@ -11651,27 +11654,31 @@ namespace H3MP
 
         static bool SetPhasePrefix(TNH_Phase p)
         {
-            Mod.LogInfo("SetPhasePrefix called with " + p);
             // We want to prevent call to SetPhase unless we are controller
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 // Only set phase if controller
-                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                //if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                //{
+                //    Mod.LogInfo("\tWe are controller, sending and continuing");
+                //    if (H3MP_ThreadManager.host)
+                //    {
+                //        H3MP_ServerSend.TNHSetPhase(Mod.currentTNHInstance.instance, (short)p);
+                //    }
+                //    else
+                //    {
+                //        H3MP_ClientSend.TNHSetPhase(Mod.currentTNHInstance.instance, p);
+                //    }
+                //    return true;
+                //}
+                //else
+                //{
+                //    Mod.LogInfo("\tWe are not controller, preventing setphase");
+                //    return false;
+                //}
+
+                if(Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
                 {
-                    Mod.LogInfo("\tWe are controller, sending and continuing");
-                    if (H3MP_ThreadManager.host)
-                    {
-                        H3MP_ServerSend.TNHSetPhase(Mod.currentTNHInstance.instance, (short)p);
-                    }
-                    else
-                    {
-                        H3MP_ClientSend.TNHSetPhase(Mod.currentTNHInstance.instance, p);
-                    }
-                    return true;
-                }
-                else
-                {
-                    Mod.LogInfo("\tWe are not controller, preventing setphase");
                     return false;
                 }
             }
@@ -12165,7 +12172,7 @@ namespace H3MP
                     if (Mod.currentTNHInstance.activeSupplyPointIndices.Contains(((TNH_PointSequence)Mod.TNH_Manager_m_curPointSequence.GetValue(Mod.currentTNHInstance.manager)).StartSupplyPointIndex))
                     {
                         // Starting point invalid, find a player to spawn on
-                        if(Mod.currentTNHInstance.currentlyPlaying != null && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+                        if (Mod.currentTNHInstance.currentlyPlaying != null && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
                             Mod.TNHSpawnPoint = H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position;
                             GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position, true);
