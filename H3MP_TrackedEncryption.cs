@@ -67,7 +67,8 @@ namespace H3MP
             {
                 targetScript.SpawnPoints = new List<Transform>();
             }
-            GameObject trackedItemRef = new GameObject("TrackedEncryptionRef");
+            GameObject trackedItemRef = new GameObject();
+            trackedItemRef.SetActive(false);
             if (availableTrackedEncryptionRefIndices.Count == 0)
             {
                 H3MP_TrackedEncryption[] tempItems = trackedEncryptionReferences;
@@ -82,7 +83,7 @@ namespace H3MP
                 }
             }
             trackedEncryptionReferences[availableTrackedEncryptionRefIndices.Count - 1] = this;
-            trackedItemRef.hideFlags = HideFlags.HideAndDontSave + availableTrackedEncryptionRefIndices[availableTrackedEncryptionRefIndices.Count - 1];
+            trackedItemRef.name = availableTrackedEncryptionRefIndices[availableTrackedEncryptionRefIndices.Count - 1].ToString();
             availableTrackedEncryptionRefIndices.RemoveAt(availableTrackedEncryptionRefIndices.Count - 1);
             targetScript.SpawnPoints.Add(trackedItemRef.transform);
         }

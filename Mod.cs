@@ -15,6 +15,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR.InteractionSystem;
+using Valve.VR.InteractionSystem.Sample;
 
 namespace H3MP
 {
@@ -204,6 +205,7 @@ namespace H3MP
         public static readonly FieldInfo StingerLauncher_m_hasMissile = typeof(StingerLauncher).GetField("m_hasMissile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo PinnedGrenade_m_hasSploded = typeof(PinnedGrenade).GetField("m_hasSploded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo PinnedGrenade_m_rings = typeof(PinnedGrenade).GetField("m_rings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo PinnedGrenadeRing_m_hasPinDetached = typeof(PinnedGrenadeRing).GetField("m_hasPinDetached", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRGrenade_FuseTimings = typeof(FVRGrenade).GetField("FuseTimings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRGrenade_m_hasSploded = typeof(FVRGrenade).GetField("m_hasSploded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRGrenade_m_isLeverReleased = typeof(FVRGrenade).GetField("m_isLeverReleased", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -7514,10 +7516,10 @@ namespace H3MP
 
         // My solution is hijacking a variable of the PinnedGrenade, in this case its SpawnOnSplode list, to somehow reference the trackedItem
         // To do this, when we track a PinnedGrenade, I add a new GameObject to the SpawnOnSplode list
-        // This GameObject has its HideFlags set to HideAndDontSave + an index
+        // This GameObject has its name set to an index
         // This index is the index of the tracked item in the trackedItemReferences static array if TrackedItem
         // So to know if our PinnedGrenade is under our control, we get the last gameObject in the SpawnOnSplode list
-        // We get tis hideflags, if it is > HideAndDontSave, we get index = hideflag - HideAndDontSave, which we then use to get our TrackedItem
+        // We get its name, which we then use to get our TrackedItem
         // We can then check trackedItem.Controller
         // Note: We also now need to prevent the PinnedGrenade from actually spawning the last item in SpawnOnSplode
 
@@ -7533,13 +7535,10 @@ namespace H3MP
 
             exploded = ___m_hasSploded;
 
-            if (__instance.SpawnOnSplode != null && __instance.SpawnOnSplode.Count > 0)
+            if (__instance.SpawnOnSplode != null && __instance.SpawnOnSplode.Count > 0 && int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int index))
             {
-                int index = (int)__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].hideFlags - (int)HideFlags.HideAndDontSave;
-
-                // Return true (run original), if dont have an index, index doesn't fit in references (shouldn't happen?), reference null (shouldn't happen), or we control
-                return index <= 0 || 
-                       H3MP_TrackedItem.trackedItemReferences.Length <= index || 
+                // Return true (run original), index doesn't fit in references, reference null, or we control
+                return H3MP_TrackedItem.trackedItemReferences.Length <= index || 
                        H3MP_TrackedItem.trackedItemReferences[index] == null || 
                        H3MP_TrackedItem.trackedItemReferences[index].data.controller == H3MP_GameManager.ID;
             }
@@ -7617,7 +7616,7 @@ namespace H3MP
                 return false;
             }
 
-            return grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].hideFlags > HideFlags.HideAndDontSave;
+            return grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index);
         }
 
         // To know if grenade exploded in latest update
@@ -7688,13 +7687,10 @@ namespace H3MP
                 return true;
             }
 
-            if (grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0)
+            if (grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index))
             {
-                int index = (int)grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].hideFlags - (int)HideFlags.HideAndDontSave;
-
-                // Return true (controlled), if have an index, index fits in references (should always be true?), reference not null (should always be true), and we control
-                return index > 0 &&
-                       H3MP_TrackedItem.trackedItemReferences.Length > index &&
+                // Return true (controlled), index fits in references, reference not null, and we control
+                return H3MP_TrackedItem.trackedItemReferences.Length <= index &&
                        H3MP_TrackedItem.trackedItemReferences[index] != null &&
                        H3MP_TrackedItem.trackedItemReferences[index].data.controller == H3MP_GameManager.ID;
             }
@@ -7707,7 +7703,7 @@ namespace H3MP
             Mod.PinnedGrenade_m_hasSploded.SetValue(grenade, true);
             for (int i = 0; i < grenade.SpawnOnSplode.Count; i++)
             {
-                if(i == grenade.SpawnOnSplode.Count - 1 && grenade.SpawnOnSplode[i].hideFlags > HideFlags.HideAndDontSave)
+                if(i == grenade.SpawnOnSplode.Count - 1 && int.TryParse(grenade.SpawnOnSplode[i].name, out int index))
                 {
                     break;
                 }
@@ -7758,13 +7754,10 @@ namespace H3MP
                 return true;
             }
 
-            if (__instance.SpawnPoints != null && __instance.SpawnPoints.Count > 0)
+            if (__instance.SpawnPoints != null && __instance.SpawnPoints.Count > 0 && int.TryParse(__instance.SpawnPoints[__instance.SpawnPoints.Count - 1].name, out int index))
             {
-                int index = (int)__instance.SpawnPoints[__instance.SpawnPoints.Count - 1].hideFlags - (int)HideFlags.HideAndDontSave;
-
-                // Return true (run original), if dont have an index, index doesn't fit in references (shouldn't happen?), reference null (shouldn't happen), or we control
-                return index <= 0 || 
-                       H3MP_TrackedEncryption.trackedEncryptionReferences.Length <= index ||
+                // Return true (run original), index doesn't fit in references, reference null, or we control
+                return H3MP_TrackedEncryption.trackedEncryptionReferences.Length <= index ||
                        H3MP_TrackedEncryption.trackedEncryptionReferences[index] == null ||
                        H3MP_TrackedEncryption.trackedEncryptionReferences[index].data.controller == H3MP_GameManager.ID;
             }

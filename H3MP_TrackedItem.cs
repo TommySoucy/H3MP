@@ -230,7 +230,8 @@ namespace H3MP
                 {
                     asPG.SpawnOnSplode = new List<GameObject>();
                 }
-                GameObject trackedItemRef = new GameObject("PGTrackedItemRef");
+                GameObject trackedItemRef = new GameObject();
+                trackedItemRef.SetActive(false);
                 if (availableTrackedItemRefIndices.Count == 0)
                 {
                     H3MP_TrackedItem[] tempItems = trackedItemReferences;
@@ -245,7 +246,7 @@ namespace H3MP
                     }
                 }
                 trackedItemReferences[availableTrackedItemRefIndices.Count - 1] = this;
-                trackedItemRef.hideFlags = HideFlags.HideAndDontSave + availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
+                trackedItemRef.name = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1].ToString();
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
                 asPG.SpawnOnSplode.Add(trackedItemRef);
             }
@@ -1497,7 +1498,15 @@ namespace H3MP
                 {
                     if (newData[i+1] == 1 && !rings[i].HasPinDetached())
                     {
-                        rings[i].PopOutRoutine();
+                        Mod.PinnedGrenadeRing_m_hasPinDetached.SetValue(rings[i], true);
+                        rings[i].Pin.RootRigidbody = rings[i].Pin.gameObject.AddComponent<Rigidbody>();
+                        rings[i].Pin.RootRigidbody.mass = 0.02f;
+                        rings[i].ForceBreakInteraction();
+                        rings[i].transform.SetParent(rings[i].Pin.transform);
+                        rings[i].Pin.enabled = true;
+                        SM.PlayCoreSound(FVRPooledAudioType.GenericClose, rings[i].G.AudEvent_Pinpull, rings[i].transform.position);
+                        rings[i].GetComponent<Collider>().enabled = false;
+                        rings[i].enabled = false;
                         modified = true;
                     }
                 }
