@@ -1946,10 +1946,10 @@ namespace H3MP
 
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
-                    //SyncTrackedSosigs();
-                    //SyncTrackedAutoMeaters();
-                    //SyncTrackedItems();
-                    //SyncTrackedEncryptions();
+                    SyncTrackedSosigs();
+                    SyncTrackedAutoMeaters();
+                    SyncTrackedItems();
+                    SyncTrackedEncryptions();
 
                     controlOverride = false;
 

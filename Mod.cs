@@ -429,8 +429,7 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadDivide))
                 {
-                    GameObject recursivePrefab = IM.OD["TNH_EncryptionTarget_4_Recursive"].GetGameObject();
-                    Instantiate(recursivePrefab, GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward, Quaternion.identity);
+                    SteamVR_LoadLevel.Begin("Friendly45_New", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
             }
 #endif
