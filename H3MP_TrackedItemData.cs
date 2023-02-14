@@ -44,6 +44,7 @@ namespace H3MP
 
         public int parent = -1; // The tracked ID of item this item is attached to
         public List<H3MP_TrackedItemData> children; // The items attached to this item
+        public List<int> childrenToParent = new List<int>(); // The items to attach to this item once we instantiate it
         public int childIndex = -1; // The index of this item in its parent's children list
         public int ignoreParentChanged;
         public bool removeFromListOnDestroy = true;
@@ -90,9 +91,11 @@ namespace H3MP
                 }
 
                 // See Note in H3MP_GameManager.SyncTrackedItems
+                // Unfortunately this doesn't necessarily help us in this case considering we need the parent to have been instantiated
+                // by now, but since the instantiation is a coroutine, we are not guaranteed to have the parent's physObj yet
                 if (parent != -1)
                 {
-                    // Add ourselves to the prent's children
+                    // Add ourselves to the parent's children
                     H3MP_TrackedItemData parentItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[parent];
                     if (parentItem.children == null)
                     {
@@ -101,11 +104,32 @@ namespace H3MP
                     childIndex = parentItem.children.Count;
                     parentItem.children.Add(this);
 
-                    // Physically parent
-                    ++ignoreParentChanged;
-                    itemObject.transform.parent = parentItem.physicalItem.transform;
-                    --ignoreParentChanged;
+                    if (parentItem.physicalItem == null)
+                    {
+                        parentItem.childrenToParent.Add(trackedID);
+                    }
+                    else
+                    {
+                        // Physically parent
+                        ++ignoreParentChanged;
+                        itemObject.transform.parent = parentItem.physicalItem.transform;
+                        --ignoreParentChanged;
+                    }
                 }
+
+                // Process childrenToParent
+                for(int i=0; i < childrenToParent.Count; ++i)
+                {
+                    H3MP_TrackedItemData childItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[childrenToParent[i]];
+                    if (childItem != null && childItem.parent == trackedID && childItem.physicalItem != null)
+                    {
+                        // Physically parent
+                        ++childItem.ignoreParentChanged;
+                        childItem.physicalItem.transform.parent = physicalItem.transform;
+                        --childItem.ignoreParentChanged;
+                    }
+                }
+                childrenToParent.Clear();
 
                 // Set as kinematic if not in control
                 if (controller != H3MP_GameManager.ID)
