@@ -2379,6 +2379,22 @@ namespace H3MP
                     if (H3MP_GameManager.players.TryGetValue(ID, out H3MP_PlayerManager player))
                     {
                         player.SetVisible(false);
+
+                        if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null && player.reticleContact != null)
+                        {
+                            if (Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.manager.TAHReticle != null)
+                            {
+                                for (int i = 0; i < Mod.currentTNHInstance.manager.TAHReticle.Contacts.Count; ++i)
+                                {
+                                    if (Mod.currentTNHInstance.manager.TAHReticle.Contacts[i] == player.reticleContact)
+                                    {
+                                        Mod.currentTNHInstance.manager.TAHReticle.Contacts.RemoveAt(i);
+                                    }
+                                }
+                                ((HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(Mod.currentTNHInstance.manager.TAHReticle)).Remove(player.reticleContact.TrackedTransform);
+                            }
+                            GameObject.Destroy(player.reticleContact.gameObject);
+                        }
                     }
                 }
             }

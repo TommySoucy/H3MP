@@ -230,6 +230,7 @@ namespace H3MP
         public static readonly FieldInfo TubeFedShotgun_m_fireSelectorMode = typeof(TubeFedShotgun).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo BoltActionRifle_m_fireSelectorMode = typeof(BoltActionRifle).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo BoltActionRifle_m_isHammerCocked = typeof(BoltActionRifle).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TAH_Reticle_m_trackedTransforms = typeof(TAH_Reticle).GetField("m_trackedTransforms", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -11426,7 +11427,16 @@ namespace H3MP
                     }
 
                     // Prevent TNH from processing player death if there are other players still in the game
-                    if (Mod.currentTNHInstance.dead.Count < Mod.currentTNHInstance.currentlyPlaying.Count)
+                    bool someStillAlive = false;
+                    for (int i = 0; i < Mod.currentTNHInstance.currentlyPlaying.Count; ++i)
+                    {
+                        if (!Mod.currentTNHInstance.dead.Contains(Mod.currentTNHInstance.currentlyPlaying[i]))
+                        {
+                            someStillAlive = true;
+                            break;
+                        }
+                    }
+                    if (someStillAlive)
                     {
                         if (Mod.TNHOnDeathSpectate)
                         {

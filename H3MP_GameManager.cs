@@ -292,27 +292,46 @@ namespace H3MP
         //      A mod could prefix this to base it on other criteria, mainly for other game modes
         public static bool UpdatePlayerHidden(H3MP_PlayerManager player)
         {
+            bool visible = true;
+
+            // Default scene/instance
+            visible &= player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == instance;
+
             // TNH
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
+            if (visible && Mod.currentTNHInstance != null)
             {
-                if (Mod.currentTNHInstance.dead.Contains(player.ID))
+                // Update visibility
+                visible &= !Mod.currentTNHInstance.dead.Contains(player.ID);
+
+                // Process visibility
+                if(!visible && player.reticleContact != null)
                 {
-                    player.SetVisible(false);
-                    return false;
+                    if(Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.manager.TAHReticle != null)
+                    {
+                        for(int i=0; i< Mod.currentTNHInstance.manager.TAHReticle.Contacts.Count; ++i)
+                        {
+                            if (Mod.currentTNHInstance.manager.TAHReticle.Contacts[i] == player.reticleContact)
+                            {
+                                Mod.currentTNHInstance.manager.TAHReticle.Contacts.RemoveAt(i);
+                            }
+                        }
+                        ((HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(Mod.currentTNHInstance.manager.TAHReticle)).Remove(player.reticleContact.TrackedTransform);
+                    }
+                    Destroy(player.reticleContact.gameObject);
                 }
-                else // Player not dead
+                else if(visible && player.reticleContact == null)
                 {
-                    if (GM.TNH_Manager != null && Mod.currentTNHInstance.currentlyPlaying.Contains(player.ID))
+                    if (Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.currentlyPlaying.Contains(player.ID))
                     {
                         // We are currently in a TNH game with this player, add them to radar
-                        GM.TNH_Manager.TAHReticle.RegisterTrackedObject(player.head, (TAH_ReticleContact.ContactType)(-2)); // -2 is a custom value handled by TAHReticleContactPatch
+                        player.reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(player.head, (TAH_ReticleContact.ContactType)(-2)); // -2 is a custom value handled by TAHReticleContactPatch
                     }
                 }
             }
 
             // If have not found a reason for player to be hidden, set as visible
-            player.SetVisible(true);
-            return true;
+            player.SetVisible(visible);
+            return visible;
         }
 
         public static void UpdatePlayerInstance(int playerID, int instance)

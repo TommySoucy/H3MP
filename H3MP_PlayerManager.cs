@@ -28,6 +28,7 @@ namespace H3MP
         public Text usernameLabel;
         public Text healthIndicator;
         public int IFF;
+        public TAH_ReticleContact reticleContact;
 
         public string scene;
         public int instance;
