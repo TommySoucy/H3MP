@@ -52,6 +52,7 @@ namespace H3MP
 
         public static int giveControlOfDestroyed;
         public static bool controlOverride;
+        public static bool firstPlayerInSceneInstance;
 
         public static int ID = 0;
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
@@ -1886,15 +1887,18 @@ namespace H3MP
                     if(relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
                     {
                         controlOverride = relevantPlayers.Count == 0;
+                        firstPlayerInSceneInstance = controlOverride;
                     }
                     else
                     {
                         controlOverride = true;
+                        firstPlayerInSceneInstance = true;
                     }
                 }
                 else
                 {
                     controlOverride = true;
+                    firstPlayerInSceneInstance = true;
                 }
             }
             else // Finished loading

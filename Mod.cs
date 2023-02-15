@@ -8435,6 +8435,22 @@ namespace H3MP
     }
 
     // Patches FVRSceneSettings.LoadDefaultSceneRoutine so we know when we spawn items from vault as part of scene loading
+    // The goal is to identify objects spawned for the default scene routine and destroy them right after spawning if we are not 
+    // the first player in the scene
+    //      We destroy instead of preventing the spawn because SpawnVaultFileRoutine will access the object after instantiation
+    // When we are in the LoadDefaultSceneRountine we set a flag
+    // LoadDefaultSceneRountine calls SpawnObjects
+    //      SpawnObjectsPatch will store the default scene file(s) being spawned while the LoadDefaultSceneRountine flag is set
+    //      If any other players were already in the scene, it means they have loaded the scenario, so we don't want to load it again
+    //      So we want to destroy any item instantiated from one of those vault files
+    // SpawnObjects calls SpawnVaultFile
+    // SpawnVaultFile calls AnvilManager.Run(VaultSystem.SpawnVaultFileRoutine)
+    //      Note that this is a corountine so we patch the MoveNext of the iterator instead
+    //      to keep track of the vault file we are currently spawning so we know which to skip
+    //      While we are in a MoveNext call we set the inSpawnVaultFileRoutineToSkip flag
+    // Then in instantiation patches, once an object belonging to once of those files gets instantiated (inSpawnVaultFileRoutineToSkip is set)
+    // we add the resulting object to the list corresponding to the file
+    // Once the SpawnVaultFileRoutine finishes, we destroy every object in the list
     class LoadDefaultSceneRoutinePatch
     {
         public static bool inLoadDefaultSceneRoutine;
@@ -8461,8 +8477,10 @@ namespace H3MP
     {
         static void Prefix(VaultFile file)
         {
-            // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || !H3MP_GameManager.PlayersPresentSlow())
+            // Skip if not connected or we are the first in the scene/instance
+            // This means if we are the first in the scene/instance we will spawn all objects even ones spawned as part of LoadDefaultSceneRoutine
+            // If we aren't the first, we will only spawn the objects if not part of LoadDefaultSceneRoutine
+            if (Mod.managerObject == null || H3MP_GameManager.firstPlayerInSceneInstance)
             {
                 return;
             }
