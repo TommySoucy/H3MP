@@ -1,8 +1,5 @@
 ﻿using FistVR;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,21 +10,9 @@ namespace H3MP
     {
         public static bool init;
 
-        // Start page
-        private FVRPointableButton BTN_Host;
-        private FVRPointableButton BTN_Join;
-        private FVRPointableButton BTN_Options;
-
-        // Hosting
-        private FVRPointableButton BTN_Close;
-
-        // Client
-        private FVRPointableButton BTN_Disconnect;
-
-        // Options
-        private FVRPointableButton BTN_ReloadConfig;
-        private FVRPointableButton BTN_ItemInterpolation;
-        private Text TXT_ItemInterpolation;
+        delegate void ButtonClick(Text text);
+        Dictionary<int, List<KeyValuePair<FVRPointableButton, Vector3>>> pages;
+        int currentPage = -1;
 
         public override void Enable()
         {
@@ -53,97 +38,55 @@ namespace H3MP
 
         private void InitButtons()
         {
-            if (BTN_Host != null)
+            if (pages != null)
             {
                 return;
             }
 
+            pages = new Dictionary<int, List<KeyValuePair<FVRPointableButton, Vector3>>>();
+
             Image background = gameObject.AddComponent<Image>();
             background.color = new Color(0.1f, 0.1f, 0.1f, 1);
 
-            GameObject hostButton = Instantiate(this.Menu.BaseButton, transform);
-            RectTransform hostRect = hostButton.GetComponent<RectTransform>();
-            hostRect.anchorMax = new Vector2(0.5f, 0.5f);
-            hostRect.anchorMin = new Vector2(0.5f, 0.5f);
-            hostButton.transform.localPosition = new Vector3(0,75,0);
-            hostButton.transform.localRotation = Quaternion.identity;
-            Destroy(hostButton.GetComponent<FVRWristMenuSectionButton>());
-            hostButton.GetComponent<Text>().text = "Host";
-            BTN_Host = hostButton.GetComponent<FVRPointableButton>();
-            BTN_Host.Button.onClick.AddListener(OnHostClicked);
-
-            GameObject joinButton = Instantiate(this.Menu.BaseButton, transform);
-            RectTransform joinRect = joinButton.GetComponent<RectTransform>();
-            joinRect.anchorMax = new Vector2(0.5f, 0.5f);
-            joinRect.anchorMin = new Vector2(0.5f, 0.5f);
-            joinButton.transform.localPosition = Vector3.zero;
-            joinButton.transform.localRotation = Quaternion.identity;
-            Destroy(joinButton.GetComponent<FVRWristMenuSectionButton>());
-            joinButton.GetComponent<Text>().text = "Join";
-            BTN_Join = joinButton.GetComponent<FVRPointableButton>();
-            BTN_Join.Button.onClick.AddListener(OnConnectClicked);
-
-            GameObject optionsButton = Instantiate(this.Menu.BaseButton, transform);
-            RectTransform optionsRect = optionsButton.GetComponent<RectTransform>();
-            optionsRect.anchorMax = new Vector2(0.5f, 0.5f);
-            optionsRect.anchorMin = new Vector2(0.5f, 0.5f);
-            optionsButton.transform.localPosition = new Vector3(0, -75, 0);
-            optionsButton.transform.localRotation = Quaternion.identity;
-            Destroy(optionsButton.GetComponent<FVRWristMenuSectionButton>());
-            optionsButton.GetComponent<Text>().text = "Options";
-            BTN_Options = optionsButton.GetComponent<FVRPointableButton>();
-            BTN_Options.Button.onClick.AddListener(OnOptionsClicked);
-
-
-            GameObject closeButton = Instantiate(this.Menu.BaseButton, transform);
-            RectTransform closeRect = closeButton.GetComponent<RectTransform>();
-            closeRect.anchorMax = new Vector2(0.5f, 0.5f);
-            closeRect.anchorMin = new Vector2(0.5f, 0.5f);
-            closeButton.transform.localPosition = Vector3.zero;
-            closeButton.transform.localRotation = Quaternion.identity;
-            Destroy(closeButton.GetComponent<FVRWristMenuSectionButton>());
-            closeButton.GetComponent<Text>().text = "Close\nserver";
-            BTN_Close = closeButton.GetComponent<FVRPointableButton>();
-            BTN_Close.Button.onClick.AddListener(OnCloseClicked);
-
-
-            GameObject disconnectButton = Instantiate(this.Menu.BaseButton, transform);
-            RectTransform disconnectRect = disconnectButton.GetComponent<RectTransform>();
-            disconnectRect.anchorMax = new Vector2(0.5f, 0.5f);
-            disconnectRect.anchorMin = new Vector2(0.5f, 0.5f);
-            disconnectButton.transform.localPosition = Vector3.zero;
-            disconnectButton.transform.localRotation = Quaternion.identity;
-            Destroy(disconnectButton.GetComponent<FVRWristMenuSectionButton>());
-            disconnectButton.GetComponent<Text>().text = "Disconnect";
-            BTN_Disconnect = disconnectButton.GetComponent<FVRPointableButton>();
-            BTN_Disconnect.Button.onClick.AddListener(OnDisconnectClicked);
-
-
-            GameObject reloadConfigButton = Instantiate(this.Menu.BaseButton, transform);
-            RectTransform reloadConfigRect = reloadConfigButton.GetComponent<RectTransform>();
-            reloadConfigRect.anchorMax = new Vector2(0.5f, 0.5f);
-            reloadConfigRect.anchorMin = new Vector2(0.5f, 0.5f);
-            reloadConfigButton.transform.localPosition = new Vector3(0, -115, 0);
-            reloadConfigButton.transform.localRotation = Quaternion.identity;
-            Destroy(reloadConfigButton.GetComponent<FVRWristMenuSectionButton>());
-            reloadConfigButton.GetComponent<Text>().text = "Reload\nconfig.";
-            BTN_ReloadConfig = reloadConfigButton.GetComponent<FVRPointableButton>();
-            BTN_ReloadConfig.Button.onClick.AddListener(OnReloadConfigClicked);
-
-            GameObject itemInterpButton = Instantiate(this.Menu.BaseButton, transform);
-            RectTransform itemInterpRect = itemInterpButton.GetComponent<RectTransform>();
-            itemInterpRect.anchorMax = new Vector2(0.5f, 0.5f);
-            itemInterpRect.anchorMin = new Vector2(0.5f, 0.5f);
-            itemInterpButton.transform.localPosition = new Vector3(0, 75, 0);
-            itemInterpButton.transform.localRotation = Quaternion.identity;
-            Destroy(itemInterpButton.GetComponent<FVRWristMenuSectionButton>());
-            TXT_ItemInterpolation = itemInterpButton.GetComponent<Text>();
-            TXT_ItemInterpolation.text = "Item\ninterpolation\n(ON)";
-            BTN_ItemInterpolation = itemInterpButton.GetComponent<FVRPointableButton>();
-            BTN_ItemInterpolation.Button.onClick.AddListener(OnItemInterpolationClicked);
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnHostClicked, "Host");
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), OnConnectClicked, "Join");
+            InitButton(new List<int>() { 0, 1, 2 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 240), OnOptionsClicked, "Options");
+            InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnCloseClicked, "Close\nserver");
+            InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnDisconnectClicked, "Disconnect");
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-150, 150, 0) }, new Vector2(240, 240), OnBackClicked, "Back");
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 150), OnReloadConfigClicked, "Reload config");
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -75, 0) }, new Vector2(500, 150), OnItemInterpolationClicked, "Item interpolation (ON)");
         }
 
-        private void OnHostClicked()
+        private void InitButton(List<int> pageIndices, List<Vector3> positions, Vector2 sizeDelta, ButtonClick clickMethod, string defaultText)
+        {
+            GameObject button = Instantiate(this.Menu.BaseButton, transform);
+            RectTransform buttonRect = button.GetComponent<RectTransform>();
+            buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
+            buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
+            buttonRect.GetChild(0).GetComponent<RectTransform>().sizeDelta = sizeDelta;
+            button.transform.localPosition = positions[0];
+            button.transform.localRotation = Quaternion.identity;
+            Destroy(button.GetComponent<FVRWristMenuSectionButton>());
+            button.GetComponent<Text>().text = defaultText;
+            FVRPointableButton BTN_Ref = button.GetComponent<FVRPointableButton>();
+            BTN_Ref.Button.onClick.AddListener(()=>clickMethod(button.GetComponent<Text>()));
+
+            for (int i = 0; i < pageIndices.Count; ++i)
+            {
+                if (pages.TryGetValue(pageIndices[i], out List<KeyValuePair<FVRPointableButton, Vector3>> buttons))
+                {
+                    buttons.Add(new KeyValuePair<FVRPointableButton, Vector3>(BTN_Ref, positions[i]));
+                }
+                else
+                {
+                    KeyValuePair<FVRPointableButton, Vector3> entry = new KeyValuePair<FVRPointableButton, Vector3>(BTN_Ref, positions[i]);
+                    pages.Add(pageIndices[i], new List<KeyValuePair<FVRPointableButton, Vector3>>() { entry });
+                }
+            }
+        }
+
+        private void OnHostClicked(Text textRef)
         {
             Mod.modInstance.CreateManagerObject(true);
 
@@ -160,7 +103,7 @@ namespace H3MP
             SetPage(1);
         }
 
-        private void OnConnectClicked()
+        private void OnConnectClicked(Text textRef)
         {
             Mod.modInstance.CreateManagerObject();
 
@@ -180,12 +123,12 @@ namespace H3MP
             SetPage(2);
         }
 
-        private void OnReloadConfigClicked()
+        private void OnReloadConfigClicked(Text textRef)
         {
             Mod.modInstance.LoadConfig();
         }
 
-        private void OnCloseClicked()
+        private void OnCloseClicked(Text textRef)
         {
             H3MP_Server.Close();
 
@@ -193,7 +136,7 @@ namespace H3MP
             SetPage(0);
         }
 
-        private void OnDisconnectClicked()
+        private void OnDisconnectClicked(Text textRef)
         {
             H3MP_Client.singleton.Disconnect(true, 0);
 
@@ -201,37 +144,60 @@ namespace H3MP
             SetPage(0);
         }
 
-        private void OnOptionsClicked()
+        private void OnOptionsClicked(Text textRef)
         {
             // Switch page
             SetPage(3);
         }
 
-        private void OnItemInterpolationClicked()
+        private void OnBackClicked(Text textRef)
+        {
+            if(Mod.managerObject == null)
+            {
+                SetPage(0);
+            }
+            else
+            {
+                SetPage(H3MP_ThreadManager.host ? 1 : 2);
+            }
+        }
+
+        private void OnItemInterpolationClicked(Text textRef)
         {
             if (H3MP_TrackedItem.interpolated)
             {
                 H3MP_TrackedItem.interpolated = false;
-                TXT_ItemInterpolation.text = "Item\ninterpolation\n(OFF)";
+                textRef.text = "Item interpolation (OFF)";
             }
             else
             {
                 H3MP_TrackedItem.interpolated = true;
-                TXT_ItemInterpolation.text = "Item\ninterpolation\n(ON)";
+                textRef.text = "Item interpolation (ON)";
             }
         }
 
         private void SetPage(int index)
         {
-            BTN_Host.gameObject.SetActive(index == 0);
-            BTN_Join.gameObject.SetActive(index == 0);
-            BTN_Options.gameObject.SetActive(index == 0);
+            // Disable buttons from previous page if applicable
+            if (currentPage != -1 && pages.TryGetValue(index, out List<KeyValuePair<FVRPointableButton, Vector3>> previousButtons))
+            {
+                for(int i=0; i< previousButtons.Count; ++i)
+                {
+                    previousButtons[i].Key.gameObject.SetActive(false);
+                }
+            }
 
-            BTN_Close.gameObject.SetActive(index == 1);
+            // Enable buttons of new page and set their positions
+            if(pages.TryGetValue(index, out List<KeyValuePair<FVRPointableButton, Vector3>> newButtons))
+            {
+                for (int i = 0; i < newButtons.Count; ++i)
+                {
+                    newButtons[i].Key.gameObject.SetActive(true);
+                    newButtons[i].Key.GetComponent<RectTransform>().localPosition = newButtons[i].Value;
+                }
+            }
 
-            BTN_Disconnect.gameObject.SetActive(index == 2);
-
-            BTN_ReloadConfig.gameObject.SetActive(index == 3);
+            currentPage = index;
         }
     }
 }
