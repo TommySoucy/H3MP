@@ -69,7 +69,7 @@ namespace H3MP
         setTNHLevelIndex = 58,
         addInstance = 59,
         setTNHController = 60,
-        TNHData = 61, // UNUSED
+        spectatorHost = 61, // UNUSED
         TNHPlayerDied = 62,
         TNHAddTokens = 63,
         TNHSetLevel = 64,
@@ -213,7 +213,7 @@ namespace H3MP
         setTNHLevelIndex = 57,
         addInstance = 58,
         setTNHController = 59,
-        TNHData = 60, // UNUSED
+        spectatorHost = 60, // UNUSED
         TNHPlayerDied = 61,
         TNHAddTokens = 62,
         TNHSetLevel = 63,

@@ -24,6 +24,8 @@ namespace H3MP
         public static H3MP_TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
         public static List<int> availableEncryptionIndices;
 
+        public static List<int> availableSpectatorHosts;
+
         public static Dictionary<int, List<int>> clientsWaitingUpDate = new Dictionary<int, List<int>>(); // Clients we requested up to date objects from, for which clients
         public static Dictionary<int, List<int>> loadingClientsWaitingFrom = new Dictionary<int, List<int>>(); // Clients currently loading, waiting for up to date objects from which clients
 
@@ -522,7 +524,7 @@ namespace H3MP
                 H3MP_ServerHandle.SetTNHLevelIndex,
                 H3MP_ServerHandle.AddInstance,
                 H3MP_ServerHandle.SetTNHController,
-                null, // OLD TNHDATA
+                H3MP_ServerHandle.SpectatorHost,
                 H3MP_ServerHandle.TNHPlayerDied,
                 H3MP_ServerHandle.TNHAddTokens,
                 H3MP_ServerHandle.TNHSetLevel,
@@ -653,8 +655,10 @@ namespace H3MP
                                                      70,71,72,73,74,75,76,77,78,79,
                                                      80,81,82,83,84,85,86,87,88,89,
                                                      90,91,92,93,94,95,96,97,98,99};
-             
-        Mod.LogInfo("Initialized server");
+
+            availableSpectatorHosts = new List<int>();
+
+            Mod.LogInfo("Initialized server");
         }
     }
 }

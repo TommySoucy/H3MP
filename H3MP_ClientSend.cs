@@ -1,14 +1,8 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Valve.Newtonsoft.Json.Linq;
-using Valve.VR.InteractionSystem;
-using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -1786,34 +1780,6 @@ namespace H3MP
             }
         }
 
-        public static void TNHData(int instance, TNH_Manager manager)
-        {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHData))
-            {
-                packet.Write(instance);
-                bool hasInit = (bool)Mod.TNH_Manager_m_hasInit.GetValue(manager);
-                packet.Write(hasInit);
-                if (hasInit)
-                {
-                    packet.Write(manager);
-                }
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void TNHData(H3MP_Packet packet)
-        {
-            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.TNHData);
-            for (int i = 0; i < 4; ++i)
-            {
-                packet.buffer[i] = IDbytes[i];
-            }
-            packet.readPos = 0;
-
-            SendTCPData(packet);
-        }
-
         public static void TNHPlayerDied(int instance, int ID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHPlayerDied))
@@ -2387,6 +2353,16 @@ namespace H3MP
             {
                 packet.Write(trackedID);
                 packet.Write(position);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SpectatorHost(bool spectatorHost)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.spectatorHost))
+            {
+                packet.Write(spectatorHost);
 
                 SendTCPData(packet);
             }

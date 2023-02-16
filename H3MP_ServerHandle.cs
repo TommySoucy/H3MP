@@ -2321,16 +2321,6 @@ namespace H3MP
             int instance = packet.ReadInt();
             int newController = packet.ReadInt();
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)
-            {
-                Mod.LogInfo("SetTNHController called on server for our TNH instance");
-                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
-                {
-                    Mod.LogInfo("\tWe were controller, new one is not us, giving up control");
-                    H3MP_ServerSend.TNHData(instance, Mod.currentTNHInstance.manager);
-                }
-            }
-
             H3MP_GameManager.TNHInstances[instance].controller = newController;
 
             H3MP_ServerSend.SetTNHController(instance, newController, clientID);
@@ -3312,6 +3302,31 @@ namespace H3MP
             }
 
             H3MP_ServerSend.SLAMDetonate(clientID, packet);
+        }
+
+        public static void SpectatorHost(int clientID, H3MP_Packet packet)
+        {
+            bool spectatorHost = packet.ReadBool();
+
+            if (spectatorHost) 
+            {
+                if (!H3MP_GameManager.spectatorHosts.Contains(clientID))
+                {
+                    H3MP_GameManager.spectatorHosts.Add(clientID);
+                    H3MP_Server.availableSpectatorHosts.Add(clientID);
+                }
+            }
+            else
+            {
+                H3MP_GameManager.spectatorHosts.Remove(clientID);
+                H3MP_Server.availableSpectatorHosts.Remove(clientID);
+            }
+
+            H3MP_GameManager.UpdatePlayerHidden(H3MP_GameManager.players[clientID]);
+
+            //TODO: Update UI
+
+            H3MP_ServerSend.SpectatorHost(clientID, spectatorHost);
         }
     }
 }

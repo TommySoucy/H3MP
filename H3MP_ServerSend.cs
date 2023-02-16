@@ -1,12 +1,7 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using Valve.Newtonsoft.Json.Linq;
-using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -2734,34 +2729,6 @@ namespace H3MP
             }
         }
 
-        public static void TNHData(int controller, H3MP_Packet packet)
-        {
-            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.TNHData);
-            for (int i = 0; i < 4; ++i)
-            {
-                packet.buffer[i] = IDbytes[i];
-            }
-            packet.readPos = 0;
-
-            SendTCPData(controller, packet);
-        }
-
-        public static void TNHData(int controller, TNH_Manager manager)
-        {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHData))
-            {
-                packet.Write(controller);
-                bool hasInit = (bool)Mod.TNH_Manager_m_hasInit.GetValue(manager);
-                packet.Write(hasInit);
-                if (hasInit)
-                {
-                    packet.Write(manager);
-                }
-
-                SendTCPData(controller, packet);
-            }
-        }
-
         public static void TNHPlayerDied(int instance, int ID, int clientID = 0)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHPlayerDied))
@@ -3805,6 +3772,24 @@ namespace H3MP
                 packet.Write(data);
 
                 SendTCPData(toClient, packet);
+            }
+        }
+
+        public static void SpectatorHost(int clientID, bool spectatorHost)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.spectatorHost))
+            {
+                packet.Write(clientID);
+                packet.Write(spectatorHost);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
     }

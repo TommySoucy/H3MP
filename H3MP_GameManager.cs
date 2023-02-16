@@ -32,6 +32,7 @@ namespace H3MP
         }
 
         public static Dictionary<int, H3MP_PlayerManager> players = new Dictionary<int, H3MP_PlayerManager>();
+        public static List<int> spectatorHosts = new List<int>(); // List of all spectator hosts, not necessarily available 
         public static List<H3MP_TrackedItemData> items = new List<H3MP_TrackedItemData>(); // Tracked items under control of this gameManager
         public static List<H3MP_TrackedSosigData> sosigs = new List<H3MP_TrackedSosigData>(); // Tracked sosigs under control of this gameManager
         public static List<H3MP_TrackedAutoMeaterData> autoMeaters = new List<H3MP_TrackedAutoMeaterData>(); // Tracked AutoMeaters under control of this gameManager
@@ -295,8 +296,8 @@ namespace H3MP
         {
             bool visible = true;
 
-            // Default scene/instance
-            visible &= player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == instance;
+            // Default scene/instance, spectatorHost
+            visible &= player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == instance && !spectatorHosts.Contains(player.ID);
 
             // TNH
             if (visible && Mod.currentTNHInstance != null)

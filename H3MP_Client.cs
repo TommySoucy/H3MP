@@ -371,7 +371,7 @@ namespace H3MP
                 H3MP_ClientHandle.SetTNHLevelIndex,
                 H3MP_ClientHandle.AddInstance,
                 H3MP_ClientHandle.SetTNHController,
-                null, // OLD TNHDATA
+                H3MP_ClientHandle.SpectatorHost,
                 H3MP_ClientHandle.TNHPlayerDied,
                 H3MP_ClientHandle.TNHAddTokens,
                 H3MP_ClientHandle.TNHSetLevel,
@@ -876,24 +876,6 @@ namespace H3MP
             {
                 Mod.currentlyPlayingTNH = false;
                 Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, H3MP_GameManager.ID);
-
-                // If was manager controller, give manager control to next currently playing
-                // HANDLED BY SERVER
-                //if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
-                //{
-                //    Mod.currentTNHInstance.controller = Mod.currentTNHInstance.currentlyPlaying[0];
-                //    bool hasInit = (bool)Mod.TNH_Manager_m_hasInit.GetValue(Mod.currentTNHInstance.manager);
-                //    if (H3MP_ThreadManager.host)
-                //    {
-                //        H3MP_ServerSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                //        H3MP_ServerSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                //    }
-                //    else
-                //    {
-                //        H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.currentlyPlaying[0]);
-                //        H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                //    }
-                //}
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;

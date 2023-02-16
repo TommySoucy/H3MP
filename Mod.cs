@@ -14,8 +14,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
-using Valve.VR.InteractionSystem;
-using Valve.VR.InteractionSystem.Sample;
 
 namespace H3MP
 {
@@ -93,6 +91,7 @@ namespace H3MP
         public static Dictionary<int, GameObject> currentTNHInstancePlayers;
         public static TNH_UIManager currentTNHUIManager;
         public static GameObject TNHStartEquipButton;
+        public static bool spectatorHost;
 
         #region Reused NonPublic MemberInfo
         // Reused private FieldInfos
@@ -435,6 +434,44 @@ namespace H3MP
                 }
             }
 #endif
+            if (Input.GetKeyDown(KeyCode.F6) && managerObject != null)
+            {
+                spectatorHost = !spectatorHost;
+
+                if (GM.CurrentPlayerBody != null)
+                {
+                    GM.CurrentPlayerBody.EyeCam.enabled = !spectatorHost;
+                }
+
+                if (H3MP_ThreadManager.host)
+                {
+                    if (spectatorHost)
+                    {
+                        H3MP_GameManager.spectatorHosts.Add(0);
+                        H3MP_Server.availableSpectatorHosts.Add(0);
+                    }
+                    else
+                    {
+                        H3MP_GameManager.spectatorHosts.Remove(0);
+                        H3MP_Server.availableSpectatorHosts.Remove(0);
+                    }
+                    H3MP_ServerSend.SpectatorHost(0, spectatorHost);
+                }
+                else
+                {
+                    H3MP_GameManager.spectatorHosts.Add(H3MP_GameManager.ID);
+                    H3MP_ClientSend.SpectatorHost(spectatorHost);
+                }
+
+                if (spectatorHost)
+                {
+                    Mod.LogWarning("Player is now a spectator host!");
+                }
+                else
+                {
+                    Mod.LogWarning("Player is no longer a spectator host!");
+                }
+            }
         }
 
         private void SpawnDummyPlayer()
@@ -1954,6 +1991,13 @@ namespace H3MP
             harmony.Patch(wristMenuPatchUpdateOriginal, new HarmonyMethod(wristMenuPatchUpdatePrefix));
             harmony.Patch(wristMenuPatchAwakeOriginal, new HarmonyMethod(wristMenuPatchAwakePrefix));
 
+            // GMInitScenePatch
+            MethodInfo GMInitScenePatchOriginal = typeof(GM).GetMethod("InitScene", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo GMInitScenePatchPostfix = typeof(GMInitScenePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(GMInitScenePatchOriginal, harmony, true);
+            harmony.Patch(GMInitScenePatchOriginal, null, new HarmonyMethod(GMInitScenePatchPostfix));
+
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
             //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -2933,6 +2977,18 @@ namespace H3MP
             sectionScript.ButtonText = "H3MP";
             __instance.Sections.Add(sectionScript);
             section.SetActive(false);
+        }
+    }
+
+    // Patches GM.InitScene to keep track of when CurrentPlayerBody is set
+    class GMInitScenePatch
+    {
+        static void Postfix(FVRPlayerBody ___m_currentPlayerBody)
+        {
+            if(Mod.managerObject != null && ___m_currentPlayerBody != null)
+            {
+                ___m_currentPlayerBody.EyeCam.enabled = !Mod.spectatorHost;
+            }
         }
     }
 

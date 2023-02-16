@@ -1,15 +1,11 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Valve.VR.InteractionSystem;
-using static FistVR.RemoteGun;
 
 namespace H3MP
 {
@@ -2036,16 +2032,6 @@ namespace H3MP
             int instance = packet.ReadInt();
             int newController = packet.ReadInt();
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)
-            {
-                Mod.LogInfo("SetTNHController called on client for our TNH instance");
-                if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && newController != H3MP_GameManager.ID)
-                {
-                    Mod.LogInfo("\tWe were controller, new one is not us, giving up control");
-                    H3MP_ClientSend.TNHData(instance, Mod.currentTNHInstance.manager);
-                }
-            }
-
             H3MP_GameManager.TNHInstances[instance].controller = newController;
         }
 
@@ -2937,6 +2923,28 @@ namespace H3MP
         {
             //int dataLength = packet.ReadInt();
             //byte[] data = packet.ReadBytes(dataLength);
+        }
+
+        public static void SpectatorHost(H3MP_Packet packet)
+        {
+            int clientID = packet.ReadInt();
+            bool spectatorHost = packet.ReadBool();
+
+            if (spectatorHost)
+            {
+                if (!H3MP_GameManager.spectatorHosts.Contains(clientID))
+                {
+                    H3MP_GameManager.spectatorHosts.Add(clientID);
+                }
+            }
+            else
+            {
+                H3MP_GameManager.spectatorHosts.Remove(clientID);
+            }
+
+            H3MP_GameManager.UpdatePlayerHidden(H3MP_GameManager.players[clientID]);
+
+            //TODO: Update UI
         }
     }
 }
