@@ -2093,12 +2093,16 @@ namespace H3MP
         {
             TNHMenuPages[0].SetActive(false);
             TNHMenuPages[1].SetActive(true);
+            TNHStatusText.text = "Setting up as Host";
+            TNHStatusText.color = Color.blue;
         }
 
         private void OnTNHJoinClicked()
         {
             TNHMenuPages[0].SetActive(false);
             TNHMenuPages[2].SetActive(true);
+            TNHStatusText.text = "Setting up as Client";
+            TNHStatusText.color = Color.blue;
         }
 
         private void OnTNHLPJCheckClicked()
@@ -2140,12 +2144,18 @@ namespace H3MP
             {
                 H3MP_ServerSend.AddTNHInstance(newTNHInstance);
             }
+
+            TNHStatusText.text = "Hosting TNH instance";
+            TNHStatusText.color = Color.green;
         }
 
         private void OnTNHHostCancelClicked()
         {
             TNHMenuPages[0].SetActive(true);
             TNHMenuPages[1].SetActive(false);
+
+            TNHStatusText.text = "Solo";
+            TNHStatusText.color = Color.red;
         }
 
         private void OnTNHJoinCancelClicked()
@@ -2153,6 +2163,9 @@ namespace H3MP
             TNHMenuPages[0].SetActive(true);
             TNHMenuPages[2].SetActive(false);
             TNHMenuPages[3].SetActive(false);
+
+            TNHStatusText.text = "Solo";
+            TNHStatusText.color = Color.red;
         }
 
         private void OnTNHJoinOnDeathSpectateClicked()
@@ -2216,6 +2229,9 @@ namespace H3MP
             {
                 TNHMenuPages[3].SetActive(false);
                 TNHMenuPages[4].SetActive(true);
+
+                TNHStatusText.text = "Client in TNH game";
+                TNHStatusText.color = Color.green;
             }
             else
             {
@@ -2236,6 +2252,9 @@ namespace H3MP
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
+
+            TNHStatusText.text = "Solo";
+            TNHStatusText.color = Color.red;
         }
 
         public static void OnTNHSpawnStartEquipClicked()
