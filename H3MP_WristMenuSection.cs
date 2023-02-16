@@ -179,7 +179,7 @@ namespace H3MP
         private void SetPage(int index)
         {
             // Disable buttons from previous page if applicable
-            if (currentPage != -1 && pages.TryGetValue(index, out List<KeyValuePair<FVRPointableButton, Vector3>> previousButtons))
+            if (currentPage != -1 && pages.TryGetValue(currentPage, out List<KeyValuePair<FVRPointableButton, Vector3>> previousButtons))
             {
                 for(int i=0; i< previousButtons.Count; ++i)
                 {
