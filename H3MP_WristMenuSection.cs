@@ -105,6 +105,12 @@ namespace H3MP
 
         private void OnConnectClicked(Text textRef)
         {
+            if (Mod.config["IP"].ToString().Equals(""))
+            {
+                Mod.LogError("Attempted to connect to server but no IP set in config!");
+                return;
+            }
+
             Mod.modInstance.CreateManagerObject();
 
             H3MP_Client client = Mod.managerObject.AddComponent<H3MP_Client>();
