@@ -2,6 +2,11 @@
 
 As the title says, this is a mod that adds multiplayer to the virtual reality game **Hotdogs, Horseshoes and Hangrenades**.
 
+## IMPORTANT
+
+- Currently only made for game branch "alpha - Mod Safe"
+- Neither BepinEx nor H3MP can be installed through r2, installation must be manual as described below.
+
 ## Installation
 
 1. Download and install the latest version of [BepinEx](https://github.com/BepInEx/BepInEx/releases)
