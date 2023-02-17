@@ -10,7 +10,9 @@ As the title says, this is a mod that adds multiplayer to the virtual reality ga
 
 1. Download and install the latest (**_not pre-release_**) version of [BepinEx](https://github.com/BepInEx/BepInEx/releases)
 2. Download the [latest release of H3MP](https://github.com/TommySoucy/H3MP/releases)
-3. Put both H3MP.dll and the H3MP folder from the zip file into the plugins folder (H3VR\BepInEx\plugins)
+3. Put the H3MP folder from the zip file into the plugins folder (H3VR\BepInEx\plugins)
+
+So you should end up with a H3VR\BepInEx\plugins\H3MP folder, containing H3MP.dll and other files.
 
 ## Automatic Installation
 
