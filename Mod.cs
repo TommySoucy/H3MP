@@ -299,10 +299,8 @@ namespace H3MP
         public static readonly MethodInfo AlloyAreaLight_get_Light = typeof(AlloyAreaLight).GetMethod("get_Light", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
-// Debug
-#if DEBUG
+        // Debug
         public static bool debug;
-#endif
         public static Vector3 TNHSpawnPoint;
 
         private void Start()
