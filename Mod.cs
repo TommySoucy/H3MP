@@ -34,6 +34,7 @@ namespace H3MP
         public static Material reticleFriendlyContactIconMat;
         public static GameObject TNHMenu;
         public static Dictionary<string, string> sosigWearableMap;
+        public static string H3MPPath;
 
         // Menu refs
         public static Text mainStatusText;
@@ -396,7 +397,7 @@ namespace H3MP
                         }
                     }
                     JObject jDict = JObject.FromObject(map);
-                    File.WriteAllText("BepInEx/Plugins/H3MP/Debug/SosigWearableMap.json", jDict.ToString());
+                    File.WriteAllText(H3MPPath + "/H3MP/Debug/SosigWearableMap.json", jDict.ToString());
                 }
                 else if (Input.GetKeyDown(KeyCode.Keypad7))
                 {
@@ -419,14 +420,27 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadMinus))
                 {
-                    GM.CurrentMovementManager.TeleportToPoint(TNHSpawnPoint, true);
+                    Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                    for(int i=0; i < assemblies.Length; ++i)
+                    {
+                        Mod.LogInfo(assemblies[i].FullName);
+                        try
+                        {
+                            assemblies[i].GetTypes();
+                            Mod.LogInfo("\tGot types soccessfully");
+;                       }
+                        catch(Exception ex)
+                        {
+                            Mod.LogInfo("\tFailed to get types: "+ex.Message);
+                        }
+                    }
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadMultiply))
                 {
-                    string dest = "BepInEx/Plugins/H3MP/PatchHashes" + DateTimeOffset.Now.ToString().Replace("/", ".").Replace(":", ".") + ".json";
-                    File.Copy("BepInEx/Plugins/H3MP/PatchHashes.json", dest);
+                    string dest = H3MPPath + "/H3MP/PatchHashes" + DateTimeOffset.Now.ToString().Replace("/", ".").Replace(":", ".") + ".json";
+                    File.Copy(H3MPPath + "/H3MP/PatchHashes.json", dest);
                     Mod.LogWarning("Writing new hashes to file!");
-                    File.WriteAllText("BepInEx/Plugins/H3MP/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
+                    File.WriteAllText(H3MPPath + "/H3MP/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadDivide))
                 {
@@ -490,7 +504,7 @@ namespace H3MP
         public void LoadConfig()
         {
             Logger.LogInfo("Loading config...");
-            config = JObject.Parse(File.ReadAllText("BepInEx/Plugins/H3MP/Config.json"));
+            config = JObject.Parse(File.ReadAllText(H3MPPath + "/H3MP/Config.json"));
             Logger.LogInfo("Config loaded");
         }
 
@@ -664,7 +678,7 @@ namespace H3MP
 
         private void LoadAssets()
         {
-            AssetBundle assetBundle = AssetBundle.LoadFromFile("BepInEx/Plugins/H3MP/H3MP.ab");
+            AssetBundle assetBundle = AssetBundle.LoadFromFile(H3MPPath + "/H3MP/H3MP.ab");
 
             TNHMenuPrefab = assetBundle.LoadAsset<GameObject>("TNHMenu");
             reticleFriendlyContactArrowMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactArrowMat");
@@ -673,7 +687,7 @@ namespace H3MP
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
             SetupPlayerPrefab();
 
-            sosigWearableMap = JObject.Parse(File.ReadAllText("BepinEx/Plugins/H3MP/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
+            sosigWearableMap = JObject.Parse(File.ReadAllText(H3MPPath + "/H3MP/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
 
             TNHStartEquipButtonPrefab = assetBundle.LoadAsset<GameObject>("TNHStartEquipButton");
             FVRPointableButton startEquipButton = TNHStartEquipButtonPrefab.transform.GetChild(0).gameObject.AddComponent<FVRPointableButton>();
@@ -690,6 +704,10 @@ namespace H3MP
         private void Init()
         {
             Logger.LogInfo("H3MP Init called");
+
+            H3MPPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(Mod)).Location);
+            H3MPPath.Replace('\\', '/');
+            Mod.LogInfo("H3MP path found: "+ H3MPPath);
 
             DoPatching();
 
@@ -2018,7 +2036,7 @@ namespace H3MP
 
             if (PatchVerify.writeWhenDone)
             {
-                File.WriteAllText("BepInEx/Plugins/H3MP/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
+                File.WriteAllText(H3MPPath + "/H3MP/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
             }
         }
 
@@ -2792,9 +2810,9 @@ namespace H3MP
         {
             if (hashes == null)
             {
-                if (File.Exists("BepInEx/Plugins/H3MP/PatchHashes.json"))
+                if (File.Exists(Mod.H3MPPath + "/H3MP/PatchHashes.json"))
                 {
-                    hashes = JObject.Parse(File.ReadAllText("BepInEx/Plugins/H3MP/PatchHashes.json")).ToObject<Dictionary<string, int>>();
+                    hashes = JObject.Parse(File.ReadAllText(Mod.H3MPPath + "/H3MP/PatchHashes.json")).ToObject<Dictionary<string, int>>();
                 }
                 else
                 {
@@ -2834,7 +2852,7 @@ namespace H3MP
                 {
                     if (breaking)
                     {
-                        Mod.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.\nOriginal hash: "+originalHash+", new hash: "+hash);
+                        Mod.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
                     }
                     else
                     {
