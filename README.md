@@ -5,13 +5,16 @@ As the title says, this is a mod that adds multiplayer to the virtual reality ga
 ## IMPORTANT
 
 - Currently only made for game branch "alpha - Mod Safe"
-- Neither BepinEx nor H3MP can be installed through r2, installation must be manual as described below.
 
-## Installation
+## Manual Installation
 
-1. Download and install the latest version of [BepinEx](https://github.com/BepInEx/BepInEx/releases)
+1. Download and install the latest (**_not pre-release_**) version of [BepinEx](https://github.com/BepInEx/BepInEx/releases)
 2. Download the [latest release of H3MP](https://github.com/TommySoucy/H3MP/releases)
 3. Put both H3MP.dll and the H3MP folder from the zip file into the plugins folder (H3VR\BepInEx\plugins)
+
+## Automatic Installation
+
+Can be done through thunderstore using [r2modman mod manager](https://h3vr.thunderstore.io/package/ebkr/r2modman/)
 
 ## Usage
 
