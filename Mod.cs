@@ -23,7 +23,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.0.0";
+        public const string pluginVersion = "1.0.2";
 
         // Assets
         public static JObject config;
@@ -60,6 +60,7 @@ namespace H3MP
         public static GameObject TNHHostConfirmButton;
         public static GameObject TNHHostCancelButton;
         public static GameObject TNHJoinCancelButton;
+        public static GameObject TNHJoinInstanceCancelButton;
         public static GameObject TNHJoinOptionsCancelButton;
         public static GameObject TNHJoinOnDeathSpectateRadio;
         public static GameObject TNHJoinOnDeathLeaveRadio;
@@ -300,7 +301,7 @@ namespace H3MP
 
 // Debug
 #if DEBUG
-        bool debug;
+        public static bool debug;
 #endif
         public static Vector3 TNHSpawnPoint;
 
@@ -427,11 +428,11 @@ namespace H3MP
                         try
                         {
                             assemblies[i].GetTypes();
-                            Mod.LogInfo("\tGot types soccessfully");
+                            Mod.LogInfo("\tGot types successfully");
 ;                       }
                         catch(Exception ex)
                         {
-                            Mod.LogInfo("\tFailed to get types: "+ex.Message);
+                            Mod.LogWarning("\tFailed to get types: "+ex.Message);
                         }
                     }
                 }
@@ -575,6 +576,11 @@ namespace H3MP
             currentButton.Button.onClick.AddListener(OnTNHHostCancelClicked);
             TNHJoinCancelButton = TNHMenu.transform.GetChild(3).GetChild(3).gameObject;
             currentButton = TNHJoinCancelButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHJoinCancelClicked);
+            TNHJoinInstanceCancelButton = TNHMenu.transform.GetChild(4).GetChild(3).gameObject;
+            currentButton = TNHJoinInstanceCancelButton.AddComponent<FVRPointableButton>();
             currentButton.SetButton();
             currentButton.MaxPointingRange = 5;
             currentButton.Button.onClick.AddListener(OnTNHJoinCancelClicked);

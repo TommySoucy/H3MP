@@ -167,8 +167,10 @@ namespace H3MP
                         packet.Write((short)0);
                     }
 
+                    if (Mod.debug) Mod.LogInfo("Server sending playerstates");
                     for (int i = 0; i < otherPlayers.Count; ++i)
                     {
+                        if (Mod.debug) Mod.LogInfo("\tof " + ID + " to " + otherPlayers[i]);
                         SendUDPData(otherPlayers[i], packet);
                     }
                 }
