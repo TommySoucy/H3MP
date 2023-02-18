@@ -2647,9 +2647,17 @@ namespace H3MP
 
             if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].physicalItem != null)
             {
-                ++TNH_ShatterableCrateDestroyPatch.skip;
-                Mod.TNH_ShatterableCrate_Destroy.Invoke(H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>(), new object[] { d });
-                --TNH_ShatterableCrateDestroyPatch.skip;
+                TNH_ShatterableCrate crateScript = H3MP_Server.items[trackedID].physicalItem.GetComponentInChildren<TNH_ShatterableCrate>();
+                if (crateScript == null)
+                {
+                    Mod.LogError("Received order to destroy shatterable crate for which we have physObj but it has not crate script!");
+                }
+                else
+                {
+                    ++TNH_ShatterableCrateDestroyPatch.skip;
+                    Mod.TNH_ShatterableCrate_Destroy.Invoke(crateScript, new object[] { d });
+                    --TNH_ShatterableCrateDestroyPatch.skip;
+                }
             }
 
             H3MP_ServerSend.ShatterableCrateDestroy(trackedID, d, clientID);
