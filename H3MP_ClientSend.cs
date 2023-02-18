@@ -1159,7 +1159,7 @@ namespace H3MP
         public static void SosigLinkDamage(H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.sosigLinkDamage);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1184,7 +1184,7 @@ namespace H3MP
         public static void SosigWearableDamage(H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.sosigWearableDamage);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1838,7 +1838,7 @@ namespace H3MP
         public static void AutoMeaterDamage(H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.autoMeaterDamage);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1875,7 +1875,7 @@ namespace H3MP
         public static void AutoMeaterHitZoneDamage(H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.autoMeaterHitZoneDamage);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1898,7 +1898,7 @@ namespace H3MP
         public static void EncryptionDamage(H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.encryptionDamage);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1981,7 +1981,7 @@ namespace H3MP
         public static void ShatterableCrateDamage(H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.shatterableCrateDamage);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }

@@ -928,7 +928,7 @@ namespace H3MP
         public static void WeaponFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.weaponFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -987,7 +987,7 @@ namespace H3MP
         public static void FlintlockWeaponBurnOffOuter(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.flintlockWeaponBurnOffOuter);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1046,7 +1046,7 @@ namespace H3MP
         public static void FlintlockWeaponFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.flintlockWeaponFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1098,7 +1098,7 @@ namespace H3MP
         public static void BreakActionWeaponFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.breakActionWeaponFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1150,7 +1150,7 @@ namespace H3MP
         public static void DerringerFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.derringerFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1202,7 +1202,7 @@ namespace H3MP
         public static void LeverActionFirearmFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.leverActionFirearmFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1254,7 +1254,7 @@ namespace H3MP
         public static void RevolvingShotgunFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.revolvingShotgunFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1306,7 +1306,7 @@ namespace H3MP
         public static void RevolverFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.revolverFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1358,7 +1358,7 @@ namespace H3MP
         public static void SingleActionRevolverFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.singleActionRevolverFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1397,7 +1397,7 @@ namespace H3MP
         public static void StingerLauncherFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.stingerLauncherFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1449,7 +1449,7 @@ namespace H3MP
         public static void GrappleGunFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.grappleGunFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1488,7 +1488,7 @@ namespace H3MP
         public static void HCBReleaseSled(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.HCBReleaseSled);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1538,7 +1538,7 @@ namespace H3MP
         public static void SosigWeaponFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigWeaponFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1590,7 +1590,7 @@ namespace H3MP
         public static void LAPD2019Fire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.LAPD2019Fire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1636,7 +1636,7 @@ namespace H3MP
         public static void MinigunFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.minigunFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1688,7 +1688,7 @@ namespace H3MP
         public static void AttachableFirearmFire(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.attachableFirearmFire);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -1789,7 +1789,7 @@ namespace H3MP
         {
             // Make sure the packet is set to ServerPackets.uberShatterableShatter
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.uberShatterableShatter);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2067,7 +2067,7 @@ namespace H3MP
         public static void RemoteMissileDamage(H3MP_TrackedItemData trackedItem, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.remoteMissileDamage);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2090,7 +2090,7 @@ namespace H3MP
         public static void StingerMissileDamage(H3MP_TrackedItemData trackedItem, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.stingerMissileDamage);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2170,7 +2170,7 @@ namespace H3MP
         {
             // Make sure the packet is set to ServerPackets.sosigLinkDamageData
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigDamageData);
-            for(int i= 4; i < 8; ++i)
+            for(int i= 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2194,7 +2194,7 @@ namespace H3MP
         {
             // Make sure the packet is set to ServerPackets.encryptionDamageData
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.encryptionDamageData);
-            for(int i= 4; i < 8; ++i)
+            for(int i= 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2222,7 +2222,7 @@ namespace H3MP
         {
             // Make sure the packet is set to ServerPackets.autoMeaterHitZoneDamageData
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.autoMeaterHitZoneDamageData);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2246,7 +2246,7 @@ namespace H3MP
         public static void SosigLinkExplodes(H3MP_Packet packet, int fromClientID)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigLinkExplodes);
-            for(int i= 4; i < 8; ++i)
+            for(int i= 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2271,7 +2271,7 @@ namespace H3MP
         {
             // Make sure the packet is set to ServerPackets.sosigDies
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigDies);
-            for(int i= 4; i < 8; ++i)
+            for(int i= 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2298,7 +2298,8 @@ namespace H3MP
         public static void PlaySosigFootStepSound(H3MP_Packet packet, int fromClientID = 0)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.playSosigFootStepSound);
-            for(int i= 4; i < 8; ++i)
+
+            for(int i= 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -2325,7 +2326,7 @@ namespace H3MP
         public static void SosigRequestHitDecal(H3MP_Packet packet, int fromClientID = 0)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigRequestHitDecal);
-            for(int i= 4; i < 8; ++i)
+            for(int i= 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3352,7 +3353,7 @@ namespace H3MP
         public static void TNHHoldPointBeginAnalyzing(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.TNHHoldPointBeginAnalyzing);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3404,7 +3405,7 @@ namespace H3MP
         public static void TNHHoldPointRaiseBarriers(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.TNHHoldPointRaiseBarriers);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3476,7 +3477,7 @@ namespace H3MP
         public static void RemoteMissileDetonate(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.remoteMissileDetonate);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3513,7 +3514,7 @@ namespace H3MP
         public static void StingerMissileExplode(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.stingerMissileExplode);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3550,7 +3551,7 @@ namespace H3MP
         public static void PinnedGrenadeExplode(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.pinnedGrenadeExplode);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3587,7 +3588,7 @@ namespace H3MP
         public static void FVRGrenadeExplode(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.FVRGrenadeExplode);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3624,7 +3625,7 @@ namespace H3MP
         public static void BangSnapSplode(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.bangSnapSplode);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3661,7 +3662,7 @@ namespace H3MP
         public static void C4Detonate(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.C4Detonate);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3698,7 +3699,7 @@ namespace H3MP
         public static void ClaymoreMineDetonate(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.claymoreMineDetonate);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
@@ -3735,7 +3736,7 @@ namespace H3MP
         public static void SLAMDetonate(int clientID, H3MP_Packet packet)
         {
             byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.SLAMDetonate);
-            for (int i = 4; i < 8; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 packet.buffer[i] = IDbytes[i];
             }
