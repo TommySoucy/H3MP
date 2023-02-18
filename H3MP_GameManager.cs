@@ -88,7 +88,7 @@ namespace H3MP
             activeInstances.Add(instance, 1);
         }
 
-        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF)
+        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, bool join = false)
         {
             Mod.LogInfo($"Spawn player called with ID: {ID}");
 
@@ -153,6 +153,12 @@ namespace H3MP
             else
             {
                 ++playersPresent;
+
+                if (join)
+                {
+                    // This is a spawn player order from the server since we just joined it, we are not first in the scene
+                    H3MP_GameManager.firstPlayerInSceneInstance = false;
+                }
             }
         }
 

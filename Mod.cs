@@ -2087,6 +2087,8 @@ namespace H3MP
                 InitTNHMenu();
             }
 
+            H3MP_GameManager.firstPlayerInSceneInstance = true;
+
             //mainStatusText.text = "Starting...";
             //mainStatusText.color = Color.white;
         }

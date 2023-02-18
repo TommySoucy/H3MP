@@ -99,6 +99,8 @@ namespace H3MP
                 Mod.modInstance.InitTNHMenu();
             }
 
+            H3MP_GameManager.firstPlayerInSceneInstance = true;
+
             // Switch page
             SetPage(1);
         }

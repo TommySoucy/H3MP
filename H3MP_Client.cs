@@ -288,6 +288,7 @@ namespace H3MP
                     using(H3MP_Packet packet = new H3MP_Packet(data))
                     {
                         int packetID = packet.ReadInt();
+                        Mod.LogInfo("handling data with packetID: " + packetID);
                         packetHandlers[packetID](packet);
                     }
                 });
