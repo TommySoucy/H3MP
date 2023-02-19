@@ -11530,7 +11530,8 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance != null)
                 {
-                    Mod.currentTNHInstance.manager.Phase = TNH_Phase.Dead;
+                    // We don't actually want to set phase to dead as long as there are still players alive
+                    //Mod.currentTNHInstance.manager.Phase = TNH_Phase.Dead;
 
                     // Update locally
                     Mod.currentTNHInstance.dead.Add(H3MP_GameManager.ID);
