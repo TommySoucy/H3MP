@@ -1067,13 +1067,13 @@ namespace H3MP
             if (buffer.Count > readPos)
             {
                 // If there are unread bytes
-                uint _value = BitConverter.ToUInt32(readableBuffer, readPos); // Convert the bytes to an int
+                uint _value = BitConverter.ToUInt32(readableBuffer, readPos); // Convert the bytes to an uint
                 if (_moveReadPos)
                 {
                     // If _moveReadPos is true
                     readPos += 4; // Increase readPos by 4
                 }
-                return _value; // Return the int
+                return _value; // Return the uint
             }
             else
             {
