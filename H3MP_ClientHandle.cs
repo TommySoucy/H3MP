@@ -187,29 +187,36 @@ namespace H3MP
 
             H3MP_TrackedItemData trackedItem = H3MP_Client.items[trackedID];
 
-            if (trackedItem.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
+            if (trackedItem == null)
             {
-                FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
-
-                H3MP_GameManager.EnsureUncontrolled(physObj);
-
-                Mod.SetKinematicRecursive(physObj.transform, true);
-                H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                trackedItem.localTrackedID = -1;
+                Mod.LogError("Client received order to set item " + trackedID + " controller to " + controllerID + " but item is missing from items array!");
             }
-            else if(trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
+            else
             {
-                //trackedItem.controller = controllerID;
-                if(trackedItem.physicalItem != null)
+                if (trackedItem.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
-                    Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
+                    FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
+
+                    H3MP_GameManager.EnsureUncontrolled(physObj);
+
+                    Mod.SetKinematicRecursive(physObj.transform, true);
+                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    trackedItem.localTrackedID = -1;
                 }
-                trackedItem.localTrackedID = H3MP_GameManager.items.Count;
-                H3MP_GameManager.items.Add(trackedItem);
+                else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
+                {
+                    //trackedItem.controller = controllerID;
+                    if (trackedItem.physicalItem != null)
+                    {
+                        Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
+                    }
+                    trackedItem.localTrackedID = H3MP_GameManager.items.Count;
+                    H3MP_GameManager.items.Add(trackedItem);
+                }
+                trackedItem.SetController(controllerID);
             }
-            trackedItem.SetController(controllerID);
         }
 
         public static void GiveSosigControl(H3MP_Packet packet)

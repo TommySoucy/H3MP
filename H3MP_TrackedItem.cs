@@ -589,6 +589,10 @@ namespace H3MP
                 dataObject = asInterface;
                 sosigWeaponfireFunc = asInterface.W.FireGun;
             }
+            else if(physObj is FVRFireArm)
+            {
+                todo
+            }
         }
 
         public bool UpdateItemData(byte[] newData = null)
@@ -2328,7 +2332,7 @@ namespace H3MP
             RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
             bool modified = false;
 
-            object missile = Mod.RemoteMissileLauncher_m_missile.GetValue(asRML);
+            RemoteMissile missile = Mod.RemoteMissileLauncher_m_missile.GetValue(asRML) as RemoteMissile;
 
             if (data.data == null)
             {
@@ -2337,9 +2341,9 @@ namespace H3MP
             }
             else
             {
-                if(missile == null)
+                if (missile == null)
                 {
-                    if(data.data.Length == 35)
+                    if (data.data.Length == 35)
                     {
                         data.data = new byte[3];
                         modified = true;
@@ -2378,24 +2382,23 @@ namespace H3MP
 
             if (missile != null)
             {
-                RemoteMissile actualMissile = missile as RemoteMissile;
                 modified = true;
 
                 // Write missile pos
-                BitConverter.GetBytes(actualMissile.transform.position.x).CopyTo(data.data, 3);
-                BitConverter.GetBytes(actualMissile.transform.position.y).CopyTo(data.data, 7);
-                BitConverter.GetBytes(actualMissile.transform.position.z).CopyTo(data.data, 11);
+                BitConverter.GetBytes(missile.transform.position.x).CopyTo(data.data, 3);
+                BitConverter.GetBytes(missile.transform.position.y).CopyTo(data.data, 7);
+                BitConverter.GetBytes(missile.transform.position.z).CopyTo(data.data, 11);
 
                 // Write missile rot
-                BitConverter.GetBytes(actualMissile.transform.rotation.eulerAngles.x).CopyTo(data.data, 15);
-                BitConverter.GetBytes(actualMissile.transform.rotation.eulerAngles.y).CopyTo(data.data, 19);
-                BitConverter.GetBytes(actualMissile.transform.rotation.eulerAngles.z).CopyTo(data.data, 23);
+                BitConverter.GetBytes(missile.transform.rotation.eulerAngles.x).CopyTo(data.data, 15);
+                BitConverter.GetBytes(missile.transform.rotation.eulerAngles.y).CopyTo(data.data, 19);
+                BitConverter.GetBytes(missile.transform.rotation.eulerAngles.z).CopyTo(data.data, 23);
 
                 // Write target speed
-                BitConverter.GetBytes((float)Mod.RemoteMissile_speed.GetValue(actualMissile)).CopyTo(data.data, 27);
+                BitConverter.GetBytes((float)Mod.RemoteMissile_speed.GetValue(missile)).CopyTo(data.data, 27);
 
                 // Write speed
-                BitConverter.GetBytes((float)Mod.RemoteMissile_tarSpeed.GetValue(actualMissile)).CopyTo(data.data, 31);
+                BitConverter.GetBytes((float)Mod.RemoteMissile_tarSpeed.GetValue(missile)).CopyTo(data.data, 31);
             }
 
             return modified;
@@ -2431,17 +2434,16 @@ namespace H3MP
                 }
             }
 
-            object missile = Mod.RemoteMissileLauncher_m_missile.GetValue(asRML);
+            RemoteMissile missile = Mod.RemoteMissileLauncher_m_missile.GetValue(asRML) as RemoteMissile;
             if (missile != null)
             {
                 if (newData[2] == 1)
                 {
-                    RemoteMissile actualMissile = missile as RemoteMissile;
-                    actualMissile.transform.position = new Vector3(BitConverter.ToSingle(newData, 3), BitConverter.ToSingle(newData, 7), BitConverter.ToSingle(newData, 11));
-                    actualMissile.transform.rotation = Quaternion.Euler(BitConverter.ToSingle(newData, 15), BitConverter.ToSingle(newData, 19), BitConverter.ToSingle(newData, 23));
+                    missile.transform.position = new Vector3(BitConverter.ToSingle(newData, 3), BitConverter.ToSingle(newData, 7), BitConverter.ToSingle(newData, 11));
+                    missile.transform.rotation = Quaternion.Euler(BitConverter.ToSingle(newData, 15), BitConverter.ToSingle(newData, 19), BitConverter.ToSingle(newData, 23));
 
-                    Mod.RemoteMissile_speed.SetValue(actualMissile, BitConverter.ToSingle(newData, 27));
-                    Mod.RemoteMissile_tarSpeed.SetValue(actualMissile, BitConverter.ToSingle(newData, 31));
+                    Mod.RemoteMissile_speed.SetValue(missile, BitConverter.ToSingle(newData, 27));
+                    Mod.RemoteMissile_tarSpeed.SetValue(missile, BitConverter.ToSingle(newData, 31));
                 } 
                 //else if (newData[2] == 0)
                 //{

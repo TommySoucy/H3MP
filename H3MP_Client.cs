@@ -493,6 +493,25 @@ namespace H3MP
                 // Add the item to client global list
                 items[actualTrackedItem.trackedID] = actualTrackedItem;
 
+                // Add to item tracking list
+                if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
+                {
+                    if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                    {
+                        itemList.Add(trackedItem.trackedID);
+                    }
+                    else
+                    {
+                        relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                    }
+                }
+                else
+                {
+                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                    newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                    H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
+                }
+
                 actualTrackedItem.OnTrackedIDReceived();
             }
             else

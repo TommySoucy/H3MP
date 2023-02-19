@@ -285,25 +285,33 @@ namespace H3MP
             // Update locally
             H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
 
-            if (trackedItem.controller != 0 && newController == 0)
+
+            if (trackedItem == null)
             {
-                // Only want to active rigidbody if not parented to another tracked item
-                if (trackedItem.parent == -1)
+                Mod.LogError("Server received order to set item " + trackedID + " controller to " + newController + " but item is missing from items array!");
+            }
+            else
+            {
+                if (trackedItem.controller != 0 && newController == 0)
                 {
-                    Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
+                    // Only want to active rigidbody if not parented to another tracked item
+                    if (trackedItem.parent == -1)
+                    {
+                        Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
+                    }
+                    trackedItem.localTrackedID = H3MP_GameManager.items.Count;
+                    H3MP_GameManager.items.Add(trackedItem);
                 }
-                trackedItem.localTrackedID = H3MP_GameManager.items.Count;
-                H3MP_GameManager.items.Add(trackedItem);
+                else if (trackedItem.controller == 0 && newController != 0)
+                {
+                    Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
+                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    trackedItem.localTrackedID = -1;
+                }
+                trackedItem.SetController(newController);
             }
-            else if(trackedItem.controller == 0 && newController != 0)
-            {
-                Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
-                H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                trackedItem.localTrackedID = -1;
-            }
-            trackedItem.SetController(newController);
 
             // Send to all other clients
             H3MP_ServerSend.GiveControl(trackedID, newController);
