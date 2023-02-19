@@ -52,6 +52,7 @@ namespace H3MP
         public static int giveControlOfDestroyed;
         public static bool controlOverride;
         public static bool firstPlayerInSceneInstance;
+        public static bool dontAddToInstance;
 
         public static int ID = 0;
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
@@ -360,9 +361,9 @@ namespace H3MP
                 currentInstance.playerIDs.Remove(playerID);
                 if (currentInstance.playerIDs.Count == 0)
                 {
-                    TNHInstances.Remove(player.instance); 
-                    
-                    if (Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
+                    TNHInstances.Remove(player.instance);
+
+                    if (Mod.TNHInstanceList != null && Mod.joinTNHInstances != null && Mod.joinTNHInstances.ContainsKey(instance))
                     {
                         GameObject.Destroy(Mod.joinTNHInstances[instance]);
                         Mod.joinTNHInstances.Remove(instance);
@@ -1429,6 +1430,7 @@ namespace H3MP
                 Mod.joinTNHInstances.Add(instance.instance, newInstanceElement);
             }
 
+            dontAddToInstance = true;
             Mod.modInstance.OnTNHInstanceReceived(instance);
         }
 
@@ -1448,7 +1450,7 @@ namespace H3MP
             Mod.LogInfo("Changing instance from " + H3MP_GameManager.instance + " to " + instance);
             // Remove ourselves from the previous instance and manage dicts accordingly
             --activeInstances[H3MP_GameManager.instance];
-            if(activeInstances[H3MP_GameManager.instance] == 0 && H3MP_GameManager.instance != 0)
+            if(activeInstances[H3MP_GameManager.instance] == 0)
             {
                 activeInstances.Remove(H3MP_GameManager.instance);
             }
@@ -1481,7 +1483,14 @@ namespace H3MP
             {
                 activeInstances.Add(instance, 0);
             }
-            ++activeInstances[instance];
+            if (dontAddToInstance)
+            {
+                dontAddToInstance = false;
+            }
+            else
+            {
+                ++activeInstances[instance];
+            }
             if (TNHInstances.ContainsKey(instance))
             {
                 // PlayerIDs could already contain our ID if this instance was created by us

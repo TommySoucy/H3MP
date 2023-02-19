@@ -593,7 +593,7 @@ namespace H3MP
             }
             else if(physObj is FVRFireArm)
             {
-                todo
+                //todo
             }
         }
 
