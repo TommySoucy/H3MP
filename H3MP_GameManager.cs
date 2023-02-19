@@ -1353,15 +1353,15 @@ namespace H3MP
                 if ((newInstance.letPeopleJoin || newInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && Mod.joinTNHInstances != null && !Mod.joinTNHInstances.ContainsKey(freeInstance))
                 {
                     GameObject newInstanceElement = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
-                    newInstanceElement.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
+                    newInstanceElement.transform.GetChild(0).GetComponent<Text>().text = "Instance " + freeInstance;
                     newInstanceElement.SetActive(true);
 
                     FVRPointableButton instanceButton = newInstanceElement.AddComponent<FVRPointableButton>();
                     instanceButton.SetButton();
                     instanceButton.MaxPointingRange = 5;
-                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance); });
+                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(freeInstance); });
 
-                    Mod.joinTNHInstances.Add(instance, newInstanceElement);
+                    Mod.joinTNHInstances.Add(freeInstance, newInstanceElement);
                 }
 
                 activeInstances.Add(freeInstance, 0);
