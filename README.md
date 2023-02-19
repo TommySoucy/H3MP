@@ -4,6 +4,7 @@ As the title says, this is a mod that adds multiplayer to the virtual reality ga
 
 ## IMPORTANT
 
+- TNH can be played if server host is TNH instance host and goes into the TNH game before everyone else
 - Currently only made for game branch "alpha - Mod Safe"
 
 ## Manual Installation
