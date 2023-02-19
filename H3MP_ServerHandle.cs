@@ -120,6 +120,7 @@ namespace H3MP
                 }
             }
 
+            TODO: This whole thing is fucked, clients end up never being removed from this so we get duplicate key exception
             H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
 
             Mod.LogInfo("Synced with player who just joined a scene");
@@ -284,7 +285,6 @@ namespace H3MP
 
             // Update locally
             H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
-
 
             if (trackedItem == null)
             {
@@ -606,6 +606,7 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
 
+            TODO: Add logerror here checking if tracked ID is out of range
             // Update locally
             if (H3MP_Server.items[trackedID].physicalItem != null)
             {
@@ -3188,15 +3189,22 @@ namespace H3MP
         public static void PinnedGrenadeExplode(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (H3MP_Server.items[trackedID] != null)
+            if (trackedID == -1 || trackedID >= H3MP_Server.items.Length)
             {
-                // Update local;
-                if (H3MP_Server.items[trackedID].physicalItem != null)
+                Mod.LogError("Server received order to explode pinned grenade with tracked ID: "+trackedID+" but items array is not lerge enough to hold this ID!");
+            }
+            else
+            {
+                if (H3MP_Server.items[trackedID] != null)
                 {
-                    PinnedGrenade grenade = H3MP_Server.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
-                    if(grenade != null)
+                    // Update local;
+                    if (H3MP_Server.items[trackedID].physicalItem != null)
                     {
-                        PinnedGrenadePatch.ExplodePinnedGrenade(grenade, packet.ReadVector3());
+                        PinnedGrenade grenade = H3MP_Server.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
+                        if (grenade != null)
+                        {
+                            PinnedGrenadePatch.ExplodePinnedGrenade(grenade, packet.ReadVector3());
+                        }
                     }
                 }
             }

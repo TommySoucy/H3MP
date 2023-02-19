@@ -290,6 +290,9 @@ namespace H3MP
                 // Note that if we receive a tracked ID that was previously unknown, we must be a client
                 H3MP_Client.encryptions[trackedID] = null;
 
+                // Remove from encryptionsByInstanceByScene
+                H3MP_GameManager.encryptionsByInstanceByScene[scene][instance].Remove(trackedID);
+
                 // Remove from local
                 RemoveFromLocal();
             }

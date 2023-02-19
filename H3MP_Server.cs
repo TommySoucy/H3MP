@@ -170,6 +170,7 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, int clientID)
         {
+            Mod.LogInfo("Server AddTrackedItem: "+trackedItem.itemID +" with waiting index: "+trackedItem.localWaitingIndex);
             // Adjust items size to acommodate if necessary
             if (availableItemIndices.Count == 0)
             {
@@ -181,6 +182,7 @@ namespace H3MP
             availableItemIndices.RemoveAt(availableItemIndices.Count - 1);
 
             items[trackedItem.trackedID] = trackedItem;
+            Mod.LogInfo("\tAssigned trakced ID: "+trackedItem.trackedID);
 
             // Add to item tracking list
             if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
@@ -200,16 +202,19 @@ namespace H3MP
                 newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
                 H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
             }
+            Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
             // Instantiate item if it is in the current scene and not controlled by us
             if (clientID != 0)
             {
                 if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                 {
+                    Mod.LogInfo("\t\tItem not from us and in same scene/instance, instantiating");
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
 
+            Mod.LogInfo("\tSending item to clients, with controller: "+trackedItem.controller);
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
             H3MP_ServerSend.TrackedItem(trackedItem, clientID);
 

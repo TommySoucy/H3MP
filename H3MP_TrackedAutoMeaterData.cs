@@ -222,6 +222,9 @@ namespace H3MP
                 // Note that if we receive a tracked ID that was previously unknown, we must be a client
                 H3MP_Client.autoMeaters[trackedID] = null;
 
+                // Remove from autoMeatersByInstanceByScene
+                H3MP_GameManager.autoMeatersByInstanceByScene[scene][instance].Remove(trackedID);
+
                 // Remove from local
                 RemoveFromLocal();
             }

@@ -470,6 +470,9 @@ namespace H3MP
                 // Note that if we receive a tracked ID that was previously unknown, we must be a client
                 H3MP_Client.sosigs[trackedID] = null;
 
+                // Remove from sosigsByInstanceByScene
+                H3MP_GameManager.sosigsByInstanceByScene[scene][instance].Remove(trackedID);
+
                 // Remove from local
                 RemoveFromLocal();
             }

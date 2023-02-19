@@ -654,11 +654,13 @@ namespace H3MP
                     {
                         if (controlEverything || IsControlled(physObj))
                         {
+                            Mod.LogInfo("Tracking " + physObj.name);
                             H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
                             if (trackedItem.awoken)
                             {
                                 if (H3MP_ThreadManager.host)
                                 {
+                                    Mod.LogInfo("\tAwake, we are server, adding");
                                     // This will also send a packet with the item to be added in the client's global item list
                                     H3MP_Server.AddTrackedItem(trackedItem.data, 0);
                                 }
@@ -667,11 +669,13 @@ namespace H3MP
                                     // Tell the server we need to add this item to global tracked items
                                     trackedItem.data.localWaitingIndex = H3MP_Client.localItemCounter++;
                                     H3MP_Client.waitingLocalItems.Add(trackedItem.data.localWaitingIndex, trackedItem.data);
+                                    Mod.LogInfo("\tAwake, we are client, sending to server with index: "+ trackedItem.data.localWaitingIndex);
                                     H3MP_ClientSend.TrackedItem(trackedItem.data);
                                 }
                             }
                             else
                             {
+                                Mod.LogInfo("\tNot awake setting flag");
                                 trackedItem.sendOnAwake = true;
                             }
 

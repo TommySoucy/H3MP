@@ -475,6 +475,7 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
         {
+            Mod.LogInfo("Client AddTrackedItem "+trackedItem.itemID+" with waitingindeX: "+trackedItem.localWaitingIndex);
             // Adjust items size to acommodate if necessary
             if (items.Length <= trackedItem.trackedID)
             {
@@ -483,15 +484,19 @@ namespace H3MP
 
             if (trackedItem.controller == H3MP_Client.singleton.ID)
             {
+                Mod.LogInfo("\tWe are controller");
                 // Get our item
                 H3MP_TrackedItemData actualTrackedItem = waitingLocalItems[trackedItem.localWaitingIndex];
                 waitingLocalItems.Remove(trackedItem.localWaitingIndex);
 
+                Mod.LogInfo("\tGot actual tracked item: "+ actualTrackedItem.itemID);
                 // Set its new tracked ID
                 actualTrackedItem.trackedID = trackedItem.trackedID;
+                Mod.LogInfo("\tSet tracked ID: " + actualTrackedItem.trackedID);
 
                 // Add the item to client global list
                 items[actualTrackedItem.trackedID] = actualTrackedItem;
+                Mod.LogInfo("\tSet in global list");
 
                 // Add to item tracking list
                 if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
@@ -511,18 +516,21 @@ namespace H3MP
                     newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
                     H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
                 }
+                Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
                 actualTrackedItem.OnTrackedIDReceived();
             }
             else
             {
+                Mod.LogInfo("\tWe are not controller");
                 trackedItem.localTrackedID = -1;
 
                 // Add the item to client global list
                 items[trackedItem.trackedID] = trackedItem;
+                Mod.LogInfo("\ttrackedItem.trackedID is "+ trackedItem.trackedID);
 
                 // Add to item tracking list
-                if(H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
+                if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
                 {
                     if(relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
                     {
@@ -539,6 +547,7 @@ namespace H3MP
                     newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
                     H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
                 }
+                Mod.LogInfo("\tAdded to itemsByInstanceByScene, instnaitating");
 
                 // Instantiate item if it is in the current scene/instance
                 if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)

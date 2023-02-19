@@ -7737,7 +7737,7 @@ namespace H3MP
             if(!exploded && ___m_hasSploded)
             {
                 H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
-                if(trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
+                if(trackedItem != null && trackedItem.data.trackedID != -1 && trackedItem.data.controller == H3MP_GameManager.ID)
                 {
                     if (H3MP_ThreadManager.host)
                     {

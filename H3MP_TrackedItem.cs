@@ -81,6 +81,7 @@ namespace H3MP
                 if (H3MP_ThreadManager.host)
                 {
                     // This will also send a packet with the item to be added in the client's global item list
+                    Mod.LogInfo("\tAwake, we are server, adding");
                     H3MP_Server.AddTrackedItem(data, 0);
                 }
                 else
@@ -88,6 +89,7 @@ namespace H3MP
                     // Tell the server we need to add this item to global tracked items
                     data.localWaitingIndex = H3MP_Client.localItemCounter++;
                     H3MP_Client.waitingLocalItems.Add(data.localWaitingIndex, data);
+                    Mod.LogInfo("\tAwake, we are client, sending to server with index: " + data.localWaitingIndex);
                     H3MP_ClientSend.TrackedItem(data);
                 }
             }

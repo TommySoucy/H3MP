@@ -66,6 +66,7 @@ namespace H3MP
 
             try
             {
+                Mod.LogInfo("\tInstantiating an "+itemID+", with tracked ID: "+trackedID+", with waiting index: "+localWaitingIndex);
                 ++Mod.skipAllInstantiates;
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
                 --Mod.skipAllInstantiates;
@@ -434,12 +435,16 @@ namespace H3MP
 
         public void OnTrackedIDReceived()
         {
+            Mod.LogInfo("OnTrackedIDReceived called on " + trackedID);
             if (H3MP_TrackedItem.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 H3MP_ClientSend.DestroyItem(trackedID);
 
                 // Note that if we receive a tracked ID that was previously unknown, we must be a client
                 H3MP_Client.items[trackedID] = null;
+
+                // Remvoe from itemsByInstanceByScene
+                H3MP_GameManager.itemsByInstanceByScene[scene][instance].Remove(trackedID);
 
                 // Remove from local
                 RemoveFromLocal();
@@ -591,6 +596,7 @@ namespace H3MP
             H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
             H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
             H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+            Mod.LogInfo("Remove from local called on "+itemID+" with tracked ID: "+trackedID);
 
             // Remove from actual local items list and update the localTrackedID of the item we are moving
             H3MP_GameManager.items[localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1]; 
