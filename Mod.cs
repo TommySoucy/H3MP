@@ -12306,7 +12306,7 @@ namespace H3MP
 
             // If this is the first time we join this game, give the player a button 
             // with which they can spawn their own starting equipment
-            if (!Mod.currentTNHInstance.spawnedStartEquip)
+            if (!Mod.currentTNHInstance.spawnedStartEquip && Mod.TNHStartEquipButton == null)
             {
                 Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
                 Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
@@ -12324,7 +12324,7 @@ namespace H3MP
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.currentlyPlaying.Count > 1)
             {
                 // We want to get inital equipment but there are already players in game, spawn init equip spawn button instead
-                if (!Mod.currentTNHInstance.spawnedStartEquip)
+                if (!Mod.currentTNHInstance.spawnedStartEquip && Mod.TNHStartEquipButton == null)
                 {
                     Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
                     Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
