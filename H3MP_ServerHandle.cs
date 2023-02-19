@@ -120,7 +120,6 @@ namespace H3MP
                 }
             }
 
-            TODO: This whole thing is fucked, clients end up never being removed from this so we get duplicate key exception
             H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
 
             Mod.LogInfo("Synced with player who just joined a scene");
@@ -606,26 +605,32 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
 
-            TODO: Add logerror here checking if tracked ID is out of range
-            // Update locally
-            if (H3MP_Server.items[trackedID].physicalItem != null)
+            if (H3MP_Server.items[trackedID] == null)
             {
-                int roundType = packet.ReadShort();
-                int roundClass = packet.ReadShort();
-                FirePatch.positions = new List<Vector3>();
-                FirePatch.directions = new List<Vector3>();
-                byte count = packet.ReadByte();
-                for(int i=0; i < count; ++i)
+                Mod.LogError("Server received order to fire weapon " + trackedID + " but item is missing from items array!");
+            }
+            else
+            {
+                // Update locally
+                if (H3MP_Server.items[trackedID].physicalItem != null)
                 {
-                    FirePatch.positions.Add(packet.ReadVector3());
-                    FirePatch.directions.Add(packet.ReadVector3());
-                }
-                FirePatch.overriden = true;
+                    int roundType = packet.ReadShort();
+                    int roundClass = packet.ReadShort();
+                    FirePatch.positions = new List<Vector3>();
+                    FirePatch.directions = new List<Vector3>();
+                    byte count = packet.ReadByte();
+                    for (int i = 0; i < count; ++i)
+                    {
+                        FirePatch.positions.Add(packet.ReadVector3());
+                        FirePatch.directions.Add(packet.ReadVector3());
+                    }
+                    FirePatch.overriden = true;
 
-                // Make sure we skip next fire so we don't have a firing feedback loop between clients
-                ++Mod.skipNextFires;
-                H3MP_Server.items[trackedID].physicalItem.setFirearmUpdateOverride((FireArmRoundType)roundType, (FireArmRoundClass)roundClass);
-                H3MP_Server.items[trackedID].physicalItem.fireFunc();
+                    // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                    ++Mod.skipNextFires;
+                    H3MP_Server.items[trackedID].physicalItem.setFirearmUpdateOverride((FireArmRoundType)roundType, (FireArmRoundClass)roundClass);
+                    H3MP_Server.items[trackedID].physicalItem.fireFunc();
+                }
             }
 
             // Send to other clients
