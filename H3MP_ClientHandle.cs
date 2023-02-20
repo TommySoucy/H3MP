@@ -18,6 +18,7 @@ namespace H3MP
 
             Mod.LogInfo($"Message from server: {msg}");
 
+            H3MP_Client.singleton.gotWelcome = true;
             H3MP_Client.singleton.ID = ID;
             H3MP_GameManager.ID = ID;
             H3MP_ClientSend.WelcomeReceived();

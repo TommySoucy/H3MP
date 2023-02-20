@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
@@ -36,6 +37,8 @@ namespace H3MP
         public UDP udp;
 
         private bool isConnected = false;
+        public bool gotWelcome = false;
+        public int pingAttemptCounter = 0;
         private delegate void PacketHandler(H3MP_Packet packet);
         private static PacketHandler[] packetHandlers;
         public static Dictionary<string, int> synchronizedScenes;
@@ -86,7 +89,7 @@ namespace H3MP
             public TcpClient socket;
 
             public NetworkStream stream;
-            private H3MP_Packet receivedData;
+            public H3MP_Packet receivedData;
             public byte[] receiveBuffer;
 
             public void Connect()
@@ -119,18 +122,21 @@ namespace H3MP
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
             }
 
-            public void SendData(H3MP_Packet packet)
+            public void SendData(H3MP_Packet packet, bool overrideWelcome = false)
             {
-                try
+                if (H3MP_Client.singleton.gotWelcome || overrideWelcome)
                 {
-                    if(socket != null)
+                    try
                     {
-                        stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null);
+                        if (socket != null)
+                        {
+                            stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null);
+                        }
                     }
-                }
-                catch(Exception ex)
-                {
-                    Mod.LogInfo($"Error sending data to server via TCP: {ex}");
+                    catch (Exception ex)
+                    {
+                        Mod.LogInfo($"Error sending data to server via TCP: {ex}");
+                    }
                 }
             }
 
@@ -177,10 +183,13 @@ namespace H3MP
                     byte[] packetBytes = receivedData.ReadBytes(packetLength);
                     H3MP_ThreadManager.ExecuteOnMainThread(() =>
                     {
-                        using(H3MP_Packet packet = new H3MP_Packet(packetBytes))
+                        if (singleton.isConnected)
                         {
-                            int packetID = packet.ReadInt();
-                            packetHandlers[packetID](packet);
+                            using (H3MP_Packet packet = new H3MP_Packet(packetBytes))
+                            {
+                                int packetID = packet.ReadInt();
+                                packetHandlers[packetID](packet);
+                            }
                         }
                     });
 
@@ -256,22 +265,25 @@ namespace H3MP
 
             private void ReceiveCallback(IAsyncResult result)
             {
-                try
+                if (H3MP_Client.singleton.isConnected)
                 {
-                    byte[] data = socket.EndReceive(result, ref endPoint);
-                    socket.BeginReceive(ReceiveCallback, null);
-
-                    if(data.Length < 4)
+                    try
                     {
-                        singleton.Disconnect(true, 1);
-                        return;
-                    }
+                        byte[] data = socket.EndReceive(result, ref endPoint);
+                        socket.BeginReceive(ReceiveCallback, null);
 
-                    HandleData(data);
-                }
-                catch(Exception)
-                {
-                    Disconnect(2);
+                        if(data.Length < 4)
+                        {
+                            singleton.Disconnect(true, 1);
+                            return;
+                        }
+
+                        HandleData(data);
+                    }
+                    catch(Exception)
+                    {
+                        Disconnect(2);
+                    }
                 }
             }
 
@@ -285,10 +297,13 @@ namespace H3MP
 
                 H3MP_ThreadManager.ExecuteOnMainThread(() =>
                 {
-                    using(H3MP_Packet packet = new H3MP_Packet(data))
+                    if (singleton.isConnected)
                     {
-                        int packetID = packet.ReadInt();
-                        packetHandlers[packetID](packet);
+                        using (H3MP_Packet packet = new H3MP_Packet(data))
+                        {
+                            int packetID = packet.ReadInt();
+                            packetHandlers[packetID](packet);
+                        }
                     }
                 });
             }
@@ -466,9 +481,13 @@ namespace H3MP
             encryptions = new H3MP_TrackedEncryptionData[100];
 
             localItemCounter = 0;
+            waitingLocalItems.Clear();
             localSosigCounter = 0;
+            waitingLocalSosigs.Clear();
             localAutoMeaterCounter = 0;
+            waitingLocalAutoMeaters.Clear();
             localEncryptionCounter = 0;
+            waitingLocalEncryptions.Clear();
 
             Mod.LogInfo("Initialized client");
         }
@@ -869,6 +888,9 @@ namespace H3MP
                     case 3:
                         Mod.LogInfo("Disconnecting from server, UDP forced.");
                         break;
+                    case 4:
+                        Mod.LogWarning("Connection to server failed, timed out.");
+                        break;
                 }
 
                 if (sendToServer) 
@@ -882,8 +904,23 @@ namespace H3MP
                 // On our side take physical control of everything
                 H3MP_GameManager.TakeAllPhysicalControl(true);
 
-                tcp.socket.Close();
-                udp.socket.Close();
+                if (tcp.socket != null)
+                {
+                    tcp.socket.Close();
+                }
+                tcp.socket = null;
+                if (tcp.stream != null)
+                {
+                    tcp.stream.Close();
+                }
+                tcp.stream = null;
+                tcp.receiveBuffer = null;
+                tcp.receivedData = null;
+                if(udp.socket != null)
+                {
+                    udp.socket.Close();
+                }
+                udp.socket = null;
 
                 H3MP_GameManager.Reset();
                 SpecificDisconnect();

@@ -170,6 +170,7 @@ namespace H3MP
                 Destroy(playerEntry.Value.gameObject);
             }
             players.Clear();
+            spectatorHosts.Clear();
             items.Clear();
             sosigs.Clear();
             autoMeaters.Clear();
@@ -188,6 +189,35 @@ namespace H3MP
             encryptionsByInstanceByScene.Clear();
             ID = 0;
             instance = 0;
+            giveControlOfDestroyed = 0;
+            controlOverride = false;
+            firstPlayerInSceneInstance = false;
+            dontAddToInstance = false;
+            playersPresent = 0;
+            playerStateAddtionalDataSize = -1;
+            sceneLoading = false;
+            instanceAtSceneLoadStart = 0;
+            ping = -1;
+
+            for(int i=0; i< H3MP_TrackedItem.trackedItemRefObjects.Length; ++i)
+            {
+                if (H3MP_TrackedItem.trackedItemRefObjects[i] != null)
+                {
+                    Destroy(H3MP_TrackedItem.trackedItemRefObjects[i]);
+                }
+            }
+            H3MP_TrackedItem.trackedItemRefObjects = new GameObject[100];
+            H3MP_TrackedItem.trackedItemReferences = new H3MP_TrackedItem[100];
+            H3MP_TrackedItem.availableTrackedItemRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
+                                                                                10,11,12,13,14,15,16,17,18,19,
+                                                                                20,21,22,23,24,25,26,27,28,29,
+                                                                                30,31,32,33,34,35,36,37,38,39,
+                                                                                40,41,42,43,44,45,46,47,48,49,
+                                                                                50,51,52,53,54,55,56,57,58,59,
+                                                                                60,61,62,63,64,65,66,67,68,69,
+                                                                                70,71,72,73,74,75,76,77,78,79,
+                                                                                80,81,82,83,84,85,86,87,88,89,
+                                                                                90,91,92,93,94,95,96,97,98,99};
         }
 
         public static void UpdatePlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,

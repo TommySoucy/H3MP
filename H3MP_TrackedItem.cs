@@ -54,6 +54,7 @@ namespace H3MP
         // TrackedItemReferences array
         // Used by certain item subtypes who need to get access to their TrackedItem very often (On Update for example)
         // This is used to bypass having to find the item in a datastructure too often
+        public static GameObject[] trackedItemRefObjects = new GameObject[100];
         public static H3MP_TrackedItem[] trackedItemReferences = new H3MP_TrackedItem[100];
         public static List<int> availableTrackedItemRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
                                                                                     10,11,12,13,14,15,16,17,18,19,
@@ -231,6 +232,12 @@ namespace H3MP
                 trackedItemRef.SetActive(false);
                 if (availableTrackedItemRefIndices.Count == 0)
                 {
+                    GameObject[] tempRefs = trackedItemRefObjects;
+                    trackedItemRefObjects = new GameObject[tempRefs.Length + 100];
+                    for (int i = 0; i < tempRefs.Length; ++i)
+                    {
+                        trackedItemRefObjects[i] = tempRefs[i];
+                    }
                     H3MP_TrackedItem[] tempItems = trackedItemReferences;
                     trackedItemReferences = new H3MP_TrackedItem[tempItems.Length + 100];
                     for (int i = 0; i < tempItems.Length; ++i)
@@ -242,6 +249,7 @@ namespace H3MP
                         availableTrackedItemRefIndices.Add(i);
                     }
                 }
+                trackedItemRefObjects[availableTrackedItemRefIndices.Count - 1] = trackedItemRef;
                 trackedItemReferences[availableTrackedItemRefIndices.Count - 1] = this;
                 trackedItemRef.name = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1].ToString();
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
@@ -261,6 +269,12 @@ namespace H3MP
                 }
                 if (availableTrackedItemRefIndices.Count == 0)
                 {
+                    GameObject[] tempRefs = trackedItemRefObjects;
+                    trackedItemRefObjects = new GameObject[tempRefs.Length + 100];
+                    for (int i = 0; i < tempRefs.Length; ++i)
+                    {
+                        trackedItemRefObjects[i] = tempRefs[i];
+                    }
                     H3MP_TrackedItem[] tempItems = trackedItemReferences;
                     trackedItemReferences = new H3MP_TrackedItem[tempItems.Length + 100];
                     for (int i = 0; i < tempItems.Length; ++i)

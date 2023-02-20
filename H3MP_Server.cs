@@ -59,6 +59,13 @@ namespace H3MP
 
         public static void Close()
         {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            Mod.LogInfo("Closing server.");
+
             H3MP_ServerSend.ServerClosed();
 
             H3MP_GameManager.TakeAllPhysicalControl(true);
@@ -115,6 +122,11 @@ namespace H3MP
 
         private static void UDPReceiveCallback(IAsyncResult result)
         {
+            if(tcpListener == null)
+            {
+                return;
+            }
+
             try
             {
                 IPEndPoint clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -661,6 +673,9 @@ namespace H3MP
                                                      90,91,92,93,94,95,96,97,98,99};
 
             availableSpectatorHosts = new List<int>();
+
+            clientsWaitingUpDate.Clear();
+            loadingClientsWaitingFrom.Clear();
 
             Mod.LogInfo("Initialized server");
         }

@@ -340,12 +340,10 @@ namespace H3MP
                     {
                         if (H3MP_ThreadManager.host)
                         {
-                            Mod.LogInfo("Closing server.");
                             H3MP_Server.Close();
                         }
                         else
                         {
-                            Mod.LogInfo("Disconnecting from server.");
                             H3MP_Client.singleton.Disconnect(true, 0);
                         }
                     }
@@ -2072,6 +2070,11 @@ namespace H3MP
 
         private void OnHostClicked()
         {
+            if(managerObject != null)
+            {
+                return;
+            }
+
             Logger.LogInfo("Host button clicked");
             //hostButton.GetComponent<BoxCollider>().enabled = false;
             //hostButton.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
@@ -2095,6 +2098,17 @@ namespace H3MP
 
         private void OnConnectClicked()
         {
+            if (managerObject != null)
+            {
+                return;
+            }
+
+            if (Mod.config["IP"].ToString().Equals(""))
+            {
+                Mod.LogError("Attempted to connect to server but no IP set in config!");
+                return;
+            }
+
             CreateManagerObject();
 
             H3MP_Client client = managerObject.AddComponent<H3MP_Client>();
@@ -7642,7 +7656,8 @@ namespace H3MP
 
             exploded = ___m_hasSploded;
 
-            if (__instance.SpawnOnSplode != null && __instance.SpawnOnSplode.Count > 0 && int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int index))
+            if (__instance.SpawnOnSplode != null && __instance.SpawnOnSplode.Count > 0 && __instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1] != null &&
+                int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int index))
             {
                 // Return true (run original), index doesn't fit in references, reference null, or we control
                 return H3MP_TrackedItem.trackedItemReferences.Length <= index || 
@@ -7723,7 +7738,7 @@ namespace H3MP
                 return false;
             }
 
-            return grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index);
+            return grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && (grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1] == null || int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index));
         }
 
         // To know if grenade exploded in latest update
@@ -7794,7 +7809,8 @@ namespace H3MP
                 return true;
             }
 
-            if (grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index))
+            if (grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1] != null && 
+                int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index))
             {
                 // Return true (controlled), index fits in references, reference not null, and we control
                 return H3MP_TrackedItem.trackedItemReferences.Length <= index &&

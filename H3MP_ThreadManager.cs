@@ -71,7 +71,18 @@ namespace H3MP
                 if (pingTimer <= 0)
                 {
                     pingTimer = pingTime;
-                    H3MP_ClientSend.Ping(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
+                    if (H3MP_Client.singleton.gotWelcome)
+                    {
+                        H3MP_ClientSend.Ping(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
+                    }
+                    else
+                    {
+                        ++H3MP_Client.singleton.pingAttemptCounter;
+                        if(H3MP_Client.singleton.pingAttemptCounter >= 5)
+                        {
+                            H3MP_Client.singleton.Disconnect(false, 4);
+                        }
+                    }
                 }
             }
         }

@@ -129,10 +129,13 @@ namespace H3MP
                     byte[] packetBytes = receivedData.ReadBytes(packetLength);
                     H3MP_ThreadManager.ExecuteOnMainThread(() =>
                     {
-                        using (H3MP_Packet packet = new H3MP_Packet(packetBytes))
+                        if (H3MP_Server.tcpListener != null)
                         {
-                            int packetID = packet.ReadInt();
-                            H3MP_Server.packetHandlers[packetID](ID, packet);
+                            using (H3MP_Packet packet = new H3MP_Packet(packetBytes))
+                            {
+                                int packetID = packet.ReadInt();
+                                H3MP_Server.packetHandlers[packetID](ID, packet);
+                            }
                         }
                     });
 
@@ -194,10 +197,13 @@ namespace H3MP
 
                 H3MP_ThreadManager.ExecuteOnMainThread(() =>
                 {
-                    using(H3MP_Packet packet = new H3MP_Packet(packetBytes))
+                    if (H3MP_Server.tcpListener != null)
                     {
-                        int packetID = packet.ReadInt();
-                        H3MP_Server.packetHandlers[packetID](ID, packet);
+                        using (H3MP_Packet packet = new H3MP_Packet(packetBytes))
+                        {
+                            int packetID = packet.ReadInt();
+                            H3MP_Server.packetHandlers[packetID](ID, packet);
+                        }
                     }
                 });
             }

@@ -88,6 +88,11 @@ namespace H3MP
 
         private void OnHostClicked(Text textRef)
         {
+            if (Mod.managerObject != null)
+            {
+                return;
+            }
+
             Mod.modInstance.CreateManagerObject(true);
 
             //H3MP_Server.IP = Mod.config["IP"].ToString();
@@ -107,6 +112,11 @@ namespace H3MP
 
         private void OnConnectClicked(Text textRef)
         {
+            if (Mod.managerObject != null)
+            {
+                return;
+            }
+
             if (Mod.config["IP"].ToString().Equals(""))
             {
                 Mod.LogError("Attempted to connect to server but no IP set in config!");

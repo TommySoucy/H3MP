@@ -8,7 +8,7 @@ namespace H3MP
 {
     internal class H3MP_ClientSend
     {
-        private static void SendTCPData(H3MP_Packet packet)
+        private static void SendTCPData(H3MP_Packet packet, bool overrideWelcome = false)
         {
             packet.WriteLength();
             H3MP_Client.singleton.tcp.SendData(packet);
