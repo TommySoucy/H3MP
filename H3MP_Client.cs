@@ -568,8 +568,8 @@ namespace H3MP
                 }
                 Mod.LogInfo("\tAdded to itemsByInstanceByScene, instnaitating");
 
-                // Instantiate item if it is in the current scene/instance
-                if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
+                // Instantiate item if it is identiafiable and in the current scene/instance
+                if (H3MP_GameManager.IsItemIdentifiable(trackedItem) && trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(trackedItem.Instantiate());
                 }

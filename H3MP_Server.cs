@@ -217,7 +217,7 @@ namespace H3MP
             Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
             // Instantiate item if it is in the current scene and not controlled by us
-            if (clientID != 0)
+            if (clientID != 0 && H3MP_GameManager.IsItemIdentifiable(trackedItem))
             {
                 if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                 {
