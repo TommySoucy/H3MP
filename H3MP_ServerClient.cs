@@ -254,6 +254,8 @@ namespace H3MP
             {
                 Mod.LogInfo("Player " + ID + " join server in scene " + scene);
                 // Send to the clients all items that are already synced and controlled by clients in the same scene
+                TODO: Review: SHouldn't we request up to date objects here instad of sending directly when they join? because server may not have the most up to date
+                      So we might be sending out of date item data
                 SendRelevantTrackedObjects();
 
                 // Tell the client to sync its items
@@ -280,7 +282,7 @@ namespace H3MP
 
         public void SendRelevantTrackedObjects()
         {
-            // Send to the clients all items that are already synced and controlled by clients in the same scene and instance
+            // Send to the client all items that are already synced and controlled by clients in the same scene and instance
             for (int i = 0; i < H3MP_Server.items.Length; ++i)
             {
                 // TODO: Optimization: In client handle for trackedItem we already check if this item is in our scene before instantiating
@@ -304,7 +306,7 @@ namespace H3MP
                     }
                 }
             }
-            // Send to the clients all sosigs that are already synced and controlled by clients in the same scene
+            // Send to the client all sosigs that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
             {
                 if (H3MP_Server.sosigs[i] != null)
@@ -320,7 +322,7 @@ namespace H3MP
                     }
                 }
             }
-            // Send to the clients all AutoMeaters that are already synced and controlled by clients in the same scene
+            // Send to the client all AutoMeaters that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.autoMeaters.Length; ++i)
             {
                 if (H3MP_Server.autoMeaters[i] != null)
@@ -336,7 +338,7 @@ namespace H3MP
                     }
                 }
             }
-            // Send to the clients all Encryptions that are already synced and controlled by clients in the same scene
+            // Send to the client all Encryptions that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.encryptions.Length; ++i)
             {
                 if (H3MP_Server.encryptions[i] != null)

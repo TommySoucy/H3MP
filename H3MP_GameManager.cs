@@ -1541,6 +1541,7 @@ namespace H3MP
             // Set locally
             H3MP_GameManager.instance = instance;
 
+            // Update instance dicts
             if (!activeInstances.ContainsKey(instance))
             {
                 activeInstances.Add(instance, 0);
@@ -1575,11 +1576,11 @@ namespace H3MP
                 }
             }
 
+            // If we switch instance while loading a new scene, we will want to update control override
+            // because when we started loading the scene, we didn't necessarily know in which instance we would end up
             bool bringItems = !H3MP_GameManager.playersByInstanceByScene.TryGetValue(sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> ci) ||
                               !ci.TryGetValue(instance, out List<int> op) || op.Count == 0;
 
-            // If we switch instance while loading a new scene, we will want to update control override
-            // because when we started loading the scene, we didn't necessarily know in which instance we would end up
             if (sceneLoading)
             {
                 controlOverride = bringItems;
@@ -1793,6 +1794,9 @@ namespace H3MP
             string sceneName = SceneManager.GetActiveScene().name;
             if (synchronizedScenes.ContainsKey(sceneName))
             {
+                // Check each players scene/instance to know if they are in the one we are going into
+                // TODO: Review: Since we are now tracking players' scene/instance through playerBySceneByInstance, we don't need to check for each of them here
+                //       We should probably just use playersBySceneByInstance
                 foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                 {
                     if (player.Value.scene.Equals(sceneName) && player.Value.instance == instance)
@@ -1809,8 +1813,8 @@ namespace H3MP
                         {
                             // Request most up to date items from the client
                             // We do this because we may not have the most up to date version of items/sosigs since
-                            // clients only send updated data when there are others in their scene
-                            // But we need the most of to date data to instantiate the item/sosig
+                            // clients only send updated data to other players in their scene/instance
+                            // But we need the most of to date data to instantiate the object
                             Mod.LogInfo("Requesting up to date objects from " + player.Key);
                             H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                         }
