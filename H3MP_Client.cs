@@ -494,7 +494,7 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
         {
-            Mod.LogInfo("Client AddTrackedItem "+trackedItem.itemID+" with waitingindeX: "+trackedItem.localWaitingIndex);
+            Mod.LogInfo("Client AddTrackedItem "+trackedItem.itemID+" with waitingindex: "+trackedItem.localWaitingIndex);
             // Adjust items size to acommodate if necessary
             if (items.Length <= trackedItem.trackedID)
             {
