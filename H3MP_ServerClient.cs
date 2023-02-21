@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using UnityEngine;
 using FistVR;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 namespace H3MP
 {
@@ -253,10 +254,28 @@ namespace H3MP
             if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
             {
                 Mod.LogInfo("Player " + ID + " join server in scene " + scene);
-                // Send to the clients all items that are already synced and controlled by clients in the same scene
-                TODO: Review: SHouldn't we request up to date objects here instad of sending directly when they join? because server may not have the most up to date
-                      So we might be sending out of date item data
-                SendRelevantTrackedObjects();
+
+                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances) &&
+                    instances.TryGetValue(instance, out List<int> otherPlayers))
+                {
+                    // There are other players in the client's scene/instance, request up to date objects before sending
+                    for (int i = 0; i < otherPlayers.Count; ++i)
+                    {
+                        if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherPlayers[i]))
+                        {
+                            H3MP_Server.clientsWaitingUpDate[otherPlayers[i]].Add(ID);
+                        }
+                        else
+                        {
+                            H3MP_Server.clientsWaitingUpDate.Add(otherPlayers[i], new List<int> { ID });
+                        }
+                        H3MP_ServerSend.RequestUpToDateObjects(otherPlayers[i], false, ID);
+                    }
+                }
+                else // No other players in the client's scene/instance 
+                {
+                    SendRelevantTrackedObjects();
+                }
 
                 // Tell the client to sync its items
                 H3MP_ServerSend.ConnectSync(ID, inControl);

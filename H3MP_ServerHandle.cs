@@ -2035,6 +2035,8 @@ namespace H3MP
         {
             if(H3MP_Server.loadingClientsWaitingFrom.TryGetValue(clientID, out List<int> otherClients))
             {
+                // We were waiting for this client to finish loading to send relevant items
+                // Check if we are still waiting on up to date items for this client
                 bool stillWaiting = false;
                 foreach(int otherCLientID in otherClients)
                 {
@@ -2067,7 +2069,7 @@ namespace H3MP
                 // If the relevant client is no longer loading or wasn't to begin with
                 if(!H3MP_Server.loadingClientsWaitingFrom.ContainsKey(forClient))
                 {
-                    H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
+                    H3MP_Server.clients[forClient].SendRelevantTrackedObjects();
                 }
 
                 waitingClients.Remove(forClient);
