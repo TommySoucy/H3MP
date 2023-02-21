@@ -218,6 +218,31 @@ namespace H3MP
                                                                                 70,71,72,73,74,75,76,77,78,79,
                                                                                 80,81,82,83,84,85,86,87,88,89,
                                                                                 90,91,92,93,94,95,96,97,98,99};
+
+            H3MP_TrackedItem.unknownTrackedIDs.Clear();
+            H3MP_TrackedItem.unknownControlTrackedIDs.Clear();
+            H3MP_TrackedItem.unknownDestroyTrackedIDs.Clear();
+            H3MP_TrackedItem.unknownParentTrackedIDs.Clear();
+
+            H3MP_TrackedSosig.unknownBodyStates.Clear();
+            H3MP_TrackedSosig.unknownControlTrackedIDs.Clear();
+            H3MP_TrackedSosig.unknownDestroyTrackedIDs.Clear();
+            H3MP_TrackedSosig.unknownIFFChart.Clear();
+            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Clear();
+            H3MP_TrackedSosig.unknownSetIFFs.Clear();
+            H3MP_TrackedSosig.unknownSetOriginalIFFs.Clear();
+            H3MP_TrackedSosig.unknownTNHKills.Clear();
+
+            H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Clear();
+            H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Clear();
+
+            H3MP_TrackedEncryption.unknownControlTrackedIDs.Clear();
+            H3MP_TrackedEncryption.unknownDestroyTrackedIDs.Clear();
+            H3MP_TrackedEncryption.unknownDisableSubTarg.Clear();
+            H3MP_TrackedEncryption.unknownInit.Clear();
+            H3MP_TrackedEncryption.unknownResetGrowth.Clear();
+            H3MP_TrackedEncryption.unknownSpawnGrowth.Clear();
+            H3MP_TrackedEncryption.unknownSpawnSubTarg.Clear();
         }
 
         public static void UpdatePlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
