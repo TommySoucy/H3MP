@@ -16,7 +16,7 @@ namespace H3MP
         addSyncScene = 5,
         trackedItems = 6,
         trackedItem = 7,
-        takeControl = 8,
+        takeControl = 8, // UNUSED
         giveControl = 9,
         destroyItem = 10,
         itemParent = 11,
@@ -160,7 +160,7 @@ namespace H3MP
         addSyncScene = 4,
         trackedItems = 5,
         trackedItem = 6,
-        takeControl = 7,
+        takeControl = 7, // UNUSED
         giveControl = 8,
         destroyItem = 9,
         itemParent = 10,

@@ -865,6 +865,13 @@ namespace H3MP
                    physObj.GetComponent<TNH_ShatterableCrate>() != null;
         }
 
+        // MOD: When the server receives an item to track, it will first check if it can identify the item on its side
+        //      If your mod added something in IsObjectIdentifiable() then you should also support it in here
+        public static bool IsItemIdentifiable(H3MP_TrackedItemData itemData)
+        {
+            return IM.OD.ContainsKey(itemData.itemID) || IM.OD.ContainsKey("TNH_ShatterableCrate");
+        }
+
         public static void SyncTrackedSosigs(bool init = false, bool inControl = false)
         {
             // When we sync our current scene, if we are alone, we sync and take control of all sosigs

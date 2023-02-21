@@ -711,49 +711,41 @@ namespace H3MP
             }
         }
 
-        public static void TrackedItemSpecific(H3MP_TrackedItemData trackedItem, string scene, int instance, int toClientID)
+        public static void TrackedItemSpecific(H3MP_TrackedItemData trackedItem, int toClientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItem))
             {
                 packet.Write(trackedItem, false, true);
-                packet.Write(scene);
-                packet.Write(instance);
 
                 SendTCPData(toClientID, packet);
             }
         }
 
-        public static void TrackedSosigSpecific(H3MP_TrackedSosigData trackedSosig, string scene, int instance, int toClientID)
+        public static void TrackedSosigSpecific(H3MP_TrackedSosigData trackedSosig, int toClientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedSosig))
             {
                 packet.Write(trackedSosig, false, true);
-                packet.Write(scene);
-                packet.Write(instance);
 
                 SendTCPData(toClientID, packet);
             }
         }
 
-        public static void TrackedAutoMeaterSpecific(H3MP_TrackedAutoMeaterData trackedAutoMeater, string scene, int instance, int toClientID)
+        public static void TrackedAutoMeaterSpecific(H3MP_TrackedAutoMeaterData trackedAutoMeater, int toClientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedAutoMeater))
             {
                 packet.Write(trackedAutoMeater, false, true);
-                packet.Write(scene);
-                packet.Write(instance);
 
                 SendTCPData(toClientID, packet);
             }
         }
 
-        public static void TrackedEncryptionSpecific(H3MP_TrackedEncryptionData trackedEncryption, string scene, int instance, int toClientID)
+        public static void TrackedEncryptionSpecific(H3MP_TrackedEncryptionData trackedEncryption, int toClientID)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedEncryption))
             {
                 packet.Write(trackedEncryption, false, true);
-                packet.Write(scene);
-                packet.Write(instance);
 
                 SendTCPData(toClientID, packet);
             }

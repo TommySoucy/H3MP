@@ -300,7 +300,7 @@ namespace H3MP
                         {
                             H3MP_Server.items[i].Update();
                         }
-                        H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], player.scene, player.instance, ID);
+                        H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], ID);
                     }
                 }
             }
@@ -316,7 +316,7 @@ namespace H3MP
                         {
                             H3MP_Server.sosigs[i].Update();
                         }
-                        H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], player.scene, player.instance, ID);
+                        H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], ID);
                     }
                 }
             }
@@ -332,7 +332,7 @@ namespace H3MP
                         {
                             H3MP_Server.autoMeaters[i].Update();
                         }
-                        H3MP_ServerSend.TrackedAutoMeaterSpecific(H3MP_Server.autoMeaters[i], player.scene, player.instance, ID);
+                        H3MP_ServerSend.TrackedAutoMeaterSpecific(H3MP_Server.autoMeaters[i], ID);
                     }
                 }
             }
@@ -348,7 +348,7 @@ namespace H3MP
                         {
                             H3MP_Server.encryptions[i].Update();
                         }
-                        H3MP_ServerSend.TrackedEncryptionSpecific(H3MP_Server.encryptions[i], player.scene, player.instance, ID);
+                        H3MP_ServerSend.TrackedEncryptionSpecific(H3MP_Server.encryptions[i], ID);
                     }
                 }
             }
