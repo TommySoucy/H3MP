@@ -1970,7 +1970,7 @@ namespace H3MP
             {
                 H3MP_TrackedItemData trackedItem = packet.ReadTrackedItem(true);
                 H3MP_GameManager.UpdateTrackedItem(trackedItem, true);
-                if (instantiate)
+                if (H3MP_GameManager.IsItemIdentifiable(trackedItem) && instantiate)
                 {
                     AnvilManager.Run(H3MP_Server.items[trackedItem.trackedID].Instantiate());
                 }
