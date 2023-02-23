@@ -8305,12 +8305,13 @@ namespace H3MP
                 }
             }
         }
-
+        
         static void Postfix(ref FVRFireArmRound __result)
         {
             if (incrementedSkip > 0)
             {
                 Mod.skipAllInstantiates -= incrementedSkip;
+                incrementedSkip = 0;
                 if(Mod.skipAllInstantiates < 0)
                 {
                     Mod.LogError("Chamber eject round decremented Mod.skipAllInstantiates by "+incrementedSkip+ " for fincal value of Mod.skipAllInstantiates, resetting to 0");
