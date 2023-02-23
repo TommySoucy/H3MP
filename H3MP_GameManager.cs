@@ -1584,6 +1584,7 @@ namespace H3MP
             if (sceneLoading)
             {
                 controlOverride = bringItems;
+                firstPlayerInSceneInstance = bringItems;
             }
             else // Scene not currently loading, we don't want to manage items if we are loading into a new scene so only do it in this case
             {

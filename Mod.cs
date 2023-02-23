@@ -8736,8 +8736,8 @@ namespace H3MP
                 return true;
             }
 
-            // If this item prefab spawn attempts to spawn an item while we are loading and we don't have control of the items, prevent spawning
-            return !H3MP_GameManager.sceneLoading || H3MP_GameManager.controlOverride;
+            // Prevent spawning if loading but we have control override, or we aren't loading but we were first in scene
+            return (H3MP_GameManager.sceneLoading && H3MP_GameManager.controlOverride) || (!H3MP_GameManager.sceneLoading && H3MP_GameManager.firstPlayerInSceneInstance);
         }
     }
     #endregion

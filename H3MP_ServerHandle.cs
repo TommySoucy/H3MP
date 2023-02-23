@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace H3MP
 {
@@ -1960,7 +1961,7 @@ namespace H3MP
 
             H3MP_ServerSend.SosigLinkSever(sosigTrackedID, linkIndex, damClass, isPullApart, clientID);
         }
-
+        
         public static void UpToDateItems(int clientID, H3MP_Packet packet)
         {
             // Reconstruct passed trackedItems from packet
@@ -1969,8 +1970,14 @@ namespace H3MP
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedItemData trackedItem = packet.ReadTrackedItem(true);
+                H3MP_TrackedItemData actualTrackedItem = H3MP_Server.items[trackedItem.trackedID];
                 H3MP_GameManager.UpdateTrackedItem(trackedItem, true);
-                if (H3MP_GameManager.IsItemIdentifiable(trackedItem) && instantiate)
+
+                // Although we only request up to date objects from our scene/instance, it might have changed since we made the request
+                // So here we check it again
+                if (instantiate && actualTrackedItem.physicalItem == null &&
+                    actualTrackedItem.scene.Equals(SceneManager.GetActiveScene().name) && actualTrackedItem.instance == H3MP_GameManager.instance &&
+                    H3MP_GameManager.IsItemIdentifiable(trackedItem))
                 {
                     AnvilManager.Run(H3MP_Server.items[trackedItem.trackedID].Instantiate());
                 }
@@ -1979,18 +1986,17 @@ namespace H3MP
 
         public static void UpToDateSosigs(int clientID, H3MP_Packet packet)
         {
-            Mod.LogInfo("Server received up to date sosigs packet");
             // Reconstruct passed trackedSosigs from packet
             int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedSosigData trackedSosig = packet.ReadTrackedSosig(true);
-                Mod.LogInfo("\tSosig: " + trackedSosig.trackedID + ", updating");
+                H3MP_TrackedSosigData actualTrackedSosig = H3MP_Server.sosigs[trackedSosig.trackedID];
                 H3MP_GameManager.UpdateTrackedSosig(trackedSosig, true);
-                if (instantiate)
+                if (instantiate && actualTrackedSosig.physicalObject == null &&
+                    actualTrackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && actualTrackedSosig.instance == H3MP_GameManager.instance)
                 {
-                    Mod.LogInfo("\tInstantiating");
                     AnvilManager.Run(H3MP_Server.sosigs[trackedSosig.trackedID].Instantiate());
                 }
             }
@@ -2004,8 +2010,10 @@ namespace H3MP
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedAutoMeaterData trackedAutoMeater = packet.ReadTrackedAutoMeater(true);
+                H3MP_TrackedAutoMeaterData actualTrackedAutoMeater = H3MP_Server.autoMeaters[trackedAutoMeater.trackedID];
                 H3MP_GameManager.UpdateTrackedAutoMeater(trackedAutoMeater, true);
-                if (instantiate)
+                if (instantiate && actualTrackedAutoMeater.physicalObject == null &&
+                    actualTrackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && actualTrackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(H3MP_Server.autoMeaters[trackedAutoMeater.trackedID].Instantiate());
                 }
@@ -2014,18 +2022,17 @@ namespace H3MP
 
         public static void UpToDateEncryptions(int clientID, H3MP_Packet packet)
         {
-            Mod.LogInfo("Server received up to date Encryptions packet");
             // Reconstruct passed trackedEncryptions from packet
             int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
                 H3MP_TrackedEncryptionData trackedEncryption = packet.ReadTrackedEncryption(true);
-                Mod.LogInfo("\tEncryption: " + trackedEncryption.trackedID + ", updating");
+                H3MP_TrackedEncryptionData actualTrackedEncryption = H3MP_Server.encryptions[trackedEncryption.trackedID];
                 H3MP_GameManager.UpdateTrackedEncryption(trackedEncryption, true);
-                if (instantiate)
+                if (instantiate && actualTrackedEncryption.physicalObject == null &&
+                    actualTrackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && actualTrackedEncryption.instance == H3MP_GameManager.instance)
                 {
-                    Mod.LogInfo("\tInstantiating");
                     AnvilManager.Run(H3MP_Server.encryptions[trackedEncryption.trackedID].Instantiate());
                 }
             }
