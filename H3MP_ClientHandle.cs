@@ -2564,24 +2564,40 @@ namespace H3MP
                 TNHInstance.level = packet.ReadInt();
                 TNHInstance.phase = (TNH_Phase)packet.ReadShort();
                 int activeSupplyPointIndicesCount = packet.ReadInt();
-                for (int j = 0; j < activeSupplyPointIndicesCount; ++j)
+                if (activeSupplyPointIndicesCount > 0)
                 {
-                    TNHInstance.activeSupplyPointIndices.Add(packet.ReadInt());
+                    TNHInstance.activeSupplyPointIndices = new List<int>();
+                    for (int j = 0; j < activeSupplyPointIndicesCount; ++j)
+                    {
+                        TNHInstance.activeSupplyPointIndices.Add(packet.ReadInt());
+                    }
                 }
                 int supplyPanelTypesCount = packet.ReadInt();
-                for (int j = 0; j < supplyPanelTypesCount; ++j)
+                if (supplyPanelTypesCount > 0)
                 {
-                    TNHInstance.supplyPanelTypes.Add((TNH_SupplyPoint.SupplyPanelType)packet.ReadByte());
+                    TNHInstance.supplyPanelTypes = new List<TNH_SupplyPoint.SupplyPanelType>();
+                    for (int j = 0; j < supplyPanelTypesCount; ++j)
+                    {
+                        TNHInstance.supplyPanelTypes.Add((TNH_SupplyPoint.SupplyPanelType)packet.ReadByte());
+                    }
                 }
                 int raisedBarriersCount = packet.ReadInt();
-                for (int j = 0; j < raisedBarriersCount; ++j)
+                if (raisedBarriersCount > 0)
                 {
-                    TNHInstance.raisedBarriers.Add(packet.ReadInt());
+                    TNHInstance.raisedBarriers = new List<int>();
+                    for (int j = 0; j < raisedBarriersCount; ++j)
+                    {
+                        TNHInstance.raisedBarriers.Add(packet.ReadInt());
+                    }
                 }
                 int raisedBarrierPrefabIndicesCount = packet.ReadInt();
-                for (int j = 0; j < raisedBarrierPrefabIndicesCount; ++j)
+                if (raisedBarrierPrefabIndicesCount > 0)
                 {
-                    TNHInstance.raisedBarrierPrefabIndices.Add(packet.ReadInt());
+                    TNHInstance.raisedBarrierPrefabIndices = new List<int>();
+                    for (int j = 0; j < raisedBarrierPrefabIndicesCount; ++j)
+                    {
+                        TNHInstance.raisedBarrierPrefabIndices.Add(packet.ReadInt());
+                    }
                 }
                 TNHInstance.letPeopleJoin = packet.ReadBool();
                 TNHInstance.progressionTypeSetting = packet.ReadInt();
