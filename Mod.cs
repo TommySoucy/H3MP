@@ -3771,6 +3771,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at firepatch prefix, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             FVRFireArmRound round = chamber.GetRound();
             if (round == null || round.IsSpent)
@@ -3976,6 +3977,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at sosig weapon fire patch, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             fireSuccessful = ___m_shotsLeft > 0 && __instance.MechaState == SosigWeapon.SosigWeaponMechaState.ReadyToFire;
         }
@@ -4180,6 +4182,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireLAPD2019Patch, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             curChamber = __instance.CurChamber;
             if (__instance.Chambers[__instance.CurChamber].GetRound() != null)
@@ -4407,6 +4410,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireMinigunPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             fireSucessful = ___m_numBullets > 0;
             if (__instance != currentMinigun)
@@ -4728,6 +4732,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireAttachableFirearmPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.Attachment, out H3MP_TrackedItem item) ? item : __instance.Attachment.GetComponent<H3MP_TrackedItem>();
             if(trackedItem != null && trackedItem.attachableFirearmGetChamberFunc().GetRound() != null)
@@ -5207,6 +5212,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at BurnOffOuterPrefix, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             if (burnSkip > 0 || Mod.managerObject == null)
             {
@@ -5467,6 +5473,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at flint lock FirePrefix, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             if (fireSkip > 0 || Mod.managerObject == null)
             {
@@ -5648,6 +5655,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireHCBPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             if (Mod.managerObject == null)
             {
@@ -5741,6 +5749,7 @@ namespace H3MP
             // Make sure we skip projectile instantiation
             // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireStingerLauncherPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out H3MP_TrackedItem item) ? item : __instance.GetComponent<H3MP_TrackedItem>();
 
@@ -7098,6 +7107,7 @@ namespace H3MP
         {
             // Make sure we skip projectile instantiation
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at AutoMeaterFirearmFireShotPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
         }
 
         static void Postfix(ref AutoMeater.AutoMeaterFirearm __instance)
@@ -8301,6 +8311,11 @@ namespace H3MP
             if (incrementedSkip > 0)
             {
                 Mod.skipAllInstantiates -= incrementedSkip;
+                if(Mod.skipAllInstantiates < 0)
+                {
+                    Mod.LogError("Chamber eject round decremented Mod.skipAllInstantiates by "+incrementedSkip+ " for fincal value of Mod.skipAllInstantiates, resetting to 0");
+                    Mod.skipAllInstantiates = 0;
+                }
             }
 
             if (track)

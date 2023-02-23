@@ -58,6 +58,7 @@ namespace H3MP
             }
 
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at sosig instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
             GameObject sosigInstance = GameObject.Instantiate(sosigPrefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalObject = sosigInstance.AddComponent<H3MP_TrackedSosig>();
@@ -146,6 +147,7 @@ namespace H3MP
                         {
                             yield return IM.OD[wearables[i][j]].GetGameObjectAsync();
                             ++Mod.skipAllInstantiates;
+                            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at equipwearbles, setting to 1"); Mod.skipAllInstantiates = 1; }
                             GameObject outfitItemObject = GameObject.Instantiate(IM.OD[wearables[i][j]].GetGameObject(), physicalObject.physicalSosigScript.Links[i].transform.position, physicalObject.physicalSosigScript.Links[i].transform.rotation, physicalObject.physicalSosigScript.Links[i].transform);
                             --Mod.skipAllInstantiates;
                             SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
@@ -174,6 +176,7 @@ namespace H3MP
                     yield break;
                 }
                 ++Mod.skipAllInstantiates;
+                if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at equipwearable, setting to 1"); Mod.skipAllInstantiates = 1; }
                 GameObject outfitItemObject = GameObject.Instantiate(IM.OD[ID].GetGameObject(), physicalObject.physicalSosigScript.Links[linkIndex].transform.position, physicalObject.physicalSosigScript.Links[linkIndex].transform.rotation, physicalObject.physicalSosigScript.Links[linkIndex].transform);
                 --Mod.skipAllInstantiates;
                 SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();

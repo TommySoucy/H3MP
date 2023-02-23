@@ -68,6 +68,7 @@ namespace H3MP
             {
                 Mod.LogInfo("\tInstantiating an "+itemID+", with tracked ID: "+trackedID+", with waiting index: "+localWaitingIndex);
                 ++Mod.skipAllInstantiates;
+                if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at item instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
                 --Mod.skipAllInstantiates;
                 physicalItem = itemObject.AddComponent<H3MP_TrackedItem>();

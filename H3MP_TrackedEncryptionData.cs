@@ -55,6 +55,7 @@ namespace H3MP
             }
 
             ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at encryption instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
             GameObject encryptionInstance = GameObject.Instantiate(prefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalObject = encryptionInstance.AddComponent<H3MP_TrackedEncryption>();
