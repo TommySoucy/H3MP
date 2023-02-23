@@ -8350,8 +8350,9 @@ namespace H3MP
                 // If not for this the item would be spawned and then synced with other clients below
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
-                // because the client that has initialized the scene spawned these and synced them
-                if (H3MP_GameManager.playersPresent > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                // because the client that has initialized the scene spawned these and synced them or eventually will
+                if (((H3MP_GameManager.sceneLoading && !H3MP_GameManager.controlOverride) || (!H3MP_GameManager.sceneLoading && !H3MP_GameManager.firstPlayerInSceneInstance)) &&
+                    SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
                 {
                     List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
                     objectsToDestroy.Add(__result);
