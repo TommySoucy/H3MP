@@ -1379,21 +1379,24 @@ namespace H3MP
                     }
                 }
 
-                // Set pin2
-                if (newData[2] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2))
+                if (asGrenade.Uses2ndPin)
                 {
-                    Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin2, true);
-                    asGrenade.Pin2.transform.SetParent(null);
-                    asGrenade.Pin2.PinPiece.transform.SetParent(asGrenade.Pin2.transform);
-                    Rigidbody rigidbody = asGrenade.Pin2.PinPiece.AddComponent<Rigidbody>();
-                    rigidbody.mass = 0.01f;
-                    HingeJoint component = asGrenade.Pin2.GetComponent<HingeJoint>();
-                    component.connectedBody = rigidbody;
-                    asGrenade.Pin2.Grenade.PullPin2();
-                    Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin2, true);
-                    if (asGrenade.Pin2.UXGeo_Held != null)
+                    // Set pin2
+                    if (newData[2] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2))
                     {
-                        UnityEngine.Object.Destroy(asGrenade.Pin2.UXGeo_Held);
+                        Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin2, true);
+                        asGrenade.Pin2.transform.SetParent(null);
+                        asGrenade.Pin2.PinPiece.transform.SetParent(asGrenade.Pin2.transform);
+                        Rigidbody rigidbody = asGrenade.Pin2.PinPiece.AddComponent<Rigidbody>();
+                        rigidbody.mass = 0.01f;
+                        HingeJoint component = asGrenade.Pin2.GetComponent<HingeJoint>();
+                        component.connectedBody = rigidbody;
+                        asGrenade.Pin2.Grenade.PullPin2();
+                        Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin2, true);
+                        if (asGrenade.Pin2.UXGeo_Held != null)
+                        {
+                            UnityEngine.Object.Destroy(asGrenade.Pin2.UXGeo_Held);
+                        }
                     }
                 }
             }
@@ -1423,23 +1426,27 @@ namespace H3MP
                     }
                     modified = true;
                 }
-                // Set pin2
-                if (newData[2] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2))
+
+                if (asGrenade.Uses2ndPin)
                 {
-                    Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin2, true);
-                    asGrenade.Pin2.transform.SetParent(null);
-                    asGrenade.Pin2.PinPiece.transform.SetParent(asGrenade.Pin2.transform);
-                    Rigidbody rigidbody = asGrenade.Pin2.PinPiece.AddComponent<Rigidbody>();
-                    rigidbody.mass = 0.01f;
-                    HingeJoint component = asGrenade.Pin2.GetComponent<HingeJoint>();
-                    component.connectedBody = rigidbody;
-                    asGrenade.Pin2.Grenade.PullPin2();
-                    Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin2, true);
-                    if (asGrenade.Pin2.UXGeo_Held != null)
+                    // Set pin2
+                    if (newData[2] == 1 && !(bool)Mod.FVRGrenadePin_m_hasBeenPulled.GetValue(asGrenade.Pin2))
                     {
-                        UnityEngine.Object.Destroy(asGrenade.Pin2.UXGeo_Held);
+                        Mod.FVRGrenadePin_m_hasBeenPulled.SetValue(asGrenade.Pin2, true);
+                        asGrenade.Pin2.transform.SetParent(null);
+                        asGrenade.Pin2.PinPiece.transform.SetParent(asGrenade.Pin2.transform);
+                        Rigidbody rigidbody = asGrenade.Pin2.PinPiece.AddComponent<Rigidbody>();
+                        rigidbody.mass = 0.01f;
+                        HingeJoint component = asGrenade.Pin2.GetComponent<HingeJoint>();
+                        component.connectedBody = rigidbody;
+                        asGrenade.Pin2.Grenade.PullPin2();
+                        Mod.FVRGrenadePin_m_isDying.SetValue(asGrenade.Pin2, true);
+                        if (asGrenade.Pin2.UXGeo_Held != null)
+                        {
+                            UnityEngine.Object.Destroy(asGrenade.Pin2.UXGeo_Held);
+                        }
+                        modified = true;
                     }
-                    modified = true;
                 }
             }
 
