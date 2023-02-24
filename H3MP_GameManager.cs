@@ -1515,10 +1515,17 @@ namespace H3MP
         {
             Mod.LogInfo("Changing instance from " + H3MP_GameManager.instance + " to " + instance);
             // Remove ourselves from the previous instance and manage dicts accordingly
-            --activeInstances[H3MP_GameManager.instance];
-            if(activeInstances[H3MP_GameManager.instance] == 0)
+            if (activeInstances.ContainsKey(H3MP_GameManager.instance))
             {
-                activeInstances.Remove(H3MP_GameManager.instance);
+                --activeInstances[H3MP_GameManager.instance];
+                if (activeInstances[H3MP_GameManager.instance] == 0)
+                {
+                    activeInstances.Remove(H3MP_GameManager.instance);
+                }
+            }
+            else
+            {
+                Mod.LogError("Instance we are leaving is missing from active instances!");
             }
             if (TNHInstances.TryGetValue(H3MP_GameManager.instance, out H3MP_TNHInstance currentInstance))
             {
