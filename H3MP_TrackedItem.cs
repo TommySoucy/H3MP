@@ -1463,7 +1463,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[rings == null ? 0 : rings.Count + 1];
+                data.data = new byte[rings == null ? 1 : rings.Count + 1];
                 modified = true;
             }
 
