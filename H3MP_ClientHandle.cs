@@ -209,7 +209,7 @@ namespace H3MP
                 else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
                 {
                     //trackedItem.controller = controllerID;
-                    if (trackedItem.physicalItem != null)
+                    if (trackedItem.physicalItem != null && trackedItem.physicalItem != null)
                     {
                         Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
                     }

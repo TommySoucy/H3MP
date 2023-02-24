@@ -248,18 +248,9 @@ namespace H3MP
 
         public bool Update(bool full = false)
         {
+            // Phys could be null if we were given control of the item while we were loading and we haven't instantiated it on our side yet
             if(physicalItem == null)
             {
-                Mod.LogError("Item " + itemID + " with tracked ID " + trackedID + " and waitingindex " + localWaitingIndex + " was called to update but we were missing physical item!");
-                if (H3MP_ThreadManager.host)
-                {
-                    H3MP_ServerSend.DestroyItem(trackedID);
-                }
-                else
-                {
-                    H3MP_ClientSend.DestroyItem(trackedID);
-                }
-                RemoveFromLocal();
                 return false;
             }
 

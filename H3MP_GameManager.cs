@@ -2053,6 +2053,36 @@ namespace H3MP
 
                     controlOverride = false;
 
+                    // Instantiate any objects we are in control of that don't have a phys yet
+                    for(int i=0; i < items.Count; ++i)
+                    {
+                        if (items[i].physicalItem == null)
+                        {
+                            AnvilManager.Run(items[i].Instantiate());
+                        }
+                    }
+                    for(int i=0; i < sosigs.Count; ++i)
+                    {
+                        if (sosigs[i].physicalObject == null)
+                        {
+                            AnvilManager.Run(sosigs[i].Instantiate());
+                        }
+                    }
+                    for(int i=0; i < autoMeaters.Count; ++i)
+                    {
+                        if (autoMeaters[i].physicalObject == null)
+                        {
+                            AnvilManager.Run(autoMeaters[i].Instantiate());
+                        }
+                    }
+                    for(int i=0; i < encryptions.Count; ++i)
+                    {
+                        if (encryptions[i].physicalObject == null)
+                        {
+                            AnvilManager.Run(encryptions[i].Instantiate());
+                        }
+                    }
+
                     // If client, tell server we are done loading
                     if (!H3MP_ThreadManager.host)
                     {

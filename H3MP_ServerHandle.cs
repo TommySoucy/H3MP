@@ -295,7 +295,8 @@ namespace H3MP
                 if (trackedItem.controller != 0 && newController == 0)
                 {
                     // Only want to active rigidbody if not parented to another tracked item
-                    if (trackedItem.parent == -1)
+                    // Physical object could be null if we are given control while we are loading, the giving client will think we are in their scene/instance
+                    if (trackedItem.parent == -1 && trackedItem.physicalItem != null)
                     {
                         Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
                     }
@@ -304,7 +305,10 @@ namespace H3MP
                 }
                 else if (trackedItem.controller == 0 && newController != 0)
                 {
-                    Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
+                    if (trackedItem.physicalItem != null) 
+                    {
+                        Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
+                    }
                     H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                     H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
