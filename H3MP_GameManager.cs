@@ -742,7 +742,7 @@ namespace H3MP
                         }
                         else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
                         {
-                            Mod.LogInfo("Dont want to track" + physObj.name+", destroying");
+                            Mod.LogInfo("Dont want to track " + physObj.name+", destroying, \n"+Environment.StackTrace);
                             Destroy(root.gameObject);
                         }
                     }

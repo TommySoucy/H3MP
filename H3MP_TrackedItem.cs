@@ -1461,9 +1461,10 @@ namespace H3MP
             List<PinnedGrenadeRing> rings = Mod.PinnedGrenade_m_rings.GetValue(asPG) as List<PinnedGrenadeRing>;
             bool modified = false;
 
-            if (data.data == null)
+            int neededSize = rings.Count + 1;
+            if (data.data == null || data.data.Length != neededSize)
             {
-                data.data = new byte[rings == null ? 1 : rings.Count + 1];
+                data.data = new byte[neededSize];
                 modified = true;
             }
 
