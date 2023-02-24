@@ -7599,7 +7599,7 @@ namespace H3MP
                                     // We want to keep it in local until we give destruction order
                                     removeFromLocal = false;
                                 }
-                                else
+                                else if (data.trackedID != -2)
                                 {
                                     H3MP_ClientSend.DestroyItem(data.trackedID);
 
@@ -7612,7 +7612,7 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            if (data.removeFromListOnDestroy && data.trackedID != -1)
+                            if (data.removeFromListOnDestroy && data.trackedID != -1 && data.trackedID != -2)
                             {
                                 H3MP_Client.items[data.trackedID] = null;
                                 H3MP_GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
@@ -7634,7 +7634,7 @@ namespace H3MP
                                 // We want to keep it in local until we give control
                                 removeFromLocal = false;
                             }
-                            else
+                            else if (data.trackedID != -2)
                             {
                                 H3MP_ClientSend.GiveControl(data.trackedID, otherPlayer);
 
@@ -7674,7 +7674,7 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    if (data.removeFromListOnDestroy && data.trackedID != -1)
+                    if (data.removeFromListOnDestroy && data.trackedID != -1 && data.trackedID != -2)
                     {
                         H3MP_Client.items[data.trackedID] = null;
                         H3MP_GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);

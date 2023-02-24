@@ -512,6 +512,7 @@ namespace H3MP
                 Write(trackedItem.localTrackedID);
                 Write(trackedItem.scene);
                 Write(trackedItem.instance);
+                Write(trackedItem.sceneInit);
                 if (trackedItem.additionalData == null || trackedItem.additionalData.Length == 0)
                 {
                     Write(0);
@@ -634,6 +635,7 @@ namespace H3MP
                 Write(SosigTargetPrioritySystemPatch.BoolArrToInt(trackedSosig.IFFChart));
                 Write(trackedSosig.scene);
                 Write(trackedSosig.instance);
+                Write(trackedSosig.sceneInit);
                 if (trackedSosig.data == null || trackedSosig.data.Length == 0)
                 {
                     Write(0);
@@ -679,6 +681,7 @@ namespace H3MP
                 Write(trackedAutoMeater.localTrackedID);
                 Write(trackedAutoMeater.scene);
                 Write(trackedAutoMeater.instance);
+                Write(trackedAutoMeater.sceneInit);
                 if (trackedAutoMeater.data == null || trackedAutoMeater.data.Length == 0)
                 {
                     Write(0);
@@ -803,6 +806,7 @@ namespace H3MP
                 }
                 Write(trackedEncryption.scene);
                 Write(trackedEncryption.instance);
+                Write(trackedEncryption.sceneInit);
                 Write(trackedEncryption.localWaitingIndex);
             }
             else
@@ -1236,6 +1240,7 @@ namespace H3MP
                 trackedItem.localTrackedID = ReadInt();
                 trackedItem.scene = ReadString();
                 trackedItem.instance = ReadInt();
+                trackedItem.sceneInit = ReadBool();
                 int additionalDataLen = ReadInt();
                 if (additionalDataLen > 0)
                 {
@@ -1328,6 +1333,7 @@ namespace H3MP
                 trackedSosig.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(ReadInt());
                 trackedSosig.scene = ReadString();
                 trackedSosig.instance = ReadInt();
+                trackedSosig.sceneInit = ReadBool();
                 int dataLen = ReadInt();
                 if (dataLen > 0)
                 {
@@ -1473,6 +1479,7 @@ namespace H3MP
                 trackedAutoMeater.localTrackedID = ReadInt();
                 trackedAutoMeater.scene = ReadString();
                 trackedAutoMeater.instance = ReadInt();
+                trackedAutoMeater.sceneInit = ReadBool();
                 int dataLen = ReadInt();
                 if (dataLen > 0)
                 {
@@ -1569,6 +1576,7 @@ namespace H3MP
                 }
                 trackedEncryption.scene = ReadString();
                 trackedEncryption.instance = ReadInt();
+                trackedEncryption.sceneInit = ReadBool();
                 trackedEncryption.localWaitingIndex = ReadUInt();
             }
             else

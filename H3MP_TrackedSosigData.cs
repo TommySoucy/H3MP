@@ -44,6 +44,7 @@ namespace H3MP
         public string scene;
         public int instance;
         public byte[] data;
+        public bool sceneInit;
 
         public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(-1, null);
 

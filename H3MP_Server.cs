@@ -182,6 +182,20 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem, int clientID)
         {
+            // If this is a sceneInit item received from client that we haven't tracked yet
+            // And if the controller is not the first player in scene/instance
+            if (trackedItem.trackedID == -1 && trackedItem.controller != 0 && trackedItem.sceneInit && 
+                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance) ||
+                H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(trackedItem.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedItem.controller))
+            {
+                // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+                // indicate this to the sending client so they can destroy their item
+                trackedItem.trackedID = -2;
+                H3MP_ServerSend.TrackedItemSpecific(trackedItem, trackedItem.controller);
+                return;
+            }
+
             Mod.LogInfo("Server AddTrackedItem: "+trackedItem.itemID +" with waiting index: "+trackedItem.localWaitingIndex);
             // Adjust items size to acommodate if necessary
             if (availableItemIndices.Count == 0)
@@ -241,6 +255,20 @@ namespace H3MP
         {
             if (trackedSosig.trackedID == -1)
             {
+                // If this is a sceneInit sosig received from client that we haven't tracked yet
+                // And if the controller is not the first player in scene/instance
+                if (trackedSosig.controller != 0 && trackedSosig.sceneInit &&
+                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance) ||
+                H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(trackedSosig.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedSosig.controller))
+                {
+                    // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+                    // indicate this to the sending client so they can destroy their sosig
+                    trackedSosig.trackedID = -2;
+                    H3MP_ServerSend.TrackedSosigSpecific(trackedSosig, trackedSosig.controller);
+                    return;
+                }
+
                 // Adjust sosigs size to acommodate if necessary
                 if (availableSosigIndices.Count == 0)
                 {
@@ -302,6 +330,20 @@ namespace H3MP
 
         public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, int clientID)
         {
+            // If this is a sceneInit autoMeater received from client that we haven't tracked yet
+            // And if the controller is not the first player in scene/instance
+            if (trackedAutoMeater.trackedID == -1 && trackedAutoMeater.controller != 0 && trackedAutoMeater.sceneInit &&
+                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance) ||
+                H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(trackedAutoMeater.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedAutoMeater.controller))
+            {
+                // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+                // indicate this to the sending client so they can destroy their autoMeater
+                trackedAutoMeater.trackedID = -2;
+                H3MP_ServerSend.TrackedAutoMeaterSpecific(trackedAutoMeater, trackedAutoMeater.controller);
+                return;
+            }
+
             // Adjust AutoMeaters size to acommodate if necessary
             if (availableAutoMeaterIndices.Count == 0)
             {
@@ -356,6 +398,20 @@ namespace H3MP
         {
             if (trackedEncryption.trackedID == -1)
             {
+                // If this is a sceneInit Encryption received from client that we haven't tracked yet
+                // And if the controller is not the first player in scene/instance
+                if (trackedEncryption.controller != 0 && trackedEncryption.sceneInit &&
+                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance) ||
+                H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(trackedEncryption.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedEncryption.controller))
+                {
+                    // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+                    // indicate this to the sending client so they can destroy their Encryption
+                    trackedEncryption.trackedID = -2;
+                    H3MP_ServerSend.TrackedEncryptionSpecific(trackedEncryption, trackedEncryption.controller);
+                    return;
+                }
+
                 // Adjust Encryptions size to acommodate if necessary
                 if (availableEncryptionIndices.Count == 0)
                 {

@@ -35,6 +35,7 @@ namespace H3MP
         public bool removeFromListOnDestroy = true;
         public string scene;
         public int instance;
+        public bool sceneInit;
 
         public IEnumerator Instantiate()
         {

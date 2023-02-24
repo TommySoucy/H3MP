@@ -494,7 +494,21 @@ namespace H3MP
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
         {
-            Mod.LogInfo("Client AddTrackedItem "+trackedItem.itemID+" with waitingindex: "+trackedItem.localWaitingIndex);
+            H3MP_TrackedItemData actualTrackedItem = null;
+            Mod.LogInfo("Client AddTrackedItem " + trackedItem.itemID + " with tracked ID "+ trackedItem.trackedID + ", waitingindex: " + trackedItem.localWaitingIndex);
+            // If this is a scene init object the server rejected
+            if (trackedItem.trackedID == -2)
+            {
+                actualTrackedItem = waitingLocalItems[trackedItem.localWaitingIndex];
+                if (actualTrackedItem.physicalItem != null)
+                {
+                    // Get rid of the item
+                    actualTrackedItem.physicalItem.sendDestroy = false;
+                    Destroy(actualTrackedItem.physicalItem.gameObject);
+                }
+                return;
+            }
+
             // Adjust items size to acommodate if necessary
             if (items.Length <= trackedItem.trackedID)
             {
@@ -505,7 +519,7 @@ namespace H3MP
             {
                 Mod.LogInfo("\tWe are controller");
                 // Get our item
-                H3MP_TrackedItemData actualTrackedItem = waitingLocalItems[trackedItem.localWaitingIndex];
+                actualTrackedItem = waitingLocalItems[trackedItem.localWaitingIndex];
                 waitingLocalItems.Remove(trackedItem.localWaitingIndex);
 
                 Mod.LogInfo("\tGot actual tracked item: "+ actualTrackedItem.itemID);
@@ -578,6 +592,20 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig)
         {
+            H3MP_TrackedSosigData actualTrackedSosig = null;
+            // If this is a scene init object the server rejected
+            if (trackedSosig.trackedID == -2)
+            {
+                actualTrackedSosig = waitingLocalSosigs[trackedSosig.localWaitingIndex];
+                if (actualTrackedSosig.physicalObject != null)
+                {
+                    // Get rid of the object
+                    actualTrackedSosig.physicalObject.sendDestroy = false;
+                    Destroy(actualTrackedSosig.physicalObject.gameObject);
+                }
+                return;
+            }
+
             // Adjust sosigs size to acommodate if necessary
             if (sosigs.Length <= trackedSosig.trackedID)
             {
@@ -587,7 +615,7 @@ namespace H3MP
             if (trackedSosig.controller == H3MP_Client.singleton.ID)
             {
                 // Get our sosig
-                H3MP_TrackedSosigData actualTrackedSosig = waitingLocalSosigs[trackedSosig.localWaitingIndex];
+                actualTrackedSosig = waitingLocalSosigs[trackedSosig.localWaitingIndex];
                 waitingLocalSosigs.Remove(trackedSosig.localWaitingIndex);
 
                 // Set its new tracked ID
@@ -663,6 +691,20 @@ namespace H3MP
 
         public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater)
         {
+            H3MP_TrackedAutoMeaterData actualTrackedAutoMeater = null;
+            // If this is a scene init object the server rejected
+            if (trackedAutoMeater.trackedID == -2)
+            {
+                actualTrackedAutoMeater = waitingLocalAutoMeaters[trackedAutoMeater.localWaitingIndex];
+                if (actualTrackedAutoMeater.physicalObject != null)
+                {
+                    // Get rid of the object
+                    actualTrackedAutoMeater.physicalObject.sendDestroy = false;
+                    Destroy(actualTrackedAutoMeater.physicalObject.gameObject);
+                }
+                return;
+            }
+
             // Adjust AutoMeaters size to acommodate if necessary
             if (autoMeaters.Length <= trackedAutoMeater.trackedID)
             {
@@ -672,7 +714,7 @@ namespace H3MP
             if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
             {
                 // Get our autoMeater.
-                H3MP_TrackedAutoMeaterData actualTrackedAutoMeater = waitingLocalAutoMeaters[trackedAutoMeater.localWaitingIndex];
+                actualTrackedAutoMeater = waitingLocalAutoMeaters[trackedAutoMeater.localWaitingIndex];
                 waitingLocalAutoMeaters.Remove(trackedAutoMeater.localWaitingIndex);
                 
                 // Set its tracked ID
@@ -720,6 +762,20 @@ namespace H3MP
 
         public static void AddTrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption)
         {
+            H3MP_TrackedEncryptionData actualTrackedEncryption = null;
+            // If this is a scene init object the server rejected
+            if (trackedEncryption.trackedID == -2)
+            {
+                actualTrackedEncryption = waitingLocalEncryptions[trackedEncryption.localWaitingIndex];
+                if (actualTrackedEncryption.physicalObject != null)
+                {
+                    // Get rid of the object
+                    actualTrackedEncryption.physicalObject.sendDestroy = false;
+                    Destroy(actualTrackedEncryption.physicalObject.gameObject);
+                }
+                return;
+            }
+
             // Adjust Encryptions size to acommodate if necessary
             if (encryptions.Length <= trackedEncryption.trackedID)
             {
@@ -729,7 +785,7 @@ namespace H3MP
             if (trackedEncryption.controller == H3MP_Client.singleton.ID)
             {
                 // Get our encryption.
-                H3MP_TrackedEncryptionData actualTrackedEncryption = waitingLocalEncryptions[trackedEncryption.localWaitingIndex];
+                actualTrackedEncryption = waitingLocalEncryptions[trackedEncryption.localWaitingIndex];
                 waitingLocalEncryptions.Remove(trackedEncryption.localWaitingIndex);
                 
                 // Set tis tracked ID

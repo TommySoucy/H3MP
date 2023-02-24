@@ -786,6 +786,7 @@ namespace H3MP
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
             data.controller = ID;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn;
 
             CollectExternalData(data);
 
@@ -1080,6 +1081,7 @@ namespace H3MP
             data.IFFChart = sosigScript.Priority.IFFChart;
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn;
 
             CollectExternalData(data);
 
@@ -1255,6 +1257,7 @@ namespace H3MP
             data.localTrackedID = autoMeaters.Count;
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn;
             autoMeaters.Add(data);
 
             return trackedAutoMeater;
@@ -1390,6 +1393,7 @@ namespace H3MP
             data.localTrackedID = encryptions.Count;
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn;
             encryptions.Add(data);
 
             return trackedEncryption;

@@ -22,6 +22,7 @@ namespace H3MP
         private bool previousActiveControl;
         public string scene;
         public int instance;
+        public bool sceneInit;
 
         // Data
         public string itemID; // The ID of this item so it can be spawned by clients and host
@@ -247,6 +248,21 @@ namespace H3MP
 
         public bool Update(bool full = false)
         {
+            if(physicalItem == null)
+            {
+                Mod.LogError("Item " + itemID + " with tracked ID " + trackedID + " and waitingindex " + localWaitingIndex + " was called to update but we were missing physical item!");
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.DestroyItem(trackedID);
+                }
+                else
+                {
+                    H3MP_ClientSend.DestroyItem(trackedID);
+                }
+                RemoveFromLocal();
+                return false;
+            }
+
             previousPos = position;
             previousRot = rotation;
             if (parent == -1)

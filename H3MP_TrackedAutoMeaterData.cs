@@ -38,6 +38,7 @@ namespace H3MP
         public string scene;
         public int instance;
         public byte[] data;
+        public bool sceneInit;
 
         public Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone> hitZones = new Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone>();
 

@@ -1198,9 +1198,10 @@ namespace H3MP
             // AnvilPrefabSpawnPatch
             MethodInfo anvilPrefabSpawnPatchOriginal = typeof(AnvilPrefabSpawn).GetMethod("InstantiateAndZero", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo anvilPrefabSpawnPatchPrefix = typeof(AnvilPrefabSpawnPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo anvilPrefabSpawnPatchPostfix = typeof(AnvilPrefabSpawnPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(anvilPrefabSpawnPatchOriginal, harmony, true);
-            harmony.Patch(anvilPrefabSpawnPatchOriginal, new HarmonyMethod(anvilPrefabSpawnPatchPrefix));
+            harmony.Patch(anvilPrefabSpawnPatchOriginal, new HarmonyMethod(anvilPrefabSpawnPatchPrefix), new HarmonyMethod(anvilPrefabSpawnPatchPostfix));
 
             // ProjectileFirePatch
             MethodInfo projectileFirePatchOriginal = typeof(BallisticProjectile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(float), typeof(Vector3), typeof(FVRFireArm), typeof(bool) }, null);
@@ -8591,6 +8592,12 @@ namespace H3MP
     // Then in instantiation patches, once an object belonging to once of those files gets instantiated (inSpawnVaultFileRoutineToSkip is set)
     // we add the resulting object to the list corresponding to the file
     // Once the SpawnVaultFileRoutine finishes, we destroy every object in the list
+
+    // Note that this whole thing is an attempt at preventing to initialize a scene if already has been initialized.
+    // Unfortunately there is still a problem if multiple players started loading a scene at the same time, each thinking they were the first
+    // Each of these will let each of their objects spawn, this is why we add the sceneInit flag to full object packets so the server
+    // can decide who the one to initialize the scene is in case multiple of them send initial objects.
+
     class LoadDefaultSceneRoutinePatch
     {
         public static bool inLoadDefaultSceneRoutine;
@@ -8598,7 +8605,7 @@ namespace H3MP
         static void Prefix()
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || !H3MP_GameManager.PlayersPresentSlow())
+            if (Mod.managerObject == null)
             {
                 return;
             }
@@ -8617,21 +8624,30 @@ namespace H3MP
     {
         static void Prefix(VaultFile file)
         {
-            // Skip if not connected or we are the first in the scene/instance
-            // This means if we are the first in the scene/instance we will spawn all objects even ones spawned as part of LoadDefaultSceneRoutine
-            // If we aren't the first, we will only spawn the objects if not part of LoadDefaultSceneRoutine
-            if (Mod.managerObject == null || H3MP_GameManager.firstPlayerInSceneInstance)
+            if (Mod.managerObject == null)
             {
                 return;
             }
 
             if (LoadDefaultSceneRoutinePatch.inLoadDefaultSceneRoutine)
             {
-                if (SpawnVaultFileRoutinePatch.filesToSkip == null)
+                // If first in scene/instance
+                if (H3MP_GameManager.firstPlayerInSceneInstance)
                 {
-                    SpawnVaultFileRoutinePatch.filesToSkip = new List<string>();
+                    if (SpawnVaultFileRoutinePatch.initFiles == null)
+                    {
+                        SpawnVaultFileRoutinePatch.initFiles = new List<string>();
+                    }
+                    SpawnVaultFileRoutinePatch.initFiles.Add(file.FileName);
                 }
-                SpawnVaultFileRoutinePatch.filesToSkip.Add(file.FileName);
+                else // Not first player in scene, add to files to skip
+                {
+                    if (SpawnVaultFileRoutinePatch.filesToSkip == null)
+                    {
+                        SpawnVaultFileRoutinePatch.filesToSkip = new List<string>();
+                    }
+                    SpawnVaultFileRoutinePatch.filesToSkip.Add(file.FileName);
+                }
             }
         }
     }
@@ -8640,7 +8656,9 @@ namespace H3MP
     class SpawnVaultFileRoutinePatch
     {
         public static bool inSpawnVaultFileRoutineToSkip;
+        public static bool inInitSpawnVaultFileRoutine;
         public static List<string> filesToSkip;
+        public static List<string> initFiles;
         public static string currentFile;
 
         public static Dictionary<string, List<UnityEngine.Object>> routineData = new Dictionary<string, List<UnityEngine.Object>>();
@@ -8667,8 +8685,8 @@ namespace H3MP
 
         static void Prefix(ref VaultFile ___f)
         {
-            // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || !H3MP_GameManager.PlayersPresentSlow())
+            // Skip if not connected
+            if (Mod.managerObject == null)
             {
                 return;
             }
@@ -8682,6 +8700,12 @@ namespace H3MP
                 {
                     routineData.Add(___f.FileName, new List<UnityEngine.Object>());
                 }
+            }
+            else if(initFiles != null && initFiles.Contains(___f.FileName))
+            {
+                inInitSpawnVaultFileRoutine = true;
+
+                currentFile = ___f.FileName;
             }
         }
 
@@ -8707,6 +8731,7 @@ namespace H3MP
         static void Postfix(ref VaultFile ___f)
         {
             inSpawnVaultFileRoutineToSkip = false;
+            inInitSpawnVaultFileRoutine = false;
         }
     }
 
@@ -8729,16 +8754,25 @@ namespace H3MP
     // Patches AnvilPrefabSpawn.InstantiateAndZero so we know when we spawn items from an anvil prefab spawn
     class AnvilPrefabSpawnPatch
     {
+        public static bool inInitPrefabSpawn;
+
         static bool Prefix(AnvilPrefabSpawn __instance, GameObject result)
         {
             // Skip if not connected or no one else in the scene/instance
-            if (Mod.managerObject == null || !H3MP_GameManager.PlayersPresentSlow())
+            if (Mod.managerObject == null)
             {
                 return true;
             }
 
+            inInitPrefabSpawn = true;
+
             // Prevent spawning if loading but we have control override, or we aren't loading but we were first in scene
             return (H3MP_GameManager.sceneLoading && H3MP_GameManager.controlOverride) || (!H3MP_GameManager.sceneLoading && H3MP_GameManager.firstPlayerInSceneInstance);
+        }
+
+        static void Postfix()
+        {
+            inInitPrefabSpawn = false;
         }
     }
     #endregion

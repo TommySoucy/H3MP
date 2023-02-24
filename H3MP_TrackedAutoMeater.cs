@@ -146,7 +146,7 @@ namespace H3MP
                                 sendDestroy = true;
                             }
 
-                            if (data.trackedID != -1)
+                            if (data.trackedID != -1 && data.trackedID != -2)
                             {
                                 H3MP_Client.autoMeaters[data.trackedID] = null;
                                 H3MP_GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
@@ -168,7 +168,7 @@ namespace H3MP
                                 // We want to keep it in local until we give control
                                 removeFromLocal = false;
                             }
-                            else
+                            else if (data.trackedID != -2)
                             {
                                 H3MP_ClientSend.GiveAutoMeaterControl(data.trackedID, otherPlayer);
 
@@ -208,7 +208,7 @@ namespace H3MP
                         sendDestroy = true;
                     }
 
-                    if(data.removeFromListOnDestroy && data.trackedID != -1)
+                    if(data.removeFromListOnDestroy && data.trackedID != -1 && data.trackedID != -2)
                     {
                         H3MP_Client.autoMeaters[data.trackedID] = null;
                         H3MP_GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
