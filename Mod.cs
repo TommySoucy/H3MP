@@ -11888,6 +11888,7 @@ namespace H3MP
             }
         }
 
+        // TODO: ModComp: TNHTweaker: Has SetPhase_Take_Replacement that we would need to patch instead
         static bool SetPhaseTakePrefix()
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
@@ -11949,6 +11950,7 @@ namespace H3MP
             return true;
         }
 
+        // TODO: ModComp: TNHTweaker: Has SetPhase_Take_Replacement that we would need to patch instead
         static void SetPhaseTakePostfix()
         {
             if (skipNextSetPhaseTake)
@@ -12414,6 +12416,7 @@ namespace H3MP
             inGenerateSentryPatrol = false;
         }
 
+        // TODO: ModComp: TNHTweaker: The mod has its own GeneratePatrol method instead of calling vanilla one
         static void GeneratePatrolPrefix(TNH_Manager __instance)
         {
             if(Mod.managerObject != null)
@@ -12829,6 +12832,7 @@ namespace H3MP
             return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own IdentifyEncryptionReplacement patch for IdentifyEncryption, need to review for the DeleteAllActiveWarpIns call below
         static void IdentifyEncryptionPostfix(TNH_HoldPoint __instance)
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
@@ -12945,21 +12949,33 @@ namespace H3MP
             }
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own patch for holdpoint SpawnTakeEnemyGroup which we will need to patch since it repleaces the original
+        //                            and here we need to know when we spawn the sosigs inside there to set the flag
+        // TODO: ModComp: TNHTweaker: Has its own SpawnHoldEnemyGroup which we will need to patch since it repleaces the original
+        //                            in TNHTweaker's patch for SpawningRoutineUpdate
         static void SpawnEnemyGroupPrefix()
         {
             inSpawnEnemyGroup = true;
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own patch for holdpoint SpawnTakeEnemyGroup which we will need to patch since it repleaces the original
+        //                            and here we need to know when we spawn the sosigs inside there to set the flag
+        // TODO: ModComp: TNHTweaker: Has its own SpawnHoldEnemyGroup which we will need to patch since it repleaces the original
+        //                            in TNHTweaker's patch for SpawningRoutineUpdate
         static void SpawnEnemyGroupPostfix()
         {
             inSpawnEnemyGroup = false;
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own patch for holdpoint SpawnTurrets which we will need to patch since it repleaces the original
+        //                            and here we need to know when we spawn the turrests inside there to set the flag
         static void SpawnTurretsPrefix()
         {
             inSpawnTurrets = true;
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own patch for holdpoint SpawnTurrets which we will need to patch since it repleaces the original
+        //                            and here we need to know when we spawn the turrests inside there to set the flag
         static void SpawnTurretsPostfix()
         {
             inSpawnTurrets = false;
@@ -13031,6 +13047,7 @@ namespace H3MP
         public static bool inSpawnBoxes;
         public static int supplyPointIndex;
 
+        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyGroup we would need to patch instead
         static void SpawnTakeEnemyGroupPrefix(TNH_SupplyPoint __instance)
         {
             inSpawnTakeEnemyGroup = true;
@@ -13045,11 +13062,13 @@ namespace H3MP
             }
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyGroup we would need to patch instead
         static void SpawnTakeEnemyGroupPostfix()
         {
             inSpawnTakeEnemyGroup = false;
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyTurrets we would need to patch instead
         static void SpawnDefensesPrefix(TNH_SupplyPoint __instance)
         {
             inSpawnDefenses = true;
@@ -13064,11 +13083,13 @@ namespace H3MP
             }
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyTurrets we would need to patch instead
         static void SpawnDefensesPostfix()
         {
             inSpawnDefenses = false;
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyBoxes we would need to patch instead
         static void SpawnBoxesPrefix(TNH_SupplyPoint __instance)
         {
             inSpawnBoxes = true;
@@ -13083,6 +13104,7 @@ namespace H3MP
             }
         }
 
+        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyBoxes we would need to patch instead
         static void SpawnBoxesPostfix()
         {
             inSpawnBoxes = false;
