@@ -146,7 +146,7 @@ namespace H3MP
 
         public void RemoveCurrentlyPlaying(bool send, int ID, bool fromServer = false)
         {
-            if ((letPeopleJoin || currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(instance))
+            if ((letPeopleJoin || currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && Mod.joinTNHInstances != null && !Mod.joinTNHInstances.ContainsKey(instance))
             {
                 GameObject newInstance = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
                 newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
