@@ -2158,7 +2158,7 @@ namespace H3MP
                 // If the relevant client is no longer loading or wasn't to begin with
                 if(!H3MP_Server.loadingClientsWaitingFrom.ContainsKey(forClient))
                 {
-                    H3MP_Server.clients[forClient].SendRelevantTrackedObjects();
+                    H3MP_Server.clients[forClient].SendRelevantTrackedObjects(clientID);
                 }
 
                 waitingClients.Remove(forClient);

@@ -271,6 +271,9 @@ namespace H3MP
                         }
                         H3MP_ServerSend.RequestUpToDateObjects(otherPlayers[i], false, ID);
                     }
+
+                    // Send relevant trackedObjects specifically from us too
+                    SendRelevantTrackedObjects(0);
                 }
                 else // No other players in the client's scene/instance 
                 {
@@ -299,7 +302,7 @@ namespace H3MP
             }
         }
 
-        public void SendRelevantTrackedObjects()
+        public void SendRelevantTrackedObjects(int fromclient = -1)
         {
             // Send to the client all items that are already synced and controlled by clients in the same scene and instance
             for (int i = 0; i < H3MP_Server.items.Length; ++i)
@@ -309,67 +312,79 @@ namespace H3MP
                 //       the ones from other scenes, which will be useless to the client
                 //       Need to check which one would be more efficient, more packets or checking scene twice
                 //       Could also pass a bool telling the client not to check the scene because its already been checked?
-                if (H3MP_Server.items[i] != null)
+                H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
+                if (trackedItem != null)
                 {
-                    if ((H3MP_Server.items[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (H3MP_Server.items[i].controller != 0 && H3MP_Server.items[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.items[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.items[i].controller].player.instance))
+                    if ((fromclient == -1 && ((trackedItem.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                        (trackedItem.controller != 0 && trackedItem.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedItem.controller].player.scene) &&
+                        player.instance == H3MP_Server.clients[trackedItem.controller].player.instance))) || (fromclient != -1 && trackedItem.controller == fromclient &&
+                        player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
                     {
                         // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                         // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
                         // nullable are still null, which is problematic
-                        if (H3MP_Server.items[i].controller == 0)
+                        if (trackedItem.controller == 0)
                         {
-                            H3MP_Server.items[i].Update();
+                            trackedItem.Update();
                         }
-                        H3MP_ServerSend.TrackedItemSpecific(H3MP_Server.items[i], ID);
+                        H3MP_ServerSend.TrackedItemSpecific(trackedItem, ID);
                     }
                 }
             }
             // Send to the client all sosigs that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
             {
-                if (H3MP_Server.sosigs[i] != null)
+                H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[i];
+                if (trackedSosig != null)
                 {
-                    if ((H3MP_Server.sosigs[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (H3MP_Server.sosigs[i].controller != 0 && H3MP_Server.sosigs[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.sosigs[i].controller].player.instance))
+                    if ((fromclient == -1 && ((trackedSosig.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                        (trackedSosig.controller != 0 && trackedSosig.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedSosig.controller].player.scene) &&
+                        player.instance == H3MP_Server.clients[trackedSosig.controller].player.instance))) || (fromclient != -1 && trackedSosig.controller == fromclient &&
+                        player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
                     {
-                        if (H3MP_Server.sosigs[i].controller == 0)
+                        if (trackedSosig.controller == 0)
                         {
-                            H3MP_Server.sosigs[i].Update();
+                            trackedSosig.Update();
                         }
-                        H3MP_ServerSend.TrackedSosigSpecific(H3MP_Server.sosigs[i], ID);
+                        H3MP_ServerSend.TrackedSosigSpecific(trackedSosig, ID);
                     }
                 }
             }
             // Send to the client all AutoMeaters that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.autoMeaters.Length; ++i)
             {
-                if (H3MP_Server.autoMeaters[i] != null)
+                H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[i];
+                if (trackedAutoMeater != null)
                 {
-                    if ((H3MP_Server.autoMeaters[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (H3MP_Server.autoMeaters[i].controller != 0 && H3MP_Server.autoMeaters[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.autoMeaters[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.autoMeaters[i].controller].player.instance))
+                    if ((fromclient == -1 && ((trackedAutoMeater.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                        (trackedAutoMeater.controller != 0 && trackedAutoMeater.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedAutoMeater.controller].player.scene) &&
+                        player.instance == H3MP_Server.clients[trackedAutoMeater.controller].player.instance))) || (fromclient != -1 && trackedAutoMeater.controller == fromclient &&
+                        player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
                     {
-                        if (H3MP_Server.autoMeaters[i].controller == 0)
+                        if (trackedAutoMeater.controller == 0)
                         {
-                            H3MP_Server.autoMeaters[i].Update();
+                            trackedAutoMeater.Update();
                         }
-                        H3MP_ServerSend.TrackedAutoMeaterSpecific(H3MP_Server.autoMeaters[i], ID);
+                        H3MP_ServerSend.TrackedAutoMeaterSpecific(trackedAutoMeater, ID);
                     }
                 }
             }
             // Send to the client all Encryptions that are already synced and controlled by clients in the same scene
             for (int i = 0; i < H3MP_Server.encryptions.Length; ++i)
             {
-                if (H3MP_Server.encryptions[i] != null)
+                H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[i];
+                if (trackedEncryption != null)
                 {
-                    if ((H3MP_Server.encryptions[i].controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (H3MP_Server.encryptions[i].controller != 0 && H3MP_Server.encryptions[i].controller != ID && player.scene.Equals(H3MP_Server.clients[H3MP_Server.encryptions[i].controller].player.scene) && player.instance == H3MP_Server.clients[H3MP_Server.encryptions[i].controller].player.instance))
+                    if ((fromclient == -1 && ((trackedEncryption.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                        (trackedEncryption.controller != 0 && trackedEncryption.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedEncryption.controller].player.scene) &&
+                        player.instance == H3MP_Server.clients[trackedEncryption.controller].player.instance))) || (fromclient != -1 && trackedEncryption.controller == fromclient &&
+                        player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
                     {
-                        if (H3MP_Server.encryptions[i].controller == 0)
+                        if (trackedEncryption.controller == 0)
                         {
-                            H3MP_Server.encryptions[i].Update();
+                            trackedEncryption.Update();
                         }
-                        H3MP_ServerSend.TrackedEncryptionSpecific(H3MP_Server.encryptions[i], ID);
+                        H3MP_ServerSend.TrackedEncryptionSpecific(trackedEncryption, ID);
                     }
                 }
             }

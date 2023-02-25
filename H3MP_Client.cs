@@ -555,6 +555,12 @@ namespace H3MP
             }
             else
             {
+                // We might already have the object if it was sent multiple times through SendRelevantTrackedObjects
+                if(items[trackedItem.trackedID] != null)
+                {
+                    return;
+                }
+
                 Mod.LogInfo("\tWe are not controller");
                 trackedItem.localTrackedID = -1;
 
@@ -728,6 +734,12 @@ namespace H3MP
             }
             else
             {
+                // We might already have the object if it was sent multiple times through SendRelevantTrackedObjects
+                if (autoMeaters[trackedAutoMeater.trackedID] != null)
+                {
+                    return;
+                }
+
                 trackedAutoMeater.localTrackedID = -1;
 
                 // Add the AutoMeater to client global list
