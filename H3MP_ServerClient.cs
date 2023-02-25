@@ -302,7 +302,7 @@ namespace H3MP
             }
         }
 
-        public void SendRelevantTrackedObjects(int fromclient = -1)
+        public void SendRelevantTrackedObjects(int fromClient = -1)
         {
             // Send to the client all items that are already synced and controlled by clients in the same scene and instance
             for (int i = 0; i < H3MP_Server.items.Length; ++i)
@@ -315,18 +315,41 @@ namespace H3MP
                 H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
                 if (trackedItem != null)
                 {
-                    if (((fromclient == -1 || fromclient == 0) && ((trackedItem.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (trackedItem.controller != 0 && trackedItem.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedItem.controller].player.scene) &&
-                        player.instance == H3MP_Server.clients[trackedItem.controller].player.instance))) || (fromclient != -1 && trackedItem.controller == fromclient &&
-                        player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
+                    if(fromClient == -1)
                     {
-                        // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
-                        // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
-                        // nullable are still null, which is problematic
                         if (trackedItem.controller == 0)
                         {
-                            trackedItem.Update();
+                            if (player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                            {
+                                // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                                // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                                // nullable are still null, which is problematic
+                                trackedItem.Update();
+                                H3MP_ServerSend.TrackedItemSpecific(trackedItem, ID);
+                            }
                         }
+                        else if(trackedItem.controller != ID &&
+                                player.scene.Equals(H3MP_Server.clients[trackedItem.controller].player.scene) &&
+                                player.instance == H3MP_Server.clients[trackedItem.controller].player.instance)
+                        {
+                            H3MP_ServerSend.TrackedItemSpecific(trackedItem, ID);
+                        }
+                    }
+                    else if(fromClient == 0)
+                    {
+                        if (trackedItem.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                        {
+                            // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                            // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                            // nullable are still null, which is problematic
+                            trackedItem.Update();
+                            H3MP_ServerSend.TrackedItemSpecific(trackedItem, ID);
+                        }
+                    }
+                    else if (trackedItem.controller == fromClient &&
+                            player.scene.Equals(H3MP_Server.clients[fromClient].player.scene) &&
+                            player.instance == H3MP_Server.clients[fromClient].player.instance)
+                    {
                         H3MP_ServerSend.TrackedItemSpecific(trackedItem, ID);
                     }
                 }
@@ -337,15 +360,41 @@ namespace H3MP
                 H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[i];
                 if (trackedSosig != null)
                 {
-                    if (((fromclient == -1 || fromclient == 0) && ((trackedSosig.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (trackedSosig.controller != 0 && trackedSosig.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedSosig.controller].player.scene) &&
-                        player.instance == H3MP_Server.clients[trackedSosig.controller].player.instance))) || (fromclient != -1 && trackedSosig.controller == fromclient &&
-                        player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
+                    if (fromClient == -1)
                     {
                         if (trackedSosig.controller == 0)
                         {
-                            trackedSosig.Update();
+                            if (player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                            {
+                                // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                                // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                                // nullable are still null, which is problematic
+                                trackedSosig.Update();
+                                H3MP_ServerSend.TrackedSosigSpecific(trackedSosig, ID);
+                            }
                         }
+                        else if (trackedSosig.controller != ID &&
+                                player.scene.Equals(H3MP_Server.clients[trackedSosig.controller].player.scene) &&
+                                player.instance == H3MP_Server.clients[trackedSosig.controller].player.instance)
+                        {
+                            H3MP_ServerSend.TrackedSosigSpecific(trackedSosig, ID);
+                        }
+                    }
+                    else if (fromClient == 0)
+                    {
+                        if (trackedSosig.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                        {
+                            // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                            // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                            // nullable are still null, which is problematic
+                            trackedSosig.Update();
+                            H3MP_ServerSend.TrackedSosigSpecific(trackedSosig, ID);
+                        }
+                    }
+                    else if (trackedSosig.controller == fromClient &&
+                            player.scene.Equals(H3MP_Server.clients[fromClient].player.scene) &&
+                            player.instance == H3MP_Server.clients[fromClient].player.instance)
+                    {
                         H3MP_ServerSend.TrackedSosigSpecific(trackedSosig, ID);
                     }
                 }
@@ -356,15 +405,41 @@ namespace H3MP
                 H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[i];
                 if (trackedAutoMeater != null)
                 {
-                    if (((fromclient == -1 || fromclient == 0) && ((trackedAutoMeater.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (trackedAutoMeater.controller != 0 && trackedAutoMeater.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedAutoMeater.controller].player.scene) &&
-                        player.instance == H3MP_Server.clients[trackedAutoMeater.controller].player.instance))) || (fromclient != -1 && trackedAutoMeater.controller == fromclient &&
-                        player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
+                    if (fromClient == -1)
                     {
                         if (trackedAutoMeater.controller == 0)
                         {
-                            trackedAutoMeater.Update();
+                            if (player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                            {
+                                // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                                // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                                // nullable are still null, which is problematic
+                                trackedAutoMeater.Update();
+                                H3MP_ServerSend.TrackedAutoMeaterSpecific(trackedAutoMeater, ID);
+                            }
                         }
+                        else if (trackedAutoMeater.controller != ID &&
+                                player.scene.Equals(H3MP_Server.clients[trackedAutoMeater.controller].player.scene) &&
+                                player.instance == H3MP_Server.clients[trackedAutoMeater.controller].player.instance)
+                        {
+                            H3MP_ServerSend.TrackedAutoMeaterSpecific(trackedAutoMeater, ID);
+                        }
+                    }
+                    else if (fromClient == 0)
+                    {
+                        if (trackedAutoMeater.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                        {
+                            // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                            // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                            // nullable are still null, which is problematic
+                            trackedAutoMeater.Update();
+                            H3MP_ServerSend.TrackedAutoMeaterSpecific(trackedAutoMeater, ID);
+                        }
+                    }
+                    else if (trackedAutoMeater.controller == fromClient &&
+                            player.scene.Equals(H3MP_Server.clients[fromClient].player.scene) &&
+                            player.instance == H3MP_Server.clients[fromClient].player.instance)
+                    {
                         H3MP_ServerSend.TrackedAutoMeaterSpecific(trackedAutoMeater, ID);
                     }
                 }
@@ -375,15 +450,41 @@ namespace H3MP
                 H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[i];
                 if (trackedEncryption != null)
                 {
-                    if (((fromclient == -1 || fromclient == 0) && ((trackedEncryption.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
-                        (trackedEncryption.controller != 0 && trackedEncryption.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedEncryption.controller].player.scene) &&
-                        player.instance == H3MP_Server.clients[trackedEncryption.controller].player.instance))) || (fromclient != -1 && trackedEncryption.controller == fromclient &&
-                        player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
+                    if (fromClient == -1)
                     {
                         if (trackedEncryption.controller == 0)
                         {
-                            trackedEncryption.Update();
+                            if (player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                            {
+                                // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                                // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                                // nullable are still null, which is problematic
+                                trackedEncryption.Update();
+                                H3MP_ServerSend.TrackedEncryptionSpecific(trackedEncryption, ID);
+                            }
                         }
+                        else if (trackedEncryption.controller != ID &&
+                                player.scene.Equals(H3MP_Server.clients[trackedEncryption.controller].player.scene) &&
+                                player.instance == H3MP_Server.clients[trackedEncryption.controller].player.instance)
+                        {
+                            H3MP_ServerSend.TrackedEncryptionSpecific(trackedEncryption, ID);
+                        }
+                    }
+                    else if (fromClient == 0)
+                    {
+                        if (trackedEncryption.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                        {
+                            // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
+                            // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
+                            // nullable are still null, which is problematic
+                            trackedEncryption.Update();
+                            H3MP_ServerSend.TrackedEncryptionSpecific(trackedEncryption, ID);
+                        }
+                    }
+                    else if (trackedEncryption.controller == fromClient &&
+                            player.scene.Equals(H3MP_Server.clients[fromClient].player.scene) &&
+                            player.instance == H3MP_Server.clients[fromClient].player.instance)
+                    {
                         H3MP_ServerSend.TrackedEncryptionSpecific(trackedEncryption, ID);
                     }
                 }
