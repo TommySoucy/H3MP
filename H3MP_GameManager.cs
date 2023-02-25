@@ -2067,21 +2067,21 @@ namespace H3MP
                     }
                     for(int i=0; i < sosigs.Count; ++i)
                     {
-                        if (sosigs[i].physicalObject == null && items[i].trackedID > -1)
+                        if (sosigs[i].physicalObject == null && sosigs[i].trackedID > -1)
                         {
                             AnvilManager.Run(sosigs[i].Instantiate());
                         }
                     }
                     for(int i=0; i < autoMeaters.Count; ++i)
                     {
-                        if (autoMeaters[i].physicalObject == null && items[i].trackedID > -1)
+                        if (autoMeaters[i].physicalObject == null && autoMeaters[i].trackedID > -1)
                         {
                             AnvilManager.Run(autoMeaters[i].Instantiate());
                         }
                     }
                     for(int i=0; i < encryptions.Count; ++i)
                     {
-                        if (encryptions[i].physicalObject == null && items[i].trackedID > -1)
+                        if (encryptions[i].physicalObject == null && encryptions[i].trackedID > -1)
                         {
                             AnvilManager.Run(encryptions[i].Instantiate());
                         }
