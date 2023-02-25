@@ -417,20 +417,7 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadMinus))
                 {
-                    Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                    for(int i=0; i < assemblies.Length; ++i)
-                    {
-                        Mod.LogInfo(assemblies[i].FullName);
-                        try
-                        {
-                            assemblies[i].GetTypes();
-                            Mod.LogInfo("\tGot types successfully");
-;                       }
-                        catch(Exception ex)
-                        {
-                            Mod.LogWarning("\tFailed to get types: "+ex.Message);
-                        }
-                    }
+                    typeof(SceneLoader).GetMethod("LoadMG", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(GameObject.FindObjectOfType<SceneLoader>(), null);
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadMultiply))
                 {

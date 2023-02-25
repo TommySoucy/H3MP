@@ -2065,28 +2065,28 @@ namespace H3MP
                     // which will not have a trackedID yet
                     for(int i=0; i < items.Count; ++i)
                     {
-                        if (items[i].physicalItem == null && items[i].trackedID > -1)
+                        if (items[i].physicalItem == null && !items[i].awaitingInstantiation && items[i].trackedID > -1)
                         {
                             AnvilManager.Run(items[i].Instantiate());
                         }
                     }
                     for(int i=0; i < sosigs.Count; ++i)
                     {
-                        if (sosigs[i].physicalObject == null && sosigs[i].trackedID > -1)
+                        if (sosigs[i].physicalObject == null && !sosigs[i].awaitingInstantiation && sosigs[i].trackedID > -1)
                         {
                             AnvilManager.Run(sosigs[i].Instantiate());
                         }
                     }
                     for(int i=0; i < autoMeaters.Count; ++i)
                     {
-                        if (autoMeaters[i].physicalObject == null && autoMeaters[i].trackedID > -1)
+                        if (autoMeaters[i].physicalObject == null && !autoMeaters[i].awaitingInstantiation && autoMeaters[i].trackedID > -1)
                         {
                             AnvilManager.Run(autoMeaters[i].Instantiate());
                         }
                     }
                     for(int i=0; i < encryptions.Count; ++i)
                     {
-                        if (encryptions[i].physicalObject == null && encryptions[i].trackedID > -1)
+                        if (encryptions[i].physicalObject == null && !encryptions[i].awaitingInstantiation && encryptions[i].trackedID > -1)
                         {
                             AnvilManager.Run(encryptions[i].Instantiate());
                         }

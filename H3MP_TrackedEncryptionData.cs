@@ -37,6 +37,7 @@ namespace H3MP
         public string scene;
         public int instance;
         public bool sceneInit;
+        public bool awaitingInstantiation;
 
         public IEnumerator Instantiate()
         {
@@ -53,6 +54,7 @@ namespace H3MP
             if(prefab == null)
             {
                 Mod.LogError($"Attempted to instantiate encryption {type} sent from {controller} but failed to get prefab.");
+                awaitingInstantiation = false;
                 yield break;
             }
 
@@ -61,6 +63,7 @@ namespace H3MP
             GameObject encryptionInstance = GameObject.Instantiate(prefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalObject = encryptionInstance.AddComponent<H3MP_TrackedEncryption>();
+            awaitingInstantiation = false;
             physicalObject.data = this;
 
             physicalObject.physicalEncryptionScript = encryptionInstance.GetComponent<TNH_EncryptionTarget>();

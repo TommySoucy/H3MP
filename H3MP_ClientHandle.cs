@@ -220,13 +220,17 @@ namespace H3MP
                     H3MP_GameManager.items.Add(trackedItem);
                     if (trackedItem.physicalItem == null)
                     {
-                        // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                        // If its is null and we receive this after having finishing loading, we only want to instantiate if it is in our current scene/instance
                         // Otherwise we send destroy order for the object
                         if (!H3MP_GameManager.sceneLoading)
                         {
                             if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                             {
-                                AnvilManager.Run(trackedItem.Instantiate());
+                                if (!trackedItem.awaitingInstantiation)
+                                {
+                                    Mod.LogInfo("Received control of item " + trackedItem.itemID + " with tracked ID " + trackedItem.trackedID + " but had no phys, instantiating");
+                                    AnvilManager.Run(trackedItem.Instantiate());
+                                }
                             }
                             else
                             {
@@ -279,7 +283,10 @@ namespace H3MP
                     {
                         if (trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
                         {
-                            AnvilManager.Run(trackedSosig.Instantiate());
+                            if (!trackedSosig.awaitingInstantiation)
+                            {
+                                AnvilManager.Run(trackedSosig.Instantiate());
+                            }
                         }
                         else
                         {
@@ -332,7 +339,10 @@ namespace H3MP
                     {
                         if (trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                         {
-                            AnvilManager.Run(trackedAutoMeater.Instantiate());
+                            if (!trackedAutoMeater.awaitingInstantiation)
+                            {
+                                AnvilManager.Run(trackedAutoMeater.Instantiate());
+                            }
                         }
                         else
                         {
@@ -379,7 +389,10 @@ namespace H3MP
                     {
                         if (trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
                         {
-                            AnvilManager.Run(trackedEncryption.Instantiate());
+                            if (!trackedEncryption.awaitingInstantiation)
+                            {
+                                AnvilManager.Run(trackedEncryption.Instantiate());
+                            }
                         }
                         else
                         {

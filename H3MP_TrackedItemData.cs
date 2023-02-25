@@ -23,6 +23,7 @@ namespace H3MP
         public string scene;
         public int instance;
         public bool sceneInit;
+        public bool awaitingInstantiation;
 
         // Data
         public string itemID; // The ID of this item so it can be spawned by clients and host
@@ -57,6 +58,7 @@ namespace H3MP
             if (itemPrefab == null)
             {
                 Mod.LogError($"Attempted to instantiate {itemID} sent from {controller} but failed to get item prefab.");
+                awaitingInstantiation = false;
                 yield break;
             }
 
@@ -73,6 +75,7 @@ namespace H3MP
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
                 --Mod.skipAllInstantiates;
                 physicalItem = itemObject.AddComponent<H3MP_TrackedItem>();
+                awaitingInstantiation = false;
                 physicalItem.data = this;
                 physicalItem.physicalObject = itemObject.GetComponent<FVRPhysicalObject>();
 

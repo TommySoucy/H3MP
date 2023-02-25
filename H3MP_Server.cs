@@ -240,7 +240,7 @@ namespace H3MP
             // Instantiate item if it is in the current scene and not controlled by us
             if (clientID != 0 && H3MP_GameManager.IsItemIdentifiable(trackedItem))
             {
-                if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
+                if (!trackedItem.awaitingInstantiation && trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                 {
                     Mod.LogInfo("\t\tItem not from us and in same scene/instance, instantiating");
                     AnvilManager.Run(trackedItem.Instantiate());
@@ -310,7 +310,7 @@ namespace H3MP
                 // Instantiate sosig if it is in the current scene and not controlled by us
                 if (clientID != 0)
                 {
-                    if (trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
+                    if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
                     {
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
@@ -385,7 +385,7 @@ namespace H3MP
             // Instantiate AutoMeater if it is in the current scene and not controlled by us
             if (clientID != 0)
             {
-                if (trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                if (!trackedAutoMeater.awaitingInstantiation && trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(trackedAutoMeater.Instantiate());
                 }
@@ -453,7 +453,7 @@ namespace H3MP
                 // Instantiate Encryption if it is in the current scene and not controlled by us
                 if (clientID != 0)
                 {
-                    if (trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
+                    if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
                     {
                         AnvilManager.Run(trackedEncryption.Instantiate());
                     }

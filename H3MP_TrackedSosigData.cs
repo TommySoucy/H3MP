@@ -45,6 +45,7 @@ namespace H3MP
         public int instance;
         public byte[] data;
         public bool sceneInit;
+        public bool awaitingInstantiation;
 
         public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(-1, null);
 
@@ -55,6 +56,7 @@ namespace H3MP
             if (sosigPrefab == null)
             {
                 Mod.LogError($"Attempted to instantiate sosig sent from {controller} but failed to get prefab.");
+                awaitingInstantiation = false;
                 yield break;
             }
 
@@ -63,6 +65,7 @@ namespace H3MP
             GameObject sosigInstance = GameObject.Instantiate(sosigPrefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalObject = sosigInstance.AddComponent<H3MP_TrackedSosig>();
+            awaitingInstantiation = false;
             physicalObject.data = this;
 
             physicalObject.physicalSosigScript = sosigInstance.GetComponent<Sosig>();

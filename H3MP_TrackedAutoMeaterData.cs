@@ -39,6 +39,7 @@ namespace H3MP
         public int instance;
         public byte[] data;
         public bool sceneInit;
+        public bool awaitingInstantiation;
 
         public Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone> hitZones = new Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone>();
 
@@ -51,6 +52,7 @@ namespace H3MP
             if (autoMeaterPrefab == null)
             {
                 Mod.LogError($"Attempted to instantiate AutoMeater sent from {controller} but failed to get prefab.");
+                awaitingInstantiation = false;
                 yield break;
             }
 
@@ -59,6 +61,7 @@ namespace H3MP
             GameObject autoMeaterInstance = GameObject.Instantiate(autoMeaterPrefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalObject = autoMeaterInstance.AddComponent<H3MP_TrackedAutoMeater>();
+            awaitingInstantiation = false;
             physicalObject.data = this;
 
             physicalObject.physicalAutoMeaterScript = autoMeaterInstance.GetComponent<AutoMeater>();

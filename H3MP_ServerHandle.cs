@@ -306,8 +306,11 @@ namespace H3MP
                         {
                             if(trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                             {
-                                Mod.LogInfo("\tInstantiating");
-                                AnvilManager.Run(trackedItem.Instantiate());
+                                if (!trackedItem.awaitingInstantiation)
+                                {
+                                    Mod.LogInfo("\tInstantiating");
+                                    AnvilManager.Run(trackedItem.Instantiate());
+                                }
                             }
                             else
                             {
@@ -362,7 +365,10 @@ namespace H3MP
                     {
                         if (trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
                         {
-                            AnvilManager.Run(trackedSosig.Instantiate());
+                            if (!trackedSosig.awaitingInstantiation)
+                            {
+                                AnvilManager.Run(trackedSosig.Instantiate());
+                            }
                         }
                         else
                         {
@@ -417,7 +423,10 @@ namespace H3MP
                     {
                         if (trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                         {
-                            AnvilManager.Run(trackedAutoMeater.Instantiate());
+                            if (!trackedAutoMeater.awaitingInstantiation)
+                            {
+                                AnvilManager.Run(trackedAutoMeater.Instantiate());
+                            }
                         }
                         else
                         {
@@ -472,7 +481,10 @@ namespace H3MP
                     {
                         if (trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
                         {
-                            AnvilManager.Run(trackedEncryption.Instantiate());
+                            if (!trackedEncryption.awaitingInstantiation)
+                            {
+                                AnvilManager.Run(trackedEncryption.Instantiate());
+                            }
                         }
                         else
                         {
@@ -2057,7 +2069,7 @@ namespace H3MP
 
                 // Although we only request up to date objects from our scene/instance, it might have changed since we made the request
                 // So here we check it again
-                if (instantiate && actualTrackedItem.physicalItem == null &&
+                if (instantiate && actualTrackedItem.physicalItem == null && !actualTrackedItem.awaitingInstantiation &&
                     actualTrackedItem.scene.Equals(SceneManager.GetActiveScene().name) && actualTrackedItem.instance == H3MP_GameManager.instance &&
                     H3MP_GameManager.IsItemIdentifiable(trackedItem))
                 {
@@ -2076,7 +2088,7 @@ namespace H3MP
                 H3MP_TrackedSosigData trackedSosig = packet.ReadTrackedSosig(true);
                 H3MP_TrackedSosigData actualTrackedSosig = H3MP_Server.sosigs[trackedSosig.trackedID];
                 H3MP_GameManager.UpdateTrackedSosig(trackedSosig, true);
-                if (instantiate && actualTrackedSosig.physicalObject == null &&
+                if (instantiate && actualTrackedSosig.physicalObject == null && !actualTrackedSosig.awaitingInstantiation &&
                     actualTrackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && actualTrackedSosig.instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(H3MP_Server.sosigs[trackedSosig.trackedID].Instantiate());
@@ -2094,7 +2106,7 @@ namespace H3MP
                 H3MP_TrackedAutoMeaterData trackedAutoMeater = packet.ReadTrackedAutoMeater(true);
                 H3MP_TrackedAutoMeaterData actualTrackedAutoMeater = H3MP_Server.autoMeaters[trackedAutoMeater.trackedID];
                 H3MP_GameManager.UpdateTrackedAutoMeater(trackedAutoMeater, true);
-                if (instantiate && actualTrackedAutoMeater.physicalObject == null &&
+                if (instantiate && actualTrackedAutoMeater.physicalObject == null && !actualTrackedAutoMeater.awaitingInstantiation &&
                     actualTrackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && actualTrackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(H3MP_Server.autoMeaters[trackedAutoMeater.trackedID].Instantiate());
@@ -2112,7 +2124,7 @@ namespace H3MP
                 H3MP_TrackedEncryptionData trackedEncryption = packet.ReadTrackedEncryption(true);
                 H3MP_TrackedEncryptionData actualTrackedEncryption = H3MP_Server.encryptions[trackedEncryption.trackedID];
                 H3MP_GameManager.UpdateTrackedEncryption(trackedEncryption, true);
-                if (instantiate && actualTrackedEncryption.physicalObject == null &&
+                if (instantiate && actualTrackedEncryption.physicalObject == null && !actualTrackedEncryption.awaitingInstantiation &&
                     actualTrackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && actualTrackedEncryption.instance == H3MP_GameManager.instance)
                 {
                     AnvilManager.Run(H3MP_Server.encryptions[trackedEncryption.trackedID].Instantiate());
