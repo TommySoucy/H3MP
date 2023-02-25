@@ -2130,7 +2130,12 @@ namespace H3MP
             int instance = packet.ReadInt();
             int newController = packet.ReadInt();
 
-            H3MP_GameManager.TNHInstances[instance].controller = newController;
+            // The instance may not exist anymore if we were the last one in there and we left between
+            // server sending us order to set TNH controller and receiving it
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance i))
+            {
+                i.controller = newController;
+            }
         }
 
         public static void TNHPlayerDied(H3MP_Packet packet)

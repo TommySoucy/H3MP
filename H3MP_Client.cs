@@ -555,13 +555,22 @@ namespace H3MP
             }
             else
             {
-                // We might already have the object if it was sent multiple times through SendRelevantTrackedObjects
-                if(items[trackedItem.trackedID] != null)
+                Mod.LogInfo("\tWe are not controller");
+                // We might already have the object
+                if (items[trackedItem.trackedID] != null)
                 {
+                    // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
+                    // receive it from relevant objects
+                    if (items[trackedItem.trackedID].physicalItem == null &&
+                        items[trackedItem.trackedID].scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) &&
+                        items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
+                    {
+                        Mod.LogInfo("\t\thave data but not phys, instantiating");
+                        AnvilManager.Run(trackedItem.Instantiate());
+                    }
                     return;
                 }
 
-                Mod.LogInfo("\tWe are not controller");
                 trackedItem.localTrackedID = -1;
 
                 // Add the item to client global list
@@ -586,11 +595,12 @@ namespace H3MP
                     newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
                     H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
                 }
-                Mod.LogInfo("\tAdded to itemsByInstanceByScene, instnaitating");
+                Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
                 // Instantiate item if it is identiafiable and in the current scene/instance
                 if (H3MP_GameManager.IsItemIdentifiable(trackedItem) && trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                 {
+                    Mod.LogInfo("\t\tinstantiating");
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
@@ -734,9 +744,17 @@ namespace H3MP
             }
             else
             {
-                // We might already have the object if it was sent multiple times through SendRelevantTrackedObjects
+                // We might already have the object
                 if (autoMeaters[trackedAutoMeater.trackedID] != null)
                 {
+                    // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
+                    // receive it from relevant objects
+                    if (autoMeaters[trackedAutoMeater.trackedID].physicalObject == null &&
+                        autoMeaters[trackedAutoMeater.trackedID].scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) &&
+                        autoMeaters[trackedAutoMeater.trackedID].instance == H3MP_GameManager.instance)
+                    {
+                        AnvilManager.Run(trackedAutoMeater.Instantiate());
+                    }
                     return;
                 }
 
