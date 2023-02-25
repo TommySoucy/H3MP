@@ -62,6 +62,7 @@ namespace H3MP
         public static int instance = 0;
         public static bool sceneLoading;
         public static int instanceAtSceneLoadStart;
+        public static string sceneAtSceneLoadStart;
 
         public static long ping = -1;
 
@@ -1943,6 +1944,7 @@ namespace H3MP
                 Mod.LogInfo("Switching scene, from " + SceneManager.GetActiveScene().name + " to " + LoadLevelBeginPatch.loadingLevel);
                 sceneLoading = true;
                 instanceAtSceneLoadStart = instance;
+                sceneAtSceneLoadStart = SceneManager.GetActiveScene().name;
 
                 ++giveControlOfDestroyed;
 

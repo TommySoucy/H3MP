@@ -2642,25 +2642,46 @@ namespace H3MP
             {
                 if (currentController == -1) // This means the potential host could also be us
                 {
-                    foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                    if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_GameManager.sceneAtSceneLoadStart, out Dictionary<int, List<int>> instances) &&
+                            instances.TryGetValue(H3MP_GameManager.instanceAtSceneLoadStart, out List<int> otherPlayers))
                     {
-                        if (player.Key > H3MP_GameManager.ID)
+                        if(otherPlayers.Count == 0)
                         {
                             return H3MP_GameManager.ID;
                         }
-                        if (player.Value.gameObject.activeSelf)
+                        else
                         {
-                            return player.Key;
+                            int smallest = otherPlayers[0] < H3MP_GameManager.ID ? otherPlayers[0] : H3MP_GameManager.ID;
+                            for (int i = 1; i < otherPlayers.Count; ++i)
+                            {
+                                if (otherPlayers[i] < smallest)
+                                {
+                                    smallest = otherPlayers[i];
+                                }
+                            }
+                            return smallest;
                         }
                     }
                 }
                 else
                 {
-                    foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
+                    if (H3MP_GameManager.sceneLoading)
                     {
-                        if (player.Value.gameObject.activeSelf)
+                        // We want to look at list of other players who were in our previous scene/instance
+                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_GameManager.sceneAtSceneLoadStart, out Dictionary<int, List<int>> instances) &&
+                            instances.TryGetValue(H3MP_GameManager.instanceAtSceneLoadStart, out List<int> otherPlayers) && otherPlayers.Count > 0)
                         {
-                            return player.Key;
+                            // Just take first one
+                            return otherPlayers[0];
+                        }
+                    }
+                    else // Not loading, check players in current scene/instance
+                    {
+                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> instances) &&
+                            instances.TryGetValue(H3MP_GameManager.instance, out List<int> otherPlayers) && otherPlayers.Count > 0)
+                        {
+                            // Just take first one
+                            return otherPlayers[0];
                         }
                     }
                 }
