@@ -1496,7 +1496,8 @@ namespace H3MP
                 Mod.joinTNHInstances.Add(instance.instance, newInstanceElement);
             }
 
-            dontAddToInstance = true;
+            // Only want to set dontAddToInstance if we want to join the TNH instance upon receiving it
+            dontAddToInstance = Mod.setLatestInstance;
             Mod.modInstance.OnTNHInstanceReceived(instance);
         }
 
