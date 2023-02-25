@@ -2056,30 +2056,32 @@ namespace H3MP
 
                     // Instantiate any objects we are in control of that don't have a phys yet
                     // This could happen if object control was given to us while we were loading
+                    // Note that we check if the trackedID is initialized becaue we don't want to reinstantiate items that are unawoken
+                    // which will not have a trackedID yet
                     for(int i=0; i < items.Count; ++i)
                     {
-                        if (items[i].physicalItem == null)
+                        if (items[i].physicalItem == null && items[i].trackedID > -1)
                         {
                             AnvilManager.Run(items[i].Instantiate());
                         }
                     }
                     for(int i=0; i < sosigs.Count; ++i)
                     {
-                        if (sosigs[i].physicalObject == null)
+                        if (sosigs[i].physicalObject == null && items[i].trackedID > -1)
                         {
                             AnvilManager.Run(sosigs[i].Instantiate());
                         }
                     }
                     for(int i=0; i < autoMeaters.Count; ++i)
                     {
-                        if (autoMeaters[i].physicalObject == null)
+                        if (autoMeaters[i].physicalObject == null && items[i].trackedID > -1)
                         {
                             AnvilManager.Run(autoMeaters[i].Instantiate());
                         }
                     }
                     for(int i=0; i < encryptions.Count; ++i)
                     {
-                        if (encryptions[i].physicalObject == null)
+                        if (encryptions[i].physicalObject == null && items[i].trackedID > -1)
                         {
                             AnvilManager.Run(encryptions[i].Instantiate());
                         }
