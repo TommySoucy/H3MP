@@ -996,6 +996,13 @@ namespace H3MP
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
+            Mod.currentTNHInstancePlayers = null;
+            Mod.joinTNHInstances = null;
+            if(Mod.TNHMenu != null)
+            {
+                Destroy(Mod.TNHMenu);
+                Mod.TNHMenu = null;
+            }
         }
     }
 }

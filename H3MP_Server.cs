@@ -98,6 +98,13 @@ namespace H3MP
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
             Mod.currentlyPlayingTNH = false;
+            Mod.currentTNHInstancePlayers = null;
+            Mod.joinTNHInstances = null;
+            if (Mod.TNHMenu != null)
+            {
+                GameObject.Destroy(Mod.TNHMenu);
+                Mod.TNHMenu = null;
+            }
         }
 
         private static void TCPConnectCallback(IAsyncResult result)
