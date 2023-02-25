@@ -315,7 +315,7 @@ namespace H3MP
                 H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
                 if (trackedItem != null)
                 {
-                    if ((fromclient == -1 && ((trackedItem.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                    if (((fromclient == -1 || fromclient == 0) && ((trackedItem.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
                         (trackedItem.controller != 0 && trackedItem.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedItem.controller].player.scene) &&
                         player.instance == H3MP_Server.clients[trackedItem.controller].player.instance))) || (fromclient != -1 && trackedItem.controller == fromclient &&
                         player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
@@ -337,7 +337,7 @@ namespace H3MP
                 H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[i];
                 if (trackedSosig != null)
                 {
-                    if ((fromclient == -1 && ((trackedSosig.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                    if (((fromclient == -1 || fromclient == 0) && ((trackedSosig.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
                         (trackedSosig.controller != 0 && trackedSosig.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedSosig.controller].player.scene) &&
                         player.instance == H3MP_Server.clients[trackedSosig.controller].player.instance))) || (fromclient != -1 && trackedSosig.controller == fromclient &&
                         player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
@@ -356,7 +356,7 @@ namespace H3MP
                 H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[i];
                 if (trackedAutoMeater != null)
                 {
-                    if ((fromclient == -1 && ((trackedAutoMeater.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                    if (((fromclient == -1 || fromclient == 0) && ((trackedAutoMeater.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
                         (trackedAutoMeater.controller != 0 && trackedAutoMeater.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedAutoMeater.controller].player.scene) &&
                         player.instance == H3MP_Server.clients[trackedAutoMeater.controller].player.instance))) || (fromclient != -1 && trackedAutoMeater.controller == fromclient &&
                         player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))
@@ -375,7 +375,7 @@ namespace H3MP
                 H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[i];
                 if (trackedEncryption != null)
                 {
-                    if ((fromclient == -1 && ((trackedEncryption.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
+                    if (((fromclient == -1 || fromclient == 0) && ((trackedEncryption.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance) ||
                         (trackedEncryption.controller != 0 && trackedEncryption.controller != ID && player.scene.Equals(H3MP_Server.clients[trackedEncryption.controller].player.scene) &&
                         player.instance == H3MP_Server.clients[trackedEncryption.controller].player.instance))) || (fromclient != -1 && trackedEncryption.controller == fromclient &&
                         player.scene.Equals(H3MP_Server.clients[fromclient].player.scene) && player.instance == H3MP_Server.clients[fromclient].player.instance))

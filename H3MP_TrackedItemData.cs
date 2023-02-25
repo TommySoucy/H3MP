@@ -451,7 +451,7 @@ namespace H3MP
                 // Note that if we receive a tracked ID that was previously unknown, we must be a client
                 H3MP_Client.items[trackedID] = null;
 
-                // Remvoe from itemsByInstanceByScene
+                // Remove from itemsByInstanceByScene
                 H3MP_GameManager.itemsByInstanceByScene[scene][instance].Remove(trackedID);
 
                 // Remove from local
@@ -604,13 +604,20 @@ namespace H3MP
             H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
             H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
             H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
-            Mod.LogInfo("Remove from local called on "+itemID+" with tracked ID: "+trackedID);
+            Mod.LogInfo("Remove from local called on "+itemID+" with tracked ID: "+trackedID+" and localTrackedID: "+ localTrackedID);
 
-            // Remove from actual local items list and update the localTrackedID of the item we are moving
-            H3MP_GameManager.items[localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1]; 
-            H3MP_GameManager.items[localTrackedID].localTrackedID = localTrackedID;
-            H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1); 
-            localTrackedID = -1;
+            if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.items.Count)
+            {
+                // Remove from actual local items list and update the localTrackedID of the item we are moving
+                H3MP_GameManager.items[localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                H3MP_GameManager.items[localTrackedID].localTrackedID = localTrackedID;
+                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                localTrackedID = -1;
+            }
+            else
+            {
+                Mod.LogInfo("\tlocaltrackedID out of range!:\n"+Environment.StackTrace);
+            }
         }
 
         public void SetController(int newController)

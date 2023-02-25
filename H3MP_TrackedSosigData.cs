@@ -588,11 +588,18 @@ namespace H3MP
             H3MP_TrackedSosig.unknownTNHKills.Remove(localWaitingIndex);
             H3MP_TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
 
-            // Remove from actual local sosigs list and update the localTrackedID of the sosig we are moving
-            H3MP_GameManager.sosigs[localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-            H3MP_GameManager.sosigs[localTrackedID].localTrackedID = localTrackedID;
-            H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-            localTrackedID = -1;
+            if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.sosigs.Count)
+            {
+                // Remove from actual local sosigs list and update the localTrackedID of the sosig we are moving
+                H3MP_GameManager.sosigs[localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                H3MP_GameManager.sosigs[localTrackedID].localTrackedID = localTrackedID;
+                H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                localTrackedID = -1;
+            }
+            else
+            {
+                Mod.LogInfo("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
+            }
         }
     }
 }

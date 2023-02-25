@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -402,11 +403,18 @@ namespace H3MP
             H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
             H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
 
-            // Remove from actual local encryptions list and update the localTrackedID of the encryption we are moving
-            H3MP_GameManager.encryptions[localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-            H3MP_GameManager.encryptions[localTrackedID].localTrackedID = localTrackedID;
-            H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
-            localTrackedID = -1;
+            if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.encryptions.Count)
+            {
+                // Remove from actual local encryptions list and update the localTrackedID of the encryption we are moving
+                H3MP_GameManager.encryptions[localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
+                H3MP_GameManager.encryptions[localTrackedID].localTrackedID = localTrackedID;
+                H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+                localTrackedID = -1;
+            }
+            else
+            {
+                Mod.LogInfo("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
+            }
         }
     }
 }

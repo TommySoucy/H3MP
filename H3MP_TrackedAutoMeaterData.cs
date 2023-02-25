@@ -277,11 +277,18 @@ namespace H3MP
             H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localWaitingIndex);
             H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
 
-            // Remove from actual local items list and update the localTrackedID of the autoMeater we are moving
-            H3MP_GameManager.autoMeaters[localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-            H3MP_GameManager.autoMeaters[localTrackedID].localTrackedID = localTrackedID;
-            H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-            localTrackedID = -1;
+            if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.autoMeaters.Count)
+            {
+                // Remove from actual local items list and update the localTrackedID of the autoMeater we are moving
+                H3MP_GameManager.autoMeaters[localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                H3MP_GameManager.autoMeaters[localTrackedID].localTrackedID = localTrackedID;
+                H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                localTrackedID = -1;
+            }
+            else
+            {
+                Mod.LogInfo("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
+            }
         }
     }
 }

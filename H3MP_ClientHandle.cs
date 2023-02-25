@@ -201,10 +201,18 @@ namespace H3MP
                     H3MP_GameManager.EnsureUncontrolled(physObj);
 
                     Mod.SetKinematicRecursive(physObj.transform, true);
-                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    trackedItem.localTrackedID = -1;
+
+                    if (trackedItem.localTrackedID > -1 && trackedItem.localTrackedID < H3MP_GameManager.items.Count)
+                    {
+                        H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                        H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                        H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                        trackedItem.localTrackedID = -1;
+                    }
+                    else
+                    {
+                        Mod.LogInfo("GiveControl localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
+                    }
                 }
                 else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
                 {
@@ -409,9 +417,16 @@ namespace H3MP
 
                 if (trackedItem.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    if (trackedItem.localTrackedID > -1 && trackedItem.localTrackedID < H3MP_GameManager.items.Count)
+                    {
+                        H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                        H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                        H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                    }
+                    else
+                    {
+                        Mod.LogInfo("DestroyItem localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
+                    }
                 }
 
                 if (removeFromList)
