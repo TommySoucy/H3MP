@@ -53,6 +53,7 @@ namespace H3MP
         public static bool controlOverride;
         public static bool firstPlayerInSceneInstance;
         public static bool dontAddToInstance;
+        public static bool inPostSceneLoadTrack;
 
         public static int ID = 0;
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
@@ -787,7 +788,7 @@ namespace H3MP
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
             data.controller = ID;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
 
             CollectExternalData(data);
 
@@ -1082,7 +1083,7 @@ namespace H3MP
             data.IFFChart = sosigScript.Priority.IFFChart;
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
 
             CollectExternalData(data);
 
@@ -1258,7 +1259,7 @@ namespace H3MP
             data.localTrackedID = autoMeaters.Count;
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
             autoMeaters.Add(data);
 
             return trackedAutoMeater;
@@ -1394,7 +1395,7 @@ namespace H3MP
             data.localTrackedID = encryptions.Count;
             data.scene = SceneManager.GetActiveScene().name;
             data.instance = instance;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
             encryptions.Add(data);
 
             return trackedEncryption;
@@ -2049,10 +2050,12 @@ namespace H3MP
 
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
+                    inPostSceneLoadTrack = true;
                     SyncTrackedSosigs();
                     SyncTrackedAutoMeaters();
                     SyncTrackedItems();
                     SyncTrackedEncryptions();
+                    inPostSceneLoadTrack = false;
 
                     controlOverride = false;
 

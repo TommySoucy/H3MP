@@ -7522,7 +7522,7 @@ namespace H3MP
                     if (data.controller == 0)
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
-
+                        Mod.LogInfo("OnDestroy called for " + data.itemID + " with tracked ID: " + data.trackedID+", best potential host: "+ otherPlayer);
                         if (otherPlayer == -1)
                         {
                             // No one to give control of item to, destroy it
