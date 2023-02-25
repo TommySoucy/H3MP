@@ -294,14 +294,35 @@ namespace H3MP
             {
                 if (trackedItem.controller != 0 && newController == 0)
                 {
-                    // Only want to active rigidbody if not parented to another tracked item
+                    trackedItem.localTrackedID = H3MP_GameManager.items.Count;
+                    H3MP_GameManager.items.Add(trackedItem);
+                    Mod.LogInfo("Received control of item " + trackedItem.itemID + " with tracked ID " + trackedID + ", loading?: " + H3MP_GameManager.sceneLoading);
                     // Physical object could be null if we are given control while we are loading, the giving client will think we are in their scene/instance
-                    if (trackedItem.parent == -1 && trackedItem.physicalItem != null)
+                    if (trackedItem.physicalItem == null)
+                    {
+                        // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                        // Otherwise we send destroy order for the object
+                        if (!H3MP_GameManager.sceneLoading)
+                        {
+                            if(trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
+                            {
+                                Mod.LogInfo("\tInstantiating");
+                                AnvilManager.Run(trackedItem.Instantiate());
+                            }
+                            else
+                            {
+                                Mod.LogInfo("\tSending destroy");
+                                H3MP_ServerSend.DestroyItem(trackedID);
+                                trackedItem.RemoveFromLocal();
+                                H3MP_Server.items[trackedID] = null;
+                            }
+                        }
+                        // else we will instantiate when we are done loading
+                    }
+                    else if(trackedItem.parent == -1)
                     {
                         Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
                     }
-                    trackedItem.localTrackedID = H3MP_GameManager.items.Count;
-                    H3MP_GameManager.items.Add(trackedItem);
                 }
                 else if (trackedItem.controller == 0 && newController != 0)
                 {
@@ -332,12 +353,31 @@ namespace H3MP
             if (trackedSosig.controller != 0 && newController == 0)
             {
                 trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
-                if(trackedSosig.physicalObject != null)
+                H3MP_GameManager.sosigs.Add(trackedSosig);
+                if (trackedSosig.physicalObject == null)
+                {
+                    // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                    // Otherwise we send destroy order for the object
+                    if (!H3MP_GameManager.sceneLoading)
+                    {
+                        if (trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
+                        {
+                            AnvilManager.Run(trackedSosig.Instantiate());
+                        }
+                        else
+                        {
+                            H3MP_ServerSend.DestroySosig(trackedID);
+                            trackedSosig.RemoveFromLocal();
+                            H3MP_Server.sosigs[trackedID] = null;
+                        }
+                    }
+                    // else we will instantiate when we are done loading
+                }
+                else
                 {
                     GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
                 }
-                H3MP_GameManager.sosigs.Add(trackedSosig);
             }
             else if(trackedSosig.controller == 0 && newController != 0)
             {
@@ -368,12 +408,31 @@ namespace H3MP
             if (trackedAutoMeater.controller != 0 && newController == 0)
             {
                 trackedAutoMeater.localTrackedID = H3MP_GameManager.autoMeaters.Count;
-                if(trackedAutoMeater.physicalObject != null)
+                H3MP_GameManager.autoMeaters.Add(trackedAutoMeater);
+                if (trackedAutoMeater.physicalObject == null)
+                {
+                    // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                    // Otherwise we send destroy order for the object
+                    if (!H3MP_GameManager.sceneLoading)
+                    {
+                        if (trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                        {
+                            AnvilManager.Run(trackedAutoMeater.Instantiate());
+                        }
+                        else
+                        {
+                            H3MP_ServerSend.DestroyAutoMeater(trackedID);
+                            trackedAutoMeater.RemoveFromLocal();
+                            H3MP_Server.autoMeaters[trackedID] = null;
+                        }
+                    }
+                    // else we will instantiate when we are done loading
+                }
+                else
                 {
                     GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
                     trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
                 }
-                H3MP_GameManager.autoMeaters.Add(trackedAutoMeater);
             }
             else if(trackedAutoMeater.controller == 0 && newController != 0)
             {
@@ -405,6 +464,25 @@ namespace H3MP
             {
                 trackedEncryption.localTrackedID = H3MP_GameManager.encryptions.Count;
                 H3MP_GameManager.encryptions.Add(trackedEncryption);
+                if (trackedEncryption.physicalObject == null)
+                {
+                    // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                    // Otherwise we send destroy order for the object
+                    if (!H3MP_GameManager.sceneLoading)
+                    {
+                        if (trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
+                        {
+                            AnvilManager.Run(trackedEncryption.Instantiate());
+                        }
+                        else
+                        {
+                            H3MP_ServerSend.DestroyEncryption(trackedID);
+                            trackedEncryption.RemoveFromLocal();
+                            H3MP_Server.encryptions[trackedID] = null;
+                        }
+                    }
+                    // else we will instantiate when we are done loading
+                }
             }
             else if(trackedEncryption.controller == 0 && newController != 0)
             {

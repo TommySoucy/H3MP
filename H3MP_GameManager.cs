@@ -742,7 +742,6 @@ namespace H3MP
                         }
                         else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
                         {
-                            Mod.LogInfo("Dont want to track " + physObj.name+", destroying, \n"+Environment.StackTrace);
                             Destroy(root.gameObject);
                         }
                     }
@@ -2055,6 +2054,7 @@ namespace H3MP
                     controlOverride = false;
 
                     // Instantiate any objects we are in control of that don't have a phys yet
+                    // This could happen if object control was given to us while we were loading
                     for(int i=0; i < items.Count; ++i)
                     {
                         if (items[i].physicalItem == null)
