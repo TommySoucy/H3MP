@@ -12293,6 +12293,7 @@ namespace H3MP
         public static void InitJoinTNH()
         {
             Mod.LogInfo("InitJoinTNH called");
+            Mod.currentTNHInstance.manager.Phase = Mod.currentTNHInstance.phase;
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
             Mod.TNH_Manager_m_curHoldIndex.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.curHoldIndex);
