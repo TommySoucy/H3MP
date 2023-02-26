@@ -7501,6 +7501,7 @@ namespace H3MP
 
         private void OnDestroy()
         {
+            Mod.LogInfo("OnDestroy called for " + data.itemID + " with tracked ID: " + data.trackedID);
             // Don't want to destroy if controlled by someone else and under their active control
             if (skipFullDestroy || (data.controller != H3MP_GameManager.ID && data.underActiveControl))
             {
@@ -7522,7 +7523,7 @@ namespace H3MP
                     if (data.controller == 0)
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
-                        Mod.LogInfo("OnDestroy called for " + data.itemID + " with tracked ID: " + data.trackedID+", best potential host: "+ otherPlayer);
+                        Mod.LogInfo("\tbest potential host: "+ otherPlayer);
                         if (otherPlayer == -1)
                         {
                             // No one to give control of item to, destroy it
@@ -7553,6 +7554,7 @@ namespace H3MP
                 }
                 else
                 {
+                    Mod.LogInfo("\tNot giving control, senddestroy: "+ sendDestroy);
                     if (sendDestroy && skipDestroy == 0)
                     {
                         H3MP_ServerSend.DestroyItem(data.trackedID);

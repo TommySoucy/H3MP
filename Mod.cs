@@ -11901,10 +11901,12 @@ namespace H3MP
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
+                Mod.LogInfo("SetPhaseTakePrefix");
                 // Note that SetPhase_Take will only ever be called on a non controller if it an order from another client
                 // This implies that it will not be called if we just joined a game that has already been inited unless it is a new take phase
                 if (Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
                 {
+                    Mod.LogInfo("\tNot controller");
                     Mod.currentTNHInstance.phase = TNH_Phase.Take;
                     Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
 
@@ -11946,6 +11948,7 @@ namespace H3MP
                 }
                 else if(inDelayedInit && Mod.currentTNHInstance.phase != TNH_Phase.StartUp)
                 {
+                    Mod.LogInfo("\tController and in delayed init, but TNH has already been init");
                     // We are controller finishing our init in a TNH instance that has already been inited
                     InitJoinTNH();
 
@@ -11961,8 +11964,10 @@ namespace H3MP
         // TODO: ModComp: TNHTweaker: Has SetPhase_Take_Replacement that we would need to patch instead
         static void SetPhaseTakePostfix()
         {
+            Mod.LogInfo("SetPhaseTakePostfix");
             if (skipNextSetPhaseTake)
             {
+                Mod.LogInfo("\tskip");
                 skipNextSetPhaseTake = false;
                 return;
             }
@@ -11970,6 +11975,7 @@ namespace H3MP
             // If we are controller collect data and send set phase take order
             if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
             {
+                Mod.LogInfo("\tsending");
                 int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
                 List<TNH_SupplyPoint.SupplyPanelType> secondaryPanelTypes = new List<TNH_SupplyPoint.SupplyPanelType>();
                 List<int> activeSupplyPointIndicies = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(GM.TNH_Manager);
@@ -12280,6 +12286,7 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
+            Mod.LogInfo("InitJoinTNH called");
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
             Mod.TNH_Manager_m_curHoldIndex.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.curHoldIndex);

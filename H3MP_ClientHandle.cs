@@ -229,6 +229,7 @@ namespace H3MP
                                 if (!trackedItem.awaitingInstantiation)
                                 {
                                     Mod.LogInfo("Received control of item " + trackedItem.itemID + " with tracked ID " + trackedItem.trackedID + " but had no phys, instantiating");
+                                    trackedItem.awaitingInstantiation = true;
                                     AnvilManager.Run(trackedItem.Instantiate());
                                 }
                             }
@@ -285,6 +286,7 @@ namespace H3MP
                         {
                             if (!trackedSosig.awaitingInstantiation)
                             {
+                                trackedSosig.awaitingInstantiation = true;
                                 AnvilManager.Run(trackedSosig.Instantiate());
                             }
                         }
@@ -341,6 +343,7 @@ namespace H3MP
                         {
                             if (!trackedAutoMeater.awaitingInstantiation)
                             {
+                                trackedAutoMeater.awaitingInstantiation = true;
                                 AnvilManager.Run(trackedAutoMeater.Instantiate());
                             }
                         }
@@ -391,6 +394,7 @@ namespace H3MP
                         {
                             if (!trackedEncryption.awaitingInstantiation)
                             {
+                                trackedEncryption.awaitingInstantiation = true;
                                 AnvilManager.Run(trackedEncryption.Instantiate());
                             }
                         }

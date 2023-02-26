@@ -243,6 +243,7 @@ namespace H3MP
                 if (!trackedItem.awaitingInstantiation && trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                 {
                     Mod.LogInfo("\t\tItem not from us and in same scene/instance, instantiating");
+                    trackedItem.awaitingInstantiation = true;
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
@@ -312,6 +313,7 @@ namespace H3MP
                 {
                     if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
                     {
+                        trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
                 }
@@ -387,6 +389,7 @@ namespace H3MP
             {
                 if (!trackedAutoMeater.awaitingInstantiation && trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
+                    trackedAutoMeater.awaitingInstantiation = true;
                     AnvilManager.Run(trackedAutoMeater.Instantiate());
                 }
             }
@@ -455,6 +458,7 @@ namespace H3MP
                 {
                     if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
                     {
+                        trackedEncryption.awaitingInstantiation = true;
                         AnvilManager.Run(trackedEncryption.Instantiate());
                     }
                 }

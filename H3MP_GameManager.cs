@@ -2068,6 +2068,7 @@ namespace H3MP
                     {
                         if (items[i].physicalItem == null && !items[i].awaitingInstantiation && items[i].trackedID > -1)
                         {
+                            items[i].awaitingInstantiation = true;
                             AnvilManager.Run(items[i].Instantiate());
                         }
                     }
@@ -2075,6 +2076,7 @@ namespace H3MP
                     {
                         if (sosigs[i].physicalObject == null && !sosigs[i].awaitingInstantiation && sosigs[i].trackedID > -1)
                         {
+                            sosigs[i].awaitingInstantiation = true;
                             AnvilManager.Run(sosigs[i].Instantiate());
                         }
                     }
@@ -2082,6 +2084,7 @@ namespace H3MP
                     {
                         if (autoMeaters[i].physicalObject == null && !autoMeaters[i].awaitingInstantiation && autoMeaters[i].trackedID > -1)
                         {
+                            autoMeaters[i].awaitingInstantiation = true;
                             AnvilManager.Run(autoMeaters[i].Instantiate());
                         }
                     }
@@ -2089,6 +2092,7 @@ namespace H3MP
                     {
                         if (encryptions[i].physicalObject == null && !encryptions[i].awaitingInstantiation && encryptions[i].trackedID > -1)
                         {
+                            encryptions[i].awaitingInstantiation = true;
                             AnvilManager.Run(encryptions[i].Instantiate());
                         }
                     }

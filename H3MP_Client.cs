@@ -566,6 +566,7 @@ namespace H3MP
                         items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
                     {
                         Mod.LogInfo("\t\thave data but not phys, instantiating");
+                        trackedItem.awaitingInstantiation = true;
                         AnvilManager.Run(trackedItem.Instantiate());
                     }
                     return;
@@ -601,6 +602,7 @@ namespace H3MP
                 if (!trackedItem.awaitingInstantiation && H3MP_GameManager.IsItemIdentifiable(trackedItem) && trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                 {
                     Mod.LogInfo("\t\tinstantiating");
+                    trackedItem.awaitingInstantiation = true;
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
@@ -683,6 +685,7 @@ namespace H3MP
                     // Instantiate sosig if it is in the current scene
                     if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
                     {
+                        trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
                 }
@@ -696,6 +699,7 @@ namespace H3MP
                     {
                         if (trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
                         {
+                            trackedSosig.awaitingInstantiation = true;
                             AnvilManager.Run(trackedSosigData.Instantiate());
                         }
                     }
@@ -753,6 +757,7 @@ namespace H3MP
                         autoMeaters[trackedAutoMeater.trackedID].scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) &&
                         autoMeaters[trackedAutoMeater.trackedID].instance == H3MP_GameManager.instance)
                     {
+                        trackedAutoMeater.awaitingInstantiation = true;
                         AnvilManager.Run(trackedAutoMeater.Instantiate());
                     }
                     return;
@@ -785,6 +790,7 @@ namespace H3MP
                 // Instantiate AutoMeater if it is in the current scene
                 if (!trackedAutoMeater.awaitingInstantiation && trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
+                    trackedAutoMeater.awaitingInstantiation = true;
                     AnvilManager.Run(trackedAutoMeater.Instantiate());
                 }
             }
@@ -867,6 +873,7 @@ namespace H3MP
                     // Instantiate Encryption if it is in the current scene
                     if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
                     {
+                        trackedEncryption.awaitingInstantiation = true;
                         AnvilManager.Run(trackedEncryption.Instantiate());
                     }
                 }
@@ -880,6 +887,7 @@ namespace H3MP
                     {
                         if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
                         {
+                            trackedEncryptionData.awaitingInstantiation = true;
                             AnvilManager.Run(trackedEncryptionData.Instantiate());
                         }
                     }
