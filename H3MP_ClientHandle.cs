@@ -2153,6 +2153,16 @@ namespace H3MP
             if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance i))
             {
                 i.controller = newController;
+
+                if(i.manager != null)
+                {
+                    // We are in control, the instance is not init yet but the TNH_Manager attempted to
+                    if (newController == H3MP_GameManager.ID && i.phase == TNH_Phase.StartUp && (bool)Mod.TNH_Manager_m_hasInit.GetValue(Mod.currentTNHInstance.manager))
+                    {
+                        // Init
+                        Mod.TNH_Manager_SetPhase.Invoke(i.manager, new object[] { TNH_Phase.Take });
+                    }
+                }
             }
         }
 
