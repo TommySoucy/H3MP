@@ -11956,6 +11956,8 @@ namespace H3MP
 
                     return false;
                 }
+
+                Mod.currentTNHInstance.phase = TNH_Phase.Take;
             }
 
             return true;
@@ -12071,6 +12073,8 @@ namespace H3MP
 
                     return false;
                 }
+
+                Mod.currentTNHInstance.phase = TNH_Phase.Hold;
             }
 
             return true;
@@ -12160,6 +12164,8 @@ namespace H3MP
 
                     return false;
                 }
+
+                Mod.currentTNHInstance.phase = TNH_Phase.Completed;
             }
 
             return true;
