@@ -990,7 +990,8 @@ namespace H3MP
                 if (sendToServer) 
                 {
                     // Give control of everything we control
-                    H3MP_GameManager.GiveUpAllControl();
+                    // HANDLED BY SERVER
+                    //H3MP_GameManager.GiveUpAllControl();
 
                     H3MP_ClientSend.ClientDisconnect();
                 }

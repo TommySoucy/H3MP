@@ -2218,24 +2218,201 @@ namespace H3MP
             {
                 H3MP_ClientSend.GiveEncryptionControl(encryption.trackedID, newController);
             }
+        }
 
-            // TNH
-            if(Mod.currentTNHInstance != null)
+        // MOD: This will get called when a client disconnects from the server
+        //      A mod should postfix this to give control of whatever elements it has that are tracked through H3MP that are under this client's control
+        public static void DistributeAllControl(int clientID)
+        {
+            // Get best potential host
+            int newController = Mod.GetBestPotentialObjectHost(clientID, false);
+            if(newController == -1)
             {
+                // This would mean there is noone in the client's scene/instance to take control of anything the client has
+                return;
+            }
 
-                if (Mod.currentlyPlayingTNH)
+            // Give all items
+            for(int i=0; i < H3MP_Server.items.Length; ++i)
+            {
+                if (H3MP_Server.items[i] != null)
                 {
-                    Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID);
+                    H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
+
+                    // If its us, take control
+                    if (newController == 0)
+                    {
+                        trackedItem.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem);
+                        // Physical object could be null if we are given control while we are loading, the giving client will think we are in their scene/instance
+                        if (trackedItem.physicalItem == null)
+                        {
+                            // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                            // Otherwise we send destroy order for the object
+                            if (!H3MP_GameManager.sceneLoading)
+                            {
+                                if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
+                                {
+                                    if (!trackedItem.awaitingInstantiation)
+                                    {
+                                        trackedItem.awaitingInstantiation = true;
+                                        AnvilManager.Run(trackedItem.Instantiate());
+                                    }
+                                }
+                                else
+                                {
+                                    H3MP_ServerSend.DestroyItem(trackedItem.trackedID);
+                                    trackedItem.RemoveFromLocal();
+                                    H3MP_Server.items[trackedItem.trackedID] = null;
+                                }
+                            }
+                            // else we will instantiate when we are done loading
+                        }
+                        else if (trackedItem.parent == -1)
+                        {
+                            Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
+                        }
+                    }
+                    trackedItem.SetController(newController);
+
+                    H3MP_ServerSend.GiveControl(trackedItem.trackedID, newController);
                 }
+            }
 
-                //if(Mod.currentlyPlayingTNH && Mod.currentTNHInstance.controller == ID)
-                //{
-                //    H3MP_ClientSend.SetTNHController(Mod.currentTNHInstance.instance, newController);
-                //    H3MP_ClientSend.TNHData(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.manager);
-                //}
+            // Give all sosigs
+            for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
+            {
+                if (H3MP_Server.sosigs[i] != null)
+                {
+                    H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[i];
 
-                // Note: When client disconnects, other clients will be told and will take this client out of
-                //       the various TNH lists like currentlyPlaying, etc. So we don't have to do it here
+                    // If its us, take control
+                    if (newController == 0)
+                    {
+                        trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
+                        H3MP_GameManager.sosigs.Add(trackedSosig);
+                        if (trackedSosig.physicalObject == null)
+                        {
+                            // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                            // Otherwise we send destroy order for the object
+                            if (!H3MP_GameManager.sceneLoading)
+                            {
+                                if (trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
+                                {
+                                    if (!trackedSosig.awaitingInstantiation)
+                                    {
+                                        trackedSosig.awaitingInstantiation = true;
+                                        AnvilManager.Run(trackedSosig.Instantiate());
+                                    }
+                                }
+                                else
+                                {
+                                    H3MP_ServerSend.DestroySosig(trackedSosig.trackedID);
+                                    trackedSosig.RemoveFromLocal();
+                                    H3MP_Server.sosigs[trackedSosig.trackedID] = null;
+                                }
+                            }
+                            // else we will instantiate when we are done loading
+                        }
+                        else
+                        {
+                            GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
+                        }
+                    }
+                    trackedSosig.controller = newController;
+
+                    H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, newController);
+                }
+            }
+
+            // Give all automeaters
+            for (int i = 0; i < H3MP_Server.autoMeaters.Length; ++i)
+            {
+                if (H3MP_Server.autoMeaters[i] != null)
+                {
+                    H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[i];
+
+                    // If its us, take control
+                    if (newController == 0)
+                    {
+                        trackedAutoMeater.localTrackedID = H3MP_GameManager.autoMeaters.Count;
+                        H3MP_GameManager.autoMeaters.Add(trackedAutoMeater);
+                        if (trackedAutoMeater.physicalObject == null)
+                        {
+                            // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                            // Otherwise we send destroy order for the object
+                            if (!H3MP_GameManager.sceneLoading)
+                            {
+                                if (trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                                {
+                                    if (!trackedAutoMeater.awaitingInstantiation)
+                                    {
+                                        trackedAutoMeater.awaitingInstantiation = true;
+                                        AnvilManager.Run(trackedAutoMeater.Instantiate());
+                                    }
+                                }
+                                else
+                                {
+                                    H3MP_ServerSend.DestroyAutoMeater(trackedAutoMeater.trackedID);
+                                    trackedAutoMeater.RemoveFromLocal();
+                                    H3MP_Server.autoMeaters[trackedAutoMeater.trackedID] = null;
+                                }
+                            }
+                            // else we will instantiate when we are done loading
+                        }
+                        else
+                        {
+                            GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                            trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
+                        }
+                    }
+                    trackedAutoMeater.controller = newController;
+
+                    H3MP_ClientSend.GiveAutoMeaterControl(trackedAutoMeater.trackedID, newController);
+                }
+            }
+
+            // Give all encryptions
+            for (int i = 0; i < H3MP_Server.encryptions.Length; ++i)
+            {
+                if (H3MP_Server.encryptions[i] != null)
+                {
+                    H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[i];
+
+                    // If its us, take control
+                    if (newController == 0)
+                    {
+                        trackedEncryption.localTrackedID = H3MP_GameManager.encryptions.Count;
+                        H3MP_GameManager.encryptions.Add(trackedEncryption);
+                        if (trackedEncryption.physicalObject == null)
+                        {
+                            // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                            // Otherwise we send destroy order for the object
+                            if (!H3MP_GameManager.sceneLoading)
+                            {
+                                if (trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
+                                {
+                                    if (!trackedEncryption.awaitingInstantiation)
+                                    {
+                                        trackedEncryption.awaitingInstantiation = true;
+                                        AnvilManager.Run(trackedEncryption.Instantiate());
+                                    }
+                                }
+                                else
+                                {
+                                    H3MP_ServerSend.DestroyEncryption(trackedEncryption.trackedID);
+                                    trackedEncryption.RemoveFromLocal();
+                                    H3MP_Server.encryptions[trackedEncryption.trackedID] = null;
+                                }
+                            }
+                            // else we will instantiate when we are done loading
+                        }
+                    }
+                    trackedEncryption.controller = newController;
+
+                    H3MP_ClientSend.GiveEncryptionControl(trackedEncryption.trackedID, newController);
+                }
             }
         }
 

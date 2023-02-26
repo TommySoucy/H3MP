@@ -3353,7 +3353,7 @@ namespace H3MP
             if (H3MP_Server.clients[clientID].connected && // If a client is connected at that index, AND
                 H3MP_Server.clients[clientID].tcp.openTime < packet.ReadLong()) // If it is not a new client we have connected since the client has disconnected
             {
-                H3MP_Server.clients[clientID].Disconnect(3);
+                H3MP_Server.clients[clientID].Disconnect(2);
             }
         }
 

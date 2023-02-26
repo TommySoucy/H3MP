@@ -509,13 +509,15 @@ namespace H3MP
                     break;
             }
 
+            tcp.Disconnect();
+            udp.Disconnect();
+
             Mod.RemovePlayerFromLists(ID);
+            H3MP_GameManager.DistributeAllControl(ID);
             SpecificDisconnect();
             H3MP_ServerSend.ClientDisconnect(ID);
 
             player = null;
-            tcp.Disconnect();
-            udp.Disconnect();
         }
 
         // MOD: This will be called after disconnection to reset specific fields
@@ -526,21 +528,6 @@ namespace H3MP
             if (H3MP_GameManager.TNHInstances.TryGetValue(player.instance, out H3MP_TNHInstance TNHInstance) && TNHInstance.currentlyPlaying.Contains(ID)) // TNH_Manager was set to null and we are currently playing
             {
                 TNHInstance.RemoveCurrentlyPlaying(true, ID, true);
-
-                // If was manager controller, give manager control to next currently playing
-                // NOW HANDLED BY SERVER
-                //if (TNHInstance.controller == ID && TNHInstance.currentlyPlaying.Count > 0)
-                //{
-                //    TNHInstance.controller = TNHInstance.currentlyPlaying[0];
-                //    if (H3MP_ThreadManager.host)
-                //    {
-                //        H3MP_ServerSend.SetTNHController(TNHInstance.instance, TNHInstance.currentlyPlaying[0]);
-                //    }
-                //    else
-                //    {
-                //        H3MP_ClientSend.SetTNHController(TNHInstance.instance, TNHInstance.currentlyPlaying[0]);
-                //    }
-                //}
             }
         }
     }

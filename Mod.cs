@@ -2593,84 +2593,111 @@ namespace H3MP
 
         // MOD: This method will be used to find the ID of which player to give control of this object to
         //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
-        public static int GetBestPotentialObjectHost(int currentController)
+        public static int GetBestPotentialObjectHost(int currentController, bool forUs = true)
         {
-            if (Mod.currentTNHInstance != null)
+            if (forUs)
             {
-                if (currentController == -1) // This means the potential host could also be us
+                if (Mod.currentTNHInstance != null)
                 {
-                    // Going through each like this, we will go through the host of the instance before any other
-                    foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
+                    if (currentController == -1) // This means the potential host could also be us
                     {
-                        // If the player is us and we are **not spectating**??
-                        // OR it is another player who is **not spectating**??
-                        // TODO: Spectators can still be in control of things, can't they? review this
-                        if ((playerID == H3MP_GameManager.ID/* && !Mod.TNHSpectating*/) ||
-                             (H3MP_GameManager.players.ContainsKey(playerID)/* && H3MP_GameManager.players[playerID].gameObject.activeSelf*/))
+                        // Going through each like this, we will go through the host of the instance before any other
+                        foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                         {
-                            return playerID;
+                            // If the player is us and we are **not spectating**??
+                            // OR it is another player who is **not spectating**??
+                            // TODO: Spectators can still be in control of things, can't they? review this
+                            if ((playerID == H3MP_GameManager.ID/* && !Mod.TNHSpectating*/) ||
+                                 (H3MP_GameManager.players.ContainsKey(playerID)/* && H3MP_GameManager.players[playerID].gameObject.activeSelf*/))
+                            {
+                                return playerID;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Going through each like this, we will go through the host of the instance before any other
+                        // TODO: Spectators can still be in control of things, can't they? review this
+                        foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
+                        {
+                            if (playerID != currentController/* && H3MP_GameManager.players[playerID].gameObject.activeSelf*/)
+                            {
+                                return playerID;
+                            }
                         }
                     }
                 }
                 else
                 {
-                    // Going through each like this, we will go through the host of the instance before any other
-                    // TODO: Spectators can still be in control of things, can't they? review this
-                    foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
+                    if (currentController == -1) // This means the potential host could also be us
                     {
-                        if (playerID != currentController/* && H3MP_GameManager.players[playerID].gameObject.activeSelf*/)
+                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_GameManager.sceneAtSceneLoadStart, out Dictionary<int, List<int>> instances) &&
+                                instances.TryGetValue(H3MP_GameManager.instanceAtSceneLoadStart, out List<int> otherPlayers))
                         {
-                            return playerID;
+                            if (otherPlayers.Count == 0)
+                            {
+                                return H3MP_GameManager.ID;
+                            }
+                            else
+                            {
+                                int smallest = otherPlayers[0] < H3MP_GameManager.ID ? otherPlayers[0] : H3MP_GameManager.ID;
+                                for (int i = 1; i < otherPlayers.Count; ++i)
+                                {
+                                    if (otherPlayers[i] < smallest)
+                                    {
+                                        smallest = otherPlayers[i];
+                                    }
+                                }
+                                return smallest;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (H3MP_GameManager.sceneLoading)
+                        {
+                            // We want to look at list of other players who were in our previous scene/instance
+                            if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_GameManager.sceneAtSceneLoadStart, out Dictionary<int, List<int>> instances) &&
+                                instances.TryGetValue(H3MP_GameManager.instanceAtSceneLoadStart, out List<int> otherPlayers) && otherPlayers.Count > 0)
+                            {
+                                // Just take first one
+                                return otherPlayers[0];
+                            }
+                        }
+                        else // Not loading, check players in current scene/instance
+                        {
+                            if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> instances) &&
+                                instances.TryGetValue(H3MP_GameManager.instance, out List<int> otherPlayers) && otherPlayers.Count > 0)
+                            {
+                                // Just take first one
+                                return otherPlayers[0];
+                            }
                         }
                     }
                 }
             }
-            else
+            else if(H3MP_ThreadManager.host) // Not for us, this was called to find a best potential host for something controlled by someone else
             {
-                if (currentController == -1) // This means the potential host could also be us
+                string scene = H3MP_Server.clients[currentController].player.scene;
+                int instance = H3MP_Server.clients[currentController].player.instance;
+
+                if(scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel:SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
                 {
-                    if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_GameManager.sceneAtSceneLoadStart, out Dictionary<int, List<int>> instances) &&
-                            instances.TryGetValue(H3MP_GameManager.instanceAtSceneLoadStart, out List<int> otherPlayers))
-                    {
-                        if(otherPlayers.Count == 0)
-                        {
-                            return H3MP_GameManager.ID;
-                        }
-                        else
-                        {
-                            int smallest = otherPlayers[0] < H3MP_GameManager.ID ? otherPlayers[0] : H3MP_GameManager.ID;
-                            for (int i = 1; i < otherPlayers.Count; ++i)
-                            {
-                                if (otherPlayers[i] < smallest)
-                                {
-                                    smallest = otherPlayers[i];
-                                }
-                            }
-                            return smallest;
-                        }
-                    }
+                    return 0;
                 }
-                else
+
+                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances) &&
+                    instances.TryGetValue(instance, out List<int> otherPlayers) && otherPlayers.Count > 0)
                 {
-                    if (H3MP_GameManager.sceneLoading)
+                    int smallest = otherPlayers[0];
+                    for (int i = 1; i < otherPlayers.Count; ++i)
                     {
-                        // We want to look at list of other players who were in our previous scene/instance
-                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_GameManager.sceneAtSceneLoadStart, out Dictionary<int, List<int>> instances) &&
-                            instances.TryGetValue(H3MP_GameManager.instanceAtSceneLoadStart, out List<int> otherPlayers) && otherPlayers.Count > 0)
+                        if (otherPlayers[i] < smallest)
                         {
-                            // Just take first one
-                            return otherPlayers[0];
+                            smallest = otherPlayers[i];
                         }
                     }
-                    else // Not loading, check players in current scene/instance
-                    {
-                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> instances) &&
-                            instances.TryGetValue(H3MP_GameManager.instance, out List<int> otherPlayers) && otherPlayers.Count > 0)
-                        {
-                            // Just take first one
-                            return otherPlayers[0];
-                        }
-                    }
+                    return smallest;
                 }
             }
             return -1;
