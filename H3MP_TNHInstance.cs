@@ -171,6 +171,9 @@ namespace H3MP
                 if (currentlyPlaying.Contains(playerIDs[0]))
                 {
                     H3MP_ServerSend.SetTNHController(instance, playerIDs[0]);
+
+                    // Update on our side
+                    controller = playerIDs[0];
                 }
                 else // New instance host is not currently playing
                 {
@@ -183,6 +186,9 @@ namespace H3MP
                         }
                     }
                     H3MP_ServerSend.SetTNHController(instance, currentLowest);
+
+                    // Update on our side
+                    controller = currentLowest;
                 }
             }
 
