@@ -495,7 +495,7 @@ namespace H3MP
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
         {
             H3MP_TrackedItemData actualTrackedItem = null;
-            Mod.LogInfo("Client AddTrackedItem " + trackedItem.itemID + " with tracked ID "+ trackedItem.trackedID + ", waitingindex: " + trackedItem.localWaitingIndex);
+            Mod.LogInfo("Client AddTrackedItem " + trackedItem.itemID + " with tracked ID "+ trackedItem.trackedID + ", waitingindex: " + trackedItem.localWaitingIndex+", scene: "+trackedItem.scene+", instance: "+trackedItem.instance);
             // If this is a scene init object the server rejected
             if (trackedItem.trackedID == -2)
             {

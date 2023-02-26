@@ -744,6 +744,7 @@ namespace H3MP
                         }
                         else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
                         {
+                            Mod.LogInfo("We do not want to track "+ root.name+" destroying");
                             Destroy(root.gameObject);
                         }
                     }
@@ -872,7 +873,7 @@ namespace H3MP
         //      If your mod added something in IsObjectIdentifiable() then you should also support it in here
         public static bool IsItemIdentifiable(H3MP_TrackedItemData itemData)
         {
-            return IM.OD.ContainsKey(itemData.itemID) || IM.OD.ContainsKey("TNH_ShatterableCrate");
+            return IM.OD.ContainsKey(itemData.itemID) || itemData.itemID.Equals("TNH_ShatterableCrate");
         }
 
         public static void SyncTrackedSosigs(bool init = false, bool inControl = false)
@@ -2255,6 +2256,7 @@ namespace H3MP
                 encryptionArrToUse = H3MP_Client.encryptions;
             }
 
+            Mod.LogInfo("Taking all physical control, destroying item scripts? : "+ destroyTrackedScript);
             foreach (H3MP_TrackedItemData item in itemArrToUse)
             {
                 if(item != null && item.physicalItem != null)

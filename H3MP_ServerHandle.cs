@@ -629,6 +629,7 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
+            Mod.LogInfo("Client received order to destroy item at " + trackedID);
             if (H3MP_Server.items[trackedID] != null)
             {
                 H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
