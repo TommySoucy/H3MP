@@ -4,8 +4,10 @@ As the title says, this is a mod that adds multiplayer to the virtual reality ga
 
 ## IMPORTANT
 
-- TNH can be played if server host is TNH instance host and goes into the TNH game before everyone else
-- Currently only made for game branch "alpha - Mod Safe"
+- See incompatibilities section below for a list of known incompatible mods and modes.
+- Only report bugs if you don't use any of the mods from the incompatibilities list.
+- Report bugs directly to VIPkiller17#4326 on discord and always send **_full_** output logs.
+- Currently only made for game branch "alpha - Mod Safe".
 
 ## Manual Installation
 
@@ -52,3 +54,19 @@ To host a server **for public access**, you will need to set your **IP** as your
 For public access, you will need to **port foward** the port you have set in your config.
 
 To start the server, in the wristmenu, press H3MP->Host
+
+## Incompatibilities
+
+- TNH tweaker
+- Meat fortress mode
+- Rotweiners mode
+- Anything not sandbox or TNH will most probably not work
+- Any mods that cause "PatchVerify" errors in your console/output logs will most probably break H3MP
+
+## Upcoming support
+
+- TNH tweaker
+- Most if not all Modul mods
+- Meat fortress mode
+- Rotweiners mode
+- Escape from Meatov
