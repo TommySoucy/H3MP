@@ -60,7 +60,9 @@ namespace H3MP
                 // Here, for a value of 0.5f, we mean that a sosig should never move more than 0.5m in a single frame, and should never teleport less than 0.5m
                 if (data.previousPos != null && data.velocity.magnitude < 0.5f)
                 {
-                    physicalSosigScript.CoreRB.position = Vector3.Lerp(physicalSosigScript.CoreRB.position, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                    Vector3 newPosition = Vector3.Lerp(physicalSosigScript.CoreRB.position, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                    physicalSosigScript.Agent.transform.position = newPosition;
+                    physicalSosigScript.CoreRB.position = newPosition;
                 }
                 else
                 {

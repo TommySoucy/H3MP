@@ -594,9 +594,11 @@ namespace H3MP
                     Write(trackedSosig.linkIntegrity[i]);
                 }
             }
+            Write((byte)trackedSosig.fallbackOrder);
 
             if (full)
             {
+                Write((byte)trackedSosig.currentOrder);
                 if (trackedSosig.linkData == null || trackedSosig.linkData.Length == 0)
                 {
                     Write((byte)0);
@@ -1289,9 +1291,11 @@ namespace H3MP
                     trackedSosig.linkIntegrity[i] = ReadFloat();
                 }
             }
+            trackedSosig.fallbackOrder = (Sosig.SosigOrder)ReadByte();
 
             if (full)
             {
+                trackedSosig.currentOrder = (Sosig.SosigOrder)ReadByte();
                 byte sosigLinkDataLength = ReadByte();
                 if (sosigLinkDataLength > 0)
                 {

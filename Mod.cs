@@ -6387,6 +6387,8 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null)
             {
+                trackedSosig.data.currentOrder = o;
+
                 if (H3MP_ThreadManager.host)
                 {
                     H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data.trackedID, o);

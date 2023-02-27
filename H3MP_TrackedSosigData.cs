@@ -40,6 +40,8 @@ namespace H3MP
         public bool[] IFFChart;
         public Sosig.SosigBodyPose previousBodyPose;
         public Sosig.SosigBodyPose bodyPose;
+        public Sosig.SosigOrder currentOrder;
+        public Sosig.SosigOrder fallbackOrder;
         public bool removeFromListOnDestroy = true;
         public string scene;
         public int instance;
@@ -91,6 +93,10 @@ namespace H3MP
 
             // Set IFFChart
             physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
+
+            // Initially set order
+            physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+            physicalObject.physicalSosigScript.FallbackOrder = fallbackOrder;
 
             ProcessData();
 
@@ -220,10 +226,12 @@ namespace H3MP
             linkIntegrity = updatedItem.linkIntegrity;
             previousBodyPose = bodyPose;
             bodyPose = updatedItem.bodyPose;
+            fallbackOrder = updatedItem.fallbackOrder;
 
             // Set physically
             if (physicalObject != null)
             {
+                physicalObject.physicalSosigScript.FallbackOrder = fallbackOrder;
                 physicalObject.physicalSosigScript.Mustard = mustard;
                 //physicalObject.physicalSosigScript.CoreRB.position = position;
                 //physicalObject.physicalSosigScript.CoreRB.rotation = rotation;
@@ -263,6 +271,7 @@ namespace H3MP
                 linkIntegrity = updatedItem.linkIntegrity;
                 wearables = updatedItem.wearables;
                 IFFChart = updatedItem.IFFChart;
+                currentOrder = updatedItem.currentOrder;
 
                 if (physicalObject != null)
                 {
@@ -321,6 +330,7 @@ namespace H3MP
                     modifiedLinkIntegrity = true;
                 }
             }
+            fallbackOrder = physicalObject.physicalSosigScript.FallbackOrder;
 
             previousActive = active;
             active = physicalObject.gameObject.activeInHierarchy;
@@ -451,6 +461,7 @@ namespace H3MP
                     }
                 }
                 IFFChart = physicalObject.physicalSosigScript.Priority.IFFChart;
+                currentOrder = physicalObject.physicalSosigScript.CurrentOrder;
             }
 
             return ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();

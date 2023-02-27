@@ -633,7 +633,7 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
-            Mod.LogInfo("Client received order to destroy item at " + trackedID);
+            Mod.LogInfo("Server received order to destroy item at " + trackedID);
             if (H3MP_Server.items[trackedID] != null)
             {
                 H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
@@ -1978,11 +1978,16 @@ namespace H3MP
             Sosig.SosigOrder currentOrder = (Sosig.SosigOrder)packet.ReadByte();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            if (trackedSosig != null)
             {
-                ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
-                --SosigActionPatch.sosigSetCurrentOrderSkip;
+                trackedSosig.currentOrder = currentOrder;
+
+                if (trackedSosig.physicalObject != null)
+                {
+                    ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                    trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                    --SosigActionPatch.sosigSetCurrentOrderSkip;
+                }
             }
 
             H3MP_ServerSend.SosigSetCurrentOrder(sosigTrackedID, currentOrder, clientID);

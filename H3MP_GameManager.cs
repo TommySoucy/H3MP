@@ -1080,6 +1080,8 @@ namespace H3MP
             data.controller = ID;
             data.mustard = sosigScript.Mustard;
             data.bodyPose = sosigScript.BodyPose;
+            data.currentOrder = sosigScript.CurrentOrder;
+            data.fallbackOrder = sosigScript.FallbackOrder;
             data.IFF = (byte)sosigScript.GetIFF();
             data.IFFChart = sosigScript.Priority.IFFChart;
             data.scene = SceneManager.GetActiveScene().name;
@@ -2232,10 +2234,13 @@ namespace H3MP
                 return;
             }
 
+            // TODO: Optimization: Could keep track of items by controller in a dict, go through those specifically
+            //                     Or could at least use itemsByInstanceByScene and go only through the item in the same scene/instance as the client
+
             // Give all items
             for(int i=0; i < H3MP_Server.items.Length; ++i)
             {
-                if (H3MP_Server.items[i] != null)
+                if (H3MP_Server.items[i] != null && H3MP_Server.items[i].controller == clientID)
                 {
                     H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
 
@@ -2282,7 +2287,7 @@ namespace H3MP
             // Give all sosigs
             for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
             {
-                if (H3MP_Server.sosigs[i] != null)
+                if (H3MP_Server.sosigs[i] != null && H3MP_Server.sosigs[i].controller == clientID)
                 {
                     H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[i];
 
@@ -2329,7 +2334,7 @@ namespace H3MP
             // Give all automeaters
             for (int i = 0; i < H3MP_Server.autoMeaters.Length; ++i)
             {
-                if (H3MP_Server.autoMeaters[i] != null)
+                if (H3MP_Server.autoMeaters[i] != null && H3MP_Server.autoMeaters[i].controller == clientID)
                 {
                     H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[i];
 
@@ -2376,7 +2381,7 @@ namespace H3MP
             // Give all encryptions
             for (int i = 0; i < H3MP_Server.encryptions.Length; ++i)
             {
-                if (H3MP_Server.encryptions[i] != null)
+                if (H3MP_Server.encryptions[i] != null && H3MP_Server.encryptions[i].controller == clientID)
                 {
                     H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[i];
 

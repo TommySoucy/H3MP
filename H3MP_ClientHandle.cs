@@ -1817,11 +1817,16 @@ namespace H3MP
             Sosig.SosigOrder currentOrder = (Sosig.SosigOrder)packet.ReadByte();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            if (trackedSosig != null)
             {
-                ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
-                --SosigActionPatch.sosigSetCurrentOrderSkip;
+                trackedSosig.currentOrder = currentOrder;
+
+                if (trackedSosig.physicalObject != null)
+                {
+                    ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                    trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                    --SosigActionPatch.sosigSetCurrentOrderSkip;
+                }
             }
         }
 
