@@ -108,21 +108,24 @@ namespace H3MP
                 H3MP_ServerSend.TrackedEncryptions();
 
                 // Also send the host's player state to all clients
-                H3MP_ServerSend.PlayerState(0,
-                                            GM.CurrentPlayerBody.transform.position,
-                                            GM.CurrentPlayerBody.transform.rotation,
-                                            GM.CurrentPlayerBody.headPositionFiltered,
-                                            GM.CurrentPlayerBody.headRotationFiltered,
-                                            GM.CurrentPlayerBody.headPositionFiltered + H3MP_GameManager.torsoOffset,
-                                            GM.CurrentPlayerBody.Torso.rotation,
-                                            GM.CurrentPlayerBody.LeftHand.position,
-                                            GM.CurrentPlayerBody.LeftHand.rotation,
-                                            GM.CurrentPlayerBody.RightHand.position,
-                                            GM.CurrentPlayerBody.RightHand.rotation,
-                                            GM.CurrentPlayerBody.Health,
-                                            GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(),
-                                            SceneManager.GetActiveScene().name,
-                                            H3MP_GameManager.instance);
+                if (GM.CurrentPlayerBody != null)
+                {
+                    H3MP_ServerSend.PlayerState(0,
+                                                GM.CurrentPlayerBody.transform.position,
+                                                GM.CurrentPlayerBody.transform.rotation,
+                                                GM.CurrentPlayerBody.headPositionFiltered,
+                                                GM.CurrentPlayerBody.headRotationFiltered,
+                                                GM.CurrentPlayerBody.headPositionFiltered + H3MP_GameManager.torsoOffset,
+                                                GM.CurrentPlayerBody.Torso.rotation,
+                                                GM.CurrentPlayerBody.LeftHand.position,
+                                                GM.CurrentPlayerBody.LeftHand.rotation,
+                                                GM.CurrentPlayerBody.RightHand.position,
+                                                GM.CurrentPlayerBody.RightHand.rotation,
+                                                GM.CurrentPlayerBody.Health,
+                                                GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(),
+                                                SceneManager.GetActiveScene().name,
+                                                H3MP_GameManager.instance);
+                }
             }
             else
             {
@@ -135,18 +138,21 @@ namespace H3MP
                     H3MP_ClientSend.TrackedEncryptions();
 
                     // Also send the player state to all clients
-                    H3MP_ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,
-                                                GM.CurrentPlayerBody.transform.rotation,
-                                                GM.CurrentPlayerBody.headPositionFiltered,
-                                                GM.CurrentPlayerBody.headRotationFiltered,
-                                                GM.CurrentPlayerBody.headPositionFiltered + H3MP_GameManager.torsoOffset,
-                                                GM.CurrentPlayerBody.Torso.rotation,
-                                                GM.CurrentPlayerBody.LeftHand.position,
-                                                GM.CurrentPlayerBody.LeftHand.rotation,
-                                                GM.CurrentPlayerBody.RightHand.position,
-                                                GM.CurrentPlayerBody.RightHand.rotation,
-                                                GM.CurrentPlayerBody.Health,
-                                                GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
+                    if (GM.CurrentPlayerBody != null)
+                    {
+                        H3MP_ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,
+                                                    GM.CurrentPlayerBody.transform.rotation,
+                                                    GM.CurrentPlayerBody.headPositionFiltered,
+                                                    GM.CurrentPlayerBody.headRotationFiltered,
+                                                    GM.CurrentPlayerBody.headPositionFiltered + H3MP_GameManager.torsoOffset,
+                                                    GM.CurrentPlayerBody.Torso.rotation,
+                                                    GM.CurrentPlayerBody.LeftHand.position,
+                                                    GM.CurrentPlayerBody.LeftHand.rotation,
+                                                    GM.CurrentPlayerBody.RightHand.position,
+                                                    GM.CurrentPlayerBody.RightHand.rotation,
+                                                    GM.CurrentPlayerBody.Health,
+                                                    GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
+                    }
                 }
             }
         }

@@ -216,9 +216,9 @@ namespace H3MP
             }
         }
 
-        public static void AddSyncScene(int ID, string sceneName)
+        public static void AddNonSyncScene(int ID, string sceneName)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.addSyncScene))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.addNonSyncScene))
             {
                 packet.Write(ID);
                 packet.Write(sceneName);

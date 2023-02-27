@@ -50,7 +50,7 @@ namespace H3MP
             bool inControl = packet.ReadBool();
 
             // Just connected, sync if current scene is syncable
-            if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
+            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
             {
                 H3MP_GameManager.SyncTrackedSosigs(true, inControl);
                 H3MP_GameManager.SyncTrackedAutoMeaters(true, inControl);
@@ -173,12 +173,12 @@ namespace H3MP
             H3MP_Client.AddTrackedEncryption(packet.ReadTrackedEncryption(true));
         }
 
-        public static void AddSyncScene(H3MP_Packet packet)
+        public static void AddNonSyncScene(H3MP_Packet packet)
         {
             int ID = packet.ReadInt();
             string scene = packet.ReadString();
 
-            H3MP_GameManager.synchronizedScenes.Add(scene, ID);
+            H3MP_GameManager.nonSynchronizedScenes.Add(scene, ID);
         }
 
         public static void GiveControl(H3MP_Packet packet)

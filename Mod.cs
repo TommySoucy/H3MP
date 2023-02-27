@@ -23,7 +23,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.1.0";
+        public const string pluginVersion = "1.1.1";
 
         // Assets
         public static JObject config;
@@ -2777,7 +2777,7 @@ namespace H3MP
             }
 
             // Manage players present
-            if (player.scene.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
+            if (player.scene.Equals(SceneManager.GetActiveScene().name) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
             {
                 --H3MP_GameManager.playersPresent;
             }
@@ -2947,6 +2947,8 @@ namespace H3MP
         static void Prefix(string levelName)
         {
             loadingLevel = levelName;
+            loadingLevel = loadingLevel.Replace("Assets/", "");
+            loadingLevel = loadingLevel.Replace(".unity", "");
         }
     }
 

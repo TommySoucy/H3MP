@@ -251,7 +251,7 @@ namespace H3MP
             H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF, true);
             inControl &= !scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name);
 
-            if (H3MP_GameManager.synchronizedScenes.ContainsKey(scene))
+            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(scene))
             {
                 Mod.LogInfo("Player " + ID + " join server in scene " + scene);
 

@@ -145,10 +145,10 @@ namespace H3MP
             }
         }
 
-        // MOD: This is what a mod that adds a scene it wants to sync would call to sync players and items inside it
-        public static void AddSyncScene(string sceneName)
+        // MOD: This is what a mod that adds a scene it doesn't wants to sync would call to prevent syncing inside it
+        public static void AddNonSyncScene(string sceneName)
         {
-            using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.addSyncScene))
+            using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.addNonSyncScene))
             {
                 packet.Write(sceneName);
 

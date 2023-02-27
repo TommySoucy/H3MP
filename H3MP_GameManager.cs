@@ -35,7 +35,7 @@ namespace H3MP
         public static List<H3MP_TrackedSosigData> sosigs = new List<H3MP_TrackedSosigData>(); // Tracked sosigs under control of this gameManager
         public static List<H3MP_TrackedAutoMeaterData> autoMeaters = new List<H3MP_TrackedAutoMeaterData>(); // Tracked AutoMeaters under control of this gameManager
         public static List<H3MP_TrackedEncryptionData> encryptions = new List<H3MP_TrackedEncryptionData>(); // Tracked TNH_EncryptionTarget under control of this gameManager
-        public static Dictionary<string, int> synchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
+        public static Dictionary<string, int> nonSynchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
         public static Dictionary<FVRPhysicalObject, H3MP_TrackedItem> trackedItemByItem = new Dictionary<FVRPhysicalObject, H3MP_TrackedItem>();
         public static Dictionary<SosigWeapon, H3MP_TrackedItem> trackedItemBySosigWeapon = new Dictionary<SosigWeapon, H3MP_TrackedItem>();
         public static Dictionary<Sosig, H3MP_TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, H3MP_TrackedSosig>();
@@ -75,17 +75,6 @@ namespace H3MP
             singleton = this;
 
             SteamVR_Events.Loading.Listen(OnSceneLoadedVR);
-
-            // All vanilla scenes can be synced by default
-            if (synchronizedScenes.Count == 0)
-            {
-                int sceneCount = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
-                for (int i = 0; i < sceneCount; i++)
-                {
-                    string sceneName = System.IO.Path.GetFileNameWithoutExtension(UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i));
-                    synchronizedScenes.Add(sceneName, 0);
-                }
-            }
 
             // Init the main instance
             activeInstances.Add(instance, 1);
@@ -327,7 +316,7 @@ namespace H3MP
                 H3MP_Server.clients[playerID].player.scene = sceneName;
             }
 
-            if (sceneName.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
+            if (sceneName.Equals(SceneManager.GetActiveScene().name) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
             {
                 if (!player.gameObject.activeSelf)
                 {
@@ -484,7 +473,7 @@ namespace H3MP
                 H3MP_Server.clients[playerID].player.instance = instance;
             }
 
-            if (player.scene.Equals(SceneManager.GetActiveScene().name) && H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
+            if (player.scene.Equals(SceneManager.GetActiveScene().name) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
             {
                 if (!player.gameObject.activeSelf)
                 {
@@ -1810,7 +1799,7 @@ namespace H3MP
             // Set players active and playersPresent
             playersPresent = 0;
             string sceneName = SceneManager.GetActiveScene().name;
-            if (synchronizedScenes.ContainsKey(sceneName))
+            if (!nonSynchronizedScenes.ContainsKey(sceneName))
             {
                 // Check each players scene/instance to know if they are in the one we are going into
                 // TODO: Review: Since we are now tracking players' scene/instance through playerBySceneByInstance, we don't need to check for each of them here
@@ -2017,7 +2006,7 @@ namespace H3MP
 
                 // Update players' active state depending on which are in the same scene/instance
                 playersPresent = 0;
-                if (synchronizedScenes.ContainsKey(loadedScene.name))
+                if (!nonSynchronizedScenes.ContainsKey(loadedScene.name))
                 {
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                     {

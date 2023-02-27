@@ -326,7 +326,7 @@ namespace H3MP
                 H3MP_ClientHandle.SpawnPlayer,
                 H3MP_ClientHandle.PlayerState,
                 H3MP_ClientHandle.PlayerScene,
-                H3MP_ClientHandle.AddSyncScene,
+                H3MP_ClientHandle.AddNonSyncScene,
                 H3MP_ClientHandle.TrackedItems,
                 H3MP_ClientHandle.TrackedItem,
                 null, // Unused ServerPackets.takeControl

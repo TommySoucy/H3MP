@@ -99,7 +99,7 @@ namespace H3MP
             List<int> waitingFromClients = new List<int>();
 
             // Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
-            if (H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene))
+            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene))
             {
                 foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
                 {
@@ -144,7 +144,7 @@ namespace H3MP
             {
                 // Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
                 int requestedCount = 0;
-                if (H3MP_GameManager.synchronizedScenes.ContainsKey(player.scene))
+                if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene))
                 {
                     foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
                     {
@@ -207,14 +207,14 @@ namespace H3MP
             H3MP_ServerSend.AddInstance(H3MP_GameManager.AddNewInstance());
         }
 
-        public static void AddSyncScene(int clientID, H3MP_Packet packet)
+        public static void AddNonSyncScene(int clientID, H3MP_Packet packet)
         {
             string scene = packet.ReadString();
 
-            H3MP_GameManager.synchronizedScenes.Add(scene, clientID);
+            H3MP_GameManager.nonSynchronizedScenes.Add(scene, clientID);
 
             // Send to all other clients
-            H3MP_ServerSend.AddSyncScene(clientID, scene);
+            H3MP_ServerSend.AddNonSyncScene(clientID, scene);
         }
 
         public static void TrackedItems(int clientID, H3MP_Packet packet)

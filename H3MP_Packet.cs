@@ -13,7 +13,7 @@ namespace H3MP
         spawnPlayer = 2,
         playerState = 3,
         playerScene = 4,
-        addSyncScene = 5,
+        addNonSyncScene = 5,
         trackedItems = 6,
         trackedItem = 7,
         takeControl = 8, // UNUSED
@@ -157,7 +157,7 @@ namespace H3MP
         welcomeReceived = 1,
         playerState = 2,
         playerScene = 3,
-        addSyncScene = 4,
+        addNonSyncScene = 4,
         trackedItems = 5,
         trackedItem = 6,
         takeControl = 7, // UNUSED

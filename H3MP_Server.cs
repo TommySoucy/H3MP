@@ -48,7 +48,7 @@ namespace H3MP
             Mod.LogInfo($"Server started on: {tcpListener.LocalEndpoint}");
 
             // Just connected, sync if current scene is syncable
-            if (H3MP_GameManager.synchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
+            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
             {
                 H3MP_GameManager.SyncTrackedItems(true, true);
                 H3MP_GameManager.SyncTrackedSosigs(true, true);
@@ -551,7 +551,7 @@ namespace H3MP
                 H3MP_ServerHandle.WelcomeReceived,
                 H3MP_ServerHandle.PlayerState,
                 H3MP_ServerHandle.PlayerScene,
-                H3MP_ServerHandle.AddSyncScene,
+                H3MP_ServerHandle.AddNonSyncScene,
                 H3MP_ServerHandle.TrackedItems,
                 H3MP_ServerHandle.TrackedItem,
                 H3MP_ServerHandle.TakeControl,
