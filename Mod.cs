@@ -1,5 +1,6 @@
 ﻿using Anvil;
 using BepInEx;
+using BepInEx.Bootstrap;
 using FistVR;
 using HarmonyLib;
 using HarmonyLib.Public.Patching;
@@ -18,6 +19,21 @@ using Valve.Newtonsoft.Json.Linq;
 namespace H3MP
 {
     [BepInPlugin(pluginGuid, pluginName, pluginVersion)]
+    [BepInDependency("stratum", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("nrgill28.Sodalite", BepInDependency.DependencyFlags.SoftDependency)] // Has WristMenu awake patch, should not interfere
+    [BepInDependency("h3vr.otherloader", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("devyndamonster-OtherLoader", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("h3vr.cityrobo.prefab_replacer", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("dll.wfiost.h3vrutilities", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("dll.wfiost.h3vrutilitieslib", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("dll.wfiost.h3vrutilitieslib.vehicles", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("h3vr.cityrobo.OpenScripts", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("h3vr.cityrobo.thermalvision", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("h3vr.OpenScripts2", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("h3vr.andrew_ftw.afcl", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("h3vr.andrew_ftw.bepinexshit", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("Meat_banono-Meats_ModulAR", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("Meat_banono-Meats_ModulARpt2", BepInDependency.DependencyFlags.SoftDependency)]
     public class Mod : BaseUnityPlugin
     {
         // BepinEx
@@ -2028,6 +2044,64 @@ namespace H3MP
             {
                 File.WriteAllText(H3MPPath + "/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
             }
+
+            if (PatchVerify.breakingPatchVerify > 0)
+            {
+                Mod.LogError("PatchVerify report: " + PatchVerify.breakingPatchVerify + " breaking, " + PatchVerify.warningPatchVerify + " warnings.\nIf you have other mods installed this may be normal. Refer to H3MP mod compatibility list in case things break.");
+            }
+            else if(PatchVerify.warningPatchVerify > 0)
+            {
+                Mod.LogWarning("PatchVerify report: 0 breaking, " + PatchVerify.warningPatchVerify + " warnings.\nIf you have other mods installed this may be normal. Refer to H3MP mod compatibility list in case things break.");
+            }
+
+            List<string> supportedMods = new List<string>();
+            object[] dependencyAttributes = typeof(Mod).GetCustomAttributes(typeof(BepInDependency), false);
+            for(int i=0; i < dependencyAttributes.Length; ++i)
+            {
+                BepInDependency dependency = dependencyAttributes[i] as BepInDependency;
+                if (dependency != null)
+                {
+                    supportedMods.Add(dependency.DependencyGUID);
+                }
+            }
+            int unknownModCount = 0;
+#if DEBUG
+            List<string> unknownMods = new List<string>();
+#endif
+            foreach (KeyValuePair<string, PluginInfo> otherPlugin in Chainloader.PluginInfos)
+            {
+                if (!otherPlugin.Key.Equals("VIP.TommySoucy.H3MP") && !supportedMods.Contains(otherPlugin.Key))
+                {
+                    ++unknownModCount;
+#if DEBUG
+                    unknownMods.Add(otherPlugin.Key);
+#endif
+                }
+
+                switch (otherPlugin.Key)
+                {
+                    case "dll.wfiost.h3vrutilities":
+                        Mod.LogWarning("You have H3VRUtilities installed! Note that any object/entity that uses the scripts included in this mod may not work with H3MP!");
+                        break;
+                    case "h3vr.cityrobo.OpenScripts":
+                        Mod.LogWarning("You have OpenScripts installed! Note that any object/entity that uses the scripts included in this mod may not work with H3MP!");
+                        break;
+                    case "h3vr.OpenScripts2":
+                        Mod.LogWarning("You have OpenScripts2 installed! Note that any object/entity that uses the scripts included in this mod may not work with H3MP!");
+                        break;
+                    case "h3vr.andrew_ftw.afcl":
+                        Mod.LogWarning("You have FTW Arms AFCL installed! Note that any object/entity that uses the scripts included in this mod may not work with H3MP!");
+                        break;
+                }
+            }
+            Mod.LogWarning("You have at least " + unknownModCount + " mods installed that are either unrecognized or unsupported by H3MP");
+#if DEBUG
+            Mod.LogWarning("Unknown/Unsupported mods:");
+            for (int i=0; i< unknownMods.Count; ++i)
+            {
+                Mod.LogWarning(unknownMods[i]);
+            }
+#endif
         }
 
         // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
@@ -2861,6 +2935,8 @@ namespace H3MP
 
         public static Dictionary<string, int> hashes;
         public static bool writeWhenDone;
+        public static int breakingPatchVerify = 0;
+        public static int warningPatchVerify = 0;
 
         public static void Verify(MethodInfo methodInfo, Harmony harmony, bool breaking)
         {
@@ -2897,7 +2973,16 @@ namespace H3MP
             for (int i = 0; i < instructions.Count; ++i)
             {
                 CodeInstruction instruction = instructions[i];
-                s += (instruction.opcode == null ? "null opcode" : instruction.opcode.ToString()) + (instruction.operand == null ? "null operand" : instruction.operand.ToString());
+                OpCode oc = instruction.opcode;
+                if(oc == null)
+                {
+                    s += "null opcode" + (instruction.operand == null ? "null operand" : instruction.operand.ToString());
+                }
+                else
+                {
+                    // This is done because the code changes if a mod is loaded using MonoMod loader? Some calls become virtual
+                    s += (oc == OpCodes.Call || oc == OpCodes.Callvirt ? "c" : oc.ToString()) + (instruction.operand == null ? "null operand" : instruction.operand.ToString());
+                }
             }
             int hash = s.GetHashCode();
 
@@ -2908,11 +2993,17 @@ namespace H3MP
                 {
                     if (breaking)
                     {
+#if DEBUG
                         Mod.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
+#endif
+                        ++breakingPatchVerify;
                     }
                     else
                     {
+#if DEBUG
                         Mod.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
+#endif
+                        ++warningPatchVerify;
                     }
 
                     hashes[identifier] = hash;
@@ -2923,7 +3014,9 @@ namespace H3MP
                 hashes.Add(identifier, hash);
                 if (!writeWhenDone)
                 {
+#if DEBUG
                     Mod.LogWarning("PatchVerify: " + identifier + " not found in hashes. Most probably a new patch. This warning will remain until new hash file is written.");
+#endif
                 }
             }
         }
@@ -8814,7 +8907,7 @@ namespace H3MP
             inInitPrefabSpawn = false;
         }
     }
-    #endregion
+#endregion
 
 #region Damageable Patches
     // TODO: Optimization?: Patch IFVRDamageable.Damage and have a way to track damageables so we don't need to have a specific TCP call for each
@@ -10990,9 +11083,9 @@ namespace H3MP
             }
         }
     }
-    #endregion
+#endregion
 
-    #region TNH Patches
+#region TNH Patches
     // When set TNH Manager
     // If we are instance host
     //   Take control (#1 SEND CONTROL TAKEOVER)
