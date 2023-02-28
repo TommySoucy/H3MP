@@ -34,6 +34,9 @@ namespace H3MP
     [BepInDependency("h3vr.andrew_ftw.bepinexshit", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("Meat_banono-Meats_ModulAR", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("Meat_banono-Meats_ModulARpt2", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("nrgill28.Atlas", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("another_marcel.aporkalypse_now_tnh", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("JerryAr.gm_Construct", BepInDependency.DependencyFlags.SoftDependency)]
     public class Mod : BaseUnityPlugin
     {
         // BepinEx

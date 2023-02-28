@@ -261,15 +261,18 @@ namespace H3MP
                     // There are other players in the client's scene/instance, request up to date objects before sending
                     for (int i = 0; i < otherPlayers.Count; ++i)
                     {
-                        if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherPlayers[i]))
+                        if (otherPlayers[i] != ID)
                         {
-                            H3MP_Server.clientsWaitingUpDate[otherPlayers[i]].Add(ID);
+                            if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherPlayers[i]))
+                            {
+                                H3MP_Server.clientsWaitingUpDate[otherPlayers[i]].Add(ID);
+                            }
+                            else
+                            {
+                                H3MP_Server.clientsWaitingUpDate.Add(otherPlayers[i], new List<int> { ID });
+                            }
+                            H3MP_ServerSend.RequestUpToDateObjects(otherPlayers[i], false, ID);
                         }
-                        else
-                        {
-                            H3MP_Server.clientsWaitingUpDate.Add(otherPlayers[i], new List<int> { ID });
-                        }
-                        H3MP_ServerSend.RequestUpToDateObjects(otherPlayers[i], false, ID);
                     }
 
                     // Send relevant trackedObjects specifically from us too

@@ -7573,12 +7573,10 @@ namespace H3MP
                 }
                 if (data.localTrackedID != -1)
                 {
-                    Mod.LogInfo("\thas local trackedID: "+ data.localTrackedID+", removing from "+ H3MP_GameManager.items.Count+" element local item list");
                     H3MP_GameManager.items[data.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
                     H3MP_GameManager.items[data.localTrackedID].localTrackedID = data.localTrackedID;
                     H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
                     data.localTrackedID = -1;
-                    Mod.LogInfo("\tafter removing count: "+ H3MP_GameManager.items.Count);
                 }
             }
             else
