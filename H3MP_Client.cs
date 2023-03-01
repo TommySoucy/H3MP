@@ -462,6 +462,7 @@ namespace H3MP
                 H3MP_ClientHandle.SLAMDetonate,
                 H3MP_ClientHandle.Ping,
                 H3MP_ClientHandle.TNHSetPhaseHold,
+                H3MP_ClientHandle.ShatterableCrateSetHoldingToken,
             };
 
             // All vanilla scenes can be synced by default
