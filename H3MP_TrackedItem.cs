@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static H3MP.H3MP_TrackedItem;
 
 namespace H3MP
 {
@@ -24,8 +25,8 @@ namespace H3MP
         // Update
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
         public delegate bool UpdateDataWithGiven(byte[] newData);
-        public delegate bool FireFirearm();
-        public delegate void FirearmUpdateOverrideSetter(FireArmRoundType roundType, FireArmRoundClass roundClass);
+        public delegate bool FireFirearm(int chamberIndex);
+        public delegate void FirearmUpdateOverrideSetter(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex);
         public delegate bool FireSosigGun(float recoilMult);
         public delegate void FireAttachableFirearm(bool firedFromInterface);
         public delegate void FireAttachableFirearmChamberRound(FireArmRoundType roundType, FireArmRoundClass roundClass);
@@ -137,7 +138,7 @@ namespace H3MP
                 updateFunc = UpdateClosedBoltWeapon;
                 updateGivenFunc = UpdateGivenClosedBoltWeapon;
                 dataObject = asCBW;
-                fireFunc = asCBW.Fire;
+                fireFunc = FireCBW;
                 setFirearmUpdateOverride = SetCBWUpdateOverride;
             }
             else if (physObj is OpenBoltReceiver)
@@ -146,7 +147,7 @@ namespace H3MP
                 updateFunc = UpdateOpenBoltReceiver;
                 updateGivenFunc = UpdateGivenOpenBoltReceiver;
                 dataObject = asOBR;
-                fireFunc = asOBR.Fire;
+                fireFunc = FireOBR;
                 setFirearmUpdateOverride = SetOBRUpdateOverride;
             }
             else if (physObj is BoltActionRifle)
@@ -155,7 +156,7 @@ namespace H3MP
                 updateFunc = UpdateBoltActionRifle;
                 updateGivenFunc = UpdateGivenBoltActionRifle;
                 dataObject = asBAR;
-                fireFunc = asBAR.Fire;
+                fireFunc = FireBAR;
                 setFirearmUpdateOverride = SetBARUpdateOverride;
             }
             else if (physObj is Handgun)
@@ -164,7 +165,7 @@ namespace H3MP
                 updateFunc = UpdateHandgun;
                 updateGivenFunc = UpdateGivenHandgun;
                 dataObject = asHandgun;
-                fireFunc = asHandgun.Fire;
+                fireFunc = FireHandgun;
                 setFirearmUpdateOverride = SetHandgunUpdateOverride;
             }
             else if (physObj is TubeFedShotgun)
@@ -173,7 +174,7 @@ namespace H3MP
                 updateFunc = UpdateTubeFedShotgun;
                 updateGivenFunc = UpdateGivenTubeFedShotgun;
                 dataObject = asTFS;
-                fireFunc = asTFS.Fire;
+                fireFunc = FireTFS;
                 setFirearmUpdateOverride = SetTFSUpdateOverride;
             }
             else if (physObj is Revolver)
@@ -203,7 +204,7 @@ namespace H3MP
                 updateFunc = UpdateBAP;
                 updateGivenFunc = UpdateGivenBAP;
                 dataObject = asBAP;
-                fireFunc = asBAP.Fire;
+                fireFunc = FireBAP;
                 setFirearmUpdateOverride = SetBAPUpdateOverride;
             }
             else if (physObj is BreakActionWeapon)
@@ -293,7 +294,6 @@ namespace H3MP
             }
             else if(physObj is C4)
             {
-                Mod.LogInfo("\ninit type is C4");
                 C4 asC4 = (C4)physObj;
                 updateFunc = UpdateC4;
                 updateGivenFunc = UpdateGivenC4;
@@ -608,7 +608,12 @@ namespace H3MP
             }
             else if(physObj is FVRFireArm)
             {
-                //todo
+                FVRFireArm asFA = physObj as FVRFireArm;
+                updateFunc = UpdateFireArm;
+                updateGivenFunc = UpdateGivenFireArm;
+                dataObject = asFA;
+                fireFunc = FireFireArm;
+                setFirearmUpdateOverride = SetFireArmUpdateOverride;
             }
         }
 
@@ -630,6 +635,126 @@ namespace H3MP
         }
 
         #region Type Updates
+        private bool UpdateFireArm()
+        {
+            FVRFireArm asFA = dataObject as FVRFireArm;
+            bool modified = false;
+
+            int necessarySize = asFA.GetChambers().Count * 4;
+
+            if (data.data == null || data.data.Length < necessarySize)
+            {
+                data.data = new byte[necessarySize];
+                modified = true;
+            }
+
+            // Write chambered rounds
+            byte preval0;
+            byte preval1;
+            byte preval2;
+            byte preval3;
+            for (int i = 0; i < asFA.GetChambers().Count; ++i)
+            {
+                int firstIndex = i * 4;
+                preval0 = data.data[firstIndex];
+                preval1 = data.data[firstIndex + 1];
+                preval2 = data.data[firstIndex + 2];
+                preval3 = data.data[firstIndex + 3];
+
+                if (asFA.GetChambers()[i].GetRound() == null || asFA.GetChambers()[i].GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)asFA.GetChambers()[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
+                    BitConverter.GetBytes((short)asFA.GetChambers()[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                }
+
+                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenFireArm(byte[] newData)
+        {
+            bool modified = false;
+            FVRFireArm asFA = dataObject as FVRFireArm;
+
+            // Set chambers
+            for (int i = 0; i < asFA.GetChambers().Count; ++i)
+            {
+                int firstIndex = i * 4;
+
+                if(firstIndex >= asFA.GetChambers().Count)
+                {
+                    break;
+                }
+
+                short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
+                short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (asFA.GetChambers()[i].GetRound() != null)
+                    {
+                        asFA.GetChambers()[i].SetRound(null, false);
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (asFA.GetChambers()[i].GetRound() == null || asFA.GetChambers()[i].GetRound().RoundClass != roundClass)
+                    {
+                        if (asFA.GetChambers()[i].RoundType == roundType)
+                        {
+                            asFA.GetChambers()[i].SetRound(roundClass, asFA.GetChambers()[i].transform.position, asFA.GetChambers()[i].transform.rotation);
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = asFA.GetChambers()[i].RoundType;
+                            asFA.GetChambers()[i].RoundType = roundType;
+                            asFA.GetChambers()[i].SetRound(roundClass, asFA.GetChambers()[i].transform.position, asFA.GetChambers()[i].transform.rotation);
+                            asFA.GetChambers()[i].RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool FireFireArm(int chamberIndex)
+        {
+            if(chamberIndex == -1)
+            {
+                return false;
+            }
+
+            FVRFireArm asFA = dataObject as FVRFireArm;
+            asFA.Fire(asFA.GetChambers()[chamberIndex], asFA.GetMuzzle(), false);
+            return true;
+        }
+
+        private void SetFireArmUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
+        {
+            if(chamberIndex == -1)
+            {
+                return;
+            }
+
+            FVRFireArm asFA = dataObject as FVRFireArm;
+            FireArmRoundType prevRoundType = asFA.GetChambers()[chamberIndex].RoundType;
+            asFA.GetChambers()[chamberIndex].RoundType = roundType;
+            asFA.GetChambers()[chamberIndex].SetRound(roundClass, asFA.GetChambers()[chamberIndex].transform.position, asFA.GetChambers()[chamberIndex].transform.rotation);
+            asFA.GetChambers()[chamberIndex].RoundType = prevRoundType;
+        }
+
         private bool UpdateSBLPCell()
         {
             bool modified = false;
@@ -1134,14 +1259,14 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireAirgun()
+        private bool FireAirgun(int chamberIndex)
         {
             Airgun asAG = dataObject as Airgun;
             Mod.Airgun_DropHammer.Invoke(asAG, null);
             return true;
         }
 
-        private void SetAirgunUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetAirgunUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             Airgun asAG = dataObject as Airgun;
 
@@ -1615,14 +1740,14 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireMF2_RL()
+        private bool FireMF2_RL(int chamberIndex)
         {
             MF2_RL asMF2_RL = (MF2_RL)dataObject;
             asMF2_RL.Fire();
             return true;
         }
 
-        private void SetMF2_RLUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetMF2_RLUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             MF2_RL asMF2_RL = (MF2_RL)dataObject;
             FireArmRoundType prevRoundType = asMF2_RL.Chamber.RoundType;
@@ -1914,7 +2039,7 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireSimpleLauncher2()
+        private bool FireSimpleLauncher2(int chamberIndex)
         {
             SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
             bool wasOnSA = false;
@@ -1931,7 +2056,7 @@ namespace H3MP
             return true;
         }
 
-        private void SetSimpleLauncher2UpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetSimpleLauncher2UpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
             FireArmRoundType prevRoundType = asSimpleLauncher.Chamber.RoundType;
@@ -2014,14 +2139,14 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireSimpleLauncher()
+        private bool FireSimpleLauncher(int chamberIndex)
         {
             SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
             asSimpleLauncher.Fire();
             return true;
         }
 
-        private void SetSimpleLauncherUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetSimpleLauncherUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
             FireArmRoundType prevRoundType = asSimpleLauncher.Chamber.RoundType;
@@ -2128,14 +2253,14 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireRPG7()
+        private bool FireRPG7(int chamberIndex)
         {
             RPG7 asRPG7 = (RPG7)dataObject;
             asRPG7.Fire();
             return true;
         }
 
-        private void SetRPG7UpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetRPG7UpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             RPG7 asRPG7 = (RPG7)dataObject;
             Mod.RPG7_m_isHammerCocked.SetValue(asRPG7, true);
@@ -2243,14 +2368,14 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireRollingBlock()
+        private bool FireRollingBlock(int chamberIndex)
         {
             RollingBlock asRB = (RollingBlock)dataObject;
             Mod.RollingBlock_Fire.Invoke(asRB, null);
             return true;
         }
 
-        private void SetRollingBlockUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetRollingBlockUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             RollingBlock asRB = (RollingBlock)dataObject;
 
@@ -2334,7 +2459,7 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireRGM40()
+        private bool FireRGM40(int chamberIndex)
         {
             RGM40 asRGM40 = dataObject as RGM40;
 
@@ -2342,7 +2467,7 @@ namespace H3MP
             return true;
         }
 
-        private void SetRGM40UpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetRGM40UpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             RGM40 asRGM40 = dataObject as RGM40;
 
@@ -2485,14 +2610,14 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireRemoteMissileLauncher()
+        private bool FireRemoteMissileLauncher(int chamberIndex)
         {
             RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
             Mod.RemoteMissileLauncher_FireShot.Invoke(asRML, null);
             return true;
         }
 
-        private void SetRemoteMissileLauncherUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetRemoteMissileLauncherUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
 
@@ -2577,14 +2702,14 @@ namespace H3MP
             return modified;
         }
 
-        private bool FirePotatoGun()
+        private bool FirePotatoGun(int chamberIndex)
         {
             PotatoGun asPG = dataObject as PotatoGun;
             asPG.Fire();
             return true;
         }
 
-        private void SetPotatoGunUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetPotatoGunUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             PotatoGun asPG = dataObject as PotatoGun;
 
@@ -2792,14 +2917,14 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireM72()
+        private bool FireM72(int chamberIndex)
         {
             M72 asM72 = dataObject as M72;
             asM72.Fire();
             return true;
         }
 
-        private void SetM72UpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetM72UpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             M72 asM72 = dataObject as M72;
 
@@ -2923,7 +3048,7 @@ namespace H3MP
             return modified;
         }
 
-        private void SetOBRUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetOBRUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             OpenBoltReceiver asOBR = dataObject as OpenBoltReceiver;
 
@@ -2931,6 +3056,11 @@ namespace H3MP
             asOBR.Chamber.RoundType = roundType;
             asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
             asOBR.Chamber.RoundType = prevRoundType;
+        }
+
+        private bool FireOBR(int chamberIndex)
+        {
+            return (dataObject as OpenBoltReceiver).Fire();
         }
 
         private bool UpdateHCB()
@@ -3467,13 +3597,13 @@ namespace H3MP
             return modified;
         }
 
-        private bool FireFlaregun()
+        private bool FireFlaregun(int chamberIndex)
         {
             Mod.Flaregun_Fire.Invoke((dataObject as Flaregun), null);
             return true;
         }
 
-        private void SetFlaregunUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetFlaregunUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             Flaregun asFG = dataObject as Flaregun;
 
@@ -4044,7 +4174,7 @@ namespace H3MP
             return modified;
         }
 
-        private void SetBAPUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetBAPUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             BAP asBAP = dataObject as BAP;
 
@@ -4052,6 +4182,11 @@ namespace H3MP
             asBAP.Chamber.RoundType = roundType;
             asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
             asBAP.Chamber.RoundType = prevRoundType;
+        }
+
+        private bool FireBAP(int chamberIndex)
+        {
+            return (dataObject as BAP).Fire();
         }
 
         private bool UpdateRevolvingShotgun()
@@ -5842,7 +5977,7 @@ namespace H3MP
             return modified;
         }
 
-        private void SetCBWUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetCBWUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             ClosedBoltWeapon asCBW = (ClosedBoltWeapon)dataObject;
 
@@ -5850,6 +5985,11 @@ namespace H3MP
             asCBW.Chamber.RoundType = roundType;
             asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
             asCBW.Chamber.RoundType = prevRoundType;
+        }
+
+        private bool FireCBW(int chamberIndex)
+        {
+            return (dataObject as ClosedBoltWeapon).Fire();
         }
 
         private bool UpdateHandgun()
@@ -5993,7 +6133,7 @@ namespace H3MP
             return modified;
         }
 
-        private void SetHandgunUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetHandgunUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             Handgun asHandgun = dataObject as Handgun;
 
@@ -6001,6 +6141,11 @@ namespace H3MP
             asHandgun.Chamber.RoundType = roundType;
             asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
             asHandgun.Chamber.RoundType = prevRoundType;
+        }
+
+        private bool FireHandgun(int chamberIndex)
+        {
+            return (dataObject as Handgun).Fire();
         }
 
         private bool UpdateTubeFedShotgun()
@@ -6169,7 +6314,7 @@ namespace H3MP
             return modified;
         }
 
-        private void SetTFSUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetTFSUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             TubeFedShotgun asTFS = dataObject as TubeFedShotgun;
 
@@ -6177,6 +6322,11 @@ namespace H3MP
             asTFS.Chamber.RoundType = roundType;
             asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
             asTFS.Chamber.RoundType = prevRoundType;
+        }
+
+        private bool FireTFS(int chamberIndex)
+        {
+            return (dataObject as TubeFedShotgun).Fire();
         }
 
         private bool UpdateBoltActionRifle()
@@ -6336,7 +6486,7 @@ namespace H3MP
             return modified;
         }
 
-        private void SetBARUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass)
+        private void SetBARUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             BoltActionRifle asBar = dataObject as BoltActionRifle;
 
@@ -6344,6 +6494,11 @@ namespace H3MP
             asBar.Chamber.RoundType = roundType;
             asBar.Chamber.SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
             asBar.Chamber.RoundType = prevRoundType;
+        }
+
+        private bool FireBAR(int chamberIndex)
+        {
+            return (dataObject as BoltActionRifle).Fire();
         }
 
         private bool UpdateSuppressor()

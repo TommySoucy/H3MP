@@ -752,11 +752,12 @@ namespace H3MP
                         FirePatch.directions.Add(packet.ReadVector3());
                     }
                     FirePatch.overriden = true;
+                    int chamberIndex = packet.ReadInt();
 
                     // Make sure we skip next fire so we don't have a firing feedback loop between clients
                     ++Mod.skipNextFires;
-                    H3MP_Server.items[trackedID].physicalItem.setFirearmUpdateOverride((FireArmRoundType)roundType, (FireArmRoundClass)roundClass);
-                    H3MP_Server.items[trackedID].physicalItem.fireFunc();
+                    H3MP_Server.items[trackedID].physicalItem.setFirearmUpdateOverride((FireArmRoundType)roundType, (FireArmRoundClass)roundClass, chamberIndex);
+                    H3MP_Server.items[trackedID].physicalItem.fireFunc(chamberIndex);
                 }
             }
 

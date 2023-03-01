@@ -4059,7 +4059,7 @@ namespace H3MP
             directions.Add(dir);
         }
 
-        static void Postfix(ref FVRFireArm __instance)
+        static void Postfix(ref FVRFireArm __instance, FVRFireArmChamber chamber)
         {
             // Skip sending will prevent fire patch from handling its own data, as we want to handle it elsewhere
             if (skipSending > 0)
@@ -4096,12 +4096,30 @@ namespace H3MP
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, roundType, roundClass, positions, directions);
+                        int chamberIndex = -1;
+                        for(int i=0; i < __instance.GetChambers().Count; ++i)
+                        {
+                            if (__instance.GetChambers()[i] == chamber)
+                            {
+                                chamberIndex = i;
+                                break;
+                            }
+                        }
+                        H3MP_ServerSend.WeaponFire(0, trackedItem.data.trackedID, roundType, roundClass, positions, directions, chamberIndex);
                     }
                 }
                 else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID, roundType, roundClass, positions, directions);
+                    int chamberIndex = 0;
+                    for (int i = 0; i < __instance.GetChambers().Count; ++i)
+                    {
+                        if (__instance.GetChambers()[i] == chamber)
+                        {
+                            chamberIndex = i;
+                            break;
+                        }
+                    }
+                    H3MP_ClientSend.WeaponFire(trackedItem.data.trackedID, roundType, roundClass, positions, directions, chamberIndex);
                 }
             }
 

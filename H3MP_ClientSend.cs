@@ -579,7 +579,7 @@ namespace H3MP
             }
         }
 
-        public static void WeaponFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions)
+        public static void WeaponFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, List<Vector3> positions, List<Vector3> directions, int chamberIndex)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.weaponFire))
             {
@@ -599,6 +599,7 @@ namespace H3MP
                         packet.Write(directions[i]);
                     }
                 }
+                packet.Write(chamberIndex);
 
                 SendTCPData(packet);
             }
