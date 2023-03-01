@@ -2881,6 +2881,40 @@ namespace H3MP
             }
         }
 
+        public static void ShatterableCrateSetHoldingHealth(int trackedID, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.shatterableCrateSetHoldingHealth))
+            {
+                packet.Write(trackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void ShatterableCrateSetHoldingToken(int trackedID, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.shatterableCrateSetHoldingToken))
+            {
+                packet.Write(trackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
         public static void ShatterableCrateDamage(int trackedID, Damage d)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.shatterableCrateDamage))

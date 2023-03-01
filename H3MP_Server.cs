@@ -554,7 +554,7 @@ namespace H3MP
                 H3MP_ServerHandle.AddNonSyncScene,
                 H3MP_ServerHandle.TrackedItems,
                 H3MP_ServerHandle.TrackedItem,
-                H3MP_ServerHandle.TakeControl,
+                H3MP_ServerHandle.ShatterableCrateSetHoldingHealth,
                 H3MP_ServerHandle.GiveControl,
                 H3MP_ServerHandle.DestroyItem,
                 H3MP_ServerHandle.ItemParent,
@@ -689,6 +689,7 @@ namespace H3MP
                 H3MP_ServerHandle.SLAMDetonate,
                 H3MP_ServerHandle.Ping,
                 H3MP_ServerHandle.TNHSetPhaseHold,
+                H3MP_ServerHandle.ShatterableCrateSetHoldingToken,
             };
 
             items = new H3MP_TrackedItemData[100];

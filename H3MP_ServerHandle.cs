@@ -257,27 +257,6 @@ namespace H3MP
             }
         }
 
-        public static void TakeControl(int clientID, H3MP_Packet packet)
-        {
-            int trackedID = packet.ReadInt();
-
-            H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
-
-            // Update locally
-            if (trackedItem.controller == 0)
-            {
-                Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
-                H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                trackedItem.localTrackedID = -1;
-            }
-            trackedItem.SetController(clientID);
-
-            // Send to all other clients
-            H3MP_ServerSend.GiveControl(trackedID, clientID);
-        }
-
         public static void GiveControl(int clientID, H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -2801,6 +2780,44 @@ namespace H3MP
             }
 
             H3MP_ServerSend.TNHHoldPointRaiseBarriers(clientID, packet);
+        }
+
+        public static void ShatterableCrateSetHoldingHealth(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Server.items[trackedID] != null)
+            {
+                H3MP_Server.items[trackedID].identifyingData[1] = 1;
+
+                if (H3MP_Server.items[trackedID].physicalItem != null)
+                {
+                    ++TNH_ShatterableCrateSetHoldingHealthPatch.skip;
+                    H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingHealth(GM.TNH_Manager);
+                    --TNH_ShatterableCrateSetHoldingHealthPatch.skip;
+                }
+            }
+
+            H3MP_ServerSend.ShatterableCrateSetHoldingHealth(trackedID, clientID);
+        }
+
+        public static void ShatterableCrateSetHoldingToken(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Server.items[trackedID] != null)
+            {
+                H3MP_Server.items[trackedID].identifyingData[2] = 1;
+
+                if (H3MP_Server.items[trackedID].physicalItem != null)
+                {
+                    ++TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                    H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingToken(GM.TNH_Manager);
+                    --TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                }
+            }
+
+            H3MP_ServerSend.ShatterableCrateSetHoldingToken(trackedID, clientID);
         }
 
         public static void ShatterableCrateDamage(int clientID, H3MP_Packet packet)

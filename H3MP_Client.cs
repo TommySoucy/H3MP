@@ -329,7 +329,7 @@ namespace H3MP
                 H3MP_ClientHandle.AddNonSyncScene,
                 H3MP_ClientHandle.TrackedItems,
                 H3MP_ClientHandle.TrackedItem,
-                null, // Unused ServerPackets.takeControl
+                H3MP_ClientHandle.ShatterableCrateSetHoldingHealth,
                 H3MP_ClientHandle.GiveControl,
                 H3MP_ClientHandle.DestroyItem,
                 H3MP_ClientHandle.ItemParent,

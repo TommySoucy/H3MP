@@ -1967,6 +1967,26 @@ namespace H3MP
             }
         }
 
+        public static void ShatterableCrateSetHoldingHealth(int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.shatterableCrateSetHoldingHealth))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void ShatterableCrateSetHoldingToken(int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.shatterableCrateSetHoldingToken))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void ShatterableCrateDamage(int trackedID, Damage d)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.shatterableCrateDamage))

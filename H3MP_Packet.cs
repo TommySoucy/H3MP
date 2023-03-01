@@ -16,7 +16,7 @@ namespace H3MP
         addNonSyncScene = 5,
         trackedItems = 6,
         trackedItem = 7,
-        takeControl = 8, // UNUSED
+        shatterableCrateSetHoldingHealth = 8,
         giveControl = 9,
         destroyItem = 10,
         itemParent = 11,
@@ -69,7 +69,7 @@ namespace H3MP
         setTNHLevelIndex = 58,
         addInstance = 59,
         setTNHController = 60,
-        spectatorHost = 61, // UNUSED
+        spectatorHost = 61,
         TNHPlayerDied = 62,
         TNHAddTokens = 63,
         TNHSetLevel = 64,
@@ -148,7 +148,8 @@ namespace H3MP
         claymoreMineDetonate = 137,
         SLAMDetonate = 138,
         ping = 139,
-        TNHSetPhaseHold = 140
+        TNHSetPhaseHold = 140,
+        shatterableCrateSetHoldingToken = 141
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -160,7 +161,7 @@ namespace H3MP
         addNonSyncScene = 4,
         trackedItems = 5,
         trackedItem = 6,
-        takeControl = 7, // UNUSED
+        shatterableCrateSetHoldingHealth = 7,
         giveControl = 8,
         destroyItem = 9,
         itemParent = 10,
@@ -213,7 +214,7 @@ namespace H3MP
         setTNHLevelIndex = 57,
         addInstance = 58,
         setTNHController = 59,
-        spectatorHost = 60, // UNUSED
+        spectatorHost = 60,
         TNHPlayerDied = 61,
         TNHAddTokens = 62,
         TNHSetLevel = 63,
@@ -294,7 +295,8 @@ namespace H3MP
         claymoreMineDetonate = 138,
         SLAMDetonate = 139,
         ping = 140,
-        TNHSetPhaseHold = 141
+        TNHSetPhaseHold = 141,
+        shatterableCrateSetHoldingToken = 142
     }
 
     public class H3MP_Packet : IDisposable

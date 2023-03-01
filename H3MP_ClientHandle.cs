@@ -2438,6 +2438,40 @@ namespace H3MP
             }
         }
 
+        public static void ShatterableCrateSetHoldingHealth(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                H3MP_Client.items[trackedID].identifyingData[1] = 1;
+
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    ++TNH_ShatterableCrateSetHoldingHealthPatch.skip;
+                    H3MP_Client.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingHealth(GM.TNH_Manager);
+                    --TNH_ShatterableCrateSetHoldingHealthPatch.skip;
+                }
+            }
+        }
+
+        public static void ShatterableCrateSetHoldingToken(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                H3MP_Client.items[trackedID].identifyingData[2] = 1;
+
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    ++TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                    H3MP_Client.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingToken(GM.TNH_Manager);
+                    --TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                }
+            }
+        }
+
         public static void ShatterableCrateDamage(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

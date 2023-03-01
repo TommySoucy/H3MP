@@ -1620,6 +1620,20 @@ namespace H3MP
             PatchVerify.Verify(TNH_ShatterableCrateDestroyPatchOriginal, harmony, false);
             harmony.Patch(TNH_ShatterableCrateDestroyPatchOriginal, new HarmonyMethod(TNH_ShatterableCrateDestroyPatchPrefix));
 
+            // TNH_ShatterableCrateSetHoldingHealthPatch
+            MethodInfo TNH_ShatterableCrateSetHoldingHealthPatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("SetHoldingHealth", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ShatterableCrateSetHoldingHealthPatchPrefix = typeof(TNH_ShatterableCrateSetHoldingHealthPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(TNH_ShatterableCrateSetHoldingHealthPatchOriginal, harmony, false);
+            harmony.Patch(TNH_ShatterableCrateSetHoldingHealthPatchOriginal, new HarmonyMethod(TNH_ShatterableCrateSetHoldingHealthPatchPrefix));
+
+            // TNH_ShatterableCrateSetHoldingTokenPatch
+            MethodInfo TNH_ShatterableCrateSetHoldingTokenPatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("SetHoldingToken", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ShatterableCrateSetHoldingTokenPatchPrefix = typeof(TNH_ShatterableCrateSetHoldingTokenPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(TNH_ShatterableCrateSetHoldingTokenPatchOriginal, harmony, false);
+            harmony.Patch(TNH_ShatterableCrateSetHoldingTokenPatchOriginal, new HarmonyMethod(TNH_ShatterableCrateSetHoldingTokenPatchPrefix));
+
             // TNH_UIManagerPatch
             MethodInfo TNH_UIManagerPatchProgressionOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_Progression", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_UIManagerPatchProgressionPrefix = typeof(TNH_UIManagerPatch).GetMethod("ProgressionPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -10643,6 +10657,74 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.ShatterableCrateDestroy(trackedItem.data.trackedID, dam);
+                }
+            }
+        }
+    }
+
+    // Patches TNH_ShatterableCrate.SetHoldingHealth to keep track of contents
+    class TNH_ShatterableCrateSetHoldingHealthPatch
+    {
+        public static int skip;
+        static H3MP_TrackedItem trackedItem;
+
+        static void Prefix(ref TNH_ShatterableCrate __instance, Damage dam)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                }
+                else
+                {
+                    H3MP_ClientSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                }
+            }
+        }
+    }
+
+    // Patches TNH_ShatterableCrate.SetHoldingToken to keep track of contents
+    class TNH_ShatterableCrateSetHoldingTokenPatch
+    {
+        public static int skip;
+        static H3MP_TrackedItem trackedItem;
+
+        static void Prefix(ref TNH_ShatterableCrate __instance, Damage dam)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                }
+                else
+                {
+                    H3MP_ClientSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
                 }
             }
         }
