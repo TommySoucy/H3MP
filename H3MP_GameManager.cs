@@ -214,6 +214,7 @@ namespace H3MP
             H3MP_TrackedItem.unknownControlTrackedIDs.Clear();
             H3MP_TrackedItem.unknownDestroyTrackedIDs.Clear();
             H3MP_TrackedItem.unknownParentTrackedIDs.Clear();
+            H3MP_TrackedItem.unknownCrateHolding.Clear();
 
             H3MP_TrackedSosig.unknownBodyStates.Clear();
             H3MP_TrackedSosig.unknownControlTrackedIDs.Clear();

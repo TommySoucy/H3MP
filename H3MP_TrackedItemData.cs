@@ -576,6 +576,35 @@ namespace H3MP
                 }
                 H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
             }
+            if (localTrackedID != -1 && H3MP_TrackedItem.unknownCrateHolding.TryGetValue(localWaitingIndex, out byte option))
+            {
+                bool health = option == 0 || option == 2;
+                bool token = option == 1 || option == 2;
+                if (H3MP_ThreadManager.host)
+                {
+                    if (health)
+                    {
+                        H3MP_ServerSend.ShatterableCrateSetHoldingHealth(trackedID);
+                    }
+                    if (token)
+                    {
+                        H3MP_ServerSend.ShatterableCrateSetHoldingToken(trackedID);
+                    }
+                }
+                else
+                {
+                    if (health)
+                    {
+                        H3MP_ClientSend.ShatterableCrateSetHoldingHealth(trackedID);
+                    }
+                    if (token)
+                    {
+                        H3MP_ClientSend.ShatterableCrateSetHoldingToken(trackedID);
+                    }
+                }
+
+                H3MP_TrackedItem.unknownCrateHolding.Remove(localWaitingIndex);
+            }
 
             if(localTrackedID != -1)
             {

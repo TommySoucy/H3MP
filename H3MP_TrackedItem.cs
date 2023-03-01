@@ -19,6 +19,7 @@ namespace H3MP
         public static Dictionary<uint, List<int>> unknownParentTrackedIDs = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
         public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
+        public static Dictionary<uint, byte> unknownCrateHolding = new Dictionary<uint, byte>();
 
         // Update
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified

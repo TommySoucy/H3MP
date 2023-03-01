@@ -10684,13 +10684,27 @@ namespace H3MP
             trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
             {
-                if (H3MP_ThreadManager.host)
+                if (trackedItem.data.trackedID == -1)
                 {
-                    H3MP_ServerSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                    if(H3MP_TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 1)
+                    {
+                        H3MP_TrackedItem.unknownCrateHolding[trackedItem.data.localWaitingIndex] = 2;
+                    }
+                    else
+                    {
+                        H3MP_TrackedItem.unknownCrateHolding.Add(trackedItem.data.localWaitingIndex, 0);
+                    }
                 }
                 else
                 {
-                    H3MP_ClientSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                    }
                 }
             }
         }
@@ -10718,13 +10732,27 @@ namespace H3MP
             trackedItem = __instance.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
             {
-                if (H3MP_ThreadManager.host)
+                if (trackedItem.data.trackedID == -1)
                 {
-                    H3MP_ServerSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                    if (H3MP_TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 0)
+                    {
+                        H3MP_TrackedItem.unknownCrateHolding[trackedItem.data.localWaitingIndex] = 2;
+                    }
+                    else
+                    {
+                        H3MP_TrackedItem.unknownCrateHolding.Add(trackedItem.data.localWaitingIndex, 1);
+                    }
                 }
                 else
                 {
-                    H3MP_ClientSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                    }
                 }
             }
         }
