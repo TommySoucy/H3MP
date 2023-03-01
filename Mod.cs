@@ -10668,7 +10668,7 @@ namespace H3MP
         public static int skip;
         static H3MP_TrackedItem trackedItem;
 
-        static void Prefix(ref TNH_ShatterableCrate __instance, Damage dam)
+        static void Prefix(ref TNH_ShatterableCrate __instance)
         {
             if (skip > 0)
             {
@@ -10716,7 +10716,7 @@ namespace H3MP
         public static int skip;
         static H3MP_TrackedItem trackedItem;
 
-        static void Prefix(ref TNH_ShatterableCrate __instance, Damage dam)
+        static void Prefix(ref TNH_ShatterableCrate __instance)
         {
             if (skip > 0)
             {
