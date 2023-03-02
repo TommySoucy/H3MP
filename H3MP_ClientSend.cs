@@ -2033,7 +2033,7 @@ namespace H3MP
             }
         }
 
-        public static void TNHSetPhaseTake(int instance, int holdIndex, List<int> activeSupplyPointIndices, List<TNH_SupplyPoint.SupplyPanelType> types)
+        public static void TNHSetPhaseTake(int instance, int holdIndex, List<int> activeSupplyPointIndices)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHSetPhaseTake))
             {
@@ -2043,10 +2043,6 @@ namespace H3MP
                 foreach(int index in activeSupplyPointIndices)
                 {
                     packet.Write(index);
-                }
-                foreach (TNH_SupplyPoint.SupplyPanelType type in types)
-                {
-                    packet.Write((byte)type);
                 }
 
                 SendTCPData(packet);

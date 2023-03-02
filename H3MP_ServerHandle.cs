@@ -2890,18 +2890,12 @@ namespace H3MP
             {
                 activeIndices.Add(packet.ReadInt());
             }
-            List<TNH_SupplyPoint.SupplyPanelType> types = new List<TNH_SupplyPoint.SupplyPanelType>();
-            for(int i=0; i < activeSupplyCount; ++i)
-            {
-                types.Add((TNH_SupplyPoint.SupplyPanelType)packet.ReadByte());
-            }
 
             if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
                 actualInstance.curHoldIndex = holdIndex;
                 actualInstance.phase = TNH_Phase.Take;
                 actualInstance.activeSupplyPointIndices = activeIndices;
-                actualInstance.supplyPanelTypes = types;
 
                 if(actualInstance.manager != null && (bool)Mod.TNH_Manager_m_hasInit.GetValue(actualInstance.manager))
                 {
@@ -2909,7 +2903,7 @@ namespace H3MP
                 }
             }
 
-            H3MP_ServerSend.TNHSetPhaseTake(instance, holdIndex, activeIndices, types, clientID);
+            H3MP_ServerSend.TNHSetPhaseTake(instance, holdIndex, activeIndices, clientID);
         }
 
         public static void TNHSetPhaseHold(int clientID, H3MP_Packet packet)

@@ -2538,18 +2538,12 @@ namespace H3MP
             {
                 activeIndices.Add(packet.ReadInt());
             }
-            List<TNH_SupplyPoint.SupplyPanelType> types = new List<TNH_SupplyPoint.SupplyPanelType>();
-            for (int i = 0; i < activeSupplyCount; ++i)
-            {
-                types.Add((TNH_SupplyPoint.SupplyPanelType)packet.ReadByte());
-            }
 
             if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
                 actualInstance.curHoldIndex = holdIndex;
                 actualInstance.phase = TNH_Phase.Take;
                 actualInstance.activeSupplyPointIndices = activeIndices;
-                actualInstance.supplyPanelTypes = types;
 
                 if (actualInstance.manager != null && (bool)Mod.TNH_Manager_m_hasInit.GetValue(actualInstance.manager))
                 {
@@ -2770,15 +2764,6 @@ namespace H3MP
                     for (int j = 0; j < activeSupplyPointIndicesCount; ++j)
                     {
                         TNHInstance.activeSupplyPointIndices.Add(packet.ReadInt());
-                    }
-                }
-                int supplyPanelTypesCount = packet.ReadInt();
-                if (supplyPanelTypesCount > 0)
-                {
-                    TNHInstance.supplyPanelTypes = new List<TNH_SupplyPoint.SupplyPanelType>();
-                    for (int j = 0; j < supplyPanelTypesCount; ++j)
-                    {
-                        TNHInstance.supplyPanelTypes.Add((TNH_SupplyPoint.SupplyPanelType)packet.ReadByte());
                     }
                 }
                 int raisedBarriersCount = packet.ReadInt();

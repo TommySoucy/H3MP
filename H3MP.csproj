@@ -56,6 +56,9 @@
       <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\BepInEx\core\MonoMod.Utils.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="TakeAndHoldTweaker">
+      <HintPath>K:\Users\vipki\AppData\Roaming\R2ModMan\H3VR\profiles\H3MP\BepInEx\plugins\devyndamonster-TakeAndHoldTweaker\TakeAndHoldTweaker.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\h3vr_Data\Managed\UnityEngine.dll</HintPath>

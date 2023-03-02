@@ -2963,7 +2963,7 @@ namespace H3MP
             }
         }
 
-        public static void TNHSetPhaseTake(int instance, int holdIndex, List<int> activeSupplyPointIndices, List<TNH_SupplyPoint.SupplyPanelType> types, int clientID = 0)
+        public static void TNHSetPhaseTake(int instance, int holdIndex, List<int> activeSupplyPointIndices, int clientID = 0)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHSetPhaseTake))
             {
@@ -2973,10 +2973,6 @@ namespace H3MP
                 foreach (int index in activeSupplyPointIndices)
                 {
                     packet.Write(index);
-                }
-                foreach (TNH_SupplyPoint.SupplyPanelType type in types)
-                {
-                    packet.Write((byte)type);
                 }
 
                 if (clientID == 0)
@@ -3290,18 +3286,6 @@ namespace H3MP
                         foreach (int index in TNHInstanceEntry.Value.activeSupplyPointIndices)
                         {
                             packet.Write(index);
-                        }
-                    }
-                    if (TNHInstanceEntry.Value.supplyPanelTypes == null || TNHInstanceEntry.Value.supplyPanelTypes.Count == 0)
-                    {
-                        packet.Write(0);
-                    }
-                    else
-                    {
-                        packet.Write(TNHInstanceEntry.Value.supplyPanelTypes.Count);
-                        foreach (TNH_SupplyPoint.SupplyPanelType supplyPanelType in TNHInstanceEntry.Value.supplyPanelTypes)
-                        {
-                            packet.Write((byte)supplyPanelType);
                         }
                     }
                     if (TNHInstanceEntry.Value.raisedBarriers == null || TNHInstanceEntry.Value.raisedBarriers.Count == 0)

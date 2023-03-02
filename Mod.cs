@@ -11,10 +11,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using TNHTweaker;
+using TNHTweaker.ObjectTemplates;
+using TNHTweaker.Patches;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
+using static FistVR.MeatmasAdventBox;
+using static FistVR.TNH_PatrolChallenge;
+using static FistVR.TNH_Progression;
 
 namespace H3MP
 {
@@ -37,6 +43,7 @@ namespace H3MP
     [BepInDependency("nrgill28.Atlas", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("another_marcel.aporkalypse_now_tnh", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("JerryAr.gm_Construct", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("deli", BepInDependency.DependencyFlags.SoftDependency)]
     public class Mod : BaseUnityPlugin
     {
         // BepinEx
@@ -447,7 +454,12 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadDivide))
                 {
-                    SteamVR_LoadLevel.Begin("Friendly45_New", false, 0.5f, 0f, 0f, 0f, 1f);
+                    Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                    for(int i=0; i < assemblies.Length; ++i)
+                    {
+                        Assembly assembly = assemblies[i];
+                        Mod.LogInfo("Assembly: " + assembly.FullName);
+                    }
                 }
             }
 #endif
@@ -728,6 +740,17 @@ namespace H3MP
 
         private void DoPatching()
         {
+            // Look for supported mod assemblies we may need to patch for
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            int TNHTweakerAsmIdx = -1;
+            for(int i=0; i < assemblies.Length; ++i)
+            {
+                if (assemblies[i].GetName().Name.Equals("TakeAndHoldTweaker"))
+                {
+                    TNHTweakerAsmIdx = i;
+                }
+            }
+
             var harmony = new HarmonyLib.Harmony("VIP.TommySoucy.H3MP");
 
             // LoadLevelBeginPatch
@@ -1690,6 +1713,19 @@ namespace H3MP
             harmony.Patch(TNH_UIManagerPatchPrevLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchPrevLevelPrefix));
 
             // TNH_ManagerPatch
+            MethodInfo TNH_ManagerPatchSetPhaseTakeOriginal = null;
+            MethodInfo TNH_ManagerGeneratePatrolOriginal = null;
+            if (TNHTweakerAsmIdx > -1)
+            {
+                TNH_ManagerPatch.isInTNHTweaker = true;
+                TNH_ManagerPatchSetPhaseTakeOriginal = typeof(TNHPatches).GetMethod("SetPhase_Take_Replacement", BindingFlags.Public | BindingFlags.Static);
+                TNH_ManagerGeneratePatrolOriginal = typeof(PatrolPatches).GetMethod("GeneratePatrol", BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(TNH_Manager), typeof(TNHTweaker.ObjectTemplates.Patrol), typeof(List<Vector3>), typeof(List<Vector3>), typeof(List<Vector3>), typeof(int) }, null);
+            }
+            else
+            {
+                TNH_ManagerPatchSetPhaseTakeOriginal = typeof(TNH_Manager).GetMethod("SetPhase_Take", BindingFlags.NonPublic | BindingFlags.Instance);
+                TNH_ManagerGeneratePatrolOriginal = typeof(TNH_Manager).GetMethod("GeneratePatrol", BindingFlags.NonPublic | BindingFlags.Instance);
+            }
             MethodInfo TNH_ManagerPatchPlayerDiedOriginal = typeof(TNH_Manager).GetMethod("PlayerDied", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchPlayerDiedPrefix = typeof(TNH_ManagerPatch).GetMethod("PlayerDiedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchAddTokensOriginal = typeof(TNH_Manager).GetMethod("AddTokens", BindingFlags.Public | BindingFlags.Instance);
@@ -1702,7 +1738,6 @@ namespace H3MP
             MethodInfo TNH_ManagerPatchUpdatePrefix = typeof(TNH_ManagerPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchInitBeginEquipOriginal = typeof(TNH_Manager).GetMethod("InitBeginningEquipment", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchInitBeginEquipPrefix = typeof(TNH_ManagerPatch).GetMethod("InitBeginEquipPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_ManagerPatchSetPhaseTakeOriginal = typeof(TNH_Manager).GetMethod("SetPhase_Take", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchSetPhaseTakePrefix = typeof(TNH_ManagerPatch).GetMethod("SetPhaseTakePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseTakePostfix = typeof(TNH_ManagerPatch).GetMethod("SetPhaseTakePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSetPhaseHoldOriginal = typeof(TNH_Manager).GetMethod("SetPhase_Hold", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1722,7 +1757,6 @@ namespace H3MP
             MethodInfo TNH_ManagerGenerateSentryPatrolOriginal = typeof(TNH_Manager).GetMethod("GenerateSentryPatrol", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerGenerateSentryPatrolPrefix = typeof(TNH_ManagerPatch).GetMethod("GenerateSentryPatrolPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerGenerateSentryPatrolPostfix = typeof(TNH_ManagerPatch).GetMethod("GenerateSentryPatrolPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_ManagerGeneratePatrolOriginal = typeof(TNH_Manager).GetMethod("GeneratePatrol", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerGeneratePatrolPrefix = typeof(TNH_ManagerPatch).GetMethod("GeneratePatrolPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerGeneratePatrolPostfix = typeof(TNH_ManagerPatch).GetMethod("GeneratePatrolPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerDelayedInitOriginal = typeof(TNH_Manager).GetMethod("DelayedInit", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1763,22 +1797,42 @@ namespace H3MP
             harmony.Patch(TNH_ManagerDelayedInitOriginal, new HarmonyMethod(TNH_ManagerDelayedInitPrefix), new HarmonyMethod(TNH_ManagerDelayedInitPostfix));
 
             // TNHSupplyPointPatch
-            MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnTakeEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnTakeEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNHSupplyPointPatchSpawnDefensesOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnDefenses", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo TNHSupplyPointPatchSpawnDefensesPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnDefensesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNHSupplyPointPatchSpawnDefensesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnDefensesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNHSupplyPointPatchSpawnBoxesOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnBoxes", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo TNHSupplyPointPatchSpawnBoxesPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnBoxesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNHSupplyPointPatchSpawnBoxesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnBoxesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-
-            PatchVerify.Verify(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, harmony, false);
-            PatchVerify.Verify(TNHSupplyPointPatchSpawnDefensesOriginal, harmony, false);
-            PatchVerify.Verify(TNHSupplyPointPatchSpawnBoxesOriginal, harmony, false);
-            harmony.Patch(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix));
-            harmony.Patch(TNHSupplyPointPatchSpawnDefensesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPostfix));
-            harmony.Patch(TNHSupplyPointPatchSpawnBoxesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPostfix));
+            if (TNHTweakerAsmIdx > -1)
+            {
+                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnSupplyGroup", BindingFlags.Public | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnDefensesOriginal = typeof(TNHPatches).GetMethod("SpawnSupplyTurrets", BindingFlags.Public | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnBoxesOriginal = typeof(TNHPatches).GetMethod("SpawnSupplyBoxes", BindingFlags.Public | BindingFlags.Static);
+                PatchVerify.Verify(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, harmony, false);
+                PatchVerify.Verify(TNHSupplyPointPatchSpawnDefensesOriginal, harmony, false);
+                PatchVerify.Verify(TNHSupplyPointPatchSpawnBoxesOriginal, harmony, false);
+                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix = typeof(TNH_SupplyPointPatch).GetMethod("TNHTweaker_SpawnTakeEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix = typeof(TNH_SupplyPointPatch).GetMethod("TNHTweaker_SpawnTakeEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnDefensesPrefix = typeof(TNH_SupplyPointPatch).GetMethod("TNHTweaker_SpawnDefensesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnDefensesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("TNHTweaker_SpawnDefensesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnBoxesPrefix = typeof(TNH_SupplyPointPatch).GetMethod("TNHTweaker_SpawnBoxesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnBoxesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("TNHTweaker_SpawnBoxesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+                harmony.Patch(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix));
+                harmony.Patch(TNHSupplyPointPatchSpawnDefensesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPostfix));
+                harmony.Patch(TNHSupplyPointPatchSpawnBoxesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPostfix));
+            }
+            else
+            {
+                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+                MethodInfo TNHSupplyPointPatchSpawnDefensesOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnDefenses", BindingFlags.NonPublic | BindingFlags.Instance);
+                MethodInfo TNHSupplyPointPatchSpawnBoxesOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnBoxes", BindingFlags.NonPublic | BindingFlags.Instance);
+                PatchVerify.Verify(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, harmony, false);
+                PatchVerify.Verify(TNHSupplyPointPatchSpawnDefensesOriginal, harmony, false);
+                PatchVerify.Verify(TNHSupplyPointPatchSpawnBoxesOriginal, harmony, false);
+                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnTakeEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnTakeEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnDefensesPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnDefensesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnDefensesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnDefensesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnBoxesPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnBoxesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnBoxesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnBoxesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+                harmony.Patch(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix));
+                harmony.Patch(TNHSupplyPointPatchSpawnDefensesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPostfix));
+                harmony.Patch(TNHSupplyPointPatchSpawnBoxesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPostfix));
+            }
 
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
@@ -1791,6 +1845,24 @@ namespace H3MP
             harmony.Patch(TAHReticleContactPatchSetContactTypeOriginal, new HarmonyMethod(TAHReticleContactPatchSetContactTypePrefix));
 
             // TNH_HoldPointPatch
+            MethodInfo TNH_HoldPointPatchSpawnTargetGroupOriginal = null;
+            MethodInfo TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = null;
+            MethodInfo TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = null;
+            MethodInfo TNH_HoldPointPatchSpawnTurretsOriginal = null;
+            if (TNHTweakerAsmIdx > -1)
+            {
+                TNH_HoldPointPatchSpawnTargetGroupOriginal = typeof(TNHPatches).GetMethod("SpawnEncryptionReplacement", BindingFlags.Public | BindingFlags.Static);
+                TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnTakeGroupReplacement", BindingFlags.Public | BindingFlags.Static);
+                TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnHoldEnemyGroup", BindingFlags.Public | BindingFlags.Static);
+                TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNHPatches).GetMethod("SpawnTurretsReplacement", BindingFlags.Public | BindingFlags.Static);
+            }
+            else
+            {
+                TNH_HoldPointPatchSpawnTargetGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTargetGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+                TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+                TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnHoldEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+                TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
+            }
             MethodInfo TNH_HoldPointPatchSystemNodeOriginal = typeof(TNH_HoldPoint).GetMethod("ConfigureAsSystemNode", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSystemNodePrefix = typeof(TNH_HoldPointPatch).GetMethod("ConfigureAsSystemNodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnEntitiesOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeChallengeEntities", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1811,7 +1883,6 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchBeginAnalyzingPostfix = typeof(TNH_HoldPointPatch).GetMethod("BeginAnalyzingPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnWarpInMarkersOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnWarpInMarkers", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnWarpInMarkersPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnWarpInMarkersPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_HoldPointPatchSpawnTargetGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTargetGroup", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnTargetGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTargetGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchIdentifyEncryptionOriginal = typeof(TNH_HoldPoint).GetMethod("IdentifyEncryption", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchIdentifyEncryptionPostfix = typeof(TNH_HoldPointPatch).GetMethod("IdentifyEncryptionPostfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1824,11 +1895,8 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchCompleteHoldOriginal = typeof(TNH_HoldPoint).GetMethod("CompleteHold", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchCompleteHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchCompleteHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnHoldEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchSpawnTurretsPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnTurretsPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             //MethodInfo TNH_HoldPointPatchDeletionBurstOriginal = typeof(TNH_HoldPoint).GetMethod("DeletionBurst", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -2038,6 +2106,9 @@ namespace H3MP
 
             PatchVerify.Verify(GMInitScenePatchOriginal, harmony, true);
             harmony.Patch(GMInitScenePatchOriginal, null, new HarmonyMethod(GMInitScenePatchPostfix));
+
+            
+
 
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
@@ -11217,84 +11288,6 @@ namespace H3MP
 #endregion
 
 #region TNH Patches
-    // When set TNH Manager
-    // If we are instance host
-    //   Take control (#1 SEND CONTROL TAKEOVER)
-    // else (we are not instance host)
-    //   If only player
-    //     If instance host not yet loading
-    //        Take control (#1 SEND CONTROL TAKEOVER)
-    //     else (instance host loading)
-    //        Do nothing (wait for instance host to init data)
-    //   else (Already another player in currently playing)
-    //     Do nothing (wait for controller to init data)
-    //
-    // When controller leaves (Removed from currrently playing)
-    //  If we are server
-    //      If currentlyPlaying.Count > 0
-    //          If controller who left is still host instance
-    //              Give control to lowest ID CurrentlyPlaying (#1 SEND CONTROL TAKEOVER)
-    //          else (controller who left is not players[0])
-    //              If players[0] is CurrentlyPlaying
-    //                  Give control to players[0] (new instance host) (NOTE THAT THIS REQUIRES THAT
-    //                  ALL CLIENTS AGREE ON THE INSTANCE HOST, ALSO NOTE THAT THE PLAYERS LIST IS
-    //                  ALWAYS AGREED UPON BY ALL CLIENT INHERENTLY DUE TO ANY CHANGE HAVING TO GO THROUGH THE
-    //                  SERVER BEFORE REACHING OTHER CLIENTS, AND IF AN ORDER IS SENT THAT IS DEPENDENT ON
-    //                  CONSISTENCY OF THIS LIST, IT WILL FOR SURE BE RECEIVED ON THAT VERSION OF THE PLAYERS LIST
-    //                  ON CLIENTS. EXCEPTION: THE CHANGE TO PLAYERS IS PERTINENT TO US, FOR EXAMPLE IF WE ARE THE ONE TO LEAVE
-    //                  THE TNH INSTANCE AND REMOVE OURSELVES FROM THE PLAYERS LIST, THEN IF WE RECEIVE AN ORDER
-    //                  ABOUT THE PREVIOUS STATE OF THE LIST WE WILL HAVE THE WRONG LIST, THIS IS FINE THOUGH SINCE
-    //                  THIS WILL BE RECEIVED BY THE SERVER AND HOW TO HANDLE IT WILL BE SENT TO ALL CLIENTS) (#1 SEND CONTROL TAKEOVER)
-    //              else (new instance host is not currently playing)
-    //                  Give control to lowest ID CurrentlyPlaying (#1 SEND CONTROL TAKEOVER)
-    //      else (not other players to take control)
-    //          Set instance to no controller (controller = -1), there are no players in game, the next player to take control will init a new TNH game
-    //  else (we are client)
-    //      Ignore, server will deal with control exchange
-    //              
-    // WHEN RECEIVE #1 FROM ANOTHER PLAYER
-    //   If we are playing
-    //      If we are instance host
-    //          Do nothing, we will send our TNH data to others after init for them to replace all TNH data they already have (#3 SEND TNH DATA)
-    //      If we sent control takeover (controller set to our ID) (Only possible if the other had yet to
-    //      receive our takeover before sending their's, meaning they will go through this case too (#2))
-    //          If the other is instance host OR if the other's ID is lower than ours
-    //              Reset our state
-    //              Set them as controller
-    //              Wait for TNH data from the controller (#3) (Recall #2, the other will also be receiving our takeover request, so either they are instance host
-    //              or they will compare our IDs and go into the else below, in both case they will remain controller and send their data when they have it)
-    //          else (other is not instance host and we have lower ID)
-    //              Do nothing, we will send our TNH data to others after init for them to replace all TNH data they already have (#3 SEND TNH DATA)
-    //      else (We do not have control)
-    //          Set them as controller
-    //   else (we are not playing)
-    //      Set them as controller
-    //
-    // WHEN RECEIVE #3 FROM ANOTHER PLAYER
-    //   If we sent control takeover (controller set to our ID) (Possible to receive TNH data from someone else after having taken
-    //   over if they haven't received it yet, they are lower ID than us, or they are instance host)
-    //      If we are instance host
-    //          Do nothing, we are controller
-    //      else (we are not instance host)
-    //          If they have lower ID than us
-    //              Reset our state
-    //              Set them as controller
-    //              Init our state with their TNH data
-    //          else (we have lower ID)
-    //              Do nothing, we are controller
-    //  else (We do not have control)
-    //      If a controller is set
-    //          If they are current known controller
-    //              Init our state with their TNH data (we were waiting for it)
-    //          else (They are not currently known controller)
-    //              If they are instance host OR their ID is lower than currently known controller
-    //                  Reset our state
-    //                  Set them as controller
-    //                  Init our state with their TNH data
-    //              else (Their ID is higher than currently known controller)
-    //                  Ignore we already have more appropriate controller
-    //      else (Controller is not set yet)
-    //          Init our state with their TNH data (we were waiting for it)
 
     // Patches GM.set_TNH_Manager() to keep track of TNH Manager instances
     class SetTNHManagerPatch
@@ -11854,6 +11847,8 @@ namespace H3MP
         public static List<Vector3> patrolPoints;
         public static int patrolIndex = -1;
 
+        public static bool isInTNHTweaker;
+
         static bool PlayerDiedPrefix()
         {
             if (Mod.managerObject != null)
@@ -12151,7 +12146,6 @@ namespace H3MP
             }
         }
 
-        // TODO: ModComp: TNHTweaker: Has SetPhase_Take_Replacement that we would need to patch instead
         static bool SetPhaseTakePrefix()
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
@@ -12164,6 +12158,20 @@ namespace H3MP
                     Mod.LogInfo("\tNot controller");
                     Mod.currentTNHInstance.phase = TNH_Phase.Take;
                     Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
+
+                    object level = null;
+                    if (isInTNHTweaker)
+                    {
+                        CustomCharacter character = LoadedTemplateManager.LoadedCharactersDict[GM.TNH_Manager.C];
+                        level = character.GetCurrentLevel(Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager) as TNH_Progression.Level);
+
+                        TNHTweaker.TNHTweaker.SpawnedBossIndexes.Clear();
+
+                        // Like we do for vanilla, we don't clear if not controller, we will just set it to the list in the TNH instance
+                        //__instance.m_activeSupplyPointIndicies.Clear();
+
+                        TNHTweaker.TNHTweaker.PreventOutfitFunctionality = LoadedTemplateManager.LoadedCharactersDict[GM.TNH_Manager.C].ForceDisableOutfitFunctionality;
+                    }
 
                     if (Mod.currentTNHInstance.manager.RadarMode == TNHModifier_RadarMode.Standard)
                     {
@@ -12184,15 +12192,43 @@ namespace H3MP
                     Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
                     bool spawnToken = true;
                     Mod.TNH_Manager_m_activeSupplyPointIndicies.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.activeSupplyPointIndices);
-                    for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+
+                    int panelIndex = 0;
+                    if (isInTNHTweaker)
                     {
-                        TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
-                        TNH_SupplyPoint.SupplyPanelType panelType = Mod.currentTNHInstance.supplyPanelTypes[i];
-                        // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
-                        tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
-                        spawnToken = false;
-                        TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
-                        tnh_SupplyPoint.SetContact(contact);
+                        for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                        {
+                            TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                            TNHPatches.ConfigureSupplyPoint(tnh_SupplyPoint, (TNHTweaker.ObjectTemplates.Level)level, ref panelIndex);
+                            
+                            TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                            tnh_SupplyPoint.SetContact(contact);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                        {
+                            TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                            int num6 = i;
+                            if (i > 0)
+                            {
+                                num6 = panelIndex;
+                                panelIndex++;
+                                if (panelIndex > 2)
+                                {
+                                    panelIndex = 1;
+                                }
+                            }
+                            TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
+                            // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                            tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
+                            spawnToken = false;
+                            TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                            tnh_SupplyPoint.SetContact(contact);
+                        }
                     }
                     if (Mod.currentTNHInstance.manager.BGAudioMode == TNH_BGAudioMode.Default)
                     {
@@ -12218,7 +12254,6 @@ namespace H3MP
             return true;
         }
 
-        // TODO: ModComp: TNHTweaker: Has SetPhase_Take_Replacement that we would need to patch instead
         static void SetPhaseTakePostfix()
         {
             Mod.LogInfo("SetPhaseTakePostfix");
@@ -12234,38 +12269,15 @@ namespace H3MP
             {
                 Mod.LogInfo("\tsending");
                 int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
-                List<TNH_SupplyPoint.SupplyPanelType> secondaryPanelTypes = new List<TNH_SupplyPoint.SupplyPanelType>();
-                List<int> activeSupplyPointIndicies = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(GM.TNH_Manager);
-                for(int i = 0; i < activeSupplyPointIndicies.Count; ++i)
-                {
-                    int index = activeSupplyPointIndicies[i];
-                    GameObject panel = (GameObject)Mod.TNH_SupplyPoint_m_panel.GetValue(GM.TNH_Manager.SupplyPoints[index]);
-                    TNH_AmmoReloader ammoReloader = panel.GetComponent<TNH_AmmoReloader>();
-                    if(ammoReloader != null)
-                    {
-                        secondaryPanelTypes.Add(TNH_SupplyPoint.SupplyPanelType.AmmoReloader);
-                    }
-                    else
-                    {
-                        TNH_MagDuplicator magDuplicator = panel.GetComponent<TNH_MagDuplicator>();
-                        if (magDuplicator != null)
-                        {
-                            secondaryPanelTypes.Add(TNH_SupplyPoint.SupplyPanelType.MagDuplicator);
-                        }
-                        else
-                        {
-                            secondaryPanelTypes.Add(TNH_SupplyPoint.SupplyPanelType.GunRecycler);
-                        }
-                    }
-                }
+                List<int> activeSupplyPointIndicies = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(Mod.currentTNHInstance.manager);
 
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies, secondaryPanelTypes);
+                    H3MP_ServerSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies);
                 }
                 else
                 {
-                    H3MP_ClientSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies, secondaryPanelTypes);
+                    H3MP_ClientSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies);
                 }
             }
         }
@@ -12614,18 +12626,58 @@ namespace H3MP
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
                 Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
 
+                object level = null;
+                if (isInTNHTweaker)
+                {
+                    CustomCharacter character = LoadedTemplateManager.LoadedCharactersDict[Mod.currentTNHInstance.manager.C];
+                    level = character.GetCurrentLevel(curLevel);
+
+                    TNHTweaker.TNHTweaker.SpawnedBossIndexes.Clear();
+
+                    // Like we do for vanilla, we don't clear if not controller, we will just set it to the list in the TNH instance
+                    //__instance.m_activeSupplyPointIndicies.Clear();
+
+                    TNHTweaker.TNHTweaker.PreventOutfitFunctionality = LoadedTemplateManager.LoadedCharactersDict[Mod.currentTNHInstance.manager.C].ForceDisableOutfitFunctionality;
+                }
+
                 //  Set supply points
                 bool spawnToken = true;
-                for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                int panelIndex = 0;
+                if (isInTNHTweaker)
                 {
-                    TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
-                    TNH_SupplyPoint.SupplyPanelType panelType = Mod.currentTNHInstance.supplyPanelTypes[i];
-                    // Here we pass false to spawn sosigs,turrents, and 0 for max boxes because doing 
-                    // this init means we are not the first ones here, meaning those things should already be spawned for this supply point
-                    tnh_SupplyPoint.Configure(((TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager)).SupplyChallenge, false, false, true, panelType, 1, 0, spawnToken);
-                    spawnToken = false;
-                    TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
-                    tnh_SupplyPoint.SetContact(contact);
+                    for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                    {
+                        TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                        TNHPatches.ConfigureSupplyPoint(tnh_SupplyPoint, (TNHTweaker.ObjectTemplates.Level)level, ref panelIndex);
+
+                        TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                        tnh_SupplyPoint.SetContact(contact);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                    {
+                        TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                        int num6 = i;
+                        if (i > 0)
+                        {
+                            num6 = panelIndex;
+                            panelIndex++;
+                            if (panelIndex > 2)
+                            {
+                                panelIndex = 1;
+                            }
+                        }
+                        TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
+                        // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                        tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
+                        spawnToken = false;
+                        TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                        tnh_SupplyPoint.SetContact(contact);
+                    }
                 }
 
                 // Spawn at intial supply point
@@ -12693,8 +12745,7 @@ namespace H3MP
             inGenerateSentryPatrol = false;
         }
 
-        // TODO: ModComp: TNHTweaker: The mod has its own GeneratePatrol method instead of calling vanilla one
-        static void GeneratePatrolPrefix(TNH_Manager __instance)
+        static void GeneratePatrolPrefix()
         {
             if(Mod.managerObject != null)
             {
@@ -12705,7 +12756,7 @@ namespace H3MP
                 int num = 0;
                 while (i < 5)
                 {
-                    int item = UnityEngine.Random.Range(0, __instance.HoldPoints.Count);
+                    int item = UnityEngine.Random.Range(0, GM.TNH_Manager.HoldPoints.Count);
                     if (!list.Contains(item))
                     {
                         list.Add(item);
@@ -12720,7 +12771,7 @@ namespace H3MP
                 patrolPoints = new List<Vector3>();
                 for (int j = 0; j < list.Count; j++)
                 {
-                    patrolPoints.Add(__instance.HoldPoints[list[j]].SpawnPoints_Sosigs_Defense[UnityEngine.Random.Range(0, __instance.HoldPoints[list[j]].SpawnPoints_Sosigs_Defense.Count)].position);
+                    patrolPoints.Add(GM.TNH_Manager.HoldPoints[list[j]].SpawnPoints_Sosigs_Defense[UnityEngine.Random.Range(0, GM.TNH_Manager.HoldPoints[list[j]].SpawnPoints_Sosigs_Defense.Count)].position);
                 }
             }
         }
@@ -13109,7 +13160,6 @@ namespace H3MP
             return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own IdentifyEncryptionReplacement patch for IdentifyEncryption, need to review for the DeleteAllActiveWarpIns call below
         static void IdentifyEncryptionPostfix(TNH_HoldPoint __instance)
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
@@ -13226,33 +13276,21 @@ namespace H3MP
             }
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own patch for holdpoint SpawnTakeEnemyGroup which we will need to patch since it repleaces the original
-        //                            and here we need to know when we spawn the sosigs inside there to set the flag
-        // TODO: ModComp: TNHTweaker: Has its own SpawnHoldEnemyGroup which we will need to patch since it repleaces the original
-        //                            in TNHTweaker's patch for SpawningRoutineUpdate
         static void SpawnEnemyGroupPrefix()
         {
             inSpawnEnemyGroup = true;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own patch for holdpoint SpawnTakeEnemyGroup which we will need to patch since it repleaces the original
-        //                            and here we need to know when we spawn the sosigs inside there to set the flag
-        // TODO: ModComp: TNHTweaker: Has its own SpawnHoldEnemyGroup which we will need to patch since it repleaces the original
-        //                            in TNHTweaker's patch for SpawningRoutineUpdate
         static void SpawnEnemyGroupPostfix()
         {
             inSpawnEnemyGroup = false;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own patch for holdpoint SpawnTurrets which we will need to patch since it repleaces the original
-        //                            and here we need to know when we spawn the turrests inside there to set the flag
         static void SpawnTurretsPrefix()
         {
             inSpawnTurrets = true;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own patch for holdpoint SpawnTurrets which we will need to patch since it repleaces the original
-        //                            and here we need to know when we spawn the turrests inside there to set the flag
         static void SpawnTurretsPostfix()
         {
             inSpawnTurrets = false;
@@ -13324,65 +13362,176 @@ namespace H3MP
         public static bool inSpawnBoxes;
         public static int supplyPointIndex;
 
-        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyGroup we would need to patch instead
-        static void SpawnTakeEnemyGroupPrefix(TNH_SupplyPoint __instance)
+        static bool SpawnTakeEnemyGroupPrefix(TNH_SupplyPoint __instance)
         {
-            inSpawnTakeEnemyGroup = true;
-            supplyPointIndex = -1;
-            for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+            if(Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
-                if (__instance == GM.TNH_Manager.SupplyPoints[i])
-                {
-                    supplyPointIndex = i;
-                    break;
-                }
+                return true;
             }
+            else if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                inSpawnTakeEnemyGroup = true;
+                supplyPointIndex = -1;
+                for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+                {
+                    if (__instance == GM.TNH_Manager.SupplyPoints[i])
+                    {
+                        supplyPointIndex = i;
+                        break;
+                    }
+                }
+
+                return true;
+            }
+            return false;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyGroup we would need to patch instead
         static void SpawnTakeEnemyGroupPostfix()
         {
             inSpawnTakeEnemyGroup = false;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyTurrets we would need to patch instead
-        static void SpawnDefensesPrefix(TNH_SupplyPoint __instance)
+        static bool SpawnDefensesPrefix(TNH_SupplyPoint __instance)
         {
-            inSpawnDefenses = true;
-            supplyPointIndex = -1;
-            for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+            if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
-                if (__instance == GM.TNH_Manager.SupplyPoints[i])
-                {
-                    supplyPointIndex = i;
-                    break;
-                }
+                return true;
             }
+            else if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                inSpawnDefenses = true;
+                supplyPointIndex = -1;
+                for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+                {
+                    if (__instance == GM.TNH_Manager.SupplyPoints[i])
+                    {
+                        supplyPointIndex = i;
+                        break;
+                    }
+                }
+
+                return true;
+            }
+            return false;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyTurrets we would need to patch instead
         static void SpawnDefensesPostfix()
         {
             inSpawnDefenses = false;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyBoxes we would need to patch instead
-        static void SpawnBoxesPrefix(TNH_SupplyPoint __instance)
+        static bool SpawnBoxesPrefix(TNH_SupplyPoint __instance)
         {
-            inSpawnBoxes = true;
-            supplyPointIndex = -1;
-            for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+            if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
-                if (__instance == GM.TNH_Manager.SupplyPoints[i])
-                {
-                    supplyPointIndex = i;
-                    break;
-                }
+                return true;
             }
+            else if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                inSpawnBoxes = true;
+                supplyPointIndex = -1;
+                for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+                {
+                    if (__instance == GM.TNH_Manager.SupplyPoints[i])
+                    {
+                        supplyPointIndex = i;
+                        break;
+                    }
+                }
+
+                return true;
+            }
+            return false;
         }
 
-        // TODO: ModComp: TNHTweaker: Has its own SpawnSupplyBoxes we would need to patch instead
         static void SpawnBoxesPostfix()
+        {
+            inSpawnBoxes = false;
+        }
+
+        static bool TNHTweaker_SpawnTakeEnemyGroupPrefix(TNH_SupplyPoint point)
+        {
+            if(Mod.managerObject == null || Mod.currentTNHInstance == null)
+            {
+                return true;
+            }
+            else if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                inSpawnTakeEnemyGroup = true;
+                supplyPointIndex = -1;
+                for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+                {
+                    if (point == GM.TNH_Manager.SupplyPoints[i])
+                    {
+                        supplyPointIndex = i;
+                        break;
+                    }
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        static void TNHTweaker_SpawnTakeEnemyGroupPostfix()
+        {
+            inSpawnTakeEnemyGroup = false;
+        }
+
+        static bool TNHTweaker_SpawnDefensesPrefix(TNH_SupplyPoint point)
+        {
+            if (Mod.managerObject == null || Mod.currentTNHInstance == null)
+            {
+                return true;
+            }
+            else if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                inSpawnDefenses = true;
+                supplyPointIndex = -1;
+                for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+                {
+                    if (point == GM.TNH_Manager.SupplyPoints[i])
+                    {
+                        supplyPointIndex = i;
+                        break;
+                    }
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        static void TNHTweaker_SpawnDefensesPostfix()
+        {
+            inSpawnDefenses = false;
+        }
+
+        static bool TNHTweaker_SpawnBoxesPrefix(TNH_SupplyPoint point)
+        {
+            if (Mod.managerObject == null || Mod.currentTNHInstance == null)
+            {
+                return true;
+            }
+            else if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                inSpawnBoxes = true;
+                supplyPointIndex = -1;
+                for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
+                {
+                    if (point == GM.TNH_Manager.SupplyPoints[i])
+                    {
+                        supplyPointIndex = i;
+                        break;
+                    }
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        static void TNHTweaker_SpawnBoxesPostfix()
         {
             inSpawnBoxes = false;
         }

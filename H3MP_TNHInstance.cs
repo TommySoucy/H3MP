@@ -26,7 +26,6 @@ namespace H3MP
         public int level;
         public TNH_Phase phase = TNH_Phase.StartUp;
         public List<int> activeSupplyPointIndices;
-        public List<TNH_SupplyPoint.SupplyPanelType> supplyPanelTypes;
         public List<int> raisedBarriers;
         public List<int> raisedBarrierPrefabIndices;
 
@@ -219,7 +218,6 @@ namespace H3MP
             level = 0;
             phase = TNH_Phase.StartUp;
             activeSupplyPointIndices = null;
-            supplyPanelTypes = null;
             raisedBarriers = null;
             raisedBarrierPrefabIndices = null;
             spawnedStartEquip = false;
