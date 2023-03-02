@@ -150,7 +150,11 @@ namespace H3MP
         public static readonly FieldInfo TNH_Manager_m_curProgression = typeof(TNH_Manager).GetField("m_curProgression", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_curProgressionEndless = typeof(TNH_Manager).GetField("m_curProgressionEndless", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_level = typeof(TNH_Manager).GetField("m_level", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_supplyPoints = typeof(TNH_Manager).GetField("m_supplyPoints", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_weaponCases = typeof(TNH_Manager).GetField("m_weaponCases", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_numTokens = typeof(TNH_Manager).GetField("m_numTokens", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_activeSupplyPointIndicies = typeof(TNH_Manager).GetField("m_activeSupplyPointIndicies", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TNH_Manager_m_nextSupplyPanelType = typeof(TNH_Manager).GetField("m_nextSupplyPanelType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_curHoldIndex = typeof(TNH_Manager).GetField("m_curHoldIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_lastHoldIndex = typeof(TNH_Manager).GetField("m_lastHoldIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TNH_Manager_m_curHoldPoint = typeof(TNH_Manager).GetField("m_curHoldPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -689,11 +693,28 @@ namespace H3MP
             Mod.currentTNHUIManager.OBS_RunSeed.SetSelectedButton(instance.TNHSeed + 1);
             GM.TNHOptions.TNHSeed = instance.TNHSeed;
 
-            Mod.TNH_UIManager_m_currentLevelIndex.SetValue(Mod.currentTNHUIManager, instance.levelIndex);
-            Mod.currentTNHUIManager.CurLevelID = Mod.currentTNHUIManager.Levels[instance.levelIndex].LevelID;
-            Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
-            Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
-            Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
+            SceneLoader sceneLoader = UnityEngine.Object.FindObjectOfType<SceneLoader>();
+            // Find level
+            bool found = false;
+            for (int i = 0; i < Mod.currentTNHUIManager.Levels.Count; ++i)
+            {
+                if (Mod.currentTNHUIManager.Levels[i].LevelID.Equals(instance.levelID))
+                {
+                    found = true;
+                    Mod.TNH_UIManager_m_currentLevelIndex.SetValue(Mod.currentTNHUIManager, i);
+                    Mod.currentTNHUIManager.CurLevelID = instance.levelID;
+                    Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
+                    Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
+                    Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
+                    sceneLoader.gameObject.SetActive(true);
+                    break;
+                }
+            }
+            if (!found)
+            {
+                sceneLoader.gameObject.SetActive(false);
+                Mod.LogError("Missing TNH level: " + instance.levelID + "! Make sure you have it installed.");
+            }
         }
 
         private void LoadAssets()
@@ -2111,7 +2132,12 @@ namespace H3MP
             PatchVerify.Verify(GMInitScenePatchOriginal, harmony, true);
             harmony.Patch(GMInitScenePatchOriginal, null, new HarmonyMethod(GMInitScenePatchPostfix));
 
-            
+            // TNH_ScoreDisplayReloadPatch
+            MethodInfo TNH_ScoreDisplayReloadPatchOriginal = typeof(TNH_ScoreDisplay).GetMethod("ReloadLevel", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_ScoreDisplayReloadPatchPrefix = typeof(TNH_ScoreDisplayReloadPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(TNH_ScoreDisplayReloadPatchOriginal, harmony, true);
+            harmony.Patch(TNH_ScoreDisplayReloadPatchOriginal, new HarmonyMethod(TNH_ScoreDisplayReloadPatchPrefix));
 
 
             //// TeleportToPointPatch
@@ -2331,7 +2357,7 @@ namespace H3MP
                                               (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
                                               (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
                                               (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
-                                              (int)TNH_UIManager_m_currentLevelIndex.GetValue(Mod.currentTNHUIManager));
+                                              Mod.currentTNHUIManager.CurLevelID);
             if (H3MP_ThreadManager.host)
             {
                 H3MP_ServerSend.AddTNHInstance(newTNHInstance);
@@ -2643,17 +2669,28 @@ namespace H3MP
                 currentTNHUIManager.SetOBS_ItemSpawner(instance.itemSpawnerMode);
                 currentTNHUIManager.SetOBS_Backpack(instance.backpackMode);
                 currentTNHUIManager.SetOBS_SosiggunShakeReloading(instance.sosiggunShakeReloading);
-                if (instance.levelIndex < currentTNHUIManager.Levels.Count)
+
+                SceneLoader sceneLoader = UnityEngine.Object.FindObjectOfType<SceneLoader>();
+                // Find level
+                bool found = false;
+                for (int i = 0; i < Mod.currentTNHUIManager.Levels.Count; ++i)
                 {
-                    TNH_UIManager_m_currentLevelIndex.SetValue(currentTNHUIManager, instance.levelIndex);
-                    currentTNHUIManager.CurLevelID = currentTNHUIManager.Levels[instance.levelIndex].LevelID;
-                    TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(currentTNHUIManager, null);
-                    TNH_UIManager_UpdateTableBasedOnOptions.Invoke(currentTNHUIManager, null);
-                    TNH_UIManager_PlayButtonSound.Invoke(currentTNHUIManager, new object[] { 2 });
+                    if (Mod.currentTNHUIManager.Levels[i].LevelID.Equals(instance.levelID))
+                    {
+                        found = true;
+                        Mod.TNH_UIManager_m_currentLevelIndex.SetValue(Mod.currentTNHUIManager, i);
+                        Mod.currentTNHUIManager.CurLevelID = instance.levelID;
+                        Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
+                        Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
+                        Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
+                        sceneLoader.gameObject.SetActive(true);
+                        break;
+                    }
                 }
-                else
+                if (!found)
                 {
-                    return false;
+                    sceneLoader.gameObject.SetActive(false);
+                    Mod.LogError("Missing TNH level: " + instance.levelID + "! Make sure you have it installed.");
                 }
             }
 
@@ -3276,6 +3313,47 @@ namespace H3MP
             {
                 ___m_currentPlayerBody.EyeCam.enabled = !Mod.spectatorHost;
             }
+        }
+    }
+
+    // Patches TNH_ScoreDisplay.ReloadLevel to handle MP TNH
+    class TNH_ScoreDisplayReloadPatch
+    {
+        static bool Prefix()
+        {
+            if(Mod.managerObject != null && Mod.currentTNHInstance != null)
+            {
+                for(int i=0; i < Mod.currentTNHInstance.currentlyPlaying.Count; ++i)
+                {
+                    if (!Mod.currentTNHInstance.dead.Contains(Mod.currentTNHInstance.currentlyPlaying[i]))
+                    {
+                        // If players to spectate, teleport to first one
+                        GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[i]].transform.position, true);
+
+                        // In this case, don't want to reload level
+                        return false;
+                    }
+                }
+
+                // If controller we want to restart the game for everyone
+                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                {
+                    // Tell everyone to reset
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.ResetTNH(Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.ResetTNH(Mod.currentTNHInstance.instance);
+                    }
+
+                    // Don't continue, if we are actually controller (decided by server), we will receive order to reset also
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 
@@ -11745,7 +11823,7 @@ namespace H3MP
             return true;
         }
 
-        static bool NextLevelPrefix(ref TNH_UIManager __instance, ref int ___m_currentLevelIndex)
+        static bool NextLevelPrefix(ref TNH_UIManager __instance)
         {
             if (Mod.managerObject != null)
             {
@@ -11757,24 +11835,17 @@ namespace H3MP
                         return false;
                     }
 
-                    // Claculate new level index
-                    int levelIndex = ___m_currentLevelIndex + 1;
-                    if (levelIndex >= __instance.Levels.Count)
-                    {
-                        levelIndex = 0;
-                    }
-
                     // Update locally
-                    Mod.currentTNHInstance.levelIndex = levelIndex;
+                    Mod.currentTNHInstance.levelID = __instance.CurLevelID;
 
                     // Send update
                     if (H3MP_ThreadManager.host)
                     {
-                        H3MP_ServerSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                        H3MP_ServerSend.SetTNHLevelID(Mod.currentTNHInstance.levelID, Mod.currentTNHInstance.instance);
                     }
                     else
                     {
-                        H3MP_ClientSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                        H3MP_ClientSend.SetTNHLevelID(Mod.currentTNHInstance.levelID, Mod.currentTNHInstance.instance);
                     }
                 }
             }
@@ -11794,24 +11865,17 @@ namespace H3MP
                         return false;
                     }
 
-                    // Claculate new level index
-                    int levelIndex = ___m_currentLevelIndex - 1;
-                    if (levelIndex < 0)
-                    {
-                        levelIndex = __instance.Levels.Count;
-                    }
-
                     // Update locally
-                    Mod.currentTNHInstance.levelIndex = levelIndex;
+                    Mod.currentTNHInstance.levelID = __instance.CurLevelID;
 
                     // Send update
                     if (H3MP_ThreadManager.host)
                     {
-                        H3MP_ServerSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                        H3MP_ServerSend.SetTNHLevelID(Mod.currentTNHInstance.levelID, Mod.currentTNHInstance.instance);
                     }
                     else
                     {
-                        H3MP_ClientSend.SetTNHLevelIndex(levelIndex, Mod.currentTNHInstance.instance);
+                        H3MP_ClientSend.SetTNHLevelID(Mod.currentTNHInstance.levelID, Mod.currentTNHInstance.instance);
                     }
                 }
             }
@@ -11895,55 +11959,55 @@ namespace H3MP
                         }
 
                         Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);
-                        for (int i = 0; i < Mod.currentTNHInstance.manager.HoldPoints.Count; i++)
-                        {
-                            // ForceClearConfiguration
-                            Mod.TNH_HoldPoint_m_isInHold.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], false);
-                            Mod.TNH_HoldPoint_m_state.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], TNH_HoldPoint.HoldState.Beginning);
-                            Mod.currentTNHInstance.manager.HoldPoints[i].NavBlockers.SetActive(false);
-                            Mod.TNH_HoldPoint_m_phaseIndex.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], 0);
-                            Mod.TNH_HoldPoint_m_maxPhases.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], 0);
-                            Mod.TNH_HoldPoint_m_curPhase.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], null);
-                            Mod.TNH_HoldPoint_DeleteSystemNode.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
+                        //for (int i = 0; i < Mod.currentTNHInstance.manager.HoldPoints.Count; i++)
+                        //{
+                        //    // ForceClearConfiguration
+                        //    Mod.TNH_HoldPoint_m_isInHold.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], false);
+                        //    Mod.TNH_HoldPoint_m_state.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], TNH_HoldPoint.HoldState.Beginning);
+                        //    Mod.currentTNHInstance.manager.HoldPoints[i].NavBlockers.SetActive(false);
+                        //    Mod.TNH_HoldPoint_m_phaseIndex.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], 0);
+                        //    Mod.TNH_HoldPoint_m_maxPhases.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], 0);
+                        //    Mod.TNH_HoldPoint_m_curPhase.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], null);
+                        //    Mod.TNH_HoldPoint_DeleteSystemNode.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
 
-                            // DeleteAllActiveEntities
-                            (Mod.TNH_HoldPoint_m_activeTargets.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<TNH_EncryptionTarget>).Clear();
-                            Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
-                            Mod.TNH_HoldPoint_DeleteBarriers.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
-                            (Mod.TNH_HoldPoint_m_activeSosigs.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<Sosig>).Clear();
-                            (Mod.TNH_HoldPoint_m_activeTurrets.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<AutoMeater>).Clear();
-                        }
-                        for (int j = 0; j < Mod.currentTNHInstance.manager.SupplyPoints.Count; j++)
-                        {
-                            // DeleteAllActiveEntities
-                            (Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<Sosig>).Clear();
-                            (Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<AutoMeater>).Clear();
-                            List<GameObject> trackedObjects = (Mod.TNH_SupplyPoint_m_trackedObjects.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<GameObject>);
-                            if (trackedObjects.Count > 0)
-                            {
-                                for (int i = trackedObjects.Count - 1; i >= 0; i--)
-                                {
-                                    if (trackedObjects[i] != null)
-                                    {
-                                        UnityEngine.Object.Destroy(trackedObjects[i]);
-                                    }
-                                }
-                            }
-                            GameObject constructor = (Mod.TNH_SupplyPoint_m_constructor.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as GameObject);
-                            if (constructor != null)
-                            {
-                                constructor.GetComponent<TNH_ObjectConstructor>().ClearCase();
-                                UnityEngine.Object.Destroy(constructor);
-                                Mod.TNH_SupplyPoint_m_constructor.SetValue(Mod.currentTNHInstance.manager.SupplyPoints[j], null);
-                            }
-                            GameObject panel = (Mod.TNH_SupplyPoint_m_panel.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as GameObject);
-                            if (panel != null)
-                            {
-                                UnityEngine.Object.Destroy(panel);
-                                Mod.TNH_SupplyPoint_m_panel.SetValue(Mod.currentTNHInstance.manager.SupplyPoints[j], null);
-                            }
-                        }
-                        Mod.TNH_Manager_DispatchScore.Invoke(Mod.currentTNHInstance.manager, null);
+                        //    // DeleteAllActiveEntities
+                        //    (Mod.TNH_HoldPoint_m_activeTargets.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<TNH_EncryptionTarget>).Clear();
+                        //    Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
+                        //    Mod.TNH_HoldPoint_DeleteBarriers.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
+                        //    (Mod.TNH_HoldPoint_m_activeSosigs.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<Sosig>).Clear();
+                        //    (Mod.TNH_HoldPoint_m_activeTurrets.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<AutoMeater>).Clear();
+                        //}
+                        //for (int j = 0; j < Mod.currentTNHInstance.manager.SupplyPoints.Count; j++)
+                        //{
+                        //    // DeleteAllActiveEntities
+                        //    (Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<Sosig>).Clear();
+                        //    (Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<AutoMeater>).Clear();
+                        //    List<GameObject> trackedObjects = (Mod.TNH_SupplyPoint_m_trackedObjects.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<GameObject>);
+                        //    if (trackedObjects.Count > 0)
+                        //    {
+                        //        for (int i = trackedObjects.Count - 1; i >= 0; i--)
+                        //        {
+                        //            if (trackedObjects[i] != null)
+                        //            {
+                        //                UnityEngine.Object.Destroy(trackedObjects[i]);
+                        //            }
+                        //        }
+                        //    }
+                        //    GameObject constructor = (Mod.TNH_SupplyPoint_m_constructor.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as GameObject);
+                        //    if (constructor != null)
+                        //    {
+                        //        constructor.GetComponent<TNH_ObjectConstructor>().ClearCase();
+                        //        UnityEngine.Object.Destroy(constructor);
+                        //        Mod.TNH_SupplyPoint_m_constructor.SetValue(Mod.currentTNHInstance.manager.SupplyPoints[j], null);
+                        //    }
+                        //    GameObject panel = (Mod.TNH_SupplyPoint_m_panel.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as GameObject);
+                        //    if (panel != null)
+                        //    {
+                        //        UnityEngine.Object.Destroy(panel);
+                        //        Mod.TNH_SupplyPoint_m_panel.SetValue(Mod.currentTNHInstance.manager.SupplyPoints[j], null);
+                        //    }
+                        //}
+                        //Mod.TNH_Manager_DispatchScore.Invoke(Mod.currentTNHInstance.manager, null);
 
                         return false;
                     }

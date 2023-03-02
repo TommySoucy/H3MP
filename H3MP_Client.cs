@@ -379,7 +379,7 @@ namespace H3MP
                 H3MP_ClientHandle.SetTNHHealthMult,
                 H3MP_ClientHandle.SetTNHSosigGunReload,
                 H3MP_ClientHandle.SetTNHSeed,
-                H3MP_ClientHandle.SetTNHLevelIndex,
+                H3MP_ClientHandle.SetTNHLevelID,
                 H3MP_ClientHandle.AddInstance,
                 H3MP_ClientHandle.SetTNHController,
                 H3MP_ClientHandle.SpectatorHost,
@@ -463,6 +463,7 @@ namespace H3MP
                 H3MP_ClientHandle.Ping,
                 H3MP_ClientHandle.TNHSetPhaseHold,
                 H3MP_ClientHandle.ShatterableCrateSetHoldingToken,
+                H3MP_ClientHandle.ResetTNH,
             };
 
             // All vanilla scenes can be synced by default

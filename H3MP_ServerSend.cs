@@ -2692,11 +2692,11 @@ namespace H3MP
             }
         }
 
-        public static void SetTNHLevelIndex(int levelIndex, int instance, int clientID = 0)
+        public static void SetTNHLevelID(string levelID, int instance, int clientID = 0)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.setTNHLevelIndex))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.setTNHLevelID))
             {
-                packet.Write(levelIndex);
+                packet.Write(levelID);
                 packet.Write(instance);
 
                 if(clientID == 0)
@@ -3324,7 +3324,7 @@ namespace H3MP
                     packet.Write(TNHInstanceEntry.Value.healthMult);
                     packet.Write(TNHInstanceEntry.Value.sosiggunShakeReloading);
                     packet.Write(TNHInstanceEntry.Value.TNHSeed);
-                    packet.Write(TNHInstanceEntry.Value.levelIndex);
+                    packet.Write(TNHInstanceEntry.Value.levelID);
                 }
 
                 SendTCPData(toClientID, packet);
@@ -3807,6 +3807,16 @@ namespace H3MP
                 {
                     SendTCPDataToAll(clientID, packet);
                 }
+            }
+        }
+
+        public static void ResetTNH(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.resetTNH))
+            {
+                packet.Write(instance);
+
+                SendTCPDataToAll(packet);
             }
         }
     }

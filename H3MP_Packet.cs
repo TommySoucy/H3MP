@@ -66,7 +66,7 @@ namespace H3MP
         setTNHHealthMult = 55,
         setTNHSosigGunReload = 56,
         setTNHSeed = 57,
-        setTNHLevelIndex = 58,
+        setTNHLevelID = 58,
         addInstance = 59,
         setTNHController = 60,
         spectatorHost = 61,
@@ -149,7 +149,8 @@ namespace H3MP
         SLAMDetonate = 138,
         ping = 139,
         TNHSetPhaseHold = 140,
-        shatterableCrateSetHoldingToken = 141
+        shatterableCrateSetHoldingToken = 141,
+        resetTNH = 142
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -211,7 +212,7 @@ namespace H3MP
         setTNHHealthMult = 54,
         setTNHSosigGunReload = 55,
         setTNHSeed = 56,
-        setTNHLevelIndex = 57,
+        setTNHLevelID = 57,
         addInstance = 58,
         setTNHController = 59,
         spectatorHost = 60,
@@ -296,7 +297,8 @@ namespace H3MP
         SLAMDetonate = 139,
         ping = 140,
         TNHSetPhaseHold = 141,
-        shatterableCrateSetHoldingToken = 142
+        shatterableCrateSetHoldingToken = 142,
+        resetTNH = 143
     }
 
     public class H3MP_Packet : IDisposable
@@ -956,7 +958,7 @@ namespace H3MP
             Write(instance.healthMult);
             Write(instance.sosiggunShakeReloading);
             Write(instance.TNHSeed);
-            Write(instance.levelIndex);
+            Write(instance.levelID);
             Write(instance.playerIDs.Count);
             for(int i=0; i < instance.playerIDs.Count; ++i)
             {
@@ -1638,13 +1640,13 @@ namespace H3MP
             int healthMult = ReadInt();
             int sosiggunShakeReloading = ReadInt();
             int TNHSeed = ReadInt();
-            int levelIndex = ReadInt();
+            string levelID = ReadString();
             int playerCount = ReadInt();
             int hostID = ReadInt();
             H3MP_TNHInstance instance = new H3MP_TNHInstance(instanceID, hostID, letPeopleJoin,
                                                              progressionTypeSetting, healthModeSetting, equipmentModeSetting,
                                                              targetModeSetting, AIDifficultyModifier, radarModeModifier,
-                                                             itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
+                                                             itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
             for (int i=1; i < playerCount; ++i)
             {
                 int newPlayerID = ReadInt();

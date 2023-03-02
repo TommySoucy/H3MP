@@ -604,7 +604,7 @@ namespace H3MP
                 H3MP_ServerHandle.SetTNHHealthMult,
                 H3MP_ServerHandle.SetTNHSosigGunReload,
                 H3MP_ServerHandle.SetTNHSeed,
-                H3MP_ServerHandle.SetTNHLevelIndex,
+                H3MP_ServerHandle.SetTNHLevelID,
                 H3MP_ServerHandle.AddInstance,
                 H3MP_ServerHandle.SetTNHController,
                 H3MP_ServerHandle.SpectatorHost,
@@ -690,6 +690,7 @@ namespace H3MP
                 H3MP_ServerHandle.Ping,
                 H3MP_ServerHandle.TNHSetPhaseHold,
                 H3MP_ServerHandle.ShatterableCrateSetHoldingToken,
+                H3MP_ServerHandle.ResetTNH,
             };
 
             items = new H3MP_TrackedItemData[100];

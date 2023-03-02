@@ -2170,20 +2170,40 @@ namespace H3MP
             }
         }
 
-        public static void SetTNHLevelIndex(H3MP_Packet packet)
+        public static void SetTNHLevelID(H3MP_Packet packet)
         {
-            int levelIndex = packet.ReadInt();
+            string levelID = packet.ReadString();
             int instance = packet.ReadInt();
 
-            H3MP_GameManager.TNHInstances[instance].levelIndex = levelIndex;
-
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
-                Mod.TNH_UIManager_m_currentLevelIndex.SetValue(Mod.currentTNHUIManager, levelIndex);
-                Mod.currentTNHUIManager.CurLevelID = Mod.currentTNHUIManager.Levels[levelIndex].LevelID;
-                Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
-                Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
-                Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
+                actualInstance.levelID = levelID;
+
+                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+                {
+                    SceneLoader sceneLoader = UnityEngine.Object.FindObjectOfType<SceneLoader>();
+                    // Find level
+                    bool found = false;
+                    for (int i = 0; i < Mod.currentTNHUIManager.Levels.Count; ++i)
+                    {
+                        if (Mod.currentTNHUIManager.Levels[i].LevelID.Equals(levelID))
+                        {
+                            found = true;
+                            Mod.TNH_UIManager_m_currentLevelIndex.SetValue(Mod.currentTNHUIManager, i);
+                            Mod.currentTNHUIManager.CurLevelID = levelID;
+                            Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
+                            Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
+                            Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
+                            sceneLoader.gameObject.SetActive(true);
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        sceneLoader.gameObject.SetActive(false);
+                        Mod.LogError("Missing TNH level: " + levelID + ", you will not be able to play in this instance if the game is started!");
+                    }
+                }
             }
         }
 
@@ -2796,7 +2816,7 @@ namespace H3MP
                 TNHInstance.healthMult = packet.ReadInt();
                 TNHInstance.sosiggunShakeReloading = packet.ReadInt();
                 TNHInstance.TNHSeed = packet.ReadInt();
-                TNHInstance.levelIndex = packet.ReadInt();
+                TNHInstance.levelID = packet.ReadString();
 
                 H3MP_GameManager.TNHInstances.Add(instance, TNHInstance);
 
@@ -3163,6 +3183,21 @@ namespace H3MP
             H3MP_GameManager.UpdatePlayerHidden(H3MP_GameManager.players[clientID]);
 
             //TODO: Update UI
+        }
+
+        public static void ResetTNH(H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.Reset();
+
+                if (actualInstance.manager != null)
+                {
+                    actualInstance.ResetManager();
+                }
+            }
         }
     }
 }

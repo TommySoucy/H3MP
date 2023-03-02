@@ -114,7 +114,7 @@ namespace H3MP
         public static void AddTNHInstance(int hostID, bool letPeopleJoin,
                                           int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
                                           int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
-                                          int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, int levelIndex)
+                                          int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.addTNHInstance))
             {
@@ -131,7 +131,7 @@ namespace H3MP
                 packet.Write(healthMult);
                 packet.Write(sosiggunShakeReloading);
                 packet.Write(TNHSeed);
-                packet.Write(levelIndex);
+                packet.Write(levelID);
 
                 SendTCPData(packet);
             }
@@ -1759,11 +1759,11 @@ namespace H3MP
             }
         }
 
-        public static void SetTNHLevelIndex(int levelIndex, int instance)
+        public static void SetTNHLevelID(string levelID, int instance)
         {
-            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHLevelIndex))
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.setTNHLevelID))
             {
-                packet.Write(levelIndex);
+                packet.Write(levelID);
                 packet.Write(instance);
 
                 SendTCPData(packet);
@@ -2380,6 +2380,16 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.spectatorHost))
             {
                 packet.Write(spectatorHost);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void ResetTNH(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.resetTNH))
+            {
+                packet.Write(instance);
 
                 SendTCPData(packet);
             }

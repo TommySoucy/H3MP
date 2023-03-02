@@ -26,6 +26,7 @@ namespace H3MP
         public Text healthIndicator;
         public int IFF;
         public TAH_ReticleContact reticleContact;
+        public float health;
 
         public string scene;
         public int instance;

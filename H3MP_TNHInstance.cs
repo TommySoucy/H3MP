@@ -42,7 +42,7 @@ namespace H3MP
         public int healthMult;
         public int sosiggunShakeReloading;
         public int TNHSeed;
-        public int levelIndex;
+        public string levelID;
 
         public H3MP_TNHInstance(int instance)
         {
@@ -56,7 +56,7 @@ namespace H3MP
         public H3MP_TNHInstance(int instance, int hostID, bool letPeopleJoin,
                                 int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
                                 int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
-                                int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, int levelIndex)
+                                int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
         {
             this.instance = instance;
             playerIDs = new List<int>();
@@ -77,7 +77,7 @@ namespace H3MP
             this.healthMult = healthMult;
             this.sosiggunShakeReloading = sosiggunShakeReloading;
             this.TNHSeed = TNHSeed;
-            this.levelIndex = levelIndex;
+            this.levelID = levelID;
         }
 
         public void AddCurrentlyPlaying(bool send, int ID, bool fromServer = false)
@@ -110,6 +110,11 @@ namespace H3MP
             {
                 if (ID == playerIDs[0])
                 {
+                    // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
+                    if(ID != controller)
+                    {
+                        H3MP_GameManager.DistributeAllControl(controller, ID, false);
+                    }
                     controller = ID;
                     H3MP_ServerSend.SetTNHController(instance, ID);
                 }
@@ -120,6 +125,11 @@ namespace H3MP
                         if (!H3MP_GameManager.playersByInstanceByScene.TryGetValue(ID == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[ID].player.scene, out Dictionary<int, List<int>> instances) ||
                             !instances.TryGetValue(instance, out List<int> players) || !players.Contains(playerIDs[0]))
                         {
+                            // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
+                            if (ID != controller)
+                            {
+                                H3MP_GameManager.DistributeAllControl(controller, ID, false);
+                            }
                             controller = ID;
                             H3MP_ServerSend.SetTNHController(instance, ID);
                         }
@@ -169,6 +179,12 @@ namespace H3MP
             {
                 if (currentlyPlaying.Contains(playerIDs[0]))
                 {
+                    // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
+                    if (playerIDs[0] != controller)
+                    {
+                        H3MP_GameManager.DistributeAllControl(controller, playerIDs[0], false);
+                    }
+
                     H3MP_ServerSend.SetTNHController(instance, playerIDs[0]);
 
                     // Update on our side
@@ -184,6 +200,13 @@ namespace H3MP
                             currentLowest = currentlyPlaying[i];
                         }
                     }
+
+                    // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
+                    if (currentLowest != controller)
+                    {
+                        H3MP_GameManager.DistributeAllControl(controller, currentLowest, false);
+                    }
+
                     H3MP_ServerSend.SetTNHController(instance, currentLowest);
 
                     // Update on our side
@@ -228,6 +251,34 @@ namespace H3MP
             {
                 Mod.TNHSpectating = false;
             }
+        }
+
+        public void ResetManager()
+        {
+            if(manager == null)
+            {
+                return;
+            }
+
+            phase = TNH_Phase.StartUp;
+            manager.UsesClassicPatrolBehavior = true;
+            Mod.TNH_Manager_m_level.SetValue(manager, -1);
+            Mod.TNH_Manager_m_numTokens.SetValue(manager, 5);
+            ((List<TNH_SupplyPoint>)Mod.TNH_Manager_m_supplyPoints.GetValue(manager)).Clear();
+            ((List<GameObject>)Mod.TNH_Manager_m_weaponCases.GetValue(manager)).Clear();
+            ((List<TNH_Manager.SosigPatrolSquad>)Mod.TNH_Manager_m_patrolSquads.GetValue(manager)).Clear();
+            ((List<GameObject>)Mod.TNH_Manager_m_miscEnemies.GetValue(manager)).Clear();
+            for(int i=0; i < manager.Nums.Length; ++i)
+            {
+                manager.Nums[i] = 0;
+            }
+            for(int i=0; i < manager.Stats.Length; ++i)
+            {
+                manager.Stats[i] = 0;
+            }
+            Mod.TNH_Manager_m_hasInit.SetValue(manager, false);
+            ((List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(manager)).Clear();
+            Mod.TNH_Manager_m_nextSupplyPanelType.SetValue(manager, 1);
         }
     }
 }

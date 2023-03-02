@@ -267,9 +267,15 @@ namespace H3MP
             player.rightHand.transform.position = rightHandPos;
             player.rightHand.transform.rotation = rightHandRot;
             player.overheadDisplayBillboard.transform.position = player.head.transform.position + overheadDisplayOffset;
+            player.health = health;
             if (player.healthIndicator.gameObject.activeSelf)
             {
                 player.healthIndicator.text = ((int)health).ToString() + "/" + maxHealth;
+            }
+
+            if((health <= 0 && player.head.gameObject.activeSelf) || (health > 0 && !player.head.gameObject.activeSelf))
+            {
+                UpdatePlayerHidden(player);
             }
 
             ProcessAdditionalPlayerData(ID, additionalData);
@@ -349,7 +355,7 @@ namespace H3MP
             bool visible = true;
 
             // Default scene/instance, spectatorHost
-            visible &= player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == instance && !spectatorHosts.Contains(player.ID);
+            visible &= player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == instance && !spectatorHosts.Contains(player.ID) && player.health > 0;
 
             // TNH
             if (visible && Mod.currentTNHInstance != null)
@@ -1397,7 +1403,7 @@ namespace H3MP
         public static H3MP_TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin,
                                                          int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
                                                          int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
-                                                         int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, int levelIndex)
+                                                         int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
         {
             if (H3MP_ThreadManager.host)
             {
@@ -1409,7 +1415,7 @@ namespace H3MP
                 H3MP_TNHInstance newInstance = new H3MP_TNHInstance(freeInstance, hostID, letPeopleJoin,
                                                                     progressionTypeSetting, healthModeSetting, equipmentModeSetting,
                                                                     targetModeSetting, AIDifficultyModifier, radarModeModifier,
-                                                                    itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
+                                                                    itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
                 TNHInstances.Add(freeInstance, newInstance);
 
                 if ((newInstance.letPeopleJoin || newInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && Mod.joinTNHInstances != null && !Mod.joinTNHInstances.ContainsKey(freeInstance))
@@ -1437,7 +1443,7 @@ namespace H3MP
                 H3MP_ClientSend.AddTNHInstance(hostID, letPeopleJoin,
                                                progressionTypeSetting, healthModeSetting, equipmentModeSetting,
                                                targetModeSetting, AIDifficultyModifier, radarModeModifier,
-                                               itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelIndex);
+                                               itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
 
                 return null;
             }
@@ -2214,88 +2220,93 @@ namespace H3MP
 
         // MOD: This will get called when a client disconnects from the server
         //      A mod should postfix this to give control of whatever elements it has that are tracked through H3MP that are under this client's control
-        public static void DistributeAllControl(int clientID)
+        //      This will also get called when a TNH controller gives up control to redistribute control of sosigs/automeaters/encryptions
+        //      to the new controller. overrideController will be set to the new controller, and all will be false, specifying not to distribute item control
+        public static void DistributeAllControl(int clientID, int overrideController = -1, bool all = true)
         {
             // Get best potential host
-            int newController = Mod.GetBestPotentialObjectHost(clientID, false);
+            int newController = overrideController == -1 ? Mod.GetBestPotentialObjectHost(clientID, false) : overrideController;
 
             // TODO: Optimization: Could keep track of items by controller in a dict, go through those specifically
             //                     Or could at least use itemsByInstanceByScene and go only through the item in the same scene/instance as the client
 
             // Give all items
-            for(int i=0; i < H3MP_Server.items.Length; ++i)
+            if (all)
             {
-                if (H3MP_Server.items[i] != null && H3MP_Server.items[i].controller == clientID)
+                for (int i = 0; i < H3MP_Server.items.Length; ++i)
                 {
-                    H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
-
-                    bool destroyed = newController == -1;
-
-                    if (destroyed) // No other player to take control, destroy
+                    if (H3MP_Server.items[i] != null && H3MP_Server.items[i].controller == clientID)
                     {
-                        H3MP_ServerSend.DestroyItem(trackedItem.trackedID);
-                        H3MP_Server.items[trackedItem.trackedID] = null;
-                        H3MP_Server.availableItemIndices.Add(trackedItem.trackedID);
-                        if (itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
-                            currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                        H3MP_TrackedItemData trackedItem = H3MP_Server.items[i];
+
+                        bool destroyed = newController == -1;
+
+                        if (destroyed) // No other player to take control, destroy
                         {
-                            itemList.Remove(trackedItem.trackedID);
-                        }
-                    }
-                    else if (newController == 0) // If its us, take control
-                    {
-                        trackedItem.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem);
-                        // Physical object could be null if we are given control while we are loading, the giving client will think we are in their scene/instance
-                        if (trackedItem.physicalItem == null)
-                        {
-                            // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
-                            // Otherwise we send destroy order for the object
-                            if (!H3MP_GameManager.sceneLoading)
+                            H3MP_ServerSend.DestroyItem(trackedItem.trackedID);
+                            H3MP_Server.items[trackedItem.trackedID] = null;
+                            H3MP_Server.availableItemIndices.Add(trackedItem.trackedID);
+                            if (itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
                             {
-                                if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
+                                itemList.Remove(trackedItem.trackedID);
+                            }
+                        }
+                        else if (newController == 0) // If its us, take control
+                        {
+                            trackedItem.localTrackedID = H3MP_GameManager.items.Count;
+                            H3MP_GameManager.items.Add(trackedItem);
+                            // Physical object could be null if we are given control while we are loading, the giving client will think we are in their scene/instance
+                            if (trackedItem.physicalItem == null)
+                            {
+                                // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
+                                // Otherwise we send destroy order for the object
+                                if (!H3MP_GameManager.sceneLoading)
                                 {
-                                    if (!trackedItem.awaitingInstantiation)
+                                    if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
                                     {
-                                        trackedItem.awaitingInstantiation = true;
-                                        AnvilManager.Run(trackedItem.Instantiate());
-                                    }
-                                }
-                                else
-                                {
-                                    if (trackedItem.physicalItem != null)
-                                    {
-                                        // TrackedItem.OnDestroy will handle removal from relevant lists
-                                        Destroy(trackedItem.physicalItem.gameObject);
-                                    }
-                                    else 
-                                    {
-                                        H3MP_ServerSend.DestroyItem(trackedItem.trackedID);
-                                        trackedItem.RemoveFromLocal();
-                                        H3MP_Server.items[trackedItem.trackedID] = null;
-                                        H3MP_Server.availableItemIndices.Add(trackedItem.trackedID);
-                                        if (itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                            currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                        if (!trackedItem.awaitingInstantiation)
                                         {
-                                            itemList.Remove(trackedItem.trackedID);
+                                            trackedItem.awaitingInstantiation = true;
+                                            AnvilManager.Run(trackedItem.Instantiate());
                                         }
                                     }
-                                    destroyed = true;
+                                    else
+                                    {
+                                        if (trackedItem.physicalItem != null)
+                                        {
+                                            // TrackedItem.OnDestroy will handle removal from relevant lists
+                                            Destroy(trackedItem.physicalItem.gameObject);
+                                        }
+                                        else
+                                        {
+                                            H3MP_ServerSend.DestroyItem(trackedItem.trackedID);
+                                            trackedItem.RemoveFromLocal();
+                                            H3MP_Server.items[trackedItem.trackedID] = null;
+                                            H3MP_Server.availableItemIndices.Add(trackedItem.trackedID);
+                                            if (itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                                currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                            {
+                                                itemList.Remove(trackedItem.trackedID);
+                                            }
+                                        }
+                                        destroyed = true;
+                                    }
                                 }
+                                // else we will instantiate when we are done loading
                             }
-                            // else we will instantiate when we are done loading
+                            else if (trackedItem.parent == -1)
+                            {
+                                Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
+                            }
                         }
-                        else if (trackedItem.parent == -1)
+
+                        if (!destroyed)
                         {
-                            Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
+                            trackedItem.SetController(newController);
+
+                            H3MP_ServerSend.GiveControl(trackedItem.trackedID, newController);
                         }
-                    }
-
-                    if (!destroyed)
-                    {
-                        trackedItem.SetController(newController);
-
-                        H3MP_ServerSend.GiveControl(trackedItem.trackedID, newController);
                     }
                 }
             }
