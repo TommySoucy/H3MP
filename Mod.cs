@@ -1855,6 +1855,10 @@ namespace H3MP
                 TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnTakeGroupReplacement", BindingFlags.Public | BindingFlags.Static);
                 TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnHoldEnemyGroup", BindingFlags.Public | BindingFlags.Static);
                 TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNHPatches).GetMethod("SpawnTurretsReplacement", BindingFlags.Public | BindingFlags.Static);
+
+                MethodInfo TNHHoldPointSpawnUpdateReplacementOriginal = typeof(TNHPatches).GetMethod("SpawningUpdateReplacement", BindingFlags.Public | BindingFlags.Static);
+                MethodInfo TNHHoldPointSpawnUpdateReplacementPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawningUpdateReplacementPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+                harmony.Patch(TNHHoldPointSpawnUpdateReplacementOriginal, new HarmonyMethod(TNHHoldPointSpawnUpdateReplacementPrefix));
             }
             else
             {
@@ -6586,7 +6590,7 @@ namespace H3MP
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
-            if (trackedSosig != null)
+            if (trackedSosig != null && trackedSosig.data.controller == H3MP_GameManager.ID)
             {
                 trackedSosig.data.currentOrder = o;
 
@@ -12800,6 +12804,14 @@ namespace H3MP
         public static bool inSpawnEnemyGroup;
         public static bool inSpawnTurrets;
 
+        static void SpawningUpdateReplacementPrefix()
+        {
+            if (Mod.currentTNHInstance != null)
+            {
+                Mod.LogInfo("SpawningUpdateReplacementPrefix called, curphase null?: "+(Mod.TNH_HoldPoint_m_curPhase.GetValue((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager)) == null) +" on holdpoint: "+((int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager)).ToString()+", isinhold?: "+((bool)Mod.TNH_HoldPoint_m_isInHold.GetValue((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager))).ToString() + " \n" + Environment.StackTrace);
+            }
+        }
+
         static bool UpdatePrefix(ref TNH_HoldPoint __instance, bool ___m_isInHold, ref TNH_HoldPointSystemNode ___m_systemNode, ref bool ___m_hasPlayedTimeWarning1, ref bool ___m_hasPlayedTimeWarning2,
                                  ref int ___m_numWarnings)
         {
@@ -13116,12 +13128,15 @@ namespace H3MP
         static bool CompletePhasePrefix(TNH_HoldPoint __instance, List<Sosig> ___m_activeSosigs, TNH_HoldPointSystemNode ___m_systemNode, ref int ___m_phaseIndex,
                                         ref TNH_HoldPoint.HoldState ___m_state, ref float ___m_tickDownTransition)
         {
+            Mod.LogInfo("CompletePhasePrefix called");
+
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Transition;
 
                 if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
+                    Mod.LogInfo("\tController, sending then continuing");
                     if (H3MP_ThreadManager.host)
                     {
                         H3MP_ServerSend.TNHHoldCompletePhase(Mod.currentTNHInstance.instance);
@@ -13133,6 +13148,7 @@ namespace H3MP
                 }
                 else
                 {
+                    Mod.LogInfo("\tnon controller");
                     // Deletion burst
                     ___m_activeSosigs.Clear();
                     (Mod.TNH_Manager_m_miscEnemies.GetValue(Mod.currentTNHInstance.manager) as List<GameObject>).Clear();
@@ -13245,6 +13261,7 @@ namespace H3MP
 
         static void CompleteHoldPrefix()
         {
+            Mod.LogInfo("CompleteHoldPrefix called");
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 Mod.currentTNHInstance.holdOngoing = false;
@@ -13278,11 +13295,13 @@ namespace H3MP
 
         static void SpawnEnemyGroupPrefix()
         {
+            Mod.LogInfo("SpawnEnemyGroupPrefix");
             inSpawnEnemyGroup = true;
         }
 
         static void SpawnEnemyGroupPostfix()
         {
+            Mod.LogInfo("SpawnEnemyGroupPostfix");
             inSpawnEnemyGroup = false;
         }
 
