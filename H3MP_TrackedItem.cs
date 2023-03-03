@@ -251,10 +251,11 @@ namespace H3MP
                         availableTrackedItemRefIndices.Add(i);
                     }
                 }
-                trackedItemRefObjects[availableTrackedItemRefIndices.Count - 1] = trackedItemRef;
-                trackedItemReferences[availableTrackedItemRefIndices.Count - 1] = this;
-                trackedItemRef.name = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1].ToString();
+                int refIndex = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
+                trackedItemRefObjects[refIndex] = trackedItemRef;
+                trackedItemReferences[refIndex] = this;
+                trackedItemRef.name = refIndex.ToString();
                 asPG.SpawnOnSplode.Add(trackedItemRef);
             }
             else if(physObj is FVRGrenade)
@@ -288,9 +289,10 @@ namespace H3MP
                         availableTrackedItemRefIndices.Add(i);
                     }
                 }
-                timings.Add(-1, availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1]);
-                trackedItemReferences[availableTrackedItemRefIndices.Count - 1] = this;
+                int refIndex = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
+                timings.Add(-1, refIndex);
+                trackedItemReferences[refIndex] = this;
             }
             else if(physObj is C4)
             {
