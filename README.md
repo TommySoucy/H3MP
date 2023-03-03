@@ -8,6 +8,7 @@ As the title says, this is a mod that adds multiplayer to the virtual reality ga
 - Only report bugs if you don't use any of the mods from the incompatibilities list.
 - Report bugs directly to VIPkiller17#4326 on discord and always send **_full_** output logs.
 - Currently only made for game branch "alpha - Mod Safe".
+- If you get "PatchVerify" errors on start up it means either your game or H3MP is the wrong version.
 
 ## Manual Installation
 
@@ -57,15 +58,12 @@ To start the server, in the wristmenu, press H3MP->Host
 
 ## Incompatibilities
 
-- TNH tweaker
 - Meat fortress mode
 - Rotweiners mode
 - Anything not sandbox or TNH will most probably not work
-- Any mods that cause "PatchVerify" errors in your console/output logs will most probably break H3MP
 
 ## Upcoming support
 
-- TNH tweaker
 - Most if not all Modul mods
 - Meat fortress mode
 - Rotweiners mode
