@@ -515,7 +515,7 @@ namespace H3MP
             H3MP_PlayerManager playerManager = player.GetComponent<H3MP_PlayerManager>();
             playerManager.ID = -1;
             playerManager.username = "Dummy";
-            playerManager.scene = SceneManager.GetActiveScene().name;
+            playerManager.scene = H3MP_GameManager.scene;
             playerManager.instance = H3MP_GameManager.instance;
             playerManager.usernameLabel.text = "Dummy";
             playerManager.SetIFF(GM.CurrentPlayerBody.GetPlayerIFF());
@@ -2261,7 +2261,7 @@ namespace H3MP
 
             H3MP_Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]);
 
-            if (SceneManager.GetActiveScene().name.Equals("TakeAndHold_Lobby_2"))
+            if (H3MP_GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
                 Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 InitTNHMenu();
@@ -2294,7 +2294,7 @@ namespace H3MP
 
             client.ConnectToServer();
 
-            if (SceneManager.GetActiveScene().name.Equals("TakeAndHold_Lobby_2"))
+            if (H3MP_GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
                 Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 InitTNHMenu();
@@ -2865,7 +2865,7 @@ namespace H3MP
                         }
                         else // Not loading, check players in current scene/instance
                         {
-                            if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> instances) &&
+                            if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(H3MP_GameManager.scene, out Dictionary<int, List<int>> instances) &&
                                 instances.TryGetValue(H3MP_GameManager.instance, out List<int> otherPlayers) && otherPlayers.Count > 0)
                             {
                                 // Just take first one
@@ -2880,7 +2880,7 @@ namespace H3MP
                 string scene = H3MP_Server.clients[currentController].player.scene;
                 int instance = H3MP_Server.clients[currentController].player.instance;
 
-                if(scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel:SceneManager.GetActiveScene().name) && instance == H3MP_GameManager.instance)
+                if(scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && instance == H3MP_GameManager.instance)
                 {
                     return 0;
                 }
@@ -2976,7 +2976,7 @@ namespace H3MP
             }
 
             // Manage players present
-            if (player.scene.Equals(SceneManager.GetActiveScene().name) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
+            if (player.scene.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
             {
                 --H3MP_GameManager.playersPresent;
             }
@@ -3319,15 +3319,18 @@ namespace H3MP
         {
             if(Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                for(int i=0; i < Mod.currentTNHInstance.currentlyPlaying.Count; ++i)
+                if (Mod.currentTNHInstance.phase != TNH_Phase.Completed)
                 {
-                    if (!Mod.currentTNHInstance.dead.Contains(Mod.currentTNHInstance.currentlyPlaying[i]))
+                    for (int i = 0; i < Mod.currentTNHInstance.currentlyPlaying.Count; ++i)
                     {
-                        // If players to spectate, teleport to first one
-                        GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[i]].transform.position, true);
+                        if (Mod.currentTNHInstance.currentlyPlaying[i] != H3MP_GameManager.ID && !Mod.currentTNHInstance.dead.Contains(Mod.currentTNHInstance.currentlyPlaying[i]))
+                        {
+                            // If players to spectate, teleport to first one
+                            GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[i]].transform.position, true);
 
-                        // In this case, don't want to reload level
-                        return false;
+                            // In this case, don't want to reload level
+                            return false;
+                        }
                     }
                 }
 
@@ -8640,7 +8643,7 @@ namespace H3MP
             {
                 track = false;
 
-                H3MP_GameManager.SyncTrackedItems(__result.transform, true, null, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedItems(__result.transform, true, null, H3MP_GameManager.scene);
             }
         }
     }
@@ -8680,10 +8683,10 @@ namespace H3MP
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
-                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, H3MP_GameManager.scene);
             }
         }
     }
@@ -8760,10 +8763,10 @@ namespace H3MP
             if (track)
             {
                 track = false;
-                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, H3MP_GameManager.scene);
             }
         }
     }
@@ -8802,10 +8805,10 @@ namespace H3MP
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
-                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, H3MP_GameManager.scene);
             }
         }
     }
@@ -8883,10 +8886,10 @@ namespace H3MP
             if (track)
             {
                 track = false;
-                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
-                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, SceneManager.GetActiveScene().name);
+                H3MP_GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, H3MP_GameManager.scene);
+                H3MP_GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, H3MP_GameManager.scene);
             }
         }
     }
@@ -9063,7 +9066,7 @@ namespace H3MP
             }
 
             // Try syncing
-            H3MP_GameManager.SyncTrackedItems(__instance.transform, true, null, SceneManager.GetActiveScene().name);
+            H3MP_GameManager.SyncTrackedItems(__instance.transform, true, null, H3MP_GameManager.scene);
         }
     }
 

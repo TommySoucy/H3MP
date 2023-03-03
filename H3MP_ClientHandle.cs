@@ -50,7 +50,7 @@ namespace H3MP
             bool inControl = packet.ReadBool();
 
             // Just connected, sync if current scene is syncable
-            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
+            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(H3MP_GameManager.scene))
             {
                 H3MP_GameManager.SyncTrackedSosigs(true, inControl);
                 H3MP_GameManager.SyncTrackedAutoMeaters(true, inControl);
@@ -225,7 +225,7 @@ namespace H3MP
                         // Otherwise we send destroy order for the object
                         if (!H3MP_GameManager.sceneLoading)
                         {
-                            if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
+                            if (trackedItem.scene.Equals(H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
                             {
                                 if (!trackedItem.awaitingInstantiation)
                                 {
@@ -294,7 +294,7 @@ namespace H3MP
                     // Otherwise we send destroy order for the object
                     if (!H3MP_GameManager.sceneLoading)
                     {
-                        if (trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
+                        if (trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
                         {
                             if (!trackedSosig.awaitingInstantiation)
                             {
@@ -362,7 +362,7 @@ namespace H3MP
                     // Otherwise we send destroy order for the object
                     if (!H3MP_GameManager.sceneLoading)
                     {
-                        if (trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                        if (trackedAutoMeater.scene.Equals(H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                         {
                             if (!trackedAutoMeater.awaitingInstantiation)
                             {
@@ -423,7 +423,7 @@ namespace H3MP
                     // Otherwise we send destroy order for the object
                     if (!H3MP_GameManager.sceneLoading)
                     {
-                        if (trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
+                        if (trackedEncryption.scene.Equals(H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
                         {
                             if (!trackedEncryption.awaitingInstantiation)
                             {

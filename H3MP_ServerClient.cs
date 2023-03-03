@@ -248,8 +248,8 @@ namespace H3MP
             }
 
             // Also spawn host player in this client
-            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF, true);
-            inControl &= !scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name);
+            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF, true);
+            inControl &= !scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene);
 
             if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(scene))
             {
@@ -322,7 +322,7 @@ namespace H3MP
                     {
                         if (trackedItem.controller == 0)
                         {
-                            if (player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                            if (player.scene.Equals(H3MP_GameManager.scene) && player.instance == H3MP_GameManager.instance)
                             {
                                 // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                                 // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
@@ -340,7 +340,7 @@ namespace H3MP
                     }
                     else if(fromClient == 0)
                     {
-                        if (trackedItem.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                        if (trackedItem.controller == 0 && player.scene.Equals(H3MP_GameManager.scene) && player.instance == H3MP_GameManager.instance)
                         {
                             // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                             // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
@@ -367,7 +367,7 @@ namespace H3MP
                     {
                         if (trackedSosig.controller == 0)
                         {
-                            if (player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                            if (player.scene.Equals(H3MP_GameManager.scene) && player.instance == H3MP_GameManager.instance)
                             {
                                 // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                                 // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
@@ -385,7 +385,7 @@ namespace H3MP
                     }
                     else if (fromClient == 0)
                     {
-                        if (trackedSosig.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                        if (trackedSosig.controller == 0 && player.scene.Equals(H3MP_GameManager.scene) && player.instance == H3MP_GameManager.instance)
                         {
                             // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                             // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
@@ -412,7 +412,7 @@ namespace H3MP
                     {
                         if (trackedAutoMeater.controller == 0)
                         {
-                            if (player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                            if (player.scene.Equals(H3MP_GameManager.scene) && player.instance == H3MP_GameManager.instance)
                             {
                                 // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                                 // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
@@ -430,7 +430,7 @@ namespace H3MP
                     }
                     else if (fromClient == 0)
                     {
-                        if (trackedAutoMeater.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                        if (trackedAutoMeater.controller == 0 && player.scene.Equals(H3MP_GameManager.scene) && player.instance == H3MP_GameManager.instance)
                         {
                             // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                             // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
@@ -457,7 +457,7 @@ namespace H3MP
                     {
                         if (trackedEncryption.controller == 0)
                         {
-                            if (player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                            if (player.scene.Equals(H3MP_GameManager.scene) && player.instance == H3MP_GameManager.instance)
                             {
                                 // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                                 // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but
@@ -475,7 +475,7 @@ namespace H3MP
                     }
                     else if (fromClient == 0)
                     {
-                        if (trackedEncryption.controller == 0 && player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == H3MP_GameManager.instance)
+                        if (trackedEncryption.controller == 0 && player.scene.Equals(H3MP_GameManager.scene) && player.instance == H3MP_GameManager.instance)
                         {
                             // Ensure it is up to date before sending because an item may not have been updated at all since there might not have
                             // been anyone in the scene/instance with the controller. Then when someone else joins the scene, we send relevent items but

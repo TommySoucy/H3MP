@@ -26,7 +26,7 @@ namespace H3MP
             {
                 packet.Write(H3MP_Client.singleton.ID);
                 packet.Write(Mod.config["Username"].ToString());
-                packet.Write(SceneManager.GetActiveScene().name);
+                packet.Write(H3MP_GameManager.scene);
                 packet.Write(H3MP_GameManager.instance);
                 packet.Write(GM.CurrentPlayerBody.GetPlayerIFF());
 

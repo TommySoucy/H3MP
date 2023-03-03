@@ -122,7 +122,7 @@ namespace H3MP
                 {
                     if(currentlyPlaying.Count == 1)
                     {
-                        if (!H3MP_GameManager.playersByInstanceByScene.TryGetValue(ID == 0 ? SceneManager.GetActiveScene().name : H3MP_Server.clients[ID].player.scene, out Dictionary<int, List<int>> instances) ||
+                        if (!H3MP_GameManager.playersByInstanceByScene.TryGetValue(ID == 0 ? H3MP_GameManager.scene : H3MP_Server.clients[ID].player.scene, out Dictionary<int, List<int>> instances) ||
                             !instances.TryGetValue(instance, out List<int> players) || !players.Contains(playerIDs[0]))
                         {
                             // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller

@@ -61,6 +61,7 @@ namespace H3MP
         public static int playersPresent = 0;
         public static int playerStateAddtionalDataSize = -1;
         public static int instance = 0;
+        public static string scene = "MainMenu3";
         public static bool sceneLoading;
         public static int instanceAtSceneLoadStart;
         public static string sceneAtSceneLoadStart;
@@ -136,7 +137,7 @@ namespace H3MP
             }
 
             // Make sure the player is disabled if not in the same scene/instance
-            if (!scene.Equals(SceneManager.GetActiveScene().name) || instance != H3MP_GameManager.instance)
+            if (!scene.Equals(H3MP_GameManager.scene) || instance != H3MP_GameManager.instance)
             {
                 playerManager.gameObject.SetActive(false);
 
@@ -323,7 +324,7 @@ namespace H3MP
                 H3MP_Server.clients[playerID].player.scene = sceneName;
             }
 
-            if (sceneName.Equals(SceneManager.GetActiveScene().name) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
+            if (sceneName.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
             {
                 if (!player.gameObject.activeSelf)
                 {
@@ -355,7 +356,7 @@ namespace H3MP
             bool visible = true;
 
             // Default scene/instance, spectatorHost
-            visible &= player.scene.Equals(SceneManager.GetActiveScene().name) && player.instance == instance && !spectatorHosts.Contains(player.ID) && player.health > 0;
+            visible &= player.scene.Equals(H3MP_GameManager.scene) && player.instance == instance && !spectatorHosts.Contains(player.ID) && player.health > 0;
 
             // TNH
             if (visible && Mod.currentTNHInstance != null)
@@ -480,7 +481,7 @@ namespace H3MP
                 H3MP_Server.clients[playerID].player.instance = instance;
             }
 
-            if (player.scene.Equals(SceneManager.GetActiveScene().name) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
+            if (player.scene.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
             {
                 if (!player.gameObject.activeSelf)
                 {
@@ -688,7 +689,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach(GameObject root in roots)
             {
-                SyncTrackedItems(root.transform, init ? inControl : controlOverride, null, scene.name);
+                SyncTrackedItems(root.transform, init ? inControl : controlOverride, null, H3MP_GameManager.scene);
             }
         }
 
@@ -782,7 +783,7 @@ namespace H3MP
             data.active = trackedItem.gameObject.activeInHierarchy;
             data.underActiveControl = IsControlled(trackedItem.physicalObject);
 
-            data.scene = SceneManager.GetActiveScene().name;
+            data.scene = H3MP_GameManager.scene;
             data.instance = instance;
             data.controller = ID;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
@@ -879,7 +880,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach (GameObject root in roots)
             {
-                SyncTrackedSosigs(root.transform, init ? inControl : controlOverride, scene.name);
+                SyncTrackedSosigs(root.transform, init ? inControl : controlOverride, H3MP_GameManager.scene);
             }
         }
 
@@ -1080,7 +1081,7 @@ namespace H3MP
             data.fallbackOrder = sosigScript.FallbackOrder;
             data.IFF = (byte)sosigScript.GetIFF();
             data.IFFChart = sosigScript.Priority.IFFChart;
-            data.scene = SceneManager.GetActiveScene().name;
+            data.scene = H3MP_GameManager.scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
 
@@ -1139,7 +1140,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach (GameObject root in roots)
             {
-                SyncTrackedAutoMeaters(root.transform, init ? inControl : controlOverride, scene.name);
+                SyncTrackedAutoMeaters(root.transform, init ? inControl : controlOverride, H3MP_GameManager.scene);
             }
         }
 
@@ -1256,7 +1257,7 @@ namespace H3MP
 
             // Add to local list
             data.localTrackedID = autoMeaters.Count;
-            data.scene = SceneManager.GetActiveScene().name;
+            data.scene = H3MP_GameManager.scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
             autoMeaters.Add(data);
@@ -1286,7 +1287,7 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach (GameObject root in roots)
             {
-                SyncTrackedEncryptions(root.transform, init ? inControl : controlOverride, scene.name);
+                SyncTrackedEncryptions(root.transform, init ? inControl : controlOverride, H3MP_GameManager.scene);
             }
         }
 
@@ -1392,7 +1393,7 @@ namespace H3MP
 
             // Add to local list
             data.localTrackedID = encryptions.Count;
-            data.scene = SceneManager.GetActiveScene().name;
+            data.scene = H3MP_GameManager.scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
             encryptions.Add(data);
@@ -1592,7 +1593,7 @@ namespace H3MP
 
             // If we switch instance while loading a new scene, we will want to update control override
             // because when we started loading the scene, we didn't necessarily know in which instance we would end up
-            bool bringItems = !H3MP_GameManager.playersByInstanceByScene.TryGetValue(sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name, out Dictionary<int, List<int>> ci) ||
+            bool bringItems = !H3MP_GameManager.playersByInstanceByScene.TryGetValue(sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene, out Dictionary<int, List<int>> ci) ||
                               !ci.TryGetValue(instance, out List<int> op) || op.Count == 0;
 
             if (sceneLoading)
@@ -1660,7 +1661,7 @@ namespace H3MP
                             // Only sync the top parent of items. The children will also get retracked as children
                             if (hadNoParent)
                             {
-                                SyncTrackedItems(go.transform, true, null, SceneManager.GetActiveScene().name);
+                                SyncTrackedItems(go.transform, true, null, H3MP_GameManager.scene);
                             }
                         }
                         else // Destroy entire object
@@ -1706,7 +1707,7 @@ namespace H3MP
                             DestroyImmediate(filteredSosigs[i].physicalObject);
 
                             // Retrack sosig
-                            SyncTrackedSosigs(go.transform, true, SceneManager.GetActiveScene().name);
+                            SyncTrackedSosigs(go.transform, true, H3MP_GameManager.scene);
                         }
                         else // Destroy entire object
                         {
@@ -1751,7 +1752,7 @@ namespace H3MP
                             DestroyImmediate(filteredAutoMeaters[i].physicalObject);
 
                             // Retrack sosig
-                            SyncTrackedAutoMeaters(go.transform, true, SceneManager.GetActiveScene().name);
+                            SyncTrackedAutoMeaters(go.transform, true, H3MP_GameManager.scene);
                         }
                         else // Destroy entire object
                         {
@@ -1781,7 +1782,7 @@ namespace H3MP
                         DestroyImmediate(filteredEncryptions[i].physicalObject);
 
                         // Retrack sosig
-                        SyncTrackedEncryptions(go.transform, true, SceneManager.GetActiveScene().name);
+                        SyncTrackedEncryptions(go.transform, true, H3MP_GameManager.scene);
                     }
                     else // Destroy entire object
                     {
@@ -1806,7 +1807,7 @@ namespace H3MP
 
             // Set players active and playersPresent
             playersPresent = 0;
-            string sceneName = SceneManager.GetActiveScene().name;
+            string sceneName = H3MP_GameManager.scene;
             if (!nonSynchronizedScenes.ContainsKey(sceneName))
             {
                 // Check each players scene/instance to know if they are in the one we are going into
@@ -1921,10 +1922,9 @@ namespace H3MP
 
         public static bool PlayersPresentSlow()
         {
-            Scene currentScene = SceneManager.GetActiveScene();
             foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
             {
-                if (player.Value.scene.Equals(currentScene.name) && player.Value.instance == instance)
+                if (player.Value.scene.Equals(H3MP_GameManager.scene) && player.Value.instance == instance)
                 {
                     return true;
                 }
@@ -1942,10 +1942,10 @@ namespace H3MP
 
             if (loading) // Just started loading
             {
-                Mod.LogInfo("Switching scene, from " + SceneManager.GetActiveScene().name + " to " + LoadLevelBeginPatch.loadingLevel);
+                Mod.LogInfo("Switching scene, from " + H3MP_GameManager.scene + " to " + LoadLevelBeginPatch.loadingLevel);
                 sceneLoading = true;
                 instanceAtSceneLoadStart = instance;
-                sceneAtSceneLoadStart = SceneManager.GetActiveScene().name;
+                sceneAtSceneLoadStart = H3MP_GameManager.scene;
 
                 ++giveControlOfDestroyed;
 
@@ -2003,22 +2003,21 @@ namespace H3MP
             }
             else // Finished loading
             {
-                Mod.LogInfo("Arrived in scene: " + SceneManager.GetActiveScene().name);
+                H3MP_GameManager.scene = LoadLevelBeginPatch.loadingLevel;
+                Mod.LogInfo("Arrived in scene: " + H3MP_GameManager.scene);
                 sceneLoading = false;
 
                 //--Mod.skipAllInstantiates;
 
                 --giveControlOfDestroyed;
 
-                Scene loadedScene = SceneManager.GetActiveScene();
-
                 // Update players' active state depending on which are in the same scene/instance
                 playersPresent = 0;
-                if (!nonSynchronizedScenes.ContainsKey(loadedScene.name))
+                if (!nonSynchronizedScenes.ContainsKey(H3MP_GameManager.scene))
                 {
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                     {
-                        if (player.Value.scene.Equals(loadedScene.name) && player.Value.instance == instance)
+                        if (player.Value.scene.Equals(H3MP_GameManager.scene) && player.Value.instance == instance)
                         {
                             if (!player.Value.gameObject.activeSelf)
                             {
@@ -2264,7 +2263,7 @@ namespace H3MP
                                 // Otherwise we send destroy order for the object
                                 if (!H3MP_GameManager.sceneLoading)
                                 {
-                                    if (trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
+                                    if (trackedItem.scene.Equals(H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
                                     {
                                         if (!trackedItem.awaitingInstantiation)
                                         {
@@ -2342,7 +2341,7 @@ namespace H3MP
                             // Otherwise we send destroy order for the object
                             if (!H3MP_GameManager.sceneLoading)
                             {
-                                if (trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
+                                if (trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
                                 {
                                     if (!trackedSosig.awaitingInstantiation)
                                     {
@@ -2419,7 +2418,7 @@ namespace H3MP
                             // Otherwise we send destroy order for the object
                             if (!H3MP_GameManager.sceneLoading)
                             {
-                                if (trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                                if (trackedAutoMeater.scene.Equals(H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                                 {
                                     if (!trackedAutoMeater.awaitingInstantiation)
                                     {
@@ -2496,7 +2495,7 @@ namespace H3MP
                             // Otherwise we send destroy order for the object
                             if (!H3MP_GameManager.sceneLoading)
                             {
-                                if (trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
+                                if (trackedEncryption.scene.Equals(H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
                                 {
                                     if (!trackedEncryption.awaitingInstantiation)
                                     {

@@ -123,7 +123,7 @@ namespace H3MP
                                                 GM.CurrentPlayerBody.RightHand.rotation,
                                                 GM.CurrentPlayerBody.Health,
                                                 GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(),
-                                                SceneManager.GetActiveScene().name,
+                                                H3MP_GameManager.scene,
                                                 H3MP_GameManager.instance);
                 }
             }

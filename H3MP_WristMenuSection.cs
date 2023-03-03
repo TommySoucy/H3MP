@@ -98,7 +98,7 @@ namespace H3MP
             //H3MP_Server.IP = Mod.config["IP"].ToString();
             H3MP_Server.Start((ushort)Mod.config["MaxClientCount"], (ushort)Mod.config["Port"]);
 
-            if (SceneManager.GetActiveScene().name.Equals("TakeAndHold_Lobby_2"))
+            if (H3MP_GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
                 Mod.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 Mod.modInstance.InitTNHMenu();
@@ -131,7 +131,7 @@ namespace H3MP
 
             client.ConnectToServer();
 
-            if (SceneManager.GetActiveScene().name.Equals("TakeAndHold_Lobby_2"))
+            if (H3MP_GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
                 Mod.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 Mod.modInstance.InitTNHMenu();

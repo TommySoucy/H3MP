@@ -48,7 +48,7 @@ namespace H3MP
             Mod.LogInfo($"Server started on: {tcpListener.LocalEndpoint}");
 
             // Just connected, sync if current scene is syncable
-            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(SceneManager.GetActiveScene().name))
+            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(H3MP_GameManager.scene))
             {
                 H3MP_GameManager.SyncTrackedItems(true, true);
                 H3MP_GameManager.SyncTrackedSosigs(true, true);
@@ -192,7 +192,7 @@ namespace H3MP
             // If this is a sceneInit item received from client that we haven't tracked yet
             // And if the controller is not the first player in scene/instance
             if (trackedItem.trackedID == -1 && trackedItem.controller != 0 && trackedItem.sceneInit && 
-                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance) ||
+                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance) ||
                 H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> instances) &&
                 instances.TryGetValue(trackedItem.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedItem.controller))
             {
@@ -240,7 +240,7 @@ namespace H3MP
             // Instantiate item if it is in the current scene and not controlled by us
             if (clientID != 0 && H3MP_GameManager.IsItemIdentifiable(trackedItem))
             {
-                if (!trackedItem.awaitingInstantiation && trackedItem.scene.Equals(SceneManager.GetActiveScene().name) && trackedItem.instance == H3MP_GameManager.instance)
+                if (!trackedItem.awaitingInstantiation && trackedItem.scene.Equals(H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
                 {
                     Mod.LogInfo("\t\tItem not from us and in same scene/instance, instantiating");
                     trackedItem.awaitingInstantiation = true;
@@ -266,7 +266,7 @@ namespace H3MP
                 // If this is a sceneInit sosig received from client that we haven't tracked yet
                 // And if the controller is not the first player in scene/instance
                 if (trackedSosig.controller != 0 && trackedSosig.sceneInit &&
-                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance) ||
+                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance) ||
                 H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> instances) &&
                 instances.TryGetValue(trackedSosig.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedSosig.controller))
                 {
@@ -311,7 +311,7 @@ namespace H3MP
                 // Instantiate sosig if it is in the current scene and not controlled by us
                 if (clientID != 0)
                 {
-                    if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(SceneManager.GetActiveScene().name) && trackedSosig.instance == H3MP_GameManager.instance)
+                    if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
                     {
                         trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
@@ -342,7 +342,7 @@ namespace H3MP
             // If this is a sceneInit autoMeater received from client that we haven't tracked yet
             // And if the controller is not the first player in scene/instance
             if (trackedAutoMeater.trackedID == -1 && trackedAutoMeater.controller != 0 && trackedAutoMeater.sceneInit &&
-                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance) ||
+                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance) ||
                 H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> instances) &&
                 instances.TryGetValue(trackedAutoMeater.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedAutoMeater.controller))
             {
@@ -387,7 +387,7 @@ namespace H3MP
             // Instantiate AutoMeater if it is in the current scene and not controlled by us
             if (clientID != 0)
             {
-                if (!trackedAutoMeater.awaitingInstantiation && trackedAutoMeater.scene.Equals(SceneManager.GetActiveScene().name) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                if (!trackedAutoMeater.awaitingInstantiation && trackedAutoMeater.scene.Equals(H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
                     trackedAutoMeater.awaitingInstantiation = true;
                     AnvilManager.Run(trackedAutoMeater.Instantiate());
@@ -411,7 +411,7 @@ namespace H3MP
                 // If this is a sceneInit Encryption received from client that we haven't tracked yet
                 // And if the controller is not the first player in scene/instance
                 if (trackedEncryption.controller != 0 && trackedEncryption.sceneInit &&
-                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance) ||
+                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance) ||
                 H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> instances) &&
                 instances.TryGetValue(trackedEncryption.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedEncryption.controller))
                 {
@@ -456,7 +456,7 @@ namespace H3MP
                 // Instantiate Encryption if it is in the current scene and not controlled by us
                 if (clientID != 0)
                 {
-                    if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(SceneManager.GetActiveScene().name) && trackedEncryption.instance == H3MP_GameManager.instance)
+                    if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
                     {
                         trackedEncryption.awaitingInstantiation = true;
                         AnvilManager.Run(trackedEncryption.Instantiate());
