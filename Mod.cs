@@ -11819,7 +11819,7 @@ namespace H3MP
             return true;
         }
 
-        static bool NextLevelPrefix(ref TNH_UIManager __instance)
+        static bool NextLevelPrefix(ref TNH_UIManager __instance, int ___m_currentLevelIndex)
         {
             if (Mod.managerObject != null)
             {
@@ -11832,7 +11832,12 @@ namespace H3MP
                     }
 
                     // Update locally
-                    Mod.currentTNHInstance.levelID = __instance.CurLevelID;
+                    int nextLevelIndex = ___m_currentLevelIndex + 1;
+                    if (nextLevelIndex >= __instance.Levels.Count)
+                    {
+                        nextLevelIndex = 0;
+                    }
+                    Mod.currentTNHInstance.levelID = __instance.Levels[nextLevelIndex].LevelID;
 
                     // Send update
                     if (H3MP_ThreadManager.host)
@@ -11849,7 +11854,7 @@ namespace H3MP
             return true;
         }
 
-        static bool PrevLevelPrefix(ref TNH_UIManager __instance, ref int ___m_currentLevelIndex)
+        static bool PrevLevelPrefix(ref TNH_UIManager __instance, int ___m_currentLevelIndex)
         {
             if (Mod.managerObject != null)
             {
@@ -11862,7 +11867,12 @@ namespace H3MP
                     }
 
                     // Update locally
-                    Mod.currentTNHInstance.levelID = __instance.CurLevelID;
+                    int prevLevelIndex = ___m_currentLevelIndex - 1;
+                    if (prevLevelIndex < 0)
+                    {
+                        prevLevelIndex = __instance.Levels.Count - 1;
+                    }
+                    Mod.currentTNHInstance.levelID = __instance.Levels[prevLevelIndex].LevelID;
 
                     // Send update
                     if (H3MP_ThreadManager.host)
