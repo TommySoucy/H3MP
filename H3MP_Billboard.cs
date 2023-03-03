@@ -6,7 +6,7 @@ namespace H3MP
     {
         void Update()
         {
-            if (!Mod.spectatorHost)
+            if (!Mod.spectatorHost && Camera.main != null)
             {
                 Vector3 euler = Camera.main.transform.rotation.eulerAngles;
                 euler.z = 0;
