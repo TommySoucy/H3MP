@@ -11,9 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using TNHTweaker;
-using TNHTweaker.ObjectTemplates;
-using TNHTweaker.Patches;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -42,7 +39,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.2.0";
+        public const string pluginVersion = "1.2.2";
 
         // Assets
         public static JObject config;
@@ -114,6 +111,22 @@ namespace H3MP
         public static SceneLoader currentTNHSceneLoader;
         public static GameObject TNHStartEquipButton;
         public static bool spectatorHost;
+
+        // Mod compatibility
+        public static Assembly[] assemblies;
+        public static int TNHTweakerAsmIdx = -1;
+        public static Type TNHTweaker_TNHTweaker;
+        public static FieldInfo TNHTweaker_TNHTweaker_SpawnedBossIndexes;
+        public static FieldInfo TNHTweaker_TNHTweaker_PreventOutfitFunctionality;
+        public static Type TNHTweaker_TNHPatches;
+        public static MethodInfo TNHTweaker_TNHPatches_ConfigureSupplyPoint;
+        public static Type TNHTweaker_PatrolPatches;
+        public static Type TNHTweaker_Patrol;
+        public static Type TNHTweaker_LoadedTemplateManager;
+        public static FieldInfo TNHTweaker_LoadedTemplateManager_LoadedCharactersDict;
+        public static Type TNHTweaker_CustomCharacter;
+        public static MethodInfo TNHTweaker_CustomCharacter_GetCurrentLevel;
+        public static FieldInfo TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality;
 
         #region Reused NonPublic MemberInfo
         // Reused private FieldInfos
@@ -756,13 +769,24 @@ namespace H3MP
         private void DoPatching()
         {
             // Look for supported mod assemblies we may need to patch for
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            int TNHTweakerAsmIdx = -1;
+            assemblies = AppDomain.CurrentDomain.GetAssemblies();
             for(int i=0; i < assemblies.Length; ++i)
             {
                 if (assemblies[i].GetName().Name.Equals("TakeAndHoldTweaker"))
                 {
                     TNHTweakerAsmIdx = i;
+                    TNHTweaker_TNHPatches = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.Patches.TNHPatches");
+                    TNHTweaker_TNHPatches_ConfigureSupplyPoint = TNHTweaker_TNHPatches.GetMethod("ConfigureSupplyPoint", BindingFlags.Public | BindingFlags.Static);
+                    TNHTweaker_PatrolPatches = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.Patches.PatrolPatches");
+                    TNHTweaker_Patrol = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.ObjectTemplates.Patrol");
+                    TNHTweaker_LoadedTemplateManager = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.LoadedTemplateManager");
+                    TNHTweaker_LoadedTemplateManager_LoadedCharactersDict = TNHTweaker_LoadedTemplateManager.GetField("LoadedCharactersDict", BindingFlags.Public | BindingFlags.Static);
+                    TNHTweaker_CustomCharacter = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.ObjectTemplates.CustomCharacter");
+                    TNHTweaker_CustomCharacter_GetCurrentLevel = TNHTweaker_CustomCharacter.GetMethod("GetCurrentLevel", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality = TNHTweaker_CustomCharacter.GetField("ForceDisableOutfitFunctionality", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_TNHTweaker = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.TNHTweaker");
+                    TNHTweaker_TNHTweaker_SpawnedBossIndexes = TNHTweaker_TNHTweaker.GetField("SpawnedBossIndexes", BindingFlags.Public | BindingFlags.Static); ;
+                    TNHTweaker_TNHTweaker_PreventOutfitFunctionality = TNHTweaker_TNHTweaker.GetField("PreventOutfitFunctionality", BindingFlags.Public | BindingFlags.Static); ;
                 }
             }
 
@@ -1732,9 +1756,8 @@ namespace H3MP
             MethodInfo TNH_ManagerGeneratePatrolOriginal = null;
             if (TNHTweakerAsmIdx > -1)
             {
-                TNH_ManagerPatch.isInTNHTweaker = true;
-                TNH_ManagerPatchSetPhaseTakeOriginal = typeof(TNHPatches).GetMethod("SetPhase_Take_Replacement", BindingFlags.Public | BindingFlags.Static);
-                TNH_ManagerGeneratePatrolOriginal = typeof(PatrolPatches).GetMethod("GeneratePatrol", BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(TNH_Manager), typeof(TNHTweaker.ObjectTemplates.Patrol), typeof(List<Vector3>), typeof(List<Vector3>), typeof(List<Vector3>), typeof(int) }, null);
+                TNH_ManagerPatchSetPhaseTakeOriginal = TNHTweaker_TNHPatches.GetMethod("SetPhase_Take_Replacement", BindingFlags.Public | BindingFlags.Static);
+                TNH_ManagerGeneratePatrolOriginal = TNHTweaker_PatrolPatches.GetMethod("GeneratePatrol", BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(TNH_Manager), TNHTweaker_Patrol, typeof(List<Vector3>), typeof(List<Vector3>), typeof(List<Vector3>), typeof(int) }, null);
             }
             else
             {
@@ -1814,9 +1837,9 @@ namespace H3MP
             // TNHSupplyPointPatch
             if (TNHTweakerAsmIdx > -1)
             {
-                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnSupplyGroup", BindingFlags.Public | BindingFlags.Static);
-                MethodInfo TNHSupplyPointPatchSpawnDefensesOriginal = typeof(TNHPatches).GetMethod("SpawnSupplyTurrets", BindingFlags.Public | BindingFlags.Static);
-                MethodInfo TNHSupplyPointPatchSpawnBoxesOriginal = typeof(TNHPatches).GetMethod("SpawnSupplyBoxes", BindingFlags.Public | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = TNHTweaker_TNHPatches.GetMethod("SpawnSupplyGroup", BindingFlags.Public | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnDefensesOriginal = TNHTweaker_TNHPatches.GetMethod("SpawnSupplyTurrets", BindingFlags.Public | BindingFlags.Static);
+                MethodInfo TNHSupplyPointPatchSpawnBoxesOriginal = TNHTweaker_TNHPatches.GetMethod("SpawnSupplyBoxes", BindingFlags.Public | BindingFlags.Static);
                 PatchVerify.Verify(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, harmony, false);
                 PatchVerify.Verify(TNHSupplyPointPatchSpawnDefensesOriginal, harmony, false);
                 PatchVerify.Verify(TNHSupplyPointPatchSpawnBoxesOriginal, harmony, false);
@@ -1866,10 +1889,10 @@ namespace H3MP
             MethodInfo TNH_HoldPointPatchSpawnTurretsOriginal = null;
             if (TNHTweakerAsmIdx > -1)
             {
-                TNH_HoldPointPatchSpawnTargetGroupOriginal = typeof(TNHPatches).GetMethod("SpawnEncryptionReplacement", BindingFlags.Public | BindingFlags.Static);
-                TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnTakeGroupReplacement", BindingFlags.Public | BindingFlags.Static);
-                TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnHoldEnemyGroup", BindingFlags.Public | BindingFlags.Static);
-                TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNHPatches).GetMethod("SpawnTurretsReplacement", BindingFlags.Public | BindingFlags.Static);
+                TNH_HoldPointPatchSpawnTargetGroupOriginal = TNHTweaker_TNHPatches.GetMethod("SpawnEncryptionReplacement", BindingFlags.Public | BindingFlags.Static);
+                TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = TNHTweaker_TNHPatches.GetMethod("SpawnTakeGroupReplacement", BindingFlags.Public | BindingFlags.Static);
+                TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = TNHTweaker_TNHPatches.GetMethod("SpawnHoldEnemyGroup", BindingFlags.Public | BindingFlags.Static);
+                TNH_HoldPointPatchSpawnTurretsOriginal = TNHTweaker_TNHPatches.GetMethod("SpawnTurretsReplacement", BindingFlags.Public | BindingFlags.Static);
             }
             else
             {
@@ -11917,8 +11940,6 @@ namespace H3MP
         public static List<Vector3> patrolPoints;
         public static int patrolIndex = -1;
 
-        public static bool isInTNHTweaker;
-
         static bool PlayerDiedPrefix()
         {
             if (Mod.managerObject != null)
@@ -12230,17 +12251,17 @@ namespace H3MP
                     Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
 
                     object level = null;
-                    if (isInTNHTweaker)
+                    if (Mod.TNHTweakerAsmIdx > -1)
                     {
-                        CustomCharacter character = LoadedTemplateManager.LoadedCharactersDict[GM.TNH_Manager.C];
-                        level = character.GetCurrentLevel(Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager) as TNH_Progression.Level);
+                        object character = ((IDictionary)Mod.TNHTweaker_LoadedTemplateManager_LoadedCharactersDict.GetValue(Mod.TNHTweaker_LoadedTemplateManager))[GM.TNH_Manager.C];
+                        level = Mod.TNHTweaker_CustomCharacter_GetCurrentLevel.Invoke(character, new object[] { Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager) as TNH_Progression.Level });
 
-                        TNHTweaker.TNHTweaker.SpawnedBossIndexes.Clear();
+                        ((List<int>)Mod.TNHTweaker_TNHTweaker_SpawnedBossIndexes.GetValue(Mod.TNHTweaker_TNHTweaker)).Clear();
 
                         // Like we do for vanilla, we don't clear if not controller, we will just set it to the list in the TNH instance
                         //__instance.m_activeSupplyPointIndicies.Clear();
 
-                        TNHTweaker.TNHTweaker.PreventOutfitFunctionality = LoadedTemplateManager.LoadedCharactersDict[GM.TNH_Manager.C].ForceDisableOutfitFunctionality;
+                        Mod.TNHTweaker_TNHTweaker_PreventOutfitFunctionality.SetValue(Mod.TNHTweaker_TNHTweaker, Mod.TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality.GetValue(character));
                     }
 
                     if (Mod.currentTNHInstance.manager.RadarMode == TNHModifier_RadarMode.Standard)
@@ -12264,13 +12285,13 @@ namespace H3MP
                     Mod.TNH_Manager_m_activeSupplyPointIndicies.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.activeSupplyPointIndices);
 
                     int panelIndex = 0;
-                    if (isInTNHTweaker)
+                    if (Mod.TNHTweakerAsmIdx > -1)
                     {
                         for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
                         {
                             TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
 
-                            TNHPatches.ConfigureSupplyPoint(tnh_SupplyPoint, (TNHTweaker.ObjectTemplates.Level)level, ref panelIndex);
+                            Mod.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(Mod.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });
                             
                             TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
                             tnh_SupplyPoint.SetContact(contact);
@@ -12697,29 +12718,29 @@ namespace H3MP
                 Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
 
                 object level = null;
-                if (isInTNHTweaker)
+                if (Mod.TNHTweakerAsmIdx > -1)
                 {
-                    CustomCharacter character = LoadedTemplateManager.LoadedCharactersDict[Mod.currentTNHInstance.manager.C];
-                    level = character.GetCurrentLevel(curLevel);
+                    object character = ((IDictionary)Mod.TNHTweaker_LoadedTemplateManager_LoadedCharactersDict.GetValue(Mod.TNHTweaker_LoadedTemplateManager))[GM.TNH_Manager.C];
+                    level = Mod.TNHTweaker_CustomCharacter_GetCurrentLevel.Invoke(character, new object[] { Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager) as TNH_Progression.Level });
 
-                    TNHTweaker.TNHTweaker.SpawnedBossIndexes.Clear();
+                    ((List<int>)Mod.TNHTweaker_TNHTweaker_SpawnedBossIndexes.GetValue(Mod.TNHTweaker_TNHTweaker)).Clear();
 
                     // Like we do for vanilla, we don't clear if not controller, we will just set it to the list in the TNH instance
                     //__instance.m_activeSupplyPointIndicies.Clear();
 
-                    TNHTweaker.TNHTweaker.PreventOutfitFunctionality = LoadedTemplateManager.LoadedCharactersDict[Mod.currentTNHInstance.manager.C].ForceDisableOutfitFunctionality;
+                    Mod.TNHTweaker_TNHTweaker_PreventOutfitFunctionality.SetValue(Mod.TNHTweaker_TNHTweaker, Mod.TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality.GetValue(character));
                 }
 
                 //  Set supply points
                 bool spawnToken = true;
                 int panelIndex = 0;
-                if (isInTNHTweaker)
+                if (Mod.TNHTweakerAsmIdx > -1)
                 {
                     for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
                     {
                         TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
 
-                        TNHPatches.ConfigureSupplyPoint(tnh_SupplyPoint, (TNHTweaker.ObjectTemplates.Level)level, ref panelIndex);
+                        Mod.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(Mod.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });
 
                         TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
                         tnh_SupplyPoint.SetContact(contact);
