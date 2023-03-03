@@ -18,9 +18,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
-using static FistVR.MeatmasAdventBox;
-using static FistVR.TNH_PatrolChallenge;
-using static FistVR.TNH_Progression;
 
 namespace H3MP
 {
@@ -38,18 +35,14 @@ namespace H3MP
     [BepInDependency("h3vr.OpenScripts2", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("h3vr.andrew_ftw.afcl", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("h3vr.andrew_ftw.bepinexshit", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("Meat_banono-Meats_ModulAR", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("Meat_banono-Meats_ModulARpt2", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("nrgill28.Atlas", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("another_marcel.aporkalypse_now_tnh", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("JerryAr.gm_Construct", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("deli", BepInDependency.DependencyFlags.SoftDependency)]
     public class Mod : BaseUnityPlugin
     {
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.1.1";
+        public const string pluginVersion = "1.2.0";
 
         // Assets
         public static JObject config;
