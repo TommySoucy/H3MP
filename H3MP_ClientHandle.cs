@@ -2181,7 +2181,6 @@ namespace H3MP
 
                 if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
                 {
-                    SceneLoader sceneLoader = UnityEngine.Object.FindObjectOfType<SceneLoader>();
                     // Find level
                     bool found = false;
                     for (int i = 0; i < Mod.currentTNHUIManager.Levels.Count; ++i)
@@ -2194,13 +2193,13 @@ namespace H3MP
                             Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
                             Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
                             Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
-                            sceneLoader.gameObject.SetActive(true);
+                            Mod.currentTNHSceneLoader.gameObject.SetActive(true);
                             break;
                         }
                     }
                     if (!found)
                     {
-                        sceneLoader.gameObject.SetActive(false);
+                        Mod.currentTNHSceneLoader.gameObject.SetActive(false);
                         Mod.LogError("Missing TNH level: " + levelID + ", you will not be able to play in this instance if the game is started!");
                     }
                 }

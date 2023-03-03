@@ -118,6 +118,7 @@ namespace H3MP
         public static Dictionary<int, GameObject> joinTNHInstances;
         public static Dictionary<int, GameObject> currentTNHInstancePlayers;
         public static TNH_UIManager currentTNHUIManager;
+        public static SceneLoader currentTNHSceneLoader;
         public static GameObject TNHStartEquipButton;
         public static bool spectatorHost;
 
@@ -660,6 +661,7 @@ namespace H3MP
 
             // Get ref to the UI Manager
             Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
+            Mod.currentTNHSceneLoader = GameObject.FindObjectOfType<SceneLoader>();
 
             // If already in a TNH isntance, which could be the case if we are coming back from being in game
             if (currentTNHInstance != null)
@@ -693,7 +695,6 @@ namespace H3MP
             Mod.currentTNHUIManager.OBS_RunSeed.SetSelectedButton(instance.TNHSeed + 1);
             GM.TNHOptions.TNHSeed = instance.TNHSeed;
 
-            SceneLoader sceneLoader = UnityEngine.Object.FindObjectOfType<SceneLoader>();
             // Find level
             bool found = false;
             for (int i = 0; i < Mod.currentTNHUIManager.Levels.Count; ++i)
@@ -706,13 +707,13 @@ namespace H3MP
                     Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
                     Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
                     Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
-                    sceneLoader.gameObject.SetActive(true);
+                    Mod.currentTNHSceneLoader.gameObject.SetActive(true);
                     break;
                 }
             }
             if (!found)
             {
-                sceneLoader.gameObject.SetActive(false);
+                Mod.currentTNHSceneLoader.gameObject.SetActive(false);
                 Mod.LogError("Missing TNH level: " + instance.levelID + "! Make sure you have it installed.");
             }
         }
@@ -2666,7 +2667,6 @@ namespace H3MP
                 currentTNHUIManager.SetOBS_Backpack(instance.backpackMode);
                 currentTNHUIManager.SetOBS_SosiggunShakeReloading(instance.sosiggunShakeReloading);
 
-                SceneLoader sceneLoader = UnityEngine.Object.FindObjectOfType<SceneLoader>();
                 // Find level
                 bool found = false;
                 for (int i = 0; i < Mod.currentTNHUIManager.Levels.Count; ++i)
@@ -2679,13 +2679,13 @@ namespace H3MP
                         Mod.TNH_UIManager_UpdateLevelSelectDisplayAndLoader.Invoke(Mod.currentTNHUIManager, null);
                         Mod.TNH_UIManager_UpdateTableBasedOnOptions.Invoke(Mod.currentTNHUIManager, null);
                         Mod.TNH_UIManager_PlayButtonSound.Invoke(Mod.currentTNHUIManager, new object[] { 2 });
-                        sceneLoader.gameObject.SetActive(true);
+                        Mod.currentTNHSceneLoader.gameObject.SetActive(true);
                         break;
                     }
                 }
                 if (!found)
                 {
-                    sceneLoader.gameObject.SetActive(false);
+                    Mod.currentTNHSceneLoader.gameObject.SetActive(false);
                     Mod.LogError("Missing TNH level: " + instance.levelID + "! Make sure you have it installed.");
                 }
             }
