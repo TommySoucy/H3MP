@@ -121,7 +121,20 @@ namespace H3MP
                 }
             }
 
-            H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
+            if (H3MP_Server.loadingClientsWaitingFrom.ContainsKey(clientID))
+            {
+                Mod.LogWarning("Server received order to set player " + clientID + "'s scene to " + scene + ", but was already in loadingClientsWaitingFrom:");
+                List<int> currentList = H3MP_Server.loadingClientsWaitingFrom[clientID];
+                for(int i=0;i<currentList.Count; ++i)
+                {
+                    Mod.LogWarning("\t" + currentList[i]);
+                }
+                H3MP_Server.loadingClientsWaitingFrom[clientID] = waitingFromClients;
+            }
+            else
+            {
+                H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
+            }
 
             Mod.LogInfo("Synced with player who just joined a scene");
         }
