@@ -561,17 +561,26 @@ namespace H3MP
                 // We might already have the object
                 if (items[trackedItem.trackedID] != null)
                 {
-                    // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
-                    // receive it from relevant objects
-                    if (items[trackedItem.trackedID].physicalItem == null && !items[trackedItem.trackedID].awaitingInstantiation &&
-                        items[trackedItem.trackedID].scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
-                        items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
+                    if (!items[trackedItem.trackedID].itemID.Equals(trackedItem.itemID))
                     {
-                        Mod.LogInfo("\t\thave data but not phys, instantiating");
-                        trackedItem.awaitingInstantiation = true;
-                        AnvilManager.Run(trackedItem.Instantiate());
+                        Mod.LogError("\t\tGot tracking inconsistency! Item received trackedID: "+trackedItem.trackedID+" already occupied but itemID is different: ours: "+ items[trackedItem.trackedID].itemID + ", server's: "+ trackedItem.itemID + ".\nDestroying our side to be consistent with server.");
+                        items[trackedItem.trackedID].physicalItem.sendDestroy = false;
+                        DestroyImmediate(items[trackedItem.trackedID].physicalItem.gameObject);
                     }
-                    return;
+                    else
+                    {
+                        // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
+                        // receive it from relevant objects
+                        if (items[trackedItem.trackedID].physicalItem == null && !items[trackedItem.trackedID].awaitingInstantiation &&
+                            items[trackedItem.trackedID].scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                            items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
+                        {
+                            Mod.LogInfo("\t\thave data but not phys, instantiating");
+                            trackedItem.awaitingInstantiation = true;
+                            AnvilManager.Run(trackedItem.Instantiate());
+                        }
+                        return;
+                    }
                 }
 
                 trackedItem.localTrackedID = -1;
