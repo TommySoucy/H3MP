@@ -290,7 +290,7 @@ namespace H3MP
             }
             else
             {
-                Mod.LogInfo("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
+                Mod.LogWarning("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
             }
         }
     }

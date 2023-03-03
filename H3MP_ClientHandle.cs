@@ -212,7 +212,7 @@ namespace H3MP
                     }
                     else
                     {
-                        Mod.LogInfo("GiveControl localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
+                        Mod.LogWarning("GiveControl localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
                     }
                 }
                 else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
@@ -481,7 +481,7 @@ namespace H3MP
                     }
                     else
                     {
-                        Mod.LogInfo("DestroyItem localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
+                        Mod.LogWarning("DestroyItem localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
                     }
                 }
 

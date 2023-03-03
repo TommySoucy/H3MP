@@ -1876,10 +1876,6 @@ namespace H3MP
                 TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnTakeGroupReplacement", BindingFlags.Public | BindingFlags.Static);
                 TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNHPatches).GetMethod("SpawnHoldEnemyGroup", BindingFlags.Public | BindingFlags.Static);
                 TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNHPatches).GetMethod("SpawnTurretsReplacement", BindingFlags.Public | BindingFlags.Static);
-
-                MethodInfo TNHHoldPointSpawnUpdateReplacementOriginal = typeof(TNHPatches).GetMethod("SpawningUpdateReplacement", BindingFlags.Public | BindingFlags.Static);
-                MethodInfo TNHHoldPointSpawnUpdateReplacementPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawningUpdateReplacementPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-                harmony.Patch(TNHHoldPointSpawnUpdateReplacementOriginal, new HarmonyMethod(TNHHoldPointSpawnUpdateReplacementPrefix));
             }
             else
             {
@@ -12867,14 +12863,6 @@ namespace H3MP
 
         public static bool inSpawnEnemyGroup;
         public static bool inSpawnTurrets;
-
-        static void SpawningUpdateReplacementPrefix()
-        {
-            if (Mod.currentTNHInstance != null)
-            {
-                Mod.LogInfo("SpawningUpdateReplacementPrefix called, curphase null?: "+(Mod.TNH_HoldPoint_m_curPhase.GetValue((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager)) == null) +" on holdpoint: "+((int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager)).ToString()+", isinhold?: "+((bool)Mod.TNH_HoldPoint_m_isInHold.GetValue((TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(Mod.currentTNHInstance.manager))).ToString() + " \n" + Environment.StackTrace);
-            }
-        }
 
         static bool UpdatePrefix(ref TNH_HoldPoint __instance, bool ___m_isInHold, ref TNH_HoldPointSystemNode ___m_systemNode, ref bool ___m_hasPlayedTimeWarning1, ref bool ___m_hasPlayedTimeWarning2,
                                  ref int ___m_numWarnings)
