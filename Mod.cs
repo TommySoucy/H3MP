@@ -9093,6 +9093,8 @@ namespace H3MP
 
             inInitPrefabSpawn = true;
 
+            Mod.LogInfo("In init prefab spawn TRUE, scenelaoding: " + H3MP_GameManager.sceneLoading + ", control override: " + H3MP_GameManager.controlOverride + ", firstp ayer in scene isntance: " + H3MP_GameManager.firstPlayerInSceneInstance);
+
             // Prevent spawning if loading but we have control override, or we aren't loading but we were first in scene
             return (H3MP_GameManager.sceneLoading && H3MP_GameManager.controlOverride) || (!H3MP_GameManager.sceneLoading && H3MP_GameManager.firstPlayerInSceneInstance);
         }

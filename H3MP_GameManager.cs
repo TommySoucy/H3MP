@@ -823,7 +823,7 @@ namespace H3MP
             data.active = trackedItem.gameObject.activeInHierarchy;
             data.underActiveControl = IsControlled(trackedItem.physicalObject);
 
-            data.scene = H3MP_GameManager.scene;
+            data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
             data.instance = instance;
             data.controller = ID;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
@@ -1121,7 +1121,7 @@ namespace H3MP
             data.fallbackOrder = sosigScript.FallbackOrder;
             data.IFF = (byte)sosigScript.GetIFF();
             data.IFFChart = sosigScript.Priority.IFFChart;
-            data.scene = H3MP_GameManager.scene;
+            data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
 
@@ -1297,7 +1297,7 @@ namespace H3MP
 
             // Add to local list
             data.localTrackedID = autoMeaters.Count;
-            data.scene = H3MP_GameManager.scene;
+            data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
             autoMeaters.Add(data);
@@ -1433,7 +1433,7 @@ namespace H3MP
 
             // Add to local list
             data.localTrackedID = encryptions.Count;
-            data.scene = H3MP_GameManager.scene;
+            data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
             encryptions.Add(data);
@@ -2051,6 +2051,7 @@ namespace H3MP
                     controlOverride = true;
                     firstPlayerInSceneInstance = true;
                 }
+                Mod.LogInfo("Started loading, control override: " + controlOverride);
             }
             else // Finished loading
             {
@@ -2097,6 +2098,7 @@ namespace H3MP
 
                         UpdatePlayerHidden(player.Value);
                     }
+                    Mod.LogInfo("Started loading, control override: " + controlOverride);
 
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP

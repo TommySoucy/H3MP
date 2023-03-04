@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -188,7 +189,14 @@ namespace H3MP
                             using (H3MP_Packet packet = new H3MP_Packet(packetBytes))
                             {
                                 int packetID = packet.ReadInt();
-                                packetHandlers[packetID](packet);
+                                try
+                                {
+                                    packetHandlers[packetID](packet);
+                                }
+                                catch(IndexOutOfRangeException)
+                                {
+                                    Mod.LogError("Client TCP received patcket with ID: "+packetID+ " as ServerPackets: " + ((ServerPackets)packetID).ToString());
+                                }
                             }
                         }
                     });

@@ -191,16 +191,52 @@ namespace H3MP
         {
             // If this is a sceneInit item received from client that we haven't tracked yet
             // And if the controller is not the first player in scene/instance
-            if (trackedItem.trackedID == -1 && trackedItem.controller != 0 && trackedItem.sceneInit && 
-                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance) ||
-                H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> instances) &&
-                instances.TryGetValue(trackedItem.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedItem.controller))
+            //if (trackedItem.trackedID == -1 && trackedItem.controller != 0 && trackedItem.sceneInit && 
+            //    ((H3MP_GameManager.firstPlayerInSceneInstance && trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance) ||
+            //    H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> instances) &&
+            //    instances.TryGetValue(trackedItem.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedItem.controller))
+            //{
+            //    // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+            //    // indicate this to the sending client so they can destroy their item
+            //    trackedItem.trackedID = -2;
+            //    H3MP_ServerSend.TrackedItemSpecific(trackedItem, trackedItem.controller);
+            //    return;
+            //}
+
+            if(trackedItem.trackedID == -1 && trackedItem.controller != 0 && trackedItem.sceneInit)
             {
-                // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
-                // indicate this to the sending client so they can destroy their item
-                trackedItem.trackedID = -2;
-                H3MP_ServerSend.TrackedItemSpecific(trackedItem, trackedItem.controller);
-                return;
+                Mod.LogInfo("Server new client "+clientID+" tracked item that is scene init. Scene: " + trackedItem.scene + ", instance: " + trackedItem.instance);
+                if (H3MP_GameManager.firstPlayerInSceneInstance &&
+                    trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                    trackedItem.instance == H3MP_GameManager.instance)
+                {
+                    Mod.LogInfo("\tIt is in our scene instance are we were first");
+                    // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+                    // indicate this to the sending client so they can destroy their item
+                    trackedItem.trackedID = -2;
+                    H3MP_ServerSend.TrackedItemSpecific(trackedItem, trackedItem.controller);
+                    return;
+                }
+                else if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> instances) &&
+                         instances.TryGetValue(trackedItem.instance, out List<int> playerList) && 
+                         playerList.Count > 0)
+                {
+                    Mod.LogInfo("\tThere are players in the item's scene/instance:");
+                    for(int i=0; i < playerList.Count; ++i)
+                    {
+                        Mod.LogInfo("\t\t"+ playerList[i]);
+                    }
+                    Mod.LogInfo("\t\tItem controller is: " + trackedItem.controller);
+                    if(trackedItem.controller != playerList[0])
+                    {
+                        Mod.LogInfo("\t\t\tItem controller is not first in list, not first in scene/instance, sending order to destroy");
+                        // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+                        // indicate this to the sending client so they can destroy their item
+                        trackedItem.trackedID = -2;
+                        H3MP_ServerSend.TrackedItemSpecific(trackedItem, trackedItem.controller);
+                        return;
+                    }
+                }
             }
 
             Mod.LogInfo("Server AddTrackedItem: "+trackedItem.itemID +" with waiting index: "+trackedItem.localWaitingIndex);
