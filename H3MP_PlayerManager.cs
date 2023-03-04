@@ -60,7 +60,7 @@ namespace H3MP
             overheadDisplayBillboard = transform.GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<H3MP_Billboard>();
             usernameLabel = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
             healthIndicator = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
-            mat = head.GetComponent<Renderer>().material;
+            mat = head.GetComponent<Renderer>().sharedMaterial;
         }
 
         public void Damage(H3MP_PlayerHitbox.Part part, Damage damage)
@@ -121,6 +121,8 @@ namespace H3MP
             {
                 SetColor(IFF);
             }
+
+            overheadDisplayBillboard.gameObject.SetActive(head.gameObject.activeSelf && (H3MP_GameManager.nameplateMode == 0 || (H3MP_GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
         }
 
         public void SetColor(int colorIndex)

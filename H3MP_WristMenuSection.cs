@@ -16,6 +16,7 @@ namespace H3MP
 
         public static Text colorText;
         public static Text colorByIFFText;
+        public static Text IFFText;
         public static Text nameplateText;
 
         public override void Enable()
@@ -53,26 +54,26 @@ namespace H3MP
             background.color = new Color(0.1f, 0.1f, 0.1f, 1);
 
             Text textOut = null;
-            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnHostClicked, "Host", out textOut);
-            InitButton(new List<int>() { 0 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), OnConnectClicked, "Join", out textOut);
-            InitButton(new List<int>() { 0, 1, 2 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 240), OnOptionsClicked, "Options", out textOut);
-            InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnCloseClicked, "Close\nserver", out textOut);
-            InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnDisconnectClicked, "Disconnect", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-150, 150, 0) }, new Vector2(240, 240), OnBackClicked, "Back", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1000, 150), OnReloadConfigClicked, "Reload config", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1000, 150), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1000, 150), OnTNHReviveClicked, "TNH revive", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1000, 150), OnColorClicked, "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex], out colorText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(550, 0, 0) }, new Vector2(150, 150), OnNextColorClicked, ">", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-550, 0, 0) }, new Vector2(150, 150), OnPreviousColorClicked, "<", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1000, 150), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(550, -50, 0) }, new Vector2(150, 150), OnNextIFFClicked, ">", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-550, -50, 0) }, new Vector2(150, 150), OnPreviousIFFClicked, "<", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1000, 150), OnColorByIFFClicked, "Color by IFF ("+H3MP_GameManager.colorByIFF+")", out colorByIFFText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1000, 150), OnNameplatesClicked, "Nameplates (Friendly Only)", out nameplateText);
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnHostClicked, "Host", out textOut);
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), new Vector2(140, 70), OnConnectClicked, "Join", out textOut);
+            InitButton(new List<int>() { 0, 1, 2 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnOptionsClicked, "Options", out textOut);
+            InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnCloseClicked, "Close\nserver", out textOut);
+            InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnDisconnectClicked, "Disconnect", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-150, 150, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnBackClicked, "Back", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnReloadConfigClicked, "Reload config", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnTNHReviveClicked, "TNH revive", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnColorClicked, "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex], out colorText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(130, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextColorClicked, ">", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-130, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousColorClicked, "<", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out IFFText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(130, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextIFFClicked, ">", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-130, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousIFFClicked, "<", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnColorByIFFClicked, "Color by IFF ("+H3MP_GameManager.colorByIFF+")", out colorByIFFText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnNameplatesClicked, "Nameplates ("+ (H3MP_GameManager.nameplateMode == 0 ? "All" : (H3MP_GameManager.nameplateMode == 1 ? "Friendly Only" : "None"))+ ")", out nameplateText);
         }
 
-        private void InitButton(List<int> pageIndices, List<Vector3> positions, Vector2 sizeDelta, ButtonClick clickMethod, string defaultText, out Text textOut)
+        private void InitButton(List<int> pageIndices, List<Vector3> positions, Vector2 sizeDelta, Vector2 boxSize, ButtonClick clickMethod, string defaultText, out Text textOut)
         {
             GameObject button = Instantiate(this.Menu.BaseButton, transform);
             RectTransform buttonRect = button.GetComponent<RectTransform>();
@@ -80,6 +81,8 @@ namespace H3MP
             buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
             buttonRect.sizeDelta = sizeDelta;
             buttonRect.GetChild(0).GetComponent<RectTransform>().sizeDelta = sizeDelta;
+            BoxCollider boxCollider = button.GetComponent<BoxCollider>();
+            boxCollider.size = new Vector3(boxSize.x, boxSize.y, boxCollider.size.z);
             button.transform.localPosition = positions[0];
             button.transform.localRotation = Quaternion.identity;
             Destroy(button.GetComponent<FVRWristMenuSectionButton>());
@@ -231,7 +234,12 @@ namespace H3MP
 
         private void OnNextColorClicked(Text textRef)
         {
-            if(!H3MP_GameManager.colorByIFF && Mod.managerObject != null)
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (!H3MP_GameManager.colorByIFF && Mod.managerObject != null)
             {
                 ++H3MP_GameManager.colorIndex;
                 if(H3MP_GameManager.colorIndex >= H3MP_GameManager.colors.Length)
@@ -245,7 +253,12 @@ namespace H3MP
 
         private void OnPreviousColorClicked(Text textRef)
         {
-            if(!H3MP_GameManager.colorByIFF && Mod.managerObject != null)
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (!H3MP_GameManager.colorByIFF && Mod.managerObject != null)
             {
                 --H3MP_GameManager.colorIndex;
                 if(H3MP_GameManager.colorIndex < 0)
@@ -264,6 +277,11 @@ namespace H3MP
 
         private void OnNextIFFClicked(Text textRef)
         {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
             if (GM.CurrentPlayerBody.GetPlayerIFF() == 31)
             {
                 GM.CurrentPlayerBody.SetPlayerIFF(0);
@@ -287,11 +305,16 @@ namespace H3MP
                 H3MP_GameManager.SetPlayerColor(H3MP_GameManager.ID, GM.CurrentPlayerBody.GetPlayerIFF(), false, 0, false);
             }
 
-            textRef.text = "Current IFF: " + GM.CurrentPlayerBody.GetPlayerIFF();
+            IFFText.text = "Current IFF: " + GM.CurrentPlayerBody.GetPlayerIFF();
         }
 
         private void OnPreviousIFFClicked(Text textRef)
         {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
             if (GM.CurrentPlayerBody.GetPlayerIFF() == 0)
             {
                 GM.CurrentPlayerBody.SetPlayerIFF(31);
@@ -315,11 +338,16 @@ namespace H3MP
                 H3MP_GameManager.SetPlayerColor(H3MP_GameManager.ID, GM.CurrentPlayerBody.GetPlayerIFF(), false, 0, false);
             }
 
-            textRef.text = "Current IFF: " + GM.CurrentPlayerBody.GetPlayerIFF();
+            IFFText.text = "Current IFF: " + GM.CurrentPlayerBody.GetPlayerIFF();
         }
 
         private void OnColorByIFFClicked(Text textRef)
         {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
             if (H3MP_ThreadManager.host)
             {
                 H3MP_GameManager.colorByIFF = !H3MP_GameManager.colorByIFF;
@@ -350,6 +378,11 @@ namespace H3MP
 
         private void OnNameplatesClicked(Text textRef)
         {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
             if (H3MP_ThreadManager.host)
             {
                 H3MP_GameManager.nameplateMode = (H3MP_GameManager.nameplateMode + 1 ) % 3;

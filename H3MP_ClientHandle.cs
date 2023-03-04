@@ -3223,12 +3223,18 @@ namespace H3MP
         public static void ColorByIFF(H3MP_Packet packet)
         {
             H3MP_GameManager.colorByIFF = packet.ReadBool();
-            H3MP_WristMenuSection.colorByIFFText.text = "Color by IFF (" + H3MP_GameManager.colorByIFF + ")";
+            if (H3MP_WristMenuSection.colorByIFFText != null)
+            {
+                H3MP_WristMenuSection.colorByIFFText.text = "Color by IFF (" + H3MP_GameManager.colorByIFF + ")";
+            }
 
             if (H3MP_GameManager.colorByIFF)
             {
                 H3MP_GameManager.colorIndex = GM.CurrentPlayerBody.GetPlayerIFF() % H3MP_GameManager.colors.Length;
-                H3MP_WristMenuSection.colorText.text = "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex];
+                if (H3MP_WristMenuSection.colorText != null)
+                {
+                    H3MP_WristMenuSection.colorText.text = "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex];
+                }
 
                 foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
                 {
@@ -3251,21 +3257,30 @@ namespace H3MP
             switch (H3MP_GameManager.nameplateMode)
             {
                 case 0:
-                    H3MP_WristMenuSection.nameplateText.text = "Nameplates (All)";
+                    if (H3MP_WristMenuSection.nameplateText != null)
+                    {
+                        H3MP_WristMenuSection.nameplateText.text = "Nameplates (All)";
+                    }
                     foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
                     {
                         playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.head.gameObject.activeSelf);
                     }
                     break;
                 case 1:
-                    H3MP_WristMenuSection.nameplateText.text = "Nameplates (Friendly only)";
+                    if (H3MP_WristMenuSection.nameplateText != null)
+                    {
+                        H3MP_WristMenuSection.nameplateText.text = "Nameplates (Friendly only)";
+                    }
                     foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
                     {
                         playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.head.gameObject.activeSelf && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
                     }
                     break;
                 case 2:
-                    H3MP_WristMenuSection.nameplateText.text = "Nameplates (None)";
+                    if (H3MP_WristMenuSection.nameplateText != null)
+                    {
+                        H3MP_WristMenuSection.nameplateText.text = "Nameplates (None)";
+                    }
                     foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
                     {
                         playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(false);
