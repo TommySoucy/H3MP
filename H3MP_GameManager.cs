@@ -80,10 +80,6 @@ namespace H3MP
         {
             singleton = this;
 
-            SteamVR_Events.Loading.Listen(OnSceneLoadedVR);
-
-            scene = SceneManager.GetActiveScene().name;
-
             // Init the main instance
             activeInstances.Add(instance, 1);
         }
@@ -1976,11 +1972,22 @@ namespace H3MP
             return false;
         }
 
-        private void OnSceneLoadedVR(bool loading)
+        public static void OnSceneLoadedVR(bool loading)
         {
             // Return right away if we don't have server or client running
             if(Mod.managerObject == null)
             {
+                if (loading)
+                {
+                    sceneLoading = true;
+                    instanceAtSceneLoadStart = instance;
+                    sceneAtSceneLoadStart = H3MP_GameManager.scene;
+                }
+                else
+                {
+                    H3MP_GameManager.scene = LoadLevelBeginPatch.loadingLevel;
+                    sceneLoading = false;
+                }
                 return;
             }
 

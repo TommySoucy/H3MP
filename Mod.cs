@@ -15,6 +15,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
+using Valve.VR;
 
 namespace H3MP
 {
@@ -764,6 +765,7 @@ namespace H3MP
 
             LoadAssets();
 
+            SteamVR_Events.Loading.Listen(H3MP_GameManager.OnSceneLoadedVR);
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
