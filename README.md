@@ -38,7 +38,7 @@ In the wristmenu, some options are available:
 
 - **_Item interpolate_**: This will toggle item interpolation. Item interpolation is the smoothing of item movement to prevent everything from looking "jagged". Turning it off will ensure that items are positionned/rotated exactly as you receive the data from another client. Due to latency, this will make item movement look extremely low FPS.
 
-- **_TNH Revive_**: Will revive you if you are in MP TNH. This is so you can rejoin an ongoing game without having to restart it. Also useful if wanting to use a TNH map similarly to a sandbox map but dying respawns you in the wrong place. This will respawn ou at your spawn supply point and get rid of you dead and spectating status.
+- **_TNH Revive_**: Will revive you if you are in MP TNH. This is so you can rejoin an ongoing game without having to restart it. Also useful if wanting to use a TNH map similarly to a sandbox map but dying respawns you in the wrong place. This will respawn you at your spawn supply point and get rid of your dead and spectating status.
 
 - **_Current color_**: Lets you go through certain colors of player model. This color will be visible to other players. Available colors: White, Red, Green, Blue, Black, Desert, and Forest. Note that Desert and Forest are not camo they're just Beige and Dark green. **Only available while connected!**
 
