@@ -38,6 +38,16 @@ In the wristmenu, some options are available:
 
 - **_Item interpolate_**: This will toggle item interpolation. Item interpolation is the smoothing of item movement to prevent everything from looking "jagged". Turning it off will ensure that items are positionned/rotated exactly as you receive the data from another client. Due to latency, this will make item movement look extremely low FPS.
 
+- **_TNH Revive_**: Will revive you if you are in MP TNH. This is so you can rejoin an ongoing game without having to restart it. Also useful if wanting to use a TNH map similarly to a sandbox map but dying respawns you in the wrong place. This will respawn you at your spawn supply point and get rid of your dead and spectating status.
+
+- **_Current color_**: Lets you go through certain colors of player model. This color will be visible to other players. Available colors: White, Red, Green, Blue, Black, Desert, and Forest. Note that Desert and Forest are not camo they're just Beige and Dark green. **Only available while connected!**
+
+- **_Current IFF_**: Lets you change IFF. Note that friendly fire is currently always on. **Only available while connected!**
+
+- **_Color by IFF_**: Toggle that lets the host decide whether player colors should correspond to IFF. IFF 0 corresponds to White, 1 to Red, 2 to Green, and so on. Sequence is same as in **_Current color_** option. The color then loops, so IFF 7 will correspond to White. **Only available to Host!**
+
+- **_Nameplate mode_**: Lets host decide in which case the nameplate and health of a player should be visible. Available modes are: All, Friendly Only (Default), and None. All means all nameplates will always be visible to everyone, Friendly Only means nameplates will only be visible to player with same IFF, and None means no nameplates will be visible, no matter the IFF. **Only available to Host!**
+
 ### Config
 
 The **config** refers to a file in the H3MP folder called **Config.json** which contains a few important settings.
