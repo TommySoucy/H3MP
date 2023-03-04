@@ -25,8 +25,10 @@ namespace H3MP
         public Text usernameLabel;
         public Text healthIndicator;
         public int IFF;
+        public int colorIndex;
         public TAH_ReticleContact reticleContact;
         public float health;
+        public Material mat;
 
         public string scene;
         public int instance;
@@ -58,6 +60,7 @@ namespace H3MP
             overheadDisplayBillboard = transform.GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<H3MP_Billboard>();
             usernameLabel = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
             healthIndicator = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
+            mat = head.GetComponent<Renderer>().material;
         }
 
         public void Damage(H3MP_PlayerHitbox.Part part, Damage damage)
@@ -102,7 +105,7 @@ namespace H3MP
             torso.gameObject.SetActive(hidden);
             leftHand.gameObject.SetActive(hidden);
             rightHand.gameObject.SetActive(hidden);
-            overheadDisplayBillboard.gameObject.SetActive(hidden);
+            overheadDisplayBillboard.gameObject.SetActive(!hidden && (H3MP_GameManager.nameplateMode == 0 || (H3MP_GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
         }
 
         public void SetIFF(int IFF)
@@ -113,6 +116,18 @@ namespace H3MP
                 headEntity.IFFCode = IFF;
                 torsoEntity.IFFCode = IFF;
             }
+
+            if (H3MP_GameManager.colorByIFF)
+            {
+                SetColor(IFF);
+            }
+        }
+
+        public void SetColor(int colorIndex)
+        {
+            this.colorIndex = colorIndex % H3MP_GameManager.colors.Length;
+
+            mat.color = H3MP_GameManager.colors[colorIndex];
         }
     }
 }

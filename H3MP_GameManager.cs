@@ -65,6 +65,11 @@ namespace H3MP
         public static bool sceneLoading;
         public static int instanceAtSceneLoadStart;
         public static string sceneAtSceneLoadStart;
+        public static int colorIndex = 0;
+        public static readonly string[] colorNames = new string[] { "White", "Red", "Green", "Blue", "Black", "Desert", "Forest" };
+        public static readonly Color[] colors = new Color[] { Color.white, Color.red, Color.green, Color.blue, Color.black, new Color(0.98431f, 0.86275f, 0.71373f), new Color(0.31373f, 0.31373f, 0.15294f) };
+        public static bool colorByIFF = false; 
+        public static int nameplateMode = 1; // 0: All, 1: Friendly only (same IFF), 2: None 
 
         public static long ping = -1;
 
@@ -77,11 +82,13 @@ namespace H3MP
 
             SteamVR_Events.Loading.Listen(OnSceneLoadedVR);
 
+            scene = SceneManager.GetActiveScene().name;
+
             // Init the main instance
             activeInstances.Add(instance, 1);
         }
 
-        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, bool join = false)
+        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, bool join = false)
         {
             Mod.LogInfo($"Spawn player called with ID: {ID}");
 
@@ -105,6 +112,7 @@ namespace H3MP
             playerManager.instance = instance;
             playerManager.usernameLabel.text = username;
             playerManager.SetIFF(IFF);
+            playerManager.SetColor(colorIndex);
             players.Add(ID, playerManager);
 
             // Add to scene/instance
@@ -190,8 +198,10 @@ namespace H3MP
             sceneLoading = false;
             instanceAtSceneLoadStart = 0;
             ping = -1;
+            colorByIFF = false;
+            nameplateMode = 1;
 
-            for(int i=0; i< H3MP_TrackedItem.trackedItemRefObjects.Length; ++i)
+            for (int i=0; i< H3MP_TrackedItem.trackedItemRefObjects.Length; ++i)
             {
                 if (H3MP_TrackedItem.trackedItemRefObjects[i] != null)
                 {
@@ -528,6 +538,40 @@ namespace H3MP
                     newPlayerElement.SetActive(true);
 
                     Mod.currentTNHInstancePlayers.Add(playerID, newPlayerElement);
+                }
+            }
+        }
+
+        public static void SetPlayerColor(int ID, int index, bool received = false, int clientID = 0, bool send = true)
+        {
+            if(H3MP_GameManager.ID == ID)
+            {
+                colorIndex = index;
+
+                if(H3MP_WristMenuSection.colorText != null)
+                {
+                    H3MP_WristMenuSection.colorText.text = "Current color: " + colorNames[colorIndex];
+                }
+            }
+            else
+            {
+                players[ID].SetColor(index);
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_Server.clients[ID].player.colorIndex = index;
+                }
+            }
+
+            if (send)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.PlayerColor(ID, index, clientID);
+                }
+                else if (!received)
+                {
+                    H3MP_ClientSend.PlayerColor(ID, index);
                 }
             }
         }

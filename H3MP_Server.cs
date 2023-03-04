@@ -691,6 +691,8 @@ namespace H3MP
                 H3MP_ServerHandle.TNHSetPhaseHold,
                 H3MP_ServerHandle.ShatterableCrateSetHoldingToken,
                 H3MP_ServerHandle.ResetTNH,
+                H3MP_ServerHandle.ReviveTNHPlayer,
+                H3MP_ServerHandle.PlayerColor,
             };
 
             items = new H3MP_TrackedItemData[100];

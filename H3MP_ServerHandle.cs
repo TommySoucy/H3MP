@@ -16,6 +16,7 @@ namespace H3MP
             string scene = packet.ReadString();
             int instance = packet.ReadInt();
             int IFF = packet.ReadInt();
+            int colorIndex = packet.ReadInt();
 
             Mod.LogInfo($"{H3MP_Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}");
 
@@ -25,7 +26,7 @@ namespace H3MP
             }
 
             // Spawn player to clients 
-            H3MP_Server.clients[clientID].SendIntoGame(username, scene, instance, IFF);
+            H3MP_Server.clients[clientID].SendIntoGame(username, scene, instance, IFF, colorIndex);
         }
 
         public static void Ping(int clientID, H3MP_Packet packet)
@@ -3584,6 +3585,27 @@ namespace H3MP
 
                 H3MP_ServerSend.ResetTNH(instance);
             }
+        }
+
+        public static void ReviveTNHPlayer(int clientID, H3MP_Packet packet)
+        {
+            int ID = packet.ReadInt();
+            int instance = packet.ReadInt();
+
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.RevivePlayer(ID, true);
+
+                H3MP_ServerSend.ReviveTNHPlayer(ID, instance, clientID);
+            }
+        }
+
+        public static void PlayerColor(int clientID, H3MP_Packet packet)
+        {
+            int ID = packet.ReadInt();
+            int index = packet.ReadInt();
+
+            H3MP_GameManager.SetPlayerColor(ID, index, true, clientID);
         }
     }
 }

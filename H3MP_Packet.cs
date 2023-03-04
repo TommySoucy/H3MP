@@ -150,7 +150,11 @@ namespace H3MP
         ping = 139,
         TNHSetPhaseHold = 140,
         shatterableCrateSetHoldingToken = 141,
-        resetTNH = 142
+        resetTNH = 142,
+        reviveTNHPlayer = 143,
+        playerColor = 144,
+        colorByIFF = 145,
+        nameplateMode = 146
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -298,7 +302,9 @@ namespace H3MP
         ping = 140,
         TNHSetPhaseHold = 141,
         shatterableCrateSetHoldingToken = 142,
-        resetTNH = 143
+        resetTNH = 143,
+        reviveTNHPlayer = 144,
+        playerColor = 145
     }
 
     public class H3MP_Packet : IDisposable

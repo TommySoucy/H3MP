@@ -290,6 +290,7 @@ namespace H3MP
         public static readonly MethodInfo TNH_Manager_SetPhase_Hold = typeof(TNH_Manager).GetMethod("SetPhase_Hold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_Manager_SetPhase_Completed = typeof(TNH_Manager).GetMethod("SetPhase_Completed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_Manager_DispatchScore = typeof(TNH_Manager).GetMethod("DispatchScore", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo TNH_Manager_InitPlayerPosition = typeof(TNH_Manager).GetMethod("InitPlayerPosition", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_HoldPoint_CompleteHold = typeof(TNH_HoldPoint).GetMethod("CompleteHold", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_HoldPoint_CompletePhase = typeof(TNH_HoldPoint).GetMethod("CompletePhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_DestructibleBarrierPoint_SetCoverPointData = typeof(TNH_DestructibleBarrierPoint).GetMethod("SetCoverPointData", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

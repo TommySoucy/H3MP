@@ -228,6 +228,42 @@ namespace H3MP
             }
         }
 
+        public void RevivePlayer(int ID, bool received = false)
+        {
+            if (dead != null)
+            {
+                dead.Remove(ID);
+            }
+
+            if (ID == H3MP_GameManager.ID)
+            {
+                Mod.TNHSpectating = false;
+
+                if (received && manager != null)
+                {
+                    Mod.TNH_Manager_InitPlayerPosition.Invoke(manager, null);
+                }
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.ReviveTNHPlayer(ID, instance, 0);
+                }
+                else if(!received)
+                {
+                    H3MP_ClientSend.ReviveTNHPlayer(ID, instance);
+                }
+            }
+            else
+            {
+                H3MP_GameManager.UpdatePlayerHidden(H3MP_GameManager.players[ID]);
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.ReviveTNHPlayer(ID, instance, 0);
+                }
+            }
+        }
+
         public void Reset()
         {
             dead.Clear();

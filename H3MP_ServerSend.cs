@@ -77,12 +77,13 @@ namespace H3MP
             }
         }
 
-        public static void Welcome(int toClient, string msg)
+        public static void Welcome(int toClient, string msg, bool colorByIFF)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.welcome))
             {
                 packet.Write(msg);
                 packet.Write(toClient);
+                packet.Write(colorByIFF);
 
                 SendTCPData(toClient, packet);
             }
@@ -97,12 +98,12 @@ namespace H3MP
             }
         }
 
-        public static void SpawnPlayer(int clientID, H3MP_Player player, string scene, int instance, int IFF, bool join = false)
+        public static void SpawnPlayer(int clientID, H3MP_Player player, string scene, int instance, int IFF, int colorIndex, bool join = false)
         {
-            SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation, IFF, join);
+            SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation, IFF, colorIndex, join);
         }
 
-        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, bool join = false)
+        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, bool join = false)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.spawnPlayer))
             {
@@ -113,6 +114,7 @@ namespace H3MP
                 packet.Write(position);
                 packet.Write(rotation);
                 packet.Write(IFF);
+                packet.Write(colorIndex);
                 packet.Write(join);
 
                 SendTCPData(clientID, packet);
@@ -3815,6 +3817,48 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.resetTNH))
             {
                 packet.Write(instance);
+
+                SendTCPDataToAll(packet);
+            }
+        }
+
+        public static void ReviveTNHPlayer(int ID, int instance, int clientID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.reviveTNHPlayer))
+            {
+                packet.Write(ID);
+                packet.Write(instance);
+
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void PlayerColor(int ID, int index, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerColor))
+            {
+                packet.Write(ID);
+                packet.Write(index);
+
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void ColorByIFF(bool colorByIFF)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.colorByIFF))
+            {
+                packet.Write(colorByIFF);
+
+                SendTCPDataToAll(packet);
+            }
+        }
+
+        public static void NameplateMode(int nameplateMode)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.nameplateMode))
+            {
+                packet.Write(nameplateMode);
 
                 SendTCPDataToAll(packet);
             }

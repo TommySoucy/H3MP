@@ -15,6 +15,7 @@ namespace H3MP
         {
             string msg = packet.ReadString();
             int ID = packet.ReadInt();
+            H3MP_GameManager.colorByIFF = packet.ReadBool();
 
             Mod.LogInfo($"Message from server: {msg}");
 
@@ -40,9 +41,10 @@ namespace H3MP
             Vector3 position = packet.ReadVector3();
             Quaternion rotation = packet.ReadQuaternion();
             int IFF = packet.ReadInt();
+            int colorIndex = packet.ReadInt();
             bool join = packet.ReadBool();
 
-            H3MP_GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation, IFF, join);
+            H3MP_GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation, IFF, colorIndex, join);
         }
 
         public static void ConnectSync(H3MP_Packet packet)
@@ -3196,6 +3198,79 @@ namespace H3MP
                 {
                     actualInstance.ResetManager();
                 }
+            }
+        }
+
+        public static void ReviveTNHPlayer(H3MP_Packet packet)
+        {
+            int ID = packet.ReadInt();
+            int instance = packet.ReadInt();
+
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
+            {
+                actualInstance.RevivePlayer(ID, true);
+            }
+        }
+
+        public static void PlayerColor(H3MP_Packet packet)
+        {
+            int ID = packet.ReadInt();
+            int index = packet.ReadInt();
+
+            H3MP_GameManager.SetPlayerColor(ID, index, true, 0);
+        }
+
+        public static void ColorByIFF(H3MP_Packet packet)
+        {
+            H3MP_GameManager.colorByIFF = packet.ReadBool();
+            H3MP_WristMenuSection.colorByIFFText.text = "Color by IFF (" + H3MP_GameManager.colorByIFF + ")";
+
+            if (H3MP_GameManager.colorByIFF)
+            {
+                H3MP_GameManager.colorIndex = GM.CurrentPlayerBody.GetPlayerIFF() % H3MP_GameManager.colors.Length;
+                H3MP_WristMenuSection.colorText.text = "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex];
+
+                foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                {
+                    playerEntry.Value.SetColor(playerEntry.Value.IFF);
+                }
+            }
+            else
+            {
+                foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                {
+                    playerEntry.Value.SetColor(playerEntry.Value.colorIndex);
+                }
+            }
+        }
+
+        public static void NameplateMode(H3MP_Packet packet)
+        {
+            H3MP_GameManager.nameplateMode = packet.ReadInt();
+
+            switch (H3MP_GameManager.nameplateMode)
+            {
+                case 0:
+                    H3MP_WristMenuSection.nameplateText.text = "Nameplates (All)";
+                    foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                    {
+                        playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.head.gameObject.activeSelf);
+                    }
+                    break;
+                case 1:
+                    H3MP_WristMenuSection.nameplateText.text = "Nameplates (Friendly only)";
+                    foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                    {
+                        playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.head.gameObject.activeSelf && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                    }
+                    break;
+                case 2:
+                    H3MP_WristMenuSection.nameplateText.text = "Nameplates (None)";
+                    foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                    {
+                        playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(false);
+                    }
+                    break;
             }
         }
     }

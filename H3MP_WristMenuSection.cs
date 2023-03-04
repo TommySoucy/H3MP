@@ -14,6 +14,10 @@ namespace H3MP
         Dictionary<int, List<KeyValuePair<FVRPointableButton, Vector3>>> pages;
         int currentPage = -1;
 
+        public static Text colorText;
+        public static Text colorByIFFText;
+        public static Text nameplateText;
+
         public override void Enable()
         {
             // Init buttons if not already done
@@ -48,29 +52,42 @@ namespace H3MP
             Image background = gameObject.AddComponent<Image>();
             background.color = new Color(0.1f, 0.1f, 0.1f, 1);
 
-            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnHostClicked, "Host");
-            InitButton(new List<int>() { 0 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), OnConnectClicked, "Join");
-            InitButton(new List<int>() { 0, 1, 2 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 240), OnOptionsClicked, "Options");
-            InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnCloseClicked, "Close\nserver");
-            InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnDisconnectClicked, "Disconnect");
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-150, 150, 0) }, new Vector2(240, 240), OnBackClicked, "Back");
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 150), OnReloadConfigClicked, "Reload config");
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -75, 0) }, new Vector2(500, 150), OnItemInterpolationClicked, "Item interpolation (ON)");
+            Text textOut = null;
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnHostClicked, "Host", out textOut);
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), OnConnectClicked, "Join", out textOut);
+            InitButton(new List<int>() { 0, 1, 2 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 240), OnOptionsClicked, "Options", out textOut);
+            InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnCloseClicked, "Close\nserver", out textOut);
+            InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), OnDisconnectClicked, "Disconnect", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-150, 150, 0) }, new Vector2(240, 240), OnBackClicked, "Back", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1000, 150), OnReloadConfigClicked, "Reload config", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1000, 150), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1000, 150), OnTNHReviveClicked, "TNH revive", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1000, 150), OnColorClicked, "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex], out colorText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(550, 0, 0) }, new Vector2(150, 150), OnNextColorClicked, ">", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-550, 0, 0) }, new Vector2(150, 150), OnPreviousColorClicked, "<", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1000, 150), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(550, -50, 0) }, new Vector2(150, 150), OnNextIFFClicked, ">", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-550, -50, 0) }, new Vector2(150, 150), OnPreviousIFFClicked, "<", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1000, 150), OnColorByIFFClicked, "Color by IFF ("+H3MP_GameManager.colorByIFF+")", out colorByIFFText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1000, 150), OnNameplatesClicked, "Nameplates (Friendly Only)", out nameplateText);
         }
 
-        private void InitButton(List<int> pageIndices, List<Vector3> positions, Vector2 sizeDelta, ButtonClick clickMethod, string defaultText)
+        private void InitButton(List<int> pageIndices, List<Vector3> positions, Vector2 sizeDelta, ButtonClick clickMethod, string defaultText, out Text textOut)
         {
             GameObject button = Instantiate(this.Menu.BaseButton, transform);
             RectTransform buttonRect = button.GetComponent<RectTransform>();
             buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
             buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
+            buttonRect.sizeDelta = sizeDelta;
             buttonRect.GetChild(0).GetComponent<RectTransform>().sizeDelta = sizeDelta;
             button.transform.localPosition = positions[0];
             button.transform.localRotation = Quaternion.identity;
             Destroy(button.GetComponent<FVRWristMenuSectionButton>());
             button.GetComponent<Text>().text = defaultText;
             FVRPointableButton BTN_Ref = button.GetComponent<FVRPointableButton>();
-            BTN_Ref.Button.onClick.AddListener(()=>clickMethod(button.GetComponent<Text>()));
+            Text buttonText = button.GetComponent<Text>();
+            textOut = buttonText;
+            BTN_Ref.Button.onClick.AddListener(()=>clickMethod(buttonText));
 
             for (int i = 0; i < pageIndices.Count; ++i)
             {
@@ -191,6 +208,178 @@ namespace H3MP
             {
                 H3MP_TrackedItem.interpolated = true;
                 textRef.text = "Item interpolation (ON)";
+            }
+        }
+
+        private void OnTNHReviveClicked(Text textRef)
+        {
+            if(GM.TNH_Manager != null)
+            {
+                Mod.TNH_Manager_InitPlayerPosition.Invoke(GM.TNH_Manager, null);
+
+                if(Mod.currentTNHInstance != null)
+                {
+                    Mod.currentTNHInstance.RevivePlayer(H3MP_GameManager.ID);
+                }
+            }
+        }
+
+        private void OnColorClicked(Text textRef)
+        {
+            // Place holder
+        }
+
+        private void OnNextColorClicked(Text textRef)
+        {
+            if(!H3MP_GameManager.colorByIFF && Mod.managerObject != null)
+            {
+                ++H3MP_GameManager.colorIndex;
+                if(H3MP_GameManager.colorIndex >= H3MP_GameManager.colors.Length)
+                {
+                    H3MP_GameManager.colorIndex = 0;
+                }
+
+                H3MP_GameManager.SetPlayerColor(H3MP_GameManager.ID, H3MP_GameManager.colorIndex, false, 0);
+            }
+        }
+
+        private void OnPreviousColorClicked(Text textRef)
+        {
+            if(!H3MP_GameManager.colorByIFF && Mod.managerObject != null)
+            {
+                --H3MP_GameManager.colorIndex;
+                if(H3MP_GameManager.colorIndex < 0)
+                {
+                    H3MP_GameManager.colorIndex = H3MP_GameManager.colors.Length - 1;
+                }
+
+                H3MP_GameManager.SetPlayerColor(H3MP_GameManager.ID, H3MP_GameManager.colorIndex, false, 0);
+            }
+        }
+
+        private void OnIFFClicked(Text textRef)
+        {
+            // Place holder
+        }
+
+        private void OnNextIFFClicked(Text textRef)
+        {
+            if (GM.CurrentPlayerBody.GetPlayerIFF() == 31)
+            {
+                GM.CurrentPlayerBody.SetPlayerIFF(0);
+            }
+            else
+            {
+                GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentPlayerBody.GetPlayerIFF() + 1);
+            }
+
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.PlayerIFF(0, GM.CurrentPlayerBody.GetPlayerIFF());
+            }
+            else
+            {
+                H3MP_ClientSend.PlayerIFF(GM.CurrentPlayerBody.GetPlayerIFF());
+            }
+
+            if (H3MP_GameManager.colorByIFF)
+            {
+                H3MP_GameManager.SetPlayerColor(H3MP_GameManager.ID, GM.CurrentPlayerBody.GetPlayerIFF(), false, 0, false);
+            }
+
+            textRef.text = "Current IFF: " + GM.CurrentPlayerBody.GetPlayerIFF();
+        }
+
+        private void OnPreviousIFFClicked(Text textRef)
+        {
+            if (GM.CurrentPlayerBody.GetPlayerIFF() == 0)
+            {
+                GM.CurrentPlayerBody.SetPlayerIFF(31);
+            }
+            else
+            {
+                GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentPlayerBody.GetPlayerIFF() - 1);
+            }
+
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.PlayerIFF(0, GM.CurrentPlayerBody.GetPlayerIFF());
+            }
+            else
+            {
+                H3MP_ClientSend.PlayerIFF(GM.CurrentPlayerBody.GetPlayerIFF());
+            }
+
+            if (H3MP_GameManager.colorByIFF)
+            {
+                H3MP_GameManager.SetPlayerColor(H3MP_GameManager.ID, GM.CurrentPlayerBody.GetPlayerIFF(), false, 0, false);
+            }
+
+            textRef.text = "Current IFF: " + GM.CurrentPlayerBody.GetPlayerIFF();
+        }
+
+        private void OnColorByIFFClicked(Text textRef)
+        {
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_GameManager.colorByIFF = !H3MP_GameManager.colorByIFF;
+
+                textRef.text = "Color by IFF (" + H3MP_GameManager.colorByIFF + ")";
+
+                if (H3MP_GameManager.colorByIFF)
+                {
+                    H3MP_GameManager.colorIndex = GM.CurrentPlayerBody.GetPlayerIFF() % H3MP_GameManager.colors.Length;
+                    H3MP_WristMenuSection.colorText.text = "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex];
+
+                    foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                    {
+                        playerEntry.Value.SetColor(playerEntry.Value.IFF);
+                    }
+                }
+                else
+                {
+                    foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                    {
+                        playerEntry.Value.SetColor(playerEntry.Value.colorIndex);
+                    }
+                }
+
+                H3MP_ServerSend.ColorByIFF(H3MP_GameManager.colorByIFF);
+            }
+        }
+
+        private void OnNameplatesClicked(Text textRef)
+        {
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_GameManager.nameplateMode = (H3MP_GameManager.nameplateMode + 1 ) % 3;
+
+                switch (H3MP_GameManager.nameplateMode)
+                {
+                    case 0:
+                        textRef.text = "Nameplates (All)";
+                        foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                        {
+                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.head.gameObject.activeSelf);
+                        }
+                        break;
+                    case 1:
+                        textRef.text = "Nameplates (Friendly only)";
+                        foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                        {
+                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.head.gameObject.activeSelf && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                        }
+                        break;
+                    case 2:
+                        textRef.text = "Nameplates (None)";
+                        foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                        {
+                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(false);
+                        }
+                        break;
+                }
+
+                H3MP_ServerSend.NameplateMode(H3MP_GameManager.nameplateMode);
             }
         }
 

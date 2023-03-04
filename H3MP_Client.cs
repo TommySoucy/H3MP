@@ -464,6 +464,10 @@ namespace H3MP
                 H3MP_ClientHandle.TNHSetPhaseHold,
                 H3MP_ClientHandle.ShatterableCrateSetHoldingToken,
                 H3MP_ClientHandle.ResetTNH,
+                H3MP_ClientHandle.ReviveTNHPlayer,
+                H3MP_ClientHandle.PlayerColor,
+                H3MP_ClientHandle.ColorByIFF,
+                H3MP_ClientHandle.NameplateMode,
             };
 
             // All vanilla scenes can be synced by default

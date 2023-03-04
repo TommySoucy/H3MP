@@ -57,7 +57,7 @@ namespace H3MP
 
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
 
-                H3MP_ServerSend.Welcome(ID, "Welcome to the server");
+                H3MP_ServerSend.Welcome(ID, "Welcome to the server", H3MP_GameManager.colorByIFF);
             }
 
             public void SendData(H3MP_Packet packet)
@@ -215,9 +215,9 @@ namespace H3MP
             }
         }
 
-        public void SendIntoGame(string playerName, string scene, int instance, int IFF)
+        public void SendIntoGame(string playerName, string scene, int instance, int IFF, int colorIndex)
         {
-            player = new H3MP_Player(ID, playerName, Vector3.zero, IFF);
+            player = new H3MP_Player(ID, playerName, Vector3.zero, IFF, colorIndex);
             player.scene = scene;
             player.instance = instance;
 
@@ -228,13 +228,13 @@ namespace H3MP
                 {
                     if(client.ID != ID)
                     {
-                        H3MP_ServerSend.SpawnPlayer(ID, client.player, scene, instance, IFF);
+                        H3MP_ServerSend.SpawnPlayer(ID, client.player, scene, instance, IFF, colorIndex);
                     }
                 }
             }
 
             // Also spawn player for host
-            H3MP_GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, instance, player.position, player.rotation, IFF);
+            H3MP_GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, instance, player.position, player.rotation, IFF, colorIndex);
 
             // Spawn all clients' players in this client
             bool inControl = true;
@@ -242,13 +242,13 @@ namespace H3MP
             {
                 if(client.player != null && client.ID != ID)
                 {
-                    H3MP_ServerSend.SpawnPlayer(client.ID, player, client.player.scene, client.player.instance, IFF, true);
+                    H3MP_ServerSend.SpawnPlayer(client.ID, player, client.player.scene, client.player.instance, IFF, colorIndex, true);
                     inControl &= !scene.Equals(client.player.scene);
                 }
             }
 
             // Also spawn host player in this client
-            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF, true);
+            H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF, H3MP_GameManager.colorIndex, true);
             inControl &= !scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene);
 
             if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(scene))

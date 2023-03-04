@@ -24,14 +24,16 @@ namespace H3MP
 
         public string scene;
         public int instance;
+        public int colorIndex;
 
-        public H3MP_Player(int ID, string username, Vector3 spawnPos, int IFF)
+        public H3MP_Player(int ID, string username, Vector3 spawnPos, int IFF, int colorIndex)
         {
             this.ID = ID;
             this.username = username;
             this.position = spawnPos;
             this.rotation = Quaternion.identity;
             this.IFF = IFF;
+            this.colorIndex = colorIndex;
         }
 
         public void UpdateState()

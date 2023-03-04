@@ -29,6 +29,7 @@ namespace H3MP
                 packet.Write(H3MP_GameManager.scene);
                 packet.Write(H3MP_GameManager.instance);
                 packet.Write(GM.CurrentPlayerBody.GetPlayerIFF());
+                packet.Write(H3MP_GameManager.colorIndex);
 
                 SendTCPData(packet);
             }
@@ -2390,6 +2391,28 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.resetTNH))
             {
                 packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void ReviveTNHPlayer(int ID, int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.reviveTNHPlayer))
+            {
+                packet.Write(ID);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void PlayerColor(int ID, int index)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.playerColor))
+            {
+                packet.Write(ID);
+                packet.Write(index);
 
                 SendTCPData(packet);
             }
