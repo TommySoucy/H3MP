@@ -77,6 +77,11 @@ namespace H3MP
         {
             InitItemType();
 
+            if(updateFunc != null && data != null)
+            {
+                updateFunc();
+            }
+
             awoken = true;
             if (sendOnAwake)
             {
@@ -6660,22 +6665,24 @@ namespace H3MP
                 modified = true;
             }
 
-            byte preIndex = data.data[0];
+            byte preIndex = currentMountIndex;
 
             // Write attached mount index
             if (asAttachment.curMount == null)
             {
                 data.data[0] = 255;
+                currentMountIndex = 255;
             }
             else
             {
                 // Find the mount and set it
                 bool found = false;
-                for(int i=0; i < asAttachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                for(int i=0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    if (asAttachment.curMount.Parent.AttachmentMounts[i] == asAttachment.curMount)
+                    if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
                     {
                         data.data[0] = (byte)i;
+                        currentMountIndex = data.data[0];
                         found = true;
                         break;
                     }
@@ -6683,6 +6690,7 @@ namespace H3MP
                 if (!found)
                 {
                     data.data[0] = 255;
+                    currentMountIndex = 255;
                 }
             }
 
@@ -6692,7 +6700,7 @@ namespace H3MP
                 attachmentInterfaceUpdateFunc(asAttachment, ref modified);
             }
 
-            return modified || (preIndex != data.data[0]);
+            return modified || (preIndex != currentMountIndex);
         }
 
         private bool UpdateGivenAttachment(byte[] newData)
@@ -7556,7 +7564,7 @@ namespace H3MP
             bool modified = false;
             Speedloader asSpeedloader = dataObject as Speedloader;
 
-            int necessarySize = asSpeedloader.Chambers.Count * 2 + 2;
+            int necessarySize = asSpeedloader.Chambers.Count * 2;
 
             if (data.data == null || data.data.Length < necessarySize)
             {

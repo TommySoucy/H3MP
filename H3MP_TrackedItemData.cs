@@ -99,12 +99,6 @@ namespace H3MP
                 {
                     // Add ourselves to the parent's children
                     H3MP_TrackedItemData parentItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[parent];
-                    if (parentItem.children == null)
-                    {
-                        parentItem.children = new List<H3MP_TrackedItemData>();
-                    }
-                    childIndex = parentItem.children.Count;
-                    parentItem.children.Add(this);
 
                     if (parentItem.physicalItem == null)
                     {
@@ -119,20 +113,6 @@ namespace H3MP
                     }
                 }
 
-                // Process childrenToParent
-                for(int i=0; i < childrenToParent.Count; ++i)
-                {
-                    H3MP_TrackedItemData childItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[childrenToParent[i]];
-                    if (childItem != null && childItem.parent == trackedID && childItem.physicalItem != null)
-                    {
-                        // Physically parent
-                        ++childItem.ignoreParentChanged;
-                        childItem.physicalItem.transform.parent = physicalItem.transform;
-                        --childItem.ignoreParentChanged;
-                    }
-                }
-                childrenToParent.Clear();
-
                 // Set as kinematic if not in control
                 if (controller != H3MP_GameManager.ID)
                 {
@@ -143,6 +123,25 @@ namespace H3MP
 
                 // Initially set itself
                 Update(this, true);
+
+                // Process childrenToParent
+                for (int i = 0; i < childrenToParent.Count; ++i)
+                {
+                    H3MP_TrackedItemData childItem = (H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items)[childrenToParent[i]];
+                    if (childItem != null && childItem.parent == trackedID && childItem.physicalItem != null)
+                    {
+                        // Physically parent
+                        ++childItem.ignoreParentChanged;
+                        childItem.physicalItem.transform.parent = physicalItem.transform;
+                        --childItem.ignoreParentChanged;
+
+                        // Call update on child in case it needs to process its new parent somehow
+                        // This is needed for attachments that did their latest update before we got their parent's phys
+                        // Calling this update will let them mount themselves to their mount properly
+                        childItem.Update(childItem);
+                    }
+                }
+                childrenToParent.Clear();
             }
             catch(Exception e)
             {
@@ -425,23 +424,31 @@ namespace H3MP
             }
             if((data == null && previousData != null)||(data != null && previousData == null)||data.Length != previousData.Length)
             {
-                return true;
+                return false;
             }
             for(int i=0; i < data.Length; ++i)
             {
-                if (data[i] != previousData.Length)
+                if (data[i] != previousData[i])
                 {
-                    return true;
+                    return false;
                 }
             }
-            return false;
+            return true;
         }
 
         private bool UpdateData(byte[] newData = null)
         {
             previousData = data;
 
-            return physicalItem == null ? false : physicalItem.UpdateItemData(newData);
+            if(physicalItem == null)
+            {
+                data = newData;
+                return false;
+            }
+            else
+            {
+                return physicalItem.UpdateItemData(newData);
+            }
         }
 
         public void OnTrackedIDReceived()

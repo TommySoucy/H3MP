@@ -13,14 +13,18 @@ namespace H3MP
         // Player transforms and state data
         public Transform head;
         public H3MP_PlayerHitbox headHitBox;
+        public Material headMat;
         public AIEntity headEntity;
         public Transform torso;
+        public Material torsoMat;
         public H3MP_PlayerHitbox torsoHitBox;
         public AIEntity torsoEntity;
         public Transform leftHand;
         public H3MP_PlayerHitbox leftHandHitBox;
+        public Material leftHandMat;
         public Transform rightHand;
         public H3MP_PlayerHitbox rightHandHitBox;
+        public Material rightHandMat;
         public H3MP_Billboard overheadDisplayBillboard;
         public Text usernameLabel;
         public Text healthIndicator;
@@ -28,7 +32,6 @@ namespace H3MP
         public int colorIndex;
         public TAH_ReticleContact reticleContact;
         public float health;
-        public Material mat;
 
         public string scene;
         public int instance;
@@ -60,7 +63,10 @@ namespace H3MP
             overheadDisplayBillboard = transform.GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<H3MP_Billboard>();
             usernameLabel = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
             healthIndicator = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
-            mat = head.GetComponent<Renderer>().sharedMaterial;
+            headMat = head.GetComponent<Renderer>().material;
+            torsoMat = torso.GetComponent<Renderer>().material;
+            leftHandMat = leftHand.GetComponent<Renderer>().material;
+            rightHandMat = rightHand.GetComponent<Renderer>().material;
         }
 
         public void Damage(H3MP_PlayerHitbox.Part part, Damage damage)
@@ -129,7 +135,10 @@ namespace H3MP
         {
             this.colorIndex = colorIndex % H3MP_GameManager.colors.Length;
 
-            mat.color = H3MP_GameManager.colors[colorIndex];
+            headMat.color = H3MP_GameManager.colors[colorIndex];
+            torsoMat.color = H3MP_GameManager.colors[colorIndex];
+            leftHandMat.color = H3MP_GameManager.colors[colorIndex];
+            rightHandMat.color = H3MP_GameManager.colors[colorIndex];
         }
     }
 }

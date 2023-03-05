@@ -1,11 +1,8 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace H3MP
 {

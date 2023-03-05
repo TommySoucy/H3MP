@@ -28,6 +28,11 @@ namespace H3MP
 
         private void Awake()
         {
+            if (data != null)
+            {
+                data.Update(true);
+            }
+
             awoken = true;
             if (sendOnAwake)
             {

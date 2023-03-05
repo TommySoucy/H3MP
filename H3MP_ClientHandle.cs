@@ -604,7 +604,14 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             int newParentID = packet.ReadInt();
 
-            H3MP_Client.items[trackedID].SetParent(newParentID);
+            if (H3MP_Client.items[trackedID] == null)
+            {
+                Mod.LogError("Client has received order to set item " + trackedID + "'s parent to " + newParentID + " but item is null in items array");
+            }
+            else
+            {
+                H3MP_Client.items[trackedID].SetParent(newParentID);
+            }
         }
 
         public static void WeaponFire(H3MP_Packet packet)

@@ -571,7 +571,7 @@ namespace H3MP
                 }
             }
         }
-
+        
         public static void UpdateTrackedItem(H3MP_TrackedItemData updatedItem, bool ignoreOrder = false)
         {
             if(updatedItem.trackedID == -1)
@@ -595,14 +595,22 @@ namespace H3MP
                 }
             }
 
+            // TODO: Review: Should we keep the up to date data for later if we dont have the tracked item yet?
+            //               Concern is that if we send tracked item TCP packet, but before that arrives, we send the insurance updates
+            //               meaning we don't have the item for those yet and so when we receive the item itself, we don't have the most up to date
+            //               We could keep only the highest order in a dict by trackedID
             if (trackedItemData != null)
             {
+                if (trackedItemData.itemID.Equals("ReflexArco"))
+                {
+                    Mod.LogInfo("\tGot item, controller: "+ trackedItemData.controller + ", ignore order: "+ ignoreOrder + ", updated order: "+ updatedItem.order+", current order: "+ trackedItemData.order);
+                }
                 // If we take control of an item, we could still receive an updated item from another client
                 // if they haven't received the control update yet, so here we check if this actually needs to update
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
                 // Since the order is kept as a single byte, it will overflow every 256 packets of this item
                 // Here we consider the update out of order if it is within 128 iterations before the latest
-                if(trackedItemData.controller != ID && (ignoreOrder || ((updatedItem.order > trackedItemData.order || trackedItemData.order - updatedItem.order > 128))))
+                if (trackedItemData.controller != ID && (ignoreOrder || ((updatedItem.order > trackedItemData.order || trackedItemData.order - updatedItem.order > 128))))
                 {
                     trackedItemData.Update(updatedItem);
                 }
@@ -801,6 +809,13 @@ namespace H3MP
             trackedItem.data = data;
             data.physicalItem = trackedItem;
             data.physicalItem.physicalObject = physObj;
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if(trackedItem.updateFunc != null)
+            {
+                trackedItem.updateFunc();
+            }
+
             H3MP_GameManager.trackedItemByItem.Add(physObj, trackedItem);
             if(physObj is SosigWeaponPlayerInterface)
             {
@@ -983,6 +998,12 @@ namespace H3MP
             data.physicalObject = trackedSosig;
             trackedSosig.physicalSosigScript = sosigScript;
             H3MP_GameManager.trackedSosigBySosig.Add(sosigScript, trackedSosig);
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedSosig.awoken)
+            {
+                trackedSosig.data.Update(true);
+            }
 
             data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
             data.configTemplate.AppliesDamageResistToIntegrityLoss = sosigScript.AppliesDamageResistToIntegrityLoss;
@@ -1244,6 +1265,12 @@ namespace H3MP
             trackedAutoMeater.physicalAutoMeaterScript = autoMeaterScript;
             H3MP_GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
 
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedAutoMeater.awoken)
+            {
+                trackedAutoMeater.data.Update(true);
+            }
+
             data.position = autoMeaterScript.RB.position;
             data.rotation = autoMeaterScript.RB.rotation;
             data.active = trackedAutoMeater.gameObject.activeInHierarchy;
@@ -1389,6 +1416,12 @@ namespace H3MP
             trackedEncryption.data = data;
             data.physicalObject = trackedEncryption;
             data.physicalObject.physicalEncryptionScript = encryption;
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedEncryption.awoken)
+            {
+                trackedEncryption.data.Update(true);
+            }
 
             data.type = encryption.Type;
             data.position = trackedEncryption.transform.position;
