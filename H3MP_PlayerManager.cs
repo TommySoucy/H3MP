@@ -36,6 +36,8 @@ namespace H3MP
         public string scene;
         public int instance;
 
+        public bool visible;
+
         private void Awake()
         {
             head = transform.GetChild(0);
@@ -105,13 +107,17 @@ namespace H3MP
             }
         }
 
-        public void SetVisible(bool hidden)
+        public void SetVisible(bool visible)
         {
-            head.gameObject.SetActive(hidden);
-            torso.gameObject.SetActive(hidden);
-            leftHand.gameObject.SetActive(hidden);
-            rightHand.gameObject.SetActive(hidden);
-            overheadDisplayBillboard.gameObject.SetActive(!hidden && (H3MP_GameManager.nameplateMode == 0 || (H3MP_GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+            this.visible = visible;
+
+            head.gameObject.SetActive(visible);
+            torso.gameObject.SetActive(visible);
+            leftHand.gameObject.SetActive(visible);
+            rightHand.gameObject.SetActive(visible);
+            overheadDisplayBillboard.gameObject.SetActive(visible && (H3MP_GameManager.nameplateMode == 0 || (H3MP_GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+        
+            SetEntitiesRegistered(visible);
         }
 
         public void SetIFF(int IFF)
@@ -128,7 +134,7 @@ namespace H3MP
                 SetColor(IFF);
             }
 
-            overheadDisplayBillboard.gameObject.SetActive(head.gameObject.activeSelf && (H3MP_GameManager.nameplateMode == 0 || (H3MP_GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+            overheadDisplayBillboard.gameObject.SetActive(visible && (H3MP_GameManager.nameplateMode == 0 || (H3MP_GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
         }
 
         public void SetColor(int colorIndex)

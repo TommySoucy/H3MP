@@ -393,14 +393,14 @@ namespace H3MP
                         textRef.text = "Nameplates (All)";
                         foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
                         {
-                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.head.gameObject.activeSelf);
+                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.visible);
                         }
                         break;
                     case 1:
                         textRef.text = "Nameplates (Friendly only)";
                         foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
                         {
-                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.head.gameObject.activeSelf && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.visible && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
                         }
                         break;
                     case 2:

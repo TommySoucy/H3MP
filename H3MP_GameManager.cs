@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.VR;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -140,14 +141,11 @@ namespace H3MP
                 activeInstances.Add(instance, 1);
             }
 
-            // Make sure the player is disabled if not in the same scene/instance
-            if (!scene.Equals(H3MP_GameManager.scene) || instance != H3MP_GameManager.instance)
-            {
-                playerManager.gameObject.SetActive(false);
 
-                playerManager.SetEntitiesRegistered(false);
-            }
-            else
+            UpdatePlayerHidden(playerManager);
+
+            // Make sure to count the player if in the same scene/instance
+            if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(scene) && scene.Equals(H3MP_GameManager.scene) && instance == H3MP_GameManager.instance)
             {
                 ++playersPresent;
 
@@ -256,7 +254,7 @@ namespace H3MP
             }
 
             H3MP_PlayerManager player = players[ID];
-            if (!player.gameObject.activeSelf)
+            if (!player.visible)
             {
                 return;
             }
@@ -280,7 +278,7 @@ namespace H3MP
                 player.healthIndicator.text = ((int)health).ToString() + "/" + maxHealth;
             }
 
-            if((health <= 0 && player.head.gameObject.activeSelf) || (health > 0 && !player.head.gameObject.activeSelf))
+            if((health <= 0 && player.visible) || (health > 0 && !player.visible))
             {
                 UpdatePlayerHidden(player);
             }
@@ -330,28 +328,16 @@ namespace H3MP
                 H3MP_Server.clients[playerID].player.scene = sceneName;
             }
 
+            UpdatePlayerHidden(player);
+
             if (sceneName.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
             {
-                if (!player.gameObject.activeSelf)
-                {
-                    player.gameObject.SetActive(true);
-                    ++playersPresent;
-
-                    player.SetEntitiesRegistered(true);
-                }
+                ++playersPresent;
             }
             else
             {
-                if (player.gameObject.activeSelf)
-                {
-                    player.gameObject.SetActive(false);
-                    --playersPresent;
-
-                    player.SetEntitiesRegistered(false);
-                }
+                --playersPresent;
             }
-
-            UpdatePlayerHidden(player);
         }
 
         // MOD: This will be called to set a player as hidden based on certain criteria
@@ -362,7 +348,7 @@ namespace H3MP
             bool visible = true;
 
             // Default scene/instance, spectatorHost
-            visible &= player.scene.Equals(H3MP_GameManager.scene) && player.instance == instance && !spectatorHosts.Contains(player.ID) && player.health > 0;
+            visible &= !nonSynchronizedScenes.ContainsKey(player.scene) && player.scene.Equals(scene) && player.instance == instance && !spectatorHosts.Contains(player.ID) && player.health > 0;
 
             // TNH
             if (visible && Mod.currentTNHInstance != null)
@@ -487,28 +473,16 @@ namespace H3MP
                 H3MP_Server.clients[playerID].player.instance = instance;
             }
 
+            UpdatePlayerHidden(player);
+
             if (player.scene.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
             {
-                if (!player.gameObject.activeSelf)
-                {
-                    player.gameObject.SetActive(true);
-                    ++playersPresent;
-
-                    player.SetEntitiesRegistered(true);
-                }
+                ++playersPresent;
             }
             else
             {
-                if (player.gameObject.activeSelf)
-                {
-                    player.gameObject.SetActive(false);
-                    --playersPresent;
-
-                    player.SetEntitiesRegistered(false);
-                }
+                --playersPresent;
             }
-
-            UpdatePlayerHidden(player);
 
             if (activeInstances.ContainsKey(instance))
             {
@@ -1890,13 +1864,7 @@ namespace H3MP
                 {
                     if (player.Value.scene.Equals(sceneName) && player.Value.instance == instance)
                     {
-                        if (!player.Value.gameObject.activeSelf)
-                        {
-                            player.Value.gameObject.SetActive(true);
-                        }
                         ++playersPresent;
-
-                        player.Value.SetEntitiesRegistered(true);
 
                         if (H3MP_ThreadManager.host && !sceneLoading)
                         {
@@ -1908,13 +1876,6 @@ namespace H3MP
                             H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                         }
                     }
-                    else
-                    {
-                        if (player.Value.gameObject.activeSelf)
-                        {
-                            player.Value.gameObject.SetActive(false);
-                        }
-                    }
 
                     UpdatePlayerHidden(player.Value);
                 }
@@ -1923,10 +1884,7 @@ namespace H3MP
             {
                 foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                 {
-                    if (player.Value.gameObject.activeSelf)
-                    {
-                        player.Value.gameObject.SetActive(false);
-                    }
+                    UpdatePlayerHidden(player.Value);
                 }
             }
         }
@@ -2098,19 +2056,13 @@ namespace H3MP
 
                 // Update players' active state depending on which are in the same scene/instance
                 playersPresent = 0;
-                if (!nonSynchronizedScenes.ContainsKey(H3MP_GameManager.scene))
+                if (!nonSynchronizedScenes.ContainsKey(scene))
                 {
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                     {
-                        if (player.Value.scene.Equals(H3MP_GameManager.scene) && player.Value.instance == instance)
+                        if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                         {
-                            if (!player.Value.gameObject.activeSelf)
-                            {
-                                player.Value.gameObject.SetActive(true);
-                            }
                             ++playersPresent;
-
-                            player.Value.SetEntitiesRegistered(true);
 
                             if (H3MP_ThreadManager.host)
                             {
@@ -2119,13 +2071,6 @@ namespace H3MP
                                 // clients only send updated data when there are others in their scene
                                 // But we need the most of to date data to instantiate the object
                                 H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
-                            }
-                        }
-                        else
-                        {
-                            if (player.Value.gameObject.activeSelf)
-                            {
-                                player.Value.gameObject.SetActive(false);
                             }
                         }
 
@@ -2191,10 +2136,7 @@ namespace H3MP
                 {
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                     {
-                        if (player.Value.gameObject.activeSelf)
-                        {
-                            player.Value.gameObject.SetActive(false);
-                        }
+                        UpdatePlayerHidden(player.Value);
                     }
                 }
 

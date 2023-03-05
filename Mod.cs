@@ -2155,6 +2155,13 @@ namespace H3MP
             PatchVerify.Verify(TNH_ScoreDisplayReloadPatchOriginal, harmony, true);
             harmony.Patch(TNH_ScoreDisplayReloadPatchOriginal, new HarmonyMethod(TNH_ScoreDisplayReloadPatchPrefix));
 
+            // SetCurrentAIManagerPatch
+            MethodInfo SetCurrentAIManagerPatchOriginal = typeof(GM).GetMethod("set_CurrentAIManager", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo SetCurrentAIManagerPatchPostfix = typeof(SetCurrentAIManagerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(SetCurrentAIManagerPatchOriginal, harmony, true);
+            harmony.Patch(SetCurrentAIManagerPatchOriginal, new HarmonyMethod(SetCurrentAIManagerPatchPostfix));
+
 
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
@@ -3361,6 +3368,29 @@ namespace H3MP
             }
 
             return true;
+        }
+    }
+
+    // Patches GM.set_CurrentAIManager to register player AI entities when it gets set
+    class SetCurrentAIManagerPatch
+    {
+        static void Postfix()
+        {
+            if(Mod.managerObject != null)
+            {
+                return;
+            }
+
+            if(GM.CurrentAIManager != null)
+            {
+                foreach(KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                {
+                    if (playerEntry.Value.visible)
+                    {
+                        playerEntry.Value.SetEntitiesRegistered(true);
+                    }
+                }
+            }
         }
     }
 
@@ -8687,7 +8717,7 @@ namespace H3MP
                     return;
                 }
             }
-
+            
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
@@ -9631,7 +9661,7 @@ namespace H3MP
                         int firstPlayerInScene = 0;
                         foreach (KeyValuePair<int, H3MP_PlayerManager> player in H3MP_GameManager.players)
                         {
-                            if (player.Value.gameObject.activeSelf)
+                            if (player.Value.visible)
                             {
                                 firstPlayerInScene = player.Key;
                             }
@@ -11385,7 +11415,6 @@ namespace H3MP
     {
         static void Postfix()
         {
-            // Disable the TNH_Manager if we are not the host
             // Also manage currently playing in the TNH instance
             if (Mod.managerObject != null)
             {
