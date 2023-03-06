@@ -72,7 +72,10 @@ namespace H3MP
             // Also set RB as kinematic
             if (controller != H3MP_GameManager.ID)
             {
-                GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalAutoMeaterScript.E);
+                if (GM.CurrentAIManager != null)
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalAutoMeaterScript.E);
+                }
                 physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
             }
 

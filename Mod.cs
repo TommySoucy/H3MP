@@ -272,6 +272,7 @@ namespace H3MP
         public static readonly FieldInfo BoltActionRifle_m_fireSelectorMode = typeof(BoltActionRifle).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo BoltActionRifle_m_isHammerCocked = typeof(BoltActionRifle).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TAH_Reticle_m_trackedTransforms = typeof(TAH_Reticle).GetField("m_trackedTransforms", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo AIManager_m_knownEntities = typeof(AIManager).GetField("m_knownEntities", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -3383,11 +3384,32 @@ namespace H3MP
 
             if(GM.CurrentAIManager != null)
             {
+                // Make sure players' AIEntities are registered
                 foreach(KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
                 {
                     if (playerEntry.Value.visible)
                     {
                         playerEntry.Value.SetEntitiesRegistered(true);
+                    }
+                }
+
+                List<AIEntity> knownEntities = Mod.AIManager_m_knownEntities.GetValue(GM.CurrentAIManager) as List<AIEntity>;
+
+                // Make sure Sosig AIEntities are registered
+                for (int i=0; i < H3MP_GameManager.sosigs.Count; ++i)
+                {
+                    if (H3MP_GameManager.sosigs[i].physicalObject != null && !knownEntities.Contains(H3MP_GameManager.sosigs[i].physicalObject.physicalSosigScript.E))
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(H3MP_GameManager.sosigs[i].physicalObject.physicalSosigScript.E);
+                    }
+                }
+
+                // Make sure AutoMeater AIEntities are registered
+                for (int i=0; i < H3MP_GameManager.autoMeaters.Count; ++i)
+                {
+                    if (H3MP_GameManager.autoMeaters[i].physicalObject != null && !knownEntities.Contains(H3MP_GameManager.autoMeaters[i].physicalObject.physicalAutoMeaterScript.E))
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(H3MP_GameManager.autoMeaters[i].physicalObject.physicalAutoMeaterScript.E);
                     }
                 }
             }
@@ -3472,7 +3494,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(0);
+                            trackedItem.data.SetController(0, true);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                         }
@@ -3488,7 +3510,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                            trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                         }
@@ -3591,7 +3613,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(0);
+                            trackedItem.data.SetController(0, true);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                         }
@@ -3607,7 +3629,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                            trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                         }
@@ -3641,7 +3663,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(0);
+                        trackedItem.data.SetController(0, true);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                         bool primaryHand = __instance == __instance.S.Hand_Primary;
@@ -3660,7 +3682,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                        trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                         bool primaryHand = __instance == __instance.S.Hand_Primary;
@@ -3710,7 +3732,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(0);
+                        trackedItem.data.SetController(0, true);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                         int slotIndex = 0;
@@ -3736,7 +3758,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                        trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                         int slotIndex = 0;
@@ -3910,7 +3932,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(0);
+                        trackedItem.data.SetController(0, true);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                     }
@@ -3926,7 +3948,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                        trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                     }
@@ -3976,7 +3998,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(0);
+                            trackedItem.data.SetController(0, true);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                         }
@@ -3992,7 +4014,7 @@ namespace H3MP
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                            trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
                             trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                             H3MP_GameManager.items.Add(trackedItem.data);
                         }
@@ -4045,7 +4067,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(0);
+                        trackedItem.data.SetController(0, true);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                     }
@@ -4061,7 +4083,7 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(H3MP_Client.singleton.ID);
+                        trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
                         trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
                         H3MP_GameManager.items.Add(trackedItem.data);
                     }

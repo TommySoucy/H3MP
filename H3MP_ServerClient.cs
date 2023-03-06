@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 using FistVR;
-using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 namespace H3MP

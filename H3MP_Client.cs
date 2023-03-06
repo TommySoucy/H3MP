@@ -30,7 +30,7 @@ namespace H3MP
 
         public string IP;
         public ushort port;
-        public int ID;
+        public int ID = -1;
         public TCP tcp;
         public UDP udp;
 
@@ -188,11 +188,14 @@ namespace H3MP
                                 int packetID = packet.ReadInt();
                                 try
                                 {
-                                    packetHandlers[packetID](packet);
+                                    if (singleton.ID >= 0 || packetID == 1)
+                                    {
+                                        packetHandlers[packetID](packet);
+                                    }
                                 }
                                 catch(IndexOutOfRangeException)
                                 {
-                                    Mod.LogError("Client TCP received patcket with ID: "+packetID+ " as ServerPackets: " + ((ServerPackets)packetID).ToString());
+                                    Mod.LogError("Client TCP received packet with ID: "+packetID+ " as ServerPackets: " + ((ServerPackets)packetID).ToString());
                                 }
                             }
                         }
@@ -570,23 +573,27 @@ namespace H3MP
                 // We might already have the object
                 if (items[trackedItem.trackedID] != null)
                 {
-                    if (!items[trackedItem.trackedID].itemID.Equals(trackedItem.itemID))
+                    actualTrackedItem = items[trackedItem.trackedID];
+                    if (!actualTrackedItem.itemID.Equals(trackedItem.itemID))
                     {
-                        Mod.LogError("\t\tGot tracking inconsistency! Item received trackedID: "+trackedItem.trackedID+" already occupied but itemID is different: ours: "+ items[trackedItem.trackedID].itemID + ", server's: "+ trackedItem.itemID + ".\nDestroying our side to be consistent with server.");
-                        items[trackedItem.trackedID].physicalItem.sendDestroy = false;
-                        DestroyImmediate(items[trackedItem.trackedID].physicalItem.gameObject);
+                        Mod.LogError("\t\tGot tracking inconsistency! Item received trackedID: "+trackedItem.trackedID+" already occupied but itemID is different: ours: "+ actualTrackedItem.itemID + ", server's: "+ trackedItem.itemID + ".\nDestroying our side to be consistent with server.");
+                        if (actualTrackedItem.physicalItem != null)
+                        {
+                            actualTrackedItem.physicalItem.sendDestroy = false;
+                            DestroyImmediate(actualTrackedItem.physicalItem.gameObject);
+                        }
                     }
                     else
                     {
                         // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
                         // receive it from relevant objects
-                        if (items[trackedItem.trackedID].physicalItem == null && !items[trackedItem.trackedID].awaitingInstantiation &&
-                            items[trackedItem.trackedID].scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
-                            items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
+                        if (actualTrackedItem.physicalItem == null && !actualTrackedItem.awaitingInstantiation &&
+                            actualTrackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                            actualTrackedItem.instance == H3MP_GameManager.instance)
                         {
                             Mod.LogInfo("\t\thave data but not phys, instantiating");
-                            trackedItem.awaitingInstantiation = true;
-                            AnvilManager.Run(trackedItem.Instantiate());
+                            actualTrackedItem.awaitingInstantiation = true;
+                            AnvilManager.Run(actualTrackedItem.Instantiate());
                         }
                         return;
                     }
@@ -619,7 +626,7 @@ namespace H3MP
                 Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
                 // Instantiate item if it is identiafiable and in the current scene/instance
-                if (!trackedItem.awaitingInstantiation && H3MP_GameManager.IsItemIdentifiable(trackedItem) && trackedItem.scene.Equals(H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
+                if (!trackedItem.awaitingInstantiation && H3MP_GameManager.IsItemIdentifiable(trackedItem) && trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
                 {
                     Mod.LogInfo("\t\tinstantiating");
                     trackedItem.awaitingInstantiation = true;
@@ -703,7 +710,7 @@ namespace H3MP
                     }
 
                     // Instantiate sosig if it is in the current scene
-                    if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
+                    if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
                     {
                         trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
@@ -713,18 +720,18 @@ namespace H3MP
                 {
                     H3MP_TrackedSosigData trackedSosigData = sosigs[trackedSosig.trackedID];
 
+                    trackedSosigData.Update(trackedSosig, true);
+
                     // Instantiate sosig if it is in the current scene if not instantiated already
                     // This could be the case if joining a scene with sosigs we already have the data for
                     if (trackedSosigData.physicalObject == null && !trackedSosigData.awaitingInstantiation)
                     {
-                        if (trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
+                        if (trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
                         {
-                            trackedSosig.awaitingInstantiation = true;
+                            trackedSosigData.awaitingInstantiation = true;
                             AnvilManager.Run(trackedSosigData.Instantiate());
                         }
                     }
-
-                    trackedSosigData.Update(trackedSosig, true);
                 }
             }
         }
@@ -771,14 +778,15 @@ namespace H3MP
                 // We might already have the object
                 if (autoMeaters[trackedAutoMeater.trackedID] != null)
                 {
+                    actualTrackedAutoMeater = autoMeaters[trackedAutoMeater.trackedID];
                     // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
                     // receive it from relevant objects
-                    if (autoMeaters[trackedAutoMeater.trackedID].physicalObject == null && !autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation &&
-                        autoMeaters[trackedAutoMeater.trackedID].scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
-                        autoMeaters[trackedAutoMeater.trackedID].instance == H3MP_GameManager.instance)
+                    if (actualTrackedAutoMeater.physicalObject == null && !actualTrackedAutoMeater.awaitingInstantiation &&
+                        actualTrackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                        actualTrackedAutoMeater.instance == H3MP_GameManager.instance)
                     {
-                        trackedAutoMeater.awaitingInstantiation = true;
-                        AnvilManager.Run(trackedAutoMeater.Instantiate());
+                        actualTrackedAutoMeater.awaitingInstantiation = true;
+                        AnvilManager.Run(actualTrackedAutoMeater.Instantiate());
                     }
                     return;
                 }
@@ -808,7 +816,7 @@ namespace H3MP
                 }
 
                 // Instantiate AutoMeater if it is in the current scene
-                if (!trackedAutoMeater.awaitingInstantiation && trackedAutoMeater.scene.Equals(H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                if (!trackedAutoMeater.awaitingInstantiation && trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
                     trackedAutoMeater.awaitingInstantiation = true;
                     AnvilManager.Run(trackedAutoMeater.Instantiate());
@@ -891,7 +899,7 @@ namespace H3MP
                     }
 
                     // Instantiate Encryption if it is in the current scene
-                    if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
+                    if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
                     {
                         trackedEncryption.awaitingInstantiation = true;
                         AnvilManager.Run(trackedEncryption.Instantiate());
@@ -901,18 +909,18 @@ namespace H3MP
                 {
                     H3MP_TrackedEncryptionData trackedEncryptionData = encryptions[trackedEncryption.trackedID];
 
+                    trackedEncryptionData.Update(trackedEncryption, true);
+
                     // Instantiate Encryption if it is in the current scene if not instantiated already
                     // This could be the case if joining a scene with encryptions we already have the data for
                     if (trackedEncryptionData.physicalObject == null)
                     {
-                        if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
+                        if (!trackedEncryptionData.awaitingInstantiation && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
                         {
                             trackedEncryptionData.awaitingInstantiation = true;
                             AnvilManager.Run(trackedEncryptionData.Instantiate());
                         }
                     }
-
-                    trackedEncryptionData.Update(trackedEncryption, true);
                 }
             }
         }
@@ -1037,6 +1045,7 @@ namespace H3MP
                 }
                 udp.socket = null;
 
+                ID = -1;
                 H3MP_GameManager.Reset();
                 SpecificDisconnect();
                 Destroy(Mod.managerObject);

@@ -2402,7 +2402,10 @@ namespace H3MP
                         }
                         else
                         {
-                            GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                            if (GM.CurrentAIManager != null)
+                            {
+                                GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                            }
                             trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
                         }
                     }
@@ -2479,7 +2482,10 @@ namespace H3MP
                         }
                         else
                         {
-                            GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                            if (GM.CurrentAIManager != null)
+                            {
+                                GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                            }
                             trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
                         }
                     }

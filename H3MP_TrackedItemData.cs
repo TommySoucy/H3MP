@@ -373,7 +373,7 @@ namespace H3MP
                     --ignoreParentChanged;
 
                     // Set Controller to parent's
-                    SetController(newParent.controller);
+                    SetController(newParent.controller, true);
 
                     // If in control, we want to enable rigidbody
                     if (controller == H3MP_GameManager.ID)
@@ -474,7 +474,7 @@ namespace H3MP
                 H3MP_ClientSend.GiveControl(trackedID, newController);
 
                 // Also change controller locally
-                SetController(newController);
+                SetController(newController, true);
 
                 H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
 
@@ -659,9 +659,16 @@ namespace H3MP
             }
         }
 
-        public void SetController(int newController)
+        public void SetController(int newController, bool recursive = false)
         {
-            SetControllerRecursive(this, newController);
+            if (recursive)
+            {
+                SetControllerRecursive(this, newController);
+            }
+            else
+            {
+                controller = newController;
+            }
         }
 
         private void SetControllerRecursive(H3MP_TrackedItemData otherTrackedItem, int newController)

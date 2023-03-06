@@ -346,7 +346,7 @@ namespace H3MP
 
                 if (!destroyed)
                 {
-                    trackedItem.SetController(newController);
+                    trackedItem.SetController(newController, true);
 
                     // Send to all other clients
                     H3MP_ServerSend.GiveControl(trackedID, newController);
@@ -399,7 +399,10 @@ namespace H3MP
                 }
                 else
                 {
-                    GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    }
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
                 }
             }
@@ -411,7 +414,10 @@ namespace H3MP
                 trackedSosig.localTrackedID = -1;
                 if (trackedSosig.physicalObject != null)
                 {
-                    GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    }
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
                 }
             }
@@ -470,7 +476,10 @@ namespace H3MP
                 }
                 else
                 {
-                    GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    }
                     trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
                 }
             }
@@ -482,7 +491,10 @@ namespace H3MP
                 trackedAutoMeater.localTrackedID = -1;
                 if (trackedAutoMeater.physicalObject != null)
                 {
-                    GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    }
                     trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
                 }
             }
@@ -2127,8 +2139,8 @@ namespace H3MP
                     actualTrackedItem.scene.Equals(H3MP_GameManager.scene) && actualTrackedItem.instance == H3MP_GameManager.instance &&
                     H3MP_GameManager.IsItemIdentifiable(trackedItem))
                 {
-                    H3MP_Server.items[trackedItem.trackedID].awaitingInstantiation = true;
-                    AnvilManager.Run(H3MP_Server.items[trackedItem.trackedID].Instantiate());
+                    actualTrackedItem.awaitingInstantiation = true;
+                    AnvilManager.Run(actualTrackedItem.Instantiate());
                 }
             }
         }
@@ -2146,8 +2158,8 @@ namespace H3MP
                 if (instantiate && actualTrackedSosig.physicalObject == null && !actualTrackedSosig.awaitingInstantiation &&
                     actualTrackedSosig.scene.Equals(H3MP_GameManager.scene) && actualTrackedSosig.instance == H3MP_GameManager.instance)
                 {
-                    H3MP_Server.sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
-                    AnvilManager.Run(H3MP_Server.sosigs[trackedSosig.trackedID].Instantiate());
+                    actualTrackedSosig.awaitingInstantiation = true;
+                    AnvilManager.Run(actualTrackedSosig.Instantiate());
                 }
             }
         }
@@ -2165,8 +2177,8 @@ namespace H3MP
                 if (instantiate && actualTrackedAutoMeater.physicalObject == null && !actualTrackedAutoMeater.awaitingInstantiation &&
                     actualTrackedAutoMeater.scene.Equals(H3MP_GameManager.scene) && actualTrackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
-                    H3MP_Server.autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation = true;
-                    AnvilManager.Run(H3MP_Server.autoMeaters[trackedAutoMeater.trackedID].Instantiate());
+                    actualTrackedAutoMeater.awaitingInstantiation = true;
+                    AnvilManager.Run(actualTrackedAutoMeater.Instantiate());
                 }
             }
         }
@@ -2184,8 +2196,8 @@ namespace H3MP
                 if (instantiate && actualTrackedEncryption.physicalObject == null && !actualTrackedEncryption.awaitingInstantiation &&
                     actualTrackedEncryption.scene.Equals(H3MP_GameManager.scene) && actualTrackedEncryption.instance == H3MP_GameManager.instance)
                 {
-                    H3MP_Server.encryptions[trackedEncryption.trackedID].awaitingInstantiation = true;
-                    AnvilManager.Run(H3MP_Server.encryptions[trackedEncryption.trackedID].Instantiate());
+                    actualTrackedEncryption.awaitingInstantiation = true;
+                    AnvilManager.Run(actualTrackedEncryption.Instantiate());
                 }
             }
         }

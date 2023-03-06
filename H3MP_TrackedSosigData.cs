@@ -82,7 +82,10 @@ namespace H3MP
             // Also set CoreRB as kinematic
             if (controller != H3MP_GameManager.ID)
             {
-                GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
+                if (GM.CurrentAIManager != null)
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
+                }
                 physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
             }
 

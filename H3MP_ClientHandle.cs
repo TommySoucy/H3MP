@@ -259,7 +259,7 @@ namespace H3MP
 
                 if (!destroyed)
                 {
-                    trackedItem.SetController(controllerID);
+                    trackedItem.SetController(controllerID, true);
                 }
             }
         }
@@ -281,7 +281,10 @@ namespace H3MP
 
                 if (trackedSosig.physicalObject != null)
                 {
-                    GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    }
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
                 }
             }
@@ -321,7 +324,10 @@ namespace H3MP
                 }
                 else
                 {
-                    GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                    }
                     trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
                 }
             }
@@ -349,7 +355,11 @@ namespace H3MP
 
                 if (trackedAutoMeater.physicalObject != null)
                 {
-                    GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    }
                     trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
                 }
             }
@@ -389,7 +399,10 @@ namespace H3MP
                 }
                 else
                 {
-                    GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                    }
                     trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
                 }
             }
