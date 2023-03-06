@@ -5,8 +5,6 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Valve.VR;
-using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -1872,7 +1870,6 @@ namespace H3MP
                             // We do this because we may not have the most up to date version of items/sosigs since
                             // clients only send updated data to other players in their scene/instance
                             // But we need the most of to date data to instantiate the object
-                            Mod.LogInfo("Requesting up to date objects from " + player.Key);
                             H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                         }
                     }
@@ -2070,6 +2067,7 @@ namespace H3MP
                                 // We do this because we may not have the most up to date version of objects since
                                 // clients only send updated data when there are others in their scene
                                 // But we need the most of to date data to instantiate the object
+                                Mod.LogInfo("Server sending request for up to date objects to " + player.Key);
                                 H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                             }
                         }

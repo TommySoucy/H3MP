@@ -683,5 +683,36 @@ namespace H3MP
                 }
             }
         }
+
+        public static void TakeControlRecursive(H3MP_TrackedItemData currentTrackedItem)
+        {
+            if(currentTrackedItem.trackedID < 0)
+            {
+                return;
+            }
+
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.GiveControl(currentTrackedItem.trackedID, H3MP_GameManager.ID);
+            }
+            else
+            {
+                H3MP_ClientSend.GiveControl(currentTrackedItem.trackedID, H3MP_GameManager.ID);
+            }
+            currentTrackedItem.SetController(H3MP_GameManager.ID);
+            if (currentTrackedItem.localTrackedID == -1)
+            {
+                currentTrackedItem.localTrackedID = H3MP_GameManager.items.Count;
+                H3MP_GameManager.items.Add(currentTrackedItem);
+            }
+
+            if (currentTrackedItem.children != null)
+            {
+                foreach (H3MP_TrackedItemData child in currentTrackedItem.children)
+                {
+                    TakeControlRecursive(child);
+                }
+            }
+        }
     }
 }

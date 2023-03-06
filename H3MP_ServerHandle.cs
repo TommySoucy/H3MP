@@ -346,7 +346,7 @@ namespace H3MP
 
                 if (!destroyed)
                 {
-                    trackedItem.SetController(newController, true);
+                    trackedItem.SetController(newController);
 
                     // Send to all other clients
                     H3MP_ServerSend.GiveControl(trackedID, newController);

@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -189,6 +190,7 @@ namespace H3MP
             int controllerID = packet.ReadInt();
 
             H3MP_TrackedItemData trackedItem = H3MP_Client.items[trackedID];
+            Mod.LogInfo("Client received order to set control of item at: " + trackedID);
 
             bool destroyed = false;
             if (trackedItem == null)
@@ -197,6 +199,7 @@ namespace H3MP
             }
             else
             {
+                Mod.LogInfo("\tWe have the item, controller: "+ trackedItem.controller+" compared to us: "+H3MP_GameManager.ID+", new controller: "+ controllerID);
                 if (trackedItem.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
                     FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
@@ -219,10 +222,13 @@ namespace H3MP
                 }
                 else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
                 {
+                    Mod.LogInfo("\t\tWe take control");
                     trackedItem.localTrackedID = H3MP_GameManager.items.Count;
                     H3MP_GameManager.items.Add(trackedItem);
+                    Mod.LogInfo("\t\tAdded to items");
                     if (trackedItem.physicalItem == null)
                     {
+                        Mod.LogInfo("\t\t\tNo phys");
                         // If its is null and we receive this after having finishing loading, we only want to instantiate if it is in our current scene/instance
                         // Otherwise we send destroy order for the object
                         if (!H3MP_GameManager.sceneLoading)
@@ -259,7 +265,7 @@ namespace H3MP
 
                 if (!destroyed)
                 {
-                    trackedItem.SetController(controllerID, true);
+                    trackedItem.SetController(controllerID);
                 }
             }
         }

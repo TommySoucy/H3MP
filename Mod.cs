@@ -3490,13 +3490,10 @@ namespace H3MP
                             // Take control
 
                             // Send to all clients
-                            H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+                            H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(0, true);
-                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                            H3MP_GameManager.items.Add(trackedItem.data);
                         }
                     }
                     else
@@ -3506,13 +3503,10 @@ namespace H3MP
                             // Take control
 
                             // Send to all clients
-                            H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+                            H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
-                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                            H3MP_GameManager.items.Add(trackedItem.data);
                         }
                     }
                 }
@@ -3609,13 +3603,10 @@ namespace H3MP
                             // Take control
 
                             // Send to all clients
-                            H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+                            H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(0, true);
-                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                            H3MP_GameManager.items.Add(trackedItem.data);
                         }
                     }
                     else
@@ -3625,13 +3616,10 @@ namespace H3MP
                             // Take control
 
                             // Send to server and all other clients
-                            H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+                            H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
-                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                            H3MP_GameManager.items.Add(trackedItem.data);
                         }
                     }
                 }
@@ -3659,13 +3647,10 @@ namespace H3MP
                         // Take control
 
                         // Send to all clients
-                        H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(0, true);
-                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem.data);
                         bool primaryHand = __instance == __instance.S.Hand_Primary;
                         H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
                         H3MP_ServerSend.SosigPickUpItem(trackedSosig.data.trackedID, trackedItem.data.trackedID, primaryHand);
@@ -3678,13 +3663,10 @@ namespace H3MP
                         // Take control
 
                         // Send to server and all other clients
-                        H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
-                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem.data);
                         bool primaryHand = __instance == __instance.S.Hand_Primary;
                         H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
                         if (trackedSosig.data.trackedID == -1)
@@ -3728,13 +3710,10 @@ namespace H3MP
                         // Take control
 
                         // Send to all clients
-                        H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(0, true);
-                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem.data);
                         int slotIndex = 0;
                         for (int i = 0; i < __instance.I.Slots.Count; ++i)
                         {
@@ -3754,13 +3733,10 @@ namespace H3MP
                         // Take control
 
                         // Send to server and all other clients
-                        H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
-                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem.data);
                         int slotIndex = 0;
                         for (int i = 0; i < __instance.I.Slots.Count; ++i)
                         {
@@ -3928,13 +3904,10 @@ namespace H3MP
                         // Take control
 
                         // Send to all clients
-                        H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(0, true);
-                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem.data);
                     }
                 }
                 else
@@ -3944,13 +3917,10 @@ namespace H3MP
                         // Take control
 
                         // Send to all clients
-                        H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
-                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem.data);
                     }
                 }
             }
@@ -3994,13 +3964,10 @@ namespace H3MP
                             // Take control
 
                             // Send to all clients
-                            H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+                            H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(0, true);
-                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                            H3MP_GameManager.items.Add(trackedItem.data);
                         }
                     }
                     else
@@ -4010,13 +3977,10 @@ namespace H3MP
                             // Take control
 
                             // Send to all clients
-                            H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+                            H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                             // Update locally
                             Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
-                            trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                            H3MP_GameManager.items.Add(trackedItem.data);
                         }
                     }
                 }
@@ -4063,13 +4027,10 @@ namespace H3MP
                         // Take control
 
                         // Send to all clients
-                        H3MP_ServerSend.GiveControl(trackedItem.data.trackedID, 0);
+                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(0, true);
-                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem.data);
                     }
                 }
                 else
@@ -4079,13 +4040,10 @@ namespace H3MP
                         // Take control
 
                         // Send to all clients
-                        H3MP_ClientSend.GiveControl(trackedItem.data.trackedID, H3MP_Client.singleton.ID);
+                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        trackedItem.data.SetController(H3MP_Client.singleton.ID, true);
-                        trackedItem.data.localTrackedID = H3MP_GameManager.items.Count;
-                        H3MP_GameManager.items.Add(trackedItem.data);
                     }
                 }
             }
