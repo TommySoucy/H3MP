@@ -305,6 +305,7 @@ namespace H3MP
                 GameObject trackedItemRef = new GameObject("GrenadeRefIndex");
                 H3MP_TrackedItemReference refScript = trackedItemRef.AddComponent<H3MP_TrackedItemReference>();
                 refScript.refIndex = refIndex;
+                trackedItemRef.SetActive(false);
             }
             else if(physObj is C4)
             {

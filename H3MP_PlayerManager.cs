@@ -139,7 +139,7 @@ namespace H3MP
 
         public void SetColor(int colorIndex)
         {
-            this.colorIndex = colorIndex % H3MP_GameManager.colors.Length;
+            this.colorIndex = Mathf.Abs(colorIndex % H3MP_GameManager.colors.Length);
 
             headMat.color = H3MP_GameManager.colors[colorIndex];
             torsoMat.color = H3MP_GameManager.colors[colorIndex];
