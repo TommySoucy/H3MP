@@ -252,10 +252,6 @@ namespace H3MP
             }
 
             H3MP_PlayerManager player = players[ID];
-            if (!player.visible)
-            {
-                return;
-            }
 
             Transform playerTransform = player.transform;
 
