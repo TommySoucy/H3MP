@@ -236,6 +236,7 @@ namespace H3MP
                     asPG.SpawnOnSplode = new List<GameObject>();
                 }
                 GameObject trackedItemRef = new GameObject();
+                H3MP_TrackedItemReference refScript = trackedItemRef.AddComponent<H3MP_TrackedItemReference>();
                 trackedItemRef.SetActive(false);
                 if (availableTrackedItemRefIndices.Count == 0)
                 {
@@ -261,6 +262,7 @@ namespace H3MP
                 trackedItemRefObjects[refIndex] = trackedItemRef;
                 trackedItemReferences[refIndex] = this;
                 trackedItemRef.name = refIndex.ToString();
+                refScript.refIndex = refIndex;
                 asPG.SpawnOnSplode.Add(trackedItemRef);
             }
             else if(physObj is FVRGrenade)
@@ -298,6 +300,11 @@ namespace H3MP
                 availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
                 timings.Add(-1, refIndex);
                 trackedItemReferences[refIndex] = this;
+
+                // Just make an object that will handle readding ref index to available list when it gets destroyed by scene change
+                GameObject trackedItemRef = new GameObject("GrenadeRefIndex");
+                H3MP_TrackedItemReference refScript = trackedItemRef.AddComponent<H3MP_TrackedItemReference>();
+                refScript.refIndex = refIndex;
             }
             else if(physObj is C4)
             {
