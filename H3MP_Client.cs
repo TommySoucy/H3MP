@@ -476,6 +476,8 @@ namespace H3MP
                 H3MP_ClientHandle.PlayerColor,
                 H3MP_ClientHandle.ColorByIFF,
                 H3MP_ClientHandle.NameplateMode,
+                H3MP_ClientHandle.RadarMode,
+                H3MP_ClientHandle.RadarColor,
             };
 
             // All vanilla scenes can be synced by default
@@ -582,6 +584,7 @@ namespace H3MP
                             actualTrackedItem.physicalItem.sendDestroy = false;
                             DestroyImmediate(actualTrackedItem.physicalItem.gameObject);
                         }
+                        actualTrackedItem.awaitingInstantiation = false;
                     }
                     else
                     {

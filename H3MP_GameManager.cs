@@ -69,6 +69,8 @@ namespace H3MP
         public static readonly Color[] colors = new Color[] { Color.white, Color.red, Color.green, Color.blue, Color.black, new Color(0.98431f, 0.86275f, 0.71373f), new Color(0.31373f, 0.31373f, 0.15294f) };
         public static bool colorByIFF = false; 
         public static int nameplateMode = 1; // 0: All, 1: Friendly only (same IFF), 2: None 
+        public static int radarMode = 0; // 0: All, 1: Friendly only (same IFF), 2: None 
+        public static bool radarColor = true; // True: Colored by IFF, False: Colored by color
 
         public static long ping = -1;
 
@@ -192,6 +194,8 @@ namespace H3MP
             ping = -1;
             colorByIFF = false;
             nameplateMode = 1;
+            radarMode = 0;
+            radarColor = true;
 
             for (int i=0; i< H3MP_TrackedItem.trackedItemRefObjects.Length; ++i)
             {
@@ -355,23 +359,36 @@ namespace H3MP
                 {
                     if(Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.manager.TAHReticle != null)
                     {
-                        for(int i=0; i< Mod.currentTNHInstance.manager.TAHReticle.Contacts.Count; ++i)
+                        for (int i = 0; i < Mod.currentTNHInstance.manager.TAHReticle.Contacts.Count; ++i)
                         {
                             if (Mod.currentTNHInstance.manager.TAHReticle.Contacts[i] == player.reticleContact)
                             {
+                                ((HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(GM.TNH_Manager.TAHReticle)).Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                                UnityEngine.Object.Destroy(Mod.currentTNHInstance.manager.TAHReticle.Contacts[i].gameObject);
                                 Mod.currentTNHInstance.manager.TAHReticle.Contacts.RemoveAt(i);
+                                player.reticleContact = null;
+                                break;
                             }
                         }
-                        ((HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(Mod.currentTNHInstance.manager.TAHReticle)).Remove(player.reticleContact.TrackedTransform);
                     }
-                    Destroy(player.reticleContact.gameObject);
                 }
                 else if(visible && player.reticleContact == null)
                 {
                     if (Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.currentlyPlaying.Contains(player.ID))
                     {
-                        // We are currently in a TNH game with this player, add them to radar
-                        player.reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(player.head, (TAH_ReticleContact.ContactType)(-2)); // -2 is a custom value handled by TAHReticleContactPatch
+                        // We are currently in a TNH game with this player, add them to radar depending on mode
+                        switch (radarMode)
+                        {
+                            case 0:
+                                player.reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(player.head, (TAH_ReticleContact.ContactType)(radarColor ? (player.IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : player.colorIndex - 4)); // <= -2 is a custom value handled by TAHReticleContactPatch
+                                break;
+                            case 1:
+                                if (player.IFF == GM.CurrentPlayerBody.GetPlayerIFF())
+                                {
+                                    player.reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(player.head, (TAH_ReticleContact.ContactType)(radarColor ? (player.IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : player.colorIndex - 4)); // <= -2 is a custom value handled by TAHReticleContactPatch
+                                }
+                                break;
+                        }
                     }
                 }
             }
@@ -2273,6 +2290,7 @@ namespace H3MP
                             {
                                 itemList.Remove(trackedItem.trackedID);
                             }
+                            trackedItem.awaitingInstantiation = false;
                         }
                         else if (newController == 0) // If its us, take control
                         {
@@ -2311,6 +2329,7 @@ namespace H3MP
                                             {
                                                 itemList.Remove(trackedItem.trackedID);
                                             }
+                                            trackedItem.awaitingInstantiation = false;
                                         }
                                         destroyed = true;
                                     }
@@ -2352,6 +2371,7 @@ namespace H3MP
                         {
                             sosigList.Remove(trackedSosig.trackedID);
                         }
+                        trackedSosig.awaitingInstantiation = false;
                     }
                     else if (newController == 0) // If its us, take control
                     {
@@ -2388,6 +2408,7 @@ namespace H3MP
                                         {
                                             sosigList.Remove(trackedSosig.trackedID);
                                         }
+                                        trackedSosig.awaitingInstantiation = false;
                                     }
                                     destroyed = true;
                                 }
@@ -2432,6 +2453,7 @@ namespace H3MP
                         {
                             autoMeaterList.Remove(trackedAutoMeater.trackedID);
                         }
+                        trackedAutoMeater.awaitingInstantiation = false;
                     }
                     else if (newController == 0) // If its us, take control
                     {
@@ -2468,6 +2490,7 @@ namespace H3MP
                                         {
                                             autoMeaterList.Remove(trackedAutoMeater.trackedID);
                                         }
+                                        trackedAutoMeater.awaitingInstantiation = false;
                                     }
                                     destroyed = true;
                                 }
@@ -2512,6 +2535,7 @@ namespace H3MP
                         {
                             encryptionList.Remove(trackedEncryption.trackedID);
                         }
+                        trackedEncryption.awaitingInstantiation = false;
                     }
                     else if (newController == 0)
                     {
@@ -2548,6 +2572,7 @@ namespace H3MP
                                         {
                                             encryptionList.Remove(trackedEncryption.trackedID);
                                         }
+                                        trackedEncryption.awaitingInstantiation = false;
                                     }
                                     destroyed = true;
                                 }

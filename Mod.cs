@@ -13648,7 +13648,9 @@ namespace H3MP
                 return true;
             }
 
-            if((int)t == -2) // Friendly
+            int index = (int)t;
+            // -2: Friendly, -3: Enemy, -4: colorIndex 0, -5: colorIndex 1, ...
+            if(index <= -2) // Player
             {
                 if (__instance.Type != t)
                 {
@@ -13657,6 +13659,8 @@ namespace H3MP
                     __instance.M_Icon.mesh = __instance.Meshes_Icon[(int)TAH_ReticleContact.ContactType.Enemy];
                     __instance.R_Arrow.material = Mod.reticleFriendlyContactArrowMat;
                     __instance.R_Icon.material = Mod.reticleFriendlyContactIconMat;
+
+                    __instance.R_Arrow.material.color = index == -2 ? Color.green : (index == -3 ? Color.red : H3MP_GameManager.colors[Mathf.Abs(index) - 4]);
                 }
                 return false;
             }

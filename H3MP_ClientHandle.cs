@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -17,6 +15,9 @@ namespace H3MP
             string msg = packet.ReadString();
             int ID = packet.ReadInt();
             H3MP_GameManager.colorByIFF = packet.ReadBool();
+            H3MP_GameManager.nameplateMode = packet.ReadInt();
+            H3MP_GameManager.radarMode = packet.ReadInt();
+            H3MP_GameManager.radarColor = packet.ReadBool();
 
             Mod.LogInfo($"Message from server: {msg}");
 
@@ -252,6 +253,7 @@ namespace H3MP
                                 {
                                     itemList.Remove(trackedItem.trackedID);
                                 }
+                                trackedItem.awaitingInstantiation = false;
                                 destroyed = true;
                             }
                         }
@@ -323,6 +325,7 @@ namespace H3MP
                             {
                                 sosigList.Remove(trackedSosig.trackedID);
                             }
+                            trackedSosig.awaitingInstantiation = false;
                             destroyed = true;
                         }
                     }
@@ -398,6 +401,7 @@ namespace H3MP
                             {
                                 autoMeaterList.Remove(trackedAutoMeater.trackedID);
                             }
+                            trackedAutoMeater.awaitingInstantiation = false;
                             destroyed = true;
                         }
                     }
@@ -462,6 +466,7 @@ namespace H3MP
                             {
                                 encryptionList.Remove(trackedEncryption.trackedID);
                             }
+                            trackedEncryption.awaitingInstantiation = false;
                             destroyed = true;
                         }
                     }
@@ -485,6 +490,8 @@ namespace H3MP
 
             if (trackedItem != null)
             {
+                trackedItem.awaitingInstantiation = false;
+
                 trackedItem.removeFromListOnDestroy = removeFromList;
                 if (trackedItem.physicalItem != null)
                 {
@@ -523,6 +530,7 @@ namespace H3MP
 
             if (trackedSosig != null)
             {
+                trackedSosig.awaitingInstantiation = false;
                 trackedSosig.removeFromListOnDestroy = removeFromList;
                 if (trackedSosig.physicalObject != null)
                 {
@@ -563,6 +571,7 @@ namespace H3MP
 
             if (trackedAutoMeater != null)
             {
+                trackedAutoMeater.awaitingInstantiation = false;
                 trackedAutoMeater.removeFromListOnDestroy = removeFromList;
                 if (trackedAutoMeater.physicalObject != null)
                 {
@@ -595,6 +604,7 @@ namespace H3MP
 
             if (trackedEncryption != null)
             {
+                trackedEncryption.awaitingInstantiation = false;
                 trackedEncryption.removeFromListOnDestroy = removeFromList;
                 if (trackedEncryption.physicalObject != null)
                 {
@@ -2301,20 +2311,19 @@ namespace H3MP
                     {
                         player.SetVisible(false);
 
-                        if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null && player.reticleContact != null)
+                        if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.manager.TAHReticle != null && player.reticleContact != null)
                         {
-                            if (Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.manager.TAHReticle != null)
+                            for (int i = 0; i < Mod.currentTNHInstance.manager.TAHReticle.Contacts.Count; ++i)
                             {
-                                for (int i = 0; i < Mod.currentTNHInstance.manager.TAHReticle.Contacts.Count; ++i)
+                                if (Mod.currentTNHInstance.manager.TAHReticle.Contacts[i] == player.reticleContact)
                                 {
-                                    if (Mod.currentTNHInstance.manager.TAHReticle.Contacts[i] == player.reticleContact)
-                                    {
-                                        Mod.currentTNHInstance.manager.TAHReticle.Contacts.RemoveAt(i);
-                                    }
+                                    ((HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(GM.TNH_Manager.TAHReticle)).Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                                    UnityEngine.Object.Destroy(Mod.currentTNHInstance.manager.TAHReticle.Contacts[i].gameObject);
+                                    Mod.currentTNHInstance.manager.TAHReticle.Contacts.RemoveAt(i);
+                                    player.reticleContact = null;
+                                    break;
                                 }
-                                ((HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(Mod.currentTNHInstance.manager.TAHReticle)).Remove(player.reticleContact.TrackedTransform);
                             }
-                            GameObject.Destroy(player.reticleContact.gameObject);
                         }
                     }
                 }
@@ -3312,6 +3321,128 @@ namespace H3MP
                         playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(false);
                     }
                     break;
+            }
+        }
+
+        public static void RadarMode(H3MP_Packet packet)
+        {
+            H3MP_GameManager.radarMode = packet.ReadInt();
+
+            switch (H3MP_GameManager.radarMode)
+            {
+                case 0:
+                    if (H3MP_WristMenuSection.radarModeText != null)
+                    {
+                        H3MP_WristMenuSection.radarModeText.text = "Radar mode (All)";
+                    }
+                    if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null)
+                    {
+                        // Add all currently playing players to radar
+                        foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                        {
+                            if (playerEntry.Value.visible && playerEntry.Value.reticleContact == null && Mod.currentTNHInstance.currentlyPlaying.Contains(playerEntry.Key))
+                            {
+                                playerEntry.Value.reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(playerEntry.Value.head, (TAH_ReticleContact.ContactType)(H3MP_GameManager.radarColor ? (playerEntry.Value.IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : playerEntry.Value.colorIndex - 4));
+                            }
+                        }
+                    }
+                    break;
+                case 1:
+                    if (H3MP_WristMenuSection.radarModeText != null)
+                    {
+                        H3MP_WristMenuSection.radarModeText.text = "Radar mode (Friendly only)";
+                    }
+                    if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null)
+                    {
+                        // Add all currently playing friendly players to radar, remove if not friendly
+                        foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                        {
+                            if (playerEntry.Value.visible && Mod.currentTNHInstance.currentlyPlaying.Contains(playerEntry.Key) &&
+                                playerEntry.Value.IFF == GM.CurrentPlayerBody.GetPlayerIFF() &&
+                                playerEntry.Value.reticleContact == null)
+                            {
+                                playerEntry.Value.reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(playerEntry.Value.head, (TAH_ReticleContact.ContactType)(H3MP_GameManager.radarColor ? (playerEntry.Value.IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : playerEntry.Value.colorIndex - 4));
+                            }
+                            else if ((!playerEntry.Value.visible || !Mod.currentTNHInstance.currentlyPlaying.Contains(playerEntry.Key) || playerEntry.Value.IFF != GM.CurrentPlayerBody.GetPlayerIFF())
+                                     && playerEntry.Value.reticleContact != null)
+                            {
+                                for (int i = GM.TNH_Manager.TAHReticle.Contacts.Count - 1; i >= 0; i--)
+                                {
+                                    if (GM.TNH_Manager.TAHReticle.Contacts[i] == playerEntry.Value.reticleContact)
+                                    {
+                                        HashSet<Transform> ts = (HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(GM.TNH_Manager.TAHReticle);
+                                        ts.Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                                        UnityEngine.Object.Destroy(GM.TNH_Manager.TAHReticle.Contacts[i].gameObject);
+                                        GM.TNH_Manager.TAHReticle.Contacts.RemoveAt(i);
+                                        playerEntry.Value.reticleContact = null;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 2:
+                    if (H3MP_WristMenuSection.radarModeText != null)
+                    {
+                        H3MP_WristMenuSection.radarModeText.text = "Radar mode (None)";
+                    }
+                    if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null)
+                    {
+                        // Remvoe all player contacts
+                        foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                        {
+                            if (playerEntry.Value.reticleContact != null)
+                            {
+                                for (int i = GM.TNH_Manager.TAHReticle.Contacts.Count - 1; i >= 0; i--)
+                                {
+                                    if (GM.TNH_Manager.TAHReticle.Contacts[i] == playerEntry.Value.reticleContact)
+                                    {
+                                        HashSet<Transform> ts = (HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(GM.TNH_Manager.TAHReticle);
+                                        ts.Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                                        UnityEngine.Object.Destroy(GM.TNH_Manager.TAHReticle.Contacts[i].gameObject);
+                                        GM.TNH_Manager.TAHReticle.Contacts.RemoveAt(i);
+                                        playerEntry.Value.reticleContact = null;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+
+        public static void RadarColor(H3MP_Packet packet)
+        {
+            H3MP_GameManager.radarColor = packet.ReadBool();
+            if (H3MP_WristMenuSection.radarColorText != null)
+            {
+                H3MP_WristMenuSection.radarColorText.text = "Radar color IFF (" + H3MP_GameManager.radarColor + ")";
+            }
+
+            // Set color of any active player contacts
+            if (H3MP_GameManager.radarColor)
+            {
+                foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                {
+                    if (playerEntry.Value.reticleContact == null)
+                    {
+                        playerEntry.Value.reticleContact.R_Arrow.material.color = playerEntry.Value.IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? Color.green : Color.red;
+                        playerEntry.Value.reticleContact.R_Icon.material.color = playerEntry.Value.IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? Color.green : Color.red;
+                    }
+                }
+            }
+            else
+            {
+                foreach (KeyValuePair<int, H3MP_PlayerManager> playerEntry in H3MP_GameManager.players)
+                {
+                    if (playerEntry.Value.reticleContact == null)
+                    {
+                        playerEntry.Value.reticleContact.R_Arrow.material.color = H3MP_GameManager.colors[playerEntry.Value.colorIndex];
+                        playerEntry.Value.reticleContact.R_Icon.material.color = H3MP_GameManager.colors[playerEntry.Value.colorIndex];
+                    }
+                }
             }
         }
     }

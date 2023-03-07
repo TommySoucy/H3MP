@@ -56,7 +56,7 @@ namespace H3MP
 
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
 
-                H3MP_ServerSend.Welcome(ID, "Welcome to the server", H3MP_GameManager.colorByIFF);
+                H3MP_ServerSend.Welcome(ID, "Welcome to the server", H3MP_GameManager.colorByIFF, H3MP_GameManager.nameplateMode, H3MP_GameManager.radarMode, H3MP_GameManager.radarColor);
             }
 
             public void SendData(H3MP_Packet packet)

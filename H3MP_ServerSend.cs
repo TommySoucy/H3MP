@@ -77,13 +77,16 @@ namespace H3MP
             }
         }
 
-        public static void Welcome(int toClient, string msg, bool colorByIFF)
+        public static void Welcome(int toClient, string msg, bool colorByIFF, int nameplateMode, int radarMode, bool radarColor)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.welcome))
             {
                 packet.Write(msg);
                 packet.Write(toClient);
                 packet.Write(colorByIFF);
+                packet.Write(nameplateMode);
+                packet.Write(radarMode);
+                packet.Write(radarColor);
 
                 SendTCPData(toClient, packet);
             }
@@ -3859,6 +3862,26 @@ namespace H3MP
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.nameplateMode))
             {
                 packet.Write(nameplateMode);
+
+                SendTCPDataToAll(packet);
+            }
+        }
+
+        public static void RadarMode(int radarMode)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.radarMode))
+            {
+                packet.Write(radarMode);
+
+                SendTCPDataToAll(packet);
+            }
+        }
+
+        public static void RadarColor(bool radarColor)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.radarColor))
+            {
+                packet.Write(radarColor);
 
                 SendTCPDataToAll(packet);
             }

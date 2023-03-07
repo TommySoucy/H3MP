@@ -116,12 +116,35 @@ namespace H3MP
             leftHand.gameObject.SetActive(visible);
             rightHand.gameObject.SetActive(visible);
             overheadDisplayBillboard.gameObject.SetActive(visible && (H3MP_GameManager.nameplateMode == 0 || (H3MP_GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
-        
+
+            if (visible && reticleContact == null &&
+                Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null &&
+                Mod.currentTNHInstance.manager.TAHReticle != null)
+            {
+                reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(head, (TAH_ReticleContact.ContactType)(H3MP_GameManager.radarColor ? (IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : colorIndex - 4));
+            }
+            else if(!visible && reticleContact != null)
+            {
+                for (int i = GM.TNH_Manager.TAHReticle.Contacts.Count - 1; i >= 0; i--)
+                {
+                    if (GM.TNH_Manager.TAHReticle.Contacts[i] == reticleContact)
+                    {
+                        HashSet<Transform> ts = (HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(GM.TNH_Manager.TAHReticle);
+                        ts.Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                        UnityEngine.Object.Destroy(GM.TNH_Manager.TAHReticle.Contacts[i].gameObject);
+                        GM.TNH_Manager.TAHReticle.Contacts.RemoveAt(i);
+                        reticleContact = null;
+                        break;
+                    }
+                }
+            }
+
             SetEntitiesRegistered(visible);
         }
 
         public void SetIFF(int IFF)
         {
+            int preIFF = this.IFF;
             this.IFF = IFF;
             if (headEntity != null)
             {
@@ -135,6 +158,43 @@ namespace H3MP
             }
 
             overheadDisplayBillboard.gameObject.SetActive(visible && (H3MP_GameManager.nameplateMode == 0 || (H3MP_GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+
+            if (H3MP_GameManager.radarMode == 1)
+            {
+                if (visible &&
+                    Mod.currentTNHInstance != null &&
+                    Mod.currentTNHInstance.manager != null &&
+                    Mod.currentTNHInstance.currentlyPlaying.Contains(ID) &&
+                    reticleContact == null)
+                {
+                    reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(head, (TAH_ReticleContact.ContactType)(H3MP_GameManager.radarColor ? (IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : colorIndex - 4));
+                }
+                else if(!visible ||
+                Mod.currentTNHInstance == null ||
+                Mod.currentTNHInstance.manager == null ||
+                        !Mod.currentTNHInstance.currentlyPlaying.Contains(ID) ||
+                        reticleContact != null)
+                {
+                    for (int i = GM.TNH_Manager.TAHReticle.Contacts.Count - 1; i >= 0; i--)
+                    {
+                        if (GM.TNH_Manager.TAHReticle.Contacts[i] == reticleContact)
+                        {
+                            HashSet<Transform> ts = (HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(GM.TNH_Manager.TAHReticle);
+                            ts.Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                            Destroy(GM.TNH_Manager.TAHReticle.Contacts[i].gameObject);
+                            GM.TNH_Manager.TAHReticle.Contacts.RemoveAt(i);
+                            reticleContact = null;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (H3MP_GameManager.radarColor && reticleContact != null)
+            {
+                reticleContact.R_Arrow.material.color = IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? Color.green : Color.red;
+                reticleContact.R_Icon.material.color = IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? Color.green : Color.red;
+            }
         }
 
         public void SetColor(int colorIndex)
@@ -145,6 +205,12 @@ namespace H3MP
             torsoMat.color = H3MP_GameManager.colors[colorIndex];
             leftHandMat.color = H3MP_GameManager.colors[colorIndex];
             rightHandMat.color = H3MP_GameManager.colors[colorIndex];
+
+            if (!H3MP_GameManager.radarColor && reticleContact != null)
+            {
+                reticleContact.R_Arrow.material.color = H3MP_GameManager.colors[colorIndex];
+                reticleContact.R_Icon.material.color = H3MP_GameManager.colors[colorIndex];
+            }
         }
     }
 }

@@ -62,6 +62,12 @@ namespace H3MP
                 yield break;
             }
 
+            if (!awaitingInstantiation)
+            {
+                // Could have cancelled an item instantiation if received destruction order while we were waiting to get the prefab
+                yield break;
+            }
+
             // Here, we can't simply skip the next instantiate
             // Since Awake() will be called on the object upon instantiation, if the object instantiates something in Awake(), like firearm,
             // it will consume the skipNextInstantiate, so we instead skipAllInstantiates during the current instantiation

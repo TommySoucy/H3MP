@@ -56,6 +56,11 @@ namespace H3MP
                 yield break;
             }
 
+            if (!awaitingInstantiation)
+            {
+                yield break;
+            }
+
             ++Mod.skipAllInstantiates;
             if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at automeater instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
             GameObject autoMeaterInstance = GameObject.Instantiate(autoMeaterPrefab, position, rotation);

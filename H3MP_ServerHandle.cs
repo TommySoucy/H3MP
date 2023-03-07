@@ -320,6 +320,7 @@ namespace H3MP
                                 {
                                     itemList.Remove(trackedItem.trackedID);
                                 }
+                                trackedItem.awaitingInstantiation = false;
                                 destroyed = true;
                             }
                         }
@@ -392,6 +393,7 @@ namespace H3MP
                             {
                                 sosigList.Remove(trackedSosig.trackedID);
                             }
+                            trackedSosig.awaitingInstantiation = false;
                             destroyed = true;
                         }
                     }
@@ -469,6 +471,7 @@ namespace H3MP
                             {
                                 autoMeaterList.Remove(trackedAutoMeater.trackedID);
                             }
+                            trackedAutoMeater.awaitingInstantiation = false;
                             destroyed = true;
                         }
                     }
@@ -545,6 +548,7 @@ namespace H3MP
                             {
                                 encryptionList.Remove(trackedEncryption.trackedID);
                             }
+                            trackedEncryption.awaitingInstantiation = false;
                             destroyed = true;
                         }
                     }
@@ -577,6 +581,8 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 trackedSosig.removeFromListOnDestroy = removeFromList;
+
+                trackedSosig.awaitingInstantiation = false;
 
                 bool destroyed = false;
                 if (trackedSosig.physicalObject != null)
@@ -623,6 +629,7 @@ namespace H3MP
             if (trackedAutoMeater != null)
             {
                 trackedAutoMeater.removeFromListOnDestroy = removeFromList;
+                trackedAutoMeater.awaitingInstantiation = false;
 
                 if (trackedAutoMeater.physicalObject != null)
                 {
@@ -660,6 +667,7 @@ namespace H3MP
             if (trackedEncryption != null)
             {
                 trackedEncryption.removeFromListOnDestroy = removeFromList;
+                trackedEncryption.awaitingInstantiation = false;
 
                 if (trackedEncryption.physicalObject != null)
                 {
@@ -696,6 +704,8 @@ namespace H3MP
             {
                 H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
                 trackedItem.removeFromListOnDestroy = removeFromList;
+
+                trackedItem.awaitingInstantiation = false;
 
                 bool destroyed = false;
                 if (trackedItem.physicalItem != null)
@@ -2576,20 +2586,19 @@ namespace H3MP
                     {
                         player.SetVisible(false);
 
-                        if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null && player.reticleContact != null)
+                        if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.manager.TAHReticle != null && player.reticleContact != null)
                         {
-                            if (Mod.currentTNHInstance.manager != null && Mod.currentTNHInstance.manager.TAHReticle != null)
+                            for (int i = 0; i < Mod.currentTNHInstance.manager.TAHReticle.Contacts.Count; ++i)
                             {
-                                for (int i = 0; i < Mod.currentTNHInstance.manager.TAHReticle.Contacts.Count; ++i)
+                                if (Mod.currentTNHInstance.manager.TAHReticle.Contacts[i] == player.reticleContact)
                                 {
-                                    if (Mod.currentTNHInstance.manager.TAHReticle.Contacts[i] == player.reticleContact)
-                                    {
-                                        Mod.currentTNHInstance.manager.TAHReticle.Contacts.RemoveAt(i);
-                                    }
+                                    ((HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(GM.TNH_Manager.TAHReticle)).Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                                    UnityEngine.Object.Destroy(Mod.currentTNHInstance.manager.TAHReticle.Contacts[i].gameObject);
+                                    Mod.currentTNHInstance.manager.TAHReticle.Contacts.RemoveAt(i);
+                                    player.reticleContact = null;
+                                    break;
                                 }
-                                ((HashSet<Transform>)Mod.TAH_Reticle_m_trackedTransforms.GetValue(Mod.currentTNHInstance.manager.TAHReticle)).Remove(player.reticleContact.TrackedTransform);
                             }
-                            GameObject.Destroy(player.reticleContact.gameObject);
                         }
                     }
                 }

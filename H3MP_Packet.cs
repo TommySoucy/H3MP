@@ -154,7 +154,9 @@ namespace H3MP
         reviveTNHPlayer = 143,
         playerColor = 144,
         colorByIFF = 145,
-        nameplateMode = 146
+        nameplateMode = 146,
+        radarMode = 147,
+        radarColor = 148
     }
 
     /// <summary>Sent from client to server.</summary>
