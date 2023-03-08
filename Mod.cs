@@ -16,6 +16,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -468,12 +469,8 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadDivide))
                 {
-                    Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                    for(int i=0; i < assemblies.Length; ++i)
-                    {
-                        Assembly assembly = assemblies[i];
-                        Mod.LogInfo("Assembly: " + assembly.FullName);
-                    }
+                    TODO: Review why server needed up to date obejcts in the first place
+                    SteamVR_LoadLevel.Begin("Grillhouse_2Story", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
             }
 #endif
@@ -2819,8 +2816,13 @@ namespace H3MP
 
         // MOD: This method will be used to find the ID of which player to give control of this object to
         //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
-        public static int GetBestPotentialObjectHost(int currentController, bool forUs = true)
+        public static int GetBestPotentialObjectHost(int currentController, bool forUs = true, bool hasWhiteList = false, List<int> whiteList = null)
         {
+            if(hasWhiteList && whiteList == null)
+            {
+                whiteList = new List<int>();
+            }
+
             if (forUs)
             {
                 if (Mod.currentTNHInstance != null)
@@ -2830,11 +2832,9 @@ namespace H3MP
                         // Going through each like this, we will go through the host of the instance before any other
                         foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                         {
-                            // If the player is us and we are **not spectating**??
-                            // OR it is another player who is **not spectating**??
-                            // TODO: Spectators can still be in control of things, can't they? review this
-                            if ((playerID == H3MP_GameManager.ID/* && !Mod.TNHSpectating*/) ||
-                                 (H3MP_GameManager.players.ContainsKey(playerID)/* && H3MP_GameManager.players[playerID].gameObject.activeSelf*/))
+                            if ((playerID == H3MP_GameManager.ID ||
+                                 H3MP_GameManager.players.ContainsKey(playerID)) &&
+                                (!hasWhiteList || whiteList.Contains(playerID)))
                             {
                                 return playerID;
                             }
@@ -2843,10 +2843,10 @@ namespace H3MP
                     else
                     {
                         // Going through each like this, we will go through the host of the instance before any other
-                        // TODO: Spectators can still be in control of things, can't they? review this
                         foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                         {
-                            if (playerID != currentController/* && H3MP_GameManager.players[playerID].gameObject.activeSelf*/)
+                            if (playerID != currentController &&
+                                (!hasWhiteList || whiteList.Contains(playerID)))
                             {
                                 return playerID;
                             }
@@ -2868,15 +2868,24 @@ namespace H3MP
                             }
                             else
                             {
-                                int smallest = otherPlayers[0] < H3MP_GameManager.ID ? otherPlayers[0] : H3MP_GameManager.ID;
-                                for (int i = 1; i < otherPlayers.Count; ++i)
+                                bool found = false;
+                                int smallest = int.MaxValue;
+                                for (int i = 0; i < otherPlayers.Count; ++i)
                                 {
-                                    if (otherPlayers[i] < smallest)
+                                    if (otherPlayers[i] < smallest &&
+                                        (!hasWhiteList || whiteList.Contains(otherPlayers[i])))
                                     {
+                                        found = true;
                                         smallest = otherPlayers[i];
                                     }
                                 }
-                                return smallest;
+                                if (H3MP_GameManager.ID < smallest &&
+                                    (!hasWhiteList || whiteList.Contains(H3MP_GameManager.ID)))
+                                {
+                                    found = true;
+                                    smallest = H3MP_GameManager.ID;
+                                }
+                                return found ? smallest : -1;
                             }
                         }
                     }
@@ -2886,7 +2895,13 @@ namespace H3MP
                             instances.TryGetValue(instanceToUse, out List<int> otherPlayers) && otherPlayers.Count > 0)
                         {
                             // Just take first one
-                            return otherPlayers[0];
+                            for(int i=0; i < otherPlayers.Count; ++i)
+                            {
+                                if(!hasWhiteList || whiteList.Contains(otherPlayers[i]))
+                                {
+                                    return otherPlayers[i];
+                                }
+                            }
                         }
                     }
                 }
@@ -2896,7 +2911,7 @@ namespace H3MP
                 string scene = H3MP_Server.clients[currentController].player.scene;
                 int instance = H3MP_Server.clients[currentController].player.instance;
 
-                if(scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && instance == H3MP_GameManager.instance)
+                if(scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && instance == H3MP_GameManager.instance && (!hasWhiteList || whiteList.Contains(0)))
                 {
                     return 0;
                 }
@@ -2904,15 +2919,18 @@ namespace H3MP
                 if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances) &&
                     instances.TryGetValue(instance, out List<int> otherPlayers) && otherPlayers.Count > 0)
                 {
-                    int smallest = otherPlayers[0];
-                    for (int i = 1; i < otherPlayers.Count; ++i)
+                    bool found = false;
+                    int smallest = int.MaxValue;
+                    for (int i = 0; i < otherPlayers.Count; ++i)
                     {
-                        if (otherPlayers[i] < smallest)
+                        if (otherPlayers[i] < smallest &&
+                            (!hasWhiteList || whiteList.Contains(otherPlayers[i])))
                         {
+                            found = true;
                             smallest = otherPlayers[i];
                         }
                     }
-                    return smallest;
+                    return found ? smallest : -1;
                 }
             }
             return -1;

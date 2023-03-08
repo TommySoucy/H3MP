@@ -103,7 +103,7 @@ namespace H3MP
                     // We just want to give control of our items to another client (usually because leaving scene with other clients left inside)
                     if (data.controller == 0)
                     {
-                        int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
+                        int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, H3MP_GameManager.playersAtLoadStart);
 
                         if (otherPlayer == -1)
                         {
@@ -165,7 +165,7 @@ namespace H3MP
                 {
                     if (data.controller == H3MP_Client.singleton.ID)
                     {
-                        int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller);
+                        int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, H3MP_GameManager.playersAtLoadStart);
 
                         if (otherPlayer == -1)
                         {

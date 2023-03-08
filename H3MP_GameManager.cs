@@ -42,6 +42,7 @@ namespace H3MP
         public static Dictionary<TNH_EncryptionTarget, H3MP_TrackedEncryption> trackedEncryptionByEncryption = new Dictionary<TNH_EncryptionTarget, H3MP_TrackedEncryption>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, H3MP_TNHInstance> TNHInstances = new Dictionary<int, H3MP_TNHInstance>();
+        public static List<int> playersAtLoadStart;
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> itemsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> sosigsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
@@ -1610,6 +1611,22 @@ namespace H3MP
                 currentInstance.dead.Remove(ID);
             }
 
+            if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
+            {
+                if (relevantInstances0.TryGetValue(H3MP_GameManager.instance, out List<int> relevantPlayers))
+                {
+                    playersAtLoadStart = relevantPlayers;
+                }
+                else
+                {
+                    playersAtLoadStart = null;
+                }
+            }
+            else
+            {
+                playersAtLoadStart = null;
+            }
+
             // Set locally
             H3MP_GameManager.instance = instance;
 
@@ -1961,18 +1978,6 @@ namespace H3MP
             return autoMeater.PO.m_hand != null;
         }
 
-        public static bool PlayersPresentSlow()
-        {
-            foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
-            {
-                if (player.Value.scene.Equals(H3MP_GameManager.scene) && player.Value.instance == instance)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public static void OnSceneLoadedVR(bool loading)
         {
             // Return right away if we don't have server or client running
@@ -2053,6 +2058,22 @@ namespace H3MP
                     firstPlayerInSceneInstance = true;
                 }
                 Mod.LogInfo("Started loading, control override: " + controlOverride);
+
+                if(playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
+                {
+                    if (relevantInstances0.TryGetValue(instance, out List<int> relevantPlayers))
+                    {
+                        playersAtLoadStart = relevantPlayers;
+                    }
+                    else
+                    {
+                        playersAtLoadStart = null;
+                    }
+                }
+                else
+                {
+                    playersAtLoadStart = null;
+                }
             }
             else // Finished loading
             {
@@ -2216,44 +2237,6 @@ namespace H3MP
                 damage.Dam_TotalEnergetic *= 0.15f;
                 damage.Dam_TotalKinetic *= 0.15f;
                 GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
-            }
-        }
-
-        // MOD: This will get called when the client disconnects from a server
-        //      A mod should postfix this to give control of whatever elements it has that are tracked through H3MP that are under this client's control
-        //      Like TNH below, if we are in a TNH instance, we need to give control of the instance if necessary
-        public static void GiveUpAllControl()
-        {
-            // Get best potential host
-            int newController = Mod.GetBestPotentialObjectHost(ID);
-            if(newController == -1)
-            {
-                // This would mean there is noone in our scene/instance to take control of anything we have
-                return;
-            }
-
-            // Give all items
-            foreach(H3MP_TrackedItemData item in items)
-            {
-                H3MP_ClientSend.GiveControl(item.trackedID, newController);
-            }
-
-            // Give all sosigs
-            foreach(H3MP_TrackedSosigData sosig in sosigs)
-            {
-                H3MP_ClientSend.GiveSosigControl(sosig.trackedID, newController);
-            }
-
-            // Give all automeaters
-            foreach(H3MP_TrackedAutoMeaterData autoMeater in autoMeaters)
-            {
-                H3MP_ClientSend.GiveAutoMeaterControl(autoMeater.trackedID, newController);
-            }
-
-            // Give all encryptions
-            foreach(H3MP_TrackedEncryptionData encryption in encryptions)
-            {
-                H3MP_ClientSend.GiveEncryptionControl(encryption.trackedID, newController);
             }
         }
 

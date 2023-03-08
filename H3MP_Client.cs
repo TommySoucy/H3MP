@@ -629,7 +629,10 @@ namespace H3MP
                 Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
                 // Instantiate item if it is identiafiable and in the current scene/instance
-                if (!trackedItem.awaitingInstantiation && H3MP_GameManager.IsItemIdentifiable(trackedItem) && trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
+                if (!trackedItem.awaitingInstantiation && 
+                    H3MP_GameManager.IsItemIdentifiable(trackedItem) &&
+                    trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                    trackedItem.instance == H3MP_GameManager.instance)
                 {
                     Mod.LogInfo("\t\tinstantiating");
                     trackedItem.awaitingInstantiation = true;
@@ -713,7 +716,9 @@ namespace H3MP
                     }
 
                     // Instantiate sosig if it is in the current scene
-                    if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
+                    if (!trackedSosig.awaitingInstantiation &&
+                        trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                        trackedSosig.instance == H3MP_GameManager.instance)
                     {
                         trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
@@ -729,7 +734,8 @@ namespace H3MP
                     // This could be the case if joining a scene with sosigs we already have the data for
                     if (trackedSosigData.physicalObject == null && !trackedSosigData.awaitingInstantiation)
                     {
-                        if (trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
+                        if (trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                            trackedSosig.instance == H3MP_GameManager.instance)
                         {
                             trackedSosigData.awaitingInstantiation = true;
                             AnvilManager.Run(trackedSosigData.Instantiate());
@@ -819,7 +825,9 @@ namespace H3MP
                 }
 
                 // Instantiate AutoMeater if it is in the current scene
-                if (!trackedAutoMeater.awaitingInstantiation && trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                if (!trackedAutoMeater.awaitingInstantiation &&
+                    trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                    trackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
                     trackedAutoMeater.awaitingInstantiation = true;
                     AnvilManager.Run(trackedAutoMeater.Instantiate());
@@ -902,7 +910,9 @@ namespace H3MP
                     }
 
                     // Instantiate Encryption if it is in the current scene
-                    if (!trackedEncryption.awaitingInstantiation && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
+                    if (!trackedEncryption.awaitingInstantiation &&
+                        trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && 
+                        trackedEncryption.instance == H3MP_GameManager.instance)
                     {
                         trackedEncryption.awaitingInstantiation = true;
                         AnvilManager.Run(trackedEncryption.Instantiate());
@@ -918,7 +928,9 @@ namespace H3MP
                     // This could be the case if joining a scene with encryptions we already have the data for
                     if (trackedEncryptionData.physicalObject == null)
                     {
-                        if (!trackedEncryptionData.awaitingInstantiation && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
+                        if (!trackedEncryptionData.awaitingInstantiation && 
+                            trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                            trackedEncryption.instance == H3MP_GameManager.instance)
                         {
                             trackedEncryptionData.awaitingInstantiation = true;
                             AnvilManager.Run(trackedEncryptionData.Instantiate());

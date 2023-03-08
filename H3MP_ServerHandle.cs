@@ -99,42 +99,48 @@ namespace H3MP
 
             List<int> waitingFromClients = new List<int>();
 
-            // Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
+            //// Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
+            //if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene))
+            //{
+            //    foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
+            //    {
+            //        if (otherClient.Value.tcp != null && otherClient.Value.tcp.socket != null && // If a client is connected at that index
+            //            !H3MP_Server.loadingClientsWaitingFrom.ContainsKey(otherClient.Key) && // If the client is not currently loading
+            //            otherClient.Key != clientID && otherClient.Value.player.scene.Equals(scene) && otherClient.Value.player.instance == player.instance)
+            //        {
+            //            if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherClient.Key))
+            //            {
+            //                H3MP_Server.clientsWaitingUpDate[otherClient.Key].Add(clientID);
+            //            }
+            //            else
+            //            {
+            //                H3MP_Server.clientsWaitingUpDate.Add(otherClient.Key, new List<int> { clientID });
+            //            }
+            //            H3MP_ServerSend.RequestUpToDateObjects(otherClient.Key, false, clientID);
+            //            waitingFromClients.Add(otherClient.Key);
+            //        }
+            //    }
+            //}
+
+            //if (H3MP_Server.loadingClientsWaitingFrom.ContainsKey(clientID))
+            //{
+            //    Mod.LogWarning("Server received order to set player " + clientID + "'s scene to " + scene + ", but was already in loadingClientsWaitingFrom:");
+            //    List<int> currentList = H3MP_Server.loadingClientsWaitingFrom[clientID];
+            //    for(int i=0;i<currentList.Count; ++i)
+            //    {
+            //        Mod.LogWarning("\t" + currentList[i]);
+            //    }
+            //    H3MP_Server.loadingClientsWaitingFrom[clientID] = waitingFromClients;
+            //}
+            //else
+            //{
+            //    H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
+            //}
+
             if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene))
             {
-                foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
-                {
-                    if (otherClient.Value.tcp != null && otherClient.Value.tcp.socket != null && // If a client is connected at that index
-                        !H3MP_Server.loadingClientsWaitingFrom.ContainsKey(otherClient.Key) && // If the client is not currently loading
-                        otherClient.Key != clientID && otherClient.Value.player.scene.Equals(scene) && otherClient.Value.player.instance == player.instance)
-                    {
-                        if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherClient.Key))
-                        {
-                            H3MP_Server.clientsWaitingUpDate[otherClient.Key].Add(clientID);
-                        }
-                        else
-                        {
-                            H3MP_Server.clientsWaitingUpDate.Add(otherClient.Key, new List<int> { clientID });
-                        }
-                        H3MP_ServerSend.RequestUpToDateObjects(otherClient.Key, false, clientID);
-                        waitingFromClients.Add(otherClient.Key);
-                    }
-                }
-            }
-
-            if (H3MP_Server.loadingClientsWaitingFrom.ContainsKey(clientID))
-            {
-                Mod.LogWarning("Server received order to set player " + clientID + "'s scene to " + scene + ", but was already in loadingClientsWaitingFrom:");
-                List<int> currentList = H3MP_Server.loadingClientsWaitingFrom[clientID];
-                for(int i=0;i<currentList.Count; ++i)
-                {
-                    Mod.LogWarning("\t" + currentList[i]);
-                }
-                H3MP_Server.loadingClientsWaitingFrom[clientID] = waitingFromClients;
-            }
-            else
-            {
-                H3MP_Server.loadingClientsWaitingFrom.Add(clientID, waitingFromClients);
+                Mod.LogInfo("Client " + clientID + " just changed scene, sending relevant tracked objects");
+                H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
             }
 
             Mod.LogInfo("Synced with player who just joined a scene");
@@ -156,38 +162,41 @@ namespace H3MP
             // scene when it changed instance. We will instead send up to date objects when they arrive at their new scene
             if (!wasLoading) 
             {
-                // Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
-                int requestedCount = 0;
-                if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene))
-                {
-                    foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
-                    {
-                        if (otherClient.Value.tcp != null && otherClient.Value.tcp.socket != null && // If a client is connected at that index
-                            !H3MP_Server.loadingClientsWaitingFrom.ContainsKey(otherClient.Key) && // If the client is not currently loading
-                            otherClient.Key != clientID && otherClient.Value.player.scene.Equals(player.scene) && otherClient.Value.player.instance == instance)
-                        {
-                            if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherClient.Key))
-                            {
-                                H3MP_Server.clientsWaitingUpDate[otherClient.Key].Add(clientID);
-                            }
-                            else
-                            {
-                                H3MP_Server.clientsWaitingUpDate.Add(otherClient.Key, new List<int> { clientID });
-                            }
-                            H3MP_ServerSend.RequestUpToDateObjects(otherClient.Key, false, clientID);
-                            ++requestedCount;
-                        }
-                    }
-                }
+                //// Request most up to date items from relevant clients so we can send them to the client when it is ready to receive them
+                //int requestedCount = 0;
+                //if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene))
+                //{
+                //    foreach (KeyValuePair<int, H3MP_ServerClient> otherClient in H3MP_Server.clients)
+                //    {
+                //        if (otherClient.Value.tcp != null && otherClient.Value.tcp.socket != null && // If a client is connected at that index
+                //            !H3MP_Server.loadingClientsWaitingFrom.ContainsKey(otherClient.Key) && // If the client is not currently loading
+                //            otherClient.Key != clientID && otherClient.Value.player.scene.Equals(player.scene) && otherClient.Value.player.instance == instance)
+                //        {
+                //            if (H3MP_Server.clientsWaitingUpDate.ContainsKey(otherClient.Key))
+                //            {
+                //                H3MP_Server.clientsWaitingUpDate[otherClient.Key].Add(clientID);
+                //            }
+                //            else
+                //            {
+                //                H3MP_Server.clientsWaitingUpDate.Add(otherClient.Key, new List<int> { clientID });
+                //            }
+                //            H3MP_ServerSend.RequestUpToDateObjects(otherClient.Key, false, clientID);
+                //            ++requestedCount;
+                //        }
+                //    }
+                //}
 
-                // In the case of a changing instance, the client will never send a "done loading" packet
-                // This means the server will never get the signal to send relevant tracked objects unless 
-                // there are other clients in the scene/instance to receive up to date items from
-                // This means if there are not other such clients, we will never send relevant items, so we do it here right away instead
-                if (requestedCount == 0)
-                {
-                    H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
-                }
+                //// In the case of a changing instance, the client will never send a "done loading" packet
+                //// This means the server will never get the signal to send relevant tracked objects unless 
+                //// there are other clients in the scene/instance to receive up to date items from
+                //// This means if there are not other such clients, we will never send relevant items, so we do it here right away instead
+                //if (requestedCount == 0)
+                //{
+                //    H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
+                //}
+
+                Mod.LogInfo("Client " + clientID + " just changed instance, sending relevant tracked objects");
+                H3MP_Server.clients[clientID].SendRelevantTrackedObjects();
             }
         }
 
