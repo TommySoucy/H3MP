@@ -2006,19 +2006,7 @@ namespace H3MP
 
                 ++giveControlOfDestroyed;
 
-                // Send an update to all other clients so they can decide whether they can see this client
-                if (H3MP_ThreadManager.host)
-                {
-                    // Send the host's scene to clients
-                    H3MP_ServerSend.PlayerScene(0, LoadLevelBeginPatch.loadingLevel);
-                }
-                else
-                {
-                    // Send to server, host will update and then send to all other clients
-                    H3MP_ClientSend.PlayerScene(LoadLevelBeginPatch.loadingLevel);
-                }
-
-                //++Mod.skipAllInstantiates;
+                ++Mod.skipAllInstantiates;
 
                 // Get out of TNH instance 
                 // This makes assumption that player must go through main menu to leave TNH
@@ -2081,7 +2069,19 @@ namespace H3MP
                 Mod.LogInfo("Arrived in scene: " + H3MP_GameManager.scene);
                 sceneLoading = false;
 
-                //--Mod.skipAllInstantiates;
+                // Send an update to let others know we changed scene
+                if (H3MP_ThreadManager.host)
+                {
+                    // Send the host's scene to clients
+                    H3MP_ServerSend.PlayerScene(0, LoadLevelBeginPatch.loadingLevel);
+                }
+                else
+                {
+                    // Send to server, host will update and then send to all other clients
+                    H3MP_ClientSend.PlayerScene(LoadLevelBeginPatch.loadingLevel);
+                }
+
+                --Mod.skipAllInstantiates;
 
                 --giveControlOfDestroyed;
 
@@ -2125,6 +2125,8 @@ namespace H3MP
                     // This could happen if object control was given to us while we were loading
                     // Note that we check if the trackedID is initialized becaue we don't want to reinstantiate items that are unawoken
                     // which will not have a trackedID yet
+                    // TODO: Review: This may not be a possible case anymore considering we only send our new scene once we are done loading, so no one is going to 
+                    //               give us control because they didn't know we were coming here
                     for(int i=0; i < items.Count; ++i)
                     {
                         if (items[i].physicalItem == null && !items[i].awaitingInstantiation && items[i].trackedID > -1)
