@@ -35,6 +35,7 @@ namespace H3MP
 
         public string scene;
         public int instance;
+        public bool firstInSceneInstance;
 
         public bool visible;
 

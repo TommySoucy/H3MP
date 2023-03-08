@@ -136,6 +136,10 @@ namespace H3MP
                 firstInSceneInstance = true;
             }
 
+            firstInSceneInstance &= sceneLoading || !scene.Equals(H3MP_GameManager.scene) || instance != H3MP_GameManager.instance;
+
+            playerManager.firstInSceneInstance = firstInSceneInstance;
+
             if (H3MP_ThreadManager.host)
             {
                 H3MP_Server.clients[ID].player.firstInSceneInstance = firstInSceneInstance;
@@ -335,6 +339,10 @@ namespace H3MP
                 firstInSceneInstance = true;
             }
 
+            firstInSceneInstance &= sceneLoading || !player.scene.Equals(scene) || player.instance != instance;
+
+            player.firstInSceneInstance = firstInSceneInstance;
+
             if (H3MP_ThreadManager.host)
             {
                 H3MP_Server.clients[playerID].player.scene = sceneName;
@@ -497,6 +505,10 @@ namespace H3MP
                 playersByInstanceByScene[player.scene].Add(instance, new List<int>() { player.ID });
                 firstInSceneInstance = true;
             }
+
+            firstInSceneInstance &= sceneLoading || !player.scene.Equals(scene) || player.instance != H3MP_GameManager.instance;
+
+            player.firstInSceneInstance = firstInSceneInstance;
 
             if (H3MP_ThreadManager.host)
             {
