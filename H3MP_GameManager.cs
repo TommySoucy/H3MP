@@ -114,15 +114,18 @@ namespace H3MP
             players.Add(ID, playerManager);
 
             // Add to scene/instance
+            bool firstInSceneInstance = false;
             if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int,List<int>> relevantInstances))
             {
                 if (relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
                 {
                     relevantPlayers.Add(ID);
+                    firstInSceneInstance = relevantPlayers.Count == 1;
                 }
                 else // We have scene but not instance, add instance
                 {
                     relevantInstances.Add(instance, new List<int>() { ID });
+                    firstInSceneInstance = true;
                 }
             }
             else // We don't have scene, add scene
@@ -130,6 +133,12 @@ namespace H3MP
                 Dictionary<int,List<int>> newInstances = new Dictionary<int,List<int>>();
                 newInstances.Add(instance, new List<int>() { ID });
                 playersByInstanceByScene.Add(scene, newInstances);
+                firstInSceneInstance = true;
+            }
+
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_Server.clients[ID].player.firstInSceneInstance = firstInSceneInstance;
             }
 
             // Add to instance
@@ -302,17 +311,20 @@ namespace H3MP
             }
 
             player.scene = sceneName;
-            
+
             // Add to scene/instance
+            bool firstInSceneInstance = false;
             if (playersByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> relevantInstances))
             {
                 if (relevantInstances.TryGetValue(player.instance, out List<int> relevantPlayers))
                 {
                     relevantPlayers.Add(player.ID);
+                    firstInSceneInstance = relevantPlayers.Count == 1;
                 }
                 else // We have scene but not instance, add instance
                 {
                     relevantInstances.Add(player.instance, new List<int>() { player.ID });
+                    firstInSceneInstance = true;
                 }
             }
             else // We don't have scene, add scene
@@ -320,11 +332,14 @@ namespace H3MP
                 Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
                 newInstances.Add(player.instance, new List<int>() { player.ID });
                 playersByInstanceByScene.Add(player.scene, newInstances);
+                firstInSceneInstance = true;
             }
 
             if (H3MP_ThreadManager.host)
             {
                 H3MP_Server.clients[playerID].player.scene = sceneName;
+
+                H3MP_Server.clients[playerID].player.firstInSceneInstance = firstInSceneInstance;
             }
 
             UpdatePlayerHidden(player);
@@ -471,18 +486,23 @@ namespace H3MP
             player.instance = instance;
 
             // Add to instance
+            bool firstInSceneInstance = false;
             if (playersByInstanceByScene[player.scene].TryGetValue(instance, out List<int> relevantPlayers))
             {
                 relevantPlayers.Add(player.ID);
+                firstInSceneInstance = relevantPlayers.Count == 1;
             }
             else // We have scene but not instance, add instance
             {
                 playersByInstanceByScene[player.scene].Add(instance, new List<int>() { player.ID });
+                firstInSceneInstance = true;
             }
 
             if (H3MP_ThreadManager.host)
             {
                 H3MP_Server.clients[playerID].player.instance = instance;
+
+                H3MP_Server.clients[playerID].player.firstInSceneInstance = firstInSceneInstance;
             }
 
             UpdatePlayerHidden(player);

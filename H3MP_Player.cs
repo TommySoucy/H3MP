@@ -24,6 +24,7 @@ namespace H3MP
 
         public string scene;
         public int instance;
+        public bool firstInSceneInstance;
         public int colorIndex;
 
         public H3MP_Player(int ID, string username, Vector3 spawnPos, int IFF, int colorIndex)
