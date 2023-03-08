@@ -469,7 +469,6 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadDivide))
                 {
-                    TODO: Review why server needed up to date obejcts in the first place
                     SteamVR_LoadLevel.Begin("Grillhouse_2Story", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
             }
