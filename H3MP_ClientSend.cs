@@ -481,46 +481,94 @@ namespace H3MP
             }
         }
 
-        public static void GiveControl(int trackedID, int newController)
+        public static void GiveControl(int trackedID, int newController, List<int> debounce)
         {
             Mod.LogInfo("Client sending givecontrol for " + trackedID+":\n"+Environment.StackTrace);
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveControl))
             {
                 packet.Write(trackedID);
                 packet.Write(newController);
+                if(debounce == null || debounce.Count == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(debounce.Count);
+                    for(int i=0; i < debounce.Count; ++i)
+                    {
+                        packet.Write(debounce[i]);
+                    }
+                }
 
                 SendTCPData(packet);
             }
         }
 
-        public static void GiveSosigControl(int trackedID, int newController)
+        public static void GiveSosigControl(int trackedID, int newController, List<int> debounce)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveSosigControl))
             {
                 packet.Write(trackedID);
                 packet.Write(newController);
+                if (debounce == null || debounce.Count == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(debounce.Count);
+                    for (int i = 0; i < debounce.Count; ++i)
+                    {
+                        packet.Write(debounce[i]);
+                    }
+                }
 
                 SendTCPData(packet);
             }
         }
 
-        public static void GiveAutoMeaterControl(int trackedID, int newController)
+        public static void GiveAutoMeaterControl(int trackedID, int newController, List<int> debounce)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveAutoMeaterControl))
             {
                 packet.Write(trackedID);
                 packet.Write(newController);
+                if (debounce == null || debounce.Count == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(debounce.Count);
+                    for (int i = 0; i < debounce.Count; ++i)
+                    {
+                        packet.Write(debounce[i]);
+                    }
+                }
 
                 SendTCPData(packet);
             }
         }
 
-        public static void GiveEncryptionControl(int trackedID, int newController)
+        public static void GiveEncryptionControl(int trackedID, int newController, List<int> debounce)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveEncryptionControl))
             {
                 packet.Write(trackedID);
                 packet.Write(newController);
+                if (debounce == null || debounce.Count == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(debounce.Count);
+                    for (int i = 0; i < debounce.Count; ++i)
+                    {
+                        packet.Write(debounce[i]);
+                    }
+                }
 
                 SendTCPData(packet);
             }

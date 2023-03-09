@@ -3538,7 +3538,7 @@ namespace H3MP
                         {
                             if (H3MP_ThreadManager.host)
                             {
-                                H3MP_ServerSend.GiveSosigControl(trackedSosig.data.trackedID, 0);
+                                H3MP_ServerSend.GiveSosigControl(trackedSosig.data.trackedID, 0, null);
 
                                 // Update locally
                                 trackedSosig.data.controller = 0;
@@ -3547,7 +3547,7 @@ namespace H3MP
                             }
                             else
                             {
-                                H3MP_ClientSend.GiveSosigControl(trackedSosig.data.trackedID, H3MP_Client.singleton.ID);
+                                H3MP_ClientSend.GiveSosigControl(trackedSosig.data.trackedID, H3MP_Client.singleton.ID, null);
 
                                 // Update locally
                                 trackedSosig.data.controller = H3MP_Client.singleton.ID;
@@ -3567,7 +3567,7 @@ namespace H3MP
                             {
                                 if (H3MP_ThreadManager.host)
                                 {
-                                    H3MP_ServerSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, 0);
+                                    H3MP_ServerSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, 0, null);
 
                                     // Update locally
                                     trackedAutoMeater.data.controller = 0;
@@ -3576,7 +3576,7 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    H3MP_ClientSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, H3MP_Client.singleton.ID);
+                                    H3MP_ClientSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, H3MP_Client.singleton.ID, null);
 
                                     // Update locally
                                     trackedAutoMeater.data.controller = H3MP_Client.singleton.ID;

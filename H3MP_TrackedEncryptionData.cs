@@ -311,7 +311,7 @@ namespace H3MP
             {
                 int newController = H3MP_TrackedEncryption.unknownControlTrackedIDs[localWaitingIndex];
 
-                H3MP_ClientSend.GiveEncryptionControl(trackedID, newController);
+                H3MP_ClientSend.GiveEncryptionControl(trackedID, newController, null);
 
                 // Also change controller locally
                 controller = newController;

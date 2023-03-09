@@ -2329,7 +2329,7 @@ namespace H3MP
                         {
                             trackedItem.SetController(newController);
 
-                            H3MP_ServerSend.GiveControl(trackedItem.trackedID, newController);
+                            H3MP_ServerSend.GiveControl(trackedItem.trackedID, newController, null);
                         }
                     }
                 }
@@ -2412,7 +2412,7 @@ namespace H3MP
                     {
                         trackedSosig.controller = newController;
 
-                        H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, newController);
+                        H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, newController, null);
                     }
                 }
             }
@@ -2494,7 +2494,7 @@ namespace H3MP
                     {
                         trackedAutoMeater.controller = newController;
 
-                        H3MP_ServerSend.GiveAutoMeaterControl(trackedAutoMeater.trackedID, newController);
+                        H3MP_ServerSend.GiveAutoMeaterControl(trackedAutoMeater.trackedID, newController, null);
                     }
                 }
             }
@@ -2568,7 +2568,7 @@ namespace H3MP
                     {
                         trackedEncryption.controller = newController;
 
-                        H3MP_ServerSend.GiveEncryptionControl(trackedEncryption.trackedID, newController);
+                        H3MP_ServerSend.GiveEncryptionControl(trackedEncryption.trackedID, newController, null);
                     }
                 }
             }

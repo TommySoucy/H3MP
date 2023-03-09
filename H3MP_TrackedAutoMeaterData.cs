@@ -245,7 +245,7 @@ namespace H3MP
             {
                 int newController = H3MP_TrackedAutoMeater.unknownControlTrackedIDs[localWaitingIndex];
 
-                H3MP_ClientSend.GiveAutoMeaterControl(trackedID, newController);
+                H3MP_ClientSend.GiveAutoMeaterControl(trackedID, newController, null);
 
                 // Also change controller locally
                 controller = newController;

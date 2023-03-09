@@ -135,7 +135,7 @@ namespace H3MP
                         }
                         else
                         {
-                            H3MP_ServerSend.GiveEncryptionControl(data.trackedID, otherPlayer);
+                            H3MP_ServerSend.GiveEncryptionControl(data.trackedID, otherPlayer, null);
 
                             // Also change controller locally
                             data.controller = otherPlayer;
@@ -236,7 +236,7 @@ namespace H3MP
                             }
                             else if (data.trackedID != -2)
                             {
-                                H3MP_ClientSend.GiveEncryptionControl(data.trackedID, otherPlayer);
+                                H3MP_ClientSend.GiveEncryptionControl(data.trackedID, otherPlayer, null);
 
                                 // Also change controller locally
                                 data.controller = otherPlayer;

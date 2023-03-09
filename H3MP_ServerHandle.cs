@@ -302,6 +302,12 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
             int newController = packet.ReadInt();
+            int debounceCount = packet.ReadInt();
+            List<int> debounce = new List<int>();
+            for (int i = 0; i < debounceCount; ++i)
+            {
+                debounce.Add(packet.ReadInt());
+            }
 
             // Update locally
             H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
@@ -338,7 +344,12 @@ namespace H3MP
                             if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> playerInstances) &&
                                 playerInstances.TryGetValue(trackedItem.instance, out List<int> playerList))
                             {
-                                newController = Mod.GetBestPotentialObjectHost(trackedItem.controller, true, true, playerList, trackedItem.scene, trackedItem.instance);
+                                List<int> newPlayerList = new List<int>(playerList);
+                                for (int i = 0; i < debounce.Count; ++i)
+                                {
+                                    newPlayerList.Remove(debounce[i]);
+                                }
+                                newController = Mod.GetBestPotentialObjectHost(trackedItem.controller, true, true, newPlayerList, trackedItem.scene, trackedItem.instance);
                                 if (newController == -1)
                                 {
                                     H3MP_ServerSend.DestroyItem(trackedID);
@@ -356,6 +367,7 @@ namespace H3MP
                                 {
                                     Mod.LogInfo("\t\t\tBounce control");
                                     trackedItem.RemoveFromLocal();
+                                    debounce.Add(H3MP_GameManager.ID);
                                     // Don't resend give control here right away, we will send at the end
                                 }
                             }
@@ -400,7 +412,7 @@ namespace H3MP
                     trackedItem.SetController(newController);
 
                     // Send to all other clients
-                    H3MP_ServerSend.GiveControl(trackedID, newController);
+                    H3MP_ServerSend.GiveControl(trackedID, newController, debounce);
                 }
             }
         }
@@ -409,6 +421,12 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
             int newController = packet.ReadInt();
+            int debounceCount = packet.ReadInt();
+            List<int> debounce = new List<int>();
+            for(int i = 0; i < debounceCount; ++i)
+            {
+                debounce.Add(packet.ReadInt());
+            }
 
             // Update locally
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[trackedID];
@@ -435,7 +453,12 @@ namespace H3MP
                         if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> sosigInstances) &&
                                 sosigInstances.TryGetValue(trackedSosig.instance, out List<int> playerList))
                         {
-                            newController = Mod.GetBestPotentialObjectHost(trackedSosig.controller, true, true, playerList, trackedSosig.scene, trackedSosig.instance);
+                            List<int> newPlayerList = new List<int>(playerList);
+                            for(int i=0; i < debounce.Count; ++i)
+                            {
+                                newPlayerList.Remove(debounce[i]);
+                            }
+                            newController = Mod.GetBestPotentialObjectHost(trackedSosig.controller, true, true, newPlayerList, trackedSosig.scene, trackedSosig.instance);
                             if (newController == -1)
                             {
                                 H3MP_ServerSend.DestroySosig(trackedID);
@@ -452,6 +475,7 @@ namespace H3MP
                             else
                             {
                                 trackedSosig.RemoveFromLocal();
+                                debounce.Add(H3MP_GameManager.ID);
                                 // Don't resend give control here right away, we will send at the end
                             }
                         }
@@ -501,7 +525,7 @@ namespace H3MP
                 trackedSosig.controller = newController;
 
                 // Send to all other clients
-                H3MP_ServerSend.GiveSosigControl(trackedID, newController);
+                H3MP_ServerSend.GiveSosigControl(trackedID, newController, debounce);
             }
         }
 
@@ -509,6 +533,12 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
             int newController = packet.ReadInt();
+            int debounceCount = packet.ReadInt();
+            List<int> debounce = new List<int>();
+            for (int i = 0; i < debounceCount; ++i)
+            {
+                debounce.Add(packet.ReadInt());
+            }
 
             // Update locally
             H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Server.autoMeaters[trackedID];
@@ -535,7 +565,12 @@ namespace H3MP
                         if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> playerInstances) &&
                             playerInstances.TryGetValue(trackedAutoMeater.instance, out List<int> playerList))
                         {
-                            newController = Mod.GetBestPotentialObjectHost(trackedAutoMeater.controller, true, true, playerList, trackedAutoMeater.scene, trackedAutoMeater.instance);
+                            List<int> newPlayerList = new List<int>(playerList);
+                            for (int i = 0; i < debounce.Count; ++i)
+                            {
+                                newPlayerList.Remove(debounce[i]);
+                            }
+                            newController = Mod.GetBestPotentialObjectHost(trackedAutoMeater.controller, true, true, newPlayerList, trackedAutoMeater.scene, trackedAutoMeater.instance);
                             if (newController == -1)
                             {
                                 H3MP_ServerSend.DestroyAutoMeater(trackedID);
@@ -552,6 +587,7 @@ namespace H3MP
                             else
                             {
                                 trackedAutoMeater.RemoveFromLocal();
+                                debounce.Add(H3MP_GameManager.ID);
                                 // Don't resend give control here right away, we will send at the end
                             }
                         }
@@ -600,7 +636,7 @@ namespace H3MP
                 trackedAutoMeater.controller = newController;
 
                 // Send to all other clients
-                H3MP_ServerSend.GiveAutoMeaterControl(trackedID, newController);
+                H3MP_ServerSend.GiveAutoMeaterControl(trackedID, newController, debounce);
             }
         }
 
@@ -608,6 +644,12 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
             int newController = packet.ReadInt();
+            int debounceCount = packet.ReadInt();
+            List<int> debounce = new List<int>();
+            for (int i = 0; i < debounceCount; ++i)
+            {
+                debounce.Add(packet.ReadInt());
+            }
 
             // Update locally
             H3MP_TrackedEncryptionData trackedEncryption = H3MP_Server.encryptions[trackedID];
@@ -634,7 +676,12 @@ namespace H3MP
                         if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> playerInstances) &&
                                 playerInstances.TryGetValue(trackedEncryption.instance, out List<int> playerList))
                         {
-                            newController = Mod.GetBestPotentialObjectHost(trackedEncryption.controller, true, true, playerList, trackedEncryption.scene, trackedEncryption.instance);
+                            List<int> newPlayerList = new List<int>(playerList);
+                            for (int i = 0; i < debounce.Count; ++i)
+                            {
+                                newPlayerList.Remove(debounce[i]);
+                            }
+                            newController = Mod.GetBestPotentialObjectHost(trackedEncryption.controller, true, true, newPlayerList, trackedEncryption.scene, trackedEncryption.instance);
                             if (newController == -1)
                             {
                                 H3MP_ServerSend.DestroyEncryption(trackedID);
@@ -651,6 +698,7 @@ namespace H3MP
                             else
                             {
                                 trackedEncryption.RemoveFromLocal();
+                                debounce.Add(H3MP_GameManager.ID);
                                 // Don't resend give control here right away, we will send at the end
                             }
                         }
@@ -684,7 +732,7 @@ namespace H3MP
                 trackedEncryption.controller = newController;
 
                 // Send to all other clients
-                H3MP_ServerSend.GiveEncryptionControl(trackedID, newController);
+                H3MP_ServerSend.GiveEncryptionControl(trackedID, newController, debounce);
             }
         }
 

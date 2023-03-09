@@ -506,7 +506,7 @@ namespace H3MP
             {
                 int newController = H3MP_TrackedSosig.unknownControlTrackedIDs[localWaitingIndex];
 
-                H3MP_ClientSend.GiveSosigControl(trackedID, newController);
+                H3MP_ClientSend.GiveSosigControl(trackedID, newController, null);
 
                 // Also change controller locally
                 controller = newController;

@@ -477,7 +477,7 @@ namespace H3MP
             {
                 int newController = H3MP_TrackedItem.unknownControlTrackedIDs[localWaitingIndex];
 
-                H3MP_ClientSend.GiveControl(trackedID, newController);
+                H3MP_ClientSend.GiveControl(trackedID, newController, null);
 
                 // Also change controller locally
                 SetController(newController, true);
@@ -699,11 +699,11 @@ namespace H3MP
 
             if (H3MP_ThreadManager.host)
             {
-                H3MP_ServerSend.GiveControl(currentTrackedItem.trackedID, H3MP_GameManager.ID);
+                H3MP_ServerSend.GiveControl(currentTrackedItem.trackedID, H3MP_GameManager.ID, null);
             }
             else
             {
-                H3MP_ClientSend.GiveControl(currentTrackedItem.trackedID, H3MP_GameManager.ID);
+                H3MP_ClientSend.GiveControl(currentTrackedItem.trackedID, H3MP_GameManager.ID, null);
             }
             currentTrackedItem.SetController(H3MP_GameManager.ID);
             if (currentTrackedItem.localTrackedID == -1)
