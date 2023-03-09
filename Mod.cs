@@ -4248,13 +4248,13 @@ namespace H3MP
 
         static void Postfix(ref FVRFireArm __instance, FVRFireArmChamber chamber)
         {
+            --Mod.skipAllInstantiates;
+
             // Skip sending will prevent fire patch from handling its own data, as we want to handle it elsewhere
             if (skipSending > 0)
             {
                 return;
             }
-
-            --Mod.skipAllInstantiates;
 
             overriden = false;
 
@@ -5156,7 +5156,6 @@ namespace H3MP
         static void Postfix(ref RevolvingShotgun __instance)
         {
             --FirePatch.skipSending;
-            --Mod.skipAllInstantiates;
 
             FirePatch.overriden = false;
 
@@ -5210,7 +5209,6 @@ namespace H3MP
         static void Postfix(ref Revolver __instance)
         {
             --FirePatch.skipSending;
-            --Mod.skipAllInstantiates;
 
             FirePatch.overriden = false;
 
@@ -5256,15 +5254,17 @@ namespace H3MP
     // Patches SingleActionRevolver.Fire so we can track fire action
     class FireSingleActionRevolverPatch
     {
-        static void Prefix()
+        static void Prefix(SingleActionRevolver __instance)
         {
             ++FirePatch.skipSending;
+
+            FVRFireArmChamber chamber = __instance.Cylinder.Chambers[__instance.CurChamber];
+            FirePatch.fireSuccessful = chamber.IsFull && chamber.GetRound() != null && !chamber.IsSpent;
         }
 
         static void Postfix(ref SingleActionRevolver __instance)
         {
             --FirePatch.skipSending;
-            --Mod.skipAllInstantiates;
 
             FirePatch.overriden = false;
 
@@ -5312,9 +5312,12 @@ namespace H3MP
     {
         static int preChamber;
 
-        static void Prefix(int ___m_curChamber)
+        static void Prefix(GrappleGun __instance, int ___m_curChamber)
         {
             ++FirePatch.skipSending;
+
+            FVRFireArmChamber chamber = __instance.Chambers[___m_curChamber];
+            FirePatch.fireSuccessful = chamber.IsFull && chamber.GetRound() != null && !chamber.IsSpent;
 
             preChamber = ___m_curChamber;
         }
@@ -5322,7 +5325,6 @@ namespace H3MP
         static void Postfix(ref GrappleGun __instance)
         {
             --FirePatch.skipSending;
-            --Mod.skipAllInstantiates;
 
             FirePatch.overriden = false;
 
@@ -5368,15 +5370,17 @@ namespace H3MP
     // Patches Derringer.FireBarrel so we can skip 
     class FireDerringerPatch
     {
-        static void Prefix(ref Derringer __instance)
+        static void Prefix(Derringer __instance, Derringer.HingeState ___m_hingeState, int ___m_curBarrel)
         {
             ++FirePatch.skipSending;
+
+            FVRFireArmChamber chamber = __instance.Barrels[___m_curBarrel].Chamber;
+            FirePatch.fireSuccessful = ___m_hingeState == Derringer.HingeState.Closed && chamber.IsFull && chamber.GetRound() != null && !chamber.IsSpent;
         }
 
         static void Postfix(ref Derringer __instance, int i)
         {
             --FirePatch.skipSending;
-            --Mod.skipAllInstantiates;
 
             FirePatch.overriden = false;
 
@@ -5422,15 +5426,17 @@ namespace H3MP
     // Patches BreakActionWeapon.Fire so we can skip 
     class FireBreakActionWeaponPatch
     {
-        static void Prefix()
+        static void Prefix(BreakActionWeapon __instance, int b)
         {
             ++FirePatch.skipSending;
+
+            FVRFireArmChamber chamber = __instance.Barrels[b].Chamber;
+            FirePatch.fireSuccessful = chamber.IsFull && chamber.GetRound() != null && !chamber.IsSpent;
         }
 
         static void Postfix(ref BreakActionWeapon __instance, int b)
         {
             --FirePatch.skipSending;
-            --Mod.skipAllInstantiates;
 
             FirePatch.overriden = false;
 
@@ -5490,7 +5496,6 @@ namespace H3MP
         static void Postfix(ref LeverActionFirearm __instance, bool ___m_isHammerCocked, bool ___m_isHammerCocked2)
         {
             --FirePatch.skipSending;
-            --Mod.skipAllInstantiates;
 
             FirePatch.overriden = false;
 
