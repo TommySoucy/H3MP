@@ -190,30 +190,13 @@ namespace H3MP
         {
             // If this is a sceneInit item received from client that we haven't tracked yet
             // And if the controller is not the first player in scene/instance
-            if(trackedItem.trackedID == -1 && trackedItem.controller != 0 && trackedItem.sceneInit)
+            if(trackedItem.trackedID == -1 && trackedItem.controller != 0 && trackedItem.sceneInit && !clients[trackedItem.controller].player.firstInSceneInstance)
             {
-                // If in our scene/instance and we were first
-                if (H3MP_GameManager.firstPlayerInSceneInstance &&
-                    trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
-                    trackedItem.instance == H3MP_GameManager.instance)
-                {
-                    // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
-                    // indicate this to the sending client so they can destroy their item
-                    trackedItem.trackedID = -2;
-                    H3MP_ServerSend.TrackedItemSpecific(trackedItem, trackedItem.controller);
-                    return;
-                }
-                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> instances) &&
-                         instances.TryGetValue(trackedItem.instance, out List<int> playerList) && 
-                         playerList.Count > 0 && trackedItem.controller != playerList[0])
-                {
-                    // In another scene/instance, and the controller isn't first
-                    // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
-                    // indicate this to the sending client so they can destroy their item
-                    trackedItem.trackedID = -2;
-                    H3MP_ServerSend.TrackedItemSpecific(trackedItem, trackedItem.controller);
-                    return;
-                }
+                // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+                // indicate this to the sending client so they can destroy their item
+                trackedItem.trackedID = -2;
+                H3MP_ServerSend.TrackedItemSpecific(trackedItem, trackedItem.controller);
+                return;
             }
 
             Mod.LogInfo("Server AddTrackedItem: "+trackedItem.itemID +" with waiting index: "+trackedItem.localWaitingIndex);
@@ -280,10 +263,7 @@ namespace H3MP
             {
                 // If this is a sceneInit sosig received from client that we haven't tracked yet
                 // And if the controller is not the first player in scene/instance
-                if (trackedSosig.controller != 0 && trackedSosig.sceneInit &&
-                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance) ||
-                H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> instances) &&
-                instances.TryGetValue(trackedSosig.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedSosig.controller))
+                if (trackedSosig.controller != 0 && trackedSosig.sceneInit && !clients[trackedSosig.controller].player.firstInSceneInstance)
                 {
                     // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
                     // indicate this to the sending client so they can destroy their sosig
@@ -357,10 +337,7 @@ namespace H3MP
         {
             // If this is a sceneInit autoMeater received from client that we haven't tracked yet
             // And if the controller is not the first player in scene/instance
-            if (trackedAutoMeater.trackedID == -1 && trackedAutoMeater.controller != 0 && trackedAutoMeater.sceneInit &&
-                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance) ||
-                H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> instances) &&
-                instances.TryGetValue(trackedAutoMeater.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedAutoMeater.controller))
+            if (trackedAutoMeater.trackedID == -1 && trackedAutoMeater.controller != 0 && trackedAutoMeater.sceneInit && !clients[trackedAutoMeater.controller].player.firstInSceneInstance)
             {
                 // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
                 // indicate this to the sending client so they can destroy their autoMeater
@@ -427,10 +404,7 @@ namespace H3MP
             {
                 // If this is a sceneInit Encryption received from client that we haven't tracked yet
                 // And if the controller is not the first player in scene/instance
-                if (trackedEncryption.controller != 0 && trackedEncryption.sceneInit &&
-                ((H3MP_GameManager.firstPlayerInSceneInstance && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance) ||
-                H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> instances) &&
-                instances.TryGetValue(trackedEncryption.instance, out List<int> playerList) && playerList.Count > 0 && playerList[0] != trackedEncryption.controller))
+                if (trackedEncryption.controller != 0 && trackedEncryption.sceneInit && !clients[trackedEncryption.controller].player.firstInSceneInstance)
                 {
                     // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
                     // indicate this to the sending client so they can destroy their Encryption

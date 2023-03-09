@@ -2815,7 +2815,7 @@ namespace H3MP
 
         // MOD: This method will be used to find the ID of which player to give control of this object to
         //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
-        public static int GetBestPotentialObjectHost(int currentController, bool forUs = true, bool hasWhiteList = false, List<int> whiteList = null)
+        public static int GetBestPotentialObjectHost(int currentController, bool forUs = true, bool hasWhiteList = false, List<int> whiteList = null, string sceneOverride = null, int instanceOverride = -1)
         {
             if(hasWhiteList && whiteList == null)
             {
@@ -2854,8 +2854,8 @@ namespace H3MP
                 }
                 else
                 {
-                    string sceneToUse = H3MP_GameManager.sceneLoading ? H3MP_GameManager.sceneAtSceneLoadStart : H3MP_GameManager.scene;
-                    int instanceToUse = H3MP_GameManager.sceneLoading ? H3MP_GameManager.instanceAtSceneLoadStart : H3MP_GameManager.instance;
+                    string sceneToUse = sceneOverride == null ? (H3MP_GameManager.sceneLoading ? H3MP_GameManager.sceneAtSceneLoadStart : H3MP_GameManager.scene) : sceneOverride;
+                    int instanceToUse = instanceOverride == -1 ? (H3MP_GameManager.sceneLoading ? H3MP_GameManager.instanceAtSceneLoadStart : H3MP_GameManager.instance) : instanceOverride;
                     if (currentController == -1) // This means the potential host could also be us
                     {
                         if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(sceneToUse, out Dictionary<int, List<int>> instances) &&

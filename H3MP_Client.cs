@@ -591,7 +591,7 @@ namespace H3MP
                         // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
                         // receive it from relevant objects
                         if (actualTrackedItem.physicalItem == null && !actualTrackedItem.awaitingInstantiation &&
-                            actualTrackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                            actualTrackedItem.scene.Equals(H3MP_GameManager.scene) &&
                             actualTrackedItem.instance == H3MP_GameManager.instance)
                         {
                             Mod.LogInfo("\t\thave data but not phys, instantiating");
@@ -631,7 +631,7 @@ namespace H3MP
                 // Instantiate item if it is identiafiable and in the current scene/instance
                 if (!trackedItem.awaitingInstantiation && 
                     H3MP_GameManager.IsItemIdentifiable(trackedItem) &&
-                    trackedItem.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                    trackedItem.scene.Equals(H3MP_GameManager.scene) &&
                     trackedItem.instance == H3MP_GameManager.instance)
                 {
                     Mod.LogInfo("\t\tinstantiating");
@@ -717,7 +717,7 @@ namespace H3MP
 
                     // Instantiate sosig if it is in the current scene
                     if (!trackedSosig.awaitingInstantiation &&
-                        trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                        trackedSosig.scene.Equals(H3MP_GameManager.scene) &&
                         trackedSosig.instance == H3MP_GameManager.instance)
                     {
                         trackedSosig.awaitingInstantiation = true;
@@ -734,7 +734,7 @@ namespace H3MP
                     // This could be the case if joining a scene with sosigs we already have the data for
                     if (trackedSosigData.physicalObject == null && !trackedSosigData.awaitingInstantiation)
                     {
-                        if (trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                        if (trackedSosig.scene.Equals(H3MP_GameManager.scene) &&
                             trackedSosig.instance == H3MP_GameManager.instance)
                         {
                             trackedSosigData.awaitingInstantiation = true;
@@ -791,7 +791,7 @@ namespace H3MP
                     // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
                     // receive it from relevant objects
                     if (actualTrackedAutoMeater.physicalObject == null && !actualTrackedAutoMeater.awaitingInstantiation &&
-                        actualTrackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                        actualTrackedAutoMeater.scene.Equals(H3MP_GameManager.scene) &&
                         actualTrackedAutoMeater.instance == H3MP_GameManager.instance)
                     {
                         actualTrackedAutoMeater.awaitingInstantiation = true;
@@ -826,7 +826,7 @@ namespace H3MP
 
                 // Instantiate AutoMeater if it is in the current scene
                 if (!trackedAutoMeater.awaitingInstantiation &&
-                    trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                    trackedAutoMeater.scene.Equals(H3MP_GameManager.scene) &&
                     trackedAutoMeater.instance == H3MP_GameManager.instance)
                 {
                     trackedAutoMeater.awaitingInstantiation = true;
@@ -911,7 +911,7 @@ namespace H3MP
 
                     // Instantiate Encryption if it is in the current scene
                     if (!trackedEncryption.awaitingInstantiation &&
-                        trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) && 
+                        trackedEncryption.scene.Equals(H3MP_GameManager.scene) && 
                         trackedEncryption.instance == H3MP_GameManager.instance)
                     {
                         trackedEncryption.awaitingInstantiation = true;
@@ -929,7 +929,7 @@ namespace H3MP
                     if (trackedEncryptionData.physicalObject == null)
                     {
                         if (!trackedEncryptionData.awaitingInstantiation && 
-                            trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene) &&
+                            trackedEncryption.scene.Equals(H3MP_GameManager.scene) &&
                             trackedEncryption.instance == H3MP_GameManager.instance)
                         {
                             trackedEncryptionData.awaitingInstantiation = true;

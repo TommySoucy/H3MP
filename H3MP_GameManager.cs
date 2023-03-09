@@ -2058,7 +2058,7 @@ namespace H3MP
                     Mod.currentlyPlayingTNH = false;
                 }
 
-                // Check if there are other players where we are going
+                // Check if there are other players where we are going to prevent things like prefab spawns
                 if (playersByInstanceByScene.TryGetValue(LoadLevelBeginPatch.loadingLevel, out Dictionary<int, List<int>> relevantInstances))
                 {
                     if(relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
@@ -2121,11 +2121,15 @@ namespace H3MP
                 playersPresent = 0;
                 if (!nonSynchronizedScenes.ContainsKey(scene))
                 {
+                    controlOverride = true;
+                    firstPlayerInSceneInstance = true;
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                     {
                         if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                         {
                             ++playersPresent;
+                            controlOverride = false;
+                            firstPlayerInSceneInstance = false;
 
                             if (H3MP_ThreadManager.host)
                             {
@@ -2153,50 +2157,12 @@ namespace H3MP
 
                     controlOverride = false;
 
-                    // Instantiate any objects we are in control of that don't have a phys yet
-                    // This could happen if object control was given to us while we were loading
-                    // Note that we check if the trackedID is initialized becaue we don't want to reinstantiate items that are unawoken
-                    // which will not have a trackedID yet
-                    // TODO: Review: This may not be a possible case anymore considering we only send our new scene once we are done loading, so no one is going to 
-                    //               give us control because they didn't know we were coming here
-                    for(int i=0; i < items.Count; ++i)
-                    {
-                        if (items[i].physicalItem == null && !items[i].awaitingInstantiation && items[i].trackedID > -1)
-                        {
-                            items[i].awaitingInstantiation = true;
-                            AnvilManager.Run(items[i].Instantiate());
-                        }
-                    }
-                    for(int i=0; i < sosigs.Count; ++i)
-                    {
-                        if (sosigs[i].physicalObject == null && !sosigs[i].awaitingInstantiation && sosigs[i].trackedID > -1)
-                        {
-                            sosigs[i].awaitingInstantiation = true;
-                            AnvilManager.Run(sosigs[i].Instantiate());
-                        }
-                    }
-                    for(int i=0; i < autoMeaters.Count; ++i)
-                    {
-                        if (autoMeaters[i].physicalObject == null && !autoMeaters[i].awaitingInstantiation && autoMeaters[i].trackedID > -1)
-                        {
-                            autoMeaters[i].awaitingInstantiation = true;
-                            AnvilManager.Run(autoMeaters[i].Instantiate());
-                        }
-                    }
-                    for(int i=0; i < encryptions.Count; ++i)
-                    {
-                        if (encryptions[i].physicalObject == null && !encryptions[i].awaitingInstantiation && encryptions[i].trackedID > -1)
-                        {
-                            encryptions[i].awaitingInstantiation = true;
-                            AnvilManager.Run(encryptions[i].Instantiate());
-                        }
-                    }
-
-                    // If client, tell server we are done loading
-                    if (!H3MP_ThreadManager.host)
-                    {
-                        H3MP_ClientSend.DoneLoadingScene();
-                    }
+                    //// If client, tell server we are done loading
+                    ///// SHOULD NOT BE NEEDED ANYMORE SINCE WE NOW SEND OUR SCENE WHEN WE ARE DONE LOADING
+                    //if (!H3MP_ThreadManager.host)
+                    //{
+                    //    H3MP_ClientSend.DoneLoadingScene();
+                    //}
                 }
                 else // New scene not syncable, ensure all players are disabled regardless of scene
                 {
