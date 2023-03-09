@@ -125,7 +125,7 @@ namespace H3MP
                         }
                         else
                         {
-                            H3MP_ServerSend.GiveSosigControl(data.trackedID, otherPlayer, null);
+                            H3MP_ServerSend.GiveSosigControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
 
                             // Also change controller locally
                             data.controller = otherPlayer;
@@ -218,7 +218,7 @@ namespace H3MP
                             }
                             else if (data.trackedID != -2)
                             {
-                                H3MP_ClientSend.GiveSosigControl(data.trackedID, otherPlayer, null);
+                                H3MP_ClientSend.GiveSosigControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
 
                                 // Also change controller locally
                                 data.controller = otherPlayer;

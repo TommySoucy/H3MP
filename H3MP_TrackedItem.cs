@@ -7719,7 +7719,7 @@ namespace H3MP
                         }
                         else
                         {
-                            H3MP_ServerSend.GiveControl(data.trackedID, otherPlayer, null);
+                            H3MP_ServerSend.GiveControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
 
                             // Also change controller locally
                             data.SetController(otherPlayer);
@@ -7813,7 +7813,7 @@ namespace H3MP
                             }
                             else if (data.trackedID != -2)
                             {
-                                H3MP_ClientSend.GiveControl(data.trackedID, otherPlayer, null);
+                                H3MP_ClientSend.GiveControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
 
                                 // Also change controller locally
                                 data.SetController(otherPlayer);
