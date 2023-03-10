@@ -3647,9 +3647,11 @@ namespace H3MP
     // Patches SosigHand.PickUp so we can keep track of item control
     class SosigPickUpPatch
     {
+        public static int skip;
+
         static void Postfix(ref SosigHand __instance, SosigWeapon o)
         {
-            if (Mod.managerObject == null)
+            if (Mod.managerObject == null || skip > 0)
             {
                 return;
             }
@@ -3710,9 +3712,11 @@ namespace H3MP
     // Patches SosigInventory.Slot.PlaceObjectIn so we can keep track of item control
     class SosigPlaceObjectInPatch
     {
+        public static int skip;
+
         static void Postfix(ref SosigInventory.Slot __instance, SosigWeapon o)
         {
-            if (Mod.managerObject == null)
+            if (Mod.managerObject == null || skip > 0)
             {
                 return;
             }

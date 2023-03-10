@@ -1397,6 +1397,7 @@ namespace H3MP
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if(trackedSosig != null && trackedSosig.physicalObject != null)
             {
+                ++SosigPickUpPatch.skip;
                 if (primaryHand)
                 {
                     trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
@@ -1405,6 +1406,7 @@ namespace H3MP
                 {
                     trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
                 }
+                --SosigPickUpPatch.skip;
             }
         }
 
@@ -1417,7 +1419,9 @@ namespace H3MP
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if(trackedSosig != null && trackedSosig.physicalObject != null)
             {
+                ++SosigPlaceObjectInPatch.skip;
                 trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                --SosigPlaceObjectInPatch.skip;
             }
         }
 

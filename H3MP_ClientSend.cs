@@ -483,7 +483,6 @@ namespace H3MP
 
         public static void GiveControl(int trackedID, int newController, List<int> debounce)
         {
-            Mod.LogInfo("Client sending givecontrol for " + trackedID+":\n"+Environment.StackTrace);
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.giveControl))
             {
                 packet.Write(trackedID);
