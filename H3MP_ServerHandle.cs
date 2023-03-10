@@ -355,6 +355,7 @@ namespace H3MP
                                     H3MP_ServerSend.DestroyItem(trackedID);
                                     trackedItem.RemoveFromLocal();
                                     H3MP_Server.items[trackedID] = null;
+                                    H3MP_Server.availableItemIndices.Add(trackedID);
                                     if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
                                         currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
                                     {
@@ -377,7 +378,7 @@ namespace H3MP
                                 H3MP_ServerSend.DestroyItem(trackedID);
                                 trackedItem.RemoveFromLocal();
                                 H3MP_Server.items[trackedID] = null;
-                                H3MP_Server.availableItemIndices.Add(trackedItem.trackedID);
+                                H3MP_Server.availableItemIndices.Add(trackedID);
                                 if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
                                     currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
                                 {
@@ -464,6 +465,7 @@ namespace H3MP
                                 H3MP_ServerSend.DestroySosig(trackedID);
                                 trackedSosig.RemoveFromLocal();
                                 H3MP_Server.sosigs[trackedID] = null;
+                                H3MP_Server.availableSosigIndices.Add(trackedID);
                                 if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> currentInstances) &&
                                     currentInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
                                 {
@@ -484,7 +486,7 @@ namespace H3MP
                             H3MP_ServerSend.DestroySosig(trackedID);
                             trackedSosig.RemoveFromLocal();
                             H3MP_Server.sosigs[trackedID] = null;
-                            H3MP_Server.availableSosigIndices.Add(trackedSosig.trackedID);
+                            H3MP_Server.availableSosigIndices.Add(trackedID);
                             if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> currentInstances) &&
                                 currentInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
                             {
@@ -576,6 +578,7 @@ namespace H3MP
                                 H3MP_ServerSend.DestroyAutoMeater(trackedID);
                                 trackedAutoMeater.RemoveFromLocal();
                                 H3MP_Server.autoMeaters[trackedID] = null;
+                                H3MP_Server.availableAutoMeaterIndices.Add(trackedID);
                                 if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> currentInstances) &&
                                     currentInstances.TryGetValue(trackedAutoMeater.instance, out List<int> autoMeaterList))
                                 {
@@ -596,7 +599,7 @@ namespace H3MP
                             H3MP_ServerSend.DestroyAutoMeater(trackedID);
                             trackedAutoMeater.RemoveFromLocal();
                             H3MP_Server.autoMeaters[trackedID] = null;
-                            H3MP_Server.availableAutoMeaterIndices.Add(trackedAutoMeater.trackedID);
+                            H3MP_Server.availableAutoMeaterIndices.Add(trackedID);
                             if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> currentInstances) &&
                                 currentInstances.TryGetValue(trackedAutoMeater.instance, out List<int> autoMeaterList))
                             {
@@ -687,6 +690,7 @@ namespace H3MP
                                 H3MP_ServerSend.DestroyEncryption(trackedID);
                                 trackedEncryption.RemoveFromLocal();
                                 H3MP_Server.encryptions[trackedID] = null;
+                                H3MP_Server.availableEncryptionIndices.Add(trackedID);
                                 if (H3MP_GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> currentInstances) &&
                                     currentInstances.TryGetValue(trackedEncryption.instance, out List<int> encryptionList))
                                 {
@@ -707,7 +711,7 @@ namespace H3MP
                             H3MP_ServerSend.DestroyEncryption(trackedID);
                             trackedEncryption.RemoveFromLocal();
                             H3MP_Server.encryptions[trackedID] = null;
-                            H3MP_Server.availableEncryptionIndices.Add(trackedEncryption.trackedID);
+                            H3MP_Server.availableEncryptionIndices.Add(trackedID);
                             if (H3MP_GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> currentInstances) &&
                                 currentInstances.TryGetValue(trackedEncryption.instance, out List<int> encryptionList))
                             {

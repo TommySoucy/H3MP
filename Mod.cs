@@ -12618,9 +12618,20 @@ namespace H3MP
             return true;
         }
 
-        static void DelayedInitPrefix(bool ___m_hasInit)
+        static bool DelayedInitPrefix(bool ___m_hasInit)
         {
             inDelayedInit = true;
+
+            if (!___m_hasInit) 
+            {
+                Mod.LogInfo("DelayedInitPrefix");
+                if (Mod.currentTNHInstance != null)
+                {
+                    Mod.LogInfo("\tWe are in MP TNH, loading?: " + H3MP_GameManager.sceneLoading + ", controller: " + Mod.currentTNHInstance.controller+", currently playing count: "+ Mod.currentTNHInstance.currentlyPlaying.Count);
+                }
+            }
+
+            return !H3MP_GameManager.sceneLoading;
         }
 
         static void DelayedInitPostfix(bool ___m_hasInit)

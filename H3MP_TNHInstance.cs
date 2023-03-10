@@ -82,6 +82,7 @@ namespace H3MP
 
         public void AddCurrentlyPlaying(bool send, int ID, bool fromServer = false)
         {
+            Mod.LogInfo("AddCurrentlyPlaying called to add " + ID + " to instance: " + instance+", currently controlled by "+controller);
             if (!letPeopleJoin && currentlyPlaying.Count == 0 &&
                 Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
             {
@@ -110,8 +111,9 @@ namespace H3MP
             {
                 if (ID == playerIDs[0])
                 {
+                    Mod.LogInfo("\tClient is instance host, giving control");
                     // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
-                    if(ID != controller)
+                    if (ID != controller)
                     {
                         H3MP_GameManager.DistributeAllControl(controller, ID, false);
                     }
@@ -120,20 +122,17 @@ namespace H3MP
                 }
                 else // The player who got added is not instance host
                 {
-                    if(currentlyPlaying.Count == 1)
+                    Mod.LogInfo("\tClient is NOT instance host");
+                    if (currentlyPlaying.Count == 1)
                     {
-                        if (!H3MP_GameManager.playersByInstanceByScene.TryGetValue(ID == 0 ? H3MP_GameManager.scene : H3MP_Server.clients[ID].player.scene, out Dictionary<int, List<int>> instances) ||
-                            !instances.TryGetValue(instance, out List<int> players) || !players.Contains(playerIDs[0]))
+                        Mod.LogInfo("\t\tIs first player, giving control");
+                        // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
+                        if (ID != controller)
                         {
-                            // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
-                            if (ID != controller)
-                            {
-                                H3MP_GameManager.DistributeAllControl(controller, ID, false);
-                            }
-                            controller = ID;
-                            H3MP_ServerSend.SetTNHController(instance, ID);
+                            H3MP_GameManager.DistributeAllControl(controller, ID, false);
                         }
-                        //else // Instance host loading, just wait for them
+                        controller = ID;
+                        H3MP_ServerSend.SetTNHController(instance, ID);
                     }
                     //else // The player is not the only one
                 }

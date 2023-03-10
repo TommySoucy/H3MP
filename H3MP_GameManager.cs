@@ -2128,6 +2128,16 @@ namespace H3MP
                         if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                         {
                             ++playersPresent;
+
+                            // NOTE: Calculating control override when we finish loading here is necessary
+                            // Consider the server loading into a scene. When they started loading, they thought they would be the first in the scene, controlOverride = true.
+                            // Another client, loads into that scene, track their items, the server accepts them since that client was the first in scene.
+                            // Then server arrives, tracks their own init scene items and sends to clients. Reinitializing the scene, causing double instantiation.
+                            // Unless we calculate it here again, at which point the server will know someone else is in their new scene, preventing to track their own items.
+
+                            // NOTE: See note above, this also means that scenes that require base their initialization on some other criteria will be required to wait 
+                            // until we are done loading before spawning any tracked objects, as they will otherwise be destroyed if they did not have control override.
+                            // This is the case for TNH, see TNH_ManagerPatch.DelayedInitPrefix, where we prevent it until done loading, even if in control of the TNH instance.
                             controlOverride = false;
                             firstPlayerInSceneInstance = false;
 
@@ -2144,7 +2154,6 @@ namespace H3MP
 
                         UpdatePlayerHidden(player.Value);
                     }
-                    Mod.LogInfo("Started loading, control override: " + controlOverride);
 
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
