@@ -7762,8 +7762,10 @@ namespace H3MP
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, H3MP_GameManager.playersAtLoadStart);
 
+                        Mod.LogInfo("\tAttempt giving control to "+ otherPlayer+" from a list of "+ (H3MP_GameManager.playersAtLoadStart == null ? "0" : H3MP_GameManager.playersAtLoadStart.Count.ToString())+" other players");
                         if (otherPlayer == -1)
                         {
+                            Mod.LogInfo("\t\tDestroying");
                             if (sendDestroy && skipDestroy == 0)
                             {
                                 if (data.trackedID == -1)
@@ -7797,6 +7799,7 @@ namespace H3MP
                         }
                         else
                         {
+                            Mod.LogInfo("\t\tGiving control");
                             if (data.trackedID == -1)
                             {
                                 if (unknownControlTrackedIDs.ContainsKey(data.localWaitingIndex))

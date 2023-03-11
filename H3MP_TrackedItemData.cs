@@ -15,6 +15,7 @@ namespace H3MP
         public int trackedID = -1; // This item's unique ID to identify it across systems (index in global items arrays)
         public int localTrackedID = -1; // This item's index in local items list
         public uint localWaitingIndex = uint.MaxValue; // The unique index this item had while waiting for its tracked ID
+        public int initTracker; // The ID of the client who initially tracked this item
         public int controller = 0; // Client controlling this item, 0 for host
         public bool active;
         private bool previousActive;

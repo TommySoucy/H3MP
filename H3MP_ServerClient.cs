@@ -330,7 +330,7 @@ namespace H3MP
                 for(int i=0; i < items.Count; ++i)
                 {
                     H3MP_TrackedItemData trackedItemData = H3MP_Server.items[items[i]];
-                    if(trackedItemData != null && (fromClient == -1 || trackedItemData.controller == fromClient))
+                    if(trackedItemData != null && (fromClient == -1 || trackedItemData.controller == fromClient) && trackedItemData.controller != ID)
                     {
                         // If this is ours
                         if(trackedItemData.controller == 0)
@@ -358,7 +358,7 @@ namespace H3MP
                 for(int i=0; i < sosigs.Count; ++i)
                 {
                     H3MP_TrackedSosigData trackedSosigData = H3MP_Server.sosigs[sosigs[i]];
-                    if(trackedSosigData != null && (fromClient == -1 || trackedSosigData.controller == fromClient))
+                    if(trackedSosigData != null && (fromClient == -1 || trackedSosigData.controller == fromClient) && trackedSosigData.controller != ID)
                     {
                         // If this is ours
                         if(trackedSosigData.controller == 0)
@@ -386,7 +386,7 @@ namespace H3MP
                 for(int i=0; i < autoMeaters.Count; ++i)
                 {
                     H3MP_TrackedAutoMeaterData trackedAutoMeaterData = H3MP_Server.autoMeaters[autoMeaters[i]];
-                    if(trackedAutoMeaterData != null && (fromClient == -1 || trackedAutoMeaterData.controller == fromClient))
+                    if(trackedAutoMeaterData != null && (fromClient == -1 || trackedAutoMeaterData.controller == fromClient) && trackedAutoMeaterData.controller != ID)
                     {
                         // If this is ours
                         if(trackedAutoMeaterData.controller == 0)
@@ -414,7 +414,7 @@ namespace H3MP
                 for(int i=0; i < encryptions.Count; ++i)
                 {
                     H3MP_TrackedEncryptionData trackedEncryptionData = H3MP_Server.encryptions[encryptions[i]];
-                    if(trackedEncryptionData != null && (fromClient == -1 || trackedEncryptionData.controller == fromClient))
+                    if(trackedEncryptionData != null && (fromClient == -1 || trackedEncryptionData.controller == fromClient) && trackedEncryptionData.controller != ID)
                     {
                         // If this is ours
                         if(trackedEncryptionData.controller == 0)

@@ -511,7 +511,7 @@ namespace H3MP
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
         {
             H3MP_TrackedItemData actualTrackedItem = null;
-            Mod.LogInfo("Client AddTrackedItem " + trackedItem.itemID + " with tracked ID "+ trackedItem.trackedID + ", waitingindex: " + trackedItem.localWaitingIndex+", scene: "+trackedItem.scene+", instance: "+trackedItem.instance);
+            Mod.LogInfo("Client AddTrackedItem " + trackedItem.itemID + " with tracked ID "+ trackedItem.trackedID + ", waitingindex: " + trackedItem.localWaitingIndex+", scene: "+trackedItem.scene+", instance: "+trackedItem.instance+", controller: "+trackedItem.controller);
             // If this is a scene init object the server rejected
             if (trackedItem.trackedID == -2)
             {
@@ -531,43 +531,72 @@ namespace H3MP
                 IncreaseItemsSize(trackedItem.trackedID);
             }
 
+            //Problem: When joining TNH game that has already been init, but we are instance host, we are given TNH control and control of sosigs
+            // Once we arrive in the scene, we are sent relevant sosigs, the ones we are already in control of
+            // If the sosig has a local waiting index that we are not waiting for, instantiate the sosig if we have its data
+            // If the local waiting index matches one of ours, it could be one we have initially tracked or one from snother player that just happened to match on of ours
+            //  If one we have initially tracked, get the ID and process as normal
+            //  If one from someone else instantiate if we have the data since we are not in control
             if (trackedItem.controller == H3MP_Client.singleton.ID)
             {
                 Mod.LogInfo("\tWe are controller");
-                // Get our item
-                actualTrackedItem = waitingLocalItems[trackedItem.localWaitingIndex];
-                waitingLocalItems.Remove(trackedItem.localWaitingIndex);
-
-                Mod.LogInfo("\tGot actual tracked item: "+ actualTrackedItem.itemID);
-                // Set its new tracked ID
-                actualTrackedItem.trackedID = trackedItem.trackedID;
-                Mod.LogInfo("\tSet tracked ID: " + actualTrackedItem.trackedID);
-
-                // Add the item to client global list
-                items[actualTrackedItem.trackedID] = actualTrackedItem;
-                Mod.LogInfo("\tSet in global list");
-
-                // Add to item tracking list
-                if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
+                if (waitingLocalItems.TryGetValue(trackedItem.localWaitingIndex, out actualTrackedItem))
                 {
-                    if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                    Mod.LogInfo("\t\tWe have waiting");
+                    if (trackedItem.initTracker == H3MP_GameManager.ID)
                     {
-                        itemList.Add(trackedItem.trackedID);
-                    }
-                    else
-                    {
-                        relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                    }
-                }
-                else
-                {
-                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                    newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                    H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
-                }
-                Mod.LogInfo("\tAdded to itemsByInstanceByScene");
+                        Mod.LogInfo("\t\t\tWe are init tracker");
+                        // Get our item
+                        waitingLocalItems.Remove(trackedItem.localWaitingIndex);
 
-                actualTrackedItem.OnTrackedIDReceived();
+                        Mod.LogInfo("\tGot actual tracked item: " + actualTrackedItem.itemID);
+                        // Set its new tracked ID
+                        actualTrackedItem.trackedID = trackedItem.trackedID;
+                        Mod.LogInfo("\tSet tracked ID: " + actualTrackedItem.trackedID);
+
+                        // Add the item to client global list
+                        items[actualTrackedItem.trackedID] = actualTrackedItem;
+                        Mod.LogInfo("\tSet in global list");
+
+                        // Add to item tracking list
+                        if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                            {
+                                itemList.Add(trackedItem.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                            H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
+                        }
+                        Mod.LogInfo("\tAdded to itemsByInstanceByScene");
+
+                        actualTrackedItem.OnTrackedIDReceived();
+                    }
+                    else if (items[trackedItem.trackedID] != null && items[trackedItem.trackedID].physicalItem != null && !items[trackedItem.trackedID].awaitingInstantiation &&
+                             !H3MP_GameManager.sceneLoading && items[trackedItem.trackedID].scene.Equals(H3MP_GameManager.scene) &&
+                             items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
+                    {
+                        items[trackedItem.trackedID].awaitingInstantiation = true;
+                        AnvilManager.Run(items[trackedItem.trackedID].Instantiate());
+                    }
+                    // else, we should have received data before control, if not in our scene/instance, control will be bounced in GiveControl
+                }
+                else if (trackedItem.trackedID != -1 && items[trackedItem.trackedID] != null && items[trackedItem.trackedID].physicalItem != null && !items[trackedItem.trackedID].awaitingInstantiation &&
+                       !H3MP_GameManager.sceneLoading && items[trackedItem.trackedID].scene.Equals(H3MP_GameManager.scene) &&
+                       items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
+                {
+                    items[trackedItem.trackedID].awaitingInstantiation = true;
+                    AnvilManager.Run(items[trackedItem.trackedID].Instantiate());
+                }
+                // else, we should have received data before control, if not in our scene/instance, control will be bounced in GiveControl
             }
             else
             {
@@ -665,26 +694,46 @@ namespace H3MP
 
             if (trackedSosig.controller == H3MP_Client.singleton.ID)
             {
-                // Get our sosig
-                actualTrackedSosig = waitingLocalSosigs[trackedSosig.localWaitingIndex];
-                waitingLocalSosigs.Remove(trackedSosig.localWaitingIndex);
-
-                // Set its new tracked ID
-                actualTrackedSosig.trackedID = trackedSosig.trackedID;
-
-                // Add the sosig to client global list
-                sosigs[trackedSosig.trackedID] = actualTrackedSosig;
-
-                // Send queued up orders
-                actualTrackedSosig.OnTrackedIDReceived();
-
-                // Only send latest data if not destroyed
-                if (sosigs[trackedSosig.trackedID] != null)
+                if (waitingLocalSosigs.TryGetValue(trackedSosig.localWaitingIndex, out actualTrackedSosig))
                 {
-                    sosigs[trackedSosig.trackedID].Update(true);
+                    if (trackedSosig.initTracker == H3MP_GameManager.ID)
+                    {
+                        // Get our sosig
+                        waitingLocalSosigs.Remove(trackedSosig.localWaitingIndex);
 
-                    // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
-                    H3MP_ClientSend.TrackedSosig(sosigs[trackedSosig.trackedID]);
+                        // Set its new tracked ID
+                        actualTrackedSosig.trackedID = trackedSosig.trackedID;
+
+                        // Add the sosig to client global list
+                        sosigs[trackedSosig.trackedID] = actualTrackedSosig;
+
+                        // Send queued up orders
+                        actualTrackedSosig.OnTrackedIDReceived();
+
+                        // Only send latest data if not destroyed
+                        if (sosigs[trackedSosig.trackedID] != null)
+                        {
+                            sosigs[trackedSosig.trackedID].Update(true);
+
+                            // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
+                            H3MP_ClientSend.TrackedSosig(sosigs[trackedSosig.trackedID]);
+                        }
+                    }
+                    else if (sosigs[trackedSosig.trackedID] != null && sosigs[trackedSosig.trackedID].physicalObject != null && !sosigs[trackedSosig.trackedID].awaitingInstantiation &&
+                             !H3MP_GameManager.sceneLoading && sosigs[trackedSosig.trackedID].scene.Equals(H3MP_GameManager.scene) &&
+                             sosigs[trackedSosig.trackedID].instance == H3MP_GameManager.instance)
+                    {
+                        sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
+                        AnvilManager.Run(sosigs[trackedSosig.trackedID].Instantiate());
+                    }
+                }
+                else if(trackedSosig.trackedID != -1 && sosigs[trackedSosig.trackedID] != null && sosigs[trackedSosig.trackedID].physicalObject != null && !sosigs[trackedSosig.trackedID].awaitingInstantiation &&
+                        !H3MP_GameManager.sceneLoading && sosigs[trackedSosig.trackedID].scene.Equals(H3MP_GameManager.scene) &&
+                        sosigs[trackedSosig.trackedID].instance == H3MP_GameManager.instance)
+                {
+                    // Received full data for objects we are in control of, instantiate if possible
+                    sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
+                    AnvilManager.Run(sosigs[trackedSosig.trackedID].Instantiate());
                 }
             }
             else
@@ -769,18 +818,37 @@ namespace H3MP
 
             if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
             {
-                // Get our autoMeater.
-                actualTrackedAutoMeater = waitingLocalAutoMeaters[trackedAutoMeater.localWaitingIndex];
-                waitingLocalAutoMeaters.Remove(trackedAutoMeater.localWaitingIndex);
-                
-                // Set its tracked ID
-                actualTrackedAutoMeater.trackedID = trackedAutoMeater.trackedID;
+                if (waitingLocalAutoMeaters.TryGetValue(trackedAutoMeater.localWaitingIndex, out actualTrackedAutoMeater))
+                {
+                    if (trackedAutoMeater.initTracker == H3MP_GameManager.ID)
+                    {
+                        // Get our autoMeater.
+                        waitingLocalAutoMeaters.Remove(trackedAutoMeater.localWaitingIndex);
 
-                // Add the AutoMeater to client global list
-                autoMeaters[trackedAutoMeater.trackedID] = actualTrackedAutoMeater;
+                        // Set its tracked ID
+                        actualTrackedAutoMeater.trackedID = trackedAutoMeater.trackedID;
 
-                // Send queued up orders
-                actualTrackedAutoMeater.OnTrackedIDReceived();
+                        // Add the AutoMeater to client global list
+                        autoMeaters[trackedAutoMeater.trackedID] = actualTrackedAutoMeater;
+
+                        // Send queued up orders
+                        actualTrackedAutoMeater.OnTrackedIDReceived();
+                    }
+                    else if (autoMeaters[trackedAutoMeater.trackedID] != null && autoMeaters[trackedAutoMeater.trackedID].physicalObject != null && !autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation &&
+                            !H3MP_GameManager.sceneLoading && autoMeaters[trackedAutoMeater.trackedID].scene.Equals(H3MP_GameManager.scene) &&
+                            autoMeaters[trackedAutoMeater.trackedID].instance == H3MP_GameManager.instance)
+                    {
+                        autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation = true;
+                        AnvilManager.Run(autoMeaters[trackedAutoMeater.trackedID].Instantiate());
+                    }
+                }
+                else if (trackedAutoMeater.trackedID != -1 && autoMeaters[trackedAutoMeater.trackedID] != null && autoMeaters[trackedAutoMeater.trackedID].physicalObject != null && !autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation &&
+                        !H3MP_GameManager.sceneLoading && autoMeaters[trackedAutoMeater.trackedID].scene.Equals(H3MP_GameManager.scene) &&
+                        autoMeaters[trackedAutoMeater.trackedID].instance == H3MP_GameManager.instance)
+                {
+                    autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation = true;
+                    AnvilManager.Run(autoMeaters[trackedAutoMeater.trackedID].Instantiate());
+                }
             }
             else
             {
@@ -859,26 +927,45 @@ namespace H3MP
 
             if (trackedEncryption.controller == H3MP_Client.singleton.ID)
             {
-                // Get our encryption.
-                actualTrackedEncryption = waitingLocalEncryptions[trackedEncryption.localWaitingIndex];
-                waitingLocalEncryptions.Remove(trackedEncryption.localWaitingIndex);
-                
-                // Set tis tracked ID
-                actualTrackedEncryption.trackedID = trackedEncryption.trackedID;
-
-                // Add the Encryption to client global list
-                encryptions[trackedEncryption.trackedID] = actualTrackedEncryption;
-
-                // Send queued up orders
-                actualTrackedEncryption.OnTrackedIDReceived();
-
-                // Only send latest data if not destroyed
-                if (encryptions[trackedEncryption.trackedID] != null)
+                if (waitingLocalEncryptions.TryGetValue(trackedEncryption.localWaitingIndex, out actualTrackedEncryption))
                 {
-                    encryptions[trackedEncryption.trackedID].Update(true);
+                    if (trackedEncryption.initTracker == H3MP_GameManager.ID)
+                    {
+                        // Get our encryption.
+                        waitingLocalEncryptions.Remove(trackedEncryption.localWaitingIndex);
 
-                    // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
-                    H3MP_ClientSend.TrackedEncryption(encryptions[trackedEncryption.trackedID]);
+                        // Set tis tracked ID
+                        actualTrackedEncryption.trackedID = trackedEncryption.trackedID;
+
+                        // Add the Encryption to client global list
+                        encryptions[trackedEncryption.trackedID] = actualTrackedEncryption;
+
+                        // Send queued up orders
+                        actualTrackedEncryption.OnTrackedIDReceived();
+
+                        // Only send latest data if not destroyed
+                        if (encryptions[trackedEncryption.trackedID] != null)
+                        {
+                            encryptions[trackedEncryption.trackedID].Update(true);
+
+                            // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
+                            H3MP_ClientSend.TrackedEncryption(encryptions[trackedEncryption.trackedID]);
+                        }
+                    }
+                    else if (encryptions[trackedEncryption.trackedID] != null && encryptions[trackedEncryption.trackedID].physicalObject != null && !encryptions[trackedEncryption.trackedID].awaitingInstantiation &&
+                            !H3MP_GameManager.sceneLoading && encryptions[trackedEncryption.trackedID].scene.Equals(H3MP_GameManager.scene) &&
+                            encryptions[trackedEncryption.trackedID].instance == H3MP_GameManager.instance)
+                    {
+                        encryptions[trackedEncryption.trackedID].awaitingInstantiation = true;
+                        AnvilManager.Run(encryptions[trackedEncryption.trackedID].Instantiate());
+                    }
+                }
+                else if (trackedEncryption.trackedID != -1 && encryptions[trackedEncryption.trackedID] != null && encryptions[trackedEncryption.trackedID].physicalObject != null && !encryptions[trackedEncryption.trackedID].awaitingInstantiation &&
+                        !H3MP_GameManager.sceneLoading && encryptions[trackedEncryption.trackedID].scene.Equals(H3MP_GameManager.scene) &&
+                        encryptions[trackedEncryption.trackedID].instance == H3MP_GameManager.instance)
+                {
+                    encryptions[trackedEncryption.trackedID].awaitingInstantiation = true;
+                    AnvilManager.Run(encryptions[trackedEncryption.trackedID].Instantiate());
                 }
             }
             else

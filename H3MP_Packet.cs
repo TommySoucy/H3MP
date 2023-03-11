@@ -535,6 +535,7 @@ namespace H3MP
                     Write(trackedItem.additionalData);
                 }
                 Write(trackedItem.localWaitingIndex);
+                Write(trackedItem.initTracker);
             }
             else
             {
@@ -660,6 +661,7 @@ namespace H3MP
                     Write(trackedSosig.data);
                 }
                 Write(trackedSosig.localWaitingIndex);
+                Write(trackedSosig.initTracker);
             }
             else
             {
@@ -706,6 +708,7 @@ namespace H3MP
                     Write(trackedAutoMeater.data);
                 }
                 Write(trackedAutoMeater.localWaitingIndex);
+                Write(trackedAutoMeater.initTracker);
             }
             else
             {
@@ -822,6 +825,7 @@ namespace H3MP
                 Write(trackedEncryption.instance);
                 Write(trackedEncryption.sceneInit);
                 Write(trackedEncryption.localWaitingIndex);
+                Write(trackedEncryption.initTracker);
             }
             else
             {
@@ -1261,6 +1265,7 @@ namespace H3MP
                     trackedItem.additionalData = ReadBytes(additionalDataLen);
                 }
                 trackedItem.localWaitingIndex = ReadUInt();
+                trackedItem.initTracker = ReadInt();
             }
             else
             {
@@ -1356,6 +1361,7 @@ namespace H3MP
                     trackedSosig.data = ReadBytes(dataLen);
                 }
                 trackedSosig.localWaitingIndex = ReadUInt();
+                trackedSosig.initTracker = ReadInt();
             }
             else
             {
@@ -1502,6 +1508,7 @@ namespace H3MP
                     trackedAutoMeater.data = ReadBytes(dataLen);
                 }
                 trackedAutoMeater.localWaitingIndex = ReadUInt();
+                trackedAutoMeater.initTracker = ReadInt();
             }
             else
             {
@@ -1594,6 +1601,7 @@ namespace H3MP
                 trackedEncryption.instance = ReadInt();
                 trackedEncryption.sceneInit = ReadBool();
                 trackedEncryption.localWaitingIndex = ReadUInt();
+                trackedEncryption.initTracker = ReadInt();
             }
             else
             {

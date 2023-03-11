@@ -537,6 +537,9 @@ namespace H3MP
         {
             TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.4418f, 1.04f, 6.2977f), Quaternion.Euler(0, 270, 0));
 
+            joinTNHInstances = new Dictionary<int, GameObject>();
+            currentTNHInstancePlayers = new Dictionary<int, GameObject>();
+
             // Add background pointable
             FVRPointable backgroundPointable = TNHMenu.transform.GetChild(0).gameObject.AddComponent<FVRPointable>();
             backgroundPointable.MaxPointingRange = 5;
@@ -12989,7 +12992,7 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance != null)
                 {
-                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && (!TNH_ManagerPatch.inDelayedInit || Mod.currentTNHInstance.phase != TNH_Phase.StartUp))
                     {
                         int holdPointIndex = -1;
                         for(int i=0; i<__instance.M.HoldPoints.Count;++i)
@@ -13025,6 +13028,12 @@ namespace H3MP
 
         static bool SpawnTakeChallengeEntitiesPrefix()
         {
+            if (spawnEntitiesSkip)
+            {
+                spawnEntitiesSkip = false;
+                return false;
+            }
+
             // Skip if in TNH and not controller
             return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
         }
@@ -13414,7 +13423,7 @@ namespace H3MP
 
         static void SpawnEnemyGroupPrefix()
         {
-            Mod.LogInfo("SpawnEnemyGroupPrefix");
+            Mod.LogInfo("SpawnEnemyGroupPrefix: "+Environment.StackTrace);
             inSpawnEnemyGroup = true;
         }
 
@@ -13698,6 +13707,7 @@ namespace H3MP
                     __instance.R_Icon.material = Mod.reticleFriendlyContactIconMat;
 
                     __instance.R_Arrow.material.color = index == -2 ? Color.green : (index == -3 ? Color.red : H3MP_GameManager.colors[Mathf.Abs(index) - 4]);
+                    __instance.R_Icon.material.color = index == -2 ? Color.green : (index == -3 ? Color.red : H3MP_GameManager.colors[Mathf.Abs(index) - 4]);
                 }
                 return false;
             }

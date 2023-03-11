@@ -859,6 +859,7 @@ namespace H3MP
             data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
             data.instance = instance;
             data.controller = ID;
+            data.initTracker = ID;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
 
             CollectExternalData(data);
@@ -1154,6 +1155,7 @@ namespace H3MP
             }
             data.ammoStores = (int[])Mod.SosigInventory_m_ammoStores.GetValue(sosigScript.Inventory);
             data.controller = ID;
+            data.controller = ID;
             data.mustard = sosigScript.Mustard;
             data.bodyPose = sosigScript.BodyPose;
             data.currentOrder = sosigScript.CurrentOrder;
@@ -1342,6 +1344,8 @@ namespace H3MP
 
             // Add to local list
             data.localTrackedID = autoMeaters.Count;
+            data.controller = ID;
+            data.initTracker = ID;
             data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
@@ -1484,6 +1488,7 @@ namespace H3MP
 
             // Add to local list
             data.localTrackedID = encryptions.Count;
+            data.initTracker = ID;
             data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
@@ -1643,20 +1648,25 @@ namespace H3MP
                 currentInstance.dead.Remove(ID);
             }
 
-            if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
+            if (!sceneLoading)
             {
-                if (relevantInstances0.TryGetValue(H3MP_GameManager.instance, out List<int> relevantPlayers))
+                Mod.LogInfo("\tScene not loading, getting playersAtLoadStart");
+                if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
                 {
-                    playersAtLoadStart = relevantPlayers;
+                    if (relevantInstances0.TryGetValue(H3MP_GameManager.instance, out List<int> relevantPlayers))
+                    {
+                        playersAtLoadStart = relevantPlayers;
+                    }
+                    else
+                    {
+                        playersAtLoadStart = null;
+                    }
                 }
                 else
                 {
                     playersAtLoadStart = null;
                 }
-            }
-            else
-            {
-                playersAtLoadStart = null;
+                Mod.LogInfo("\t\t"+(playersAtLoadStart == null ? "null" : playersAtLoadStart.Count.ToString()+" elements"));
             }
 
             // Set locally
@@ -2040,6 +2050,24 @@ namespace H3MP
 
                 ++Mod.skipAllInstantiates;
 
+                Mod.LogInfo("\tGetting playersAtLoadStart");
+                if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
+                {
+                    if (relevantInstances0.TryGetValue(instance, out List<int> relevantPlayers))
+                    {
+                        playersAtLoadStart = relevantPlayers;
+                    }
+                    else
+                    {
+                        playersAtLoadStart = null;
+                    }
+                }
+                else
+                {
+                    playersAtLoadStart = null;
+                }
+                Mod.LogInfo("\t\t" + (playersAtLoadStart == null ? "null" : playersAtLoadStart.Count.ToString() + " elements"));
+
                 // Get out of TNH instance 
                 // This makes assumption that player must go through main menu to leave TNH
                 // TODO: If this is not always true, will have to handle by "if we leave a TNH scene" instead of "if we go into main menu"
@@ -2077,23 +2105,7 @@ namespace H3MP
                     controlOverride = true;
                     firstPlayerInSceneInstance = true;
                 }
-                Mod.LogInfo("Started loading, control override: " + controlOverride);
-
-                if(playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
-                {
-                    if (relevantInstances0.TryGetValue(instance, out List<int> relevantPlayers))
-                    {
-                        playersAtLoadStart = relevantPlayers;
-                    }
-                    else
-                    {
-                        playersAtLoadStart = null;
-                    }
-                }
-                else
-                {
-                    playersAtLoadStart = null;
-                }
+                Mod.LogInfo("\tStarted loading, control override: " + controlOverride);
             }
             else // Finished loading
             {
@@ -2135,7 +2147,7 @@ namespace H3MP
                             // Then server arrives, tracks their own init scene items and sends to clients. Reinitializing the scene, causing double instantiation.
                             // Unless we calculate it here again, at which point the server will know someone else is in their new scene, preventing to track their own items.
 
-                            // NOTE: See note above, this also means that scenes that require base their initialization on some other criteria will be required to wait 
+                            // NOTE: See note above, this also means that scenes that base their initialization on some other criteria will be required to wait 
                             // until we are done loading before spawning any tracked objects, as they will otherwise be destroyed if they did not have control override.
                             // This is the case for TNH, see TNH_ManagerPatch.DelayedInitPrefix, where we prevent it until done loading, even if in control of the TNH instance.
                             controlOverride = false;

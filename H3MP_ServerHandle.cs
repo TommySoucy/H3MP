@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -2419,22 +2420,105 @@ namespace H3MP
             // If clients were waiting for this client to finish sending up to date objects
             if(H3MP_Server.clientsWaitingUpDate.TryGetValue(clientID, out List<int> waitingClients))
             {
-                // If the relevant client is no longer loading or wasn't to begin with
-                H3MP_Server.clients[forClient].SendRelevantTrackedObjects(clientID);
-
-                waitingClients.Remove(forClient);
-                if(waitingClients.Count == 0)
+                if (forClient == 0)
                 {
-                    H3MP_Server.clientsWaitingUpDate.Remove(clientID);
-                }
-
-                if (H3MP_Server.loadingClientsWaitingFrom.TryGetValue(forClient, out List<int> waitingFrom))
-                {
-                    waitingFrom.Remove(clientID);
-                    if(waitingFrom.Count == 0)
+                    waitingClients.Remove(forClient);
+                    if (waitingClients.Count == 0)
                     {
-                        H3MP_Server.loadingClientsWaitingFrom.Remove(forClient);
-                        H3MP_Server.clients[forClient].SendRelevantTrackedObjects();
+                        H3MP_Server.clientsWaitingUpDate.Remove(clientID);
+                    }
+
+                    if (H3MP_Server.loadingClientsWaitingFrom.TryGetValue(forClient, out List<int> waitingFrom))
+                    {
+                        waitingFrom.Remove(clientID);
+                        if (waitingFrom.Count == 0)
+                        {
+                            // When requesting up to date objects, the server will instantiate directly upon receiving them, unlike a client, below
+                            // In the server's case we then want to instantiate all missing items directly
+                            H3MP_Server.loadingClientsWaitingFrom.Remove(forClient);// Items
+
+                            // This is necessary for the case in which server sent request before some items it was returning a tracked ID for for the relevant client
+                            if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(H3MP_GameManager.scene, out Dictionary<int, List<int>> itemInstances) &&
+                                itemInstances.TryGetValue(H3MP_GameManager.instance, out List<int> items))
+                            {
+                                for (int i = 0; i < items.Count; ++i)
+                                {
+                                    H3MP_TrackedItemData trackedItemData = H3MP_Server.items[items[i]];
+                                    if (trackedItemData != null && trackedItemData.physicalItem == null && !trackedItemData.awaitingInstantiation)
+                                    {
+                                        trackedItemData.awaitingInstantiation = true;
+                                        AnvilManager.Run(trackedItemData.Instantiate());
+                                    }
+                                }
+                            }
+
+                            // Sosigs
+                            if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(H3MP_GameManager.scene, out Dictionary<int, List<int>> sosigInstances) &&
+                                sosigInstances.TryGetValue(H3MP_GameManager.instance, out List<int> sosigs))
+                            {
+                                for (int i = 0; i < sosigs.Count; ++i)
+                                {
+                                    H3MP_TrackedSosigData trackedSosigData = H3MP_Server.sosigs[sosigs[i]];
+                                    if (trackedSosigData != null && trackedSosigData.physicalObject == null && !trackedSosigData.awaitingInstantiation)
+                                    {
+                                        trackedSosigData.awaitingInstantiation = true;
+                                        AnvilManager.Run(trackedSosigData.Instantiate());
+                                    }
+                                }
+                            }
+
+                            // AutoMeaters
+                            if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(H3MP_GameManager.scene, out Dictionary<int, List<int>> autoMeaterInstances) &&
+                                autoMeaterInstances.TryGetValue(H3MP_GameManager.instance, out List<int> autoMeaters))
+                            {
+                                for (int i = 0; i < autoMeaters.Count; ++i)
+                                {
+                                    H3MP_TrackedAutoMeaterData trackedAutoMeaterData = H3MP_Server.autoMeaters[autoMeaters[i]];
+                                    if (trackedAutoMeaterData != null && trackedAutoMeaterData.physicalObject == null && !trackedAutoMeaterData.awaitingInstantiation)
+                                    {
+                                        trackedAutoMeaterData.awaitingInstantiation = true;
+                                        AnvilManager.Run(trackedAutoMeaterData.Instantiate());
+                                    }
+                                }
+                            }
+
+                            // Encryptions
+                            if (H3MP_GameManager.encryptionsByInstanceByScene.TryGetValue(H3MP_GameManager.scene, out Dictionary<int, List<int>> encryptionInstances) &&
+                                encryptionInstances.TryGetValue(H3MP_GameManager.instance, out List<int> encryptions))
+                            {
+                                for (int i = 0; i < encryptions.Count; ++i)
+                                {
+                                    H3MP_TrackedEncryptionData trackedEncryptionData = H3MP_Server.encryptions[encryptions[i]];
+                                    if (trackedEncryptionData != null && trackedEncryptionData.physicalObject == null && !trackedEncryptionData.awaitingInstantiation)
+                                    {
+                                        trackedEncryptionData.awaitingInstantiation = true;
+                                        AnvilManager.Run(trackedEncryptionData.Instantiate());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // If the relevant client is no longer loading or wasn't to begin with
+                    H3MP_Server.clients[forClient].SendRelevantTrackedObjects(clientID);
+
+                    waitingClients.Remove(forClient);
+                    if (waitingClients.Count == 0)
+                    {
+                        H3MP_Server.clientsWaitingUpDate.Remove(clientID);
+                    }
+
+                    if (H3MP_Server.loadingClientsWaitingFrom.TryGetValue(forClient, out List<int> waitingFrom))
+                    {
+                        waitingFrom.Remove(clientID);
+                        if (waitingFrom.Count == 0)
+                        {
+                            // This means this client is no longer waiting for any more up to date objects, send them the insurance relevant object
+                            H3MP_Server.loadingClientsWaitingFrom.Remove(forClient);
+                            H3MP_Server.clients[forClient].SendRelevantTrackedObjects();
+                        }
                     }
                 }
             }
@@ -3530,6 +3614,7 @@ namespace H3MP
             {
                 // Set instance data
                 TNHInstance.holdState = TNH_HoldPoint.HoldState.Hacking;
+                TNHInstance.tickDownToFailure = 120f;
 
                 // If this is our TNH game, actually begin analyzing
                 if (TNHInstance.manager != null && (bool)Mod.TNH_Manager_m_hasInit.GetValue(TNHInstance.manager))

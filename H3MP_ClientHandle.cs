@@ -2122,6 +2122,7 @@ namespace H3MP
 
         public static void RequestUpToDateObjects(H3MP_Packet packet)
         {
+            Mod.LogInfo("Client received request for up todate objects");
             // Only send requested up to date objects if not currently loading,
             // because even if we send the most up to date now they will be destroyed by the loading
             // This request was only made to us because the server thought our scene/instance to be our destination one but we are not there yet
@@ -2936,7 +2937,7 @@ namespace H3MP
         {
             int count = packet.ReadInt();
 
-            for(int i=0; i < count; i++)
+            for(int i=0; i < count; ++i)
             {
                 int instance = packet.ReadInt();
                 H3MP_TNHInstance TNHInstance = new H3MP_TNHInstance(instance);
@@ -3105,6 +3106,7 @@ namespace H3MP
             {
                 // Set instance data
                 TNHInstance.holdState = TNH_HoldPoint.HoldState.Hacking;
+                TNHInstance.tickDownToFailure = 120f;
 
                 // If this is our TNH game, actually raise barriers
                 if (TNHInstance.manager != null && (bool)Mod.TNH_Manager_m_hasInit.GetValue(TNHInstance.manager))

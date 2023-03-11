@@ -30,6 +30,7 @@ namespace H3MP
         public H3MP_TrackedAutoMeater physicalObject;
         public int localTrackedID;
         public uint localWaitingIndex = uint.MaxValue;
+        public int initTracker;
         public bool previousActive;
         public bool active;
         public byte previousIFF;
