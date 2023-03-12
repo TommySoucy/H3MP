@@ -151,6 +151,18 @@ namespace H3MP
         public static readonly FieldInfo Sosig_m_isFrozen = typeof(Sosig).GetField("m_isFrozen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Sosig_m_receivedHeadShot = typeof(Sosig).GetField("m_receivedHeadShot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Sosig_m_isConfused = typeof(Sosig).GetField("m_isConfused", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_skirmishPoint = typeof(Sosig).GetField("m_skirmishPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_pathToPoint = typeof(Sosig).GetField("m_pathToPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_faceTowards = typeof(Sosig).GetField("m_faceTowards", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_wanderPoint = typeof(Sosig).GetField("m_wanderPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_assaultSpeed = typeof(Sosig).GetField("m_assaultSpeed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_fleeToPoint = typeof(Sosig).GetField("m_fleeToPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_idlePoint = typeof(Sosig).GetField("m_idlePoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_idleDominantDir = typeof(Sosig).GetField("m_idleDominantDir", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_pathToLookDir = typeof(Sosig).GetField("m_pathToLookDir", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_hardGuard = typeof(Sosig).GetField("m_hardGuard", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_guardDominantDirection = typeof(Sosig).GetField("m_guardDominantDirection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo Sosig_m_assaultPoint = typeof(Sosig).GetField("m_assaultPoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigLink_m_wearables = typeof(SosigLink).GetField("m_wearables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigLink_m_integrity = typeof(SosigLink).GetField("m_integrity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo SosigInventory_m_ammoStores = typeof(SosigInventory).GetField("m_ammoStores", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -280,6 +292,7 @@ namespace H3MP
         public static readonly MethodInfo Sosig_SetBodyPose = typeof(Sosig).GetMethod("SetBodyPose", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Sosig_SetBodyState = typeof(Sosig).GetMethod("SetBodyState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Sosig_VaporizeUpdate = typeof(Sosig).GetMethod("VaporizeUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Sosig_TurnTowardsFacingDir = typeof(Sosig).GetMethod("TurnTowardsFacingDir", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo SosigLink_SeverJoint = typeof(SosigLink).GetMethod("SeverJoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_UIManager_UpdateLevelSelectDisplayAndLoader = typeof(TNH_UIManager).GetMethod("UpdateLevelSelectDisplayAndLoader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TNH_UIManager_UpdateTableBasedOnOptions = typeof(TNH_UIManager).GetMethod("UpdateTableBasedOnOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -6720,13 +6733,24 @@ namespace H3MP
 
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data.trackedID, o);
+                    H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data, o);
                 }
                 else
                 {
                     if (trackedSosig.data.trackedID != -1)
                     {
-                        H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data.trackedID, o);
+                        H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                    }
+                    else
+                    {
+                        if (H3MP_TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            H3MP_TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = o;
+                        }
+                        else
+                        {
+                            H3MP_TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, o);
+                        }
                     }
                 }
             }

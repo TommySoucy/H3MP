@@ -611,10 +611,10 @@ namespace H3MP
                 }
             }
             Write((byte)trackedSosig.fallbackOrder);
+            Write((byte)trackedSosig.currentOrder);
 
             if (full)
             {
-                Write((byte)trackedSosig.currentOrder);
                 if (trackedSosig.linkData == null || trackedSosig.linkData.Length == 0)
                 {
                     Write((byte)0);
@@ -665,6 +665,42 @@ namespace H3MP
                 }
                 Write(trackedSosig.localWaitingIndex);
                 Write(trackedSosig.initTracker);
+                switch (trackedSosig.currentOrder)
+                {
+                    case Sosig.SosigOrder.GuardPoint:
+                        Write(trackedSosig.guardPoint);
+                        Write(trackedSosig.guardDir);
+                        Write(trackedSosig.hardGuard);
+                        break;
+                    case Sosig.SosigOrder.Skirmish:
+                        Write(trackedSosig.skirmishPoint);
+                        Write(trackedSosig.pathToPoint);
+                        Write(trackedSosig.assaultPoint);
+                        Write(trackedSosig.faceTowards);
+                        break;
+                    case Sosig.SosigOrder.Investigate:
+                        Write(trackedSosig.guardPoint);
+                        Write(trackedSosig.hardGuard);
+                        Write(trackedSosig.faceTowards);
+                        break;
+                    case Sosig.SosigOrder.SearchForEquipment:
+                    case Sosig.SosigOrder.Wander:
+                        Write(trackedSosig.wanderPoint);
+                        break;
+                    case Sosig.SosigOrder.Assault:
+                        Write(trackedSosig.assaultPoint);
+                        Write((byte)trackedSosig.assaultSpeed);
+                        Write(trackedSosig.faceTowards);
+                        break;
+                    case Sosig.SosigOrder.Idle:
+                        Write(trackedSosig.idleToPoint);
+                        Write(trackedSosig.idleDominantDir);
+                        break;
+                    case Sosig.SosigOrder.PathTo:
+                        Write(trackedSosig.pathToPoint);
+                        Write(trackedSosig.pathToLookDir);
+                        break;
+                }
             }
             else
             {
@@ -1313,10 +1349,10 @@ namespace H3MP
                 }
             }
             trackedSosig.fallbackOrder = (Sosig.SosigOrder)ReadByte();
+            trackedSosig.currentOrder = (Sosig.SosigOrder)ReadByte();
 
             if (full)
             {
-                trackedSosig.currentOrder = (Sosig.SosigOrder)ReadByte();
                 byte sosigLinkDataLength = ReadByte();
                 if (sosigLinkDataLength > 0)
                 {
@@ -1366,6 +1402,42 @@ namespace H3MP
                 }
                 trackedSosig.localWaitingIndex = ReadUInt();
                 trackedSosig.initTracker = ReadInt();
+                switch (trackedSosig.currentOrder) 
+                {
+                    case Sosig.SosigOrder.GuardPoint:
+                        trackedSosig.guardPoint = ReadVector3();
+                        trackedSosig.guardDir = ReadVector3();
+                        trackedSosig.hardGuard = ReadBool();
+                        break;
+                    case Sosig.SosigOrder.Skirmish:
+                        trackedSosig.skirmishPoint = ReadVector3();
+                        trackedSosig.pathToPoint = ReadVector3();
+                        trackedSosig.assaultPoint = ReadVector3();
+                        trackedSosig.faceTowards = ReadVector3();
+                        break;
+                    case Sosig.SosigOrder.Investigate:
+                        trackedSosig.guardPoint = ReadVector3();
+                        trackedSosig.hardGuard = ReadBool();
+                        trackedSosig.faceTowards = ReadVector3();
+                        break;
+                    case Sosig.SosigOrder.SearchForEquipment:
+                    case Sosig.SosigOrder.Wander:
+                        trackedSosig.wanderPoint = ReadVector3();
+                        break;
+                    case Sosig.SosigOrder.Assault:
+                        trackedSosig.assaultPoint = ReadVector3();
+                        trackedSosig.assaultSpeed = (Sosig.SosigMoveSpeed)ReadByte();
+                        trackedSosig.faceTowards = ReadVector3();
+                        break;
+                    case Sosig.SosigOrder.Idle:
+                        trackedSosig.idleToPoint = ReadVector3();
+                        trackedSosig.idleDominantDir = ReadVector3();
+                        break;
+                    case Sosig.SosigOrder.PathTo:
+                        trackedSosig.pathToPoint = ReadVector3();
+                        trackedSosig.pathToLookDir = ReadVector3();
+                        break;
+                }
             }
             else
             {

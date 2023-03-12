@@ -1392,12 +1392,48 @@ namespace H3MP
             }
         }
 
-        public static void SosigSetCurrentOrder(int sosigTrackedID, Sosig.SosigOrder currentOrder)
+        public static void SosigSetCurrentOrder(H3MP_TrackedSosigData trackedSosig, Sosig.SosigOrder currentOrder)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigSetCurrentOrder))
             {
-                packet.Write(sosigTrackedID);
+                packet.Write(trackedSosig.trackedID);
                 packet.Write((byte)currentOrder);
+                switch (trackedSosig.currentOrder)
+                {
+                    case Sosig.SosigOrder.GuardPoint:
+                        packet.Write(trackedSosig.guardPoint);
+                        packet.Write(trackedSosig.guardDir);
+                        packet.Write(trackedSosig.hardGuard);
+                        break;
+                    case Sosig.SosigOrder.Skirmish:
+                        packet.Write(trackedSosig.skirmishPoint);
+                        packet.Write(trackedSosig.pathToPoint);
+                        packet.Write(trackedSosig.assaultPoint);
+                        packet.Write(trackedSosig.faceTowards);
+                        break;
+                    case Sosig.SosigOrder.Investigate:
+                        packet.Write(trackedSosig.guardPoint);
+                        packet.Write(trackedSosig.hardGuard);
+                        packet.Write(trackedSosig.faceTowards);
+                        break;
+                    case Sosig.SosigOrder.SearchForEquipment:
+                    case Sosig.SosigOrder.Wander:
+                        packet.Write(trackedSosig.wanderPoint);
+                        break;
+                    case Sosig.SosigOrder.Assault:
+                        packet.Write(trackedSosig.assaultPoint);
+                        packet.Write((byte)trackedSosig.assaultSpeed);
+                        packet.Write(trackedSosig.faceTowards);
+                        break;
+                    case Sosig.SosigOrder.Idle:
+                        packet.Write(trackedSosig.idleToPoint);
+                        packet.Write(trackedSosig.idleDominantDir);
+                        break;
+                    case Sosig.SosigOrder.PathTo:
+                        packet.Write(trackedSosig.pathToPoint);
+                        packet.Write(trackedSosig.pathToLookDir);
+                        break;
+                }
 
                 SendTCPData(packet);
             }

@@ -245,6 +245,7 @@ namespace H3MP
             H3MP_TrackedSosig.unknownSetIFFs.Clear();
             H3MP_TrackedSosig.unknownSetOriginalIFFs.Clear();
             H3MP_TrackedSosig.unknownTNHKills.Clear();
+            H3MP_TrackedSosig.unknownCurrentOrder.Clear();
 
             H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Clear();
             H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Clear();
@@ -1162,9 +1163,29 @@ namespace H3MP
             data.fallbackOrder = sosigScript.FallbackOrder;
             data.IFF = (byte)sosigScript.GetIFF();
             data.IFFChart = sosigScript.Priority.IFFChart;
-            data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
+            data.scene = sceneLoading ? LoadLevelBeginPatch.loadingLevel : scene;
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
+
+            // Brain
+            // GuardPoint
+            data.guardPoint = sosigScript.GetGuardPoint();
+            data.guardDir = sosigScript.GetGuardDir();
+            data.hardGuard = (bool)Mod.Sosig_m_hardGuard.GetValue(sosigScript);
+            // Skirmish
+            data.skirmishPoint = (Vector3)Mod.Sosig_m_skirmishPoint.GetValue(sosigScript);
+            data.pathToPoint = (Vector3)Mod.Sosig_m_pathToPoint.GetValue(sosigScript);
+            data.assaultPoint = sosigScript.GetAssaultPoint();
+            data.faceTowards = (Vector3)Mod.Sosig_m_faceTowards.GetValue(sosigScript);
+            // SearchForEquipment
+            data.wanderPoint = (Vector3)Mod.Sosig_m_wanderPoint.GetValue(sosigScript);
+            // Assault
+            data.assaultSpeed = (Sosig.SosigMoveSpeed)Mod.Sosig_m_assaultSpeed.GetValue(sosigScript);
+            // Idle
+            data.idleToPoint = (Vector3)Mod.Sosig_m_idlePoint.GetValue(sosigScript);
+            data.idleDominantDir = (Vector3)Mod.Sosig_m_idleDominantDir.GetValue(sosigScript);
+            // PathTo
+            data.pathToLookDir = (Vector3)Mod.Sosig_m_pathToLookDir.GetValue(sosigScript);
 
             CollectExternalData(data);
 

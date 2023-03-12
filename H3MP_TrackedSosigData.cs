@@ -41,6 +41,7 @@ namespace H3MP
         public bool[] IFFChart;
         public Sosig.SosigBodyPose previousBodyPose;
         public Sosig.SosigBodyPose bodyPose;
+        public Sosig.SosigOrder previousOrder;
         public Sosig.SosigOrder currentOrder;
         public Sosig.SosigOrder fallbackOrder;
         public bool removeFromListOnDestroy = true;
@@ -49,6 +50,18 @@ namespace H3MP
         public byte[] data;
         public bool sceneInit;
         public bool awaitingInstantiation;
+        public Vector3 guardPoint;
+        public Vector3 guardDir;
+        public bool hardGuard;
+        public Vector3 skirmishPoint;
+        public Vector3 pathToPoint;
+        public Vector3 assaultPoint;
+        public Vector3 faceTowards;
+        public Vector3 wanderPoint;
+        public Sosig.SosigMoveSpeed assaultSpeed;
+        public Vector3 idleToPoint;
+        public Vector3 idleDominantDir;
+        public Vector3 pathToLookDir;
 
         public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(-1, null);
 
@@ -105,7 +118,47 @@ namespace H3MP
             physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
 
             // Initially set order
-            physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+            switch (currentOrder)
+            {
+                case Sosig.SosigOrder.GuardPoint:
+                    physicalObject.physicalSosigScript.CommandGuardPoint(guardPoint, hardGuard);
+                    Mod.Sosig_m_guardDominantDirection.SetValue(physicalObject.physicalSosigScript, guardDir);
+                    break;
+                case Sosig.SosigOrder.Skirmish:
+                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                    Mod.Sosig_m_skirmishPoint.SetValue(physicalObject.physicalSosigScript, skirmishPoint);
+                    Mod.Sosig_m_pathToPoint.SetValue(physicalObject.physicalSosigScript, pathToPoint);
+                    Mod.Sosig_m_assaultPoint.SetValue(physicalObject.physicalSosigScript, assaultPoint);
+                    Mod.Sosig_TurnTowardsFacingDir.Invoke(physicalObject.physicalSosigScript, new object[] { faceTowards });
+                    break;
+                case Sosig.SosigOrder.Investigate:
+                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                    physicalObject.physicalSosigScript.UpdateGuardPoint(guardPoint);
+                    Mod.Sosig_m_hardGuard.SetValue(physicalObject.physicalSosigScript, hardGuard);
+                    Mod.Sosig_TurnTowardsFacingDir.Invoke(physicalObject.physicalSosigScript, new object[] { faceTowards });
+                    break;
+                case Sosig.SosigOrder.SearchForEquipment:
+                case Sosig.SosigOrder.Wander:
+                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                    Mod.Sosig_m_wanderPoint.SetValue(physicalObject.physicalSosigScript, wanderPoint);
+                    break;
+                case Sosig.SosigOrder.Assault:
+                    physicalObject.physicalSosigScript.CommandAssaultPoint(assaultPoint);
+                    Mod.Sosig_TurnTowardsFacingDir.Invoke(physicalObject.physicalSosigScript, new object[] { faceTowards });
+                    physicalObject.physicalSosigScript.SetAssaultSpeed(assaultSpeed);
+                    break;
+                case Sosig.SosigOrder.Idle:
+                    physicalObject.physicalSosigScript.CommandIdle(idleToPoint, idleDominantDir);
+                    break;
+                case Sosig.SosigOrder.PathTo:
+                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                    Mod.Sosig_m_pathToPoint.SetValue(physicalObject.physicalSosigScript, pathToPoint);
+                    Mod.Sosig_m_pathToLookDir.SetValue(physicalObject.physicalSosigScript, pathToLookDir);
+                    break;
+                default:
+                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                    break;
+            }
             physicalObject.physicalSosigScript.FallbackOrder = fallbackOrder;
 
             ProcessData();
@@ -237,6 +290,8 @@ namespace H3MP
             previousBodyPose = bodyPose;
             bodyPose = updatedItem.bodyPose;
             fallbackOrder = updatedItem.fallbackOrder;
+            previousOrder = currentOrder;
+            currentOrder = updatedItem.currentOrder;
 
             // Set physically
             if (physicalObject != null)
@@ -281,7 +336,6 @@ namespace H3MP
                 linkIntegrity = updatedItem.linkIntegrity;
                 wearables = updatedItem.wearables;
                 IFFChart = updatedItem.IFFChart;
-                currentOrder = updatedItem.currentOrder;
 
                 if (physicalObject != null)
                 {
@@ -346,6 +400,30 @@ namespace H3MP
                 }
             }
             fallbackOrder = physicalObject.physicalSosigScript.FallbackOrder;
+            previousOrder = currentOrder;
+            currentOrder = physicalObject.physicalSosigScript.CurrentOrder;
+            if(previousOrder != currentOrder)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSetCurrentOrder(this, currentOrder);
+                }
+                else if(trackedID != -1)
+                {
+                    H3MP_ClientSend.SosigSetCurrentOrder(this, currentOrder);
+                }
+                else
+                {
+                    if (H3MP_TrackedSosig.unknownCurrentOrder.ContainsKey(localWaitingIndex))
+                    {
+                        H3MP_TrackedSosig.unknownCurrentOrder[localWaitingIndex] = currentOrder;
+                    }
+                    else
+                    {
+                        H3MP_TrackedSosig.unknownCurrentOrder.Add(localWaitingIndex, currentOrder);
+                    }
+                }
+            }
 
             previousActive = active;
             active = physicalObject.gameObject.activeInHierarchy;
@@ -476,7 +554,6 @@ namespace H3MP
                     }
                 }
                 IFFChart = physicalObject.physicalSosigScript.Priority.IFFChart;
-                currentOrder = physicalObject.physicalSosigScript.CurrentOrder;
             }
 
             return ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();
@@ -581,6 +658,12 @@ namespace H3MP
 
                 H3MP_TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
             }
+            if(localTrackedID != -1 && H3MP_TrackedSosig.unknownCurrentOrder.ContainsKey(localWaitingIndex))
+            {
+                H3MP_ClientSend.SosigSetCurrentOrder(this, H3MP_TrackedSosig.unknownCurrentOrder[localWaitingIndex]);
+
+                H3MP_TrackedSosig.unknownCurrentOrder.Remove(localWaitingIndex);
+            }
 
             if (localTrackedID != -1)
             {
@@ -616,6 +699,7 @@ namespace H3MP
             H3MP_TrackedSosig.unknownBodyStates.Remove(localWaitingIndex);
             H3MP_TrackedSosig.unknownTNHKills.Remove(localWaitingIndex);
             H3MP_TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownCurrentOrder.Remove(localWaitingIndex);
 
             if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.sosigs.Count)
             {

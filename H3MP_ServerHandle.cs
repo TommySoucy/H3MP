@@ -2220,16 +2220,103 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 trackedSosig.currentOrder = currentOrder;
-
-                if (trackedSosig.physicalObject != null)
+                switch (currentOrder)
                 {
-                    ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                    trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
-                    --SosigActionPatch.sosigSetCurrentOrderSkip;
+                    case Sosig.SosigOrder.GuardPoint:
+                        trackedSosig.guardPoint = packet.ReadVector3();
+                        trackedSosig.guardDir = packet.ReadVector3();
+                        trackedSosig.hardGuard = packet.ReadBool();
+                        if (trackedSosig.physicalObject != null)
+                        {
+                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalObject.physicalSosigScript.CommandGuardPoint(trackedSosig.guardPoint, trackedSosig.hardGuard);
+                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            Mod.Sosig_m_guardDominantDirection.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.guardDir);
+                        }
+                        break;
+                    case Sosig.SosigOrder.Skirmish:
+                        trackedSosig.skirmishPoint = packet.ReadVector3();
+                        trackedSosig.pathToPoint = packet.ReadVector3();
+                        trackedSosig.assaultPoint = packet.ReadVector3();
+                        trackedSosig.faceTowards = packet.ReadVector3();
+                        if (trackedSosig.physicalObject != null)
+                        {
+                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            Mod.Sosig_m_skirmishPoint.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.skirmishPoint);
+                            Mod.Sosig_m_pathToPoint.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.pathToPoint);
+                            Mod.Sosig_m_assaultPoint.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.assaultPoint);
+                            Mod.Sosig_TurnTowardsFacingDir.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.faceTowards });
+                        }
+                        break;
+                    case Sosig.SosigOrder.Investigate:
+                        trackedSosig.guardPoint = packet.ReadVector3();
+                        trackedSosig.hardGuard = packet.ReadBool();
+                        trackedSosig.faceTowards = packet.ReadVector3();
+                        if (trackedSosig.physicalObject != null)
+                        {
+                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalObject.physicalSosigScript.UpdateGuardPoint(trackedSosig.guardPoint);
+                            Mod.Sosig_m_hardGuard.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.hardGuard);
+                            Mod.Sosig_TurnTowardsFacingDir.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.faceTowards });
+                        }
+                        break;
+                    case Sosig.SosigOrder.SearchForEquipment:
+                    case Sosig.SosigOrder.Wander:
+                        trackedSosig.wanderPoint = packet.ReadVector3();
+                        if (trackedSosig.physicalObject != null)
+                        {
+                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            Mod.Sosig_m_wanderPoint.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.wanderPoint);
+                        }
+                        break;
+                    case Sosig.SosigOrder.Assault:
+                        trackedSosig.assaultPoint = packet.ReadVector3();
+                        trackedSosig.assaultSpeed = (Sosig.SosigMoveSpeed)packet.ReadByte();
+                        trackedSosig.faceTowards = packet.ReadVector3();
+                        if (trackedSosig.physicalObject != null)
+                        {
+                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalObject.physicalSosigScript.CommandAssaultPoint(trackedSosig.assaultPoint);
+                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            Mod.Sosig_TurnTowardsFacingDir.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.faceTowards });
+                            trackedSosig.physicalObject.physicalSosigScript.SetAssaultSpeed(trackedSosig.assaultSpeed);
+                        }
+                        break;
+                    case Sosig.SosigOrder.Idle:
+                        trackedSosig.idleToPoint = packet.ReadVector3();
+                        trackedSosig.idleDominantDir = packet.ReadVector3();
+                        if (trackedSosig.physicalObject != null)
+                        {
+                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalObject.physicalSosigScript.CommandIdle(trackedSosig.idleToPoint, trackedSosig.idleDominantDir);
+                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                        }
+                        break;
+                    case Sosig.SosigOrder.PathTo:
+                        trackedSosig.pathToPoint = packet.ReadVector3();
+                        trackedSosig.pathToLookDir = packet.ReadVector3();
+                        if (trackedSosig.physicalObject != null)
+                        {
+                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            Mod.Sosig_m_pathToPoint.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.pathToPoint);
+                            Mod.Sosig_m_pathToLookDir.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.pathToLookDir);
+                        }
+                        break;
+                    default:
+                        trackedSosig.physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                        break;
                 }
-            }
 
-            H3MP_ServerSend.SosigSetCurrentOrder(sosigTrackedID, currentOrder, clientID);
+                H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig, currentOrder, clientID);
+            }
         }
 
         public static void SosigVaporize(int clientID, H3MP_Packet packet)
