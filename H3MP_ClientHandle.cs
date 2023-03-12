@@ -316,6 +316,7 @@ namespace H3MP
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[trackedID];
 
+            Mod.LogInfo("Client received order to give control of sosig: " + trackedID + " to " + controllerID);
             if (trackedSosig != null)
             {
                 bool destroyed = false;

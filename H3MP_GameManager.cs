@@ -1155,7 +1155,7 @@ namespace H3MP
             }
             data.ammoStores = (int[])Mod.SosigInventory_m_ammoStores.GetValue(sosigScript.Inventory);
             data.controller = ID;
-            data.controller = ID;
+            data.initTracker = ID;
             data.mustard = sosigScript.Mustard;
             data.bodyPose = sosigScript.BodyPose;
             data.currentOrder = sosigScript.CurrentOrder;
@@ -1484,10 +1484,9 @@ namespace H3MP
                 }
             }
 
-            data.controller = ID;
-
             // Add to local list
             data.localTrackedID = encryptions.Count;
+            data.controller = ID;
             data.initTracker = ID;
             data.scene = H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene;
             data.instance = instance;
