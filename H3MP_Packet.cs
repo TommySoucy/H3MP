@@ -156,7 +156,8 @@ namespace H3MP
         colorByIFF = 145,
         nameplateMode = 146,
         radarMode = 147,
-        radarColor = 148
+        radarColor = 148,
+        TNHInitializer = 149
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -306,7 +307,9 @@ namespace H3MP
         shatterableCrateSetHoldingToken = 142,
         resetTNH = 143,
         reviveTNHPlayer = 144,
-        playerColor = 145
+        playerColor = 145,
+        requestTNHInit = 146,
+        TNHInit = 147
     }
 
     public class H3MP_Packet : IDisposable
@@ -976,6 +979,7 @@ namespace H3MP
             {
                 Write(instance.playerIDs[i]);
             }
+            Write(instance.initializer);
         }
         /// <summary>Adds a TNH_Manager.SosigPatrolSquad to the packet.</summary>
         /// <param name="instance">The TNH_Manager.SosigPatrolSquad to add.</param>
@@ -1675,6 +1679,8 @@ namespace H3MP
 
                 instance.playerIDs.Add(ReadInt());
             }
+
+            instance.initializer = ReadInt();
 
             return instance;
         }

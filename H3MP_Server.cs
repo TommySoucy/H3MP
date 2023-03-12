@@ -3,6 +3,7 @@ using System;
 using System.Net.Sockets;
 using System.Net;
 using System.Collections.Generic;
+using FistVR;
 
 namespace H3MP
 {
@@ -259,6 +260,7 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, int clientID)
         {
+            Mod.LogInfo("server AddTrackedSosig: " + trackedSosig.trackedID + " with waiting index: " + trackedSosig.localWaitingIndex + " and init tracker: " + trackedSosig.initTracker);
             if (trackedSosig.trackedID == -1)
             {
                 // If this is a sceneInit sosig received from client that we haven't tracked yet
@@ -309,6 +311,7 @@ namespace H3MP
                     // Don't use loading scene here. See AddTrackedItem why
                     if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
                     {
+                        Mod.LogInfo("\tInstantiating");
                         trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
@@ -321,6 +324,55 @@ namespace H3MP
                 if (trackedSosig.controller != 0)
                 {
                     trackedSosig.localTrackedID = -1;
+                }
+
+                // Manage control for TNH
+                if (H3MP_GameManager.TNHInstances.TryGetValue(trackedSosig.instance, out H3MP_TNHInstance TNHInstance) &&
+                    TNHInstance.controller != trackedSosig.controller && trackedSosig.scene.Equals(clients[TNHInstance.controller].player.scene))
+                {
+                    // Sosig is in a TNH instance with the instance's controller but is not controlled by the controller, give control
+                    if(TNHInstance.controller == 0)
+                    {
+                        // Us, take control
+                        trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
+                        H3MP_GameManager.sosigs.Add(trackedSosig);
+                        if (trackedSosig.physicalObject == null)
+                        {
+                            if (!trackedSosig.awaitingInstantiation)
+                            {
+                                trackedSosig.awaitingInstantiation = true;
+                                AnvilManager.Run(trackedSosig.Instantiate());
+                            }
+                        }
+                        else
+                        {
+                            if (GM.CurrentAIManager != null)
+                            {
+                                GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                            }
+                            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
+                        }
+
+                    }
+                    else if(trackedSosig.controller == 0)
+                    {
+                        // Was us, give up control
+                        H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                        H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
+                        H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                        trackedSosig.localTrackedID = -1;
+                        if (trackedSosig.physicalObject != null)
+                        {
+                            if (GM.CurrentAIManager != null)
+                            {
+                                GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                            }
+                            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
+                        }
+                    }
+
+                    trackedSosig.controller = TNHInstance.controller;
+                    H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, TNHInstance.controller, null);
                 }
             }
             else
@@ -396,6 +448,55 @@ namespace H3MP
             {
                 trackedAutoMeater.localTrackedID = -1;
             }
+
+            // Manage control for TNH
+            if (H3MP_GameManager.TNHInstances.TryGetValue(trackedAutoMeater.instance, out H3MP_TNHInstance TNHInstance) &&
+                TNHInstance.controller != trackedAutoMeater.controller && trackedAutoMeater.scene.Equals(clients[TNHInstance.controller].player.scene))
+            {
+                // Object is in a TNH instance with the instance's controller but is not controlled by the controller, give control
+                if (TNHInstance.controller == 0)
+                {
+                    // Us, take control
+                    trackedAutoMeater.localTrackedID = H3MP_GameManager.autoMeaters.Count;
+                    H3MP_GameManager.autoMeaters.Add(trackedAutoMeater);
+                    if (trackedAutoMeater.physicalObject == null)
+                    {
+                        if (!trackedAutoMeater.awaitingInstantiation)
+                        {
+                            trackedAutoMeater.awaitingInstantiation = true;
+                            AnvilManager.Run(trackedAutoMeater.Instantiate());
+                        }
+                    }
+                    else
+                    {
+                        if (GM.CurrentAIManager != null)
+                        {
+                            GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                        }
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
+                    }
+
+                }
+                else if (trackedAutoMeater.controller == 0)
+                {
+                    // Was us, give up control
+                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
+                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                    trackedAutoMeater.localTrackedID = -1;
+                    if (trackedAutoMeater.physicalObject != null)
+                    {
+                        if (GM.CurrentAIManager != null)
+                        {
+                            GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                        }
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
+                    }
+                }
+
+                trackedAutoMeater.controller = TNHInstance.controller;
+                H3MP_ServerSend.GiveAutoMeaterControl(trackedAutoMeater.trackedID, TNHInstance.controller, null);
+            }
         }
 
         public static void AddTrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, int clientID)
@@ -462,6 +563,38 @@ namespace H3MP
                 if (trackedEncryption.controller != 0)
                 {
                     trackedEncryption.localTrackedID = -1;
+                }
+
+                // Manage control for TNH
+                if (H3MP_GameManager.TNHInstances.TryGetValue(trackedEncryption.instance, out H3MP_TNHInstance TNHInstance) &&
+                    TNHInstance.controller != trackedEncryption.controller && trackedEncryption.scene.Equals(clients[TNHInstance.controller].player.scene))
+                {
+                    // Object is in a TNH instance with the instance's controller but is not controlled by the controller, give control
+                    if (TNHInstance.controller == 0)
+                    {
+                        // Us, take control
+                        trackedEncryption.localTrackedID = H3MP_GameManager.encryptions.Count;
+                        H3MP_GameManager.encryptions.Add(trackedEncryption);
+                        if (trackedEncryption.physicalObject == null)
+                        {
+                            if (!trackedEncryption.awaitingInstantiation)
+                            {
+                                trackedEncryption.awaitingInstantiation = true;
+                                AnvilManager.Run(trackedEncryption.Instantiate());
+                            }
+                        }
+                    }
+                    else if (trackedEncryption.controller == 0)
+                    {
+                        // Was us, give up control
+                        H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
+                        H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
+                        H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+                        trackedEncryption.localTrackedID = -1;
+                    }
+
+                    trackedEncryption.controller = TNHInstance.controller;
+                    H3MP_ServerSend.GiveEncryptionControl(trackedEncryption.trackedID, TNHInstance.controller, null);
                 }
             }
             else
@@ -685,6 +818,8 @@ namespace H3MP
                 H3MP_ServerHandle.ResetTNH,
                 H3MP_ServerHandle.ReviveTNHPlayer,
                 H3MP_ServerHandle.PlayerColor,
+                H3MP_ServerHandle.RequestTNHInitialization,
+                H3MP_ServerHandle.TNHInitializer,
             };
 
             items = new H3MP_TrackedItemData[100];

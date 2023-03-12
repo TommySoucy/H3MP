@@ -15,6 +15,8 @@ namespace H3MP
         public List<int> currentlyPlaying; // Players in-game
         public List<int> played; // Players who have been in-game
         public List<int> dead; // in-game players who are dead
+        public int initializer = -1;
+        public bool initializationRequested;
         public int tokenCount;
         public bool holdOngoing; // Whether the current hold point has an ongoing hold
         public TNH_HoldPoint.HoldState holdState;
@@ -178,7 +180,7 @@ namespace H3MP
             {
                 if (currentlyPlaying.Contains(playerIDs[0]))
                 {
-                    // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
+                    // If new controller is different, distribute sosigs/automeaters/encryptions because those should be controlled by TNH controller
                     if (playerIDs[0] != controller)
                     {
                         H3MP_GameManager.DistributeAllControl(controller, playerIDs[0], false);
@@ -211,6 +213,13 @@ namespace H3MP
                     // Update on our side
                     controller = currentLowest;
                 }
+            }
+
+            // Reset initialization fields if we were waiting for init from this player
+            if(initializer == ID && initializationRequested)
+            {
+                initializer = -1;
+                initializationRequested = false;
             }
 
             if (send)
@@ -280,6 +289,8 @@ namespace H3MP
             raisedBarrierPrefabIndices = null;
             spawnedStartEquip = false;
             tickDownToFailure = 120;
+            initializationRequested = false;
+            initializer = -1;
 
             // The game has reset, a new game will be created when a player goes in again, if we were spectating we want to stop
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)

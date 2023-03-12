@@ -11966,6 +11966,7 @@ namespace H3MP
         public static int sosigKillSkip;
         public static bool inDelayedInit;
         static bool skipNextSetPhaseTake;
+        static bool TNHInitializing;
 
         public static bool inGenerateSentryPatrol;
         public static bool inGeneratePatrol;
@@ -12220,33 +12221,11 @@ namespace H3MP
 
         static bool SetPhasePrefix(TNH_Phase p)
         {
-            // We want to prevent call to SetPhase unless we are controller
+            // We want to prevent call to SetPhase unless we are controller not init or initializer init
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                // Only set phase if controller
-                //if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
-                //{
-                //    Mod.LogInfo("\tWe are controller, sending and continuing");
-                //    if (H3MP_ThreadManager.host)
-                //    {
-                //        H3MP_ServerSend.TNHSetPhase(Mod.currentTNHInstance.instance, (short)p);
-                //    }
-                //    else
-                //    {
-                //        H3MP_ClientSend.TNHSetPhase(Mod.currentTNHInstance.instance, p);
-                //    }
-                //    return true;
-                //}
-                //else
-                //{
-                //    Mod.LogInfo("\tWe are not controller, preventing setphase");
-                //    return false;
-                //}
-
-                if(Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
-                {
-                    return false;
-                }
+                return (TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                       (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit);
             }
             return true;
         }
@@ -12274,104 +12253,120 @@ namespace H3MP
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 Mod.LogInfo("SetPhaseTakePrefix");
-                // Note that SetPhase_Take will only ever be called on a non controller if it an order from another client
-                // This implies that it will not be called if we just joined a game that has already been inited unless it is a new take phase
-                if (Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
+                if (inDelayedInit)
                 {
-                    Mod.LogInfo("\tNot controller");
-                    Mod.currentTNHInstance.phase = TNH_Phase.Take;
-                    Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
-
-                    object level = null;
-                    if (Mod.TNHTweakerAsmIdx > -1)
+                    Mod.LogInfo("\tIn init");
+                    if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                     {
-                        object character = ((IDictionary)Mod.TNHTweaker_LoadedTemplateManager_LoadedCharactersDict.GetValue(Mod.TNHTweaker_LoadedTemplateManager))[GM.TNH_Manager.C];
-                        level = Mod.TNHTweaker_CustomCharacter_GetCurrentLevel.Invoke(character, new object[] { Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager) as TNH_Progression.Level });
-
-                        ((List<int>)Mod.TNHTweaker_TNHTweaker_SpawnedBossIndexes.GetValue(Mod.TNHTweaker_TNHTweaker)).Clear();
-
-                        // Like we do for vanilla, we don't clear if not controller, we will just set it to the list in the TNH instance
-                        //__instance.m_activeSupplyPointIndicies.Clear();
-
-                        Mod.TNHTweaker_TNHTweaker_PreventOutfitFunctionality.SetValue(Mod.TNHTweaker_TNHTweaker, Mod.TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality.GetValue(character));
-                    }
-
-                    if (Mod.currentTNHInstance.manager.RadarMode == TNHModifier_RadarMode.Standard)
-                    {
-                        Mod.currentTNHInstance.manager.TAHReticle.GetComponent<AIEntity>().LM_VisualOcclusionCheck = Mod.currentTNHInstance.manager.ReticleMask_Take;
-                    }
-                    else if (Mod.currentTNHInstance.manager.RadarMode == TNHModifier_RadarMode.Omnipresent)
-                    {
-                        Mod.currentTNHInstance.manager.TAHReticle.GetComponent<AIEntity>().LM_VisualOcclusionCheck = Mod.currentTNHInstance.manager.ReticleMask_Hold;
-                    }
-                    int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
-                    Mod.TNH_Manager_m_lastHoldIndex.SetValue(Mod.currentTNHInstance.manager, curHoldIndex);
-                    Mod.TNH_Manager_m_curHoldIndex.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.curHoldIndex);
-                    Mod.currentTNHInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Hold);
-                    Mod.currentTNHInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Supply);
-                    Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex]);
-                    TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
-                    Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
-                    Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
-                    bool spawnToken = true;
-                    Mod.TNH_Manager_m_activeSupplyPointIndicies.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.activeSupplyPointIndices);
-
-                    int panelIndex = 0;
-                    if (Mod.TNHTweakerAsmIdx > -1)
-                    {
-                        for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
-                        {
-                            TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
-
-                            Mod.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(Mod.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });
-                            
-                            TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
-                            tnh_SupplyPoint.SetContact(contact);
-                        }
+                        Mod.LogInfo("\t\tWe are initializer, continuing");
+                        Mod.currentTNHInstance.phase = TNH_Phase.Take;
+                        return true;
                     }
                     else
                     {
-                        for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
-                        {
-                            TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+                        Mod.LogInfo("\t\tWe are NOT initializer, init using data and skipping");
+                        // We are controller finishing our init in a TNH instance that has already been inited
+                        InitJoinTNH();
 
-                            int num6 = i;
-                            if (i > 0)
-                            {
-                                num6 = panelIndex;
-                                panelIndex++;
-                                if (panelIndex > 2)
-                                {
-                                    panelIndex = 1;
-                                }
-                            }
-                            TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
-                            // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
-                            tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
-                            spawnToken = false;
-                            TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
-                            tnh_SupplyPoint.SetContact(contact);
-                        }
-                    }
-                    if (Mod.currentTNHInstance.manager.BGAudioMode == TNH_BGAudioMode.Default)
-                    {
-                        Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);
-                    }
+                        skipNextSetPhaseTake = true;
 
-                    return false;
+                        return false;
+                    }
                 }
-                else if(inDelayedInit && Mod.currentTNHInstance.phase != TNH_Phase.StartUp)
+                else
                 {
-                    Mod.LogInfo("\tController and in delayed init, but TNH has already been init");
-                    // We are controller finishing our init in a TNH instance that has already been inited
-                    InitJoinTNH();
+                    Mod.LogInfo("\tNot in init");
+                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                    {
+                        Mod.LogInfo("\t\tWe are controller, continuing");
+                        Mod.currentTNHInstance.phase = TNH_Phase.Take;
+                        return true;
+                    }
+                    else
+                    {
+                        Mod.LogInfo("\t\tWe are NOT controller, processing data and skipping");
+                        Mod.currentTNHInstance.phase = TNH_Phase.Take;
+                        Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
 
-                    skipNextSetPhaseTake = true;
+                        object level = null;
+                        if (Mod.TNHTweakerAsmIdx > -1)
+                        {
+                            object character = ((IDictionary)Mod.TNHTweaker_LoadedTemplateManager_LoadedCharactersDict.GetValue(Mod.TNHTweaker_LoadedTemplateManager))[GM.TNH_Manager.C];
+                            level = Mod.TNHTweaker_CustomCharacter_GetCurrentLevel.Invoke(character, new object[] { Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager) as TNH_Progression.Level });
 
-                    return false;
+                            ((List<int>)Mod.TNHTweaker_TNHTweaker_SpawnedBossIndexes.GetValue(Mod.TNHTweaker_TNHTweaker)).Clear();
+
+                            // Like we do for vanilla, we don't clear if not controller, we will just set it to the list in the TNH instance
+                            //__instance.m_activeSupplyPointIndicies.Clear();
+
+                            Mod.TNHTweaker_TNHTweaker_PreventOutfitFunctionality.SetValue(Mod.TNHTweaker_TNHTweaker, Mod.TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality.GetValue(character));
+                        }
+
+                        if (Mod.currentTNHInstance.manager.RadarMode == TNHModifier_RadarMode.Standard)
+                        {
+                            Mod.currentTNHInstance.manager.TAHReticle.GetComponent<AIEntity>().LM_VisualOcclusionCheck = Mod.currentTNHInstance.manager.ReticleMask_Take;
+                        }
+                        else if (Mod.currentTNHInstance.manager.RadarMode == TNHModifier_RadarMode.Omnipresent)
+                        {
+                            Mod.currentTNHInstance.manager.TAHReticle.GetComponent<AIEntity>().LM_VisualOcclusionCheck = Mod.currentTNHInstance.manager.ReticleMask_Hold;
+                        }
+                        int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
+                        Mod.TNH_Manager_m_lastHoldIndex.SetValue(Mod.currentTNHInstance.manager, curHoldIndex);
+                        Mod.TNH_Manager_m_curHoldIndex.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.curHoldIndex);
+                        Mod.currentTNHInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Hold);
+                        Mod.currentTNHInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Supply);
+                        Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex]);
+                        TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
+                        Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+                        Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
+                        bool spawnToken = true;
+                        Mod.TNH_Manager_m_activeSupplyPointIndicies.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.activeSupplyPointIndices);
+
+                        int panelIndex = 0;
+                        if (Mod.TNHTweakerAsmIdx > -1)
+                        {
+                            for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                            {
+                                TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                                Mod.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(Mod.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });
+
+                                TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                                tnh_SupplyPoint.SetContact(contact);
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                            {
+                                TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                                int num6 = i;
+                                if (i > 0)
+                                {
+                                    num6 = panelIndex;
+                                    panelIndex++;
+                                    if (panelIndex > 2)
+                                    {
+                                        panelIndex = 1;
+                                    }
+                                }
+                                TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
+                                // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                                tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
+                                spawnToken = false;
+                                TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                                tnh_SupplyPoint.SetContact(contact);
+                            }
+                        }
+                        if (Mod.currentTNHInstance.manager.BGAudioMode == TNH_BGAudioMode.Default)
+                        {
+                            Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);
+                        }
+
+                        return false;
+                    }
                 }
-
-                Mod.currentTNHInstance.phase = TNH_Phase.Take;
             }
 
             return true;
@@ -12387,8 +12382,10 @@ namespace H3MP
                 return;
             }
 
-            // If we are controller collect data and send set phase take order
-            if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            // If we are controller/init collect data and send set phase take order
+            if (Mod.managerObject != null && Mod.currentTNHInstance != null && 
+                ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                 (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit)))
             {
                 Mod.LogInfo("\tsending");
                 int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
@@ -12638,11 +12635,67 @@ namespace H3MP
                 }
             }
 
-            return !H3MP_GameManager.sceneLoading;
+            if(Mod.currentTNHInstance == null)
+            {
+                return true;
+            }
+            else
+            {
+                if (Mod.currentTNHInstance.initializer == -1 && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                {
+                    // Not yet init, we are controller
+                    if (H3MP_ThreadManager.host)
+                    {
+                        // We are server, init right away
+                        Mod.currentTNHInstance.initializer = 0;
+                        TNHInitializing = true;
+                        return !H3MP_GameManager.sceneLoading;
+                    }
+                    else if (!Mod.currentTNHInstance.initializationRequested) // Client, request initializtion if haven't already
+                    {
+                        H3MP_ClientSend.RequestTNHInitialization(Mod.currentTNHInstance.instance);
+                        Mod.currentTNHInstance.initializationRequested = true;
+                    }
+                    return false;
+                }
+                else if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
+                {
+                    // We have an initializer , it's us
+                    if (Mod.currentTNHInstance.initializationRequested)
+                    {
+                        // This is the first call to DelayedInit since we received initialization perm, set initializing
+                        Mod.currentTNHInstance.initializationRequested = false;
+                        TNHInitializing = true;
+                    }
+                    return !H3MP_GameManager.sceneLoading;
+                }
+                else // We are not initializer and we are not controller
+                {
+                    // Wait until we have initializer before continuing
+                    // Also check if not requested here because a server will set the initializer locally and set requested flag indicating that it is waiting for init
+                    return !H3MP_GameManager.sceneLoading && Mod.currentTNHInstance.initializer != -1 && !Mod.currentTNHInstance.initializationRequested;
+                }
+            }
         }
 
         static void DelayedInitPostfix(bool ___m_hasInit)
         {
+            // If we were initializing and we are done
+            if (TNHInitializing)
+            {
+                TNHInitializing = false; 
+
+                // Send to others
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.TNHInitializer(Mod.currentTNHInstance.instance, 0);
+                }
+                else
+                {
+                    H3MP_ClientSend.TNHInitializer(Mod.currentTNHInstance.instance);
+                }
+            }
+
             inDelayedInit = false;
         }
 
@@ -12992,8 +13045,11 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance != null)
                 {
-                    if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && (!TNH_ManagerPatch.inDelayedInit || Mod.currentTNHInstance.phase != TNH_Phase.StartUp))
+                    Mod.LogInfo("ConfigureAsSystemNodePrefix called while in MP TNH, controller: "+ Mod.currentTNHInstance.controller+", delayed Init: "+ TNH_ManagerPatch.inDelayedInit+", TNH phase: "+ Mod.currentTNHInstance.phase);
+                    if ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) || 
+                        (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
                     {
+                        Mod.LogInfo("\tWe init");
                         int holdPointIndex = -1;
                         for(int i=0; i<__instance.M.HoldPoints.Count;++i)
                         {
@@ -13020,6 +13076,7 @@ namespace H3MP
                     }
                     else
                     {
+                        Mod.LogInfo("\tWe dont init, skip spawn entities");
                         spawnEntitiesSkip = true;
                     }
                 }

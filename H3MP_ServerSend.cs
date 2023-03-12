@@ -3934,5 +3934,23 @@ namespace H3MP
                 SendTCPDataToAll(packet);
             }
         }
+
+        public static void TNHInitializer(int instance, int initializer, bool only = false)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHInitializer))
+            {
+                packet.Write(instance);
+                packet.Write(initializer);
+
+                if (only)
+                {
+                    SendTCPData(initializer, packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(initializer, packet);
+                }
+            }
+        }
     }
 }

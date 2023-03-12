@@ -2357,16 +2357,19 @@ namespace H3MP
             }
 
             // Give all sosigs
+            Mod.LogInfo("Distributing control of sosigs");
             for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
             {
                 if (H3MP_Server.sosigs[i] != null && H3MP_Server.sosigs[i].controller == clientID)
                 {
+                    Mod.LogInfo("\tSosig "+i+" controlled by "+ clientID);
                     H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[i];
 
                     bool destroyed = newController == -1;
 
                     if (destroyed) // No other player to take control, destroy
                     {
+                        Mod.LogInfo("\t\tNo best potential host, destroying");
                         H3MP_ServerSend.DestroySosig(trackedSosig.trackedID);
                         H3MP_Server.sosigs[trackedSosig.trackedID] = null;
                         H3MP_Server.availableSosigIndices.Add(trackedSosig.trackedID);
@@ -2379,6 +2382,7 @@ namespace H3MP
                     }
                     else if (newController == 0) // If its us, take control
                     {
+                        Mod.LogInfo("\t\tIts us, taking control");
                         trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
                         H3MP_GameManager.sosigs.Add(trackedSosig);
                         if (trackedSosig.physicalObject == null)
@@ -2433,6 +2437,7 @@ namespace H3MP
                     {
                         trackedSosig.controller = newController;
 
+                        Mod.LogInfo("\t\tSending control to clients");
                         H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, newController, null);
                     }
                 }

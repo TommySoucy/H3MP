@@ -478,6 +478,7 @@ namespace H3MP
                 H3MP_ClientHandle.NameplateMode,
                 H3MP_ClientHandle.RadarMode,
                 H3MP_ClientHandle.RadarColor,
+                H3MP_ClientHandle.TNHInitializer,
             };
 
             // All vanilla scenes can be synced by default
@@ -672,6 +673,7 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig)
         {
+            Mod.LogInfo("Client AddTrackedSosig: " + trackedSosig.trackedID + " with waiting index: " + trackedSosig.localWaitingIndex + " and init tracker: " + trackedSosig.initTracker);
             H3MP_TrackedSosigData actualTrackedSosig = null;
             // If this is a scene init object the server rejected
             if (trackedSosig.trackedID == -2)
@@ -723,6 +725,8 @@ namespace H3MP
                              !H3MP_GameManager.sceneLoading && sosigs[trackedSosig.trackedID].scene.Equals(H3MP_GameManager.scene) &&
                              sosigs[trackedSosig.trackedID].instance == H3MP_GameManager.instance)
                     {
+                        Mod.LogInfo("\tInstantiating");
+
                         sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
                         AnvilManager.Run(sosigs[trackedSosig.trackedID].Instantiate());
                     }
@@ -731,6 +735,7 @@ namespace H3MP
                         !H3MP_GameManager.sceneLoading && sosigs[trackedSosig.trackedID].scene.Equals(H3MP_GameManager.scene) &&
                         sosigs[trackedSosig.trackedID].instance == H3MP_GameManager.instance)
                 {
+                    Mod.LogInfo("\tInstantiating");
                     // Received full data for objects we are in control of, instantiate if possible
                     sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
                     AnvilManager.Run(sosigs[trackedSosig.trackedID].Instantiate());
@@ -769,6 +774,7 @@ namespace H3MP
                         trackedSosig.scene.Equals(H3MP_GameManager.scene) &&
                         trackedSosig.instance == H3MP_GameManager.instance)
                     {
+                        Mod.LogInfo("\tInstantiating");
                         trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
@@ -786,6 +792,7 @@ namespace H3MP
                         if (trackedSosig.scene.Equals(H3MP_GameManager.scene) &&
                             trackedSosig.instance == H3MP_GameManager.instance)
                         {
+                            Mod.LogInfo("\tInstantiating");
                             trackedSosigData.awaitingInstantiation = true;
                             AnvilManager.Run(trackedSosigData.Instantiate());
                         }

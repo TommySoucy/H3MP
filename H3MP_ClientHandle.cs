@@ -3600,5 +3600,16 @@ namespace H3MP
                 }
             }
         }
+
+        public static void TNHInitializer(H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+            int initializer = packet.ReadInt();
+
+            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
+            {
+                TNHInstance.initializer = initializer;
+            }
+        }
     }
 }
