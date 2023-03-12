@@ -2419,12 +2419,14 @@ namespace H3MP
         {
             int forClient = packet.ReadInt();
 
-            Mod.LogInfo("Server received DoneSendingUpToDateObjects from "+clientID);
+            Mod.LogInfo("Server received DoneSendingUpToDateObjects from "+clientID+" for "+ forClient);
             // If clients were waiting for this client to finish sending up to date objects
             if (H3MP_Server.clientsWaitingUpDate.TryGetValue(clientID, out List<int> waitingClients))
             {
+                Mod.LogInfo("\tThere are clients waiting for this");
                 if (forClient == 0)
                 {
+                    Mod.LogInfo("\t\tThis was for us, were we waiting?: "+ H3MP_Server.loadingClientsWaitingFrom.ContainsKey(0)+", count: "+ H3MP_Server.loadingClientsWaitingFrom.Count);
                     waitingClients.Remove(forClient);
                     if (waitingClients.Count == 0)
                     {
@@ -2433,6 +2435,7 @@ namespace H3MP
 
                     if (H3MP_Server.loadingClientsWaitingFrom.TryGetValue(forClient, out List<int> waitingFrom))
                     {
+                        Mod.LogInfo("\t\t\tWe were waiting");
                         waitingFrom.Remove(clientID);
                         if (waitingFrom.Count == 0)
                         {

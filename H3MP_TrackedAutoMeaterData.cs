@@ -199,6 +199,11 @@ namespace H3MP
 
         public bool Update(bool full = false)
         {
+            if(physicalObject == null)
+            {
+                return false;
+            }
+
             previousPos = position;
             previousRot = rotation;
             position = physicalObject.physicalAutoMeaterScript.RB.position;

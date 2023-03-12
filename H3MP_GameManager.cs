@@ -1941,6 +1941,23 @@ namespace H3MP
                             // We do this because we may not have the most up to date version of items/sosigs since
                             // clients only send updated data to other players in their scene/instance
                             // But we need the most of to date data to instantiate the object
+
+                            if (H3MP_Server.clientsWaitingUpDate.TryGetValue(player.Key, out List<int> waitingClients))
+                            {
+                                waitingClients.Add(0);
+                            }
+                            else
+                            {
+                                H3MP_Server.clientsWaitingUpDate.Add(player.Key, new List<int> { 0 });
+                            }
+                            if (H3MP_Server.loadingClientsWaitingFrom.TryGetValue(0, out List<int> waitingFor))
+                            {
+                                waitingFor.Add(player.Key);
+                            }
+                            else
+                            {
+                                H3MP_Server.loadingClientsWaitingFrom.Add(0, new List<int>() { player.Key });
+                            }
                             H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                         }
                     }
@@ -2159,6 +2176,23 @@ namespace H3MP
                                 // clients only send updated data when there are others in their scene
                                 // But we need the most of to date data to instantiate the object
                                 Mod.LogInfo("Server sending request for up to date objects to " + player.Key);
+
+                                if (H3MP_Server.clientsWaitingUpDate.TryGetValue(player.Key, out List<int> waitingClients))
+                                {
+                                    waitingClients.Add(0);
+                                }
+                                else
+                                {
+                                    H3MP_Server.clientsWaitingUpDate.Add(player.Key, new List<int> { 0 });
+                                }
+                                if (H3MP_Server.loadingClientsWaitingFrom.TryGetValue(0, out List<int> waitingFor))
+                                {
+                                    waitingFor.Add(player.Key);
+                                }
+                                else
+                                {
+                                    H3MP_Server.loadingClientsWaitingFrom.Add(0, new List<int>() { player.Key });
+                                }
                                 H3MP_ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                             }
                         }
