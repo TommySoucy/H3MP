@@ -25,7 +25,7 @@ Can be done through thunderstore using [r2modman mod manager](https://h3vr.thund
 
 ## Usage
 
-All H3MP functions can be access through the wristmenu, in-game (apart from the settings in the config file, see Config section below).
+All H3MP functions can be accessed through the wristmenu, in-game (apart from the settings in the config file, see Config section below).
 
 To join a server, you will have to have set the IP and port of the server in your config file (see Config section below), then, in the wristmenu, press H3MP->Join
 
