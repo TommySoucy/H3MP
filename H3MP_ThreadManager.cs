@@ -78,7 +78,11 @@ namespace H3MP
                     else
                     {
                         ++H3MP_Client.singleton.pingAttemptCounter;
-                        if(H3MP_Client.singleton.pingAttemptCounter >= 5)
+                        if(H3MP_Client.singleton.pingAttemptCounter >= 10)
+                        {
+                            Mod.LogInfo("Have not received server welcome for " + H3MP_Client.singleton.pingAttemptCounter + " seconds, timing out at 30");
+                        }
+                        if(H3MP_Client.singleton.pingAttemptCounter >= 30)
                         {
                             H3MP_Client.singleton.Disconnect(false, 4);
                         }
