@@ -7,8 +7,9 @@ As the title says, this is a mod that adds multiplayer to the virtual reality ga
 - See incompatibilities section below for a list of known incompatible mods and modes.
 - Only report bugs if you don't use any of the mods from the incompatibilities list.
 - Report bugs directly to VIPkiller17#4326 on discord and always send **_full_** output logs.
-- Currently only made for game branch "alpha - Mod Safe".
+- Will most probably work with the Main version of the game, but currently only guaranteed to work with "alpha - Mod Safe".
 - If you get "PatchVerify" errors on start up it means either your game or H3MP is the wrong version.
+- Port forward or hosting solution must support both TCP and UDP
 
 ## Manual Installation
 
@@ -47,6 +48,10 @@ In the wristmenu, some options are available:
 - **_Color by IFF_**: Toggle that lets the host decide whether player colors should correspond to IFF. IFF 0 corresponds to White, 1 to Red, 2 to Green, and so on. Sequence is same as in **_Current color_** option. The color then loops, so IFF 7 will correspond to White. **Only available to Host!**
 
 - **_Nameplate mode_**: Lets host decide in which case the nameplate and health of a player should be visible. Available modes are: All, Friendly Only (Default), and None. All means all nameplates will always be visible to everyone, Friendly Only means nameplates will only be visible to player with same IFF, and None means no nameplates will be visible, no matter the IFF. **Only available to Host!**
+
+- **_Radar mode_**: Lets host decide which players should be visible on the TNH radar. Available options are: All (Default), Friendly Only, and None. All will show both friendly and enemy players, Friendly Only will show only friendly players (same IFF), and None will show no other player, regardless of IFF. **Only available to Host!**
+
+- **_Radar Color IFF_**: Lets host decide which colors players should have on the TNH radar. If true it will show players as Green or Red, depending on whether they are Friendly or Enemy, respectively. If false, it will instead show players with their corresponding colors. **Only available to Host!**
 
 ### Config
 
