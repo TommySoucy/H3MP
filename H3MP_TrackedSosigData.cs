@@ -406,7 +406,11 @@ namespace H3MP
             {
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.SosigSetCurrentOrder(this, currentOrder);
+                    // Could still be -1 even on host if this is the initial update, when we make the sosig tracked
+                    if (trackedID != -1)
+                    {
+                        H3MP_ServerSend.SosigSetCurrentOrder(this, currentOrder);
+                    }
                 }
                 else if(trackedID != -1)
                 {

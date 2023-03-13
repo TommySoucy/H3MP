@@ -193,9 +193,9 @@ namespace H3MP
                                         packetHandlers[packetID](packet);
                                     }
                                 }
-                                catch(IndexOutOfRangeException)
+                                catch(IndexOutOfRangeException ex)
                                 {
-                                    Mod.LogError("Client TCP received packet with ID: "+packetID+ " as ServerPackets: " + ((ServerPackets)packetID).ToString());
+                                    Mod.LogError("Client TCP received packet with ID: "+packetID+ " as ServerPackets: " + ((ServerPackets)packetID).ToString()+":\n"+ ex.StackTrace);
                                 }
                             }
                         }

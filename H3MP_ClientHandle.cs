@@ -2040,7 +2040,6 @@ namespace H3MP
         {
             int sosigTrackedID = packet.ReadInt();
             Sosig.SosigOrder currentOrder = (Sosig.SosigOrder)packet.ReadByte();
-
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if (trackedSosig != null)
             {
