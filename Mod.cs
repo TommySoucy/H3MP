@@ -12864,7 +12864,8 @@ namespace H3MP
                     // Since we are not controller, our initialization will not complete fully due to lack of SetPhase
                     // So here we check if the instance is initialized (phase not startup) and if we have to and are ready to init
                     // Then init with the instance data
-                    if (Mod.currentTNHInstance.phase != TNH_Phase.StartUp && !hadInit &&
+                    if (Mod.currentTNHInstance.initializer != -1 && Mod.currentTNHInstance.initializer != H3MP_GameManager.ID &&
+                        Mod.currentTNHInstance.phase != TNH_Phase.StartUp && !hadInit &&
                         (bool)Mod.TNH_Manager_m_hasInit.GetValue(Mod.currentTNHInstance.manager) && Mod.currentTNHInstance.manager.AIManager.HasInit)
                     {
                         InitJoinTNH();
@@ -13345,8 +13346,7 @@ namespace H3MP
                 return false;
             }
 
-            // Skip if in TNH and not controller
-            return Mod.managerObject == null || Mod.currentTNHInstance == null || Mod.currentTNHInstance.controller == H3MP_GameManager.ID;
+            return true;
         }
 
         static bool BeginHoldPrefix(TNH_HoldPoint __instance, List<Sosig> ___m_activeSosigs, List<AutoMeater> ___m_activeTurrets, List<TNH_EncryptionTarget> ___m_activeTargets,

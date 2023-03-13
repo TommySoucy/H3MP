@@ -22,6 +22,7 @@ namespace H3MP
 
         public bool sendDestroy = true; // To prevent feeback loops
         public bool skipFullDestroy;
+        public bool dontGiveControl;
 
         // TrackedEncryptionReferences array
         // Used by Encryptions who need to get access to their TrackedItem very often (On Update for example)
@@ -100,7 +101,7 @@ namespace H3MP
 
             if (H3MP_ThreadManager.host)
             {
-                if (H3MP_GameManager.giveControlOfDestroyed > 0)
+                if (H3MP_GameManager.giveControlOfDestroyed > 0 && !dontGiveControl)
                 {
                     // We just want to give control of our Encryptions to another client (usually because leaving scene with other clients left inside)
                     if (data.controller == 0 && H3MP_GameManager.TNHInstances.TryGetValue(H3MP_GameManager.instance, out H3MP_TNHInstance actualInstance))
@@ -171,7 +172,7 @@ namespace H3MP
             else
             {
                 bool removeFromLocal = true;
-                if (H3MP_GameManager.giveControlOfDestroyed > 0)
+                if (H3MP_GameManager.giveControlOfDestroyed > 0 && !dontGiveControl)
                 {
                     if (data.controller == H3MP_Client.singleton.ID && H3MP_GameManager.TNHInstances.TryGetValue(H3MP_GameManager.instance, out H3MP_TNHInstance actualInstance))
                     {

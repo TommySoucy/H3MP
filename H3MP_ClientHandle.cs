@@ -643,6 +643,7 @@ namespace H3MP
                 if (trackedItem.physicalItem != null)
                 {
                     trackedItem.physicalItem.sendDestroy = false;
+                    trackedItem.physicalItem.dontGiveControl = true;
                     GameObject.Destroy(trackedItem.physicalItem.gameObject);
                 }
 
@@ -690,6 +691,7 @@ namespace H3MP
                             GameObject.Destroy(link.gameObject);
                         }
                     }
+                    trackedSosig.physicalObject.dontGiveControl = true;
                     GameObject.Destroy(trackedSosig.physicalObject.gameObject);
                 }
 
@@ -724,6 +726,7 @@ namespace H3MP
                 {
                     H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(trackedAutoMeater.physicalObject.physicalAutoMeaterScript);
                     trackedAutoMeater.physicalObject.sendDestroy = false;
+                    trackedAutoMeater.physicalObject.dontGiveControl = true;
                     GameObject.Destroy(trackedAutoMeater.physicalObject.gameObject);
                 }
 
@@ -757,6 +760,7 @@ namespace H3MP
                 {
                     H3MP_GameManager.trackedEncryptionByEncryption.Remove(trackedEncryption.physicalObject.physicalEncryptionScript);
                     trackedEncryption.physicalObject.sendDestroy = false;
+                    trackedEncryption.physicalObject.dontGiveControl = true;
                     GameObject.Destroy(trackedEncryption.physicalObject.gameObject);
                 }
 

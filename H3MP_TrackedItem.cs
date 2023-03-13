@@ -72,6 +72,7 @@ namespace H3MP
         public bool sendDestroy = true; // To prevent feeback loops
         public static int skipDestroy;
         public bool skipFullDestroy;
+        public bool dontGiveControl;
 
         private void Awake()
         {
@@ -7691,7 +7692,7 @@ namespace H3MP
 
             if (H3MP_ThreadManager.host)
             {
-                if (H3MP_GameManager.giveControlOfDestroyed > 0)
+                if (H3MP_GameManager.giveControlOfDestroyed > 0 && !dontGiveControl)
                 {
                     // We just want to give control of our items to another client (usually because leaving scene with other clients left inside)
                     if (data.controller == 0)
@@ -7756,7 +7757,7 @@ namespace H3MP
             else
             {
                 bool removeFromLocal = true;
-                if (H3MP_GameManager.giveControlOfDestroyed > 0)
+                if (H3MP_GameManager.giveControlOfDestroyed > 0 && !dontGiveControl)
                 {
                     if (data.controller == H3MP_Client.singleton.ID)
                     {
