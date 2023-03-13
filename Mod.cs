@@ -12647,11 +12647,11 @@ namespace H3MP
 
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies);
+                    H3MP_ServerSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies, TNH_ManagerPatch.inDelayedInit);
                 }
                 else
                 {
-                    H3MP_ClientSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies);
+                    H3MP_ClientSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies, TNH_ManagerPatch.inDelayedInit);
                 }
             }
         }
@@ -12898,9 +12898,11 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance.initializer == -1 && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
+                    Mod.LogInfo("\t\tNo initializer, we are controller");
                     // Not yet init, we are controller
                     if (H3MP_ThreadManager.host)
                     {
+                        Mod.LogInfo("\t\t\tWe are host, initializing");
                         // We are server, init right away
                         Mod.currentTNHInstance.initializer = 0;
                         TNHInitializing = true;
@@ -12908,6 +12910,7 @@ namespace H3MP
                     }
                     else if (!Mod.currentTNHInstance.initializationRequested) // Client, request initializtion if haven't already
                     {
+                        Mod.LogInfo("\t\t\tWe are client, requesting intialization perm");
                         H3MP_ClientSend.RequestTNHInitialization(Mod.currentTNHInstance.instance);
                         Mod.currentTNHInstance.initializationRequested = true;
                     }
@@ -12915,17 +12918,20 @@ namespace H3MP
                 }
                 else if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                 {
+                    Mod.LogInfo("\t\tWe are initializer");
                     // We have an initializer , it's us
                     if (Mod.currentTNHInstance.initializationRequested)
                     {
+                        Mod.LogInfo("\t\t\tJust received perm");
                         // This is the first call to DelayedInit since we received initialization perm, set initializing
                         Mod.currentTNHInstance.initializationRequested = false;
                         TNHInitializing = true;
                     }
                     return !H3MP_GameManager.sceneLoading;
                 }
-                else // We are not initializer and we are not controller
+                else // We are not initializer and no initializer or not controller
                 {
+                    Mod.LogInfo("\t\tWe are not initializer and no initializer or not controller");
                     // Wait until we have initializer before continuing
                     // Also check if not requested here because a server will set the initializer locally and set requested flag indicating that it is waiting for init
                     return !H3MP_GameManager.sceneLoading && Mod.currentTNHInstance.initializer != -1 && !Mod.currentTNHInstance.initializationRequested;

@@ -260,7 +260,7 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, int clientID)
         {
-            Mod.LogInfo("server AddTrackedSosig: " + trackedSosig.trackedID + " with waiting index: " + trackedSosig.localWaitingIndex + " and init tracker: " + trackedSosig.initTracker);
+            Mod.LogInfo("server AddTrackedSosig: " + trackedSosig.trackedID + ", controller: "+trackedSosig.controller+" with waiting index: " + trackedSosig.localWaitingIndex + " and init tracker: " + trackedSosig.initTracker);
             if (trackedSosig.trackedID == -1)
             {
                 // If this is a sceneInit sosig received from client that we haven't tracked yet
@@ -328,7 +328,9 @@ namespace H3MP
 
                 // Manage control for TNH
                 if (H3MP_GameManager.TNHInstances.TryGetValue(trackedSosig.instance, out H3MP_TNHInstance TNHInstance) &&
-                    TNHInstance.controller != trackedSosig.controller && trackedSosig.scene.Equals(clients[TNHInstance.controller].player.scene))
+                    TNHInstance.controller != trackedSosig.controller && 
+                    ((TNHInstance.controller == 0 && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene)) ||
+                    (TNHInstance.controller != 0 && trackedSosig.scene.Equals(clients[TNHInstance.controller].player.scene))))
                 {
                     // Sosig is in a TNH instance with the instance's controller but is not controlled by the controller, give control
                     if(TNHInstance.controller == 0)
@@ -451,7 +453,9 @@ namespace H3MP
 
             // Manage control for TNH
             if (H3MP_GameManager.TNHInstances.TryGetValue(trackedAutoMeater.instance, out H3MP_TNHInstance TNHInstance) &&
-                TNHInstance.controller != trackedAutoMeater.controller && trackedAutoMeater.scene.Equals(clients[TNHInstance.controller].player.scene))
+                TNHInstance.controller != trackedAutoMeater.controller &&
+                ((TNHInstance.controller == 0 && trackedAutoMeater.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene)) ||
+                (TNHInstance.controller != 0 && trackedAutoMeater.scene.Equals(clients[TNHInstance.controller].player.scene))))
             {
                 // Object is in a TNH instance with the instance's controller but is not controlled by the controller, give control
                 if (TNHInstance.controller == 0)
@@ -567,7 +571,9 @@ namespace H3MP
 
                 // Manage control for TNH
                 if (H3MP_GameManager.TNHInstances.TryGetValue(trackedEncryption.instance, out H3MP_TNHInstance TNHInstance) &&
-                    TNHInstance.controller != trackedEncryption.controller && trackedEncryption.scene.Equals(clients[TNHInstance.controller].player.scene))
+                    TNHInstance.controller != trackedEncryption.controller &&
+                    ((TNHInstance.controller == 0 && trackedEncryption.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene)) ||
+                    (TNHInstance.controller != 0 && trackedEncryption.scene.Equals(clients[TNHInstance.controller].player.scene))))
                 {
                     // Object is in a TNH instance with the instance's controller but is not controlled by the controller, give control
                     if (TNHInstance.controller == 0)

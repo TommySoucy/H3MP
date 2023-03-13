@@ -3315,6 +3315,7 @@ namespace H3MP
             {
                 activeIndices.Add(packet.ReadInt());
             }
+            bool init = packet.ReadBool();
 
             if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
@@ -3322,13 +3323,13 @@ namespace H3MP
                 actualInstance.phase = TNH_Phase.Take;
                 actualInstance.activeSupplyPointIndices = activeIndices;
 
-                if(actualInstance.manager != null && (bool)Mod.TNH_Manager_m_hasInit.GetValue(actualInstance.manager))
+                if(!init && actualInstance.manager != null && (bool)Mod.TNH_Manager_m_hasInit.GetValue(actualInstance.manager))
                 {
                     Mod.TNH_Manager_SetPhase_Take.Invoke(Mod.currentTNHInstance.manager, null);
                 }
             }
 
-            H3MP_ServerSend.TNHSetPhaseTake(instance, holdIndex, activeIndices, clientID);
+            H3MP_ServerSend.TNHSetPhaseTake(instance, holdIndex, activeIndices, init, clientID);
         }
 
         public static void TNHSetPhaseHold(int clientID, H3MP_Packet packet)
@@ -4002,11 +4003,13 @@ namespace H3MP
         public static void RequestTNHInitialization(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
-
+            Mod.LogInfo("Client " + clientID + " requested init perm for instance: " + instance);
             if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
-                if(TNHInstance.initializer == -1)
+                Mod.LogInfo("\tTNH instance exists with intializer: "+ TNHInstance.initializer);
+                if (TNHInstance.initializer == -1)
                 {
+                    Mod.LogInfo("\t\tNo initializer yet, giving perms to "+clientID);
                     TNHInstance.initializer = clientID;
                     TNHInstance.initializationRequested = true; // We are waiting for init from this player
 

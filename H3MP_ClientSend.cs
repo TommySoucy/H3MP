@@ -2118,7 +2118,7 @@ namespace H3MP
             }
         }
 
-        public static void TNHSetPhaseTake(int instance, int holdIndex, List<int> activeSupplyPointIndices)
+        public static void TNHSetPhaseTake(int instance, int holdIndex, List<int> activeSupplyPointIndices, bool init)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHSetPhaseTake))
             {
@@ -2129,6 +2129,7 @@ namespace H3MP
                 {
                     packet.Write(index);
                 }
+                packet.Write(init);
 
                 SendTCPData(packet);
             }

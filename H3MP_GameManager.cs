@@ -316,6 +316,11 @@ namespace H3MP
                 playersByInstanceByScene.Remove(player.scene);
             }
 
+            if (sceneName.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
+            {
+                --playersPresent;
+            }
+
             player.scene = sceneName;
 
             // Add to scene/instance
@@ -357,10 +362,6 @@ namespace H3MP
             if (sceneName.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
             {
                 ++playersPresent;
-            }
-            else
-            {
-                --playersPresent;
             }
         }
 
@@ -493,6 +494,11 @@ namespace H3MP
             //    playersByInstanceByScene.Remove(player.scene);
             //}
 
+            if (player.scene.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
+            {
+                --playersPresent;
+            }
+
             player.instance = instance;
 
             // Add to instance
@@ -524,10 +530,6 @@ namespace H3MP
             if (player.scene.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && H3MP_GameManager.instance == player.instance)
             {
                 ++playersPresent;
-            }
-            else
-            {
-                --playersPresent;
             }
 
             if (activeInstances.ContainsKey(instance))

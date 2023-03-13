@@ -2840,6 +2840,7 @@ namespace H3MP
             {
                 activeIndices.Add(packet.ReadInt());
             }
+            bool init = packet.ReadBool();
 
             if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
@@ -2847,7 +2848,7 @@ namespace H3MP
                 actualInstance.phase = TNH_Phase.Take;
                 actualInstance.activeSupplyPointIndices = activeIndices;
 
-                if (actualInstance.manager != null && (bool)Mod.TNH_Manager_m_hasInit.GetValue(actualInstance.manager))
+                if (!init && actualInstance.manager != null && (bool)Mod.TNH_Manager_m_hasInit.GetValue(actualInstance.manager))
                 {
                     Mod.TNH_Manager_SetPhase_Take.Invoke(actualInstance.manager, null);
                 }
@@ -3698,8 +3699,10 @@ namespace H3MP
             int instance = packet.ReadInt();
             int initializer = packet.ReadInt();
 
-            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
+            Mod.LogInfo("Received initializer "+initializer+" for instance: " + instance);
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
+                Mod.LogInfo("\tInstance exists setting initializer");
                 TNHInstance.initializer = initializer;
             }
         }
