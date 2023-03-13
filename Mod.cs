@@ -1170,6 +1170,18 @@ namespace H3MP
             MethodInfo sosigRequestHitDecalPatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigRequestHitDecalEdgePatchOriginal = typeof(Sosig).GetMethod("RequestHitDecal", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(SosigLink) }, null);
             MethodInfo sosigRequestHitDecalEdgePatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalEdgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandGuardPointPatchOriginal = typeof(Sosig).GetMethod("CommandGuardPoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigCommandGuardPointPatchPrefix = typeof(SosigActionPatch).GetMethod("CommandGuardPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandGuardPointPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandGuardPointPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandAssaultPatchOriginal = typeof(Sosig).GetMethod("CommandAssaultPoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigCommandAssaultPatchPrefix = typeof(SosigActionPatch).GetMethod("CommandAssaultPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandAssaultPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandAssaultPointPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandIdlePatchOriginal = typeof(Sosig).GetMethod("CommandIdle", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigCommandIdlePatchPrefix = typeof(SosigActionPatch).GetMethod("CommandIdlePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandIdlePatchPostfix = typeof(SosigActionPatch).GetMethod("CommandIdlePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandPathToPatchOriginalTransform = typeof(Sosig).GetMethod("CommandPathTo", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(List<Transform>), typeof(float), typeof(Vector2), typeof(float), typeof(Sosig.SosigMoveSpeed), typeof(Sosig.PathLoopType), typeof(List<Sosig>), typeof(float), typeof(float), typeof(bool), typeof(float) }, null);
+            MethodInfo sosigCommandPathToPatchOriginalVector = typeof(Sosig).GetMethod("CommandPathTo", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(List<Vector3>), typeof(List<Vector3>), typeof(float), typeof(Vector2), typeof(float), typeof(Sosig.SosigMoveSpeed), typeof(Sosig.PathLoopType), typeof(List<Sosig>), typeof(float), typeof(float), typeof(bool), typeof(float) }, null);
+            MethodInfo sosigCommandPathToPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandPathToPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(sosigDiesPatchOriginal, harmony, false);
             PatchVerify.Verify(sosigBodyStatePatchOriginal, harmony, false);
@@ -1178,6 +1190,10 @@ namespace H3MP
             PatchVerify.Verify(sosigSetCurrentOrderPatchOriginal, harmony, false);
             PatchVerify.Verify(sosigRequestHitDecalPatchOriginal, harmony, false);
             PatchVerify.Verify(sosigRequestHitDecalEdgePatchOriginal, harmony, false);
+            PatchVerify.Verify(sosigCommandGuardPointPatchOriginal, harmony, false);
+            PatchVerify.Verify(sosigCommandAssaultPatchOriginal, harmony, false);
+            PatchVerify.Verify(sosigCommandPathToPatchOriginalTransform, harmony, false);
+            PatchVerify.Verify(sosigCommandPathToPatchOriginalVector, harmony, false);
             harmony.Patch(sosigDiesPatchOriginal, new HarmonyMethod(sosigDiesPatchPrefix), new HarmonyMethod(sosigDiesPatchPosfix));
             harmony.Patch(sosigBodyStatePatchOriginal, new HarmonyMethod(sosigBodyStatePatchPrefix));
             harmony.Patch(sosigBodyUpdatePatchOriginal, null, null, new HarmonyMethod(sosigBodyUpdatePatchTranspiler));
@@ -1186,6 +1202,10 @@ namespace H3MP
             //harmony.Patch(sosigVaporizePatchOriginal, new HarmonyMethod(sosigVaporizePatchPrefix), new HarmonyMethod(sosigVaporizePatchPostfix));
             harmony.Patch(sosigRequestHitDecalPatchOriginal, new HarmonyMethod(sosigRequestHitDecalPatchPrefix));
             harmony.Patch(sosigRequestHitDecalEdgePatchOriginal, new HarmonyMethod(sosigRequestHitDecalEdgePatchPrefix));
+            harmony.Patch(sosigCommandGuardPointPatchOriginal, new HarmonyMethod(sosigCommandGuardPointPatchPrefix), new HarmonyMethod(sosigCommandGuardPointPatchPostfix));
+            harmony.Patch(sosigCommandAssaultPatchOriginal, new HarmonyMethod(sosigCommandAssaultPatchPrefix), new HarmonyMethod(sosigCommandAssaultPatchPostfix));
+            harmony.Patch(sosigCommandPathToPatchOriginalTransform, null, new HarmonyMethod(sosigCommandPathToPatchPostfix));
+            harmony.Patch(sosigCommandPathToPatchOriginalVector, null, new HarmonyMethod(sosigCommandPathToPatchPostfix));
 
             // SosigIFFPatch
             MethodInfo sosigSetIFFPatchOriginal = typeof(Sosig).GetMethod("SetIFF", BindingFlags.Public | BindingFlags.Instance);
@@ -6516,6 +6536,7 @@ namespace H3MP
         public static int sosigVaporizeSkip;
         public static int sosigSetCurrentOrderSkip;
         public static int sosigRequestHitDecalSkip;
+        public static int skipSendingOrder;
 
         static void SosigDiesPrefix(ref Sosig __instance, Damage.DamageClass damClass, Sosig.SosigDeathType deathType)
         {
@@ -6742,25 +6763,216 @@ namespace H3MP
             {
                 trackedSosig.data.currentOrder = o;
 
+                if (skipSendingOrder == 0)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                    }
+                    else
+                    {
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                        }
+                        else
+                        {
+                            if (H3MP_TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                            {
+                                H3MP_TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = o;
+                            }
+                            else
+                            {
+                                H3MP_TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, o);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        static void CommandGuardPointPrefix()
+        {
+            ++skipSendingOrder;
+        }
+
+        static void CommandGuardPointPostfix(Sosig __instance, Vector3 point, bool hardguard)
+        {
+            --skipSendingOrder;
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == H3MP_GameManager.ID)
+            {
+                trackedSosig.data.guardPoint = point;
+                trackedSosig.data.hardGuard = hardguard;
+
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                    H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.GuardPoint);
                 }
                 else
                 {
                     if (trackedSosig.data.trackedID != -1)
                     {
-                        H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                        H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.GuardPoint);
                     }
                     else
                     {
                         if (H3MP_TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
                         {
-                            H3MP_TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = o;
+                            H3MP_TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = Sosig.SosigOrder.GuardPoint;
                         }
                         else
                         {
-                            H3MP_TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, o);
+                            H3MP_TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, Sosig.SosigOrder.GuardPoint);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void CommandAssaultPointPrefix()
+        {
+            ++skipSendingOrder;
+        }
+
+        static void CommandAssaultPointPostfix(Sosig __instance, Vector3 point)
+        {
+            --skipSendingOrder;
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == H3MP_GameManager.ID)
+            {
+                trackedSosig.data.assaultPoint = point;
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Assault);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Assault);
+                    }
+                    else
+                    {
+                        if (H3MP_TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            H3MP_TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = Sosig.SosigOrder.Assault;
+                        }
+                        else
+                        {
+                            H3MP_TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, Sosig.SosigOrder.Assault);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void CommandIdlePrefix()
+        {
+            ++skipSendingOrder;
+        }
+
+        static void CommandIdlePostfix(Sosig __instance, Vector3 point, Vector3 dominantDir)
+        {
+            --skipSendingOrder;
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == H3MP_GameManager.ID)
+            {
+                trackedSosig.data.idleToPoint = point;
+                trackedSosig.data.idleDominantDir = dominantDir;
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Idle);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Idle);
+                    }
+                    else
+                    {
+                        if (H3MP_TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            H3MP_TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = Sosig.SosigOrder.Idle;
+                        }
+                        else
+                        {
+                            H3MP_TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, Sosig.SosigOrder.Idle);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void CommandPathToPostfix(Sosig __instance)
+        {
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance) ? H3MP_GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<H3MP_TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == H3MP_GameManager.ID)
+            {
+                trackedSosig.data.pathToPoint = (Vector3)Mod.Sosig_m_pathToPoint.GetValue(trackedSosig.physicalSosigScript);
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.PathTo);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        H3MP_ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.PathTo);
+                    }
+                    else
+                    {
+                        if (H3MP_TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            H3MP_TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = Sosig.SosigOrder.PathTo;
+                        }
+                        else
+                        {
+                            H3MP_TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, Sosig.SosigOrder.PathTo);
                         }
                     }
                 }
@@ -9526,12 +9738,19 @@ namespace H3MP
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 19)); // Set damageable
 
+            bool firstSkip = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (19)"))
+                if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (19)"))
                 {
-                    instructionList.InsertRange(i + 1, toInsert);
+                    if (!firstSkip)
+                    {
+                        firstSkip = true;
+                        continue;
+                    }
+
+                    instructionList.InsertRange(i, toInsert);
 
                     break;
                 }

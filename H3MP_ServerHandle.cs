@@ -2251,7 +2251,7 @@ namespace H3MP
                             Mod.Sosig_m_skirmishPoint.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.skirmishPoint);
                             Mod.Sosig_m_pathToPoint.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.pathToPoint);
                             Mod.Sosig_m_assaultPoint.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.assaultPoint);
-                            Mod.Sosig_TurnTowardsFacingDir.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.faceTowards });
+                            Mod.Sosig_m_faceTowards.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.faceTowards);
                         }
                         break;
                     case Sosig.SosigOrder.Investigate:
@@ -2265,7 +2265,7 @@ namespace H3MP
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalObject.physicalSosigScript.UpdateGuardPoint(trackedSosig.guardPoint);
                             Mod.Sosig_m_hardGuard.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.hardGuard);
-                            Mod.Sosig_TurnTowardsFacingDir.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.faceTowards });
+                            Mod.Sosig_m_faceTowards.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.faceTowards);
                         }
                         break;
                     case Sosig.SosigOrder.SearchForEquipment:
@@ -2288,7 +2288,7 @@ namespace H3MP
                             ++SosigActionPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalObject.physicalSosigScript.CommandAssaultPoint(trackedSosig.assaultPoint);
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
-                            Mod.Sosig_TurnTowardsFacingDir.Invoke(trackedSosig.physicalObject.physicalSosigScript, new object[] { trackedSosig.faceTowards });
+                            Mod.Sosig_m_faceTowards.SetValue(trackedSosig.physicalObject.physicalSosigScript, trackedSosig.faceTowards);
                             trackedSosig.physicalObject.physicalSosigScript.SetAssaultSpeed(trackedSosig.assaultSpeed);
                         }
                         break;
