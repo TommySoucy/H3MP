@@ -664,6 +664,12 @@ namespace H3MP
 
                 H3MP_TrackedSosig.unknownCurrentOrder.Remove(localWaitingIndex);
             }
+            if(localTrackedID != -1 && H3MP_TrackedSosig.unknownConfiguration.ContainsKey(localWaitingIndex))
+            {
+                H3MP_ClientSend.SosigConfigure(trackedID, H3MP_TrackedSosig.unknownConfiguration[localWaitingIndex]);
+
+                H3MP_TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
+            }
 
             if (localTrackedID != -1)
             {
@@ -700,6 +706,7 @@ namespace H3MP
             H3MP_TrackedSosig.unknownTNHKills.Remove(localWaitingIndex);
             H3MP_TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
             H3MP_TrackedSosig.unknownCurrentOrder.Remove(localWaitingIndex);
+            H3MP_TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
 
             if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.sosigs.Count)
             {

@@ -23,6 +23,7 @@ namespace H3MP
         public static Dictionary<uint, int> unknownTNHKills = new Dictionary<uint, int>();
         public static Dictionary<uint, int> unknownIFFChart = new Dictionary<uint, int>();
         public static Dictionary<uint, Sosig.SosigOrder> unknownCurrentOrder = new Dictionary<uint, Sosig.SosigOrder>();
+        public static Dictionary<uint, SosigConfigTemplate> unknownConfiguration = new Dictionary<uint, SosigConfigTemplate>();
 
         public bool sendDestroy = true; // To prevent feeback loops
         public bool skipFullDestroy;

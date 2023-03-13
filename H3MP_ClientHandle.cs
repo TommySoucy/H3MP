@@ -1466,6 +1466,7 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 trackedSosig.configTemplate = config;
+
                 if (trackedSosig.physicalObject != null)
                 {
                     SosigConfigurePatch.skipConfigure = true;

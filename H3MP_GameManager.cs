@@ -246,6 +246,7 @@ namespace H3MP
             H3MP_TrackedSosig.unknownSetOriginalIFFs.Clear();
             H3MP_TrackedSosig.unknownTNHKills.Clear();
             H3MP_TrackedSosig.unknownCurrentOrder.Clear();
+            H3MP_TrackedSosig.unknownConfiguration.Clear();
 
             H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Clear();
             H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Clear();

@@ -1714,11 +1714,15 @@ namespace H3MP
             SosigConfigTemplate config = packet.ReadSosigConfig();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            if (trackedSosig != null)
             {
                 trackedSosig.configTemplate = config;
-                SosigConfigurePatch.skipConfigure = true;
-                trackedSosig.physicalObject.physicalSosigScript.Configure(config);
+
+                if (trackedSosig.physicalObject != null)
+                {
+                    SosigConfigurePatch.skipConfigure = true;
+                    trackedSosig.physicalObject.physicalSosigScript.Configure(config);
+                }
             }
 
             H3MP_ServerSend.SosigConfigure(sosigTrackedID, config, clientID);

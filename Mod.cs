@@ -6428,6 +6428,17 @@ namespace H3MP
                     {
                         H3MP_ClientSend.SosigConfigure(trackedSosig.data.trackedID, t);
                     }
+                    else
+                    {
+                        if (H3MP_TrackedSosig.unknownConfiguration.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            H3MP_TrackedSosig.unknownConfiguration[trackedSosig.data.localWaitingIndex] = t;
+                        }
+                        else
+                        {
+                            H3MP_TrackedSosig.unknownConfiguration.Add(trackedSosig.data.localWaitingIndex, t);
+                        }
+                    }
                 }
             }
         }
