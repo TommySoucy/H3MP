@@ -12918,7 +12918,6 @@ namespace H3MP
                 }
                 else if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                 {
-                    Mod.LogInfo("\t\tWe are initializer");
                     // We have an initializer , it's us
                     if (Mod.currentTNHInstance.initializationRequested)
                     {
@@ -12931,7 +12930,6 @@ namespace H3MP
                 }
                 else // We are not initializer and no initializer or not controller
                 {
-                    Mod.LogInfo("\t\tWe are not initializer and no initializer or not controller");
                     // Wait until we have initializer before continuing
                     // Also check if not requested here because a server will set the initializer locally and set requested flag indicating that it is waiting for init
                     return !H3MP_GameManager.sceneLoading && Mod.currentTNHInstance.initializer != -1 && !Mod.currentTNHInstance.initializationRequested;
@@ -13832,7 +13830,8 @@ namespace H3MP
             {
                 return true;
             }
-            else if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            else if((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                    (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
             {
                 inSpawnTakeEnemyGroup = true;
                 supplyPointIndex = -1;
@@ -13861,7 +13860,8 @@ namespace H3MP
             {
                 return true;
             }
-            else if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            else if ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                    (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
             {
                 inSpawnDefenses = true;
                 supplyPointIndex = -1;
@@ -13890,7 +13890,8 @@ namespace H3MP
             {
                 return true;
             }
-            else if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            else if ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                    (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
             {
                 inSpawnBoxes = true;
                 supplyPointIndex = -1;
@@ -13919,7 +13920,8 @@ namespace H3MP
             {
                 return true;
             }
-            else if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            else if((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                    (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
             {
                 inSpawnTakeEnemyGroup = true;
                 supplyPointIndex = -1;
@@ -13948,7 +13950,8 @@ namespace H3MP
             {
                 return true;
             }
-            else if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            else if ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                    (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
             {
                 inSpawnDefenses = true;
                 supplyPointIndex = -1;
@@ -13977,7 +13980,8 @@ namespace H3MP
             {
                 return true;
             }
-            else if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            else if ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                    (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
             {
                 inSpawnBoxes = true;
                 supplyPointIndex = -1;
