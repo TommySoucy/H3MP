@@ -250,7 +250,7 @@ namespace H3MP
             H3MP_ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene, H3MP_GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, IFF, H3MP_GameManager.colorIndex, true);
             inControl &= !scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene);
 
-            Mod.LogInfo("Player " + ID + " join server in scene " + scene);
+            Mod.LogInfo("Player " + ID + " join server in scene " + scene, false);
             if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(scene))
             {
                 if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances) &&
@@ -443,14 +443,14 @@ namespace H3MP
             switch (code)
             {
                 case 0:
-                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected, end of stream.");
+                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected, end of stream.", false);
                     break;
                 case 1:
-                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.");
+                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.", false);
                     Mod.LogWarning("Exception: " + ex.Message + "\n" + ex);
                     break;
                 case 2:
-                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.");
+                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.", false);
                     break;
             }
 

@@ -20,7 +20,7 @@ namespace H3MP
                 }
                 else if (_singleton != value)
                 {
-                    Mod.LogInfo($"{nameof(H3MP_Client)} instance already exists, destroying duplicate!");
+                    Mod.LogInfo($"{nameof(H3MP_Client)} instance already exists, destroying duplicate!", false);
                     Destroy(value);
                 }
             }
@@ -99,9 +99,9 @@ namespace H3MP
                 };
 
                 receiveBuffer = new byte[dataBufferSize];
-                Mod.LogInfo("Making connection to " + singleton.IP + ":" + singleton.port);
+                Mod.LogInfo("Making connection to " + singleton.IP + ":" + singleton.port, false);
                 socket.BeginConnect(singleton.IP, singleton.port, ConnectCallback, socket);
-                Mod.LogInfo("connection begun");
+                Mod.LogInfo("connection begun", false);
             }
 
             private void ConnectCallback(IAsyncResult result)
@@ -133,7 +133,7 @@ namespace H3MP
                     }
                     catch (Exception ex)
                     {
-                        Mod.LogInfo($"Error sending data to server via TCP: {ex}");
+                        Mod.LogInfo($"Error sending data to server via TCP: {ex}", false);
                     }
                 }
             }
@@ -267,7 +267,7 @@ namespace H3MP
                 }
                 catch(Exception ex)
                 {
-                    Mod.LogInfo($"Error sending UDP data {ex}");
+                    Mod.LogInfo($"Error sending UDP data {ex}", false);
                 }
             }
 
@@ -506,13 +506,12 @@ namespace H3MP
             localEncryptionCounter = 0;
             waitingLocalEncryptions.Clear();
 
-            Mod.LogInfo("Initialized client");
+            Mod.LogInfo("Initialized client", false);
         }
 
         public static void AddTrackedItem(H3MP_TrackedItemData trackedItem)
         {
             H3MP_TrackedItemData actualTrackedItem = null;
-            Mod.LogInfo("Client AddTrackedItem " + trackedItem.itemID + " with tracked ID "+ trackedItem.trackedID + ", waitingindex: " + trackedItem.localWaitingIndex+", scene: "+trackedItem.scene+", instance: "+trackedItem.instance+", controller: "+trackedItem.controller);
             // If this is a scene init object the server rejected
             if (trackedItem.trackedID == -2)
             {
@@ -540,24 +539,18 @@ namespace H3MP
             //  If one from someone else instantiate if we have the data since we are not in control
             if (trackedItem.controller == H3MP_Client.singleton.ID)
             {
-                Mod.LogInfo("\tWe are controller");
                 if (waitingLocalItems.TryGetValue(trackedItem.localWaitingIndex, out actualTrackedItem))
                 {
-                    Mod.LogInfo("\t\tWe have waiting");
                     if (trackedItem.initTracker == H3MP_GameManager.ID)
                     {
-                        Mod.LogInfo("\t\t\tWe are init tracker");
                         // Get our item
                         waitingLocalItems.Remove(trackedItem.localWaitingIndex);
 
-                        Mod.LogInfo("\tGot actual tracked item: " + actualTrackedItem.itemID);
                         // Set its new tracked ID
                         actualTrackedItem.trackedID = trackedItem.trackedID;
-                        Mod.LogInfo("\tSet tracked ID: " + actualTrackedItem.trackedID);
 
                         // Add the item to client global list
                         items[actualTrackedItem.trackedID] = actualTrackedItem;
-                        Mod.LogInfo("\tSet in global list");
 
                         // Add to item tracking list
                         if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
@@ -577,7 +570,6 @@ namespace H3MP
                             newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
                             H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
                         }
-                        Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
                         actualTrackedItem.OnTrackedIDReceived();
                     }
@@ -601,14 +593,12 @@ namespace H3MP
             }
             else
             {
-                Mod.LogInfo("\tWe are not controller");
                 // We might already have the object
                 if (items[trackedItem.trackedID] != null)
                 {
                     actualTrackedItem = items[trackedItem.trackedID];
                     if (!actualTrackedItem.itemID.Equals(trackedItem.itemID))
                     {
-                        Mod.LogError("\t\tGot tracking inconsistency! Item received trackedID: "+trackedItem.trackedID+" already occupied but itemID is different: ours: "+ actualTrackedItem.itemID + ", server's: "+ trackedItem.itemID + ".\nDestroying our side to be consistent with server.");
                         if (actualTrackedItem.physicalItem != null)
                         {
                             actualTrackedItem.physicalItem.sendDestroy = false;
@@ -624,7 +614,6 @@ namespace H3MP
                             actualTrackedItem.scene.Equals(H3MP_GameManager.scene) &&
                             actualTrackedItem.instance == H3MP_GameManager.instance)
                         {
-                            Mod.LogInfo("\t\thave data but not phys, instantiating");
                             actualTrackedItem.awaitingInstantiation = true;
                             AnvilManager.Run(actualTrackedItem.Instantiate());
                         }
@@ -636,7 +625,6 @@ namespace H3MP
 
                 // Add the item to client global list
                 items[trackedItem.trackedID] = trackedItem;
-                Mod.LogInfo("\ttrackedItem.trackedID is "+ trackedItem.trackedID);
 
                 // Add to item tracking list
                 if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
@@ -656,7 +644,6 @@ namespace H3MP
                     newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
                     H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
                 }
-                Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
                 // Instantiate item if it is identiafiable and in the current scene/instance
                 if (!trackedItem.awaitingInstantiation && 
@@ -664,7 +651,6 @@ namespace H3MP
                     trackedItem.scene.Equals(H3MP_GameManager.scene) &&
                     trackedItem.instance == H3MP_GameManager.instance)
                 {
-                    Mod.LogInfo("\t\tinstantiating");
                     trackedItem.awaitingInstantiation = true;
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
@@ -673,7 +659,6 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig)
         {
-            Mod.LogInfo("Client AddTrackedSosig: " + trackedSosig.trackedID + " with waiting index: " + trackedSosig.localWaitingIndex + " and init tracker: " + trackedSosig.initTracker);
             H3MP_TrackedSosigData actualTrackedSosig = null;
             // If this is a scene init object the server rejected
             if (trackedSosig.trackedID == -2)
@@ -725,8 +710,6 @@ namespace H3MP
                              !H3MP_GameManager.sceneLoading && sosigs[trackedSosig.trackedID].scene.Equals(H3MP_GameManager.scene) &&
                              sosigs[trackedSosig.trackedID].instance == H3MP_GameManager.instance)
                     {
-                        Mod.LogInfo("\tInstantiating");
-
                         sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
                         AnvilManager.Run(sosigs[trackedSosig.trackedID].Instantiate());
                     }
@@ -735,7 +718,6 @@ namespace H3MP
                         !H3MP_GameManager.sceneLoading && sosigs[trackedSosig.trackedID].scene.Equals(H3MP_GameManager.scene) &&
                         sosigs[trackedSosig.trackedID].instance == H3MP_GameManager.instance)
                 {
-                    Mod.LogInfo("\tInstantiating");
                     // Received full data for objects we are in control of, instantiate if possible
                     sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
                     AnvilManager.Run(sosigs[trackedSosig.trackedID].Instantiate());
@@ -774,7 +756,6 @@ namespace H3MP
                         trackedSosig.scene.Equals(H3MP_GameManager.scene) &&
                         trackedSosig.instance == H3MP_GameManager.instance)
                     {
-                        Mod.LogInfo("\tInstantiating");
                         trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
@@ -792,7 +773,6 @@ namespace H3MP
                         if (trackedSosig.scene.Equals(H3MP_GameManager.scene) &&
                             trackedSosig.instance == H3MP_GameManager.instance)
                         {
-                            Mod.LogInfo("\tInstantiating");
                             trackedSosigData.awaitingInstantiation = true;
                             AnvilManager.Run(trackedSosigData.Instantiate());
                         }
@@ -1108,16 +1088,16 @@ namespace H3MP
                 switch (code)
                 {
                     case 0:
-                        Mod.LogInfo("Disconnecting from server.");
+                        Mod.LogInfo("Disconnecting from server.", false);
                         break;
                     case 1:
-                        Mod.LogInfo("Disconnecting from server, end of stream.");
+                        Mod.LogInfo("Disconnecting from server, end of stream.", false);
                         break;
                     case 2:
-                        Mod.LogInfo("Disconnecting from server, TCP forced.");
+                        Mod.LogInfo("Disconnecting from server, TCP forced.", false);
                         break;
                     case 3:
-                        Mod.LogInfo("Disconnecting from server, UDP forced.");
+                        Mod.LogInfo("Disconnecting from server, UDP forced.", false);
                         break;
                     case 4:
                         Mod.LogWarning("Connection to server failed, timed out.");

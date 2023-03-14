@@ -45,7 +45,7 @@ namespace H3MP
             udpListener = new UdpClient(port);
             udpListener.BeginReceive(UDPReceiveCallback, null);
 
-            Mod.LogInfo($"Server started on: {tcpListener.LocalEndpoint}");
+            Mod.LogInfo($"Server started on: {tcpListener.LocalEndpoint}", false);
 
             // Just connected, sync if current scene is syncable
             if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(H3MP_GameManager.scene))
@@ -64,7 +64,7 @@ namespace H3MP
                 return;
             }
 
-            Mod.LogInfo("Closing server.");
+            Mod.LogInfo("Closing server.", false);
 
             H3MP_ServerSend.ServerClosed();
 
@@ -112,7 +112,7 @@ namespace H3MP
             TcpClient client = tcpListener.EndAcceptTcpClient(result);
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
 
-            Mod.LogInfo($"Incoming connection from {client.Client.RemoteEndPoint}");
+            Mod.LogInfo($"Incoming connection from {client.Client.RemoteEndPoint}", false);
 
             for (int i = 1; i <= maxClientCount; ++i)
             {
@@ -168,7 +168,7 @@ namespace H3MP
             }
             catch(Exception ex)
             {
-                Mod.LogInfo($"Error receiving UDP data: {ex}");
+                Mod.LogInfo($"Error receiving UDP data: {ex}", false);
             }
         }
 
@@ -183,7 +183,7 @@ namespace H3MP
             }
             catch(Exception ex)
             {
-                Mod.LogInfo($"Error sending UDP data to {clientEndPoint}: {ex}");
+                Mod.LogInfo($"Error sending UDP data to {clientEndPoint}: {ex}", false);
             }
         }
 
@@ -200,7 +200,6 @@ namespace H3MP
                 return;
             }
 
-            Mod.LogInfo("Server AddTrackedItem: "+trackedItem.itemID +" with waiting index: "+trackedItem.localWaitingIndex);
             // Adjust items size to acommodate if necessary
             if (availableItemIndices.Count == 0)
             {
@@ -212,7 +211,6 @@ namespace H3MP
             availableItemIndices.RemoveAt(availableItemIndices.Count - 1);
 
             items[trackedItem.trackedID] = trackedItem;
-            Mod.LogInfo("\tAssigned trakced ID: "+trackedItem.trackedID);
 
             // Add to item tracking list
             if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
@@ -232,7 +230,6 @@ namespace H3MP
                 newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
                 H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
             }
-            Mod.LogInfo("\tAdded to itemsByInstanceByScene");
 
             // Instantiate item if it is in the current scene and not controlled by us
             if (clientID != 0 && H3MP_GameManager.IsItemIdentifiable(trackedItem))
@@ -241,13 +238,11 @@ namespace H3MP
                 // This is due to the possibility of items only being identifiable in certain contexts like TNH_ShatterableCrates needing a TNH_manager
                 if (!trackedItem.awaitingInstantiation && trackedItem.scene.Equals(H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
                 {
-                    Mod.LogInfo("\t\tItem not from us and in same scene/instance, instantiating");
                     trackedItem.awaitingInstantiation = true;
                     AnvilManager.Run(trackedItem.Instantiate());
                 }
             }
 
-            Mod.LogInfo("\tSending item to clients, with controller: "+trackedItem.controller);
             // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
             H3MP_ServerSend.TrackedItem(trackedItem, clientID);
 
@@ -260,7 +255,6 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, int clientID)
         {
-            Mod.LogInfo("server AddTrackedSosig: " + trackedSosig.trackedID + ", controller: "+trackedSosig.controller+" with waiting index: " + trackedSosig.localWaitingIndex + " and init tracker: " + trackedSosig.initTracker);
             if (trackedSosig.trackedID == -1)
             {
                 // If this is a sceneInit sosig received from client that we haven't tracked yet
@@ -311,7 +305,6 @@ namespace H3MP
                     // Don't use loading scene here. See AddTrackedItem why
                     if (!trackedSosig.awaitingInstantiation && trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
                     {
-                        Mod.LogInfo("\tInstantiating");
                         trackedSosig.awaitingInstantiation = true;
                         AnvilManager.Run(trackedSosig.Instantiate());
                     }
@@ -881,7 +874,7 @@ namespace H3MP
             clientsWaitingUpDate.Clear();
             loadingClientsWaitingFrom.Clear();
 
-            Mod.LogInfo("Initialized server");
+            Mod.LogInfo("Initialized server", false);
         }
     }
 }

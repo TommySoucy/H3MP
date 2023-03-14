@@ -81,7 +81,6 @@ namespace H3MP
                 yield break;
             }
 
-            Mod.LogInfo("Instantiating sosig: " + trackedID+" with waiting index: "+localWaitingIndex+" and init tracker: "+initTracker);
             ++Mod.skipAllInstantiates;
             if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at sosig instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
             GameObject sosigInstance = GameObject.Instantiate(sosigPrefab, position, rotation);

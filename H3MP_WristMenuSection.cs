@@ -117,8 +117,12 @@ namespace H3MP
         {
             if (Mod.managerObject != null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             Mod.modInstance.CreateManagerObject(true);
 
@@ -141,8 +145,12 @@ namespace H3MP
         {
             if (Mod.managerObject != null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             if (Mod.config["IP"].ToString().Equals(""))
             {
@@ -170,11 +178,15 @@ namespace H3MP
 
         private void OnReloadConfigClicked(Text textRef)
         {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             Mod.modInstance.LoadConfig();
         }
 
         private void OnCloseClicked(Text textRef)
         {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             H3MP_Server.Close();
 
             // Switch page
@@ -183,6 +195,8 @@ namespace H3MP
 
         private void OnDisconnectClicked(Text textRef)
         {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             H3MP_Client.singleton.Disconnect(true, 0);
 
             // Switch page
@@ -191,13 +205,17 @@ namespace H3MP
 
         private void OnOptionsClicked(Text textRef)
         {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             // Switch page
             SetPage(3);
         }
 
         private void OnBackClicked(Text textRef)
         {
-            if(Mod.managerObject == null)
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
+            if (Mod.managerObject == null)
             {
                 SetPage(0);
             }
@@ -209,6 +227,8 @@ namespace H3MP
 
         private void OnItemInterpolationClicked(Text textRef)
         {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             if (H3MP_TrackedItem.interpolated)
             {
                 H3MP_TrackedItem.interpolated = false;
@@ -223,14 +243,20 @@ namespace H3MP
 
         private void OnTNHReviveClicked(Text textRef)
         {
-            if(GM.TNH_Manager != null)
+            if (GM.TNH_Manager != null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
                 Mod.TNH_Manager_InitPlayerPosition.Invoke(GM.TNH_Manager, null);
 
                 if(Mod.currentTNHInstance != null)
                 {
                     Mod.currentTNHInstance.RevivePlayer(H3MP_GameManager.ID);
                 }
+            }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
             }
         }
 
@@ -243,8 +269,12 @@ namespace H3MP
         {
             if (Mod.managerObject == null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             if (!H3MP_GameManager.colorByIFF && Mod.managerObject != null)
             {
@@ -262,8 +292,12 @@ namespace H3MP
         {
             if (Mod.managerObject == null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             if (!H3MP_GameManager.colorByIFF && Mod.managerObject != null)
             {
@@ -286,8 +320,12 @@ namespace H3MP
         {
             if(Mod.managerObject == null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             if (GM.CurrentPlayerBody.GetPlayerIFF() == 31)
             {
@@ -319,8 +357,12 @@ namespace H3MP
         {
             if (Mod.managerObject == null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             if (GM.CurrentPlayerBody.GetPlayerIFF() == 0)
             {
@@ -356,11 +398,15 @@ namespace H3MP
         {
             if (Mod.managerObject == null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
 
             if (H3MP_ThreadManager.host)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
                 H3MP_GameManager.colorByIFF = !H3MP_GameManager.colorByIFF;
 
                 textRef.text = "Color by IFF (" + H3MP_GameManager.colorByIFF + ")";
@@ -385,17 +431,25 @@ namespace H3MP
 
                 H3MP_ServerSend.ColorByIFF(H3MP_GameManager.colorByIFF);
             }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+            }
         }
 
         private void OnNameplatesClicked(Text textRef)
         {
             if (Mod.managerObject == null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
 
             if (H3MP_ThreadManager.host)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
                 H3MP_GameManager.nameplateMode = (H3MP_GameManager.nameplateMode + 1 ) % 3;
 
                 switch (H3MP_GameManager.nameplateMode)
@@ -425,17 +479,25 @@ namespace H3MP
 
                 H3MP_ServerSend.NameplateMode(H3MP_GameManager.nameplateMode);
             }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+            }
         }
 
         private void OnTNHRadarModeClicked(Text textRef)
         {
             if (Mod.managerObject == null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
 
             if (H3MP_ThreadManager.host)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
                 H3MP_GameManager.radarMode = (H3MP_GameManager.radarMode + 1 ) % 3;
 
                 switch (H3MP_GameManager.radarMode)
@@ -515,17 +577,25 @@ namespace H3MP
 
                 H3MP_ServerSend.RadarMode(H3MP_GameManager.radarMode);
             }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+            }
         }
 
         private void OnTNHRadarColorClicked(Text textRef)
         {
             if (Mod.managerObject == null)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
                 return;
             }
 
             if (H3MP_ThreadManager.host)
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
                 H3MP_GameManager.radarColor = !H3MP_GameManager.radarColor;
 
                 textRef.text = "Radar color IFF (" + H3MP_GameManager.radarColor + ")";
@@ -556,15 +626,23 @@ namespace H3MP
 
                 H3MP_ServerSend.RadarColor(H3MP_GameManager.radarColor);
             }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+            }
         }
 
         private void OnNextOptionsClicked(Text textRef)
         {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             SetPage(currentPage + 1);
         }
 
         private void OnPrevOptionsClicked(Text textRef)
         {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             SetPage(currentPage - 1);
         }
 

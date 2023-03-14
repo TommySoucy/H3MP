@@ -35,7 +35,7 @@ namespace H3MP
         {
             if (_action == null)
             {
-                Mod.LogInfo("No action to execute on main thread!");
+                Mod.LogInfo("No action to execute on main thread!", false);
                 return;
             }
 
@@ -80,7 +80,7 @@ namespace H3MP
                         ++H3MP_Client.singleton.pingAttemptCounter;
                         if(H3MP_Client.singleton.pingAttemptCounter >= 10)
                         {
-                            Mod.LogInfo("Have not received server welcome for " + H3MP_Client.singleton.pingAttemptCounter + " seconds, timing out at 30");
+                            Mod.LogInfo("Have not received server welcome for " + H3MP_Client.singleton.pingAttemptCounter + " seconds, timing out at 30", false);
                         }
                         if(H3MP_Client.singleton.pingAttemptCounter >= 30)
                         {

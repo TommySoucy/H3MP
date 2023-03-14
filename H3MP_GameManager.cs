@@ -22,7 +22,7 @@ namespace H3MP
                 }
                 else if (_singleton != value)
                 {
-                    Mod.LogInfo($"{nameof(H3MP_GameManager)} instance already exists, destroying duplicate!");
+                    Mod.LogInfo($"{nameof(H3MP_GameManager)} instance already exists, destroying duplicate!", false);
                     Destroy(value);
                 }
             }
@@ -88,7 +88,7 @@ namespace H3MP
 
         public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, bool join = false)
         {
-            Mod.LogInfo($"Spawn player called with ID: {ID}");
+            Mod.LogInfo($"Spawn player called with ID: {ID}", false);
 
             GameObject player = null;
             // Always spawn if this is host (client is null)
@@ -302,7 +302,7 @@ namespace H3MP
 
         public static void UpdatePlayerScene(int playerID, string sceneName)
         {
-            Mod.LogInfo("Player " + playerID + " joining scene " + sceneName);
+            Mod.LogInfo("Player " + playerID + " joining scene " + sceneName, false);
             H3MP_PlayerManager player = players[playerID];
 
             // Remove from scene/instance
@@ -316,7 +316,7 @@ namespace H3MP
                 playersByInstanceByScene.Remove(player.scene);
             }
 
-            if (sceneName.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
+            if (player.scene.Equals(H3MP_GameManager.scene) && !H3MP_GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && instance == player.instance)
             {
                 --playersPresent;
             }
@@ -623,10 +623,6 @@ namespace H3MP
             //               We could keep only the highest order in a dict by trackedID
             if (trackedItemData != null)
             {
-                if (trackedItemData.itemID.Equals("ReflexArco"))
-                {
-                    Mod.LogInfo("\tGot item, controller: "+ trackedItemData.controller + ", ignore order: "+ ignoreOrder + ", updated order: "+ updatedItem.order+", current order: "+ trackedItemData.order);
-                }
                 // If we take control of an item, we could still receive an updated item from another client
                 // if they haven't received the control update yet, so here we check if this actually needs to update
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
@@ -779,13 +775,11 @@ namespace H3MP
                     {
                         if (controlEverything || IsControlled(physObj))
                         {
-                            Mod.LogInfo("Tracking " + physObj.name);
                             H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
                             if (trackedItem.awoken)
                             {
                                 if (H3MP_ThreadManager.host)
                                 {
-                                    Mod.LogInfo("\tAwake, we are server, adding");
                                     // This will also send a packet with the item to be added in the client's global item list
                                     H3MP_Server.AddTrackedItem(trackedItem.data, 0);
                                 }
@@ -794,13 +788,11 @@ namespace H3MP
                                     // Tell the server we need to add this item to global tracked items
                                     trackedItem.data.localWaitingIndex = H3MP_Client.localItemCounter++;
                                     H3MP_Client.waitingLocalItems.Add(trackedItem.data.localWaitingIndex, trackedItem.data);
-                                    Mod.LogInfo("\tAwake, we are client, sending a "+ trackedItem.data.itemID+ " to server with index: "+ trackedItem.data.localWaitingIndex+" with controller: "+trackedItem.data.controller);
                                     H3MP_ClientSend.TrackedItem(trackedItem.data);
                                 }
                             }
                             else
                             {
-                                Mod.LogInfo("\tNot awake setting flag");
                                 trackedItem.sendOnAwake = true;
                             }
 
@@ -811,7 +803,6 @@ namespace H3MP
                         }
                         else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
                         {
-                            Mod.LogInfo("We do not want to track "+ root.name+" destroying");
                             Destroy(root.gameObject);
                         }
                     }
@@ -1635,7 +1626,7 @@ namespace H3MP
 
         public static void SetInstance(int instance)
         {
-            Mod.LogInfo("Changing instance from " + H3MP_GameManager.instance + " to " + instance);
+            Mod.LogInfo("Changing instance from " + H3MP_GameManager.instance + " to " + instance, false);
             // Remove ourselves from the previous instance and manage dicts accordingly
             if (activeInstances.ContainsKey(H3MP_GameManager.instance))
             {
@@ -1673,7 +1664,6 @@ namespace H3MP
 
             if (!sceneLoading)
             {
-                Mod.LogInfo("\tScene not loading, getting playersAtLoadStart");
                 if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
                 {
                     if (relevantInstances0.TryGetValue(H3MP_GameManager.instance, out List<int> relevantPlayers))
@@ -1689,7 +1679,6 @@ namespace H3MP
                 {
                     playersAtLoadStart = null;
                 }
-                Mod.LogInfo("\t\t"+(playersAtLoadStart == null ? "null" : playersAtLoadStart.Count.ToString()+" elements"));
             }
 
             // Set locally
@@ -1947,15 +1936,14 @@ namespace H3MP
 
             // Set players active and playersPresent
             playersPresent = 0;
-            string sceneName = H3MP_GameManager.scene;
-            if (!nonSynchronizedScenes.ContainsKey(sceneName))
+            if (!nonSynchronizedScenes.ContainsKey(scene))
             {
                 // Check each players scene/instance to know if they are in the one we are going into
                 // TODO: Review: Since we are now tracking players' scene/instance through playerBySceneByInstance, we don't need to check for each of them here
                 //       We should probably just use playersBySceneByInstance
                 foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                 {
-                    if (player.Value.scene.Equals(sceneName) && player.Value.instance == instance)
+                    if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                     {
                         ++playersPresent;
 
@@ -2081,7 +2069,7 @@ namespace H3MP
 
             if (loading) // Just started loading
             {
-                Mod.LogInfo("Switching scene, from " + H3MP_GameManager.scene + " to " + LoadLevelBeginPatch.loadingLevel);
+                Mod.LogInfo("Switching scene, from " + H3MP_GameManager.scene + " to " + LoadLevelBeginPatch.loadingLevel, false);
                 sceneLoading = true;
                 instanceAtSceneLoadStart = instance;
                 sceneAtSceneLoadStart = H3MP_GameManager.scene;
@@ -2090,7 +2078,6 @@ namespace H3MP
 
                 ++Mod.skipAllInstantiates;
 
-                Mod.LogInfo("\tGetting playersAtLoadStart");
                 if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
                 {
                     if (relevantInstances0.TryGetValue(instance, out List<int> relevantPlayers))
@@ -2106,7 +2093,6 @@ namespace H3MP
                 {
                     playersAtLoadStart = null;
                 }
-                Mod.LogInfo("\t\t" + (playersAtLoadStart == null ? "null" : playersAtLoadStart.Count.ToString() + " elements"));
 
                 // Get out of TNH instance 
                 // This makes assumption that player must go through main menu to leave TNH
@@ -2145,12 +2131,11 @@ namespace H3MP
                     controlOverride = true;
                     firstPlayerInSceneInstance = true;
                 }
-                Mod.LogInfo("\tStarted loading, control override: " + controlOverride);
             }
             else // Finished loading
             {
                 H3MP_GameManager.scene = LoadLevelBeginPatch.loadingLevel;
-                Mod.LogInfo("Arrived in scene: " + H3MP_GameManager.scene);
+                Mod.LogInfo("Arrived in scene: " + H3MP_GameManager.scene, false);
                 sceneLoading = false;
 
                 // Send an update to let others know we changed scene
@@ -2414,19 +2399,16 @@ namespace H3MP
             }
 
             // Give all sosigs
-            Mod.LogInfo("Distributing control of sosigs");
             for (int i = 0; i < H3MP_Server.sosigs.Length; ++i)
             {
                 if (H3MP_Server.sosigs[i] != null && H3MP_Server.sosigs[i].controller == clientID)
                 {
-                    Mod.LogInfo("\tSosig "+i+" controlled by "+ clientID);
                     H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[i];
 
                     bool destroyed = newController == -1;
 
                     if (destroyed) // No other player to take control, destroy
                     {
-                        Mod.LogInfo("\t\tNo best potential host, destroying");
                         H3MP_ServerSend.DestroySosig(trackedSosig.trackedID);
                         H3MP_Server.sosigs[trackedSosig.trackedID] = null;
                         H3MP_Server.availableSosigIndices.Add(trackedSosig.trackedID);
@@ -2439,7 +2421,6 @@ namespace H3MP
                     }
                     else if (newController == 0) // If its us, take control
                     {
-                        Mod.LogInfo("\t\tIts us, taking control");
                         trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
                         H3MP_GameManager.sosigs.Add(trackedSosig);
                         if (trackedSosig.physicalObject == null)
@@ -2494,7 +2475,6 @@ namespace H3MP
                     {
                         trackedSosig.controller = newController;
 
-                        Mod.LogInfo("\t\tSending control to clients");
                         H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, newController, null);
                     }
                 }

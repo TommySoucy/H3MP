@@ -76,7 +76,6 @@ namespace H3MP
 
             try
             {
-                Mod.LogInfo("\tInstantiating an "+itemID+", with tracked ID: "+trackedID+", with waiting index: "+localWaitingIndex);
                 ++Mod.skipAllInstantiates;
                 if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at item instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
@@ -460,7 +459,6 @@ namespace H3MP
 
         public void OnTrackedIDReceived()
         {
-            Mod.LogInfo("OnTrackedIDReceived called on " + trackedID);
             if (H3MP_TrackedItem.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 H3MP_ClientSend.DestroyItem(trackedID);
@@ -650,7 +648,6 @@ namespace H3MP
             H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
             H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
             H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
-            Mod.LogInfo("Remove from local called on "+itemID+" with tracked ID: "+trackedID+" and localTrackedID: "+ localTrackedID);
 
             if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.items.Count)
             {

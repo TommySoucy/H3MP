@@ -19,11 +19,11 @@ namespace H3MP
             int IFF = packet.ReadInt();
             int colorIndex = packet.ReadInt();
 
-            Mod.LogInfo($"{H3MP_Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}");
+            Mod.LogInfo($"{H3MP_Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}", false);
 
             if (clientID != clientIDCheck)
             {
-                Mod.LogInfo($"Player \"{username}\" (ID:{clientID}) has assumed wrong client ID ({clientIDCheck})");
+                Mod.LogInfo($"Player \"{username}\" (ID:{clientID}) has assumed wrong client ID ({clientIDCheck})", false);
             }
 
             // Spawn player to clients 
@@ -325,7 +325,6 @@ namespace H3MP
                 {
                     trackedItem.localTrackedID = H3MP_GameManager.items.Count;
                     H3MP_GameManager.items.Add(trackedItem);
-                    Mod.LogInfo("Received control of item " + trackedItem.itemID + " with tracked ID " + trackedID + ", loading?: " + H3MP_GameManager.sceneLoading);
                     // Physical object could be null if we are given control while we are loading, the giving client will think we are in their scene/instance
                     if (trackedItem.physicalItem == null)
                     {
@@ -335,7 +334,6 @@ namespace H3MP
                         {
                             if (!trackedItem.awaitingInstantiation)
                             {
-                                Mod.LogInfo("\tInstantiating");
                                 trackedItem.awaitingInstantiation = true;
                                 AnvilManager.Run(trackedItem.Instantiate());
                             }
@@ -367,7 +365,6 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    Mod.LogInfo("\t\t\tBounce control");
                                     trackedItem.RemoveFromLocal();
                                     debounce.Add(H3MP_GameManager.ID);
                                     // Don't resend give control here right away, we will send at the end
@@ -375,7 +372,6 @@ namespace H3MP
                             }
                             else
                             {
-                                Mod.LogInfo("\tSending destroy");
                                 H3MP_ServerSend.DestroyItem(trackedID);
                                 trackedItem.RemoveFromLocal();
                                 H3MP_Server.items[trackedID] = null;
@@ -871,7 +867,6 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
-            Mod.LogInfo("Server received order to destroy item at " + trackedID);
             if (H3MP_Server.items[trackedID] != null)
             {
                 H3MP_TrackedItemData trackedItem = H3MP_Server.items[trackedID];
@@ -882,6 +877,7 @@ namespace H3MP
                 bool destroyed = false;
                 if (trackedItem.physicalItem != null)
                 {
+                    H3MP_GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
                     trackedItem.physicalItem.sendDestroy = false;
                     trackedItem.physicalItem.dontGiveControl = true;
                     GameObject.Destroy(trackedItem.physicalItem.gameObject);
@@ -2331,7 +2327,6 @@ namespace H3MP
         {
             int sosigTrackedID = packet.ReadInt();
             byte iff = packet.ReadByte();
-            Mod.LogInfo("Server handle sosig " + sosigTrackedID + " vaporize");
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
             if (trackedSosig != null && trackedSosig.physicalObject != null)
@@ -2432,12 +2427,10 @@ namespace H3MP
             {
                 H3MP_TrackedSosigData trackedSosig = packet.ReadTrackedSosig(true);
                 H3MP_TrackedSosigData actualTrackedSosig = H3MP_Server.sosigs[trackedSosig.trackedID];
-                Mod.LogInfo("Server received up to date sosig: "+ actualTrackedSosig.trackedID+", waiting index: "+ actualTrackedSosig.localWaitingIndex+", inittracker: "+ actualTrackedSosig.initTracker);
                 H3MP_GameManager.UpdateTrackedSosig(trackedSosig, true);
                 if (instantiate && actualTrackedSosig.physicalObject == null && !actualTrackedSosig.awaitingInstantiation &&
                     actualTrackedSosig.scene.Equals(H3MP_GameManager.scene) && actualTrackedSosig.instance == H3MP_GameManager.instance)
                 {
-                    Mod.LogInfo("\tInstantiating");
                     actualTrackedSosig.awaitingInstantiation = true;
                     AnvilManager.Run(actualTrackedSosig.Instantiate());
                 }
@@ -2514,14 +2507,11 @@ namespace H3MP
         {
             int forClient = packet.ReadInt();
 
-            Mod.LogInfo("Server received DoneSendingUpToDateObjects from "+clientID+" for "+ forClient);
             // If clients were waiting for this client to finish sending up to date objects
             if (H3MP_Server.clientsWaitingUpDate.TryGetValue(clientID, out List<int> waitingClients))
             {
-                Mod.LogInfo("\tThere are clients waiting for this");
                 if (forClient == 0)
                 {
-                    Mod.LogInfo("\t\tThis was for us, were we waiting?: "+ H3MP_Server.loadingClientsWaitingFrom.ContainsKey(0)+", count: "+ H3MP_Server.loadingClientsWaitingFrom.Count);
                     waitingClients.Remove(forClient);
                     if (waitingClients.Count == 0)
                     {
@@ -2530,11 +2520,9 @@ namespace H3MP
 
                     if (H3MP_Server.loadingClientsWaitingFrom.TryGetValue(forClient, out List<int> waitingFrom))
                     {
-                        Mod.LogInfo("\t\t\tWe were waiting");
                         waitingFrom.Remove(clientID);
                         if (waitingFrom.Count == 0)
                         {
-                            Mod.LogInfo("Server done receiving up to date objects");
                             // When requesting up to date objects, the server will instantiate directly upon receiving them, unlike a client, below
                             // In the server's case we then want to instantiate all missing items directly
                             H3MP_Server.loadingClientsWaitingFrom.Remove(forClient);// Items
@@ -2548,7 +2536,6 @@ namespace H3MP
                                     H3MP_TrackedItemData trackedItemData = H3MP_Server.items[items[i]];
                                     if (trackedItemData != null && trackedItemData.physicalItem == null && !trackedItemData.awaitingInstantiation)
                                     {
-                                        Mod.LogInfo("\tInstantiating tracked item: "+ trackedItemData.trackedID+", waiting index: "+ trackedItemData.localWaitingIndex+", init tracker: "+ trackedItemData.initTracker);
                                         trackedItemData.awaitingInstantiation = true;
                                         AnvilManager.Run(trackedItemData.Instantiate());
                                     }
@@ -2564,7 +2551,6 @@ namespace H3MP
                                     H3MP_TrackedSosigData trackedSosigData = H3MP_Server.sosigs[sosigs[i]];
                                     if (trackedSosigData != null && trackedSosigData.physicalObject == null && !trackedSosigData.awaitingInstantiation)
                                     {
-                                        Mod.LogInfo("\tInstantiating tracked sosig: " + trackedSosigData.trackedID + ", waiting index: " + trackedSosigData.localWaitingIndex + ", init tracker: " + trackedSosigData.initTracker);
                                         trackedSosigData.awaitingInstantiation = true;
                                         AnvilManager.Run(trackedSosigData.Instantiate());
                                     }
@@ -2580,7 +2566,6 @@ namespace H3MP
                                     H3MP_TrackedAutoMeaterData trackedAutoMeaterData = H3MP_Server.autoMeaters[autoMeaters[i]];
                                     if (trackedAutoMeaterData != null && trackedAutoMeaterData.physicalObject == null && !trackedAutoMeaterData.awaitingInstantiation)
                                     {
-                                        Mod.LogInfo("\tInstantiating tracked automeater: " + trackedAutoMeaterData.trackedID + ", waiting index: " + trackedAutoMeaterData.localWaitingIndex + ", init tracker: " + trackedAutoMeaterData.initTracker);
                                         trackedAutoMeaterData.awaitingInstantiation = true;
                                         AnvilManager.Run(trackedAutoMeaterData.Instantiate());
                                     }
@@ -2596,7 +2581,6 @@ namespace H3MP
                                     H3MP_TrackedEncryptionData trackedEncryptionData = H3MP_Server.encryptions[encryptions[i]];
                                     if (trackedEncryptionData != null && trackedEncryptionData.physicalObject == null && !trackedEncryptionData.awaitingInstantiation)
                                     {
-                                        Mod.LogInfo("\tInstantiating tracked encryption: " + trackedEncryptionData.trackedID + ", waiting index: " + trackedEncryptionData.localWaitingIndex + ", init tracker: " + trackedEncryptionData.initTracker);
                                         trackedEncryptionData.awaitingInstantiation = true;
                                         AnvilManager.Run(trackedEncryptionData.Instantiate());
                                     }
@@ -4003,13 +3987,10 @@ namespace H3MP
         public static void RequestTNHInitialization(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
-            Mod.LogInfo("Client " + clientID + " requested init perm for instance: " + instance);
             if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
-                Mod.LogInfo("\tTNH instance exists with intializer: "+ TNHInstance.initializer);
                 if (TNHInstance.initializer == -1)
                 {
-                    Mod.LogInfo("\t\tNo initializer yet, giving perms to "+clientID);
                     TNHInstance.initializer = clientID;
                     TNHInstance.initializationRequested = true; // We are waiting for init from this player
 
@@ -4023,7 +4004,7 @@ namespace H3MP
         {
             int instance = packet.ReadInt();
 
-            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
                 if(TNHInstance.initializer == clientID)
                 {

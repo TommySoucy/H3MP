@@ -90,7 +90,6 @@ namespace H3MP
                 if (H3MP_ThreadManager.host)
                 {
                     // This will also send a packet with the item to be added in the client's global item list
-                    Mod.LogInfo("\tAwake, we are server, adding");
                     H3MP_Server.AddTrackedItem(data, 0);
                 }
                 else
@@ -98,7 +97,6 @@ namespace H3MP
                     // Tell the server we need to add this item to global tracked items
                     data.localWaitingIndex = H3MP_Client.localItemCounter++;
                     H3MP_Client.waitingLocalItems.Add(data.localWaitingIndex, data);
-                    Mod.LogInfo("\tAwake, we are client, sending to server with index: " + data.localWaitingIndex+" and controller: "+data.controller);
                     H3MP_ClientSend.TrackedItem(data);
                 }
             }
@@ -7676,7 +7674,6 @@ namespace H3MP
 
         private void OnDestroy()
         {
-            Mod.LogInfo("OnDestroy called for " + data.itemID + " with tracked ID: " + data.trackedID);
             // Don't want to destroy if controlled by someone else and under their active control
             if (skipFullDestroy || (data.controller != H3MP_GameManager.ID && data.underActiveControl))
             {
@@ -7698,7 +7695,6 @@ namespace H3MP
                     if (data.controller == 0)
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, H3MP_GameManager.playersAtLoadStart);
-                        Mod.LogInfo("\tbest potential host: "+ otherPlayer);
                         if (otherPlayer == -1)
                         {
                             // No one to give control of item to, destroy it
@@ -7729,7 +7725,6 @@ namespace H3MP
                 }
                 else
                 {
-                    Mod.LogInfo("\tNot giving control, senddestroy: "+ sendDestroy);
                     if (sendDestroy && skipDestroy == 0)
                     {
                         H3MP_ServerSend.DestroyItem(data.trackedID);
@@ -7763,10 +7758,8 @@ namespace H3MP
                     {
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, H3MP_GameManager.playersAtLoadStart);
 
-                        Mod.LogInfo("\tAttempt giving control to "+ otherPlayer+" from a list of "+ (H3MP_GameManager.playersAtLoadStart == null ? "0" : H3MP_GameManager.playersAtLoadStart.Count.ToString())+" other players");
                         if (otherPlayer == -1)
                         {
-                            Mod.LogInfo("\t\tDestroying");
                             if (sendDestroy && skipDestroy == 0)
                             {
                                 if (data.trackedID == -1)
@@ -7800,7 +7793,6 @@ namespace H3MP
                         }
                         else
                         {
-                            Mod.LogInfo("\t\tGiving control");
                             if (data.trackedID == -1)
                             {
                                 if (unknownControlTrackedIDs.ContainsKey(data.localWaitingIndex))

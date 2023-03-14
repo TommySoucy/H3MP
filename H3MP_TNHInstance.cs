@@ -84,7 +84,6 @@ namespace H3MP
 
         public void AddCurrentlyPlaying(bool send, int ID, bool fromServer = false)
         {
-            Mod.LogInfo("AddCurrentlyPlaying called to add " + ID + " to instance: " + instance+", currently controlled by "+controller);
             if (!letPeopleJoin && currentlyPlaying.Count == 0 &&
                 Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
             {
@@ -113,7 +112,6 @@ namespace H3MP
             {
                 if (ID == playerIDs[0])
                 {
-                    Mod.LogInfo("\tClient is instance host, giving control");
                     // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
                     if (ID != controller)
                     {
@@ -124,10 +122,8 @@ namespace H3MP
                 }
                 else // The player who got added is not instance host
                 {
-                    Mod.LogInfo("\tClient is NOT instance host");
                     if (currentlyPlaying.Count == 1)
                     {
-                        Mod.LogInfo("\t\tIs first player, giving control");
                         // If new controller is different, distribute sosigs/automeaters/encryptions be cause those should be controlled by TNH controller
                         if (ID != controller)
                         {

@@ -16,7 +16,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR;
-using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -286,6 +285,7 @@ namespace H3MP
         public static readonly FieldInfo BoltActionRifle_m_isHammerCocked = typeof(BoltActionRifle).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TAH_Reticle_m_trackedTransforms = typeof(TAH_Reticle).GetField("m_trackedTransforms", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AIManager_m_knownEntities = typeof(AIManager).GetField("m_knownEntities", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties = typeof(FVRWristMenuSection_CleanUp).GetField("askConfirm_CleanupEmpties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -351,6 +351,8 @@ namespace H3MP
         public static readonly MethodInfo LaserPointer_ToggleOn = typeof(LaserPointer).GetMethod("ToggleOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo TacticalFlashlight_ToggleOn = typeof(TacticalFlashlight).GetMethod("ToggleOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo AlloyAreaLight_get_Light = typeof(AlloyAreaLight).GetMethod("get_Light", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FVRWristMenuSection_CleanUp_ResetConfirm = typeof(FVRWristMenuSection_CleanUp).GetMethod("ResetConfirm", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FVRWristMenuSection_CleanUp_AskConfirm_CleanupEmpties = typeof(FVRWristMenuSection_CleanUp).GetMethod("AskConfirm_CleanupEmpties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
         // Debug
@@ -770,7 +772,7 @@ namespace H3MP
 
             H3MPPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(Mod)).Location);
             H3MPPath.Replace('\\', '/');
-            Mod.LogInfo("H3MP path found: "+ H3MPPath);
+            Mod.LogInfo("H3MP path found: "+ H3MPPath, false);
 
             DoPatching();
 
@@ -2193,7 +2195,35 @@ namespace H3MP
             MethodInfo SetCurrentAIManagerPatchPostfix = typeof(SetCurrentAIManagerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(SetCurrentAIManagerPatchOriginal, harmony, true);
-            harmony.Patch(SetCurrentAIManagerPatchOriginal, new HarmonyMethod(SetCurrentAIManagerPatchPostfix));
+            harmony.Patch(SetCurrentAIManagerPatchOriginal, null, new HarmonyMethod(SetCurrentAIManagerPatchPostfix));
+
+            // CleanUpPatch
+            MethodInfo CleanUpScene_EmptiesOriginalSection = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_Empties", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_EmptiesOriginalWrist = typeof(FVRWristMenu).GetMethod("CleanUpScene_Empties", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_EmptiesPrefix = typeof(CleanUpPatch).GetMethod("EmptiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo CleanUpScene_AllMagsOriginalSection = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_AllMags", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_AllMagsOriginalWrist = typeof(FVRWristMenu).GetMethod("CleanUpScene_AllMags", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_AllMagsPrefix = typeof(CleanUpPatch).GetMethod("EmptiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo CleanUpScene_GunsOriginalSection = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_Guns", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_GunsOriginalWrist = typeof(FVRWristMenu).GetMethod("CleanUpScene_Guns", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_GunsPrefix = typeof(CleanUpPatch).GetMethod("EmptiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo ClearExistingSaveableObjectsOriginal = typeof(VaultSystem).GetMethod("ClearExistingSaveableObjects", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo ClearExistingSaveableObjectsPrefix = typeof(CleanUpPatch).GetMethod("ClearExistingSaveableObjectsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(ClearExistingSaveableObjectsOriginal, harmony, true);
+            PatchVerify.Verify(CleanUpScene_EmptiesOriginalSection, harmony, true);
+            PatchVerify.Verify(CleanUpScene_EmptiesOriginalWrist, harmony, true);
+            PatchVerify.Verify(CleanUpScene_AllMagsOriginalSection, harmony, true);
+            PatchVerify.Verify(CleanUpScene_AllMagsOriginalWrist, harmony, true);
+            PatchVerify.Verify(CleanUpScene_GunsOriginalSection, harmony, true);
+            PatchVerify.Verify(CleanUpScene_GunsOriginalWrist, harmony, true);
+            harmony.Patch(ClearExistingSaveableObjectsOriginal, new HarmonyMethod(ClearExistingSaveableObjectsPrefix));
+            harmony.Patch(CleanUpScene_EmptiesOriginalSection, new HarmonyMethod(CleanUpScene_EmptiesPrefix));
+            harmony.Patch(CleanUpScene_EmptiesOriginalWrist, new HarmonyMethod(CleanUpScene_EmptiesPrefix));
+            harmony.Patch(CleanUpScene_AllMagsOriginalSection, new HarmonyMethod(CleanUpScene_AllMagsPrefix));
+            harmony.Patch(CleanUpScene_AllMagsOriginalWrist, new HarmonyMethod(CleanUpScene_AllMagsPrefix));
+            harmony.Patch(CleanUpScene_GunsOriginalSection, new HarmonyMethod(CleanUpScene_GunsPrefix));
+            harmony.Patch(CleanUpScene_GunsOriginalWrist, new HarmonyMethod(CleanUpScene_GunsPrefix));
 
 
             //// TeleportToPointPatch
@@ -3104,9 +3134,18 @@ namespace H3MP
             }
         }
 
-        public static void LogInfo(string message)
+        public static void LogInfo(string message, bool debug = true)
         {
-            modInstance.Logger.LogInfo(message);
+            if (debug)
+            {
+#if DEBUG
+                modInstance.Logger.LogInfo(message);
+#endif
+            }
+            else
+            {
+                modInstance.Logger.LogInfo(message);
+            }
         }
 
         public static void LogWarning(string message)
@@ -3355,7 +3394,6 @@ namespace H3MP
 
         private static void AddSection(FVRWristMenu2 __instance)
         {
-            Mod.LogInfo("Initializing wrist menu section");
             GameObject section = new GameObject("Section_H3MP", typeof(RectTransform));
             section.transform.SetParent(__instance.MenuGO.transform);
             section.transform.localPosition = new Vector3(0, 300, 0);
@@ -3466,6 +3504,213 @@ namespace H3MP
                     }
                 }
             }
+        }
+    }
+
+    // Patches the clean up functions to make sure we clean up only certain things
+    class CleanUpPatch
+    {
+        static bool EmptiesPrefix(FVRWristMenuSection_CleanUp __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, __instance.transform.position);
+            if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties.GetValue(__instance))
+            {
+                Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
+                Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupEmpties.Invoke(__instance, null);
+                return false;
+            }
+            Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
+            FVRFireArmMagazine[] array = UnityEngine.Object.FindObjectsOfType<FVRFireArmMagazine>();
+            for (int i = array.Length - 1; i >= 0; i--)
+            {
+                H3MP_TrackedItem trackedItem =  H3MP_GameManager.trackedItemByItem.TryGetValue(array[i], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) && 
+                    !array[i].IsHeld && array[i].QuickbeltSlot == null && array[i].FireArm == null && array[i].m_numRounds == 0 && !array[i].IsIntegrated)
+                {
+                    UnityEngine.Object.Destroy(array[i].gameObject);
+                }
+            }
+            FVRFireArmRound[] array2 = UnityEngine.Object.FindObjectsOfType<FVRFireArmRound>();
+            for (int j = array2.Length - 1; j >= 0; j--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array2[j], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array2[j].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array2[j].IsHeld && array2[j].QuickbeltSlot == null && array2[j].RootRigidbody != null)
+                {
+                    UnityEngine.Object.Destroy(array2[j].gameObject);
+                }
+            }
+            FVRFireArmClip[] array3 = UnityEngine.Object.FindObjectsOfType<FVRFireArmClip>();
+            for (int k = array3.Length - 1; k >= 0; k--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array3[k], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array3[k].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array3[k].IsHeld && array3[k].QuickbeltSlot == null && array3[k].FireArm == null && array3[k].m_numRounds == 0)
+                {
+                    UnityEngine.Object.Destroy(array3[k].gameObject);
+                }
+            }
+            Speedloader[] array4 = UnityEngine.Object.FindObjectsOfType<Speedloader>();
+            for (int l = array4.Length - 1; l >= 0; l--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array4[l], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array4[l].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array4[l].IsHeld && array4[l].QuickbeltSlot == null)
+                {
+                    UnityEngine.Object.Destroy(array4[l].gameObject);
+                }
+            }
+
+            return false;
+        }
+
+        static bool AllMagsPrefix(FVRWristMenuSection_CleanUp __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, __instance.transform.position);
+            if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties.GetValue(__instance))
+            {
+                Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
+                Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupEmpties.Invoke(__instance, null);
+                return false;
+            }
+            Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
+            FVRFireArmMagazine[] array = UnityEngine.Object.FindObjectsOfType<FVRFireArmMagazine>();
+            for (int i = array.Length - 1; i >= 0; i--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array[i], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array[i].IsHeld && array[i].QuickbeltSlot == null && array[i].FireArm == null && !array[i].IsIntegrated)
+                {
+                    UnityEngine.Object.Destroy(array[i].gameObject);
+                }
+            }
+            FVRFireArmRound[] array2 = UnityEngine.Object.FindObjectsOfType<FVRFireArmRound>();
+            for (int j = array2.Length - 1; j >= 0; j--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array2[j], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array2[j].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array2[j].IsHeld && array2[j].QuickbeltSlot == null && array2[j].RootRigidbody != null)
+                {
+                    UnityEngine.Object.Destroy(array2[j].gameObject);
+                }
+            }
+            FVRFireArmClip[] array3 = UnityEngine.Object.FindObjectsOfType<FVRFireArmClip>();
+            for (int k = array3.Length - 1; k >= 0; k--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array3[k], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array3[k].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array3[k].IsHeld && array3[k].QuickbeltSlot == null && array3[k].FireArm == null)
+                {
+                    UnityEngine.Object.Destroy(array3[k].gameObject);
+                }
+            }
+            Speedloader[] array4 = UnityEngine.Object.FindObjectsOfType<Speedloader>();
+            for (int l = array4.Length - 1; l >= 0; l--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array4[l], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array4[l].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array4[l].IsHeld && array4[l].QuickbeltSlot == null)
+                {
+                    UnityEngine.Object.Destroy(array4[l].gameObject);
+                }
+            }
+
+            return false;
+        }
+
+        static bool GunsPrefix(FVRWristMenuSection_CleanUp __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, __instance.transform.position);
+            if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties.GetValue(__instance))
+            {
+                Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
+                Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupEmpties.Invoke(__instance, null);
+                return false;
+            }
+            Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
+            FVRFireArm[] array = UnityEngine.Object.FindObjectsOfType<FVRFireArm>();
+            for (int i = array.Length - 1; i >= 0; i--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array[i], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array[i].IsHeld && array[i].QuickbeltSlot == null)
+                {
+                    UnityEngine.Object.Destroy(array[i].gameObject);
+                }
+            }
+            SosigWeapon[] array2 = UnityEngine.Object.FindObjectsOfType<SosigWeapon>();
+            for (int j = array2.Length - 1; j >= 0; j--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemBySosigWeapon.TryGetValue(array2[j], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array2[j].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array2[j].O.IsHeld && array2[j].O.QuickbeltSlot == null && !array2[j].IsHeldByBot && !array2[j].IsInBotInventory)
+                {
+                    UnityEngine.Object.Destroy(array2[j].gameObject);
+                }
+            }
+            FVRMeleeWeapon[] array3 = UnityEngine.Object.FindObjectsOfType<FVRMeleeWeapon>();
+            for (int k = array3.Length - 1; k >= 0; k--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array3[k], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array3[k].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array3[k].IsHeld && array3[k].QuickbeltSlot == null)
+                {
+                    UnityEngine.Object.Destroy(array3[k].gameObject);
+                }
+            }
+            FVRFireArmAttachment[] array4 = UnityEngine.Object.FindObjectsOfType<FVRFireArmAttachment>();
+            for (int l = array4.Length - 1; l >= 0; l--)
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array4[l], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array4[l].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                    !array4[l].IsHeld && array4[l].QuickbeltSlot == null && array4[l].curMount == null)
+                {
+                    UnityEngine.Object.Destroy(array4[l].gameObject);
+                }
+            }
+
+            return false;
+        }
+
+        static bool ClearExistingSaveableObjectsPrefix(FVRWristMenuSection_CleanUp __instance, bool ClearNonSaveLoadable)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // Don't want to clear scene if in init scene spawn vault file routine
+            if (!SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine)
+            {
+                FVRPhysicalObject[] array = UnityEngine.Object.FindObjectsOfType<FVRPhysicalObject>();
+                for (int i = array.Length - 1; i >= 0; i--)
+                {
+                    FVRPhysicalObject fvrphysicalObject = array[i];
+                    H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array[i], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<H3MP_TrackedItem>();
+                    if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
+                        !(fvrphysicalObject == null) && fvrphysicalObject.gameObject.activeSelf && !fvrphysicalObject.IsHeld && !(fvrphysicalObject.QuickbeltSlot != null) && !(fvrphysicalObject.ObjectWrapper == null) && !(fvrphysicalObject.gameObject.transform.parent != null) && (fvrphysicalObject.GetIsSaveLoadable() || !ClearNonSaveLoadable) && IM.HasSpawnedID(fvrphysicalObject.ObjectWrapper.SpawnedFromId))
+                    {
+                        UnityEngine.Object.Destroy(fvrphysicalObject.GameObject);
+                    }
+                }
+            }
+
+            return false;
         }
     }
 
@@ -9379,8 +9624,6 @@ namespace H3MP
 
             inInitPrefabSpawn = true;
 
-            Mod.LogInfo("In init prefab spawn TRUE, scenelaoding: " + H3MP_GameManager.sceneLoading + ", control override: " + H3MP_GameManager.controlOverride + ", firstp ayer in scene isntance: " + H3MP_GameManager.firstPlayerInSceneInstance);
-
             // Prevent spawning if loading but we have control override, or we aren't loading but we were first in scene
             return (H3MP_GameManager.sceneLoading && H3MP_GameManager.controlOverride) || (!H3MP_GameManager.sceneLoading && H3MP_GameManager.firstPlayerInSceneInstance);
         }
@@ -12221,6 +12464,7 @@ namespace H3MP
         public static bool inDelayedInit;
         static bool skipNextSetPhaseTake;
         static bool TNHInitializing;
+        static bool TNHInitialized;
 
         public static bool inGenerateSentryPatrol;
         public static bool inGeneratePatrol;
@@ -12479,7 +12723,8 @@ namespace H3MP
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 return (TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
-                       (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit);
+                       (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.initializer != -1 && 
+                       (!H3MP_ThreadManager.host || !Mod.currentTNHInstance.initializationRequested));
             }
             return true;
         }
@@ -12506,19 +12751,16 @@ namespace H3MP
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                Mod.LogInfo("SetPhaseTakePrefix");
                 if (inDelayedInit)
                 {
-                    Mod.LogInfo("\tIn init");
                     if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                     {
-                        Mod.LogInfo("\t\tWe are initializer, continuing");
+                        TNHInitialized = true;
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         return true;
                     }
                     else
                     {
-                        Mod.LogInfo("\t\tWe are NOT initializer, init using data and skipping");
                         // We are controller finishing our init in a TNH instance that has already been inited
                         InitJoinTNH();
 
@@ -12529,16 +12771,13 @@ namespace H3MP
                 }
                 else
                 {
-                    Mod.LogInfo("\tNot in init");
                     if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                     {
-                        Mod.LogInfo("\t\tWe are controller, continuing");
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         return true;
                     }
                     else
                     {
-                        Mod.LogInfo("\t\tWe are NOT controller, processing data and skipping");
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
 
@@ -12628,10 +12867,8 @@ namespace H3MP
 
         static void SetPhaseTakePostfix()
         {
-            Mod.LogInfo("SetPhaseTakePostfix");
             if (skipNextSetPhaseTake)
             {
-                Mod.LogInfo("\tskip");
                 skipNextSetPhaseTake = false;
                 return;
             }
@@ -12641,7 +12878,6 @@ namespace H3MP
                 ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
                  (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit)))
             {
-                Mod.LogInfo("\tsending");
                 int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
                 List<int> activeSupplyPointIndicies = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(Mod.currentTNHInstance.manager);
 
@@ -12881,15 +13117,6 @@ namespace H3MP
         {
             inDelayedInit = true;
 
-            if (!___m_hasInit) 
-            {
-                Mod.LogInfo("DelayedInitPrefix");
-                if (Mod.currentTNHInstance != null)
-                {
-                    Mod.LogInfo("\tWe are in MP TNH, loading?: " + H3MP_GameManager.sceneLoading + ", controller: " + Mod.currentTNHInstance.controller+", currently playing count: "+ Mod.currentTNHInstance.currentlyPlaying.Count);
-                }
-            }
-
             if(Mod.currentTNHInstance == null)
             {
                 return true;
@@ -12898,11 +13125,9 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance.initializer == -1 && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
-                    Mod.LogInfo("\t\tNo initializer, we are controller");
                     // Not yet init, we are controller
                     if (H3MP_ThreadManager.host)
                     {
-                        Mod.LogInfo("\t\t\tWe are host, initializing");
                         // We are server, init right away
                         Mod.currentTNHInstance.initializer = 0;
                         TNHInitializing = true;
@@ -12910,7 +13135,6 @@ namespace H3MP
                     }
                     else if (!Mod.currentTNHInstance.initializationRequested) // Client, request initializtion if haven't already
                     {
-                        Mod.LogInfo("\t\t\tWe are client, requesting intialization perm");
                         H3MP_ClientSend.RequestTNHInitialization(Mod.currentTNHInstance.instance);
                         Mod.currentTNHInstance.initializationRequested = true;
                     }
@@ -12918,10 +13142,9 @@ namespace H3MP
                 }
                 else if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                 {
-                    // We have an initializer , it's us
+                    // We have an initializer, it's us
                     if (Mod.currentTNHInstance.initializationRequested)
                     {
-                        Mod.LogInfo("\t\t\tJust received perm");
                         // This is the first call to DelayedInit since we received initialization perm, set initializing
                         Mod.currentTNHInstance.initializationRequested = false;
                         TNHInitializing = true;
@@ -12940,9 +13163,10 @@ namespace H3MP
         static void DelayedInitPostfix(bool ___m_hasInit)
         {
             // If we were initializing and we are done
-            if (TNHInitializing)
+            if (TNHInitializing && TNHInitialized)
             {
-                TNHInitializing = false; 
+                TNHInitializing = false;
+                TNHInitialized = false; 
 
                 // Send to others
                 if (H3MP_ThreadManager.host)
@@ -13005,7 +13229,6 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
-            Mod.LogInfo("InitJoinTNH called");
             Mod.currentTNHInstance.manager.Phase = Mod.currentTNHInstance.phase;
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
@@ -13070,6 +13293,7 @@ namespace H3MP
                 // Set the hold
                 TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+
                 Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
 
                 object level = null;
@@ -13304,11 +13528,9 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance != null)
                 {
-                    Mod.LogInfo("ConfigureAsSystemNodePrefix called while in MP TNH, controller: "+ Mod.currentTNHInstance.controller+", delayed Init: "+ TNH_ManagerPatch.inDelayedInit+", TNH phase: "+ Mod.currentTNHInstance.phase);
                     if ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) || 
                         (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
                     {
-                        Mod.LogInfo("\tWe init");
                         int holdPointIndex = -1;
                         for(int i=0; i<__instance.M.HoldPoints.Count;++i)
                         {
@@ -13335,7 +13557,6 @@ namespace H3MP
                     }
                     else
                     {
-                        Mod.LogInfo("\tWe dont init, skip spawn entities");
                         spawnEntitiesSkip = true;
                     }
                 }
@@ -13571,15 +13792,12 @@ namespace H3MP
         static bool CompletePhasePrefix(TNH_HoldPoint __instance, List<Sosig> ___m_activeSosigs, TNH_HoldPointSystemNode ___m_systemNode, ref int ___m_phaseIndex,
                                         ref TNH_HoldPoint.HoldState ___m_state, ref float ___m_tickDownTransition)
         {
-            Mod.LogInfo("CompletePhasePrefix called");
-
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Transition;
 
                 if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
-                    Mod.LogInfo("\tController, sending then continuing");
                     if (H3MP_ThreadManager.host)
                     {
                         H3MP_ServerSend.TNHHoldCompletePhase(Mod.currentTNHInstance.instance);
@@ -13591,7 +13809,6 @@ namespace H3MP
                 }
                 else
                 {
-                    Mod.LogInfo("\tnon controller");
                     // Deletion burst
                     ___m_activeSosigs.Clear();
                     (Mod.TNH_Manager_m_miscEnemies.GetValue(Mod.currentTNHInstance.manager) as List<GameObject>).Clear();
@@ -13704,7 +13921,6 @@ namespace H3MP
 
         static void CompleteHoldPrefix()
         {
-            Mod.LogInfo("CompleteHoldPrefix called");
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 Mod.currentTNHInstance.holdOngoing = false;
@@ -13738,13 +13954,11 @@ namespace H3MP
 
         static void SpawnEnemyGroupPrefix()
         {
-            Mod.LogInfo("SpawnEnemyGroupPrefix: "+Environment.StackTrace);
             inSpawnEnemyGroup = true;
         }
 
         static void SpawnEnemyGroupPostfix()
         {
-            Mod.LogInfo("SpawnEnemyGroupPostfix");
             inSpawnEnemyGroup = false;
         }
 

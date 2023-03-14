@@ -19,7 +19,7 @@ namespace H3MP
             H3MP_GameManager.radarMode = packet.ReadInt();
             H3MP_GameManager.radarColor = packet.ReadBool();
 
-            Mod.LogInfo($"Message from server: {msg}");
+            Mod.LogInfo($"Message from server: {msg}", false);
 
             H3MP_Client.singleton.gotWelcome = true;
             H3MP_Client.singleton.ID = ID;
@@ -197,12 +197,10 @@ namespace H3MP
             }
 
             H3MP_TrackedItemData trackedItem = H3MP_Client.items[trackedID];
-            Mod.LogInfo("Client received order to set control of item at: " + trackedID);
 
             if (trackedItem != null)
             {
                 bool destroyed = false;
-                Mod.LogInfo("\tWe have the item, controller: "+ trackedItem.controller+" compared to us: "+H3MP_GameManager.ID+", new controller: "+ controllerID);
                 if (trackedItem.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
                     FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
@@ -225,20 +223,16 @@ namespace H3MP
                 }
                 else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
                 {
-                    Mod.LogInfo("\t\tWe take control");
                     trackedItem.localTrackedID = H3MP_GameManager.items.Count;
                     H3MP_GameManager.items.Add(trackedItem);
-                    Mod.LogInfo("\t\tAdded to items");
                     if (trackedItem.physicalItem == null)
                     {
-                        Mod.LogInfo("\t\t\tNo phys");
                         // If its is null and we receive this after having finishing loading, we only want to instantiate if it is in our current scene/instance
                         // Otherwise we send destroy order for the object
                         if (!H3MP_GameManager.sceneLoading && trackedItem.scene.Equals(H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
                         {
                             if (!trackedItem.awaitingInstantiation)
                             {
-                                Mod.LogInfo("Received control of item " + trackedItem.itemID + " with tracked ID " + trackedItem.trackedID + " but had no phys, instantiating");
                                 trackedItem.awaitingInstantiation = true;
                                 AnvilManager.Run(trackedItem.Instantiate());
                             }
@@ -269,7 +263,6 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    Mod.LogInfo("\t\t\tBounce control");
                                     trackedItem.RemoveFromLocal();
                                     debounce.Add(H3MP_GameManager.ID);
                                     H3MP_ClientSend.GiveControl(trackedID, controllerID, debounce);
@@ -316,7 +309,6 @@ namespace H3MP
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[trackedID];
 
-            Mod.LogInfo("Client received order to give control of sosig: " + trackedID + " to " + controllerID);
             if (trackedSosig != null)
             {
                 bool destroyed = false;
@@ -379,7 +371,6 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    Mod.LogInfo("\t\t\tBounce control");
                                     trackedSosig.RemoveFromLocal();
                                     debounce.Add(H3MP_GameManager.ID);
                                     H3MP_ClientSend.GiveSosigControl(trackedID, controllerID, debounce);
@@ -493,7 +484,6 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    Mod.LogInfo("\t\t\tBounce control");
                                     trackedAutoMeater.RemoveFromLocal();
                                     debounce.Add(H3MP_GameManager.ID);
                                     H3MP_ClientSend.GiveAutoMeaterControl(trackedID, controllerID, debounce);
@@ -597,7 +587,6 @@ namespace H3MP
                                 }
                                 else
                                 {
-                                    Mod.LogInfo("\t\t\tBounce control");
                                     trackedEncryption.RemoveFromLocal();
                                     debounce.Add(H3MP_GameManager.ID);
                                     H3MP_ClientSend.GiveEncryptionControl(trackedID, controllerID, debounce);
@@ -633,7 +622,6 @@ namespace H3MP
             bool removeFromList = packet.ReadBool();
 
             H3MP_TrackedItemData trackedItem = H3MP_Client.items[trackedID];
-            Mod.LogInfo("Client received order to destroy item at " + trackedID);
 
             if (trackedItem != null)
             {
@@ -642,6 +630,7 @@ namespace H3MP
                 trackedItem.removeFromListOnDestroy = removeFromList;
                 if (trackedItem.physicalItem != null)
                 {
+                    H3MP_GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
                     trackedItem.physicalItem.sendDestroy = false;
                     trackedItem.physicalItem.dontGiveControl = true;
                     GameObject.Destroy(trackedItem.physicalItem.gameObject);
@@ -2214,7 +2203,6 @@ namespace H3MP
 
         public static void RequestUpToDateObjects(H3MP_Packet packet)
         {
-            Mod.LogInfo("Client received request for up todate objects");
             // Only send requested up to date objects if not currently loading,
             // because even if we send the most up to date now they will be destroyed by the loading
             // This request was only made to us because the server thought our scene/instance to be our destination one but we are not there yet
@@ -2639,11 +2627,11 @@ namespace H3MP
             bool fireAtWill = packet.ReadBool();
             float dist = packet.ReadFloat();
 
-            Mod.LogInfo("Received auto meater firea ta will order, trackedID: " + trackedID + ", firearmIndex: " + firearmIndex+", automeaters length: "+ H3MP_Client.autoMeaters);
+            Mod.LogInfo("Received auto meater firea ta will order, trackedID: " + trackedID + ", firearmIndex: " + firearmIndex+", automeaters length: "+ H3MP_Client.autoMeaters, false);
             H3MP_TrackedAutoMeaterData trackedAutoMeater = H3MP_Client.autoMeaters[trackedID];
             if (trackedAutoMeater != null && trackedAutoMeater.physicalObject != null)
             {
-                Mod.LogInfo("\tFirearms count: "+ trackedAutoMeater.physicalObject.physicalAutoMeaterScript.FireControl.Firearms.Count);
+                Mod.LogInfo("\tFirearms count: "+ trackedAutoMeater.physicalObject.physicalAutoMeaterScript.FireControl.Firearms.Count, false);
                 ++AutoMeaterFirearmFireAtWillPatch.skip;
                 trackedAutoMeater.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[firearmIndex].SetFireAtWill(fireAtWill, dist);
                 --AutoMeaterFirearmFireAtWillPatch.skip;
@@ -3699,10 +3687,8 @@ namespace H3MP
             int instance = packet.ReadInt();
             int initializer = packet.ReadInt();
 
-            Mod.LogInfo("Received initializer "+initializer+" for instance: " + instance);
             if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
-                Mod.LogInfo("\tInstance exists setting initializer");
                 TNHInstance.initializer = initializer;
             }
         }

@@ -46,7 +46,7 @@ namespace H3MP
 
         public IEnumerator Instantiate()
         {
-            Mod.LogInfo("Instantiating AutoMeater " + trackedID);
+            Mod.LogInfo("Instantiating AutoMeater " + trackedID, false);
             string itemID = AutoMeaterIDToItemID(ID);
             yield return IM.OD[itemID].GetGameObjectAsync();
             GameObject autoMeaterPrefab = IM.OD[itemID].GetGameObject();
@@ -137,7 +137,7 @@ namespace H3MP
                 case 6:
                     return "TurburgertMFRed";
                 default:
-                    Mod.LogInfo("AutoMeaterIDToItemID: Invalid auto meater ID: " + ID);
+                    Mod.LogInfo("AutoMeaterIDToItemID: Invalid auto meater ID: " + ID, false);
                     return "Turburgert_SMG";
             }
         }
