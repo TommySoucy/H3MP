@@ -68,7 +68,7 @@ To host a server on a **local network**, anyone who wants to connect to you will
 
 To host a server **for public access**, anyone who wants to connect to you will have to set their config's **IP** to your machine's **public** IP address, which can be found by searching "what is my IP" on google.
 
-For public access, you will need to **port foward** the port you have set in your config.
+For public access, you will need to **port foward** the port you have set in your config. **_Important: Port forward needs to be both TCP and UDP._**
 
 In both cases, both host and client will have to set their port to the portforwarded one.
 
