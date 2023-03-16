@@ -353,6 +353,7 @@ namespace H3MP
         public static readonly MethodInfo AlloyAreaLight_get_Light = typeof(AlloyAreaLight).GetMethod("get_Light", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FVRWristMenuSection_CleanUp_ResetConfirm = typeof(FVRWristMenuSection_CleanUp).GetMethod("ResetConfirm", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FVRWristMenuSection_CleanUp_AskConfirm_CleanupEmpties = typeof(FVRWristMenuSection_CleanUp).GetMethod("AskConfirm_CleanupEmpties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FVRViveHand_SetGrabbityHovered = typeof(FVRViveHand).GetMethod("SetGrabbityHovered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
         // Debug
@@ -864,11 +865,15 @@ namespace H3MP
             harmony.Patch(sosigHandThrowPatchOriginal, new HarmonyMethod(sosigHandDropPatchPrefix));
 
             // GrabbityPatch
-            MethodInfo grabbityPatchOriginal = typeof(FVRViveHand).GetMethod("BeginFlick", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo grabbityPatchPrefix = typeof(GrabbityPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo grabbityPatchFlickOriginal = typeof(FVRViveHand).GetMethod("BeginFlick", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo grabbityPatchFlickPrefix = typeof(GrabbityPatch).GetMethod("FlickPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo grabbityPatchFindHoverOriginal = typeof(FVRViveHand).GetMethod("CastToFindHover", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo grabbityPatchFindHoverPrefix = typeof(GrabbityPatch).GetMethod("CastToFindHoverPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchVerify.Verify(grabbityPatchOriginal, harmony, false);
-            harmony.Patch(grabbityPatchOriginal, new HarmonyMethod(grabbityPatchPrefix));
+            PatchVerify.Verify(grabbityPatchFlickOriginal, harmony, false);
+            PatchVerify.Verify(grabbityPatchFindHoverOriginal, harmony, false);
+            harmony.Patch(grabbityPatchFlickOriginal, new HarmonyMethod(grabbityPatchFlickPrefix));
+            harmony.Patch(grabbityPatchFindHoverOriginal, new HarmonyMethod(grabbityPatchFindHoverPrefix));
 
             // GBeamerPatch
             MethodInfo GBeamerPatchObjectSearchOriginal = typeof(GBeamer).GetMethod("ObjectSearch", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -4180,10 +4185,10 @@ namespace H3MP
         }
     }
 
-    // Patches FVRViveHand.BeginFlick to take control of the object
+    // Patches FVRViveHand BeginFlick to take control of the object and CastToFindHover to consider uncontrolled items
     class GrabbityPatch
     {
-        static bool Prefix(FVRPhysicalObject o)
+        static bool FlickPrefix(FVRPhysicalObject o)
         {
             if (Mod.managerObject == null)
             {
@@ -4212,6 +4217,82 @@ namespace H3MP
             }
 
             return true;
+        }
+        
+        static bool CastToFindHoverPrefix(FVRViveHand __instance, RaycastHit ___m_grabbity_hit)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            bool flag = false;
+            if (Physics.Raycast(__instance.PointingTransform.position, __instance.Input.FilteredForward, out ___m_grabbity_hit, 10f, __instance.LM_Grabbity_Beam, QueryTriggerInteraction.Collide) && ___m_grabbity_hit.collider.attachedRigidbody != null)
+            {
+                FVRPhysicalObject component = ___m_grabbity_hit.collider.attachedRigidbody.gameObject.GetComponent<FVRPhysicalObject>();
+                if (component != null)
+                {
+                    H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(component, out trackedItem) ? trackedItem : component.GetComponent<H3MP_TrackedItem>();
+                    // If tracked and not under our control, check our own conditions, otherwise treat as normal
+                    if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID &&
+                        !trackedItem.data.underActiveControl && component.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                    {
+                        Mod.FVRViveHand_SetGrabbityHovered.Invoke(__instance, new object[] { component });
+                        flag = true;
+                    }
+                    else if(!component.IsHeld && component.IsDistantGrabbable() && component.QuickbeltSlot == null && !component.RootRigidbody.isKinematic && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                    {
+                        Mod.FVRViveHand_SetGrabbityHovered.Invoke(__instance, new object[] { component });
+                        flag = true;
+                    }
+                }
+            }
+            if (!flag && Physics.SphereCast(__instance.PointingTransform.position, 0.2f, __instance.PointingTransform.forward, out ___m_grabbity_hit, 10f, __instance.LM_Grabbity_BeamTrigger, QueryTriggerInteraction.Collide) && ___m_grabbity_hit.collider.attachedRigidbody != null)
+            {
+                FVRPhysicalObject component2 = ___m_grabbity_hit.collider.attachedRigidbody.gameObject.GetComponent<FVRPhysicalObject>();
+                if (component2 != null)
+                {
+                    H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(component2, out trackedItem) ? trackedItem : component2.GetComponent<H3MP_TrackedItem>();
+                    // If tracked and not under our control, check our own conditions, otherwise treat as normal
+                    if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID &&
+                        !trackedItem.data.underActiveControl && component2.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                    {
+                        Mod.FVRViveHand_SetGrabbityHovered.Invoke(__instance, new object[] { component2 });
+                        flag = true;
+                    }
+                    else if (!component2.IsHeld && component2.IsDistantGrabbable() && component2.QuickbeltSlot == null && !component2.RootRigidbody.isKinematic && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                    {
+                        Mod.FVRViveHand_SetGrabbityHovered.Invoke(__instance, new object[] { component2 });
+                        flag = true;
+                    }
+                }
+            }
+            if (!flag && Physics.SphereCast(__instance.PointingTransform.position, 0.2f, __instance.PointingTransform.forward, out ___m_grabbity_hit, 10f, __instance.LM_Grabbity_Beam, QueryTriggerInteraction.Collide) && ___m_grabbity_hit.collider.attachedRigidbody != null)
+            {
+                FVRPhysicalObject component3 = ___m_grabbity_hit.collider.attachedRigidbody.gameObject.GetComponent<FVRPhysicalObject>();
+                if (component3 != null && !component3.IsHeld && component3.IsDistantGrabbable() && component3.QuickbeltSlot == null && !component3.RootRigidbody.isKinematic && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                {
+                    H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(component3, out trackedItem) ? trackedItem : component3.GetComponent<H3MP_TrackedItem>();
+                    // If tracked and not under our control, check our own conditions, otherwise treat as normal
+                    if (trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID &&
+                        !trackedItem.data.underActiveControl && component3.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                    {
+                        Mod.FVRViveHand_SetGrabbityHovered.Invoke(__instance, new object[] { component3 });
+                        flag = true;
+                    }
+                    else if (!component3.IsHeld && component3.IsDistantGrabbable() && component3.QuickbeltSlot == null && !component3.RootRigidbody.isKinematic && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                    {
+                        Mod.FVRViveHand_SetGrabbityHovered.Invoke(__instance, new object[] { component3 });
+                        flag = true;
+                    }
+                }
+            }
+            if (!flag)
+            {
+                Mod.FVRViveHand_SetGrabbityHovered.Invoke(__instance, new object[] { null });
+            }
+
+            return false;
         }
     }
 
