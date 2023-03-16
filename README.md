@@ -57,17 +57,20 @@ In the wristmenu, some options are available:
 
 The **config** refers to a file in the H3MP folder called **Config.json** which contains a few important settings.
 
-- **_IP_**: The IP of the server you will be joining **or hosting from**
+- **_IP_**: The IP of the server you will be joining
 - **_Port_**: The port of the server you will be joining **or hosting from**
 - **_MaxClientCount_**: The maximum number of clients that can connect to your server
 - **_Username_**: The username you will have on the server
 
 ## Hosting
 
-To host a server on a **local network**, you can set your **IP** as your machine's local IP address, which can be found by running the "ipconfig" command in CMD.
+To host a server on a **local network**, anyone who wants to connect to you will have to set their config's **IP** to your machine's local IP address, which can be found by running the "ipconfig" command in CMD.
 
-To host a server **for public access**, you will need to set your **IP** as your machine's **public** IP address, which can be found by searching "what is my IP" on google.
+To host a server **for public access**, anyone who wants to connect to you will have to set their config's **IP** to your machine's **public** IP address, which can be found by searching "what is my IP" on google.
+
 For public access, you will need to **port foward** the port you have set in your config.
+
+In both cases, both host and client will have to set their port to the portforwarded one.
 
 To start the server, in the wristmenu, press H3MP->Host
 
