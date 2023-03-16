@@ -203,22 +203,31 @@ namespace H3MP
                 bool destroyed = false;
                 if (trackedItem.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
-                    FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
-
-                    H3MP_GameManager.EnsureUncontrolled(physObj);
-
-                    Mod.SetKinematicRecursive(physObj.transform, true);
-
-                    if (trackedItem.localTrackedID > -1 && trackedItem.localTrackedID < H3MP_GameManager.items.Count)
+                    if (H3MP_GameManager.IsControlled(trackedItem.physicalItem.physicalObject))
                     {
-                        H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                        H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                        H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                        trackedItem.localTrackedID = -1;
+                        // We are actively interacting with this item, don't give up control
+                        controllerID = H3MP_GameManager.ID;
+                        H3MP_ClientSend.GiveControl(trackedID, controllerID, null);
                     }
                     else
                     {
-                        Mod.LogWarning("GiveControl localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
+                        FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
+
+                        H3MP_GameManager.EnsureUncontrolled(physObj);
+
+                        Mod.SetKinematicRecursive(physObj.transform, true);
+
+                        if (trackedItem.localTrackedID > -1 && trackedItem.localTrackedID < H3MP_GameManager.items.Count)
+                        {
+                            H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                            H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                            H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                            trackedItem.localTrackedID = -1;
+                        }
+                        else
+                        {
+                            Mod.LogWarning("GiveControl localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
+                        }
                     }
                 }
                 else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
@@ -314,18 +323,27 @@ namespace H3MP
                 bool destroyed = false;
                 if (trackedSosig.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                    trackedSosig.localTrackedID = -1;
-
-                    if (trackedSosig.physicalObject != null)
+                    if (H3MP_GameManager.IsControlled(trackedSosig.physicalObject.physicalSosigScript))
                     {
-                        if (GM.CurrentAIManager != null)
+                        // We are actively interacting with this sosig, don't give up control
+                        controllerID = H3MP_GameManager.ID;
+                        H3MP_ClientSend.GiveSosigControl(trackedID, controllerID, null);
+                    }
+                    else
+                    {
+                        H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                        H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
+                        H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                        trackedSosig.localTrackedID = -1;
+
+                        if (trackedSosig.physicalObject != null)
                         {
-                            GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                            if (GM.CurrentAIManager != null)
+                            {
+                                GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                            }
+                            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
                         }
-                        trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
                     }
                 }
                 else if (trackedSosig.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
@@ -426,19 +444,28 @@ namespace H3MP
                 bool destroyed = false;
                 if (trackedAutoMeater.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
-                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-                    trackedAutoMeater.localTrackedID = -1;
-
-                    if (trackedAutoMeater.physicalObject != null)
+                    if (H3MP_GameManager.IsControlled(trackedAutoMeater.physicalObject.physicalAutoMeaterScript))
                     {
+                        // We are actively interacting with this AutoMeater, don't give up control
+                        controllerID = H3MP_GameManager.ID;
+                        H3MP_ClientSend.GiveAutoMeaterControl(trackedID, controllerID, null);
+                    }
+                    else
+                    {
+                        H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                        H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
+                        H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                        trackedAutoMeater.localTrackedID = -1;
 
-                        if (GM.CurrentAIManager != null)
+                        if (trackedAutoMeater.physicalObject != null)
                         {
-                            GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+
+                            if (GM.CurrentAIManager != null)
+                            {
+                                GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                            }
+                            trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
                         }
-                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
                     }
                 }
                 else if (trackedAutoMeater.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)

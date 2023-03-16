@@ -393,16 +393,24 @@ namespace H3MP
                 }
                 else if (trackedItem.controller == 0 && newController != 0)
                 {
-                    if (trackedItem.physicalItem != null) 
+                    if (H3MP_GameManager.IsControlled(trackedItem.physicalItem.physicalObject))
                     {
-                        Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
-
-                        H3MP_GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
+                        // We are actively interacting with this sosig, don't give up control
+                        newController = H3MP_GameManager.ID;
                     }
-                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    trackedItem.localTrackedID = -1;
+                    else
+                    {
+                        if (trackedItem.physicalItem != null)
+                        {
+                            Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
+
+                            H3MP_GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
+                        }
+                        H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
+                        H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
+                        H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
+                        trackedItem.localTrackedID = -1;
+                    }
                 }
 
                 if (!destroyed)
@@ -505,17 +513,25 @@ namespace H3MP
             }
             else if(trackedSosig.controller == 0 && newController != 0)
             {
-                H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                trackedSosig.localTrackedID = -1;
-                if (trackedSosig.physicalObject != null)
+                if (H3MP_GameManager.IsControlled(trackedSosig.physicalObject.physicalSosigScript))
                 {
-                    if (GM.CurrentAIManager != null)
+                    // We are actively interacting with this sosig, don't give up control
+                    newController = H3MP_GameManager.ID;
+                }
+                else
+                {
+                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
+                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
+                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
+                    trackedSosig.localTrackedID = -1;
+                    if (trackedSosig.physicalObject != null)
                     {
-                        GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                        if (GM.CurrentAIManager != null)
+                        {
+                            GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                        }
+                        trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
                     }
-                    trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
                 }
             }
 
@@ -618,17 +634,25 @@ namespace H3MP
             }
             else if(trackedAutoMeater.controller == 0 && newController != 0)
             {
-                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
-                H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-                trackedAutoMeater.localTrackedID = -1;
-                if (trackedAutoMeater.physicalObject != null)
+                if (H3MP_GameManager.IsControlled(trackedAutoMeater.physicalObject.physicalAutoMeaterScript))
                 {
-                    if (GM.CurrentAIManager != null)
+                    // We are actively interacting with this AutoMeater, don't give up control
+                    newController = H3MP_GameManager.ID;
+                }
+                else
+                {
+                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
+                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
+                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                    trackedAutoMeater.localTrackedID = -1;
+                    if (trackedAutoMeater.physicalObject != null)
                     {
-                        GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                        if (GM.CurrentAIManager != null)
+                        {
+                            GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
+                        }
+                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
                     }
-                    trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
                 }
             }
             if (!destroyed)
