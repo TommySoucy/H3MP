@@ -45,7 +45,7 @@ namespace H3MP
             udpListener = new UdpClient(port);
             udpListener.BeginReceive(UDPReceiveCallback, null);
 
-            Mod.LogInfo($"Server started on: {tcpListener.LocalEndpoint}", false);
+            Mod.LogInfo($"Server started, listening on port: {port}", false);
 
             // Just connected, sync if current scene is syncable
             if (!H3MP_GameManager.nonSynchronizedScenes.ContainsKey(H3MP_GameManager.scene))
