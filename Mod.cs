@@ -2208,10 +2208,10 @@ namespace H3MP
             MethodInfo CleanUpScene_EmptiesPrefix = typeof(CleanUpPatch).GetMethod("EmptiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo CleanUpScene_AllMagsOriginalSection = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_AllMags", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo CleanUpScene_AllMagsOriginalWrist = typeof(FVRWristMenu).GetMethod("CleanUpScene_AllMags", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo CleanUpScene_AllMagsPrefix = typeof(CleanUpPatch).GetMethod("EmptiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo CleanUpScene_AllMagsPrefix = typeof(CleanUpPatch).GetMethod("AllMagsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo CleanUpScene_GunsOriginalSection = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_Guns", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo CleanUpScene_GunsOriginalWrist = typeof(FVRWristMenu).GetMethod("CleanUpScene_Guns", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo CleanUpScene_GunsPrefix = typeof(CleanUpPatch).GetMethod("EmptiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo CleanUpScene_GunsPrefix = typeof(CleanUpPatch).GetMethod("GunsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo ClearExistingSaveableObjectsOriginal = typeof(VaultSystem).GetMethod("ClearExistingSaveableObjects", BindingFlags.Public | BindingFlags.Static);
             MethodInfo ClearExistingSaveableObjectsPrefix = typeof(CleanUpPatch).GetMethod("ClearExistingSaveableObjectsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
