@@ -353,6 +353,8 @@ namespace H3MP
         public static readonly MethodInfo AlloyAreaLight_get_Light = typeof(AlloyAreaLight).GetMethod("get_Light", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FVRWristMenuSection_CleanUp_ResetConfirm = typeof(FVRWristMenuSection_CleanUp).GetMethod("ResetConfirm", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FVRWristMenuSection_CleanUp_AskConfirm_CleanupEmpties = typeof(FVRWristMenuSection_CleanUp).GetMethod("AskConfirm_CleanupEmpties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FVRWristMenuSection_CleanUp_AskConfirm_CleanupAllMags = typeof(FVRWristMenuSection_CleanUp).GetMethod("AskConfirm_CleanupAllMags", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo FVRWristMenuSection_CleanUp_AskConfirm_CleanupGuns = typeof(FVRWristMenuSection_CleanUp).GetMethod("AskConfirm_CleanupGuns", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FVRViveHand_SetGrabbityHovered = typeof(FVRViveHand).GetMethod("SetGrabbityHovered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
@@ -2203,32 +2205,23 @@ namespace H3MP
             harmony.Patch(SetCurrentAIManagerPatchOriginal, null, new HarmonyMethod(SetCurrentAIManagerPatchPostfix));
 
             // CleanUpPatch
-            MethodInfo CleanUpScene_EmptiesOriginalSection = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_Empties", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo CleanUpScene_EmptiesOriginalWrist = typeof(FVRWristMenu).GetMethod("CleanUpScene_Empties", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo CleanUpScene_EmptiesPrefix = typeof(CleanUpPatch).GetMethod("EmptiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo CleanUpScene_AllMagsOriginalSection = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_AllMags", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo CleanUpScene_AllMagsOriginalWrist = typeof(FVRWristMenu).GetMethod("CleanUpScene_AllMags", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo CleanUpScene_AllMagsPrefix = typeof(CleanUpPatch).GetMethod("AllMagsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo CleanUpScene_GunsOriginalSection = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_Guns", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo CleanUpScene_GunsOriginalWrist = typeof(FVRWristMenu).GetMethod("CleanUpScene_Guns", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo CleanUpScene_GunsPrefix = typeof(CleanUpPatch).GetMethod("GunsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo ClearExistingSaveableObjectsOriginal = typeof(VaultSystem).GetMethod("ClearExistingSaveableObjects", BindingFlags.Public | BindingFlags.Static);
             MethodInfo ClearExistingSaveableObjectsPrefix = typeof(CleanUpPatch).GetMethod("ClearExistingSaveableObjectsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo CleanUpScene_EmptiesOriginal = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_Empties", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_EmptiesPrefix = typeof(CleanUpPatch).GetMethod("EmptiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo CleanUpScene_AllMagsOriginal = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_AllMags", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_AllMagsPrefix = typeof(CleanUpPatch).GetMethod("AllMagsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo CleanUpScene_GunsOriginal = typeof(FVRWristMenuSection_CleanUp).GetMethod("CleanUpScene_Guns", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo CleanUpScene_GunsPrefix = typeof(CleanUpPatch).GetMethod("GunsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(ClearExistingSaveableObjectsOriginal, harmony, true);
-            PatchVerify.Verify(CleanUpScene_EmptiesOriginalSection, harmony, true);
-            PatchVerify.Verify(CleanUpScene_EmptiesOriginalWrist, harmony, true);
-            PatchVerify.Verify(CleanUpScene_AllMagsOriginalSection, harmony, true);
-            PatchVerify.Verify(CleanUpScene_AllMagsOriginalWrist, harmony, true);
-            PatchVerify.Verify(CleanUpScene_GunsOriginalSection, harmony, true);
-            PatchVerify.Verify(CleanUpScene_GunsOriginalWrist, harmony, true);
+            PatchVerify.Verify(CleanUpScene_EmptiesOriginal, harmony, true);
+            PatchVerify.Verify(CleanUpScene_AllMagsOriginal, harmony, true);
+            PatchVerify.Verify(CleanUpScene_GunsOriginal, harmony, true);
             harmony.Patch(ClearExistingSaveableObjectsOriginal, new HarmonyMethod(ClearExistingSaveableObjectsPrefix));
-            harmony.Patch(CleanUpScene_EmptiesOriginalSection, new HarmonyMethod(CleanUpScene_EmptiesPrefix));
-            harmony.Patch(CleanUpScene_EmptiesOriginalWrist, new HarmonyMethod(CleanUpScene_EmptiesPrefix));
-            harmony.Patch(CleanUpScene_AllMagsOriginalSection, new HarmonyMethod(CleanUpScene_AllMagsPrefix));
-            harmony.Patch(CleanUpScene_AllMagsOriginalWrist, new HarmonyMethod(CleanUpScene_AllMagsPrefix));
-            harmony.Patch(CleanUpScene_GunsOriginalSection, new HarmonyMethod(CleanUpScene_GunsPrefix));
-            harmony.Patch(CleanUpScene_GunsOriginalWrist, new HarmonyMethod(CleanUpScene_GunsPrefix));
+            harmony.Patch(CleanUpScene_EmptiesOriginal, new HarmonyMethod(CleanUpScene_EmptiesPrefix));
+            harmony.Patch(CleanUpScene_AllMagsOriginal, new HarmonyMethod(CleanUpScene_AllMagsPrefix));
+            harmony.Patch(CleanUpScene_GunsOriginal, new HarmonyMethod(CleanUpScene_GunsPrefix));
 
 
             //// TeleportToPointPatch
@@ -3517,7 +3510,7 @@ namespace H3MP
     {
         static bool EmptiesPrefix(FVRWristMenuSection_CleanUp __instance)
         {
-            if(Mod.managerObject == null)
+            if (Mod.managerObject == null)
             {
                 return true;
             }
@@ -3530,11 +3523,12 @@ namespace H3MP
                 return false;
             }
             Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
+
             FVRFireArmMagazine[] array = UnityEngine.Object.FindObjectsOfType<FVRFireArmMagazine>();
             for (int i = array.Length - 1; i >= 0; i--)
             {
-                H3MP_TrackedItem trackedItem =  H3MP_GameManager.trackedItemByItem.TryGetValue(array[i], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<H3MP_TrackedItem>();
-                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) && 
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(array[i], out H3MP_TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<H3MP_TrackedItem>();
+                if (((H3MP_ThreadManager.host && (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == H3MP_GameManager.ID)) &&
                     !array[i].IsHeld && array[i].QuickbeltSlot == null && array[i].FireArm == null && array[i].m_numRounds == 0 && !array[i].IsIntegrated)
                 {
                     UnityEngine.Object.Destroy(array[i].gameObject);
@@ -3585,7 +3579,7 @@ namespace H3MP
             if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties.GetValue(__instance))
             {
                 Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
-                Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupEmpties.Invoke(__instance, null);
+                Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupAllMags.Invoke(__instance, null);
                 return false;
             }
             Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
@@ -3644,7 +3638,7 @@ namespace H3MP
             if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties.GetValue(__instance))
             {
                 Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
-                Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupEmpties.Invoke(__instance, null);
+                Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupGuns.Invoke(__instance, null);
                 return false;
             }
             Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
