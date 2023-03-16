@@ -4199,31 +4199,15 @@ namespace H3MP
             H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(o, out H3MP_TrackedItem currentItem) ? currentItem : o.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null)
             {
-                if (H3MP_ThreadManager.host)
+                if (trackedItem.data.controller != H3MP_Client.singleton.ID)
                 {
-                    if (trackedItem.data.controller != 0)
-                    {
-                        // Take control
+                    // Take control
 
-                        // Send to all clients
-                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
+                    // Send to all clients
+                    H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
 
-                        // Update locally
-                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                    }
-                }
-                else
-                {
-                    if (trackedItem.data.controller != H3MP_Client.singleton.ID)
-                    {
-                        // Take control
-
-                        // Send to all clients
-                        H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                        // Update locally
-                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                    }
+                    // Update locally
+                    Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                 }
             }
 
