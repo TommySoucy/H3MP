@@ -286,6 +286,8 @@ namespace H3MP
         public static readonly FieldInfo TAH_Reticle_m_trackedTransforms = typeof(TAH_Reticle).GetField("m_trackedTransforms", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo AIManager_m_knownEntities = typeof(AIManager).GetField("m_knownEntities", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties = typeof(FVRWristMenuSection_CleanUp).GetField("askConfirm_CleanupEmpties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRWristMenuSection_CleanUp_askConfirm_CleanupAllMags = typeof(FVRWristMenuSection_CleanUp).GetField("askConfirm_CleanupAllMags", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo FVRWristMenuSection_CleanUp_askConfirm_CleanupGuns = typeof(FVRWristMenuSection_CleanUp).GetField("askConfirm_CleanupGuns", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -3576,7 +3578,7 @@ namespace H3MP
             }
 
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, __instance.transform.position);
-            if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties.GetValue(__instance))
+            if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupAllMags.GetValue(__instance))
             {
                 Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
                 Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupAllMags.Invoke(__instance, null);
@@ -3635,7 +3637,7 @@ namespace H3MP
             }
 
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, __instance.transform.position);
-            if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties.GetValue(__instance))
+            if (!(bool)Mod.FVRWristMenuSection_CleanUp_askConfirm_CleanupGuns.GetValue(__instance))
             {
                 Mod.FVRWristMenuSection_CleanUp_ResetConfirm.Invoke(__instance, null);
                 Mod.FVRWristMenuSection_CleanUp_AskConfirm_CleanupGuns.Invoke(__instance, null);
