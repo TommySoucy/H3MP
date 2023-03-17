@@ -18,6 +18,26 @@ namespace H3MP
             H3MP_GameManager.nameplateMode = packet.ReadInt();
             H3MP_GameManager.radarMode = packet.ReadInt();
             H3MP_GameManager.radarColor = packet.ReadBool();
+            int maxHealthCount = packet.ReadInt();
+            for(int i=0; i < maxHealthCount; ++i)
+            {
+                string currentScene = packet.ReadString();
+                int instanceCount = packet.ReadInt();
+
+                Dictionary<int, KeyValuePair<float, int>> newDict = new Dictionary<int, KeyValuePair<float, int>>();
+                H3MP_GameManager.maxHealthByInstanceByScene.Add(currentScene, newDict);
+
+                for(int j=0; j < instanceCount; ++j)
+                {
+                    int currentInstance = packet.ReadInt();
+                    float original = packet.ReadFloat();
+                    int index = packet.ReadInt();
+
+                    newDict.Add(currentInstance, new KeyValuePair<float, int>(original, index));
+                }
+            }
+
+            H3MP_WristMenuSection.UpdateMaxHealth(H3MP_GameManager.scene, H3MP_GameManager.instance, -2, -1);
 
             Mod.LogInfo($"Message from server: {msg}", false);
 
@@ -3671,8 +3691,9 @@ namespace H3MP
             string scene = packet.ReadString();
             int instance = packet.ReadInt();
             int index = packet.ReadInt();
+            float original = packet.ReadFloat();
 
-            H3MP_WristMenuSection.UpdateMaxHealth(scene, instance, index);
+            H3MP_WristMenuSection.UpdateMaxHealth(scene, instance, index, original);
         }
     }
 }

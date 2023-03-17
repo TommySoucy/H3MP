@@ -3212,15 +3212,18 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
 
-            if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].controller == H3MP_GameManager.ID)
+            if (H3MP_Server.items[trackedID] != null)
             {
-                ++TNH_ShatterableCrateDamagePatch.skip;
-                H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
-                --TNH_ShatterableCrateDamagePatch.skip;
-            }
-            else
-            {
-                H3MP_ServerSend.ShatterableCrateDamage(trackedID, packet.ReadDamage());
+                if (H3MP_Server.items[trackedID].controller == H3MP_GameManager.ID)
+                {
+                    ++TNH_ShatterableCrateDamagePatch.skip;
+                    H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
+                    --TNH_ShatterableCrateDamagePatch.skip;
+                }
+                else
+                {
+                    H3MP_ServerSend.ShatterableCrateDamage(trackedID, packet.ReadDamage());
+                }
             }
         }
 

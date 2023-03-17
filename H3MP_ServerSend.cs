@@ -77,7 +77,7 @@ namespace H3MP
             }
         }
 
-        public static void Welcome(int toClient, string msg, bool colorByIFF, int nameplateMode, int radarMode, bool radarColor)
+        public static void Welcome(int toClient, string msg, bool colorByIFF, int nameplateMode, int radarMode, bool radarColor, Dictionary<string, Dictionary<int, KeyValuePair<float, int>>> maxHealthEntries)
         {
             using(H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.welcome))
             {
@@ -87,6 +87,18 @@ namespace H3MP
                 packet.Write(nameplateMode);
                 packet.Write(radarMode);
                 packet.Write(radarColor);
+                packet.Write(maxHealthEntries.Count);
+                foreach(KeyValuePair<string, Dictionary<int, KeyValuePair<float, int>>> sceneEntry in maxHealthEntries)
+                {
+                    packet.Write(sceneEntry.Key);
+                    packet.Write(sceneEntry.Value.Count);
+                    foreach(KeyValuePair<int, KeyValuePair<float, int>> instanceEntry in sceneEntry.Value)
+                    {
+                        packet.Write(instanceEntry.Key);
+                        packet.Write(instanceEntry.Value.Key);
+                        packet.Write(instanceEntry.Value.Value);
+                    }
+                }
 
                 SendTCPData(toClient, packet);
             }
@@ -3990,13 +4002,14 @@ namespace H3MP
             }
         }
 
-        public static void MaxHealth(string scene, int instance, int index, int clientID = 0)
+        public static void MaxHealth(string scene, int instance, int index, float original, int clientID = 0)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.maxHealth))
             {
                 packet.Write(scene);
                 packet.Write(instance);
                 packet.Write(index);
+                packet.Write(original);
 
                 if (clientID == 0)
                 {

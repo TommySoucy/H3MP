@@ -53,6 +53,7 @@ namespace H3MP
             pages = new Dictionary<int, List<KeyValuePair<FVRPointableButton, Vector3>>>();
 
             Image background = gameObject.AddComponent<Image>();
+            background.rectTransform.sizeDelta = new Vector2(500, 350);
             background.color = new Color(0.1f, 0.1f, 0.1f, 1);
 
             Text textOut = null;
@@ -61,25 +62,25 @@ namespace H3MP
             InitButton(new List<int>() { 0, 1, 2 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnOptionsClicked, "Options", out textOut);
             InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnCloseClicked, "Close\nserver", out textOut);
             InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnDisconnectClicked, "Disconnect", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-140, 140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnBackClicked, "Back", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnReloadConfigClicked, "Reload config", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnTNHReviveClicked, "TNH revive", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnColorClicked, "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex], out colorText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(130, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextColorClicked, ">", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-130, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousColorClicked, "<", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out IFFText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(130, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextIFFClicked, ">", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-130, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousIFFClicked, "<", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1000, 150), new Vector2(270, 45), OnColorByIFFClicked, "Color by IFF ("+H3MP_GameManager.colorByIFF+")", out colorByIFFText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-215, 140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnBackClicked, "Back", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnReloadConfigClicked, "Reload config", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnTNHReviveClicked, "TNH revive", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnColorClicked, "Current color: " + H3MP_GameManager.colorNames[H3MP_GameManager.colorIndex], out colorText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextColorClicked, ">", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousColorClicked, "<", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out IFFText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextIFFClicked, ">", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousIFFClicked, "<", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnColorByIFFClicked, "Color by IFF ("+H3MP_GameManager.colorByIFF+")", out colorByIFFText);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnNameplatesClicked, "Nameplates ("+ (H3MP_GameManager.nameplateMode == 0 ? "All" : (H3MP_GameManager.nameplateMode == 1 ? "Friendly Only" : "None"))+ ")", out nameplateText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarModeClicked, "Radar mode ("+ (H3MP_GameManager.radarMode == 0 ? "All" : (H3MP_GameManager.radarMode == 1 ? "Friendly Only" : "None"))+ ")", out radarModeText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarColorClicked, "Radar color IFF ("+ H3MP_GameManager.radarColor + ")", out radarColorText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnMaxHealthClicked, "Max health: "+ (H3MP_GameManager.maxHealthIndex == -1 ? "Not set" : H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex].ToString()), out maxHealthText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(130, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-130, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(140, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-140, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
 
         private void InitButton(List<int> pageIndices, List<Vector3> positions, Vector2 sizeDelta, Vector2 boxSize, ButtonClick clickMethod, string defaultText, out Text textOut)
@@ -672,7 +673,7 @@ namespace H3MP
                     H3MP_GameManager.maxHealthIndex = -1;
                 }
 
-                UpdateMaxHealth(H3MP_GameManager.scene, H3MP_GameManager.instance);
+                UpdateMaxHealth(H3MP_GameManager.scene, H3MP_GameManager.instance, H3MP_GameManager.maxHealthIndex, GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
             }
             else
             {
@@ -699,7 +700,7 @@ namespace H3MP
                     H3MP_GameManager.maxHealthIndex = H3MP_GameManager.maxHealths.Length;
                 }
 
-                UpdateMaxHealth(H3MP_GameManager.scene, H3MP_GameManager.instance);
+                UpdateMaxHealth(H3MP_GameManager.scene, H3MP_GameManager.instance, H3MP_GameManager.maxHealthIndex, GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
             }
             else
             {
@@ -707,15 +708,15 @@ namespace H3MP
             }
         }
 
-        public static void UpdateMaxHealth(string scene, int instance, int clientID = 0)
+        public static void UpdateMaxHealth(string scene, int instance, int index, float original, int clientID = 0)
         {
             // Tell others if necessary
             if (H3MP_ThreadManager.host)
             {
-                H3MP_ServerSend.MaxHealth(scene, instance, H3MP_GameManager.maxHealthIndex, clientID);
+                H3MP_ServerSend.MaxHealth(scene, instance, index, clientID);
             }
 
-            if (H3MP_GameManager.maxHealthIndex == -2)
+            if (index == -2)
             {
                 if (!H3MP_GameManager.overrideMaxHealthSetting &&
                     H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict) &&
@@ -723,7 +724,9 @@ namespace H3MP
                 {
                     H3MP_GameManager.maxHealthIndex = entry.Value;
 
+                    ++SetHealthThresholdPatch.skip;
                     GM.CurrentPlayerBody.SetHealthThreshold(H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex]);
+                    --SetHealthThresholdPatch.skip;
 
                     if (maxHealthText != null)
                     {
@@ -740,20 +743,27 @@ namespace H3MP
                     }
                 }
             }
-            else if (H3MP_GameManager.maxHealthIndex == -1)
+            else if (index == -1) 
             {
-                if (maxHealthText != null && H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
+                if (H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
                 {
-                    maxHealthText.text = "Max health: Not set";
+                    H3MP_GameManager.maxHealthIndex = -1;
+
+                    if (maxHealthText != null)
+                    {
+                        maxHealthText.text = "Max health: Not set";
+                    }
                 }
 
                 if (H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict) &&
                     instanceDict.TryGetValue(instance, out KeyValuePair<float, int> entry))
                 {
                     // Set our own if necessary
-                    if(H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
+                    if(GM.CurrentPlayerBody != null && H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
                     {
+                        ++SetHealthThresholdPatch.skip;
                         GM.CurrentPlayerBody.SetHealthThreshold(entry.Key);
+                        --SetHealthThresholdPatch.skip;
                     }
 
                     // Remove instance
@@ -768,28 +778,17 @@ namespace H3MP
             }
             else
             {
-                if (maxHealthText != null && H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
-                {
-                    maxHealthText.text = "Max health: " + H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex];
-                }
-
-                // Set our own if necessary
-                if (H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
-                {
-                    GM.CurrentPlayerBody.SetHealthThreshold(H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex]);
-                }
-
                 if (H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict))
                 {
                     if (instanceDict.TryGetValue(instance, out KeyValuePair<float, int> entry))
                     {
                         // Replace existing entry
-                        instanceDict[instance] = new KeyValuePair<float, int>(entry.Key, H3MP_GameManager.maxHealthIndex);
+                        instanceDict[instance] = new KeyValuePair<float, int>(entry.Key, index);
                     }
                     else
                     {
                         // Add new entry
-                        instanceDict.Add(instance, new KeyValuePair<float, int>(GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(), H3MP_GameManager.maxHealthIndex));
+                        instanceDict.Add(instance, new KeyValuePair<float, int>(original, index));
                     }
                 }
                 else
@@ -797,7 +796,25 @@ namespace H3MP
                     // Add new entry
                     Dictionary<int, KeyValuePair<float, int>> newDict = new Dictionary<int, KeyValuePair<float, int>>();
                     H3MP_GameManager.maxHealthByInstanceByScene.Add(scene, newDict);
-                    newDict.Add(instance, new KeyValuePair<float, int>(GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(), H3MP_GameManager.maxHealthIndex));
+                    newDict.Add(instance, new KeyValuePair<float, int>(original, index));
+                }
+
+                if (H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
+                {
+                    H3MP_GameManager.maxHealthIndex = index;
+
+                    if (maxHealthText != null)
+                    {
+                        maxHealthText.text = "Max health: " + H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex];
+                    }
+
+                    // Set our own if necessary
+                    if (GM.CurrentPlayerBody != null)
+                    {
+                        ++SetHealthThresholdPatch.skip;
+                        GM.CurrentPlayerBody.SetHealthThreshold(H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex]);
+                        --SetHealthThresholdPatch.skip;
+                    }
                 }
             }
         }

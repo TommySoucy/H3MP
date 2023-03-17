@@ -214,6 +214,8 @@ namespace H3MP
             nameplateMode = 1;
             radarMode = 0;
             radarColor = true;
+            maxHealthIndex = -1;
+            maxHealthByInstanceByScene.Clear();
 
             for (int i=0; i< H3MP_TrackedItem.trackedItemRefObjects.Length; ++i)
             {
@@ -1990,8 +1992,7 @@ namespace H3MP
             }
 
             // Set max health based on setting
-            maxHealthIndex = -2;
-            H3MP_WristMenuSection.UpdateMaxHealth(scene, instance);
+            H3MP_WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
         }
 
         // MOD: When a client takes control of an item that is under our control, we will need to make sure that we are not 
@@ -2247,8 +2248,7 @@ namespace H3MP
                 ClearUnawoken();
 
                 // Set max health based on setting
-                maxHealthIndex = -2;
-                H3MP_WristMenuSection.UpdateMaxHealth(scene, instance);
+                H3MP_WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
             }
         }
 

@@ -2217,13 +2217,20 @@ namespace H3MP
             MethodInfo CleanUpScene_GunsPrefix = typeof(CleanUpPatch).GetMethod("GunsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(ClearExistingSaveableObjectsOriginal, harmony, true);
-            PatchVerify.Verify(CleanUpScene_EmptiesOriginal, harmony, true);
-            PatchVerify.Verify(CleanUpScene_AllMagsOriginal, harmony, true);
-            PatchVerify.Verify(CleanUpScene_GunsOriginal, harmony, true);
+            PatchVerify.Verify(CleanUpScene_EmptiesOriginal, harmony, false);
+            PatchVerify.Verify(CleanUpScene_AllMagsOriginal, harmony, false);
+            PatchVerify.Verify(CleanUpScene_GunsOriginal, harmony, false);
             harmony.Patch(ClearExistingSaveableObjectsOriginal, new HarmonyMethod(ClearExistingSaveableObjectsPrefix));
             harmony.Patch(CleanUpScene_EmptiesOriginal, new HarmonyMethod(CleanUpScene_EmptiesPrefix));
             harmony.Patch(CleanUpScene_AllMagsOriginal, new HarmonyMethod(CleanUpScene_AllMagsPrefix));
             harmony.Patch(CleanUpScene_GunsOriginal, new HarmonyMethod(CleanUpScene_GunsPrefix));
+
+            // SetHealthThresholdPatch
+            MethodInfo SetHealthThresholdOriginal = typeof(FVRPlayerBody).GetMethod("SetHealthThreshold", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo SetHealthThresholdPrefix = typeof(SetHealthThresholdPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(SetHealthThresholdOriginal, harmony, false);
+            harmony.Patch(SetHealthThresholdOriginal, new HarmonyMethod(SetHealthThresholdPrefix));
 
 
             //// TeleportToPointPatch
@@ -3715,6 +3722,28 @@ namespace H3MP
         }
     }
 
+    // Patches FVRPlayerBody.SetHealthThreshold to override with max health setting if necessary
+    class SetHealthThresholdPatch
+    {
+        public static int skip;
+
+        static bool Prefix()
+        {
+            if (Mod.managerObject == null || skip > 0 || H3MP_GameManager.overrideMaxHealthSetting)
+            {
+                return true;
+            }
+
+            if (H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene, out Dictionary<int, KeyValuePair<float, int>> instancesDict) &&
+                instancesDict.ContainsKey(H3MP_GameManager.instance))
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
     // DEBUG PATCH Patches GameObject.SetActive
     class SetActivePatch
     {
@@ -3744,7 +3773,6 @@ namespace H3MP
             Mod.LogWarning("ChamberSetRound called with round type: "+ round.RoundType+", class: "+ round.RoundClass);
         }
     }
-
 #endregion
 
 #region Interaction Patches
