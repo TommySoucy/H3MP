@@ -644,10 +644,13 @@ namespace H3MP
         public void RemoveFromLocal()
         {
             // Manage unknown lists
-            H3MP_TrackedItem.unknownTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+            if (trackedID == -1)
+            {
+                H3MP_TrackedItem.unknownTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+            }
 
             if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.items.Count)
             {

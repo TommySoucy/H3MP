@@ -479,6 +479,7 @@ namespace H3MP
                 H3MP_ClientHandle.RadarMode,
                 H3MP_ClientHandle.RadarColor,
                 H3MP_ClientHandle.TNHInitializer,
+                H3MP_ClientHandle.MaxHealth,
             };
 
             // All vanilla scenes can be synced by default

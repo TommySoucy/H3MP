@@ -700,16 +700,19 @@ namespace H3MP
         public void RemoveFromLocal()
         {
             // Manage unknown lists
-            H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownSetIFFs.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownBodyStates.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownTNHKills.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownCurrentOrder.Remove(localWaitingIndex);
-            H3MP_TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
+            if (trackedID == -1)
+            {
+                H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownSetIFFs.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownBodyStates.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownTNHKills.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownCurrentOrder.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
+            }
 
             if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.sosigs.Count)
             {

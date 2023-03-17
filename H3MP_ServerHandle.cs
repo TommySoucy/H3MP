@@ -399,10 +399,7 @@ namespace H3MP
 
                         H3MP_GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
                     }
-                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    trackedItem.localTrackedID = -1;
+                    trackedItem.RemoveFromLocal();
                 }
 
                 if (!destroyed)
@@ -505,10 +502,7 @@ namespace H3MP
             }
             else if(trackedSosig.controller == 0 && newController != 0)
             {
-                H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                trackedSosig.localTrackedID = -1;
+                trackedSosig.RemoveFromLocal();
                 if (trackedSosig.physicalObject != null)
                 {
                     if (GM.CurrentAIManager != null)
@@ -618,10 +612,7 @@ namespace H3MP
             }
             else if(trackedAutoMeater.controller == 0 && newController != 0)
             {
-                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
-                H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-                trackedAutoMeater.localTrackedID = -1;
+                trackedAutoMeater.RemoveFromLocal();
                 if (trackedAutoMeater.physicalObject != null)
                 {
                     if (GM.CurrentAIManager != null)
@@ -722,10 +713,7 @@ namespace H3MP
             }
             else if(trackedEncryption.controller == 0 && newController != 0)
             {
-                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-                H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
-                H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
-                trackedEncryption.localTrackedID = -1;
+                trackedEncryption.RemoveFromLocal();
             }
 
             if (!destroyed)
@@ -765,12 +753,9 @@ namespace H3MP
                     destroyed = true;
                 }
 
-                if (trackedSosig.localTrackedID != -1)
+                if (!destroyed && trackedSosig.localTrackedID != -1)
                 {
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                    trackedSosig.localTrackedID = -1;
+                    trackedSosig.RemoveFromLocal();
                 }
 
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
@@ -805,11 +790,9 @@ namespace H3MP
                     destroyed = true;
                 }
 
-                if (trackedAutoMeater.localTrackedID != -1)
+                if (!destroyed && trackedAutoMeater.localTrackedID != -1)
                 {
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
-                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                    trackedAutoMeater.RemoveFromLocal();
                 }
 
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
@@ -844,11 +827,9 @@ namespace H3MP
                     destroyed = true;
                 }
 
-                if (trackedEncryption.localTrackedID != -1)
+                if (!destroyed && trackedEncryption.localTrackedID != -1)
                 {
-                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
-                    H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+                    trackedEncryption.RemoveFromLocal();
                 }
 
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
@@ -884,12 +865,9 @@ namespace H3MP
                     destroyed = true;
                 }
 
-                if (trackedItem.localTrackedID != -1)
+                if (!destroyed && trackedItem.localTrackedID != -1)
                 {
-                    H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    trackedItem.localTrackedID = -1;
+                    trackedItem.RemoveFromLocal();
                 }
 
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here

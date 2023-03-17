@@ -209,17 +209,7 @@ namespace H3MP
 
                     Mod.SetKinematicRecursive(physObj.transform, true);
 
-                    if (trackedItem.localTrackedID > -1 && trackedItem.localTrackedID < H3MP_GameManager.items.Count)
-                    {
-                        H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                        H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                        H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                        trackedItem.localTrackedID = -1;
-                    }
-                    else
-                    {
-                        Mod.LogWarning("GiveControl localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
-                    }
+                    trackedItem.RemoveFromLocal();
                 }
                 else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
                 {
@@ -314,10 +304,7 @@ namespace H3MP
                 bool destroyed = false;
                 if (trackedSosig.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                    trackedSosig.localTrackedID = -1;
+                    trackedSosig.RemoveFromLocal();
 
                     if (trackedSosig.physicalObject != null)
                     {
@@ -426,10 +413,7 @@ namespace H3MP
                 bool destroyed = false;
                 if (trackedAutoMeater.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
-                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-                    trackedAutoMeater.localTrackedID = -1;
+                    trackedAutoMeater.RemoveFromLocal();
 
                     if (trackedAutoMeater.physicalObject != null)
                     {
@@ -539,10 +523,7 @@ namespace H3MP
                 bool destroyed = false;
                 if (trackedEncryption.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
-                    H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
-                    trackedEncryption.localTrackedID = -1;
+                    trackedEncryption.RemoveFromLocal();
                 }
                 else if (trackedEncryption.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
                 {
@@ -628,29 +609,22 @@ namespace H3MP
                 trackedItem.awaitingInstantiation = false;
 
                 trackedItem.removeFromListOnDestroy = removeFromList;
+                bool destroyed = false;
                 if (trackedItem.physicalItem != null)
                 {
                     H3MP_GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
                     trackedItem.physicalItem.sendDestroy = false;
                     trackedItem.physicalItem.dontGiveControl = true;
                     GameObject.Destroy(trackedItem.physicalItem.gameObject);
+                    destroyed = true;
                 }
 
-                if (trackedItem.controller == H3MP_Client.singleton.ID)
+                if (!destroyed && trackedItem.controller == H3MP_Client.singleton.ID)
                 {
-                    if (trackedItem.localTrackedID > -1 && trackedItem.localTrackedID < H3MP_GameManager.items.Count)
-                    {
-                        H3MP_GameManager.items[trackedItem.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                        H3MP_GameManager.items[trackedItem.localTrackedID].localTrackedID = trackedItem.localTrackedID;
-                        H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    }
-                    else
-                    {
-                        Mod.LogWarning("DestroyItem localtrackedID " + trackedItem.localTrackedID + " out of range!:\n" + Environment.StackTrace);
-                    }
+                    trackedItem.RemoveFromLocal();
                 }
 
-                if (removeFromList)
+                if (!destroyed && removeFromList)
                 {
                     H3MP_Client.items[trackedID] = null;
                     H3MP_GameManager.itemsByInstanceByScene[trackedItem.scene][trackedItem.instance].Remove(trackedID);
@@ -669,6 +643,7 @@ namespace H3MP
             {
                 trackedSosig.awaitingInstantiation = false;
                 trackedSosig.removeFromListOnDestroy = removeFromList;
+                bool destroyed = false;
                 if (trackedSosig.physicalObject != null)
                 {
                     H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosigScript);
@@ -682,17 +657,15 @@ namespace H3MP
                     }
                     trackedSosig.physicalObject.dontGiveControl = true;
                     GameObject.Destroy(trackedSosig.physicalObject.gameObject);
+                    destroyed = true;
                 }
 
-                if (trackedSosig.controller == H3MP_Client.singleton.ID)
+                if (!destroyed && trackedSosig.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                    trackedSosig.localTrackedID = -1;
+                    trackedSosig.RemoveFromLocal();
                 }
 
-                if (removeFromList)
+                if (!destroyed && removeFromList)
                 {
                     H3MP_Client.sosigs[trackedID] = null;
                     H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
@@ -711,22 +684,22 @@ namespace H3MP
             {
                 trackedAutoMeater.awaitingInstantiation = false;
                 trackedAutoMeater.removeFromListOnDestroy = removeFromList;
+                bool destroyed = false;
                 if (trackedAutoMeater.physicalObject != null)
                 {
                     H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(trackedAutoMeater.physicalObject.physicalAutoMeaterScript);
                     trackedAutoMeater.physicalObject.sendDestroy = false;
                     trackedAutoMeater.physicalObject.dontGiveControl = true;
                     GameObject.Destroy(trackedAutoMeater.physicalObject.gameObject);
+                    destroyed = true;
                 }
 
-                if (trackedAutoMeater.controller == H3MP_Client.singleton.ID)
+                if (!destroyed && trackedAutoMeater.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
-                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
+                    trackedAutoMeater.RemoveFromLocal();
                 }
 
-                if (removeFromList)
+                if (!destroyed && removeFromList)
                 {
                     H3MP_Client.autoMeaters[trackedID] = null;
                     H3MP_GameManager.autoMeatersByInstanceByScene[trackedAutoMeater.scene][trackedAutoMeater.instance].Remove(trackedID);
@@ -745,22 +718,22 @@ namespace H3MP
             {
                 trackedEncryption.awaitingInstantiation = false;
                 trackedEncryption.removeFromListOnDestroy = removeFromList;
+                bool destroyed = false;
                 if (trackedEncryption.physicalObject != null)
                 {
                     H3MP_GameManager.trackedEncryptionByEncryption.Remove(trackedEncryption.physicalObject.physicalEncryptionScript);
                     trackedEncryption.physicalObject.sendDestroy = false;
                     trackedEncryption.physicalObject.dontGiveControl = true;
                     GameObject.Destroy(trackedEncryption.physicalObject.gameObject);
+                    destroyed = true;
                 }
 
-                if (trackedEncryption.controller == H3MP_Client.singleton.ID)
+                if (!destroyed && trackedEncryption.controller == H3MP_Client.singleton.ID)
                 {
-                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-                    H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
-                    H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
+                    trackedEncryption.RemoveFromLocal();
                 }
 
-                if (removeFromList)
+                if (!destroyed && removeFromList)
                 {
                     H3MP_Client.encryptions[trackedID] = null;
                     H3MP_GameManager.encryptionsByInstanceByScene[trackedEncryption.scene][trackedEncryption.instance].Remove(trackedID);
@@ -3691,6 +3664,15 @@ namespace H3MP
             {
                 TNHInstance.initializer = initializer;
             }
+        }
+
+        public static void MaxHealth(H3MP_Packet packet)
+        {
+            string scene = packet.ReadString();
+            int instance = packet.ReadInt();
+            int index = packet.ReadInt();
+
+            H3MP_WristMenuSection.UpdateMaxHealth(scene, instance, index);
         }
     }
 }

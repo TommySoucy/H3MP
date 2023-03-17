@@ -1,9 +1,7 @@
 ﻿using FistVR;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -21,6 +19,7 @@ namespace H3MP
         public static Text nameplateText;
         public static Text radarModeText;
         public static Text radarColorText;
+        public static Text maxHealthText;
 
         public override void Enable()
         {
@@ -76,6 +75,9 @@ namespace H3MP
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnNameplatesClicked, "Nameplates ("+ (H3MP_GameManager.nameplateMode == 0 ? "All" : (H3MP_GameManager.nameplateMode == 1 ? "Friendly Only" : "None"))+ ")", out nameplateText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarModeClicked, "Radar mode ("+ (H3MP_GameManager.radarMode == 0 ? "All" : (H3MP_GameManager.radarMode == 1 ? "Friendly Only" : "None"))+ ")", out radarModeText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarColorClicked, "Radar color IFF ("+ H3MP_GameManager.radarColor + ")", out radarColorText);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnMaxHealthClicked, "Max health: "+ (H3MP_GameManager.maxHealthIndex == -1 ? "Not set" : H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex].ToString()), out maxHealthText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(130, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-130, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(140, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-140, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
@@ -644,6 +646,160 @@ namespace H3MP
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             SetPage(currentPage - 1);
+        }
+
+        private void OnMaxHealthClicked(Text textRef)
+        {
+            // Place holder
+        }
+
+        private void OnNextMaxHealthClicked(Text textRef)
+        {
+            if (Mod.managerObject == null)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
+                return;
+            }
+
+            if (H3MP_ThreadManager.host)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
+                ++H3MP_GameManager.maxHealthIndex;
+                if(H3MP_GameManager.maxHealthIndex >= H3MP_GameManager.maxHealths.Length)
+                {
+                    H3MP_GameManager.maxHealthIndex = -1;
+                }
+
+                UpdateMaxHealth(H3MP_GameManager.scene, H3MP_GameManager.instance);
+            }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+            }
+        }
+
+        private void OnPreviousMaxHealthClicked(Text textRef)
+        {
+            if (Mod.managerObject == null)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
+                return;
+            }
+
+            if (H3MP_ThreadManager.host)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
+                --H3MP_GameManager.maxHealthIndex;
+                if (H3MP_GameManager.maxHealthIndex < -1)
+                {
+                    H3MP_GameManager.maxHealthIndex = H3MP_GameManager.maxHealths.Length;
+                }
+
+                UpdateMaxHealth(H3MP_GameManager.scene, H3MP_GameManager.instance);
+            }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+            }
+        }
+
+        public static void UpdateMaxHealth(string scene, int instance, int clientID = 0)
+        {
+            // Tell others if necessary
+            if (H3MP_ThreadManager.host)
+            {
+                H3MP_ServerSend.MaxHealth(scene, instance, H3MP_GameManager.maxHealthIndex, clientID);
+            }
+
+            if (H3MP_GameManager.maxHealthIndex == -2)
+            {
+                if (!H3MP_GameManager.overrideMaxHealthSetting &&
+                    H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict) &&
+                    instanceDict.TryGetValue(instance, out KeyValuePair<float, int> entry))
+                {
+                    H3MP_GameManager.maxHealthIndex = entry.Value;
+
+                    GM.CurrentPlayerBody.SetHealthThreshold(H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex]);
+
+                    if (maxHealthText != null)
+                    {
+                        maxHealthText.text = "Max health: " + H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex];
+                    }
+                }
+                else
+                {
+                    H3MP_GameManager.maxHealthIndex = -1;
+
+                    if (maxHealthText != null)
+                    {
+                        maxHealthText.text = "Max health: Not set";
+                    }
+                }
+            }
+            else if (H3MP_GameManager.maxHealthIndex == -1)
+            {
+                if (maxHealthText != null && H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
+                {
+                    maxHealthText.text = "Max health: Not set";
+                }
+
+                if (H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict) &&
+                    instanceDict.TryGetValue(instance, out KeyValuePair<float, int> entry))
+                {
+                    // Set our own if necessary
+                    if(H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
+                    {
+                        GM.CurrentPlayerBody.SetHealthThreshold(entry.Key);
+                    }
+
+                    // Remove instance
+                    instanceDict.Remove(instance);
+
+                    // Remove scene if no more entries for it
+                    if (instanceDict.Count == 0)
+                    {
+                        H3MP_GameManager.maxHealthByInstanceByScene.Remove(scene);
+                    }
+                }
+            }
+            else
+            {
+                if (maxHealthText != null && H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
+                {
+                    maxHealthText.text = "Max health: " + H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex];
+                }
+
+                // Set our own if necessary
+                if (H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
+                {
+                    GM.CurrentPlayerBody.SetHealthThreshold(H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex]);
+                }
+
+                if (H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict))
+                {
+                    if (instanceDict.TryGetValue(instance, out KeyValuePair<float, int> entry))
+                    {
+                        // Replace existing entry
+                        instanceDict[instance] = new KeyValuePair<float, int>(entry.Key, H3MP_GameManager.maxHealthIndex);
+                    }
+                    else
+                    {
+                        // Add new entry
+                        instanceDict.Add(instance, new KeyValuePair<float, int>(GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(), H3MP_GameManager.maxHealthIndex));
+                    }
+                }
+                else
+                {
+                    // Add new entry
+                    Dictionary<int, KeyValuePair<float, int>> newDict = new Dictionary<int, KeyValuePair<float, int>>();
+                    H3MP_GameManager.maxHealthByInstanceByScene.Add(scene, newDict);
+                    newDict.Add(instance, new KeyValuePair<float, int>(GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(), H3MP_GameManager.maxHealthIndex));
+                }
+            }
         }
 
         private void SetPage(int index)

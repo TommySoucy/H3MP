@@ -7743,10 +7743,7 @@ namespace H3MP
                 }
                 if (data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.items[data.localTrackedID] = H3MP_GameManager.items[H3MP_GameManager.items.Count - 1];
-                    H3MP_GameManager.items[data.localTrackedID].localTrackedID = data.localTrackedID;
-                    H3MP_GameManager.items.RemoveAt(H3MP_GameManager.items.Count - 1);
-                    data.localTrackedID = -1;
+                    data.RemoveFromLocal();
                 }
             }
             else

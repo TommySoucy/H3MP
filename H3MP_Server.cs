@@ -352,10 +352,7 @@ namespace H3MP
                     else if(trackedSosig.controller == 0)
                     {
                         // Was us, give up control
-                        H3MP_GameManager.sosigs[trackedSosig.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                        H3MP_GameManager.sosigs[trackedSosig.localTrackedID].localTrackedID = trackedSosig.localTrackedID;
-                        H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                        trackedSosig.localTrackedID = -1;
+                        trackedSosig.RemoveFromLocal();
                         if (trackedSosig.physicalObject != null)
                         {
                             if (GM.CurrentAIManager != null)
@@ -477,10 +474,7 @@ namespace H3MP
                 else if (trackedAutoMeater.controller == 0)
                 {
                     // Was us, give up control
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                    H3MP_GameManager.autoMeaters[trackedAutoMeater.localTrackedID].localTrackedID = trackedAutoMeater.localTrackedID;
-                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-                    trackedAutoMeater.localTrackedID = -1;
+                    trackedAutoMeater.RemoveFromLocal();
                     if (trackedAutoMeater.physicalObject != null)
                     {
                         if (GM.CurrentAIManager != null)
@@ -586,10 +580,7 @@ namespace H3MP
                     else if (trackedEncryption.controller == 0)
                     {
                         // Was us, give up control
-                        H3MP_GameManager.encryptions[trackedEncryption.localTrackedID] = H3MP_GameManager.encryptions[H3MP_GameManager.encryptions.Count - 1];
-                        H3MP_GameManager.encryptions[trackedEncryption.localTrackedID].localTrackedID = trackedEncryption.localTrackedID;
-                        H3MP_GameManager.encryptions.RemoveAt(H3MP_GameManager.encryptions.Count - 1);
-                        trackedEncryption.localTrackedID = -1;
+                        trackedEncryption.RemoveFromLocal();
                     }
 
                     trackedEncryption.controller = TNHInstance.controller;

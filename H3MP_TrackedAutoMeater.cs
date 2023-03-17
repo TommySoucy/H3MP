@@ -110,10 +110,7 @@ namespace H3MP
                 }
                 if (data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.autoMeaters[data.localTrackedID] = H3MP_GameManager.autoMeaters[H3MP_GameManager.autoMeaters.Count - 1];
-                    H3MP_GameManager.autoMeaters[data.localTrackedID].localTrackedID = data.localTrackedID;
-                    H3MP_GameManager.autoMeaters.RemoveAt(H3MP_GameManager.autoMeaters.Count - 1);
-                    data.localTrackedID = -1;
+                    data.RemoveFromLocal();
                 }
             }
             else

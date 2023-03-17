@@ -157,7 +157,8 @@ namespace H3MP
         nameplateMode = 146,
         radarMode = 147,
         radarColor = 148,
-        TNHInitializer = 149
+        TNHInitializer = 149,
+        maxHealth = 150
     }
 
     /// <summary>Sent from client to server.</summary>

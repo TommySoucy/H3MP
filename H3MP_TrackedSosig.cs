@@ -155,10 +155,7 @@ namespace H3MP
                 }
                 if (data.localTrackedID != -1)
                 {
-                    H3MP_GameManager.sosigs[data.localTrackedID] = H3MP_GameManager.sosigs[H3MP_GameManager.sosigs.Count - 1];
-                    H3MP_GameManager.sosigs[data.localTrackedID].localTrackedID = data.localTrackedID;
-                    H3MP_GameManager.sosigs.RemoveAt(H3MP_GameManager.sosigs.Count - 1);
-                    data.localTrackedID = -1;
+                    data.RemoveFromLocal();
                 }
             }
             else

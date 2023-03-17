@@ -72,6 +72,10 @@ namespace H3MP
         public static int nameplateMode = 1; // 0: All, 1: Friendly only (same IFF), 2: None 
         public static int radarMode = 0; // 0: All, 1: Friendly only (same IFF), 2: None 
         public static bool radarColor = true; // True: Colored by IFF, False: Colored by color
+        public static bool overrideMaxHealthSetting = false; // Ignore max health setting, used by a mod if health shouldn't be set by max health setting
+        public static float[] maxHealths = new float[] { 1, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000 };
+        public static int maxHealthIndex = -1;
+        public static Dictionary<string, Dictionary<int, KeyValuePair<float, int>>> maxHealthByInstanceByScene = new Dictionary<string, Dictionary<int, KeyValuePair<float, int>>>();
 
         public static long ping = -1;
 
@@ -1984,6 +1988,10 @@ namespace H3MP
                     UpdatePlayerHidden(player.Value);
                 }
             }
+
+            // Set max health based on setting
+            maxHealthIndex = -2;
+            H3MP_WristMenuSection.UpdateMaxHealth(scene, instance);
         }
 
         // MOD: When a client takes control of an item that is under our control, we will need to make sure that we are not 
@@ -2237,6 +2245,10 @@ namespace H3MP
 
                 // Clear any of our tracked items that may not exist anymore
                 ClearUnawoken();
+
+                // Set max health based on setting
+                maxHealthIndex = -2;
+                H3MP_WristMenuSection.UpdateMaxHealth(scene, instance);
             }
         }
 

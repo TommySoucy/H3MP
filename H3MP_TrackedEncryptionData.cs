@@ -409,13 +409,16 @@ namespace H3MP
         public void RemoveFromLocal()
         {
             // Manage unknown lists
-            H3MP_TrackedEncryption.unknownControlTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedEncryption.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedEncryption.unknownInit.Remove(localWaitingIndex);
-            H3MP_TrackedEncryption.unknownSpawnGrowth.Remove(localWaitingIndex);
-            H3MP_TrackedEncryption.unknownResetGrowth.Remove(localWaitingIndex);
-            H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
-            H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
+            if (trackedID == -1)
+            {
+                H3MP_TrackedEncryption.unknownControlTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedEncryption.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedEncryption.unknownInit.Remove(localWaitingIndex);
+                H3MP_TrackedEncryption.unknownSpawnGrowth.Remove(localWaitingIndex);
+                H3MP_TrackedEncryption.unknownResetGrowth.Remove(localWaitingIndex);
+                H3MP_TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
+                H3MP_TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
+            }
 
             if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.encryptions.Count)
             {

@@ -291,8 +291,11 @@ namespace H3MP
         public void RemoveFromLocal()
         {
             // Manage unknown lists
-            H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localWaitingIndex);
-            H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+            if (trackedID == -1)
+            {
+                H3MP_TrackedAutoMeater.unknownControlTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedAutoMeater.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+            }
 
             if (localTrackedID > -1 && localTrackedID < H3MP_GameManager.autoMeaters.Count)
             {
