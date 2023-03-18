@@ -9622,9 +9622,40 @@ namespace H3MP
                         Mod.LogWarning("SpawnVaultFileRoutinePatch.FinishedRoutine object to be destroyed already null");
                         continue;
                     }
-                    ++H3MP_TrackedItem.skipDestroy;
+
+                    H3MP_TrackedItem trackedItem = null;
+                    H3MP_TrackedSosig trackedSosig = null;
+                    H3MP_TrackedAutoMeater trackedAutoMeater = null;
+                    H3MP_TrackedEncryption trackedEncryption = null;
+                    if(obj is GameObject)
+                    {
+                        GameObject go = obj as GameObject;
+                        if(go != null)
+                        {
+                            trackedItem = go.GetComponent<H3MP_TrackedItem>();
+                            trackedSosig = go.GetComponent<H3MP_TrackedSosig>();
+                            trackedAutoMeater = go.GetComponent<H3MP_TrackedAutoMeater>();
+                            trackedEncryption = go.GetComponent<H3MP_TrackedEncryption>();
+                        }
+                    }
+                    if(trackedItem != null)
+                    {
+                        trackedItem.skipFullDestroy = true;
+                    }
+                    if(trackedSosig != null)
+                    {
+                        trackedSosig.skipFullDestroy = true;
+                    }
+                    if(trackedAutoMeater != null)
+                    {
+                        trackedAutoMeater.skipFullDestroy = true;
+                    }
+                    if(trackedEncryption != null)
+                    {
+                        trackedEncryption.skipFullDestroy = true;
+                    }
+
                     UnityEngine.Object.Destroy(obj);
-                    --H3MP_TrackedItem.skipDestroy;
                 }
                 routineData.Remove(currentFile);
             }

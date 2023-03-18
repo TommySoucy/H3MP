@@ -21,6 +21,7 @@ namespace H3MP
         public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownResetGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
 
         public bool sendDestroy = true; // To prevent feeback loops
+        public bool skipDestroyProcessing;
         public bool skipFullDestroy;
         public bool dontGiveControl;
 
@@ -92,199 +93,141 @@ namespace H3MP
 
         private void OnDestroy()
         {
+            // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
             {
                 return;
             }
 
+            // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
             H3MP_GameManager.trackedEncryptionByEncryption.Remove(physicalEncryptionScript);
 
-            if (H3MP_ThreadManager.host)
-            {
-                if (H3MP_GameManager.giveControlOfDestroyed > 0 && !dontGiveControl)
-                {
-                    // We just want to give control of our Encryptions to another client (usually because leaving scene with other clients left inside)
-                    if (data.controller == 0 && H3MP_GameManager.TNHInstances.TryGetValue(H3MP_GameManager.instance, out H3MP_TNHInstance actualInstance))
-                    {
-                        int otherPlayer = -1;
-                        for(int i=0; i < actualInstance.currentlyPlaying.Count; ++i)
-                        {
-                            if (actualInstance.currentlyPlaying[i] != H3MP_GameManager.ID)
-                            {
-                                otherPlayer = actualInstance.currentlyPlaying[i];
-                                break;
-                            }
-                        }
+            // Have a flag in case we don't actually want to remove it from local after processing
+            // In case we can't detroy gobally because we are still waiting for a tracked ID for example
+            bool removeFromLocal = true;
 
+            // Check if we want to process sending, giving control, etc.
+            // We might want to skip just this part if the object was refused by the server
+            if (skipDestroyProcessing)
+            {
+                // Check if we want to give control of any destroyed objects
+                // This would be the case while we change scene, objects will be destroyed but if there are other clients
+                // in our previous scene/instance, we don't want to destroy the object globally, we want to give control of it to one of them
+                // We might receive an order to destroy an object while we have giveControlOfDestroyed > 0, if so dontGiveControl flag 
+                // explicitly says to destroy
+                if (H3MP_GameManager.giveControlOfDestroyed == 0 || dontGiveControl)
+                {
+                    DestroyGlobally(ref removeFromLocal);
+                }
+                else // We want to give control of this object instead of destroying it globally
+                {
+                    if (data.controller == H3MP_GameManager.ID)
+                    {
+                        // Find best potential host
+                        int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, H3MP_GameManager.playersAtLoadStart);
                         if (otherPlayer == -1)
                         {
-                            if (sendDestroy)
-                            {
-                                H3MP_ServerSend.DestroyEncryption(data.trackedID);
-                            }
-                            else
-                            {
-                                sendDestroy = true;
-                            }
-
-                            if (data.removeFromListOnDestroy && H3MP_Server.encryptions[data.trackedID] != null)
-                            {
-                                H3MP_Server.encryptions[data.trackedID] = null;
-                                H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
-                                H3MP_GameManager.encryptionsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
-                            }
+                            // No other best potential host, destroy globally
+                            DestroyGlobally(ref removeFromLocal);
                         }
-                        else
+                        else // We have a potential new host to give control to
                         {
-                            H3MP_ServerSend.GiveEncryptionControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
-
-                            // Also change controller locally
-                            data.controller = otherPlayer;
-                        }
-                    }
-                }
-                else
-                {
-                    if (sendDestroy)
-                    {
-                        H3MP_ServerSend.DestroyEncryption(data.trackedID);
-                    }
-                    else
-                    {
-                        sendDestroy = true;
-                    }
-
-                    if (data.removeFromListOnDestroy && H3MP_Server.encryptions[data.trackedID] != null)
-                    {
-                        H3MP_Server.encryptions[data.trackedID] = null;
-                        H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
-                        H3MP_GameManager.encryptionsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
-                    }
-                }
-                if (data.localTrackedID != -1)
-                {
-                    data.RemoveFromLocal();
-                }
-            }
-            else
-            {
-                bool removeFromLocal = true;
-                if (H3MP_GameManager.giveControlOfDestroyed > 0 && !dontGiveControl)
-                {
-                    if (data.controller == H3MP_Client.singleton.ID && H3MP_GameManager.TNHInstances.TryGetValue(H3MP_GameManager.instance, out H3MP_TNHInstance actualInstance))
-                    {
-                        int otherPlayer = -1;
-                        for (int i = 0; i < actualInstance.currentlyPlaying.Count; ++i)
-                        {
-                            if (actualInstance.currentlyPlaying[i] != H3MP_GameManager.ID)
+                            // Check if can give control
+                            if (data.trackedID > -1)
                             {
-                                otherPlayer = actualInstance.currentlyPlaying[i];
-                                break;
+                                // Give control with us as debounce because we know we are no longer eligible to control this object
+                                H3MP_ServerSend.GiveAutoMeaterControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
+
+                                // Also change controller locally
+                                data.controller = otherPlayer;
                             }
-                        }
-
-                        if (otherPlayer == -1)
-                        {
-                            if (sendDestroy)
+                            else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag
                             {
-                                if (data.trackedID == -1)
+                                // Tell destruction we want to keep this in local for later
+                                removeFromLocal = false;
+
+                                // Keep the control change in unknown so we can send it to others if we get a tracked ID
+                                if (unknownControlTrackedIDs.TryGetValue(data.localWaitingIndex, out int val))
                                 {
-                                    if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
+                                    if (val != otherPlayer)
                                     {
-                                        unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
+                                        unknownControlTrackedIDs[data.localWaitingIndex] = otherPlayer;
                                     }
-
-                                    // We want to keep it in local until we give destruction order
-                                    removeFromLocal = false;
-                                }
-                                else
-                                {
-                                    H3MP_ClientSend.DestroyEncryption(data.trackedID);
-
-                                    H3MP_Client.encryptions[data.trackedID] = null;
-                                    H3MP_GameManager.encryptionsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
-                                }
-                            }
-                            else
-                            {
-                                sendDestroy = true;
-                            }
-
-                            if (data.trackedID != -1 && data.trackedID != -2)
-                            {
-                                H3MP_Client.encryptions[data.trackedID] = null;
-                                H3MP_GameManager.encryptionsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
-                            }
-                        }
-                        else
-                        {
-                            if (data.trackedID == -1)
-                            {
-                                if (unknownControlTrackedIDs.ContainsKey(data.localWaitingIndex))
-                                {
-                                    unknownControlTrackedIDs[data.localWaitingIndex] = otherPlayer;
                                 }
                                 else
                                 {
                                     unknownControlTrackedIDs.Add(data.localWaitingIndex, otherPlayer);
                                 }
-
-                                // We want to keep it in local until we give control
-                                removeFromLocal = false;
-                            }
-                            else if (data.trackedID != -2)
-                            {
-                                H3MP_ClientSend.GiveEncryptionControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
-
-                                // Also change controller locally
-                                data.controller = otherPlayer;
                             }
                         }
                     }
-                }
-                else
-                {
-                    if (sendDestroy)
-                    {
-                        if (data.trackedID == -1)
-                        {
-                            if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
-                            {
-                                unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
-                            }
-
-                            // We want to keep it in local until we give destruction order
-                            removeFromLocal = false;
-                        }
-                        else
-                        {
-                            H3MP_ClientSend.DestroyEncryption(data.trackedID);
-
-                            if (data.removeFromListOnDestroy)
-                            {
-                                H3MP_Client.encryptions[data.trackedID] = null;
-                                H3MP_GameManager.encryptionsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        sendDestroy = true;
-                    }
-
-                    if(data.removeFromListOnDestroy && data.trackedID != -1 && data.trackedID != -2)
-                    {
-                        H3MP_Client.encryptions[data.trackedID] = null;
-                        H3MP_GameManager.encryptionsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
-                    }
-                }
-                if (removeFromLocal && data.localTrackedID != -1)
-                {
-                    data.RemoveFromLocal();
+                    // else, we don't control this object, it will simply be destroyed physically on our side
                 }
             }
 
+            // If we control this item, remove it from local lists
+            // Which has to be done no matter what OnDestroy because we will not have a physicalObject to control after
+            // We have either destroyed it or given control of it above
+            if (data.localTrackedID != -1 && removeFromLocal)
+            {
+                data.RemoveFromLocal();
+            }
+
+            // Reset relevant flags
             data.removeFromListOnDestroy = true;
+            sendDestroy = true;
+            skipDestroyProcessing = false;
+        }
+
+        private void DestroyGlobally(ref bool removeFromLocal)
+        {
+            // Check if can destroy globally
+            if (data.trackedID > -1)
+            {
+                // Check if want to send destruction
+                // We want skip just sending if we know we are the only one with this object, ex.: We destroying because server refused tracking it
+                if (sendDestroy)
+                {
+                    // Send destruction
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.DestroyEncryption(data.trackedID, data.removeFromListOnDestroy);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.DestroyEncryption(data.trackedID, data.removeFromListOnDestroy);
+                    }
+                }
+
+                // Remove from globals lists if we want
+                // We might not want like in the case of the object only being ordered to be destroyed on our side because
+                // a client brought it along with them when changing instance
+                if (data.removeFromListOnDestroy)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_Server.encryptions[data.trackedID] = null;
+                        H3MP_Server.availableEncryptionIndices.Add(data.trackedID);
+                    }
+                    else
+                    {
+                        H3MP_Client.encryptions[data.trackedID] = null;
+                    }
+
+                    H3MP_GameManager.encryptionsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
+                }
+            }
+            else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag
+            {
+                // Tell destruction we want to keep this in local for later
+                removeFromLocal = false;
+
+                // Keep the destruction in unknown so we can send it to others if we get a tracked ID
+                if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
+                {
+                    unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
+                }
+            }
         }
     }
 }

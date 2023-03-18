@@ -628,11 +628,10 @@ namespace H3MP
             {
                 trackedItem.awaitingInstantiation = false;
 
-                trackedItem.removeFromListOnDestroy = removeFromList;
                 bool destroyed = false;
                 if (trackedItem.physicalItem != null)
                 {
-                    H3MP_GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
+                    trackedItem.removeFromListOnDestroy = removeFromList;
                     trackedItem.physicalItem.sendDestroy = false;
                     trackedItem.physicalItem.dontGiveControl = true;
                     GameObject.Destroy(trackedItem.physicalItem.gameObject);
@@ -662,11 +661,10 @@ namespace H3MP
             if (trackedSosig != null)
             {
                 trackedSosig.awaitingInstantiation = false;
-                trackedSosig.removeFromListOnDestroy = removeFromList;
                 bool destroyed = false;
                 if (trackedSosig.physicalObject != null)
                 {
-                    H3MP_GameManager.trackedSosigBySosig.Remove(trackedSosig.physicalObject.physicalSosigScript);
+                    trackedSosig.removeFromListOnDestroy = removeFromList;
                     trackedSosig.physicalObject.sendDestroy = false;
                     foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
                     {
@@ -703,11 +701,10 @@ namespace H3MP
             if (trackedAutoMeater != null)
             {
                 trackedAutoMeater.awaitingInstantiation = false;
-                trackedAutoMeater.removeFromListOnDestroy = removeFromList;
                 bool destroyed = false;
                 if (trackedAutoMeater.physicalObject != null)
                 {
-                    H3MP_GameManager.trackedAutoMeaterByAutoMeater.Remove(trackedAutoMeater.physicalObject.physicalAutoMeaterScript);
+                    trackedAutoMeater.removeFromListOnDestroy = removeFromList;
                     trackedAutoMeater.physicalObject.sendDestroy = false;
                     trackedAutoMeater.physicalObject.dontGiveControl = true;
                     GameObject.Destroy(trackedAutoMeater.physicalObject.gameObject);
@@ -737,11 +734,10 @@ namespace H3MP
             if (trackedEncryption != null)
             {
                 trackedEncryption.awaitingInstantiation = false;
-                trackedEncryption.removeFromListOnDestroy = removeFromList;
                 bool destroyed = false;
                 if (trackedEncryption.physicalObject != null)
                 {
-                    H3MP_GameManager.trackedEncryptionByEncryption.Remove(trackedEncryption.physicalObject.physicalEncryptionScript);
+                    trackedEncryption.removeFromListOnDestroy = removeFromList;
                     trackedEncryption.physicalObject.sendDestroy = false;
                     trackedEncryption.physicalObject.dontGiveControl = true;
                     GameObject.Destroy(trackedEncryption.physicalObject.gameObject);

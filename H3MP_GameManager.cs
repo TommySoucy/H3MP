@@ -2373,7 +2373,6 @@ namespace H3MP
                                     {
                                         if (trackedItem.physicalItem != null)
                                         {
-                                            // TrackedItem.OnDestroy will handle removal from relevant lists
                                             Destroy(trackedItem.physicalItem.gameObject);
                                         }
                                         else

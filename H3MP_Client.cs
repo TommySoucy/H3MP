@@ -520,6 +520,8 @@ namespace H3MP
                 if (actualTrackedItem.physicalItem != null)
                 {
                     // Get rid of the item
+                    actualTrackedItem.physicalItem.skipDestroyProcessing = true;
+                    actualTrackedItem.trackedID = -2;
                     actualTrackedItem.physicalItem.sendDestroy = false;
                     Destroy(actualTrackedItem.physicalItem.gameObject);
                 }
@@ -668,6 +670,8 @@ namespace H3MP
                 if (actualTrackedSosig.physicalObject != null)
                 {
                     // Get rid of the object
+                    actualTrackedSosig.physicalObject.skipDestroyProcessing = true;
+                    actualTrackedSosig.trackedID = -2;
                     actualTrackedSosig.physicalObject.sendDestroy = false;
                     Destroy(actualTrackedSosig.physicalObject.gameObject);
                 }
@@ -792,6 +796,8 @@ namespace H3MP
                 if (actualTrackedAutoMeater.physicalObject != null)
                 {
                     // Get rid of the object
+                    actualTrackedAutoMeater.physicalObject.skipDestroyProcessing = true;
+                    actualTrackedAutoMeater.trackedID = -2;
                     actualTrackedAutoMeater.physicalObject.sendDestroy = false;
                     Destroy(actualTrackedAutoMeater.physicalObject.gameObject);
                 }
@@ -901,6 +907,8 @@ namespace H3MP
                 if (actualTrackedEncryption.physicalObject != null)
                 {
                     // Get rid of the object
+                    actualTrackedEncryption.physicalObject.skipDestroyProcessing = true;
+                    actualTrackedEncryption.trackedID = -2;
                     actualTrackedEncryption.physicalObject.sendDestroy = false;
                     Destroy(actualTrackedEncryption.physicalObject.gameObject);
                 }
