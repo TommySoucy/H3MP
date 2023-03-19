@@ -238,6 +238,7 @@ namespace H3MP
                                                                                 90,91,92,93,94,95,96,97,98,99};
 
             H3MP_TrackedItem.unknownTrackedIDs.Clear();
+            H3MP_TrackedItem.unknownParentWaitList.Clear();
             H3MP_TrackedItem.unknownControlTrackedIDs.Clear();
             H3MP_TrackedItem.unknownDestroyTrackedIDs.Clear();
             H3MP_TrackedItem.unknownParentTrackedIDs.Clear();
@@ -793,6 +794,7 @@ namespace H3MP
                                 {
                                     // Tell the server we need to add this item to global tracked items
                                     trackedItem.data.localWaitingIndex = H3MP_Client.localItemCounter++;
+                                    Mod.LogInfo("\tSyncTrackedItems client, waitingIndex: " + trackedItem.data.localWaitingIndex);
                                     H3MP_Client.waitingLocalItems.Add(trackedItem.data.localWaitingIndex, trackedItem.data);
                                     H3MP_ClientSend.TrackedItem(trackedItem.data);
                                 }
@@ -823,6 +825,7 @@ namespace H3MP
 
         private static H3MP_TrackedItem MakeItemTracked(FVRPhysicalObject physObj, H3MP_TrackedItemData parent)
         {
+            Mod.LogInfo("MakeItemTracked called on " + physObj.name + " with parent: " + (parent == null ? "null" : parent.itemID));
             H3MP_TrackedItem trackedItem = physObj.gameObject.AddComponent<H3MP_TrackedItem>();
             H3MP_TrackedItemData data = new H3MP_TrackedItemData();
             trackedItem.data = data;
@@ -843,6 +846,7 @@ namespace H3MP
 
             if (parent != null)
             {
+                Mod.LogInfo("\tHas parent");
                 data.parent = parent.trackedID;
                 if (parent.children == null)
                 {

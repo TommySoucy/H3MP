@@ -905,6 +905,7 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             int newParentID = packet.ReadInt();
 
+            Mod.LogInfo("Received order to set item " + H3MP_Server.items[trackedID].itemID + " at " + trackedID+" with waiting index: "+ H3MP_Server.items[trackedID].localWaitingIndex);
             H3MP_Server.items[trackedID].SetParent(newParentID);
 
             // Send to all other clients

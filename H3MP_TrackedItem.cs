@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static H3MP.H3MP_TrackedItem;
+using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -17,6 +18,7 @@ namespace H3MP
 
         // Unknown tracked ID queues
         public static Dictionary<uint, KeyValuePair<uint, bool>> unknownTrackedIDs = new Dictionary<uint, KeyValuePair<uint, bool>>();
+        public static Dictionary<uint, List<uint>> unknownParentWaitList = new Dictionary<uint, List<uint>>();
         public static Dictionary<uint, List<int>> unknownParentTrackedIDs = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
         public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
@@ -6707,6 +6709,11 @@ namespace H3MP
                 attachmentInterfaceUpdateFunc(asAttachment, ref modified);
             }
 
+            if(preIndex != currentMountIndex)
+            {
+                Mod.LogInfo("Attachment " + name + " mount changed from " + preIndex + " to " + currentMountIndex);
+            }
+
             return modified || (preIndex != currentMountIndex);
         }
 
@@ -6764,10 +6771,10 @@ namespace H3MP
                     }
                 }
 
-                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
                 if (mount != null && mount != asAttachment.curMount)
                 {
-                    ++data.ignoreParentChanged;
+                    Mod.LogInfo("Attachment " + name + " at "+data.trackedID+" and waiting: "+data.localWaitingIndex+" mount changed from " + preMountIndex + " to " + newData[0]);
                     if (asAttachment.curMount != null)
                     {
                         asAttachment.DetachFromMount();
@@ -6775,7 +6782,6 @@ namespace H3MP
 
                     asAttachment.AttachToMount(mount, true);
                     currentMountIndex = newData[0];
-                    --data.ignoreParentChanged;
                 }
             }
             else // We have mount index but no parent index
@@ -6783,9 +6789,8 @@ namespace H3MP
                 // Detach from any mount we are still on
                 if (asAttachment.curMount != null)
                 {
-                    ++data.ignoreParentChanged;
+                    Mod.LogInfo("Attachment " + name + " at "+data.trackedID+" and waiting: "+data.localWaitingIndex+" unmounted");
                     asAttachment.DetachFromMount();
-                    --data.ignoreParentChanged;
 
                     // Detach from mount will recover rigidbody, set as kinematic if not controller
                     if (data.controller != H3MP_GameManager.ID)
@@ -7819,6 +7824,7 @@ namespace H3MP
 
         private void OnTransformParentChanged()
         {
+            Mod.LogInfo("Parent changed on " + name);
             if (data.ignoreParentChanged > 0)
             {
                 return;
@@ -7826,6 +7832,7 @@ namespace H3MP
 
             if (data.controller == H3MP_GameManager.ID)
             {
+                Mod.LogInfo("\tWe control");
                 Transform currentParent = transform.parent;
                 H3MP_TrackedItem parentTrackedItem = null;
                 while (currentParent != null)
@@ -7839,17 +7846,19 @@ namespace H3MP
                 }
                 if (parentTrackedItem != null)
                 {
+                    Mod.LogInfo("\t\tGot parent");
                     // Handle case of unknown tracked IDs
-                    //      If ours is not yet known, put our local tracked ID in a wait dict with value as parent's LOCAL tracked ID if it is under our control
+                    //      If ours is not yet known, put our waiting index in a wait dict with value as parent's LOCAL tracked ID if it is under our control
                     //      and the actual tracked ID if not, when we receive the tracked ID we set the parent
                     //          Note that if the parent is under our control, we need to store the local tracked ID because we might not have its tracked ID yet either
                     //          If it is not under our control then we have guarantee that is has a tracked ID
                     //      If the parent's tracked ID is not yet known, put it in a wait dict where key is the local tracked ID of the parent,
                     //      and the value is a list of all children that must be attached to this parent once we know the parent's tracked ID
                     //          Note that if we do not know the parent's tracked ID, it is because it is under our control
-                    bool haveParentID = parentTrackedItem.data.trackedID != -1;
+                    bool haveParentID = parentTrackedItem.data.trackedID > -1;
                     if (data.trackedID == -1)
                     {
+                        Mod.LogInfo("\t\t\tNo tracked ID, storing in unknown"); 
                         KeyValuePair<uint, bool> parentIDPair = new KeyValuePair<uint, bool>(haveParentID ? (uint)parentTrackedItem.data.trackedID : parentTrackedItem.data.localWaitingIndex, haveParentID);
                         if (unknownTrackedIDs.ContainsKey(data.localWaitingIndex))
                         {
@@ -7859,11 +7868,25 @@ namespace H3MP
                         {
                             unknownTrackedIDs.Add(data.localWaitingIndex, parentIDPair);
                         }
+                        if (!haveParentID)
+                        {
+                            Mod.LogInfo("\t\t\t\tDon't have parent tracked ID, adding local waiting index to waitlist: " + parentTrackedItem.data.localWaitingIndex);
+                            if (unknownParentWaitList.TryGetValue(parentTrackedItem.data.localWaitingIndex, out List<uint> waitList))
+                            {
+                                waitList.Add(data.localWaitingIndex);
+                            }
+                            else
+                            {
+                                unknownParentWaitList.Add(parentTrackedItem.data.localWaitingIndex, new List<uint>() { data.localWaitingIndex });
+                            }
+                        }
                     }
                     else
                     {
-                        if(haveParentID)
+                        Mod.LogInfo("\t\t\tGot tracked ID");
+                        if (haveParentID)
                         {
+                            Mod.LogInfo("\t\t\t\tHave parent tracked ID");
                             if (parentTrackedItem.data.trackedID != data.parent)
                             {
                                 // We have a parent trackedItem and it is new
@@ -7883,6 +7906,7 @@ namespace H3MP
                         }
                         else
                         {
+                            Mod.LogInfo("\t\t\t\tDon't have parent tracked ID, storing in unknown");
                             if (unknownParentTrackedIDs.ContainsKey(parentTrackedItem.data.localWaitingIndex))
                             {
                                 unknownParentTrackedIDs[parentTrackedItem.data.localWaitingIndex].Add(data.trackedID);
@@ -7896,20 +7920,22 @@ namespace H3MP
                 }
                 else if (data.parent != -1)
                 {
+                    Mod.LogInfo("\t\tDid not find parent but have parent, need to unparent");
                     if (data.trackedID == -1)
                     {
-                        KeyValuePair<uint, bool> parentIDPair = new KeyValuePair<uint, bool>(uint.MaxValue, false);
-                        if (unknownTrackedIDs.ContainsKey(data.localWaitingIndex))
+                        Mod.LogInfo("\t\t\tDont have our tracked ID, removing from unknown");
+                        if(unknownTrackedIDs.TryGetValue(data.localWaitingIndex, out KeyValuePair<uint, bool> entry))
                         {
-                            unknownTrackedIDs[data.localWaitingIndex] = parentIDPair;
+                            if (!entry.Value && unknownParentWaitList.TryGetValue(entry.Key, out List<uint> waitlist))
+                            {
+                                waitlist.Remove(data.localWaitingIndex);
+                            }
                         }
-                        else
-                        {
-                            unknownTrackedIDs.Add(data.localWaitingIndex, parentIDPair);
-                        }
+                        unknownTrackedIDs.Remove(data.localWaitingIndex);
                     }
                     else
                     {
+                        Mod.LogInfo("\t\t\tHave our tracked ID, unsetting parent");
                         // We were detached from current parent
                         // Update other clients
                         if (H3MP_ThreadManager.host)
