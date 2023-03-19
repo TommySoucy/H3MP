@@ -467,7 +467,6 @@ namespace H3MP
 
         public void OnTrackedIDReceived()
         {
-            Mod.LogInfo("OnTrackedIDReceived: Received tracked ID " + trackedID + " for " + itemID + ", waiting at: " + localWaitingIndex);
             if (H3MP_TrackedItem.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 H3MP_ClientSend.DestroyItem(trackedID);
@@ -500,11 +499,9 @@ namespace H3MP
             }
             if (localTrackedID != -1 && H3MP_TrackedItem.unknownTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                Mod.LogInfo("\tunknownTrackedIDs: Received tracked ID " + trackedID + " for " + itemID + ", waiting at: " + localWaitingIndex);
                 KeyValuePair<uint, bool> parentPair = H3MP_TrackedItem.unknownTrackedIDs[localWaitingIndex];
                 if (parentPair.Value)
                 {
-                    Mod.LogInfo("\tHave parent tracked ID: "+parentPair.Key);
                     H3MP_TrackedItemData parentItemData = null;
                     if (H3MP_ThreadManager.host)
                     {
@@ -516,10 +513,8 @@ namespace H3MP
                     }
                     if (parentItemData != null)
                     {
-                        Mod.LogInfo("\t\tGot parent data");
                         if (parentItemData.trackedID != parent)
                         {
-                            Mod.LogInfo("\t\t\tParent different from current, setting new");
                             // We have a parent trackedItem and it is new
                             // Update other clients
                             if (H3MP_ThreadManager.host)
@@ -538,10 +533,8 @@ namespace H3MP
                 }
                 else
                 {
-                    Mod.LogInfo("\tDidn't have parent tracked ID: " + parentPair.Key);
                     if (parentPair.Key == uint.MaxValue)
                     {
-                        Mod.LogInfo("\t\tWe were detached from current parent, unsetting");
                         // We were detached from current parent
                         // Update other clients
                         if (H3MP_ThreadManager.host)
@@ -558,7 +551,6 @@ namespace H3MP
                     }
                     else // We received our tracked ID but not our parent's
                     {
-                        Mod.LogInfo("\t\tStill waiting for parent's tracked ID");
                         if (H3MP_TrackedItem.unknownParentTrackedIDs.ContainsKey(parentPair.Key))
                         {
                             H3MP_TrackedItem.unknownParentTrackedIDs[parentPair.Key].Add(trackedID);
@@ -578,16 +570,11 @@ namespace H3MP
             }
             if (localTrackedID != -1 && H3MP_TrackedItem.unknownParentWaitList.ContainsKey(localWaitingIndex))
             {
-                Mod.LogInfo("\tunknownParentWaitList: Received tracked ID " + trackedID + " for " + itemID + ", waiting at: " + localWaitingIndex);
                 List<uint> waitlist = H3MP_TrackedItem.unknownParentWaitList[localWaitingIndex];
-                Mod.LogInfo("\tGot wait list size: "+ waitlist.Count);
                 foreach(uint childID in waitlist)
                 {
-                    Mod.LogInfo("\t\tUpdate child: " + childID);
                     if (H3MP_TrackedItem.unknownTrackedIDs.TryGetValue(childID, out KeyValuePair<uint, bool> childEntry))
                     {
-                        Mod.LogInfo("\t\t\tGot child: "+childID+" entry, "+ childEntry.Key+":"+ childEntry.Value);
-
                         H3MP_TrackedItem.unknownTrackedIDs[childID] = new KeyValuePair<uint, bool>((uint)trackedID, true);
                     }
                 }
@@ -595,9 +582,7 @@ namespace H3MP
             }
             if (localTrackedID != -1 && H3MP_TrackedItem.unknownParentTrackedIDs.ContainsKey(localWaitingIndex))
             {
-                Mod.LogInfo("\tunknownParentTrackedIDs: Received tracked ID " + trackedID + " for " + itemID + ", waiting at: " + localWaitingIndex);
                 List<int> childrenList = H3MP_TrackedItem.unknownParentTrackedIDs[localWaitingIndex];
-                Mod.LogInfo("\tGot children list size: "+childrenList.Count);
                 H3MP_TrackedItemData[] arrToUse = null;
                 if (H3MP_ThreadManager.host)
                 {
@@ -609,10 +594,8 @@ namespace H3MP
                 }
                 foreach(int childID in childrenList)
                 {
-                    Mod.LogInfo("\t\tChecking child: " + childID);
                     if (arrToUse[childID] != null)
                     {
-                        Mod.LogInfo("\t\t\tGot child: "+childID+" data, setting");
                         // Update other clients
                         if (H3MP_ThreadManager.host)
                         {
@@ -657,28 +640,6 @@ namespace H3MP
                 }
 
                 H3MP_TrackedItem.unknownCrateHolding.Remove(localWaitingIndex);
-            }
-
-            if(localTrackedID != -1)
-            {
-                // Add to item tracking list
-                if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances))
-                {
-                    if (relevantInstances.TryGetValue(instance, out List<int> itemList))
-                    {
-                        itemList.Add(trackedID);
-                    }
-                    else
-                    {
-                        relevantInstances.Add(instance, new List<int>() { trackedID });
-                    }
-                }
-                else
-                {
-                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                    newInstances.Add(instance, new List<int>() { trackedID });
-                    H3MP_GameManager.itemsByInstanceByScene.Add(scene, newInstances);
-                }
             }
         }
 

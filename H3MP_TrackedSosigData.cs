@@ -673,28 +673,6 @@ namespace H3MP
 
                 H3MP_TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
             }
-
-            if (localTrackedID != -1)
-            {
-                // Add to sosig tracking list
-                if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances))
-                {
-                    if (relevantInstances.TryGetValue(instance, out List<int> sosigList))
-                    {
-                        sosigList.Add(trackedID);
-                    }
-                    else
-                    {
-                        relevantInstances.Add(instance, new List<int>() { trackedID });
-                    }
-                }
-                else
-                {
-                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                    newInstances.Add(instance, new List<int>() { trackedID });
-                    H3MP_GameManager.sosigsByInstanceByScene.Add(scene, newInstances);
-                }
-            }
         }
 
         public void RemoveFromLocal()

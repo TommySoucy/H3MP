@@ -264,28 +264,6 @@ namespace H3MP
                     RemoveFromLocal();
                 }
             }
-
-            if (localTrackedID != -1)
-            {
-                // Add to autoMeater tracking list
-                if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances))
-                {
-                    if (relevantInstances.TryGetValue(instance, out List<int> autoMeaterList))
-                    {
-                        autoMeaterList.Add(trackedID);
-                    }
-                    else
-                    {
-                        relevantInstances.Add(instance, new List<int>() { trackedID });
-                    }
-                }
-                else
-                {
-                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                    newInstances.Add(instance, new List<int>() { trackedID });
-                    H3MP_GameManager.autoMeatersByInstanceByScene.Add(scene, newInstances);
-                }
-            }
         }
 
         public void RemoveFromLocal()
