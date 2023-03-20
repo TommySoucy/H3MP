@@ -2577,11 +2577,18 @@ namespace H3MP
                     Mod.currentTNHInstance.spawnedStartEquip = true;
                     TNH_Manager M = GM.TNH_Manager;
                     TNH_CharacterDef C = M.C;
-                    Vector3 largeCaseSpawnPos = GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward * 0.8f;
-                    Vector3 smallCaseSpawnPos = GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward * 0.3f + Vector3.down * 0.3f;
-                    Vector3 shieldSpawnPos = GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward * 0.4f + Vector3.up * 0.3f;
-                    Vector3 headForwardNegXZero = GM.CurrentPlayerBody.Head.forward * -1;
-                    headForwardNegXZero.x = 0;
+                    Vector3 target = GM.CurrentPlayerBody.Head.position + Vector3.down * 0.5f;
+                    Vector3 projectedForward = Vector3.ProjectOnPlane(GM.CurrentPlayerBody.Head.forward, Vector3.up);
+                    Vector3 projectedRight = Vector3.ProjectOnPlane(GM.CurrentPlayerBody.Head.right, Vector3.up);
+                    Vector3 largeCaseSpawnPos = target + projectedForward * 0.8f;
+                    Vector3 smallCaseSpawnPos = target + projectedRight * 0.8f;
+                    Vector3 shieldSpawnPos = target - projectedRight * 0.8f;
+                    if (M.ItemSpawnerMode == TNH_ItemSpawnerMode.On)
+                    {
+                        M.ItemSpawner.transform.position = GM.CurrentPlayerBody.Head.position + projectedForward.normalized * 2;
+                        M.ItemSpawner.transform.rotation = Quaternion.LookRotation(-projectedForward, Vector3.up);
+                        M.ItemSpawner.SetActive(true);
+                    }
                     if (C.Has_Weapon_Primary)
                     {
                         TNH_CharacterDef.LoadoutEntry weapon_Primary = C.Weapon_Primary;
@@ -2601,7 +2608,7 @@ namespace H3MP
                             minAmmo = objectTableDef.MinAmmoCapacity;
                             maxAmmo = objectTableDef.MaxAmmoCapacity;
                         }
-                        GameObject gameObject = M.SpawnWeaponCase(M.Prefab_WeaponCaseLarge, largeCaseSpawnPos, headForwardNegXZero, weapon, weapon_Primary.Num_Mags_SL_Clips, weapon_Primary.Num_Rounds, minAmmo, maxAmmo, weapon_Primary.AmmoObjectOverride);
+                        GameObject gameObject = M.SpawnWeaponCase(M.Prefab_WeaponCaseLarge, largeCaseSpawnPos, -projectedForward, weapon, weapon_Primary.Num_Mags_SL_Clips, weapon_Primary.Num_Rounds, minAmmo, maxAmmo, weapon_Primary.AmmoObjectOverride);
                         gameObject.GetComponent<TNH_WeaponCrate>().M = M;
                         gameObject.AddComponent<H3MP_TimerDestroyer>();
                     }
@@ -2624,7 +2631,7 @@ namespace H3MP
                             minAmmo2 = objectTableDef2.MinAmmoCapacity;
                             maxAmmo2 = objectTableDef2.MaxAmmoCapacity;
                         }
-                        GameObject gameObject2 = M.SpawnWeaponCase(M.Prefab_WeaponCaseSmall, smallCaseSpawnPos, headForwardNegXZero, weapon2, weapon_Secondary.Num_Mags_SL_Clips, weapon_Secondary.Num_Rounds, minAmmo2, maxAmmo2, weapon_Secondary.AmmoObjectOverride);
+                        GameObject gameObject2 = M.SpawnWeaponCase(M.Prefab_WeaponCaseSmall, smallCaseSpawnPos, -projectedRight, weapon2, weapon_Secondary.Num_Mags_SL_Clips, weapon_Secondary.Num_Rounds, minAmmo2, maxAmmo2, weapon_Secondary.AmmoObjectOverride);
                         gameObject2.GetComponent<TNH_WeaponCrate>().M = M;
                     }
                     if (C.Has_Weapon_Tertiary)
