@@ -699,6 +699,25 @@ namespace H3MP
                         // Add the sosig to client global list
                         sosigs[trackedSosig.trackedID] = actualTrackedSosig;
 
+                        // Add to sosig tracking list
+                        if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
+                            {
+                                sosigList.Add(trackedSosig.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
+                            H3MP_GameManager.sosigsByInstanceByScene.Add(trackedSosig.scene, newInstances);
+                        }
+
                         // Send queued up orders
                         actualTrackedSosig.OnTrackedIDReceived();
 
@@ -825,6 +844,25 @@ namespace H3MP
                         // Add the AutoMeater to client global list
                         autoMeaters[trackedAutoMeater.trackedID] = actualTrackedAutoMeater;
 
+                        // Add to autoMeater tracking list
+                        if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedAutoMeater.instance, out List<int> sosigList))
+                            {
+                                sosigList.Add(trackedAutoMeater.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
+                            H3MP_GameManager.autoMeatersByInstanceByScene.Add(trackedAutoMeater.scene, newInstances);
+                        }
+
                         // Send queued up orders
                         actualTrackedAutoMeater.OnTrackedIDReceived();
                     }
@@ -935,6 +973,25 @@ namespace H3MP
 
                         // Add the Encryption to client global list
                         encryptions[trackedEncryption.trackedID] = actualTrackedEncryption;
+
+                        // Add to encryption tracking list
+                        if (H3MP_GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedEncryption.instance, out List<int> sosigList))
+                            {
+                                sosigList.Add(trackedEncryption.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
+                            H3MP_GameManager.encryptionsByInstanceByScene.Add(trackedEncryption.scene, newInstances);
+                        }
 
                         // Send queued up orders
                         actualTrackedEncryption.OnTrackedIDReceived();

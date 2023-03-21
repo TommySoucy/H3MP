@@ -730,17 +730,14 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[trackedID];
-            Mod.LogInfo("Received order to destroy sosig: " + trackedID + ", removefrom list: " + removeFromList);
 
             if (trackedSosig != null)
             {
-                Mod.LogInfo("\tSosig exists");
                 trackedSosig.awaitingInstantiation = false;
 
                 bool destroyed = false;
                 if (trackedSosig.physicalObject != null)
                 {
-                    Mod.LogInfo("\t\tWe have phys, destroying");
                     trackedSosig.removeFromListOnDestroy = removeFromList;
                     trackedSosig.physicalObject.sendDestroy = false;
                     foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
@@ -763,7 +760,6 @@ namespace H3MP
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
                 if (removeFromList && H3MP_Server.sosigs[trackedID] != null && !destroyed)
                 {
-                    Mod.LogInfo("\t\tRemvoe fromlsit and not yet destroyed, removing from lists");
                     H3MP_Server.sosigs[trackedID] = null;
                     H3MP_Server.availableSosigIndices.Add(trackedID);
                     H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);

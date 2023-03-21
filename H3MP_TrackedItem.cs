@@ -7788,7 +7788,6 @@ namespace H3MP
                     }
                     else
                     {
-
                         H3MP_ClientSend.DestroyItem(data.trackedID, data.removeFromListOnDestroy);
                     }
                 }
