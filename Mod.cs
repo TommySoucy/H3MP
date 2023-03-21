@@ -12876,18 +12876,23 @@ namespace H3MP
 
         static bool SetPhaseTakePrefix()
         {
+            Mod.LogInfo("SetPhaseTakePrefix");
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
+                Mod.LogInfo("\tIn MP TNH");
                 if (inDelayedInit)
                 {
+                    Mod.LogInfo("\t\tIn DelayedInit");
                     if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                     {
+                        Mod.LogInfo("\t\t\tWe are initializer, continuing");
                         TNHInitialized = true;
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         return true;
                     }
                     else
                     {
+                        Mod.LogInfo("\t\t\tWe are not initializer, calling InitJoinTNH");
                         // We are controller finishing our init in a TNH instance that has already been inited
                         InitJoinTNH();
 
@@ -12898,13 +12903,16 @@ namespace H3MP
                 }
                 else
                 {
+                    Mod.LogInfo("\t\tNot in DelayedInit");
                     if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                     {
+                        Mod.LogInfo("\t\t\tWe are controller, continuing");
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         return true;
                     }
                     else
                     {
+                        Mod.LogInfo("\t\t\tWe are not controller, using data");
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
 
@@ -12994,6 +13002,9 @@ namespace H3MP
 
         static void SetPhaseTakePostfix()
         {
+            Mod.LogInfo("SetPhaseTakePostfix, MP TNH?: "+(Mod.managerObject != null && Mod.currentTNHInstance != null)+", to send: "+(Mod.currentTNHInstance == null || 
+                ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                 (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit))));
             if (skipNextSetPhaseTake)
             {
                 skipNextSetPhaseTake = false;
@@ -13005,6 +13016,7 @@ namespace H3MP
                 ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
                  (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit)))
             {
+                Mod.LogInfo("\tWe are in init and intializer, or not in init but controller, sending setp hase take");
                 int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
                 List<int> activeSupplyPointIndicies = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(Mod.currentTNHInstance.manager);
 
@@ -13242,6 +13254,7 @@ namespace H3MP
 
         static bool DelayedInitPrefix(bool ___m_hasInit)
         {
+            Mod.LogInfo("Delayed init prefix");
             inDelayedInit = true;
 
             if(Mod.currentTNHInstance == null)
@@ -13252,9 +13265,11 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance.initializer == -1 && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
+                    Mod.LogInfo("\tNo initializer, we are controller");
                     // Not yet init, we are controller
                     if (H3MP_ThreadManager.host)
                     {
+                        Mod.LogInfo("\t\tWe are host, taking init. H3MP_GameManager.sceneLoading?: "+ H3MP_GameManager.sceneLoading);
                         // We are server, init right away
                         Mod.currentTNHInstance.initializer = 0;
                         TNHInitializing = true;
@@ -13262,6 +13277,7 @@ namespace H3MP
                     }
                     else if (!Mod.currentTNHInstance.initializationRequested) // Client, request initializtion if haven't already
                     {
+                        Mod.LogInfo("\t\tWe are client, requesting init");
                         H3MP_ClientSend.RequestTNHInitialization(Mod.currentTNHInstance.instance);
                         Mod.currentTNHInstance.initializationRequested = true;
                     }
@@ -13269,9 +13285,11 @@ namespace H3MP
                 }
                 else if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                 {
+                    Mod.LogInfo("\tWe are inittializer. H3MP_GameManager.sceneLoading?: " + H3MP_GameManager.sceneLoading);
                     // We have an initializer, it's us
                     if (Mod.currentTNHInstance.initializationRequested)
                     {
+                        Mod.LogInfo("\t\tWe had requested it");
                         // This is the first call to DelayedInit since we received initialization perm, set initializing
                         Mod.currentTNHInstance.initializationRequested = false;
                         TNHInitializing = true;
@@ -13280,6 +13298,7 @@ namespace H3MP
                 }
                 else // We are not initializer and no initializer or not controller
                 {
+                    Mod.LogInfo("\tNot initializer and not initializer or not controller, sceneLoading: "+ H3MP_GameManager.sceneLoading + ", initializer: "+ Mod.currentTNHInstance.initializer+ ", initializationRequested: " + Mod.currentTNHInstance.initializationRequested);
                     // Wait until we have initializer before continuing
                     // Also check if not requested here because a server will set the initializer locally and set requested flag indicating that it is waiting for init
                     return !H3MP_GameManager.sceneLoading && Mod.currentTNHInstance.initializer != -1 && !Mod.currentTNHInstance.initializationRequested;
@@ -13289,9 +13308,11 @@ namespace H3MP
 
         static void DelayedInitPostfix(bool ___m_hasInit)
         {
+            Mod.LogInfo("Delayed init postfix");
             // If we were initializing and we are done
             if (TNHInitializing && TNHInitialized)
             {
+                Mod.LogInfo("\tWe were initializing and initialized, sending initialization completion signal");
                 TNHInitializing = false;
                 TNHInitialized = false; 
 
@@ -13356,6 +13377,7 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
+            Mod.LogInfo("Init joint TNH called");
             Mod.currentTNHInstance.manager.Phase = Mod.currentTNHInstance.phase;
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
@@ -13363,6 +13385,7 @@ namespace H3MP
             Mod.TNH_Manager_m_activeSupplyPointIndicies.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.activeSupplyPointIndices);
             if (Mod.currentTNHInstance.holdOngoing)
             {
+                Mod.LogInfo("\tHold ongoing");
                 // Set the hold
                 TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
@@ -13417,6 +13440,7 @@ namespace H3MP
             }
             else
             {
+                Mod.LogInfo("\tNo hold ongoing");
                 // Set the hold
                 TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);

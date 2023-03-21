@@ -118,7 +118,7 @@ namespace H3MP
 
             // Check if we want to process sending, giving control, etc.
             // We might want to skip just this part if the object was refused by the server
-            if (skipDestroyProcessing)
+            if (!skipDestroyProcessing)
             {
                 // Check if we want to give control of any destroyed objects
                 // This would be the case while we change scene, objects will be destroyed but if there are other clients

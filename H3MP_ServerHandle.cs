@@ -730,14 +730,17 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[trackedID];
+            Mod.LogInfo("Received order to destroy sosig: " + trackedID + ", removefrom list: " + removeFromList);
 
             if (trackedSosig != null)
             {
+                Mod.LogInfo("\tSosig exists");
                 trackedSosig.awaitingInstantiation = false;
 
                 bool destroyed = false;
                 if (trackedSosig.physicalObject != null)
                 {
+                    Mod.LogInfo("\t\tWe have phys, destroying");
                     trackedSosig.removeFromListOnDestroy = removeFromList;
                     trackedSosig.physicalObject.sendDestroy = false;
                     foreach (SosigLink link in trackedSosig.physicalObject.physicalSosigScript.Links)
@@ -760,6 +763,7 @@ namespace H3MP
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
                 if (removeFromList && H3MP_Server.sosigs[trackedID] != null && !destroyed)
                 {
+                    Mod.LogInfo("\t\tRemvoe fromlsit and not yet destroyed, removing from lists");
                     H3MP_Server.sosigs[trackedID] = null;
                     H3MP_Server.availableSosigIndices.Add(trackedID);
                     H3MP_GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
@@ -3967,10 +3971,12 @@ namespace H3MP
         public static void RequestTNHInitialization(int clientID, H3MP_Packet packet)
         {
             int instance = packet.ReadInt();
-            if(H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
+            Mod.LogInfo("TNH Initializion requested by " + clientID + " for " + instance);
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
                 if (TNHInstance.initializer == -1)
                 {
+                    Mod.LogInfo("\tNo initializer yet, granting init");
                     TNHInstance.initializer = clientID;
                     TNHInstance.initializationRequested = true; // We are waiting for init from this player
 
@@ -3984,10 +3990,12 @@ namespace H3MP
         {
             int instance = packet.ReadInt();
 
+            Mod.LogInfo("Received TNH Initializion by " + clientID + " for " + instance);
             if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
                 if(TNHInstance.initializer == clientID)
                 {
+                    Mod.LogInfo("\tThey were initializer, relaying");
                     TNHInstance.initializationRequested = false;
                     H3MP_ServerSend.TNHInitializer(instance, clientID);
                 }
