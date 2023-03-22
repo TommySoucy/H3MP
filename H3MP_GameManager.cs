@@ -2141,6 +2141,9 @@ namespace H3MP
                     controlOverride = true;
                     firstPlayerInSceneInstance = true;
                 }
+
+                // Clear any of our tracked items that have not awoken in the previous scene
+                ClearUnawoken();
             }
             else // Finished loading
             {
@@ -2230,12 +2233,40 @@ namespace H3MP
 
                     controlOverride = false;
 
-                    //// If client, tell server we are done loading
-                    ///// SHOULD NOT BE NEEDED ANYMORE SINCE WE NOW SEND OUR SCENE WHEN WE ARE DONE LOADING
-                    //if (!H3MP_ThreadManager.host)
-                    //{
-                    //    H3MP_ClientSend.DoneLoadingScene();
-                    //}
+                    // Instantiate any object we control that we have not yet instantiated
+                    // This could happen if we are given control of an objects while loading
+                    for (int i = 0; i < items.Count; ++i)
+                    {
+                        if (items[i].physicalItem == null && !items[i].awaitingInstantiation)
+                        {
+                            items[i].awaitingInstantiation = true;
+                            AnvilManager.Run(items[i].Instantiate());
+                        }
+                    }
+                    for (int i = 0; i < sosigs.Count; ++i)
+                    {
+                        if (sosigs[i].physicalObject == null && !sosigs[i].awaitingInstantiation)
+                        {
+                            sosigs[i].awaitingInstantiation = true;
+                            AnvilManager.Run(sosigs[i].Instantiate());
+                        }
+                    }
+                    for (int i = 0; i < autoMeaters.Count; ++i)
+                    {
+                        if (autoMeaters[i].physicalObject == null && !autoMeaters[i].awaitingInstantiation)
+                        {
+                            autoMeaters[i].awaitingInstantiation = true;
+                            AnvilManager.Run(autoMeaters[i].Instantiate());
+                        }
+                    }
+                    for (int i = 0; i < encryptions.Count; ++i)
+                    {
+                        if (encryptions[i].physicalObject == null && !encryptions[i].awaitingInstantiation)
+                        {
+                            encryptions[i].awaitingInstantiation = true;
+                            AnvilManager.Run(encryptions[i].Instantiate());
+                        }
+                    }
                 }
                 else // New scene not syncable, ensure all players are disabled regardless of scene
                 {
@@ -2244,9 +2275,6 @@ namespace H3MP
                         UpdatePlayerHidden(player.Value);
                     }
                 }
-
-                // Clear any of our tracked items that may not exist anymore
-                ClearUnawoken();
 
                 // Set max health based on setting
                 H3MP_WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
@@ -2261,28 +2289,28 @@ namespace H3MP
             // may be destroyed but their OnDestroy will not be called because they were never awoken, meaning they will still be in the items list
             for(int i=0; i < items.Count; ++i)
             {
-                if (items[i].physicalItem == null)
+                if ((items[i].physicalItem != null && !items[i].physicalItem.awoken) || (items[i].physicalItem == null && !items[i].awaitingInstantiation))
                 {
                     items[i].RemoveFromLocal();
                 }
             }
             for(int i=0; i < sosigs.Count; ++i)
             {
-                if (sosigs[i].physicalObject == null)
+                if ((sosigs[i].physicalObject != null && !sosigs[i].physicalObject.awoken) || (sosigs[i].physicalObject == null && !sosigs[i].awaitingInstantiation))
                 {
                     sosigs[i].RemoveFromLocal();
                 }
             }
             for(int i=0; i < autoMeaters.Count; ++i)
             {
-                if (autoMeaters[i].physicalObject == null)
+                if ((autoMeaters[i].physicalObject != null && !autoMeaters[i].physicalObject.awoken) || (autoMeaters[i].physicalObject == null && !autoMeaters[i].awaitingInstantiation))
                 {
                     autoMeaters[i].RemoveFromLocal();
                 }
             }
             for(int i=0; i < encryptions.Count; ++i)
             {
-                if (encryptions[i].physicalObject == null)
+                if ((encryptions[i].physicalObject != null && !encryptions[i].physicalObject.awoken) || (encryptions[i].physicalObject == null && !encryptions[i].awaitingInstantiation))
                 {
                     encryptions[i].RemoveFromLocal();
                 }
