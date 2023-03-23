@@ -128,13 +128,13 @@ namespace H3MP
                     Mod.Sosig_m_skirmishPoint.SetValue(physicalObject.physicalSosigScript, skirmishPoint);
                     Mod.Sosig_m_pathToPoint.SetValue(physicalObject.physicalSosigScript, pathToPoint);
                     Mod.Sosig_m_assaultPoint.SetValue(physicalObject.physicalSosigScript, assaultPoint);
-                    Mod.Sosig_TurnTowardsFacingDir.Invoke(physicalObject.physicalSosigScript, new object[] { faceTowards });
+                    Mod.Sosig_m_faceTowards.SetValue(physicalObject.physicalSosigScript, faceTowards);
                     break;
                 case Sosig.SosigOrder.Investigate:
                     physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
                     physicalObject.physicalSosigScript.UpdateGuardPoint(guardPoint);
                     Mod.Sosig_m_hardGuard.SetValue(physicalObject.physicalSosigScript, hardGuard);
-                    Mod.Sosig_TurnTowardsFacingDir.Invoke(physicalObject.physicalSosigScript, new object[] { faceTowards });
+                    Mod.Sosig_m_faceTowards.SetValue(physicalObject.physicalSosigScript, faceTowards);
                     break;
                 case Sosig.SosigOrder.SearchForEquipment:
                 case Sosig.SosigOrder.Wander:
@@ -143,7 +143,7 @@ namespace H3MP
                     break;
                 case Sosig.SosigOrder.Assault:
                     physicalObject.physicalSosigScript.CommandAssaultPoint(assaultPoint);
-                    Mod.Sosig_TurnTowardsFacingDir.Invoke(physicalObject.physicalSosigScript, new object[] { faceTowards });
+                    Mod.Sosig_m_faceTowards.SetValue(physicalObject.physicalSosigScript, faceTowards);
                     physicalObject.physicalSosigScript.SetAssaultSpeed(assaultSpeed);
                     break;
                 case Sosig.SosigOrder.Idle:

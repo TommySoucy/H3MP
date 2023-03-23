@@ -13017,16 +13017,17 @@ namespace H3MP
                  (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && !TNH_ManagerPatch.inDelayedInit)))
             {
                 Mod.LogInfo("\tWe are in init and intializer, or not in init but controller, sending setp hase take");
-                int curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
-                List<int> activeSupplyPointIndicies = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(Mod.currentTNHInstance.manager);
+                Mod.currentTNHInstance.curHoldIndex = (int)Mod.TNH_Manager_m_curHoldIndex.GetValue(Mod.currentTNHInstance.manager);
+                Mod.currentTNHInstance.activeSupplyPointIndices = (List<int>)Mod.TNH_Manager_m_activeSupplyPointIndicies.GetValue(Mod.currentTNHInstance.manager);
+
 
                 if (H3MP_ThreadManager.host)
                 {
-                    H3MP_ServerSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies, TNH_ManagerPatch.inDelayedInit);
+                    H3MP_ServerSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.curHoldIndex, Mod.currentTNHInstance.activeSupplyPointIndices, TNH_ManagerPatch.inDelayedInit);
                 }
                 else
                 {
-                    H3MP_ClientSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, curHoldIndex, activeSupplyPointIndicies, TNH_ManagerPatch.inDelayedInit);
+                    H3MP_ClientSend.TNHSetPhaseTake(Mod.currentTNHInstance.instance, Mod.currentTNHInstance.curHoldIndex, Mod.currentTNHInstance.activeSupplyPointIndices, TNH_ManagerPatch.inDelayedInit);
                 }
             }
         }
@@ -13368,6 +13369,7 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
+            Mod.LogInfo("InitJoinTNH called");
             Mod.currentTNHInstance.manager.Phase = Mod.currentTNHInstance.phase;
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
@@ -13429,33 +13431,41 @@ namespace H3MP
             }
             else
             {
+                Mod.LogInfo("0");
                 // Set the hold
                 TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
 
                 Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
 
+                Mod.LogInfo("0");
                 object level = null;
                 if (Mod.TNHTweakerAsmIdx > -1)
                 {
+                    Mod.LogInfo("1");
                     object character = ((IDictionary)Mod.TNHTweaker_LoadedTemplateManager_LoadedCharactersDict.GetValue(Mod.TNHTweaker_LoadedTemplateManager))[GM.TNH_Manager.C];
                     level = Mod.TNHTweaker_CustomCharacter_GetCurrentLevel.Invoke(character, new object[] { Mod.TNH_Manager_m_curLevel.GetValue(GM.TNH_Manager) as TNH_Progression.Level });
 
+                    Mod.LogInfo("1");
                     ((List<int>)Mod.TNHTweaker_TNHTweaker_SpawnedBossIndexes.GetValue(Mod.TNHTweaker_TNHTweaker)).Clear();
 
                     // Like we do for vanilla, we don't clear if not controller, we will just set it to the list in the TNH instance
                     //__instance.m_activeSupplyPointIndicies.Clear();
 
+                    Mod.LogInfo("1");
                     Mod.TNHTweaker_TNHTweaker_PreventOutfitFunctionality.SetValue(Mod.TNHTweaker_TNHTweaker, Mod.TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality.GetValue(character));
                 }
 
+                Mod.LogInfo("0");
                 //  Set supply points
                 bool spawnToken = true;
                 int panelIndex = 0;
                 if (Mod.TNHTweakerAsmIdx > -1)
                 {
+                    Mod.LogInfo("1");
                     for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
                     {
+                        Mod.LogInfo("2");
                         TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
 
                         Mod.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(Mod.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });
@@ -13466,10 +13476,13 @@ namespace H3MP
                 }
                 else
                 {
+                    Mod.LogInfo("3");
                     for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
                     {
+                        Mod.LogInfo("4");
                         TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
 
+                        Mod.LogInfo("4");
                         int num6 = i;
                         if (i > 0)
                         {
@@ -13480,41 +13493,51 @@ namespace H3MP
                                 panelIndex = 1;
                             }
                         }
+                        Mod.LogInfo("4");
                         TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
                         // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
                         tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
                         spawnToken = false;
+                        Mod.LogInfo("4");
                         TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
                         tnh_SupplyPoint.SetContact(contact);
+                        Mod.LogInfo("4");
                     }
                 }
 
+                Mod.LogInfo("0");
                 // Spawn at intial supply point
                 // We will already have been TPed to our char's starting point by delayed init
                 // Now check if valid, if not find first player to spawn on
                 if (Mod.currentTNHInstance.activeSupplyPointIndices != null)
                 {
+                    Mod.LogInfo("1");
                     if (Mod.currentTNHInstance.activeSupplyPointIndices.Contains(((TNH_PointSequence)Mod.TNH_Manager_m_curPointSequence.GetValue(Mod.currentTNHInstance.manager)).StartSupplyPointIndex))
                     {
+                        Mod.LogInfo("2");
                         // Starting point invalid, find a player to spawn on
                         if (Mod.currentTNHInstance.currentlyPlaying != null && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
+                            Mod.LogInfo("3");
                             Mod.TNHSpawnPoint = H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position;
                             GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position, true);
                         }
                         else
                         {
+                            Mod.LogInfo("4");
                             Mod.TNHSpawnPoint = GM.CurrentPlayerBody.transform.position;
                             Mod.LogWarning("Not valid supply point or player to spawn on, spawning on default start point, which might be active");
                         }
                     }
                 }
             }
+            Mod.LogInfo("00");
 
             // If this is the first time we join this game, give the player a button 
             // with which they can spawn their own starting equipment
             if (!Mod.currentTNHInstance.spawnedStartEquip && Mod.TNHStartEquipButton == null)
             {
+                Mod.LogInfo("1");
                 Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
                 Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
             }

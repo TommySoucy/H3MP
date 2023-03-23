@@ -3029,89 +3029,22 @@ namespace H3MP
 
             for(int i=0; i < count; ++i)
             {
-                int instance = packet.ReadInt();
-                H3MP_TNHInstance TNHInstance = new H3MP_TNHInstance(instance);
-                TNHInstance.controller = packet.ReadInt();
-                int playerIDCount = packet.ReadInt();
-                for(int j=0; j < playerIDCount; ++j)
-                {
-                    TNHInstance.playerIDs.Add(packet.ReadInt());
-                }
-                int currentlyPlayingCount = packet.ReadInt();
-                for(int j=0; j < currentlyPlayingCount; ++j)
-                {
-                    TNHInstance.currentlyPlaying.Add(packet.ReadInt());
-                }
-                int playedCount = packet.ReadInt();
-                for(int j=0; j < playedCount; ++j)
-                {
-                    TNHInstance.played.Add(packet.ReadInt());
-                }
-                int deadCount = packet.ReadInt();
-                for(int j=0; j < deadCount; ++j)
-                {
-                    TNHInstance.dead.Add(packet.ReadInt());
-                }
-                TNHInstance.tokenCount = packet.ReadInt();
-                TNHInstance.holdOngoing = packet.ReadBool();
-                TNHInstance.curHoldIndex = packet.ReadInt();
-                TNHInstance.level = packet.ReadInt();
-                TNHInstance.phase = (TNH_Phase)packet.ReadShort();
-                int activeSupplyPointIndicesCount = packet.ReadInt();
-                if (activeSupplyPointIndicesCount > 0)
-                {
-                    TNHInstance.activeSupplyPointIndices = new List<int>();
-                    for (int j = 0; j < activeSupplyPointIndicesCount; ++j)
-                    {
-                        TNHInstance.activeSupplyPointIndices.Add(packet.ReadInt());
-                    }
-                }
-                int raisedBarriersCount = packet.ReadInt();
-                if (raisedBarriersCount > 0)
-                {
-                    TNHInstance.raisedBarriers = new List<int>();
-                    for (int j = 0; j < raisedBarriersCount; ++j)
-                    {
-                        TNHInstance.raisedBarriers.Add(packet.ReadInt());
-                    }
-                }
-                int raisedBarrierPrefabIndicesCount = packet.ReadInt();
-                if (raisedBarrierPrefabIndicesCount > 0)
-                {
-                    TNHInstance.raisedBarrierPrefabIndices = new List<int>();
-                    for (int j = 0; j < raisedBarrierPrefabIndicesCount; ++j)
-                    {
-                        TNHInstance.raisedBarrierPrefabIndices.Add(packet.ReadInt());
-                    }
-                }
-                TNHInstance.letPeopleJoin = packet.ReadBool();
-                TNHInstance.progressionTypeSetting = packet.ReadInt();
-                TNHInstance.healthModeSetting = packet.ReadInt();
-                TNHInstance.equipmentModeSetting = packet.ReadInt();
-                TNHInstance.targetModeSetting = packet.ReadInt();
-                TNHInstance.AIDifficultyModifier = packet.ReadInt();
-                TNHInstance.radarModeModifier = packet.ReadInt();
-                TNHInstance.itemSpawnerMode = packet.ReadInt();
-                TNHInstance.backpackMode = packet.ReadInt();
-                TNHInstance.healthMult = packet.ReadInt();
-                TNHInstance.sosiggunShakeReloading = packet.ReadInt();
-                TNHInstance.TNHSeed = packet.ReadInt();
-                TNHInstance.levelID = packet.ReadString();
+                H3MP_TNHInstance TNHInstance = packet.ReadTNHInstance(true);
 
-                H3MP_GameManager.TNHInstances.Add(instance, TNHInstance);
+                H3MP_GameManager.TNHInstances.Add(TNHInstance.instance, TNHInstance);
 
-                if((TNHInstance.letPeopleJoin || TNHInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(instance))
+                if((TNHInstance.letPeopleJoin || TNHInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && !Mod.joinTNHInstances.ContainsKey(TNHInstance.instance))
                 {
                     GameObject newInstance = GameObject.Instantiate<GameObject>(Mod.TNHInstancePrefab, Mod.TNHInstanceList.transform);
-                    newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + instance;
+                    newInstance.transform.GetChild(0).GetComponent<Text>().text = "Instance " + TNHInstance.instance;
                     newInstance.SetActive(true);
 
                     FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
                     instanceButton.SetButton();
                     instanceButton.MaxPointingRange = 5;
-                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance); });
+                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(TNHInstance.instance); });
 
-                    Mod.joinTNHInstances.Add(instance, newInstance);
+                    Mod.joinTNHInstances.Add(TNHInstance.instance, newInstance);
                 }
             }
         }

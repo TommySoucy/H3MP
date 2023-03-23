@@ -995,7 +995,7 @@ namespace H3MP
         }
         /// <summary>Adds a H3MP_TNHInstance to the packet.</summary>
         /// <param name="instance">The H3MP_TNHInstance to add.</param>
-        public void Write(H3MP_TNHInstance instance)
+        public void Write(H3MP_TNHInstance instance, bool full = false)
         {
             Write(instance.instance);
             Write(instance.letPeopleJoin);
@@ -1011,12 +1011,101 @@ namespace H3MP
             Write(instance.sosiggunShakeReloading);
             Write(instance.TNHSeed);
             Write(instance.levelID);
-            Write(instance.playerIDs.Count);
-            for(int i=0; i < instance.playerIDs.Count; ++i)
+            if (instance.playerIDs == null || instance.playerIDs.Count == 0)
             {
-                Write(instance.playerIDs[i]);
+                Write(0);
+            }
+            else
+            {
+                Write(instance.playerIDs.Count);
+                for (int i = 0; i < instance.playerIDs.Count; ++i)
+                {
+                    Write(instance.playerIDs[i]);
+                }
             }
             Write(instance.initializer);
+            Write(instance.controller);
+
+            if (full)
+            {
+                if (instance.currentlyPlaying == null || instance.currentlyPlaying.Count == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(instance.currentlyPlaying.Count);
+                    foreach (int playerID in instance.currentlyPlaying)
+                    {
+                        Write(playerID);
+                    }
+                }
+                if (instance.played == null || instance.played.Count == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(instance.played.Count);
+                    foreach (int playerID in instance.played)
+                    {
+                        Write(playerID);
+                    }
+                }
+                if (instance.dead == null || instance.dead.Count == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(instance.dead.Count);
+                    foreach (int playerID in instance.dead)
+                    {
+                        Write(playerID);
+                    }
+                }
+                Write(instance.tokenCount);
+                Write(instance.holdOngoing);
+                Write(instance.curHoldIndex);
+                Write(instance.level);
+                Write((short)instance.phase);
+                if (instance.activeSupplyPointIndices == null || instance.activeSupplyPointIndices.Count == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(instance.activeSupplyPointIndices.Count);
+                    foreach (int index in instance.activeSupplyPointIndices)
+                    {
+                        Write(index);
+                    }
+                }
+                if (instance.raisedBarriers == null || instance.raisedBarriers.Count == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(instance.raisedBarriers.Count);
+                    foreach (int index in instance.raisedBarriers)
+                    {
+                        Write(index);
+                    }
+                }
+                if (instance.raisedBarrierPrefabIndices == null || instance.raisedBarrierPrefabIndices.Count == 0)
+                {
+                    Write(0);
+                }
+                else
+                {
+                    Write(instance.raisedBarrierPrefabIndices.Count);
+                    foreach (int prefabIndex in instance.raisedBarrierPrefabIndices)
+                    {
+                        Write(prefabIndex);
+                    }
+                }
+            }
         }
         /// <summary>Adds a TNH_Manager.SosigPatrolSquad to the packet.</summary>
         /// <param name="instance">The TNH_Manager.SosigPatrolSquad to add.</param>
@@ -1718,7 +1807,7 @@ namespace H3MP
 
         /// <summary>Reads a H3MP_TNHInstance from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public H3MP_TNHInstance ReadTNHInstance(bool _moveReadPos = true)
+        public H3MP_TNHInstance ReadTNHInstance(bool full = false, bool _moveReadPos = true)
         {
             int instanceID = ReadInt();
             bool letPeopleJoin = ReadBool();
@@ -1754,6 +1843,58 @@ namespace H3MP
             }
 
             instance.initializer = ReadInt();
+            instance.controller = ReadInt();
+
+            if (full)
+            {
+                int currentlyPlayingCount = ReadInt();
+                for(int i=0; i < currentlyPlayingCount; ++i)
+                {
+                    instance.currentlyPlaying.Add(ReadInt());
+                }
+                int playedCount = ReadInt();
+                for(int i=0; i < playedCount; ++i)
+                {
+                    instance.played.Add(ReadInt());
+                }
+                int deadCount = ReadInt();
+                for(int i=0; i < deadCount; ++i)
+                {
+                    instance.dead.Add(ReadInt());
+                }
+                instance.tokenCount = ReadInt();
+                instance.holdOngoing = ReadBool();
+                instance.curHoldIndex = ReadInt();
+                instance.level = ReadInt();
+                instance.phase = (TNH_Phase)ReadShort();
+                int activeSupplyPointIndicesCount = ReadInt();
+                if(activeSupplyPointIndicesCount > 0)
+                {
+                    instance.activeSupplyPointIndices = new List<int>();
+                }
+                for (int i = 0; i < activeSupplyPointIndicesCount; ++i)
+                {
+                    instance.activeSupplyPointIndices.Add(ReadInt());
+                }
+                int raisedBarriersCount = ReadInt();
+                if (raisedBarriersCount > 0)
+                {
+                    instance.raisedBarriers = new List<int>();
+                }
+                for (int i = 0; i < raisedBarriersCount; ++i)
+                {
+                    instance.raisedBarriers.Add(ReadInt());
+                }
+                int raisedBarrierPrefabIndicesCount = ReadInt();
+                if (raisedBarrierPrefabIndicesCount > 0)
+                {
+                    instance.raisedBarrierPrefabIndices = new List<int>();
+                }
+                for (int i = 0; i < raisedBarrierPrefabIndicesCount; ++i)
+                {
+                    instance.raisedBarrierPrefabIndices.Add(ReadInt());
+                }
+            }
 
             return instance;
         }
