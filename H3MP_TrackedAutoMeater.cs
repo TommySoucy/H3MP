@@ -94,7 +94,14 @@ namespace H3MP
                             if (data.trackedID > -1)
                             {
                                 // Give control with us as debounce because we know we are no longer eligible to control this object
-                                H3MP_ServerSend.GiveAutoMeaterControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
+                                if (H3MP_ThreadManager.host)
+                                {
+                                    H3MP_ServerSend.GiveAutoMeaterControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.GiveAutoMeaterControl(data.trackedID, otherPlayer, new List<int>() { H3MP_GameManager.ID });
+                                }
 
                                 // Also change controller locally
                                 data.controller = otherPlayer;
