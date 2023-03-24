@@ -53,6 +53,8 @@ In the wristmenu, some options are available:
 
 - **_Radar Color IFF_**: Lets host decide which colors players should have on the TNH radar. If true it will show players as Green or Red, depending on whether they are Friendly or Enemy, respectively. If false, it will instead show players with their corresponding colors. **Only available to Host!**
 
+- **_Max health_**: Lets host decide the max player health in their current scene/instance. Available options are: Unset (default), 1, 500, 1000, 2000, 3000, 5000, 7500, and 10000. Unset means that the maximum health will be what was set by vanilla. **Only available to Host!**
+
 ### Config
 
 The **config** refers to a file in the H3MP folder called **Config.json** which contains a few important settings.
@@ -72,17 +74,20 @@ For public access, you will need to **port foward** the port you have set in you
 
 In both cases, both host and client will have to set their port to the portforwarded one.
 
+The default port of 7861 can be used safely (Unless you already have something running on your machine that uses it), though most numbers between 0 and 65535 should work fine apart from very specific ones. If you want to use a different one, look it up online first to see if it is reserved for anything else. Some specific ones may also be blocked by your ISP.
+
 To start the server, in the wristmenu, press H3MP->Host
 
 ## Incompatibilities
 
+- Freemeat mode and entities
 - Meat fortress mode
 - Rotweiners mode
 - Anything not sandbox or TNH will most probably not work
 
 ## Upcoming support
 
-- Most if not all Modul mods
+- Escape from Meatov
 - Meat fortress mode
 - Rotweiners mode
-- Escape from Meatov
+- Freemeat mode and entities
