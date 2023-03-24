@@ -13485,13 +13485,38 @@ namespace H3MP
                 {
                     if (Mod.currentTNHInstance.activeSupplyPointIndices.Contains(((TNH_PointSequence)Mod.TNH_Manager_m_curPointSequence.GetValue(Mod.currentTNHInstance.manager)).StartSupplyPointIndex))
                     {
-                        // Starting point invalid, find a player to spawn on
+                        // Starting supply point active, find a player to spawn on
+                        bool found = false;
                         if (Mod.currentTNHInstance.currentlyPlaying != null && Mod.currentTNHInstance.currentlyPlaying.Count > 0)
                         {
-                            Mod.TNHSpawnPoint = H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position;
-                            GM.CurrentMovementManager.TeleportToPoint(H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[0]].transform.position, true);
+                            for(int i = 0; i< Mod.currentTNHInstance.currentlyPlaying.Count; ++i)
+                            {
+                                if (Mod.currentTNHInstance.currentlyPlaying[i] != H3MP_GameManager.ID)
+                                {
+                                    Mod.TNHSpawnPoint = H3MP_GameManager.players[Mod.currentTNHInstance.currentlyPlaying[i]].transform.position;
+                                    GM.CurrentMovementManager.TeleportToPoint(Mod.TNHSpawnPoint, true);
+                                    found = true;
+                                    break;
+                                }
+                            }
                         }
-                        else
+
+                        if(!found)
+                        {
+                            // Look through all possible supply points, spawn at first one that isn't active
+                            for(int i=0; i < Mod.currentTNHInstance.manager.SupplyPoints.Count; ++i)
+                            {
+                                if (!Mod.currentTNHInstance.activeSupplyPointIndices.Contains(i))
+                                {
+                                    Mod.TNHSpawnPoint = Mod.currentTNHInstance.manager.SupplyPoints[i].SpawnPoint_PlayerSpawn.position;
+                                    GM.CurrentMovementManager.TeleportToPoint(Mod.TNHSpawnPoint, true);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!found)
                         {
                             Mod.TNHSpawnPoint = GM.CurrentPlayerBody.transform.position;
                             Mod.LogWarning("Not valid supply point or player to spawn on, spawning on default start point, which might be active");
@@ -13530,7 +13555,7 @@ namespace H3MP
             }
             return true;
         }
-
+        
         static void GenerateSentryPatrolPrefix(List<Vector3> PatrolPoints)
         {
             inGenerateSentryPatrol = true;
