@@ -1,6 +1,6 @@
 # H3MP - Multiplayer mod for H3VR
 
-As the title says, this is a mod that adds multiplayer to the virtual reality game **Hotdogs, Horseshoes and Hangrenades**.
+As the title says, this is a mod that adds multiplayer to the virtual reality game **Hotdogs, Horseshoes and Handgrenades**.
 
 ## IMPORTANT
 
