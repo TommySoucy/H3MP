@@ -292,7 +292,6 @@ namespace H3MP
 
         public void SetParent(H3MP_TrackedItemData newParent, bool physicallyParent)
         {
-            Mod.LogInfo("Set parent called on " + itemID + " at " + trackedID + " and waiting: " + localWaitingIndex+" with parent: "+newParent.itemID+" at "+newParent.trackedID+" and waiting: "+newParent.localWaitingIndex);
             if (newParent == null)
             {
                 Mod.LogInfo("\tNew parent null");
@@ -345,10 +344,8 @@ namespace H3MP
             }
             else // We have new parent
             {
-                Mod.LogInfo("\tNew parent not null");
                 if (parent != -1) // We had parent before, need to unparent first
                 {
-                    Mod.LogInfo("\t\tCurrent parent not null,  unsetting");
                     H3MP_TrackedItemData previousParent = null;
                     if (H3MP_ThreadManager.host)
                     {
@@ -366,7 +363,6 @@ namespace H3MP
                         previousParent.children = null;
                     }
                 }
-                Mod.LogInfo("\tSetting new parent");
 
                 // Set new parent
                 parent = newParent.trackedID;
@@ -404,15 +400,12 @@ namespace H3MP
 
         public void SetParent(int trackedID)
         {
-            Mod.LogInfo("Set parent ("+ trackedID + ") called on "+itemID+" at "+this.trackedID+" and waiting: "+localWaitingIndex);
             if (trackedID == -1)
             {
-                Mod.LogInfo("\tGiven ID -1, unsetting");
                 SetParent(null, true);
             }
             else
             {
-                Mod.LogInfo("\tGiven ID, setting");
                 if (H3MP_ThreadManager.host)
                 {
                     SetParent(H3MP_Server.items[trackedID], true);
