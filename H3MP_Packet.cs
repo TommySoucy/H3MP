@@ -158,7 +158,9 @@ namespace H3MP
         radarMode = 147,
         radarColor = 148,
         TNHInitializer = 149,
-        maxHealth = 150
+        maxHealth = 150,
+        fuseIgnite = 151,
+        fuseBoom = 152
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -310,7 +312,9 @@ namespace H3MP
         reviveTNHPlayer = 144,
         playerColor = 145,
         requestTNHInit = 146,
-        TNHInit = 147
+        TNHInit = 147,
+        fuseIgnite = 148,
+        fuseBoom = 149
     }
 
     public class H3MP_Packet : IDisposable

@@ -4024,5 +4024,33 @@ namespace H3MP
                 }
             }
         }
+
+        public static void FuseIgnite(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID];
+            if(itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalObject is FVRFusedThrowable)
+            {
+                ++FusePatch.igniteSkip;
+                (itemData.physicalItem.physicalObject as FVRFusedThrowable).Fuse.Ignite(0);
+                --FusePatch.igniteSkip;
+            }
+
+            H3MP_ServerSend.FuseIgnite(trackedID, clientID);
+        }
+
+        public static void FuseBoom(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID];
+            if(itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalObject is FVRFusedThrowable)
+            {
+                (itemData.physicalItem.physicalObject as FVRFusedThrowable).Fuse.Boom();
+            }
+
+            H3MP_ServerSend.FuseBoom(trackedID, clientID);
+        }
     }
 }

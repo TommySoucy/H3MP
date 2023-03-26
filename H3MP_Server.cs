@@ -918,6 +918,8 @@ namespace H3MP
                 H3MP_ServerHandle.PlayerColor,
                 H3MP_ServerHandle.RequestTNHInitialization,
                 H3MP_ServerHandle.TNHInitializer,
+                H3MP_ServerHandle.FuseIgnite,
+                H3MP_ServerHandle.FuseBoom,
             };
 
             items = new H3MP_TrackedItemData[100];

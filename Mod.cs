@@ -2127,6 +2127,17 @@ namespace H3MP
             PatchVerify.Verify(FVRGrenadePatchUpdateOriginal, harmony, false);
             harmony.Patch(FVRGrenadePatchUpdateOriginal, new HarmonyMethod(FVRGrenadePatchUpdatePrefix), new HarmonyMethod(FVRGrenadePatchUpdatePostfix));
 
+            // FusePatch
+            MethodInfo FVRFusePatchIgniteOriginal = typeof(FVRFuse).GetMethod("Ignite", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo FVRFusePatchIgnitePostfix = typeof(FusePatch).GetMethod("IgnitePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo FVRFusePatchBoomOriginal = typeof(FVRFuse).GetMethod("Boom", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo FVRFusePatchBoomPrefix = typeof(FusePatch).GetMethod("BoomPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(FVRFusePatchIgniteOriginal, harmony, false);
+            PatchVerify.Verify(FVRFusePatchBoomOriginal, harmony, false);
+            harmony.Patch(FVRFusePatchIgniteOriginal, null, new HarmonyMethod(FVRFusePatchIgnitePostfix));
+            harmony.Patch(FVRFusePatchBoomOriginal, new HarmonyMethod(FVRFusePatchBoomPrefix));
+
             // EncryptionPatch
             MethodInfo EncryptionPatchUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo EncryptionPatchFixedUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -8825,6 +8836,65 @@ namespace H3MP
                     grenade.EndInteraction(grenade.m_hand);
                 }
                 UnityEngine.Object.Destroy(grenade.gameObject);
+            }
+        }
+    }
+
+    // Patches FVRFuse to keep track of events
+    class FusePatch
+    {
+        public static int igniteSkip;
+
+        static void IgnitePostfix(FVRFuse __instance, ref bool ___m_isIgnited)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.Dynamite, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null)
+            {
+                // If not controller we don't want the ignite flag to be set because we don't want it to update
+                if(trackedItem.data.controller != H3MP_GameManager.ID)
+                {
+                    ___m_isIgnited = false;
+                }
+
+                if (igniteSkip == 0)
+                {
+                    // Send order to others
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.FuseIgnite(trackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.FuseIgnite(trackedItem.data.trackedID);
+                    }
+                }
+            }
+        }
+
+        static void BoomPrefix(FVRFuse __instance, ref bool ___m_isIgnited)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.Dynamite, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
+            {
+                // Send order to others
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.FuseBoom(trackedItem.data.trackedID);
+                }
+                else
+                {
+                    H3MP_ClientSend.FuseBoom(trackedItem.data.trackedID);
+                }
             }
         }
     }

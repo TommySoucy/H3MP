@@ -3660,5 +3660,29 @@ namespace H3MP
 
             H3MP_WristMenuSection.UpdateMaxHealth(scene, instance, index, original);
         }
+
+        public static void FuseIgnite(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
+            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalObject is FVRFusedThrowable)
+            {
+                ++FusePatch.igniteSkip;
+                (itemData.physicalItem.physicalObject as FVRFusedThrowable).Fuse.Ignite(0);
+                --FusePatch.igniteSkip;
+            }
+        }
+
+        public static void FuseBoom(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
+            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalObject is FVRFusedThrowable)
+            {
+                (itemData.physicalItem.physicalObject as FVRFusedThrowable).Fuse.Boom();
+            }
+        }
     }
 }

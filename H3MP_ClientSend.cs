@@ -2522,5 +2522,25 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void FuseIgnite(int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.fuseIgnite))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void FuseBoom(int trackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.fuseBoom))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }
