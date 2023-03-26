@@ -4235,7 +4235,7 @@ namespace H3MP
             H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(o, out H3MP_TrackedItem currentItem) ? currentItem : o.GetComponent<H3MP_TrackedItem>();
             if (trackedItem != null)
             {
-                if (trackedItem.data.controller != H3MP_Client.singleton.ID)
+                if (trackedItem.data.controller != H3MP_GameManager.ID)
                 {
                     // Take control
 

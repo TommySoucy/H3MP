@@ -819,6 +819,20 @@ namespace H3MP
                         return;
                     }
                 }
+                else
+                {
+                    foreach (Transform child in root)
+                    {
+                        SyncTrackedItems(child, controlEverything, parent, scene);
+                    }
+                }
+            }
+            else
+            {
+                foreach (Transform child in root)
+                {
+                    SyncTrackedItems(child, controlEverything, parent, scene);
+                }
             }
         }
 

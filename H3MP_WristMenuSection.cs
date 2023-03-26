@@ -710,18 +710,22 @@ namespace H3MP
 
         public static void UpdateMaxHealth(string scene, int instance, int index, float original, int clientID = 0)
         {
+            Mod.LogInfo("UpdateMaxHealth: " + scene+"/"+instance+", to index: "+index+" with original: "+original+" and clientID: "+clientID, false);
             // Tell others if necessary
-            if (H3MP_ThreadManager.host)
+            if (index != -2 && H3MP_ThreadManager.host)
             {
-                H3MP_ServerSend.MaxHealth(scene, instance, index, clientID);
+                Mod.LogInfo("\tHost, sending", false);
+                H3MP_ServerSend.MaxHealth(scene, instance, index, original, clientID);
             }
 
             if (index == -2)
             {
+                Mod.LogInfo("\tIndex -2, setting to value in our current scene/instance", false);
                 if (!H3MP_GameManager.overrideMaxHealthSetting &&
                     H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict) &&
                     instanceDict.TryGetValue(instance, out KeyValuePair<float, int> entry))
                 {
+                    Mod.LogInfo("\t\tFound entry: "+entry.Key+":"+entry.Value, false);
                     H3MP_GameManager.maxHealthIndex = entry.Value;
 
                     ++SetHealthThresholdPatch.skip;
@@ -735,6 +739,7 @@ namespace H3MP
                 }
                 else
                 {
+                    Mod.LogInfo("\t\tNo entry found", false);
                     H3MP_GameManager.maxHealthIndex = -1;
 
                     if (maxHealthText != null)
@@ -743,10 +748,12 @@ namespace H3MP
                     }
                 }
             }
-            else if (index == -1) 
+            else if (index == -1)
             {
+                Mod.LogInfo("\tIndex -1, unsetting max health entry for given scene/instance", false);
                 if (H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
                 {
+                    Mod.LogInfo("\t\tCurrent scene/instance, setting index and text", false);
                     H3MP_GameManager.maxHealthIndex = -1;
 
                     if (maxHealthText != null)
@@ -758,9 +765,11 @@ namespace H3MP
                 if (H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict) &&
                     instanceDict.TryGetValue(instance, out KeyValuePair<float, int> entry))
                 {
+                    Mod.LogInfo("\t\tHave entry", false);
                     // Set our own if necessary
-                    if(GM.CurrentPlayerBody != null && H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
+                    if (GM.CurrentPlayerBody != null && H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
                     {
+                        Mod.LogInfo("\t\t\tCurrent scene/instance and we have body, resetting our health to scene default: "+entry.Key, false);
                         ++SetHealthThresholdPatch.skip;
                         GM.CurrentPlayerBody.SetHealthThreshold(entry.Key);
                         --SetHealthThresholdPatch.skip;
@@ -778,21 +787,25 @@ namespace H3MP
             }
             else
             {
+                Mod.LogInfo("\tIndex > -1, setting max health entry for given scene/instance", false);
                 if (H3MP_GameManager.maxHealthByInstanceByScene.TryGetValue(scene, out Dictionary<int, KeyValuePair<float, int>> instanceDict))
                 {
                     if (instanceDict.TryGetValue(instance, out KeyValuePair<float, int> entry))
                     {
+                        Mod.LogInfo("\t\tReplacing existing entry", false);
                         // Replace existing entry
                         instanceDict[instance] = new KeyValuePair<float, int>(entry.Key, index);
                     }
                     else
                     {
+                        Mod.LogInfo("\t\tAdding entry in new instance", false);
                         // Add new entry
                         instanceDict.Add(instance, new KeyValuePair<float, int>(original, index));
                     }
                 }
                 else
                 {
+                    Mod.LogInfo("\t\tAdding entry in new scene", false);
                     // Add new entry
                     Dictionary<int, KeyValuePair<float, int>> newDict = new Dictionary<int, KeyValuePair<float, int>>();
                     H3MP_GameManager.maxHealthByInstanceByScene.Add(scene, newDict);
@@ -801,6 +814,7 @@ namespace H3MP
 
                 if (H3MP_GameManager.scene.Equals(scene) && H3MP_GameManager.instance == instance)
                 {
+                    Mod.LogInfo("\t\tCurrent scene/instance, setting index", false);
                     H3MP_GameManager.maxHealthIndex = index;
 
                     if (maxHealthText != null)
@@ -811,6 +825,7 @@ namespace H3MP
                     // Set our own if necessary
                     if (GM.CurrentPlayerBody != null)
                     {
+                        Mod.LogInfo("\t\t\tWe have a body, setting max health", false);
                         ++SetHealthThresholdPatch.skip;
                         GM.CurrentPlayerBody.SetHealthThreshold(H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex]);
                         --SetHealthThresholdPatch.skip;

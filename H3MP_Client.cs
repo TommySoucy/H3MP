@@ -648,6 +648,21 @@ namespace H3MP
                     H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
                 }
 
+                // Add to parent children if has parent and we are not initTracker (It isn't already in the list)
+                if (trackedItem.parent != -1 && trackedItem.initTracker != H3MP_GameManager.ID)
+                {
+                    // Note that this should never be null, we should always receive the parent data before receiving the children's
+                    H3MP_TrackedItemData parentData = items[trackedItem.parent];
+
+                    if (parentData.children == null)
+                    {
+                        parentData.children = new List<H3MP_TrackedItemData>();
+                    }
+
+                    trackedItem.childIndex = parentData.children.Count;
+                    parentData.children.Add(trackedItem);
+                }
+
                 // Instantiate item if it is identiafiable and in the current scene/instance
                 if (!trackedItem.awaitingInstantiation && 
                     H3MP_GameManager.IsItemIdentifiable(trackedItem) &&

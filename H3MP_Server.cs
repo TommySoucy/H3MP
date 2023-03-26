@@ -231,6 +231,22 @@ namespace H3MP
                 H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
             }
 
+            // Add to parent children if has parent and we are not initTracker (It isn't already in the list)
+            if (trackedItem.parent != -1 && trackedItem.initTracker != H3MP_GameManager.ID)
+            {
+                // Note that this should never be null, we should always receive the parent data before receiving the children's
+                // TODO: Review: If this is actually true: is the hierarchy maintained when server sends relevant items to a client when the client joins a scene/instance?
+                H3MP_TrackedItemData parentData = items[trackedItem.parent];
+
+                if (parentData.children == null)
+                {
+                    parentData.children = new List<H3MP_TrackedItemData>();
+                }
+
+                trackedItem.childIndex = parentData.children.Count;
+                parentData.children.Add(trackedItem);
+            }
+
             // Instantiate item if it is in the current scene and not controlled by us
             if (clientID != 0 && H3MP_GameManager.IsItemIdentifiable(trackedItem))
             {
@@ -243,8 +259,25 @@ namespace H3MP
                 }
             }
 
-            // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedItem(trackedItem, clientID);
+            // Send to all clients in same scene/instance, including controller because they need confirmation from server that this object was added and its trackedID
+            List<int> toClients = new List<int>();
+            if (clientID != 0)
+            {
+                // We explicitly include clientID in the list because the client might have changed scene/instance since, but they still need to get the data
+                toClients.Add(clientID);
+            }
+            if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(trackedItem.instance, out List<int> players))
+            {
+                for(int i=0; i < players.Count; ++i)
+                {
+                    if (players[i] != clientID)
+                    {
+                        toClients.Add(players[i]);
+                    }
+                }
+            }
+            H3MP_ServerSend.TrackedItem(trackedItem, toClients);
 
             // Update the local tracked ID at the end because we need to send that back to the original client intact
             if (trackedItem.controller != 0)
@@ -310,8 +343,25 @@ namespace H3MP
                     }
                 }
 
-                // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-                H3MP_ServerSend.TrackedSosig(trackedSosig, clientID);
+                // Send to all clients in same scene/instance, including controller because they need confirmation from server that this object was added and its trackedID
+                List<int> toClients = new List<int>();
+                if (clientID != 0)
+                {
+                    // We explicitly include clientID in the list because the client might have changed scene/instance since, but they still need to get the data
+                    toClients.Add(clientID);
+                }
+                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> instances) &&
+                    instances.TryGetValue(trackedSosig.instance, out List<int> players))
+                {
+                    for (int i = 0; i < players.Count; ++i)
+                    {
+                        if (players[i] != clientID)
+                        {
+                            toClients.Add(players[i]);
+                        }
+                    }
+                }
+                H3MP_ServerSend.TrackedSosig(trackedSosig, toClients);
 
                 // Update the local tracked ID at the end because we need to send that back to the original client intact
                 if (trackedSosig.controller != 0)
@@ -370,10 +420,22 @@ namespace H3MP
             else
             {
                 // This is a sosig we already received full data for and assigned a tracked ID to but things may
-                // have appened to it since we sent the tracked ID, so use this data to update our's and everyones else's
+                // have happened to it since we sent the tracked ID, so use this data to update our's and everyones else's
                 sosigs[trackedSosig.trackedID].Update(trackedSosig, true);
 
-                H3MP_ServerSend.TrackedSosig(trackedSosig, clientID, false);
+                List<int> toClients = new List<int>();
+                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> instances) &&
+                    instances.TryGetValue(trackedSosig.instance, out List<int> players))
+                {
+                    for (int i = 0; i < players.Count; ++i)
+                    {
+                        if (players[i] != clientID)
+                        {
+                            toClients.Add(players[i]);
+                        }
+                    }
+                }
+                H3MP_ServerSend.TrackedSosig(trackedSosig, toClients);
             }
         }
 
@@ -432,8 +494,25 @@ namespace H3MP
                 }
             }
 
-            // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-            H3MP_ServerSend.TrackedAutoMeater(trackedAutoMeater, clientID);
+            // Send to all clients in same scene/instance, including controller because they need confirmation from server that this object was added and its trackedID
+            List<int> toClients = new List<int>();
+            if (clientID != 0)
+            {
+                // We explicitly include clientID in the list because the client might have changed scene/instance since, but they still need to get the data
+                toClients.Add(clientID);
+            }
+            if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(trackedAutoMeater.instance, out List<int> players))
+            {
+                for (int i = 0; i < players.Count; ++i)
+                {
+                    if (players[i] != clientID)
+                    {
+                        toClients.Add(players[i]);
+                    }
+                }
+            }
+            H3MP_ServerSend.TrackedAutoMeater(trackedAutoMeater, toClients);
 
             // Update the local tracked ID at the end because we need to send that back to the original client intact
             if (trackedAutoMeater.controller != 0)
@@ -547,8 +626,25 @@ namespace H3MP
                     }
                 }
 
-                // Send to all clients, including controller because they need confirmation from server that this item was added and its trackedID
-                H3MP_ServerSend.TrackedEncryption(trackedEncryption, clientID);
+                // Send to all clients in same scene/instance, including controller because they need confirmation from server that this object was added and its trackedID
+                List<int> toClients = new List<int>();
+                if (clientID != 0)
+                {
+                    // We explicitly include clientID in the list because the client might have changed scene/instance since, but they still need to get the data
+                    toClients.Add(clientID);
+                }
+                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> instances) &&
+                    instances.TryGetValue(trackedEncryption.instance, out List<int> players))
+                {
+                    for (int i = 0; i < players.Count; ++i)
+                    {
+                        if (players[i] != clientID)
+                        {
+                            toClients.Add(players[i]);
+                        }
+                    }
+                }
+                H3MP_ServerSend.TrackedEncryption(trackedEncryption, toClients);
 
                 // Update the local tracked ID at the end because we need to send that back to the original client intact
                 if (trackedEncryption.controller != 0)
@@ -593,7 +689,19 @@ namespace H3MP
                 // have happened to it since we sent the tracked ID, so use this data to update our's and everyones else's
                 encryptions[trackedEncryption.trackedID].Update(trackedEncryption, true);
 
-                H3MP_ServerSend.TrackedEncryption(trackedEncryption, clientID, false);
+                List<int> toClients = new List<int>();
+                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> instances) &&
+                    instances.TryGetValue(trackedEncryption.instance, out List<int> players))
+                {
+                    for (int i = 0; i < players.Count; ++i)
+                    {
+                        if (players[i] != clientID)
+                        {
+                            toClients.Add(players[i]);
+                        }
+                    }
+                }
+                H3MP_ServerSend.TrackedEncryption(trackedEncryption, toClients);
             }
         }
 

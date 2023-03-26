@@ -348,7 +348,7 @@ namespace H3MP
                 Mod.LogInfo("\tNew parent not null");
                 if (parent != -1) // We had parent before, need to unparent first
                 {
-                    Mod.LogInfo("\t\tCurrent parent null, setting");
+                    Mod.LogInfo("\t\tCurrent parent not null,  unsetting");
                     H3MP_TrackedItemData previousParent = null;
                     if (H3MP_ThreadManager.host)
                     {
@@ -366,6 +366,7 @@ namespace H3MP
                         previousParent.children = null;
                     }
                 }
+                Mod.LogInfo("\tSetting new parent");
 
                 // Set new parent
                 parent = newParent.trackedID;

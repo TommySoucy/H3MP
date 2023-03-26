@@ -308,6 +308,10 @@ namespace H3MP
                     trackedItem.SetController(controllerID);
                 }
             }
+            else if(controllerID == H3MP_GameManager.ID) // Given control of object we do not even have data for
+            {
+                H3MP_ClientSend.DestroyItem(trackedID);
+            }
         }
 
         public static void GiveSosigControl(H3MP_Packet packet)
@@ -421,6 +425,10 @@ namespace H3MP
                 {
                     trackedSosig.controller = controllerID;
                 }
+            }
+            else if (controllerID == H3MP_GameManager.ID) // Given control of object we do not even have data for
+            {
+                H3MP_ClientSend.DestroySosig(trackedID);
             }
         }
 
@@ -537,6 +545,10 @@ namespace H3MP
                     trackedAutoMeater.controller = controllerID;
                 }
             }
+            else if (controllerID == H3MP_GameManager.ID) // Given control of object we do not even have data for
+            {
+                H3MP_ClientSend.DestroyAutoMeater(trackedID);
+            }
         }
 
         public static void GiveEncryptionControl(H3MP_Packet packet)
@@ -633,6 +645,10 @@ namespace H3MP
                 {
                     trackedEncryption.controller = controllerID;
                 }
+            }
+            else if (controllerID == H3MP_GameManager.ID) // Given control of object we do not even have data for
+            {
+                H3MP_ClientSend.DestroyEncryption(trackedID);
             }
         }
 

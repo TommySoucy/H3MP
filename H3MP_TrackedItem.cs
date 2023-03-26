@@ -6709,11 +6709,6 @@ namespace H3MP
                 attachmentInterfaceUpdateFunc(asAttachment, ref modified);
             }
 
-            if(preIndex != currentMountIndex)
-            {
-                Mod.LogInfo("Attachment " + name + " mount changed from " + preIndex + " to " + currentMountIndex);
-            }
-
             return modified || (preIndex != currentMountIndex);
         }
 
@@ -6774,12 +6769,12 @@ namespace H3MP
                 // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
                 if (mount != null && mount != asAttachment.curMount)
                 {
-                    Mod.LogInfo("Attachment " + name + " at "+data.trackedID+" and waiting: "+data.localWaitingIndex+" mount changed from " + preMountIndex + " to " + newData[0]);
                     if (asAttachment.curMount != null)
                     {
                         asAttachment.DetachFromMount();
                     }
 
+                    Mod.LogInfo("Item " + name + " got update to attach to mount " + mount.name + ", mount parent null?: " + (mount.Parent == null));
                     asAttachment.AttachToMount(mount, true);
                     currentMountIndex = newData[0];
                 }
@@ -6789,7 +6784,6 @@ namespace H3MP
                 // Detach from any mount we are still on
                 if (asAttachment.curMount != null)
                 {
-                    Mod.LogInfo("Attachment " + name + " at "+data.trackedID+" and waiting: "+data.localWaitingIndex+" unmounted");
                     asAttachment.DetachFromMount();
 
                     // Detach from mount will recover rigidbody, set as kinematic if not controller

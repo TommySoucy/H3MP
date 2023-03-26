@@ -14,6 +14,18 @@ namespace H3MP
             H3MP_Server.clients[toClient].tcp.SendData(packet);
         }
 
+        private static void SendTCPData(List<int> toClients, H3MP_Packet packet, int exclude = -1)
+        {
+            packet.WriteLength();
+            for (int i = 0; i < toClients.Count; ++i)
+            {
+                if (exclude == -1 || toClients[i] != exclude)
+                {
+                    H3MP_Server.clients[toClients[i]].tcp.SendData(packet);
+                }
+            }
+        }
+
         private static void SendUDPData(List<int> toClients, H3MP_Packet packet, int exclude = -1)
         {
             packet.WriteLength();
@@ -668,63 +680,43 @@ namespace H3MP
             }
         }
 
-        public static void TrackedItem(H3MP_TrackedItemData trackedItem, int clientID)
+        public static void TrackedItem(H3MP_TrackedItemData trackedItem, List<int> toClients)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedItem))
             {
                 packet.Write(trackedItem, false, true);
 
-                // We want to send to all, even the one who requested for the item to be tracked because we need to tell them its tracked ID
-                SendTCPDataToAll(packet);
+                SendTCPData(toClients, packet);
             }
         }
 
-        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, int clientID, bool sendToOriginal = true)
+        public static void TrackedSosig(H3MP_TrackedSosigData trackedSosig, List<int> toClients)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedSosig))
             {
                 packet.Write(trackedSosig, false, true);
 
-                if (sendToOriginal)
-                {
-                    // We want to send to all, even the one who requested for the sosig to be tracked because we need to tell them its tracked ID
-                    SendTCPDataToAll(packet);
-                }
-                else
-                {
-                    // We want to send to all BUT the controlling client, probably because this is an init update 
-                    SendTCPDataToAll(clientID, packet);
-                }
+                SendTCPData(toClients, packet);
             }
         }
 
-        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, int clientID)
+        public static void TrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater, List<int> toClients)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedAutoMeater))
             {
                 packet.Write(trackedAutoMeater, false, true);
 
-                // We want to send to all, even the one who requested for the AutoMeater to be tracked because we need to tell them its tracked ID
-                SendTCPDataToAll(packet);
+                SendTCPData(toClients, packet);
             }
         }
 
-        public static void TrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, int clientID, bool sendToOriginal = true)
+        public static void TrackedEncryption(H3MP_TrackedEncryptionData trackedEncryption, List<int> toClients)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.trackedEncryption))
             {
                 packet.Write(trackedEncryption, false, true);
 
-                if (sendToOriginal)
-                {
-                    // We want to send to all, even the one who requested for the Encryption to be tracked because we need to tell them its tracked ID
-                    SendTCPDataToAll(packet);
-                }
-                else
-                {
-                    // We want to send to all BUT the controlling client, probably because this is an init update 
-                    SendTCPDataToAll(clientID, packet);
-                }
+                SendTCPData(toClients, packet);
             }
         }
 
