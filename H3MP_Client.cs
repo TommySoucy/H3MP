@@ -482,6 +482,8 @@ namespace H3MP
                 H3MP_ClientHandle.MaxHealth,
                 H3MP_ClientHandle.FuseIgnite,
                 H3MP_ClientHandle.FuseBoom,
+                H3MP_ClientHandle.MolotovShatter,
+                H3MP_ClientHandle.MolotovDamage,
             };
 
             // All vanilla scenes can be synced by default

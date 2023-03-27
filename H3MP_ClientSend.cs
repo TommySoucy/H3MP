@@ -2542,5 +2542,27 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void MolotovShatter(int trackedID, bool ignited)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.molotovShatter))
+            {
+                packet.Write(trackedID);
+                packet.Write(ignited);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void MolotovDamage(int trackedID, Damage d)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.molotovDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

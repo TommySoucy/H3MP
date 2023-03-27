@@ -920,6 +920,8 @@ namespace H3MP
                 H3MP_ServerHandle.TNHInitializer,
                 H3MP_ServerHandle.FuseIgnite,
                 H3MP_ServerHandle.FuseBoom,
+                H3MP_ServerHandle.MolotovShatter,
+                H3MP_ServerHandle.MolotovDamage,
             };
 
             items = new H3MP_TrackedItemData[100];

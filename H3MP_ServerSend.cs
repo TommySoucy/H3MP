@@ -3944,5 +3944,34 @@ namespace H3MP
                 }
             }
         }
+
+        public static void MolotovShatter(int trackedID, bool ignited, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.molotovShatter))
+            {
+                packet.Write(trackedID);
+                packet.Write(ignited);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void MolotovDamage(H3MP_TrackedItemData itemData, Damage damage)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.molotovDamage))
+            {
+                packet.Write(itemData.trackedID);
+                packet.Write(damage);
+
+                SendTCPData(itemData.controller, packet);
+            }
+        }
     }
 }

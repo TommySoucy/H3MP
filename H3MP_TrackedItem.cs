@@ -226,6 +226,13 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenLeverActionFirearm;
                 dataObject = LAF;
             }
+            else if (physObj is Molotov)
+            {
+                Molotov asMolotov = (Molotov)physObj;
+                updateFunc = UpdateMolotov;
+                updateGivenFunc = UpdateGivenMolotov;
+                dataObject = asMolotov;
+            }
             else if(physObj is PinnedGrenade)
             {
                 PinnedGrenade asPG = (PinnedGrenade)physObj;
@@ -1674,6 +1681,56 @@ namespace H3MP
                         rings[i].enabled = false;
                         modified = true;
                     }
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateMolotov()
+        {
+            Molotov asMolotov = (Molotov)dataObject;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[1];
+                modified = true;
+            }
+
+            byte preval = data.data[0];
+
+            data.data[0] = asMolotov.Igniteable.IsOnFire() ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            return modified;
+        }
+
+        private bool UpdateGivenMolotov(byte[] newData)
+        {
+            bool modified = false;
+            Molotov asMolotov = (Molotov)dataObject;
+
+            if (data.data == null)
+            {
+                modified = true;
+
+                // Set ignited
+                if (newData[0] == 1 && !asMolotov.Igniteable.IsOnFire())
+                {
+                    asMolotov.RemoteIgnite();
+                }
+            }
+            else
+            {
+                // Set ignited
+                if (newData[0] == 1 && !asMolotov.Igniteable.IsOnFire())
+                {
+                    asMolotov.RemoteIgnite();
+                    modified = true;
                 }
             }
 

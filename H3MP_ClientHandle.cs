@@ -3684,5 +3684,52 @@ namespace H3MP
                 (itemData.physicalItem.physicalObject as FVRFusedThrowable).Fuse.Boom();
             }
         }
+
+        public static void MolotovShatter(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool ignited = packet.ReadBool();
+
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
+            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalObject is Molotov)
+            {
+                Molotov asMolotov = itemData.physicalItem.physicalObject as Molotov;
+                if (ignited && !asMolotov.Igniteable.IsOnFire())
+                {
+                    asMolotov.RemoteIgnite();
+                }
+                ++MolotovPatch.shatterSkip;
+                Mod.Molotov_Shatter.Invoke(asMolotov, null);
+                --MolotovPatch.shatterSkip;
+            }
+        }
+
+        public static void MolotovDamage(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID];
+            if (itemData != null)
+            {
+                if (itemData.controller == H3MP_Client.singleton.ID)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        ++MolotovPatch.damageSkip;
+                        (itemData.physicalItem.physicalObject as Molotov).Damage(damage);
+                        --MolotovPatch.damageSkip;
+                    }
+                }
+                else
+                {
+                    H3MP_ClientSend.MolotovDamage(trackedID, damage);
+                }
+            }
+            else
+            {
+                H3MP_ClientSend.MolotovDamage(trackedID, damage);
+            }
+        }
     }
 }

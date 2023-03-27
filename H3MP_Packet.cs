@@ -160,7 +160,9 @@ namespace H3MP
         TNHInitializer = 149,
         maxHealth = 150,
         fuseIgnite = 151,
-        fuseBoom = 152
+        fuseBoom = 152,
+        molotovShatter = 153,
+        molotovDamage = 154
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -314,7 +316,9 @@ namespace H3MP
         requestTNHInit = 146,
         TNHInit = 147,
         fuseIgnite = 148,
-        fuseBoom = 149
+        fuseBoom = 149,
+        molotovShatter = 150,
+        molotovDamage = 151
     }
 
     public class H3MP_Packet : IDisposable

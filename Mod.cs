@@ -358,6 +358,7 @@ namespace H3MP
         public static readonly MethodInfo FVRWristMenuSection_CleanUp_AskConfirm_CleanupAllMags = typeof(FVRWristMenuSection_CleanUp).GetMethod("AskConfirm_CleanupAllMags", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FVRWristMenuSection_CleanUp_AskConfirm_CleanupGuns = typeof(FVRWristMenuSection_CleanUp).GetMethod("AskConfirm_CleanupGuns", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FVRViveHand_SetGrabbityHovered = typeof(FVRViveHand).GetMethod("SetGrabbityHovered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo Molotov_Shatter = typeof(Molotov).GetMethod("Shatter", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
         // Debug
@@ -2137,6 +2138,17 @@ namespace H3MP
             PatchVerify.Verify(FVRFusePatchBoomOriginal, harmony, false);
             harmony.Patch(FVRFusePatchIgniteOriginal, null, new HarmonyMethod(FVRFusePatchIgnitePostfix));
             harmony.Patch(FVRFusePatchBoomOriginal, new HarmonyMethod(FVRFusePatchBoomPrefix));
+
+            // MolotovPatch
+            MethodInfo MolotovPatchShatterOriginal = typeof(Molotov).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo MolotovPatchShatterPrefix = typeof(MolotovPatch).GetMethod("ShatterPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo MolotovPatchDamageOriginal = typeof(Molotov).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo MolotovPatchDamagePrefix = typeof(MolotovPatch).GetMethod("DamagePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(MolotovPatchShatterOriginal, harmony, false);
+            PatchVerify.Verify(MolotovPatchDamageOriginal, harmony, false);
+            harmony.Patch(MolotovPatchShatterOriginal, new HarmonyMethod(MolotovPatchShatterPrefix));
+            harmony.Patch(MolotovPatchDamageOriginal, new HarmonyMethod(MolotovPatchDamagePrefix));
 
             // EncryptionPatch
             MethodInfo EncryptionPatchUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -8896,6 +8908,76 @@ namespace H3MP
                     H3MP_ClientSend.FuseBoom(trackedItem.data.trackedID);
                 }
             }
+        }
+    }
+
+    // Patches Molotov to keep track of events
+    class MolotovPatch
+    {
+        public static int shatterSkip;
+        public static int damageSkip;
+
+        static bool ShatterPrefix(Molotov __instance)
+        {
+            if(Mod.managerObject == null || shatterSkip > 0)
+            {
+                return true;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null)
+            {
+                if(trackedItem.data.controller == H3MP_GameManager.ID)
+                {
+                    // Send order to others
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.MolotovShatter(trackedItem.data.trackedID, __instance.Igniteable.IsOnFire());
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.MolotovShatter(trackedItem.data.trackedID, __instance.Igniteable.IsOnFire());
+                    }
+                }
+                else
+                {
+                    // Don't want to let shatter happen on its own if not controller, like on collision for example
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        static bool DamagePrefix(Molotov __instance, Damage d)
+        {
+            if (Mod.managerObject == null || damageSkip > 0)
+            {
+                return true;
+            }
+
+            // If in control of the damaged molotov, we want to process the damage
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if(trackedItem.data.controller == H3MP_GameManager.ID)
+                {
+                    return true;
+                }
+                else // Not in control, send damage to controller
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.MolotovDamage(trackedItem.data, d);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.MolotovDamage(trackedItem.data.trackedID, d);
+                    }
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
