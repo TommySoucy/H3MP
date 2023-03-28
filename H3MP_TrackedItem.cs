@@ -6324,7 +6324,7 @@ namespace H3MP
                     asTFS.Handle.CurPos = (TubeFedShotgunHandle.BoltPos)newData[7];
                 }
             }
-            else 
+            else
             {
                 // Set safety
                 if (asTFS.HasSafety && ((newData[0] == 1 && !asTFS.IsSafetyEngaged) || (newData[0] == 0 && asTFS.IsSafetyEngaged)))
@@ -6351,7 +6351,7 @@ namespace H3MP
             {
                 if (asTFS.IsHammerCocked)
                 {
-                    Mod.TubeFedShotgun_m_fireSelectorMode.SetValue(asTFS, false);
+                    Mod.TubeFedShotgun_m_isHammerCocked.SetValue(asTFS, false);
                     modified = true;
                 }
             }
@@ -6363,13 +6363,13 @@ namespace H3MP
                     modified = true;
                 }
             }
-            
+
             // Set chamber
             short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
             short chamberClassIndex = BitConverter.ToInt16(newData, 4);
             if(chamberClassIndex == -1) // We don't want round in chamber
             {
-                if(asTFS.Chamber.GetRound() != null)
+                if (asTFS.Chamber.GetRound() != null)
                 {
                     asTFS.Chamber.SetRound(null, false);
                     modified = true;

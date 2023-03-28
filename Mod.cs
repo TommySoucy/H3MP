@@ -281,7 +281,7 @@ namespace H3MP
         public static readonly FieldInfo Handgun_m_CamBurst = typeof(Handgun).GetField("m_CamBurst", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Handgun_m_isHammerCocked = typeof(Handgun).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo Handgun_m_fireSelectorMode = typeof(Handgun).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        public static readonly FieldInfo TubeFedShotgun_m_fireSelectorMode = typeof(TubeFedShotgun).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo TubeFedShotgun_m_isHammerCocked = typeof(TubeFedShotgun).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo BoltActionRifle_m_fireSelectorMode = typeof(BoltActionRifle).GetField("m_fireSelectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo BoltActionRifle_m_isHammerCocked = typeof(BoltActionRifle).GetField("m_isHammerCocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo TAH_Reticle_m_trackedTransforms = typeof(TAH_Reticle).GetField("m_trackedTransforms", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
