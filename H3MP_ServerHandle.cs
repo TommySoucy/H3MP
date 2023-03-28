@@ -3819,7 +3819,6 @@ namespace H3MP
             {
                 if (H3MP_Server.items[trackedID] != null)
                 {
-                    // Update local;
                     if (H3MP_Server.items[trackedID].physicalItem != null)
                     {
                         PinnedGrenade grenade = H3MP_Server.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
@@ -3840,6 +3839,27 @@ namespace H3MP
                                     rings[i].GetComponent<Collider>().enabled = false;
                                     rings[i].enabled = false;
                                 }
+                            }
+
+                            // If we control and is in spawn lock, want to duplicate and switch in QBS
+                            if (H3MP_Server.items[trackedID].controller == H3MP_GameManager.ID &&
+                                H3MP_Server.items[trackedID].physicalItem.physicalObject.m_isSpawnLock) // Implies is in QBS
+                            {
+                                // Keep ref to QBS
+                                FVRQuickBeltSlot slot = H3MP_Server.items[trackedID].physicalItem.physicalObject.QuickbeltSlot;
+
+                                // Detach original with now pulled pin from QBS
+                                H3MP_Server.items[trackedID].physicalItem.physicalObject.ClearQuickbeltState();
+
+                                // Spawn replacement
+                                GameObject replacement = H3MP_Server.items[trackedID].physicalItem.physicalObject.DuplicateFromSpawnLock(null);
+                                FVRPhysicalObject phys = replacement.GetComponent<FVRPhysicalObject>();
+
+                                // Set replacement to the QBS
+                                phys.SetQuickBeltSlot(slot);
+
+                                // Set spawnlock
+                                phys.ToggleQuickbeltState();
                             }
                         }
                     }

@@ -2898,21 +2898,21 @@ namespace H3MP
             {
                 if (slot.CurObject != null)
                 {
-                    slot.CurObject.SetQuickBeltSlot(null);
+                    slot.CurObject.ClearQuickbeltState();
                 }
             }
             foreach (FVRQuickBeltSlot slot in GM.CurrentPlayerBody.QBSlots_Internal)
             {
                 if (slot.CurObject != null)
                 {
-                    slot.CurObject.SetQuickBeltSlot(null);
+                    slot.CurObject.ClearQuickbeltState();
                 }
             }
             foreach (FVRQuickBeltSlot slot in GM.CurrentPlayerBody.QBSlots_Added)
             {
                 if (slot.CurObject != null)
                 {
-                    slot.CurObject.SetQuickBeltSlot(null);
+                    slot.CurObject.ClearQuickbeltState();
                 }
             }
         }
@@ -3947,7 +3947,7 @@ namespace H3MP
                 // If spectating we don't want to be able to put things in slots
                 if (Mod.TNHSpectating)
                 {
-                    __instance.SetQuickBeltSlot(null);
+                    __instance.ClearQuickbeltState();
                 }
 
                 // Just put this item in a slot

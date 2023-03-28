@@ -2021,7 +2021,7 @@ namespace H3MP
             }
             if (physObj.QuickbeltSlot != null)
             {
-                physObj.SetQuickBeltSlot(null);
+                physObj.ClearQuickbeltState();
             }
         }
 
