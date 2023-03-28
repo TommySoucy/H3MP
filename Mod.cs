@@ -8672,7 +8672,8 @@ namespace H3MP
                     }
 
                     // Even if not controller, if we pulled the pin on this grenade we want to tell controller to do the same
-                    if(prePulled != ___m_isPinPulled)
+                    // We also check if ___m_isPinPulled because for some reason it can end up with prePulled true but ___m_isPinPulled false on first update
+                    if (prePulled != ___m_isPinPulled && ___m_isPinPulled)
                     {
                         if (H3MP_ThreadManager.host)
                         {
