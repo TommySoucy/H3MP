@@ -3569,6 +3569,23 @@ namespace H3MP
             }
         }
 
+        public static void PinnedGrenadePullPin(int trackedID, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.pinnedGrenadePullPin))
+            {
+                packet.Write(trackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
         public static void FVRGrenadeExplode(int clientID, int trackedID, Vector3 pos)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.FVRGrenadeExplode))

@@ -1666,21 +1666,35 @@ namespace H3MP
 
             if (rings != null)
             {
+                bool pinPulled = (bool)Mod.PinnedGrenade_m_isPinPulled.GetValue(asPG);
+                bool newPinPulled = true;
                 for (int i = 0; i < rings.Count; ++i)
                 {
-                    if (newData[i+1] == 1 && !rings[i].HasPinDetached())
+                    if (!rings[i].HasPinDetached())
                     {
-                        Mod.PinnedGrenadeRing_m_hasPinDetached.SetValue(rings[i], true);
-                        rings[i].Pin.RootRigidbody = rings[i].Pin.gameObject.AddComponent<Rigidbody>();
-                        rings[i].Pin.RootRigidbody.mass = 0.02f;
-                        rings[i].ForceBreakInteraction();
-                        rings[i].transform.SetParent(rings[i].Pin.transform);
-                        rings[i].Pin.enabled = true;
-                        SM.PlayCoreSound(FVRPooledAudioType.GenericClose, rings[i].G.AudEvent_Pinpull, rings[i].transform.position);
-                        rings[i].GetComponent<Collider>().enabled = false;
-                        rings[i].enabled = false;
-                        modified = true;
+                        if(newData[i + 1] == 1)
+                        {
+                            Mod.PinnedGrenadeRing_m_hasPinDetached.SetValue(rings[i], true);
+                            rings[i].Pin.RootRigidbody = rings[i].Pin.gameObject.AddComponent<Rigidbody>();
+                            rings[i].Pin.RootRigidbody.mass = 0.02f;
+                            rings[i].ForceBreakInteraction();
+                            rings[i].transform.SetParent(rings[i].Pin.transform);
+                            rings[i].Pin.enabled = true;
+                            SM.PlayCoreSound(FVRPooledAudioType.GenericClose, rings[i].G.AudEvent_Pinpull, rings[i].transform.position);
+                            rings[i].GetComponent<Collider>().enabled = false;
+                            rings[i].enabled = false;
+                            modified = true;
+                        }
+                        else
+                        {
+                            newPinPulled = false;
+                        }
                     }
+                }
+
+                if(pinPulled != newPinPulled)
+                {
+                    Mod.PinnedGrenade_m_isPinPulled.SetValue(asPG, newPinPulled);
                 }
             }
 

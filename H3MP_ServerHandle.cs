@@ -3787,7 +3787,7 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             if (trackedID == -1 || trackedID >= H3MP_Server.items.Length)
             {
-                Mod.LogError("Server received order to explode pinned grenade with tracked ID: "+trackedID+" but items array is not lerge enough to hold this ID!");
+                Mod.LogError("Server received order to explode pinned grenade with tracked ID: "+trackedID+" but items array is not large enough to hold this ID!");
             }
             else
             {
@@ -3806,6 +3806,47 @@ namespace H3MP
             }
 
             H3MP_ServerSend.PinnedGrenadeExplode(clientID, packet);
+        }
+
+        public static void PinnedGrenadePullPin(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (trackedID == -1 || trackedID >= H3MP_Server.items.Length)
+            {
+                Mod.LogError("Server received order to pull pin on pinned grenade with tracked ID: "+trackedID+" but items array is not large enough to hold this ID!");
+            }
+            else
+            {
+                if (H3MP_Server.items[trackedID] != null)
+                {
+                    // Update local;
+                    if (H3MP_Server.items[trackedID].physicalItem != null)
+                    {
+                        PinnedGrenade grenade = H3MP_Server.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
+                        if (grenade != null)
+                        {
+                            List<PinnedGrenadeRing> rings = (List<PinnedGrenadeRing>)Mod.PinnedGrenade_m_rings.GetValue(grenade);
+                            for(int i=0; i< rings.Count; ++i)
+                            {
+                                if (!rings[i].HasPinDetached())
+                                {
+                                    Mod.PinnedGrenadeRing_m_hasPinDetached.SetValue(rings[i], true);
+                                    rings[i].Pin.RootRigidbody = rings[i].Pin.gameObject.AddComponent<Rigidbody>();
+                                    rings[i].Pin.RootRigidbody.mass = 0.02f;
+                                    rings[i].ForceBreakInteraction();
+                                    rings[i].transform.SetParent(rings[i].Pin.transform);
+                                    rings[i].Pin.enabled = true;
+                                    SM.PlayCoreSound(FVRPooledAudioType.GenericClose, rings[i].G.AudEvent_Pinpull, rings[i].transform.position);
+                                    rings[i].GetComponent<Collider>().enabled = false;
+                                    rings[i].enabled = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            H3MP_ServerSend.PinnedGrenadePullPin(trackedID, clientID);
         }
 
         public static void FVRGrenadeExplode(int clientID, H3MP_Packet packet)

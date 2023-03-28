@@ -3276,6 +3276,38 @@ namespace H3MP
             }
         }
 
+        public static void PinnedGrenadePullPin(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            if (H3MP_Client.items[trackedID] != null)
+            {
+                // Update local
+                if (H3MP_Client.items[trackedID].physicalItem != null)
+                {
+                    PinnedGrenade grenade = H3MP_Client.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
+                    if (grenade != null)
+                    {
+                        List<PinnedGrenadeRing> rings = (List<PinnedGrenadeRing>)Mod.PinnedGrenade_m_rings.GetValue(grenade);
+                        for (int i = 0; i < rings.Count; ++i)
+                        {
+                            if (!rings[i].HasPinDetached())
+                            {
+                                Mod.PinnedGrenadeRing_m_hasPinDetached.SetValue(rings[i], true);
+                                rings[i].Pin.RootRigidbody = rings[i].Pin.gameObject.AddComponent<Rigidbody>();
+                                rings[i].Pin.RootRigidbody.mass = 0.02f;
+                                rings[i].ForceBreakInteraction();
+                                rings[i].transform.SetParent(rings[i].Pin.transform);
+                                rings[i].Pin.enabled = true;
+                                SM.PlayCoreSound(FVRPooledAudioType.GenericClose, rings[i].G.AudEvent_Pinpull, rings[i].transform.position);
+                                rings[i].GetComponent<Collider>().enabled = false;
+                                rings[i].enabled = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public static void FVRGrenadeExplode(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();

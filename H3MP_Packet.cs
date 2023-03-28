@@ -162,7 +162,8 @@ namespace H3MP
         fuseIgnite = 151,
         fuseBoom = 152,
         molotovShatter = 153,
-        molotovDamage = 154
+        molotovDamage = 154,
+        pinnedGrenadePullPin = 155
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -318,7 +319,8 @@ namespace H3MP
         fuseIgnite = 148,
         fuseBoom = 149,
         molotovShatter = 150,
-        molotovDamage = 151
+        molotovDamage = 151,
+        pinnedGrenadePullPin = 152
     }
 
     public class H3MP_Packet : IDisposable

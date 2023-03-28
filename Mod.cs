@@ -256,6 +256,7 @@ namespace H3MP
         public static readonly FieldInfo StingerLauncher_m_hasMissile = typeof(StingerLauncher).GetField("m_hasMissile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo PinnedGrenade_m_hasSploded = typeof(PinnedGrenade).GetField("m_hasSploded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo PinnedGrenade_m_rings = typeof(PinnedGrenade).GetField("m_rings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo PinnedGrenade_m_isPinPulled = typeof(PinnedGrenade).GetField("m_isPinPulled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo PinnedGrenadeRing_m_hasPinDetached = typeof(PinnedGrenadeRing).GetField("m_hasPinDetached", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRGrenade_FuseTimings = typeof(FVRGrenade).GetField("FuseTimings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRGrenade_m_hasSploded = typeof(FVRGrenade).GetField("m_hasSploded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -8635,7 +8636,7 @@ namespace H3MP
         static bool exploded;
 
         // To prevent FVR(Fixed)Update from happening
-        static bool UpdatePrefix(PinnedGrenade __instance, bool ___m_hasSploded)
+        static bool UpdatePrefix(PinnedGrenade __instance, bool ___m_hasSploded, List<PinnedGrenadeRing> ___m_rings, ref bool ___m_isPinPulled)
         {
             if(Mod.managerObject == null)
             {
@@ -8648,9 +8649,43 @@ namespace H3MP
                 int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int index))
             {
                 // Return true (run original), index doesn't fit in references, reference null, or we control
-                return H3MP_TrackedItem.trackedItemReferences.Length <= index || 
-                       H3MP_TrackedItem.trackedItemReferences[index] == null || 
-                       H3MP_TrackedItem.trackedItemReferences[index].data.controller == H3MP_GameManager.ID;
+                if (H3MP_TrackedItem.trackedItemReferences.Length <= index ||
+                    H3MP_TrackedItem.trackedItemReferences[index] == null ||
+                    H3MP_TrackedItem.trackedItemReferences[index].data.controller == H3MP_GameManager.ID)
+                {
+                    return true;
+                }
+                else // This is tracked pinned grenade we are not in control of
+                {
+                    // Do part of update we still want as non controller
+                    bool prePulled = ___m_isPinPulled;
+                    if (___m_rings.Count > 0)
+                    {
+                        ___m_isPinPulled = true;
+                        for (int i = 0; i < ___m_rings.Count; i++)
+                        {
+                            if (!___m_rings[i].HasPinDetached())
+                            {
+                                ___m_isPinPulled = false;
+                            }
+                        }
+                    }
+
+                    // Even if not controller, if we pulled the pin on this grenade we want to tell controller to do the same
+                    if(prePulled != ___m_isPinPulled)
+                    {
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.PinnedGrenadePullPin(H3MP_TrackedItem.trackedItemReferences[index].data.trackedID);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.PinnedGrenadePullPin(H3MP_TrackedItem.trackedItemReferences[index].data.trackedID);
+                        }
+                    }
+
+                    return false;
+                }
             }
 
             return true;
