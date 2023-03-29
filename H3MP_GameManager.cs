@@ -2301,28 +2301,28 @@ namespace H3MP
             // These can build up in certain cases. The main one is when we load into a level which contains items that are inactive by default
             // These items will never be awoken, they will therefore be tracked but not synced with other clients. When we leave the scene, these items 
             // may be destroyed but their OnDestroy will not be called because they were never awoken, meaning they will still be in the items list
-            for(int i = items.Count-1; i <= 0; --i)
+            for(int i = items.Count-1; i >= 0; --i)
             {
                 if ((items[i].physicalItem != null && !items[i].physicalItem.awoken) || (items[i].physicalItem == null && !items[i].awaitingInstantiation))
                 {
                     items[i].RemoveFromLocal();
                 }
             }
-            for(int i = sosigs.Count - 1; i <= 0; --i)
+            for(int i = sosigs.Count - 1; i >= 0; --i)
             {
                 if ((sosigs[i].physicalObject != null && !sosigs[i].physicalObject.awoken) || (sosigs[i].physicalObject == null && !sosigs[i].awaitingInstantiation))
                 {
                     sosigs[i].RemoveFromLocal();
                 }
             }
-            for(int i = autoMeaters.Count - 1; i <= 0; --i)
+            for(int i = autoMeaters.Count - 1; i >= 0; --i)
             {
                 if ((autoMeaters[i].physicalObject != null && !autoMeaters[i].physicalObject.awoken) || (autoMeaters[i].physicalObject == null && !autoMeaters[i].awaitingInstantiation))
                 {
                     autoMeaters[i].RemoveFromLocal();
                 }
             }
-            for(int i = encryptions.Count - 1; i <= 0; --i)
+            for(int i = encryptions.Count - 1; i >= 0; --i)
             {
                 if ((encryptions[i].physicalObject != null && !encryptions[i].physicalObject.awoken) || (encryptions[i].physicalObject == null && !encryptions[i].awaitingInstantiation))
                 {
