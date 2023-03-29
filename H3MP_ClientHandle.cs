@@ -3680,6 +3680,11 @@ namespace H3MP
             if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance TNHInstance))
             {
                 TNHInstance.initializer = initializer;
+
+                if(initializer != H3MP_GameManager.ID)
+                {
+                    TNHInstance.initializationRequested = false;
+                }
             }
         }
 
