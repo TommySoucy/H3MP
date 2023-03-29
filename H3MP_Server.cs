@@ -86,7 +86,7 @@ namespace H3MP
             udpListener = null;
 
             H3MP_GameManager.Reset();
-            GameObject.Destroy(Mod.managerObject);
+            Mod.Reset();
             SpecificClose();
         }
 

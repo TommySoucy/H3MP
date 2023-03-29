@@ -375,6 +375,21 @@ namespace H3MP
             Init();
         }
 
+        public static void Reset()
+        {
+            skipNextFires = 0;
+            skipAllInstantiates = 0;
+            TNHMenuLPJ = true;
+            TNHOnDeathSpectate = true;
+            TNHSpectating = false;
+            setLatestInstance = false;
+            currentTNHInstance = null;
+            currentlyPlayingTNH = false;
+            spectatorHost = false;
+
+            Destroy(Mod.managerObject);
+        }
+
         private void Update()
         {
 #if DEBUG

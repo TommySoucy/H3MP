@@ -1223,7 +1223,7 @@ namespace H3MP
                 ID = -1;
                 H3MP_GameManager.Reset();
                 SpecificDisconnect();
-                Destroy(Mod.managerObject);
+                Mod.Reset();
             }
         }
 
