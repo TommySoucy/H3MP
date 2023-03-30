@@ -323,6 +323,7 @@ namespace H3MP
 
         public void SendRelevantTrackedObjects(int fromClient = -1)
         {
+            Mod.LogInfo("Sending relevant object to " + ID + " from " + fromClient+" in "+ player.scene+"/"+ player.instance);
             // Items
             if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> itemInstances) &&
                 itemInstances.TryGetValue(player.instance, out List<int> items))
@@ -330,7 +331,7 @@ namespace H3MP
                 for(int i=0; i < items.Count; ++i)
                 {
                     H3MP_TrackedItemData trackedItemData = H3MP_Server.items[items[i]];
-                    if(trackedItemData != null && (fromClient == -1 || trackedItemData.controller == fromClient) && trackedItemData.controller != ID)
+                    if(trackedItemData != null && (fromClient == -1 || trackedItemData.controller == fromClient))
                     {
                         // If this is ours
                         if(trackedItemData.controller == 0)
@@ -355,10 +356,11 @@ namespace H3MP
             if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> sosigInstances) &&
                 sosigInstances.TryGetValue(player.instance, out List<int> sosigs))
             {
-                for(int i=0; i < sosigs.Count; ++i)
+                Mod.LogInfo("\tHas sosig");
+                for (int i=0; i < sosigs.Count; ++i)
                 {
                     H3MP_TrackedSosigData trackedSosigData = H3MP_Server.sosigs[sosigs[i]];
-                    if(trackedSosigData != null && (fromClient == -1 || trackedSosigData.controller == fromClient) && trackedSosigData.controller != ID)
+                    if(trackedSosigData != null && (fromClient == -1 || trackedSosigData.controller == fromClient))
                     {
                         // If this is ours
                         if(trackedSosigData.controller == 0)
@@ -386,7 +388,7 @@ namespace H3MP
                 for(int i=0; i < autoMeaters.Count; ++i)
                 {
                     H3MP_TrackedAutoMeaterData trackedAutoMeaterData = H3MP_Server.autoMeaters[autoMeaters[i]];
-                    if(trackedAutoMeaterData != null && (fromClient == -1 || trackedAutoMeaterData.controller == fromClient) && trackedAutoMeaterData.controller != ID)
+                    if(trackedAutoMeaterData != null && (fromClient == -1 || trackedAutoMeaterData.controller == fromClient))
                     {
                         // If this is ours
                         if(trackedAutoMeaterData.controller == 0)
@@ -414,7 +416,7 @@ namespace H3MP
                 for(int i=0; i < encryptions.Count; ++i)
                 {
                     H3MP_TrackedEncryptionData trackedEncryptionData = H3MP_Server.encryptions[encryptions[i]];
-                    if(trackedEncryptionData != null && (fromClient == -1 || trackedEncryptionData.controller == fromClient) && trackedEncryptionData.controller != ID)
+                    if(trackedEncryptionData != null && (fromClient == -1 || trackedEncryptionData.controller == fromClient))
                     {
                         // If this is ours
                         if(trackedEncryptionData.controller == 0)

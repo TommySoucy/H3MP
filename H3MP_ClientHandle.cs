@@ -237,13 +237,62 @@ namespace H3MP
                     H3MP_GameManager.items.Add(trackedItem);
                     if (trackedItem.physicalItem == null)
                     {
-                        // If its is null and we receive this after having finishing loading, we only want to instantiate if it is in our current scene/instance
-                        if (!H3MP_GameManager.sceneLoading && trackedItem.scene.Equals(H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
+                        // If it is null and we receive this after having finishing loading, we only want to instantiate if it is in our current scene/instance
+                        if (!H3MP_GameManager.sceneLoading)
                         {
-                            if (!trackedItem.awaitingInstantiation)
+                            if (trackedItem.scene.Equals(H3MP_GameManager.scene) && trackedItem.instance == H3MP_GameManager.instance)
                             {
-                                trackedItem.awaitingInstantiation = true;
-                                AnvilManager.Run(trackedItem.Instantiate());
+                                if (!trackedItem.awaitingInstantiation)
+                                {
+                                    trackedItem.awaitingInstantiation = true;
+                                    AnvilManager.Run(trackedItem.Instantiate());
+                                }
+                            }
+                            else
+                            {
+                                // Scene not loading but object is not in our scene/instance, try bouncing or destroy
+                                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> playerInstances) &&
+                                    playerInstances.TryGetValue(trackedItem.instance, out List<int> playerList))
+                                {
+                                    List<int> newPlayerList = new List<int>(playerList);
+                                    for (int i = 0; i < debounce.Count; ++i)
+                                    {
+                                        newPlayerList.Remove(debounce[i]);
+                                    }
+                                    controllerID = Mod.GetBestPotentialObjectHost(trackedItem.controller, true, true, newPlayerList, trackedItem.scene, trackedItem.instance);
+                                    if (controllerID == -1)
+                                    {
+                                        H3MP_ClientSend.DestroyItem(trackedID);
+                                        trackedItem.RemoveFromLocal();
+                                        H3MP_Client.items[trackedID] = null;
+                                        if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                            currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                        {
+                                            itemList.Remove(trackedItem.trackedID);
+                                        }
+                                        trackedItem.awaitingInstantiation = false;
+                                        destroyed = true;
+                                    }
+                                    else
+                                    {
+                                        trackedItem.RemoveFromLocal();
+                                        debounce.Add(H3MP_GameManager.ID);
+                                        H3MP_ClientSend.GiveControl(trackedID, controllerID, debounce);
+                                    }
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.DestroyItem(trackedID);
+                                    trackedItem.RemoveFromLocal();
+                                    H3MP_Client.items[trackedID] = null;
+                                    if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                        currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                    {
+                                        itemList.Remove(trackedItem.trackedID);
+                                    }
+                                    trackedItem.awaitingInstantiation = false;
+                                    destroyed = true;
+                                }
                             }
                         }
                         else
@@ -308,10 +357,6 @@ namespace H3MP
                     trackedItem.SetController(controllerID);
                 }
             }
-            else if(controllerID == H3MP_GameManager.ID) // Given control of object we do not even have data for
-            {
-                H3MP_ClientSend.DestroyItem(trackedID);
-            }
         }
 
         public static void GiveSosigControl(H3MP_Packet packet)
@@ -324,14 +369,17 @@ namespace H3MP
             {
                 debounce.Add(packet.ReadInt());
             }
+            Mod.LogInfo("GiveSosigControl handle with trackedID: "+trackedID+ ", controllerID: "+controllerID);
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[trackedID];
 
             if (trackedSosig != null)
             {
+                Mod.LogInfo("\tWe have data");
                 bool destroyed = false;
                 if (trackedSosig.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
+                    Mod.LogInfo("\t\tWe must give up control");
                     trackedSosig.RemoveFromLocal();
 
                     if (trackedSosig.physicalObject != null)
@@ -345,26 +393,81 @@ namespace H3MP
                 }
                 else if (trackedSosig.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
                 {
+                    Mod.LogInfo("\t\tWe must take control");
                     trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
                     H3MP_GameManager.sosigs.Add(trackedSosig);
 
                     if (trackedSosig.physicalObject == null)
                     {
+                        Mod.LogInfo("\t\t\tWe do not have phys yet");
                         // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
                         // Otherwise we send destroy order for the object
-                        if (!H3MP_GameManager.sceneLoading && trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
+                        if (!H3MP_GameManager.sceneLoading)
                         {
-                            if (!trackedSosig.awaitingInstantiation)
+                            Mod.LogInfo("\t\t\t\tScene not loading");
+                            if (trackedSosig.scene.Equals(H3MP_GameManager.scene) && trackedSosig.instance == H3MP_GameManager.instance)
                             {
-                                trackedSosig.awaitingInstantiation = true;
-                                AnvilManager.Run(trackedSosig.Instantiate());
+                                Mod.LogInfo("\t\t\t\t\tIs in our scene/instance, instantiating");
+                                if (!trackedSosig.awaitingInstantiation)
+                                {
+                                    trackedSosig.awaitingInstantiation = true;
+                                    AnvilManager.Run(trackedSosig.Instantiate());
+                                }
+                            }
+                            else
+                            {
+                                Mod.LogInfo("\t\t\t\t\tIs not in our scene/instance, bouncing control or destroying");
+                                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> playerInstances) &&
+                                    playerInstances.TryGetValue(trackedSosig.instance, out List<int> playerList))
+                                {
+                                    List<int> newPlayerList = new List<int>(playerList);
+                                    for (int i = 0; i < debounce.Count; ++i)
+                                    {
+                                        newPlayerList.Remove(debounce[i]);
+                                    }
+                                    controllerID = Mod.GetBestPotentialObjectHost(trackedSosig.controller, true, true, newPlayerList, trackedSosig.scene, trackedSosig.instance);
+                                    if (controllerID == -1)
+                                    {
+                                        H3MP_ClientSend.DestroySosig(trackedID);
+                                        trackedSosig.RemoveFromLocal();
+                                        H3MP_Client.sosigs[trackedID] = null;
+                                        if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                            currentInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
+                                        {
+                                            sosigList.Remove(trackedSosig.trackedID);
+                                        }
+                                        trackedSosig.awaitingInstantiation = false;
+                                        destroyed = true;
+                                    }
+                                    else
+                                    {
+                                        trackedSosig.RemoveFromLocal();
+                                        debounce.Add(H3MP_GameManager.ID);
+                                        H3MP_ClientSend.GiveSosigControl(trackedID, controllerID, debounce);
+                                    }
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.DestroySosig(trackedID);
+                                    trackedSosig.RemoveFromLocal();
+                                    H3MP_Client.sosigs[trackedID] = null;
+                                    if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                        currentInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
+                                    {
+                                        sosigList.Remove(trackedSosig.trackedID);
+                                    }
+                                    trackedSosig.awaitingInstantiation = false;
+                                    destroyed = true;
+                                }
                             }
                         }
                         else
                         {
+                            Mod.LogInfo("\t\t\t\tScene loading");
                             // Only bounce control or destroy if we are not on our way towards the object's scene/instance
                             if (!trackedSosig.scene.Equals(LoadLevelBeginPatch.loadingLevel) || trackedSosig.instance != H3MP_GameManager.instance)
                             {
+                                Mod.LogInfo("\t\t\t\t\tNot in our destination scene/instance");
                                 if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> playerInstances) &&
                                     playerInstances.TryGetValue(trackedSosig.instance, out List<int> playerList))
                                 {
@@ -426,10 +529,6 @@ namespace H3MP
                     trackedSosig.controller = controllerID;
                 }
             }
-            else if (controllerID == H3MP_GameManager.ID) // Given control of object we do not even have data for
-            {
-                H3MP_ClientSend.DestroySosig(trackedID);
-            }
         }
 
         public static void GiveAutoMeaterControl(H3MP_Packet packet)
@@ -471,12 +570,60 @@ namespace H3MP
                     {
                         // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
                         // Otherwise we send destroy order for the object
-                        if (!H3MP_GameManager.sceneLoading && trackedAutoMeater.scene.Equals(H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance)
+                        if (!H3MP_GameManager.sceneLoading)
                         {
-                            if (!trackedAutoMeater.awaitingInstantiation)
+                            if (trackedAutoMeater.scene.Equals(H3MP_GameManager.scene) && trackedAutoMeater.instance == H3MP_GameManager.instance)
                             {
-                                trackedAutoMeater.awaitingInstantiation = true;
-                                AnvilManager.Run(trackedAutoMeater.Instantiate());
+                                if (!trackedAutoMeater.awaitingInstantiation)
+                                {
+                                    trackedAutoMeater.awaitingInstantiation = true;
+                                    AnvilManager.Run(trackedAutoMeater.Instantiate());
+                                }
+                            }
+                            else
+                            {
+                                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> playerInstances) &&
+                                    playerInstances.TryGetValue(trackedAutoMeater.instance, out List<int> playerList))
+                                {
+                                    List<int> newPlayerList = new List<int>(playerList);
+                                    for (int i = 0; i < debounce.Count; ++i)
+                                    {
+                                        newPlayerList.Remove(debounce[i]);
+                                    }
+                                    controllerID = Mod.GetBestPotentialObjectHost(trackedAutoMeater.controller, true, true, newPlayerList, trackedAutoMeater.scene, trackedAutoMeater.instance);
+                                    if (controllerID == -1)
+                                    {
+                                        H3MP_ClientSend.DestroySosig(trackedID);
+                                        trackedAutoMeater.RemoveFromLocal();
+                                        H3MP_Client.autoMeaters[trackedID] = null;
+                                        if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                            currentInstances.TryGetValue(trackedAutoMeater.instance, out List<int> autoMeaterList))
+                                        {
+                                            autoMeaterList.Remove(trackedAutoMeater.trackedID);
+                                        }
+                                        trackedAutoMeater.awaitingInstantiation = false;
+                                        destroyed = true;
+                                    }
+                                    else
+                                    {
+                                        trackedAutoMeater.RemoveFromLocal();
+                                        debounce.Add(H3MP_GameManager.ID);
+                                        H3MP_ClientSend.GiveAutoMeaterControl(trackedID, controllerID, debounce);
+                                    }
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.DestroyAutoMeater(trackedID);
+                                    trackedAutoMeater.RemoveFromLocal();
+                                    H3MP_Client.autoMeaters[trackedID] = null;
+                                    if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                        currentInstances.TryGetValue(trackedAutoMeater.instance, out List<int> autoMeaterList))
+                                    {
+                                        autoMeaterList.Remove(trackedAutoMeater.trackedID);
+                                    }
+                                    trackedAutoMeater.awaitingInstantiation = false;
+                                    destroyed = true;
+                                }
                             }
                         }
                         else
@@ -545,10 +692,6 @@ namespace H3MP
                     trackedAutoMeater.controller = controllerID;
                 }
             }
-            else if (controllerID == H3MP_GameManager.ID) // Given control of object we do not even have data for
-            {
-                H3MP_ClientSend.DestroyAutoMeater(trackedID);
-            }
         }
 
         public static void GiveEncryptionControl(H3MP_Packet packet)
@@ -580,12 +723,60 @@ namespace H3MP
                     {
                         // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
                         // Otherwise we send destroy order for the object
-                        if (!H3MP_GameManager.sceneLoading && trackedEncryption.scene.Equals(H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
+                        if (!H3MP_GameManager.sceneLoading)
                         {
-                            if (!trackedEncryption.awaitingInstantiation)
+                            if (trackedEncryption.scene.Equals(H3MP_GameManager.scene) && trackedEncryption.instance == H3MP_GameManager.instance)
                             {
-                                trackedEncryption.awaitingInstantiation = true;
-                                AnvilManager.Run(trackedEncryption.Instantiate());
+                                if (!trackedEncryption.awaitingInstantiation)
+                                {
+                                    trackedEncryption.awaitingInstantiation = true;
+                                    AnvilManager.Run(trackedEncryption.Instantiate());
+                                }
+                            }
+                            else
+                            {
+                                if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> playerInstances) &&
+                                    playerInstances.TryGetValue(trackedEncryption.instance, out List<int> playerList))
+                                {
+                                    List<int> newPlayerList = new List<int>(playerList);
+                                    for (int i = 0; i < debounce.Count; ++i)
+                                    {
+                                        newPlayerList.Remove(debounce[i]);
+                                    }
+                                    controllerID = Mod.GetBestPotentialObjectHost(trackedEncryption.controller, true, true, newPlayerList, trackedEncryption.scene, trackedEncryption.instance);
+                                    if (controllerID == -1)
+                                    {
+                                        H3MP_ClientSend.DestroyEncryption(trackedID);
+                                        trackedEncryption.RemoveFromLocal();
+                                        H3MP_Client.encryptions[trackedID] = null;
+                                        if (H3MP_GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                            currentInstances.TryGetValue(trackedEncryption.instance, out List<int> encryptionList))
+                                        {
+                                            encryptionList.Remove(trackedEncryption.trackedID);
+                                        }
+                                        trackedEncryption.awaitingInstantiation = false;
+                                        destroyed = true;
+                                    }
+                                    else
+                                    {
+                                        trackedEncryption.RemoveFromLocal();
+                                        debounce.Add(H3MP_GameManager.ID);
+                                        H3MP_ClientSend.GiveEncryptionControl(trackedID, controllerID, debounce);
+                                    }
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.DestroyEncryption(trackedID);
+                                    trackedEncryption.RemoveFromLocal();
+                                    H3MP_Client.encryptions[trackedID] = null;
+                                    if (H3MP_GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                        currentInstances.TryGetValue(trackedEncryption.instance, out List<int> encryptionList))
+                                    {
+                                        encryptionList.Remove(trackedEncryption.trackedID);
+                                    }
+                                    trackedEncryption.awaitingInstantiation = false;
+                                    destroyed = true;
+                                }
                             }
                         }
                         else
@@ -645,10 +836,6 @@ namespace H3MP
                 {
                     trackedEncryption.controller = controllerID;
                 }
-            }
-            else if (controllerID == H3MP_GameManager.ID) // Given control of object we do not even have data for
-            {
-                H3MP_ClientSend.DestroyEncryption(trackedID);
             }
         }
 

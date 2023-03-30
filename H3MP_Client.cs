@@ -549,6 +549,7 @@ namespace H3MP
             {
                 if (waitingLocalItems.TryGetValue(trackedItem.localWaitingIndex, out actualTrackedItem))
                 {
+                    // Check if we were init tracker because we might have a different item with the same local waiting index in our side
                     if (trackedItem.initTracker == H3MP_GameManager.ID)
                     {
                         // Get our item
@@ -581,23 +582,85 @@ namespace H3MP
 
                         actualTrackedItem.OnTrackedIDReceived();
                     }
-                    else if (items[trackedItem.trackedID] != null && items[trackedItem.trackedID].physicalItem != null && !items[trackedItem.trackedID].awaitingInstantiation &&
-                             !H3MP_GameManager.sceneLoading && items[trackedItem.trackedID].scene.Equals(H3MP_GameManager.scene) &&
-                             items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
+                    else
                     {
-                        items[trackedItem.trackedID].awaitingInstantiation = true;
-                        AnvilManager.Run(items[trackedItem.trackedID].Instantiate());
+                        H3MP_TrackedItemData actual = items[trackedItem.trackedID];
+                        if (actual == null)
+                        {
+                            items[trackedItem.trackedID] = trackedItem;
+                            actual = trackedItem;
+
+                            // Add to item tracking list
+                            if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
+                            {
+                                if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                {
+                                    itemList.Add(trackedItem.trackedID);
+                                }
+                                else
+                                {
+                                    relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                                }
+                            }
+                            else
+                            {
+                                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                                newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                                H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
+                            }
+
+                            // Add local list
+                            trackedItem.localTrackedID = H3MP_GameManager.items.Count;
+                            H3MP_GameManager.items.Add(trackedItem);
+                        }
+
+                        if (actual.physicalItem == null && !actual.awaitingInstantiation &&
+                            !H3MP_GameManager.sceneLoading && actual.scene.Equals(H3MP_GameManager.scene) && actual.instance == H3MP_GameManager.instance)
+                        {
+                            actual.awaitingInstantiation = true;
+                            AnvilManager.Run(actual.Instantiate());
+                        }
                     }
-                    // else, we should have received data before control, if not in our scene/instance, control will be bounced in GiveControl
                 }
-                else if (trackedItem.trackedID != -1 && items[trackedItem.trackedID] != null && items[trackedItem.trackedID].physicalItem != null && !items[trackedItem.trackedID].awaitingInstantiation &&
-                       !H3MP_GameManager.sceneLoading && items[trackedItem.trackedID].scene.Equals(H3MP_GameManager.scene) &&
-                       items[trackedItem.trackedID].instance == H3MP_GameManager.instance)
+                else
                 {
-                    items[trackedItem.trackedID].awaitingInstantiation = true;
-                    AnvilManager.Run(items[trackedItem.trackedID].Instantiate());
+                    H3MP_TrackedItemData actual = items[trackedItem.trackedID];
+                    if (actual == null)
+                    {
+                        items[trackedItem.trackedID] = trackedItem;
+                        actual = trackedItem;
+
+                        // Add to item tracking list
+                        if (H3MP_GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                            {
+                                itemList.Add(trackedItem.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
+                            H3MP_GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
+                        }
+
+                        // Add local list
+                        trackedItem.localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(trackedItem);
+                    }
+
+                    if (actual.physicalItem == null && !actual.awaitingInstantiation &&
+                        !H3MP_GameManager.sceneLoading && actual.scene.Equals(H3MP_GameManager.scene) && actual.instance == H3MP_GameManager.instance)
+                    {
+                        actual.awaitingInstantiation = true;
+                        AnvilManager.Run(actual.Instantiate());
+                    }
                 }
-                // else, we should have received data before control, if not in our scene/instance, control will be bounced in GiveControl
             }
             else
             {
@@ -682,6 +745,7 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig)
         {
+            Mod.LogInfo("Received full sosig");
             H3MP_TrackedSosigData actualTrackedSosig = null;
             // If this is a scene init object the server rejected
             if (trackedSosig.trackedID == -2)
@@ -706,6 +770,7 @@ namespace H3MP
 
             if (trackedSosig.controller == H3MP_Client.singleton.ID)
             {
+                Mod.LogInfo("\tWe are controller, tracked id: "+ trackedSosig.trackedID+", have actual?: "+(sosigs[trackedSosig.trackedID] != null));
                 if (waitingLocalSosigs.TryGetValue(trackedSosig.localWaitingIndex, out actualTrackedSosig))
                 {
                     if (trackedSosig.initTracker == H3MP_GameManager.ID)
@@ -750,21 +815,82 @@ namespace H3MP
                             H3MP_ClientSend.TrackedSosig(sosigs[trackedSosig.trackedID]);
                         }
                     }
-                    else if (sosigs[trackedSosig.trackedID] != null && sosigs[trackedSosig.trackedID].physicalObject != null && !sosigs[trackedSosig.trackedID].awaitingInstantiation &&
-                             !H3MP_GameManager.sceneLoading && sosigs[trackedSosig.trackedID].scene.Equals(H3MP_GameManager.scene) &&
-                             sosigs[trackedSosig.trackedID].instance == H3MP_GameManager.instance)
+                    else
                     {
-                        sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
-                        AnvilManager.Run(sosigs[trackedSosig.trackedID].Instantiate());
+                        H3MP_TrackedSosigData actual = sosigs[trackedSosig.trackedID];
+                        if (actual == null)
+                        {
+                            sosigs[trackedSosig.trackedID] = trackedSosig;
+                            actual = trackedSosig;
+
+                            // Add to sosig tracking list
+                            if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> relevantInstances))
+                            {
+                                if (relevantInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
+                                {
+                                    sosigList.Add(trackedSosig.trackedID);
+                                }
+                                else
+                                {
+                                    relevantInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
+                                }
+                            }
+                            else
+                            {
+                                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                                newInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
+                                H3MP_GameManager.sosigsByInstanceByScene.Add(trackedSosig.scene, newInstances);
+                            }
+
+                            trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
+                            H3MP_GameManager.sosigs.Add(trackedSosig);
+                        }
+
+                        if (actual.physicalObject == null && !actual.awaitingInstantiation &&
+                            !H3MP_GameManager.sceneLoading && actual.scene.Equals(H3MP_GameManager.scene) && actual.instance == H3MP_GameManager.instance)
+                        {
+                            actual.awaitingInstantiation = true;
+                            AnvilManager.Run(actual.Instantiate());
+                        }
                     }
                 }
-                else if(trackedSosig.trackedID != -1 && sosigs[trackedSosig.trackedID] != null && sosigs[trackedSosig.trackedID].physicalObject != null && !sosigs[trackedSosig.trackedID].awaitingInstantiation &&
-                        !H3MP_GameManager.sceneLoading && sosigs[trackedSosig.trackedID].scene.Equals(H3MP_GameManager.scene) &&
-                        sosigs[trackedSosig.trackedID].instance == H3MP_GameManager.instance)
+                else
                 {
-                    // Received full data for objects we are in control of, instantiate if possible
-                    sosigs[trackedSosig.trackedID].awaitingInstantiation = true;
-                    AnvilManager.Run(sosigs[trackedSosig.trackedID].Instantiate());
+                    H3MP_TrackedSosigData actual = sosigs[trackedSosig.trackedID];
+                    if (actual == null)
+                    {
+                        sosigs[trackedSosig.trackedID] = trackedSosig;
+                        actual = trackedSosig;
+
+                        // Add to sosig tracking list
+                        if (H3MP_GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
+                            {
+                                sosigList.Add(trackedSosig.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
+                            H3MP_GameManager.sosigsByInstanceByScene.Add(trackedSosig.scene, newInstances);
+                        }
+
+                        trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
+                        H3MP_GameManager.sosigs.Add(trackedSosig);
+                    }
+
+                    if (actual.physicalObject == null && !actual.awaitingInstantiation &&
+                        !H3MP_GameManager.sceneLoading && actual.scene.Equals(H3MP_GameManager.scene) && actual.instance == H3MP_GameManager.instance)
+                    {
+                        actual.awaitingInstantiation = true;
+                        AnvilManager.Run(actual.Instantiate());
+                    }
                 }
             }
             else
@@ -886,20 +1012,82 @@ namespace H3MP
                         // Send queued up orders
                         actualTrackedAutoMeater.OnTrackedIDReceived();
                     }
-                    else if (autoMeaters[trackedAutoMeater.trackedID] != null && autoMeaters[trackedAutoMeater.trackedID].physicalObject != null && !autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation &&
-                            !H3MP_GameManager.sceneLoading && autoMeaters[trackedAutoMeater.trackedID].scene.Equals(H3MP_GameManager.scene) &&
-                            autoMeaters[trackedAutoMeater.trackedID].instance == H3MP_GameManager.instance)
+                    else
                     {
-                        autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation = true;
-                        AnvilManager.Run(autoMeaters[trackedAutoMeater.trackedID].Instantiate());
+                        H3MP_TrackedAutoMeaterData actual = autoMeaters[trackedAutoMeater.trackedID];
+                        if (actual == null)
+                        {
+                            autoMeaters[trackedAutoMeater.trackedID] = trackedAutoMeater;
+                            actual = trackedAutoMeater;
+
+                            // Add to autoMeater tracking list
+                            if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> relevantInstances))
+                            {
+                                if (relevantInstances.TryGetValue(trackedAutoMeater.instance, out List<int> sosigList))
+                                {
+                                    sosigList.Add(trackedAutoMeater.trackedID);
+                                }
+                                else
+                                {
+                                    relevantInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
+                                }
+                            }
+                            else
+                            {
+                                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                                newInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
+                                H3MP_GameManager.autoMeatersByInstanceByScene.Add(trackedAutoMeater.scene, newInstances);
+                            }
+
+                            trackedAutoMeater.localTrackedID = H3MP_GameManager.autoMeaters.Count;
+                            H3MP_GameManager.autoMeaters.Add(trackedAutoMeater);
+                        }
+
+                        if (actual.physicalObject == null && !actual.awaitingInstantiation &&
+                            !H3MP_GameManager.sceneLoading && actual.scene.Equals(H3MP_GameManager.scene) && actual.instance == H3MP_GameManager.instance)
+                        {
+                            actual.awaitingInstantiation = true;
+                            AnvilManager.Run(actual.Instantiate());
+                        }
                     }
                 }
-                else if (trackedAutoMeater.trackedID != -1 && autoMeaters[trackedAutoMeater.trackedID] != null && autoMeaters[trackedAutoMeater.trackedID].physicalObject != null && !autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation &&
-                        !H3MP_GameManager.sceneLoading && autoMeaters[trackedAutoMeater.trackedID].scene.Equals(H3MP_GameManager.scene) &&
-                        autoMeaters[trackedAutoMeater.trackedID].instance == H3MP_GameManager.instance)
+                else
                 {
-                    autoMeaters[trackedAutoMeater.trackedID].awaitingInstantiation = true;
-                    AnvilManager.Run(autoMeaters[trackedAutoMeater.trackedID].Instantiate());
+                    H3MP_TrackedAutoMeaterData actual = autoMeaters[trackedAutoMeater.trackedID];
+                    if (actual == null)
+                    {
+                        autoMeaters[trackedAutoMeater.trackedID] = trackedAutoMeater;
+                        actual = trackedAutoMeater;
+
+                        // Add to autoMeater tracking list
+                        if (H3MP_GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedAutoMeater.instance, out List<int> sosigList))
+                            {
+                                sosigList.Add(trackedAutoMeater.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
+                            H3MP_GameManager.autoMeatersByInstanceByScene.Add(trackedAutoMeater.scene, newInstances);
+                        }
+
+                        trackedAutoMeater.localTrackedID = H3MP_GameManager.autoMeaters.Count;
+                        H3MP_GameManager.autoMeaters.Add(trackedAutoMeater);
+                    }
+
+                    if (actual.physicalObject == null && !actual.awaitingInstantiation &&
+                        !H3MP_GameManager.sceneLoading && actual.scene.Equals(H3MP_GameManager.scene) && actual.instance == H3MP_GameManager.instance)
+                    {
+                        actual.awaitingInstantiation = true;
+                        AnvilManager.Run(actual.Instantiate());
+                    }
                 }
             }
             else
@@ -1025,20 +1213,82 @@ namespace H3MP
                             H3MP_ClientSend.TrackedEncryption(encryptions[trackedEncryption.trackedID]);
                         }
                     }
-                    else if (encryptions[trackedEncryption.trackedID] != null && encryptions[trackedEncryption.trackedID].physicalObject != null && !encryptions[trackedEncryption.trackedID].awaitingInstantiation &&
-                            !H3MP_GameManager.sceneLoading && encryptions[trackedEncryption.trackedID].scene.Equals(H3MP_GameManager.scene) &&
-                            encryptions[trackedEncryption.trackedID].instance == H3MP_GameManager.instance)
+                    else
                     {
-                        encryptions[trackedEncryption.trackedID].awaitingInstantiation = true;
-                        AnvilManager.Run(encryptions[trackedEncryption.trackedID].Instantiate());
+                        H3MP_TrackedEncryptionData actual = encryptions[trackedEncryption.trackedID];
+                        if (actual == null)
+                        {
+                            encryptions[trackedEncryption.trackedID] = trackedEncryption;
+                            actual = trackedEncryption;
+
+                            // Add to encryption tracking list
+                            if (H3MP_GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> relevantInstances))
+                            {
+                                if (relevantInstances.TryGetValue(trackedEncryption.instance, out List<int> sosigList))
+                                {
+                                    sosigList.Add(trackedEncryption.trackedID);
+                                }
+                                else
+                                {
+                                    relevantInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
+                                }
+                            }
+                            else
+                            {
+                                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                                newInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
+                                H3MP_GameManager.encryptionsByInstanceByScene.Add(trackedEncryption.scene, newInstances);
+                            }
+
+                            trackedEncryption.localTrackedID = H3MP_GameManager.encryptions.Count;
+                            H3MP_GameManager.encryptions.Add(trackedEncryption);
+                        }
+
+                        if (actual.physicalObject == null && !actual.awaitingInstantiation &&
+                            !H3MP_GameManager.sceneLoading && actual.scene.Equals(H3MP_GameManager.scene) && actual.instance == H3MP_GameManager.instance)
+                        {
+                            actual.awaitingInstantiation = true;
+                            AnvilManager.Run(actual.Instantiate());
+                        }
                     }
                 }
-                else if (trackedEncryption.trackedID != -1 && encryptions[trackedEncryption.trackedID] != null && encryptions[trackedEncryption.trackedID].physicalObject != null && !encryptions[trackedEncryption.trackedID].awaitingInstantiation &&
-                        !H3MP_GameManager.sceneLoading && encryptions[trackedEncryption.trackedID].scene.Equals(H3MP_GameManager.scene) &&
-                        encryptions[trackedEncryption.trackedID].instance == H3MP_GameManager.instance)
+                else
                 {
-                    encryptions[trackedEncryption.trackedID].awaitingInstantiation = true;
-                    AnvilManager.Run(encryptions[trackedEncryption.trackedID].Instantiate());
+                    H3MP_TrackedEncryptionData actual = encryptions[trackedEncryption.trackedID];
+                    if (actual == null)
+                    {
+                        encryptions[trackedEncryption.trackedID] = trackedEncryption;
+                        actual = trackedEncryption;
+
+                        // Add to encryption tracking list
+                        if (H3MP_GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedEncryption.instance, out List<int> sosigList))
+                            {
+                                sosigList.Add(trackedEncryption.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
+                            H3MP_GameManager.encryptionsByInstanceByScene.Add(trackedEncryption.scene, newInstances);
+                        }
+
+                        trackedEncryption.localTrackedID = H3MP_GameManager.encryptions.Count;
+                        H3MP_GameManager.encryptions.Add(trackedEncryption);
+                    }
+
+                    if (actual.physicalObject == null && !actual.awaitingInstantiation &&
+                        !H3MP_GameManager.sceneLoading && actual.scene.Equals(H3MP_GameManager.scene) && actual.instance == H3MP_GameManager.instance)
+                    {
+                        actual.awaitingInstantiation = true;
+                        AnvilManager.Run(actual.Instantiate());
+                    }
                 }
             }
             else

@@ -13926,6 +13926,7 @@ namespace H3MP
                 spawnEntitiesSkip = false;
                 return false;
             }
+            Mod.LogInfo("SpawnTakeChallengeEntitiesPrefix not being skipped");
 
             return true;
         }
