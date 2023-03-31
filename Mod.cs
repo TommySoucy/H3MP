@@ -9467,42 +9467,41 @@ namespace H3MP
             Label afterLoadChamberLabel = il.DefineLabel();
             toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadChamberLabel)); // Compare our ID with controller, if we are not controller skip load into chamber
 
-            // Define necessary clip labels
+            // Define clip label
             Label startLoadClipLabel = il.DefineLabel();
-            Label afterLoadClipLabel = il.DefineLabel();
 
-            // Define necessary SLChamber labels
+            // Define SLChamber label
             Label startLoadSLChamberLabel = il.DefineLabel();
-            Label afterLoadSLChamberLabel = il.DefineLabel();
 
-            // Define necessary RemoteGun labels
+            // Define RemoteGun label
             Label startLoadRemoteGunLabel = il.DefineLabel();
-            Label afterLoadRemoteGunLabel = il.DefineLabel();
 
-            // Define necessary Mag labels
+            // Define Mag label
             Label startLoadMagLabel = il.DefineLabel();
-            Label afterLoadMagLabel = il.DefineLabel();
 
-            int doubleInstanceFound = 0;
+            // Define final return label
+            Label returnLabel = il.DefineLabel();
+
+            bool doubleInstanceFound = false;
             bool chamberEndFound = false;
             int getCountFound = 0;
-            int returnFound = 0;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Ldarg_0 && instructionList[i + 1].opcode == OpCodes.Ldarg_0)
                 {
-                    if(doubleInstanceFound == 2)
+                    if(!doubleInstanceFound)
                     {
                         instruction.labels.Add(startLoadChamberLabel);
                         instructionList.InsertRange(i, toInsert);
                         i += toInsert.Count;
+
+                        doubleInstanceFound = true;
                     }
-                    ++doubleInstanceFound;
                 }
                 if (instruction.opcode == OpCodes.Ldarg_0 && instructionList[i + 1].opcode == OpCodes.Ldnull)
                 {
-                    if(!chamberEndFound)
+                    if (!chamberEndFound)
                     {
                         instruction.labels.Add(afterLoadChamberLabel);
 
@@ -9520,12 +9519,12 @@ namespace H3MP
 
                         toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadClipLabel); // If false (trackedItem is null), goto start chamber load
 
-                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, afterLoadClipLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, returnLabel); // Compare our ID with controller, if we are not controller skip load into chamber
                     }
                 }
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_Count"))
                 {
-                    if(getCountFound == 1)
+                    if (getCountFound == 1)
                     {
                         instructionList[i - 2].labels.Add(startLoadClipLabel);
                         instructionList.InsertRange(i - 2, toInsert);
@@ -9543,7 +9542,7 @@ namespace H3MP
 
                         toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadSLChamberLabel); // If false (trackedItem is null), goto start chamber load
 
-                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, afterLoadSLChamberLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, returnLabel); // Compare our ID with controller, if we are not controller skip load into chamber
                     }
                     else if(getCountFound == 2)
                     {
@@ -9563,7 +9562,7 @@ namespace H3MP
 
                         toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadRemoteGunLabel); // If false (trackedItem is null), goto start chamber load
 
-                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, afterLoadRemoteGunLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, returnLabel); // Compare our ID with controller, if we are not controller skip load into chamber
                     }
                     else if(getCountFound == 3)
                     {
@@ -9583,9 +9582,9 @@ namespace H3MP
 
                         toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadMagLabel); // If false (trackedItem is null), goto start chamber load
 
-                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, afterLoadMagLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, returnLabel); // Compare our ID with controller, if we are not controller skip load into chamber
                     }
-                    else if(getCountFound == 4)
+                    else if(getCountFound == 5)
                     {
                         instructionList[i - 2].labels.Add(startLoadMagLabel);
                         instructionList.InsertRange(i - 2, toInsert);
@@ -9595,24 +9594,8 @@ namespace H3MP
                 }
                 if (instruction.opcode == OpCodes.Ret)
                 {
-                    if(returnFound == 0)
-                    {
-                        instruction.labels.Add(afterLoadClipLabel);
-                    }
-                    if(returnFound == 1)
-                    {
-                        instruction.labels.Add(afterLoadSLChamberLabel);
-                    }
-                    if(returnFound == 2)
-                    {
-                        instruction.labels.Add(afterLoadRemoteGunLabel);
-                    }
-                    if(returnFound == 3)
-                    {
-                        instruction.labels.Add(afterLoadMagLabel);
-                        break;
-                    }
-                    ++returnFound;
+                    instruction.labels.Add(returnLabel);
+                    break;
                 }
             }
             return instructionList;
