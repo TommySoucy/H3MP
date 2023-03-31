@@ -49,6 +49,12 @@ namespace H3MP
         /// <summary>Executes all code meant to run on the main thread. NOTE: Call this ONLY from the main thread.</summary>
         public static void UpdateMain()
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("DEBUG UPDATE MAIN");
+            }
+#endif
             if (actionToExecuteOnMainThread)
             {
                 executeCopiedOnMainThread.Clear();
@@ -58,6 +64,12 @@ namespace H3MP
                     executeOnMainThread.Clear();
                     actionToExecuteOnMainThread = false;
                 }
+#if DEBUG
+                if (Input.GetKey(KeyCode.PageDown))
+                {
+                    Mod.LogInfo("Actions to execute: "+ executeCopiedOnMainThread.Count);
+                }
+#endif
 
                 for (int i = 0; i < executeCopiedOnMainThread.Count; i++)
                 {

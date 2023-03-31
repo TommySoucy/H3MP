@@ -10,12 +10,24 @@ namespace H3MP
     {
         private static void SendTCPData(int toClient, H3MP_Packet packet)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendTCPData: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             H3MP_Server.clients[toClient].tcp.SendData(packet);
         }
 
         private static void SendTCPData(List<int> toClients, H3MP_Packet packet, int exclude = -1)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendTCPData multiple: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             for (int i = 0; i < toClients.Count; ++i)
             {
@@ -28,6 +40,12 @@ namespace H3MP
 
         private static void SendUDPData(List<int> toClients, H3MP_Packet packet, int exclude = -1)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendUDPData multiple: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             for (int i = 0; i < toClients.Count; ++i)
             {
@@ -40,6 +58,12 @@ namespace H3MP
 
         private static void SendTCPDataToAll(H3MP_Packet packet)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendTCPDataToAll: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             for(int i = 1; i<= H3MP_Server.maxClientCount; ++i)
             {
@@ -49,6 +73,12 @@ namespace H3MP
 
         private static void SendUDPDataToAll(H3MP_Packet packet)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendUDPDataToAll: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             for(int i = 1; i<= H3MP_Server.maxClientCount; ++i)
             {
@@ -58,6 +88,12 @@ namespace H3MP
 
         private static void SendUDPDataToClients(H3MP_Packet packet, List<int> clientIDs)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendUDPDataToClients: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             foreach(int clientID in clientIDs)
             {
@@ -67,6 +103,12 @@ namespace H3MP
 
         private static void SendTCPDataToAll(int exceptClient, H3MP_Packet packet)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendTCPDataToAll: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             for(int i = 1; i<= H3MP_Server.maxClientCount; ++i)
             {
@@ -79,6 +121,12 @@ namespace H3MP
 
         private static void SendUDPDataToAll(int exceptClient, H3MP_Packet packet)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendUDPDataToAll: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             for(int i = 1; i<= H3MP_Server.maxClientCount; ++i)
             {

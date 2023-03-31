@@ -186,6 +186,12 @@ namespace H3MP
                             using (H3MP_Packet packet = new H3MP_Packet(packetBytes))
                             {
                                 int packetID = packet.ReadInt();
+#if DEBUG
+                                if (Input.GetKey(KeyCode.PageDown))
+                                {
+                                    Mod.LogInfo("\tHandling TCP packet: " + packetID);
+                                }
+#endif
                                 try
                                 {
                                     if (singleton.ID >= 0 || packetID == 1)
@@ -310,6 +316,12 @@ namespace H3MP
                         using (H3MP_Packet packet = new H3MP_Packet(data))
                         {
                             int packetID = packet.ReadInt();
+#if DEBUG
+                            if (Input.GetKey(KeyCode.PageDown))
+                            {
+                                Mod.LogInfo("\tHandling UDP packet: " + packetID);
+                            }
+#endif
                             packetHandlers[packetID](packet);
                         }
                     }

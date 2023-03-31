@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace H3MP
 {
-    internal class H3MP_GameManager : MonoBehaviour
+    public class H3MP_GameManager : MonoBehaviour
     {
         private static H3MP_GameManager _singleton;
         public static H3MP_GameManager singleton

@@ -10,12 +10,24 @@ namespace H3MP
     {
         private static void SendTCPData(H3MP_Packet packet, bool overrideWelcome = false)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendTCPData: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             H3MP_Client.singleton.tcp.SendData(packet);
         }
 
         private static void SendUDPData(H3MP_Packet packet)
         {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendUDPData: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
             packet.WriteLength();
             H3MP_Client.singleton.udp.SendData(packet);
         }

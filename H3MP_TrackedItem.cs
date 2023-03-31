@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static H3MP.H3MP_TrackedItem;
-using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {

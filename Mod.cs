@@ -2213,6 +2213,13 @@ namespace H3MP
             PatchVerify.Verify(SLAMDetonatePatchOriginal, harmony, false);
             harmony.Patch(SLAMDetonatePatchOriginal, new HarmonyMethod(SLAMDetonatePatchPrefix));
 
+            // RoundPatch
+            MethodInfo RoundPatchFixedUpdateOriginal = typeof(FVRFireArmRound).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo RoundPatchFixedUpdateTranspiler = typeof(RoundPatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(RoundPatchFixedUpdateOriginal, harmony, false);
+            harmony.Patch(RoundPatchFixedUpdateOriginal, null, null, new HarmonyMethod(RoundPatchFixedUpdateTranspiler));
+
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo wristMenuPatchUpdatePrefix = typeof(WristMenuPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -9404,6 +9411,213 @@ namespace H3MP
             }
         }
     }
+
+    // Patches FVRFireArmRound
+    class RoundPatch
+    {
+        // Patches FVRFixedUpdate to prevent insertion into ammo container if we are not round controller
+        static IEnumerable<CodeInstruction> FixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            // (8) Declare local for the tracked item we got on this round
+            LocalBuilder localTrackedItem = il.DeclareLocal(typeof(H3MP_TrackedItem));
+            localTrackedItem.SetLocalSymInfo("trackedItem");
+
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // Chamber
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Mod), "managerObject"))); // Load managerObject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Inequality"))); // Compare for inequality (true if connected) ***
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 8)); // Init trackedItem to null
+            toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe inequality call result on stack (true if connected)
+            int labelIndex0 = toInsert.Count;
+            Label afterGettingTrackedItemChamberLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemChamberLabel)); // If false (not connected) skip trying to get a tracked item
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(H3MP_GameManager), "trackedItemByItem"))); // Load trackedItemByItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load round instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloca_S, 8)); // Load trackedItem address
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<FVRPhysicalObject, H3MP_TrackedItem>), "TryGetValue"))); // Call TryGetValue trackedItemByItem
+            int labelIndex1 = toInsert.Count;
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemChamberLabel)); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load round instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "GetComponent", null, new Type[] { typeof(H3MP_TrackedItem) }))); // Get H3MP_TrackedItem component directly from round
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 8)); // Set trackedItem
+
+            int labelIndex2 = toInsert.Count;
+            Label startLoadChamberLabel = il.DefineLabel();
+            CodeInstruction afterGettingTrackedItem = new CodeInstruction(OpCodes.Brfalse_S, startLoadChamberLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+            afterGettingTrackedItem.labels.Add(afterGettingTrackedItemChamberLabel);
+            toInsert.Add(afterGettingTrackedItem);
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Equality"))); // Compare for equality (true if dont have trackedItem)
+            int labelIndex3 = toInsert.Count;
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, startLoadChamberLabel)); // If false (trackedItem is null), goto start chamber load
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItem), "data"))); // Load trackedItem data
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItemData), "controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(H3MP_GameManager), "ID"))); // Load our ID
+            int labelIndex4 = toInsert.Count;
+            Label afterLoadChamberLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadChamberLabel)); // Compare our ID with controller, if we are not controller skip load into chamber
+
+            // Define necessary clip labels
+            Label startLoadClipLabel = il.DefineLabel();
+            Label afterLoadClipLabel = il.DefineLabel();
+
+            // Define necessary SLChamber labels
+            Label startLoadSLChamberLabel = il.DefineLabel();
+            Label afterLoadSLChamberLabel = il.DefineLabel();
+
+            // Define necessary RemoteGun labels
+            Label startLoadRemoteGunLabel = il.DefineLabel();
+            Label afterLoadRemoteGunLabel = il.DefineLabel();
+
+            // Define necessary Mag labels
+            Label startLoadMagLabel = il.DefineLabel();
+            Label afterLoadMagLabel = il.DefineLabel();
+
+            int doubleInstanceFound = 0;
+            bool chamberEndFound = false;
+            int getCountFound = 0;
+            int returnFound = 0;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldarg_0 && instructionList[i + 1].opcode == OpCodes.Ldarg_0)
+                {
+                    if(doubleInstanceFound == 2)
+                    {
+                        instruction.labels.Add(startLoadChamberLabel);
+                        instructionList.InsertRange(i, toInsert);
+                        i += toInsert.Count;
+                    }
+                    ++doubleInstanceFound;
+                }
+                if (instruction.opcode == OpCodes.Ldarg_0 && instructionList[i + 1].opcode == OpCodes.Ldnull)
+                {
+                    if(!chamberEndFound)
+                    {
+                        instruction.labels.Add(afterLoadChamberLabel);
+
+                        chamberEndFound = true;
+
+                        // Set labels for Clip
+                        Label afterGettingTrackedItemClipLabel = il.DefineLabel();
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemClipLabel); // If false (not connected) skip trying to get a tracked item
+
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemClipLabel); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+                        CodeInstruction afterGettingTrackedItemClip = new CodeInstruction(OpCodes.Brfalse_S, startLoadClipLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+                        afterGettingTrackedItemClip.labels.Add(afterGettingTrackedItemClipLabel);
+                        toInsert[labelIndex2] = afterGettingTrackedItemClip;
+
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadClipLabel); // If false (trackedItem is null), goto start chamber load
+
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, afterLoadClipLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                    }
+                }
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_Count"))
+                {
+                    if(getCountFound == 1)
+                    {
+                        instructionList[i - 2].labels.Add(startLoadClipLabel);
+                        instructionList.InsertRange(i - 2, toInsert);
+                        i += toInsert.Count;
+
+                        // Set labels for SL Chamber
+                        Label afterGettingTrackedItemSLChamberLabel = il.DefineLabel();
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemSLChamberLabel); // If false (not connected) skip trying to get a tracked item
+
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemSLChamberLabel); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+                        CodeInstruction afterGettingTrackedItemSLChamber = new CodeInstruction(OpCodes.Brfalse_S, startLoadSLChamberLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+                        afterGettingTrackedItemSLChamber.labels.Add(afterGettingTrackedItemSLChamberLabel);
+                        toInsert[labelIndex2] = afterGettingTrackedItemSLChamber;
+
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadSLChamberLabel); // If false (trackedItem is null), goto start chamber load
+
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, afterLoadSLChamberLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                    }
+                    else if(getCountFound == 2)
+                    {
+                        instructionList[i - 2].labels.Add(startLoadSLChamberLabel);
+                        instructionList.InsertRange(i - 2, toInsert);
+                        i += toInsert.Count;
+
+                        // Set labels for RemoteGun
+                        Label afterGettingTrackedItemRemoteGunLabel = il.DefineLabel();
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemRemoteGunLabel); // If false (not connected) skip trying to get a tracked item
+
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemRemoteGunLabel); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+                        CodeInstruction afterGettingTrackedItemRemoteGun = new CodeInstruction(OpCodes.Brfalse_S, startLoadRemoteGunLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+                        afterGettingTrackedItemRemoteGun.labels.Add(afterGettingTrackedItemRemoteGunLabel);
+                        toInsert[labelIndex2] = afterGettingTrackedItemRemoteGun;
+
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadRemoteGunLabel); // If false (trackedItem is null), goto start chamber load
+
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, afterLoadRemoteGunLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                    }
+                    else if(getCountFound == 3)
+                    {
+                        instructionList[i - 2].labels.Add(startLoadRemoteGunLabel);
+                        instructionList.InsertRange(i - 2, toInsert);
+                        i += toInsert.Count;
+
+                        // Set labels for Mag
+                        Label afterGettingTrackedItemMagLabel = il.DefineLabel();
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemMagLabel); // If false (not connected) skip trying to get a tracked item
+
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemMagLabel); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+                        CodeInstruction afterGettingTrackedItemMag = new CodeInstruction(OpCodes.Brfalse_S, startLoadMagLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+                        afterGettingTrackedItemMag.labels.Add(afterGettingTrackedItemMagLabel);
+                        toInsert[labelIndex2] = afterGettingTrackedItemMag;
+
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadMagLabel); // If false (trackedItem is null), goto start chamber load
+
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, afterLoadMagLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                    }
+                    else if(getCountFound == 4)
+                    {
+                        instructionList[i - 2].labels.Add(startLoadMagLabel);
+                        instructionList.InsertRange(i - 2, toInsert);
+                        i += toInsert.Count;
+                    }
+                    ++getCountFound;
+                }
+                if (instruction.opcode == OpCodes.Ret)
+                {
+                    if(returnFound == 0)
+                    {
+                        instruction.labels.Add(afterLoadClipLabel);
+                    }
+                    if(returnFound == 1)
+                    {
+                        instruction.labels.Add(afterLoadSLChamberLabel);
+                    }
+                    if(returnFound == 2)
+                    {
+                        instruction.labels.Add(afterLoadRemoteGunLabel);
+                    }
+                    if(returnFound == 3)
+                    {
+                        instruction.labels.Add(afterLoadMagLabel);
+                        break;
+                    }
+                    ++returnFound;
+                }
+            }
+            return instructionList;
+        }
+    }
 #endregion
 
 #region Instantiation Patches
@@ -9517,7 +9731,7 @@ namespace H3MP
                     return;
                 }
             }
-            
+
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
