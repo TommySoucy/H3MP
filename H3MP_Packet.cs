@@ -164,7 +164,10 @@ namespace H3MP
         molotovShatter = 153,
         molotovDamage = 154,
         pinnedGrenadePullPin = 155,
-        magazineAddRound = 156
+        magazineAddRound = 156,
+        clipAddRound = 157,
+        speedloaderChamberLoad = 158,
+        remoteGunChamber = 159
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -322,7 +325,10 @@ namespace H3MP
         molotovShatter = 150,
         molotovDamage = 151,
         pinnedGrenadePullPin = 152,
-        magazineAddRound = 153
+        magazineAddRound = 153,
+        clipAddRound = 154,
+        speedloaderChamberLoad = 155,
+        remoteGunChamber = 156
     }
 
     public class H3MP_Packet : IDisposable

@@ -5,6 +5,7 @@ using System.Net;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using static FistVR.RemoteGun;
 
 namespace H3MP
 {
@@ -3971,6 +3972,69 @@ namespace H3MP
                         ++MagazinePatch.addRoundSkip;
                         (itemData.physicalItem.physicalObject as FVRFireArmMagazine).AddRound(roundClass, true, true);
                         --MagazinePatch.addRoundSkip;
+                    }
+                }
+            }
+        }
+
+        public static void ClipAddRound(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
+            if (itemData != null)
+            {
+                if (itemData.controller == H3MP_GameManager.ID)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        ++ClipPatch.addRoundSkip;
+                        (itemData.physicalItem.physicalObject as FVRFireArmClip).AddRound(roundClass, true, true);
+                        --ClipPatch.addRoundSkip;
+                    }
+                }
+            }
+        }
+
+        public static void SpeedloaderChamberLoad(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+            int chamberIndex = packet.ReadByte();
+
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
+            if (itemData != null)
+            {
+                if (itemData.controller == H3MP_GameManager.ID)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        ++SpeedloaderChamberPatch.loadSkip;
+                        (itemData.physicalItem.physicalObject as Speedloader).Chambers[chamberIndex].Load(roundClass, true);
+                        --SpeedloaderChamberPatch.loadSkip;
+                    }
+                }
+            }
+        }
+
+        public static void RemoteGunChamber(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+            FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
+
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
+            if (itemData != null)
+            {
+                if (itemData.controller == H3MP_GameManager.ID)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        FVRFireArmRound round = AM.GetRoundSelfPrefab(roundType, roundClass).GetGameObject().GetComponent<FVRFireArmRound>();
+                        ++RemoteGunPatch.chamberSkip;
+                        (itemData.physicalItem.physicalObject as RemoteGun).ChamberCartridge(round);
+                        --RemoteGunPatch.chamberSkip;
                     }
                 }
             }

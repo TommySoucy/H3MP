@@ -2221,15 +2221,40 @@ namespace H3MP
             harmony.Patch(roundPatchFixedUpdateOriginal, null, null, new HarmonyMethod(roundPatchFixedUpdateTranspiler));
 
             // MagazinePatch
-            MethodInfo addRoundClassOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
-            MethodInfo addRoundClassTranspiler = typeof(MagazinePatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo addRoundRoundOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool), typeof(bool), typeof(bool) }, null);
-            MethodInfo addRoundRoundTranspiler = typeof(MagazinePatch).GetMethod("AddRoundRoundTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magAddRoundClassOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
+            MethodInfo magAddRoundClassTranspiler = typeof(MagazinePatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magAddRoundRoundOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool), typeof(bool), typeof(bool) }, null);
+            MethodInfo magAddRoundRoundTranspiler = typeof(MagazinePatch).GetMethod("AddRoundRoundTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchVerify.Verify(addRoundClassOriginal, harmony, false);
-            PatchVerify.Verify(addRoundRoundOriginal, harmony, false);
-            harmony.Patch(addRoundClassOriginal, null, null, new HarmonyMethod(addRoundClassTranspiler));
-            harmony.Patch(addRoundRoundOriginal, null, null, new HarmonyMethod(addRoundRoundTranspiler));
+            PatchVerify.Verify(magAddRoundClassOriginal, harmony, false);
+            PatchVerify.Verify(magAddRoundRoundOriginal, harmony, false);
+            harmony.Patch(magAddRoundClassOriginal, null, null, new HarmonyMethod(magAddRoundClassTranspiler));
+            harmony.Patch(magAddRoundRoundOriginal, null, null, new HarmonyMethod(magAddRoundRoundTranspiler));
+
+            // ClipPatch
+            MethodInfo clipAddRoundClassOriginal = typeof(FVRFireArmClip).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
+            MethodInfo clipAddRoundClassTranspiler = typeof(ClipPatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo clipAddRoundRoundOriginal = typeof(FVRFireArmClip).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool), typeof(bool) }, null);
+            MethodInfo clipAddRoundRoundTranspiler = typeof(ClipPatch).GetMethod("AddRoundRoundTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(clipAddRoundClassOriginal, harmony, false);
+            PatchVerify.Verify(clipAddRoundRoundOriginal, harmony, false);
+            harmony.Patch(clipAddRoundClassOriginal, null, null, new HarmonyMethod(clipAddRoundClassTranspiler));
+            harmony.Patch(clipAddRoundRoundOriginal, null, null, new HarmonyMethod(clipAddRoundRoundTranspiler));
+
+            // SpeedloaderChamberPatch
+            MethodInfo SLChamberLoadOriginal = typeof(SpeedloaderChamber).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo SLChamberLoadPrefix = typeof(SpeedloaderChamberPatch).GetMethod("AddRoundPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(SLChamberLoadOriginal, harmony, false);
+            harmony.Patch(SLChamberLoadOriginal, new HarmonyMethod(SLChamberLoadPrefix));
+
+            // RemoteGunPatch
+            MethodInfo remoteGunChamberOriginal = typeof(RemoteGun).GetMethod("ChamberCartridge", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo remoteGunChamberPrefix = typeof(RemoteGunPatch).GetMethod("ChamberCartridgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(remoteGunChamberOriginal, harmony, false);
+            harmony.Patch(remoteGunChamberOriginal, new HarmonyMethod(remoteGunChamberPrefix));
 
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -9680,6 +9705,148 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.MagazineAddRound(trackedItem.data.trackedID, roundClass);
+                }
+            }
+        }
+    }
+
+    // Patches FVRFireArmClip
+    class ClipPatch
+    {
+        public static int addRoundSkip;
+
+        // Patches AddRound(FireArmRoundClass) to keep track of event
+        static IEnumerable<CodeInstruction> AddRoundClassTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load clip instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load rClass
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ClipPatch), "AddRound"))); // Call our AddRound method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Bge)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches AddRound(FVRFireArmRound) to keep track of event
+        static IEnumerable<CodeInstruction> AddRoundRoundTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load clip instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load round
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRFireArmRound), "RoundClass"))); // Load round class
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ClipPatch), "AddRound"))); // Call our AddRound method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Bge)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void AddRound(FVRFireArmClip clip, FireArmRoundClass roundClass)
+        {
+            if(Mod.managerObject == null || addRoundSkip > 0)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(clip, out trackedItem) ? trackedItem : clip.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.ClipAddRound(trackedItem.data.trackedID, roundClass);
+                }
+                else
+                {
+                    H3MP_ClientSend.ClipAddRound(trackedItem.data.trackedID, roundClass);
+                }
+            }
+        }
+    }
+
+    // Patches SpeedloaderChamber
+    class SpeedloaderChamberPatch
+    {
+        public static int loadSkip;
+
+        // Patches Load() to track event
+        static void AddRoundPrefix(SpeedloaderChamber __instance, FireArmRoundClass rClass)
+        {
+            if(Mod.managerObject == null || loadSkip > 0)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.SpeedLoader, out trackedItem) ? trackedItem : __instance.SpeedLoader.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                Speedloader speedLoader = trackedItem.physicalObject as Speedloader;
+                int chamberIndex = -1;
+                for (int i=0; i< speedLoader.Chambers.Count; ++i)
+                {
+                    if (speedLoader.Chambers[i] == __instance)
+                    {
+                        chamberIndex = i;
+                        break;
+                    }
+                }
+
+                if (chamberIndex > -1)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.SpeedloaderChamberLoad(trackedItem.data.trackedID, rClass, chamberIndex);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SpeedloaderChamberLoad(trackedItem.data.trackedID, rClass, chamberIndex);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches RemoteGun
+    class RemoteGunPatch
+    {
+        public static int chamberSkip;
+
+        // Patches ChamberCartridge() to track event
+        static void ChamberCartridgePrefix(RemoteGun __instance, FVRFireArmRound round)
+        {
+            if(Mod.managerObject == null || chamberSkip > 0)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.RemoteGunChamber(trackedItem.data.trackedID, round.RoundClass, round.RoundType);
+                }
+                else
+                {
+                    H3MP_ClientSend.RemoteGunChamber(trackedItem.data.trackedID, round.RoundClass, round.RoundType);
                 }
             }
         }

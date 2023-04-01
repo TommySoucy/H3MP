@@ -2597,5 +2597,40 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void ClipAddRound(int trackedID, FireArmRoundClass roundClass)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.clipAddRound))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)roundClass);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void RemoteGunChamber(int trackedID, FireArmRoundClass roundClass, FireArmRoundType roundType)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.remoteGunChamber))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)roundClass);
+                packet.Write((short)roundType);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SpeedloaderChamberLoad(int trackedID, FireArmRoundClass roundClass, int chamberIndex)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.speedloaderChamberLoad))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)roundClass);
+                packet.Write((byte)chamberIndex);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }
