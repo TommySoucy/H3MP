@@ -2586,5 +2586,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void MagazineAddRound(int trackedID, FireArmRoundClass roundClass)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.magazineAddRound))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)roundClass);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

@@ -497,6 +497,7 @@ namespace H3MP
                 H3MP_ClientHandle.MolotovShatter,
                 H3MP_ClientHandle.MolotovDamage,
                 H3MP_ClientHandle.PinnedGrenadePullPin,
+                H3MP_ClientHandle.MagazineAddRound,
             };
 
             // All vanilla scenes can be synced by default

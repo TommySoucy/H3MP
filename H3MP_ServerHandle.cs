@@ -4358,5 +4358,29 @@ namespace H3MP
                 }
             }
         }
+
+        public static void MagazineAddRound(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+
+            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID]; 
+            if (itemData != null)
+            {
+                if (itemData.controller == 0)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        ++MagazinePatch.addRoundSkip;
+                        (itemData.physicalItem.physicalObject as FVRFireArmMagazine).AddRound(roundClass, true, true);
+                        --MagazinePatch.addRoundSkip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.MagazineAddRound(itemData.trackedID, roundClass, clientID);
+                }
+            }
+        }
     }
 }

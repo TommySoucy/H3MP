@@ -923,6 +923,7 @@ namespace H3MP
                 H3MP_ServerHandle.MolotovShatter,
                 H3MP_ServerHandle.MolotovDamage,
                 H3MP_ServerHandle.PinnedGrenadePullPin,
+                H3MP_ServerHandle.MagazineAddRound,
             };
 
             items = new H3MP_TrackedItemData[100];

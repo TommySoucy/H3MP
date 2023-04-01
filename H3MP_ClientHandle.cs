@@ -3933,7 +3933,7 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             Damage damage = packet.ReadDamage();
 
-            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID];
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
             if (itemData != null)
             {
                 if (itemData.controller == H3MP_Client.singleton.ID)
@@ -3953,6 +3953,26 @@ namespace H3MP
             else
             {
                 H3MP_ClientSend.MolotovDamage(trackedID, damage);
+            }
+        }
+
+        public static void MagazineAddRound(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
+            if (itemData != null)
+            {
+                if (itemData.controller == H3MP_GameManager.ID)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        ++MagazinePatch.addRoundSkip;
+                        (itemData.physicalItem.physicalObject as FVRFireArmMagazine).AddRound(roundClass, true, true);
+                        --MagazinePatch.addRoundSkip;
+                    }
+                }
             }
         }
     }

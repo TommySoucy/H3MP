@@ -4038,5 +4038,23 @@ namespace H3MP
                 SendTCPData(itemData.controller, packet);
             }
         }
+
+        public static void MagazineAddRound(int trackedID, FireArmRoundClass roundClass, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.magazineAddRound))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)roundClass);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

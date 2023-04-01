@@ -2214,11 +2214,22 @@ namespace H3MP
             harmony.Patch(SLAMDetonatePatchOriginal, new HarmonyMethod(SLAMDetonatePatchPrefix));
 
             // RoundPatch
-            MethodInfo RoundPatchFixedUpdateOriginal = typeof(FVRFireArmRound).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo RoundPatchFixedUpdateTranspiler = typeof(RoundPatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo roundPatchFixedUpdateOriginal = typeof(FVRFireArmRound).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo roundPatchFixedUpdateTranspiler = typeof(RoundPatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchVerify.Verify(RoundPatchFixedUpdateOriginal, harmony, false);
-            harmony.Patch(RoundPatchFixedUpdateOriginal, null, null, new HarmonyMethod(RoundPatchFixedUpdateTranspiler));
+            PatchVerify.Verify(roundPatchFixedUpdateOriginal, harmony, false);
+            harmony.Patch(roundPatchFixedUpdateOriginal, null, null, new HarmonyMethod(roundPatchFixedUpdateTranspiler));
+
+            // MagazinePatch
+            MethodInfo addRoundClassOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
+            MethodInfo addRoundClassTranspiler = typeof(MagazinePatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo addRoundRoundOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool), typeof(bool), typeof(bool) }, null);
+            MethodInfo addRoundRoundTranspiler = typeof(MagazinePatch).GetMethod("AddRoundRoundTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(addRoundClassOriginal, harmony, false);
+            PatchVerify.Verify(addRoundRoundOriginal, harmony, false);
+            harmony.Patch(addRoundClassOriginal, null, null, new HarmonyMethod(addRoundClassTranspiler));
+            harmony.Patch(addRoundRoundOriginal, null, null, new HarmonyMethod(addRoundRoundTranspiler));
 
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -9599,6 +9610,78 @@ namespace H3MP
                 }
             }
             return instructionList;
+        }
+    }
+
+    // Patches FVRFireArmMagazine
+    class MagazinePatch
+    {
+        public static int addRoundSkip;
+
+        // Patches AddRound(FireArmRoundClass) to keep track of event
+        static IEnumerable<CodeInstruction> AddRoundClassTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load mag instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load rClass
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MagazinePatch), "AddRound"))); // Call our AddRound method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Bge)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches AddRound(FVRFireArmRound) to keep track of event
+        static IEnumerable<CodeInstruction> AddRoundRoundTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load mag instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load round
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRFireArmRound), "RoundClass"))); // Load round class
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MagazinePatch), "AddRound"))); // Call our AddRound method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Bge)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void AddRound(FVRFireArmMagazine mag, FireArmRoundClass roundClass)
+        {
+            if(Mod.managerObject == null || addRoundSkip > 0)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(mag, out trackedItem) ? trackedItem : mag.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.MagazineAddRound(trackedItem.data.trackedID, roundClass);
+                }
+                else
+                {
+                    H3MP_ClientSend.MagazineAddRound(trackedItem.data.trackedID, roundClass);
+                }
+            }
         }
     }
 #endregion

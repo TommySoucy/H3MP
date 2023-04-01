@@ -53,8 +53,11 @@ namespace H3MP
             GameObject itemPrefab = GetItemPrefab();
             if (itemPrefab == null)
             {
-                yield return IM.OD[itemID].GetGameObjectAsync();
-                itemPrefab = IM.OD[itemID].GetGameObject();
+                if (IM.OD.TryGetValue(itemID, out FVRObject obj))
+                {
+                    yield return obj.GetGameObjectAsync();
+                    itemPrefab = obj.GetGameObject();
+                }
             }
             if (itemPrefab == null)
             {
