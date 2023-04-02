@@ -8294,14 +8294,18 @@ namespace H3MP
                             {
                                 // Unload from current, load into new firearm
                                 asClip.FireArm.EjectClip();
+                                ++ClipPatch.loadSkip;
                                 asClip.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                --ClipPatch.loadSkip;
                                 modified = true;
                             }
                         }
                         else
                         {
                             // Load into firearm
+                            ++ClipPatch.loadSkip;
                             asClip.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                            --ClipPatch.loadSkip;
                             modified = true;
                         }
                     }

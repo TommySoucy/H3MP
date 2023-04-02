@@ -504,6 +504,7 @@ namespace H3MP
                 H3MP_ClientHandle.ChamberRound,
                 H3MP_ClientHandle.MagazineLoad,
                 H3MP_ClientHandle.MagazineLoadAttachable,
+                H3MP_ClientHandle.ClipLoad,
             };
 
             // All vanilla scenes can be synced by default

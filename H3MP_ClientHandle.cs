@@ -4134,5 +4134,26 @@ namespace H3MP
                 }
             }
         }
+
+        public static void ClipLoad(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int FATrackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData clipItemData = H3MP_Client.items[trackedID];
+            H3MP_TrackedItemData FAItemData = H3MP_Client.items[FATrackedID];
+            if (clipItemData != null && FAItemData != null)
+            {
+                if (FAItemData.controller == H3MP_GameManager.ID)
+                {
+                    if (FAItemData.physicalItem != null && clipItemData.physicalItem != null)
+                    {
+                        ++ClipPatch.loadSkip;
+                        (clipItemData.physicalItem.physicalObject as FVRFireArmClip).Load(FAItemData.physicalItem.physicalObject as FVRFireArm);
+                        --ClipPatch.loadSkip;
+                    }
+                }
+            }
+        }
     }
 }

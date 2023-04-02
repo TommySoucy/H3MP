@@ -4168,5 +4168,23 @@ namespace H3MP
                 }
             }
         }
+
+        public static void ClipLoad(int trackedID, int FATrackedID, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.clipLoad))
+            {
+                packet.Write(trackedID);
+                packet.Write(FATrackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

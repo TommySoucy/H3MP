@@ -2249,11 +2249,15 @@ namespace H3MP
             MethodInfo clipAddRoundClassTranspiler = typeof(ClipPatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo clipAddRoundRoundOriginal = typeof(FVRFireArmClip).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool), typeof(bool) }, null);
             MethodInfo clipAddRoundRoundTranspiler = typeof(ClipPatch).GetMethod("AddRoundRoundTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo clipLoadOriginal = typeof(FVRFireArmClip).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo clipLoadPrefix = typeof(ClipPatch).GetMethod("LoadPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(clipAddRoundClassOriginal, harmony, false);
             PatchVerify.Verify(clipAddRoundRoundOriginal, harmony, false);
+            PatchVerify.Verify(clipLoadOriginal, harmony, false);
             harmony.Patch(clipAddRoundClassOriginal, null, null, new HarmonyMethod(clipAddRoundClassTranspiler));
             harmony.Patch(clipAddRoundRoundOriginal, null, null, new HarmonyMethod(clipAddRoundRoundTranspiler));
+            harmony.Patch(clipLoadOriginal, new HarmonyMethod(clipLoadPrefix));
 
             // SpeedloaderChamberPatch
             MethodInfo SLChamberLoadOriginal = typeof(SpeedloaderChamber).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
@@ -9814,6 +9818,7 @@ namespace H3MP
     class ClipPatch
     {
         public static int addRoundSkip;
+        public static int loadSkip;
 
         // Patches AddRound(FireArmRoundClass) to keep track of event
         static IEnumerable<CodeInstruction> AddRoundClassTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -9879,6 +9884,41 @@ namespace H3MP
                     H3MP_ClientSend.ClipAddRound(trackedItem.data.trackedID, roundClass);
                 }
             }
+        }
+
+        // Patches Load() to control and keep track of event
+        static bool LoadPrefix(FVRFireArmClip __instance, FVRFireArm fireArm)
+        {
+            if (Mod.managerObject == null || loadSkip > 0)
+            {
+                return true;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Don't want to load if we are not controller
+                if (trackedItem.data.controller != H3MP_GameManager.ID)
+                {
+                    return false;
+                }
+
+                H3MP_TrackedItem FATrackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(fireArm, out FATrackedItem) ? FATrackedItem : fireArm.GetComponent<H3MP_TrackedItem>();
+                // Only need to send order to load if we are not firearm controller
+                if (FATrackedItem != null && FATrackedItem.data.controller != H3MP_GameManager.ID)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.ClipLoad(trackedItem.data.trackedID, FATrackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.ClipLoad(trackedItem.data.trackedID, FATrackedItem.data.trackedID);
+                    }
+                }
+            }
+
+            return true;
         }
     }
 

@@ -2667,5 +2667,16 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void ClipLoad(int trackedID, int FATrackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.clipLoad))
+            {
+                packet.Write(trackedID);
+                packet.Write(FATrackedID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

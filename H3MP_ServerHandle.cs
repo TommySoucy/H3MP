@@ -4573,5 +4573,34 @@ namespace H3MP
                 Mod.LogError("Server got order to load mag " + trackedID + " into attachable firearm " + FATrackedID + " but we are missing item data!");
             }
         }
+
+        public static void ClipLoad(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int FATrackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData clipItemData = H3MP_Server.items[trackedID];
+            H3MP_TrackedItemData FAItemData = H3MP_Server.items[FATrackedID];
+            if (clipItemData != null && FAItemData != null)
+            {
+                if (FAItemData.controller == 0)
+                {
+                    if (FAItemData.physicalItem != null && clipItemData.physicalItem != null)
+                    {
+                        ++ClipPatch.loadSkip;
+                        (clipItemData.physicalItem.physicalObject as FVRFireArmClip).Load(FAItemData.physicalItem.physicalObject as FVRFireArm);
+                        --ClipPatch.loadSkip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.ClipLoad(trackedID, FATrackedID, clientID);
+                }
+            }
+            else
+            {
+                Mod.LogError("Server got order to load clip " + trackedID + " into firearm " + FATrackedID + " but we are missing item data!");
+            }
+        }
     }
 }

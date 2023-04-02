@@ -930,6 +930,7 @@ namespace H3MP
                 H3MP_ServerHandle.ChamberRound,
                 H3MP_ServerHandle.MagazineLoad,
                 H3MP_ServerHandle.MagazineLoadAttachable,
+                H3MP_ServerHandle.ClipLoad,
             };
 
             items = new H3MP_TrackedItemData[100];
