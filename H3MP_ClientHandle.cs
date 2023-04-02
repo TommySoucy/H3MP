@@ -4135,7 +4135,7 @@ namespace H3MP
             }
         }
 
-        public static void ClipLoad(int clientID, H3MP_Packet packet)
+        public static void ClipLoad(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
             int FATrackedID = packet.ReadInt();
