@@ -1005,11 +1005,15 @@ namespace H3MP
                                 }
                                 if (newData[1] == 255)
                                 {
+                                    ++MagazinePatch.loadSkip;
                                     asCell.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                    --MagazinePatch.loadSkip;
                                 }
                                 else
                                 {
+                                    ++MagazinePatch.loadSkip;
                                     asCell.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[1]);
+                                    --MagazinePatch.loadSkip;
                                 }
                                 modified = true;
                             }
@@ -1035,11 +1039,15 @@ namespace H3MP
                             }
                             if (newData[1] == 255)
                             {
+                                ++MagazinePatch.loadSkip;
                                 asCell.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                --MagazinePatch.loadSkip;
                             }
                             else
                             {
+                                ++MagazinePatch.loadSkip;
                                 asCell.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[1]);
+                                --MagazinePatch.loadSkip;
                             }
                             modified = true;
                         }
@@ -1048,11 +1056,15 @@ namespace H3MP
                             // Load into firearm
                             if (newData[1] == 255)
                             {
+                                ++MagazinePatch.loadSkip;
                                 asCell.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                --MagazinePatch.loadSkip;
                             }
                             else
                             {
+                                ++MagazinePatch.loadSkip;
                                 asCell.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[1]);
+                                --MagazinePatch.loadSkip;
                             }
                             modified = true;
                         }
@@ -1099,7 +1111,9 @@ namespace H3MP
                                 }
                                 if (newData[3] == 255)
                                 {
+                                    ++MagazinePatch.loadSkip;
                                     asCell.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                    --MagazinePatch.loadSkip;
                                 }
                                 else
                                 {
@@ -1129,7 +1143,9 @@ namespace H3MP
                             }
                             if (newData[3] == 255)
                             {
+                                ++MagazinePatch.loadSkip;
                                 asCell.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                --MagazinePatch.loadSkip;
                             }
                             else
                             {
@@ -1143,7 +1159,9 @@ namespace H3MP
                             // Load into AttachableFireArm
                             if (newData[3] == 255)
                             {
+                                ++MagazinePatch.loadSkip;
                                 asCell.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                --MagazinePatch.loadSkip;
                             }
                             else
                             {
@@ -7950,11 +7968,15 @@ namespace H3MP
                                 }
                                 if (newData[newData.Length - 7] == 255)
                                 {
+                                    ++MagazinePatch.loadSkip;
                                     asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                    --MagazinePatch.loadSkip;
                                 }
                                 else
                                 {
+                                    ++MagazinePatch.loadSkip;
                                     asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 7]);
+                                    --MagazinePatch.loadSkip;
                                 }
                                 modified = true;
                             }
@@ -7980,11 +8002,15 @@ namespace H3MP
                             }
                             if (newData[newData.Length - 7] == 255)
                             {
+                                ++MagazinePatch.loadSkip;
                                 asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                --MagazinePatch.loadSkip;
                             }
                             else
                             {
+                                ++MagazinePatch.loadSkip;
                                 asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 7]);
+                                --MagazinePatch.loadSkip;
                             }
                             modified = true;
                         }
@@ -7993,11 +8019,15 @@ namespace H3MP
                             // Load into firearm
                             if (newData[newData.Length - 7] == 255)
                             {
+                                ++MagazinePatch.loadSkip;
                                 asMag.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                --MagazinePatch.loadSkip;
                             }
                             else
                             {
+                                ++MagazinePatch.loadSkip;
                                 asMag.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[newData.Length - 7]);
+                                --MagazinePatch.loadSkip;
                             }
                             modified = true;
                         }
@@ -8044,7 +8074,9 @@ namespace H3MP
                                 }
                                 if (newData[newData.Length - 5] == 255)
                                 {
+                                    ++MagazinePatch.loadSkip;
                                     asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                    --MagazinePatch.loadSkip;
                                 }
                                 else
                                 {
@@ -8074,7 +8106,9 @@ namespace H3MP
                             }
                             if (newData[newData.Length - 5] == 255)
                             {
+                                ++MagazinePatch.loadSkip;
                                 asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                --MagazinePatch.loadSkip;
                             }
                             else
                             {
@@ -8088,7 +8122,9 @@ namespace H3MP
                             // Load into AttachableFireArm
                             if (newData[newData.Length - 5] == 255)
                             {
+                                ++MagazinePatch.loadSkip;
                                 asMag.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                --MagazinePatch.loadSkip;
                             }
                             else
                             {

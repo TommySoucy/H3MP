@@ -16,6 +16,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR;
+using static FistVR.SosigInventory;
 
 namespace H3MP
 {
@@ -2225,11 +2226,23 @@ namespace H3MP
             MethodInfo magAddRoundClassTranspiler = typeof(MagazinePatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo magAddRoundRoundOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool), typeof(bool), typeof(bool) }, null);
             MethodInfo magAddRoundRoundTranspiler = typeof(MagazinePatch).GetMethod("AddRoundRoundTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magLoadFireArmOriginal = typeof(FVRFireArmMagazine).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArm) }, null);
+            MethodInfo magLoadFireArmPrefix = typeof(MagazinePatch).GetMethod("LoadFireArmPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magLoadIntoSecondaryOriginal = typeof(FVRFireArmMagazine).GetMethod("LoadIntoSecondary", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo magLoadIntoSecondaryPrefix = typeof(MagazinePatch).GetMethod("LoadIntoSecondaryPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magLoadAttachableOriginal = typeof(FVRFireArmMagazine).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(AttachableFirearm) }, null);
+            MethodInfo magLoadAttachablePrefix = typeof(MagazinePatch).GetMethod("LoadAttachablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(magAddRoundClassOriginal, harmony, false);
             PatchVerify.Verify(magAddRoundRoundOriginal, harmony, false);
+            PatchVerify.Verify(magLoadFireArmOriginal, harmony, false);
+            PatchVerify.Verify(magLoadIntoSecondaryOriginal, harmony, false);
+            PatchVerify.Verify(magLoadAttachableOriginal, harmony, false);
             harmony.Patch(magAddRoundClassOriginal, null, null, new HarmonyMethod(magAddRoundClassTranspiler));
             harmony.Patch(magAddRoundRoundOriginal, null, null, new HarmonyMethod(magAddRoundRoundTranspiler));
+            harmony.Patch(magLoadFireArmOriginal, new HarmonyMethod(magLoadFireArmPrefix));
+            harmony.Patch(magLoadIntoSecondaryOriginal, new HarmonyMethod(magLoadIntoSecondaryPrefix));
+            harmony.Patch(magLoadAttachableOriginal, new HarmonyMethod(magLoadAttachablePrefix));
 
             // ClipPatch
             MethodInfo clipAddRoundClassOriginal = typeof(FVRFireArmClip).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
@@ -9647,6 +9660,7 @@ namespace H3MP
     class MagazinePatch
     {
         public static int addRoundSkip;
+        public static int loadSkip;
 
         // Patches AddRound(FireArmRoundClass) to keep track of event
         static IEnumerable<CodeInstruction> AddRoundClassTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -9712,6 +9726,87 @@ namespace H3MP
                     H3MP_ClientSend.MagazineAddRound(trackedItem.data.trackedID, roundClass);
                 }
             }
+        }
+
+        // Patches Load(FVRFireArm) to control and keep track of event
+        static bool LoadFireArmPrefix(FVRFireArmMagazine __instance, FVRFireArm fireArm)
+        {
+            return Load(__instance, fireArm);
+        }
+
+        // Patches LoadIntoSecondary() to control and keep track of event
+        static bool LoadIntoSecondaryPrefix(FVRFireArmMagazine __instance, FVRFireArm fireArm, int slot)
+        {
+            return Load(__instance, fireArm, slot);
+        }
+
+        private static bool Load(FVRFireArmMagazine magInstance, FVRFireArm fireArm, int slot = -1)
+        {
+            if (Mod.managerObject == null || loadSkip > 0)
+            {
+                return true;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(magInstance, out trackedItem) ? trackedItem : magInstance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Don't want to load if we are not controller
+                if (trackedItem.data.controller != H3MP_GameManager.ID)
+                {
+                    return false;
+                }
+
+                H3MP_TrackedItem FATrackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(fireArm, out FATrackedItem) ? FATrackedItem : fireArm.GetComponent<H3MP_TrackedItem>();
+                // Only need to send order to load if we are not firearm controller
+                if (FATrackedItem != null && FATrackedItem.data.controller != H3MP_GameManager.ID)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.MagazineLoad(trackedItem.data.trackedID, FATrackedItem.data.trackedID, slot);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.MagazineLoad(trackedItem.data.trackedID, FATrackedItem.data.trackedID, slot);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // Patches Load(AttachableFirearm) to control and keep track of event
+        static bool LoadAttachablePrefix(FVRFireArmMagazine __instance, AttachableFirearm fireArm)
+        {
+            if (Mod.managerObject == null || loadSkip > 0)
+            {
+                return true;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Don't want to load if we are not controller
+                if (trackedItem.data.controller != H3MP_GameManager.ID)
+                {
+                    return false;
+                }
+
+                H3MP_TrackedItem FATrackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(fireArm.Attachment, out FATrackedItem) ? FATrackedItem : fireArm.Attachment.GetComponent<H3MP_TrackedItem>();
+                // Only need to send order to load if we are not firearm controller
+                if (FATrackedItem != null && FATrackedItem.data.controller != H3MP_GameManager.ID)
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.MagazineLoadAttachable(trackedItem.data.trackedID, FATrackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.MagazineLoadAttachable(trackedItem.data.trackedID, FATrackedItem.data.trackedID);
+                    }
+                }
+            }
+
+            return true;
         }
     }
 

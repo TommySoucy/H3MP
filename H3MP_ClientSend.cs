@@ -2644,5 +2644,28 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void MagazineLoad(int trackedID, int FATrackedID, int slot = -1)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.magazineLoad))
+            {
+                packet.Write(trackedID);
+                packet.Write(FATrackedID);
+                packet.Write((short)slot);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void MagazineLoadAttachable(int trackedID, int FATrackedID)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.magazineLoadAttachable))
+            {
+                packet.Write(trackedID);
+                packet.Write(FATrackedID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

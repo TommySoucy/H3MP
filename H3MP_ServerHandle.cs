@@ -4505,5 +4505,73 @@ namespace H3MP
                 }
             }
         }
+
+        public static void MagazineLoad(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int FATrackedID = packet.ReadInt();
+            short slot = packet.ReadShort();
+
+            H3MP_TrackedItemData magItemData = H3MP_Server.items[trackedID];
+            H3MP_TrackedItemData FAItemData = H3MP_Server.items[FATrackedID];
+            if (magItemData != null && FAItemData != null)
+            {
+                if (FAItemData.controller == 0)
+                {
+                    if (FAItemData.physicalItem != null && magItemData.physicalItem != null)
+                    {
+                        if (slot == -1)
+                        {
+                            ++MagazinePatch.loadSkip;
+                            (magItemData.physicalItem.physicalObject as FVRFireArmMagazine).Load(FAItemData.physicalItem.physicalObject as FVRFireArm);
+                            --MagazinePatch.loadSkip;
+                        }
+                        else
+                        {
+                            ++MagazinePatch.loadSkip;
+                            (magItemData.physicalItem.physicalObject as FVRFireArmMagazine).LoadIntoSecondary(FAItemData.physicalItem.physicalObject as FVRFireArm, slot);
+                            --MagazinePatch.loadSkip;
+                        }
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.MagazineLoad(trackedID, FATrackedID, slot, clientID);
+                }
+            }
+            else
+            {
+                Mod.LogError("Server got order to load mag " + trackedID + " into firearm " + FATrackedID + " but we are missing item data!");
+            }
+        }
+
+        public static void MagazineLoadAttachable(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int FATrackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData magItemData = H3MP_Server.items[trackedID];
+            H3MP_TrackedItemData FAItemData = H3MP_Server.items[FATrackedID];
+            if (magItemData != null && FAItemData != null)
+            {
+                if (FAItemData.controller == 0)
+                {
+                    if (FAItemData.physicalItem != null && magItemData.physicalItem != null)
+                    {
+                        ++MagazinePatch.loadSkip;
+                        (magItemData.physicalItem.physicalObject as FVRFireArmMagazine).Load(FAItemData.physicalItem.dataObject as AttachableFirearm);
+                        --MagazinePatch.loadSkip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.MagazineLoadAttachable(trackedID, FATrackedID, clientID);
+                }
+            }
+            else
+            {
+                Mod.LogError("Server got order to load mag " + trackedID + " into attachable firearm " + FATrackedID + " but we are missing item data!");
+            }
+        }
     }
 }

@@ -4131,5 +4131,42 @@ namespace H3MP
                 }
             }
         }
+
+        public static void MagazineLoad(int trackedID, int FATrackedID, int slot = -1, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.magazineLoad))
+            {
+                packet.Write(trackedID);
+                packet.Write(FATrackedID);
+                packet.Write((short)slot);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void MagazineLoadAttachable(int trackedID, int FATrackedID, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.magazineLoadAttachable))
+            {
+                packet.Write(trackedID);
+                packet.Write(FATrackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }
