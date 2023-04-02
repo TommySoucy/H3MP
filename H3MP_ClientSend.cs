@@ -2632,5 +2632,17 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void ChamberRound(int trackedID, FireArmRoundClass roundClass, int chamberIndex)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.chamberRound))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)roundClass);
+                packet.Write((byte)chamberIndex);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

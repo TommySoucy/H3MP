@@ -927,6 +927,7 @@ namespace H3MP
                 H3MP_ServerHandle.ClipAddRound,
                 H3MP_ServerHandle.SpeedloaderChamberLoad,
                 H3MP_ServerHandle.RemoteGunChamber,
+                H3MP_ServerHandle.ChamberRound,
             };
 
             items = new H3MP_TrackedItemData[100];

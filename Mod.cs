@@ -2256,6 +2256,20 @@ namespace H3MP
             PatchVerify.Verify(remoteGunChamberOriginal, harmony, false);
             harmony.Patch(remoteGunChamberOriginal, new HarmonyMethod(remoteGunChamberPrefix));
 
+            // ChamberPatch
+            MethodInfo chamberSetRoundClassOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(Vector3), typeof(Quaternion) }, null);
+            MethodInfo chamberSetRoundClassPrefix = typeof(ChamberPatch).GetMethod("SetRoundClassPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo chamberSetRoundRoundVectorOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(Vector3), typeof(Quaternion) }, null);
+            MethodInfo chamberSetRoundRoundBoolOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool) }, null);
+            MethodInfo chamberSetRoundRoundPrefix = typeof(ChamberPatch).GetMethod("SetRoundClassPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(chamberSetRoundClassOriginal, harmony, false);
+            PatchVerify.Verify(chamberSetRoundRoundVectorOriginal, harmony, false);
+            PatchVerify.Verify(chamberSetRoundRoundBoolOriginal, harmony, false);
+            harmony.Patch(chamberSetRoundClassOriginal, new HarmonyMethod(chamberSetRoundClassPrefix));
+            harmony.Patch(chamberSetRoundRoundVectorOriginal, new HarmonyMethod(chamberSetRoundRoundPrefix));
+            harmony.Patch(chamberSetRoundRoundBoolOriginal, new HarmonyMethod(chamberSetRoundRoundPrefix));
+
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo wristMenuPatchUpdatePrefix = typeof(WristMenuPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -3851,15 +3865,6 @@ namespace H3MP
         static void Prefix(Vector3 point)
         {
             Mod.LogWarning("TeleportToPoint called with point: (" + point.x + "," + point.y + "," + point.z + "):\n" + Environment.StackTrace);
-        }
-    }
-
-    // DEBUG PATCH Patches FVRFireArmChamber.SetRound(FVRFireArmRound, bool)
-    class ChamberSetRoundPatch
-    {
-        static void Prefix(FVRFireArmRound round)
-        {
-            Mod.LogWarning("ChamberSetRound called with round type: "+ round.RoundType+", class: "+ round.RoundClass);
         }
     }
 #endregion
@@ -9847,6 +9852,98 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.RemoteGunChamber(trackedItem.data.trackedID, round.RoundClass, round.RoundType);
+                }
+            }
+        }
+    }
+
+    // Patches FVRFireArmChamber
+    class ChamberPatch
+    {
+        public static int chamberSkip;
+
+        static void SetRoundClassPrefix(FVRFireArmChamber __instance, FireArmRoundClass rclass)
+        {
+            if(Mod.managerObject == null || chamberSkip > 0)
+            {
+                return;
+            }
+
+            // Find item this chamber is attached to
+            H3MP_TrackedItem trackedItem = null;
+            Transform currentParent = __instance.transform;
+            while(currentParent != null)
+            {
+                trackedItem = currentParent.GetComponent<H3MP_TrackedItem>();
+                if (trackedItem != null)
+                {
+                    break;
+                }
+                currentParent = currentParent.parent;
+            }
+
+            // If we have a tracked item and we are not its controller, we need to send order to controller to set the round on their side
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID && trackedItem.getChamberIndex != null)
+            {
+                // Find the chamber's index on the tracked item
+                int chamberIndex = trackedItem.getChamberIndex(__instance);
+                if(chamberIndex == -1)
+                {
+                    Mod.LogError("SetRound(Class) called on chamber attached to "+ trackedItem.name+" but chamber was not found on the item!");
+                }
+                else
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.ChamberRound(trackedItem.data.trackedID, rclass, chamberIndex);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.ChamberRound(trackedItem.data.trackedID, rclass, chamberIndex);
+                    }
+                }
+            }
+        }
+
+        static void SetRoundRoundPrefix(FVRFireArmChamber __instance, FVRFireArmRound round)
+        {
+            if(Mod.managerObject == null || chamberSkip > 0 || round == null)
+            {
+                return;
+            }
+
+            // Find item this chamber is attached to
+            H3MP_TrackedItem trackedItem = null;
+            Transform currentParent = __instance.transform;
+            while(currentParent != null)
+            {
+                trackedItem = currentParent.GetComponent<H3MP_TrackedItem>();
+                if (trackedItem != null)
+                {
+                    break;
+                }
+                currentParent = currentParent.parent;
+            }
+
+            // If we have a tracked item and we are not its controller, we need to send order to controller to set the round on their side
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID && trackedItem.getChamberIndex != null)
+            {
+                // Find the chamber's index on the tracked item
+                int chamberIndex = trackedItem.getChamberIndex(__instance);
+                if(chamberIndex == -1)
+                {
+                    Mod.LogError("SetRound(Round) called on chamber attached to "+ trackedItem.name+" but chamber was not found on the item!");
+                }
+                else
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.ChamberRound(trackedItem.data.trackedID, round.RoundClass, chamberIndex);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.ChamberRound(trackedItem.data.trackedID, round.RoundClass, chamberIndex);
+                    }
                 }
             }
         }

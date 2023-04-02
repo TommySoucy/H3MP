@@ -501,6 +501,7 @@ namespace H3MP
                 H3MP_ClientHandle.ClipAddRound,
                 H3MP_ClientHandle.SpeedloaderChamberLoad,
                 H3MP_ClientHandle.RemoteGunChamber,
+                H3MP_ClientHandle.ChamberRound,
             };
 
             // All vanilla scenes can be synced by default

@@ -4112,5 +4112,24 @@ namespace H3MP
                 }
             }
         }
+
+        public static void ChamberRound(int trackedID, FireArmRoundClass roundClass, int chamberIndex, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.chamberRound))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)roundClass);
+                packet.Write((byte)chamberIndex);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }
