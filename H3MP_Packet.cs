@@ -172,7 +172,8 @@ namespace H3MP
         magazineLoad = 161,
         magazineLoadAttachable = 162,
         clipLoad = 163,
-        revolverCylinderLoad = 164
+        revolverCylinderLoad = 164,
+        revolvingShotgunLoad = 165
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -338,7 +339,8 @@ namespace H3MP
         magazineLoad = 158,
         magazineLoadAttachable = 159,
         clipLoad = 160,
-        revolverCylinderLoad = 161
+        revolverCylinderLoad = 161,
+        revolvingShotgunLoad = 162
     }
 
     public class H3MP_Packet : IDisposable

@@ -4188,5 +4188,53 @@ namespace H3MP
                 }
             }
         }
+
+        public static void RevolvingShotgunLoad(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Client.items[trackedID];
+            if (itemData != null)
+            {
+                int chamberCount = packet.ReadByte();
+                List<short> classes = new List<short>();
+                for (int i = 0; i < chamberCount; ++i)
+                {
+                    classes.Add(packet.ReadShort());
+                }
+
+                if (itemData.controller == 0)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        RevolvingShotgun revShotgun = itemData.physicalItem.physicalObject as RevolvingShotgun;
+
+                        if (revShotgun.CylinderLoaded)
+                        {
+                            return;
+                        }
+                        revShotgun.CylinderLoaded = true;
+                        revShotgun.ProxyCylinder.gameObject.SetActive(true);
+                        revShotgun.PlayAudioEvent(FirearmAudioEventType.MagazineIn, 1f);
+                        revShotgun.CurChamber = 0;
+                        revShotgun.ProxyCylinder.localRotation = revShotgun.GetLocalRotationFromCylinder(0);
+                        ++ChamberPatch.chamberSkip;
+                        for (int i = 0; i < revShotgun.Chambers.Length; i++)
+                        {
+                            if (classes[i] == -1)
+                            {
+                                revShotgun.Chambers[i].Unload();
+                            }
+                            else
+                            {
+                                revShotgun.Chambers[i].Autochamber((FireArmRoundClass)classes[i]);
+                            }
+                            revShotgun.Chambers[i].UpdateProxyDisplay();
+                        }
+                        --ChamberPatch.chamberSkip;
+                    }
+                }
+            }
+        }
     }
 }

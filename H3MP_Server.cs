@@ -932,6 +932,7 @@ namespace H3MP
                 H3MP_ServerHandle.MagazineLoadAttachable,
                 H3MP_ServerHandle.ClipLoad,
                 H3MP_ServerHandle.RevolverCylinderLoad,
+                H3MP_ServerHandle.RevolvingShotgunLoad,
             };
 
             items = new H3MP_TrackedItemData[100];

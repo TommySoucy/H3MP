@@ -2305,6 +2305,13 @@ namespace H3MP
             PatchVerify.Verify(revolverCylinderLoadOriginal, harmony, false);
             harmony.Patch(revolverCylinderLoadOriginal, new HarmonyMethod(revolverCylinderLoadPrefix));
 
+            // RevolvingShotgunPatch
+            MethodInfo revolvingShotgunLoadOriginal = typeof(RevolvingShotgun).GetMethod("LoadCylinder", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo revolvingShotgunLoadPrefix = typeof(RevolvingShotgunPatch).GetMethod("LoadCylinderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(revolvingShotgunLoadOriginal, harmony, false);
+            harmony.Patch(revolvingShotgunLoadOriginal, new HarmonyMethod(revolvingShotgunLoadPrefix));
+
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo wristMenuPatchUpdatePrefix = typeof(WristMenuPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -10286,6 +10293,33 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.RevolverCylinderLoad(trackedItem.data.trackedID, loader);
+                }
+            }
+        }
+    }
+
+    // Patches RevolvingShotgun
+    class RevolvingShotgunPatch
+    {
+        // public static int loadSkip;
+
+        static void LoadCylinderPrefix(RevolvingShotgun __instance, Speedloader s)
+        {
+            if(Mod.managerObject == null /*|| loadSkip > 0*/)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.RevolvingShotgunLoad(trackedItem.data.trackedID, s);
+                }
+                else
+                {
+                    H3MP_ClientSend.RevolvingShotgunLoad(trackedItem.data.trackedID, s);
                 }
             }
         }
