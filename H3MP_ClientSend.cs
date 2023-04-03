@@ -2722,5 +2722,27 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void GrappleGunLoad(int trackedID, Speedloader speedLoader)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.grappleGunLoad))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)speedLoader.Chambers.Count);
+                for (int i = 0; i < speedLoader.Chambers.Count; ++i)
+                {
+                    if (speedLoader.Chambers[i].IsLoaded && !speedLoader.Chambers[i].IsSpent)
+                    {
+                        packet.Write((short)speedLoader.Chambers[i].LoadedClass);
+                    }
+                    else
+                    {
+                        packet.Write((short)-1);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

@@ -4699,5 +4699,60 @@ namespace H3MP
                 Mod.LogError("Server got order to load revolving shotgun " + trackedID + " with speedloader but we are missing item data!");
             }
         }
+
+        public static void GrappleGunLoad(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID];
+            if (itemData != null)
+            {
+                int chamberCount = packet.ReadByte();
+                List<short> classes = new List<short>();
+                for (int i = 0; i < chamberCount; ++i)
+                {
+                    classes.Add(packet.ReadShort());
+                }
+
+                if (itemData.controller == 0)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        GrappleGun grappleGun = itemData.physicalItem.physicalObject as GrappleGun;
+
+                        if (grappleGun.IsMagLoaded)
+                        {
+                            return;
+                        }
+                        grappleGun.IsMagLoaded = true;
+                        grappleGun.ProxyMag.gameObject.SetActive(true);
+                        grappleGun.PlayAudioEvent(FirearmAudioEventType.MagazineIn, 1f);
+                        Mod.GrappleGun_m_curChamber.SetValue(grappleGun, 0);
+                        ++ChamberPatch.chamberSkip;
+                        for (int i = 0; i < grappleGun.Chambers.Length; i++)
+                        {
+                            if (classes[i] == -1)
+                            {
+                                grappleGun.Chambers[i].Unload();
+                            }
+                            else
+                            {
+                                grappleGun.Chambers[i].Autochamber((FireArmRoundClass)classes[i]);
+                            }
+                            grappleGun.Chambers[i].UpdateProxyDisplay();
+                        }
+                        --ChamberPatch.chamberSkip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.GrappleGunLoad(trackedID, null, classes, clientID);
+                }
+            }
+            else
+            {
+                Mod.LogError("Server got order to load revolving shotgun " + trackedID + " with speedloader but we are missing item data!");
+            }
+        }
     }
 }

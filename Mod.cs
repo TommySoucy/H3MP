@@ -2312,6 +2312,13 @@ namespace H3MP
             PatchVerify.Verify(revolvingShotgunLoadOriginal, harmony, false);
             harmony.Patch(revolvingShotgunLoadOriginal, new HarmonyMethod(revolvingShotgunLoadPrefix));
 
+            // GrappleGunPatch
+            MethodInfo grappleGunLoadOriginal = typeof(GrappleGun).GetMethod("LoadCylinder", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo grappleGunLoadPrefix = typeof(GrappleGunPatch).GetMethod("LoadCylinderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(grappleGunLoadOriginal, harmony, false);
+            harmony.Patch(grappleGunLoadOriginal, new HarmonyMethod(grappleGunLoadPrefix));
+
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo wristMenuPatchUpdatePrefix = typeof(WristMenuPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -10276,6 +10283,7 @@ namespace H3MP
     {
         // public static int loadSkip;
 
+        // Patches LoadFromSpeedLoader() to track the event
         static void LoadFromSpeedLoaderPrefix(RevolverCylinder __instance, Speedloader loader)
         {
             if(Mod.managerObject == null /*|| loadSkip > 0*/)
@@ -10303,6 +10311,7 @@ namespace H3MP
     {
         // public static int loadSkip;
 
+        // Patches LoadCylinder() to track the event
         static void LoadCylinderPrefix(RevolvingShotgun __instance, Speedloader s)
         {
             if(Mod.managerObject == null /*|| loadSkip > 0*/)
@@ -10320,6 +10329,34 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.RevolvingShotgunLoad(trackedItem.data.trackedID, s);
+                }
+            }
+        }
+    }
+
+    // Patches GrappleGun
+    class GrappleGunPatch
+    {
+        // public static int loadSkip;
+
+        // Patches LoadCylinder() to track the event
+        static void LoadCylinderPrefix(GrappleGun __instance, Speedloader s)
+        {
+            if(Mod.managerObject == null /*|| loadSkip > 0*/)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.GrappleGunLoad(trackedItem.data.trackedID, s);
+                }
+                else
+                {
+                    H3MP_ClientSend.GrappleGunLoad(trackedItem.data.trackedID, s);
                 }
             }
         }

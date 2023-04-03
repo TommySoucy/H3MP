@@ -507,6 +507,7 @@ namespace H3MP
                 H3MP_ClientHandle.ClipLoad,
                 H3MP_ClientHandle.RevolverCylinderLoad,
                 H3MP_ClientHandle.RevolvingShotgunLoad,
+                H3MP_ClientHandle.GrappleGunLoad,
             };
 
             // All vanilla scenes can be synced by default
