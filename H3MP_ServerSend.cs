@@ -4186,5 +4186,45 @@ namespace H3MP
                 }
             }
         }
+
+        public static void RevolverCylinderLoad(int trackedID, Speedloader speedLoader, List<short> classes = null, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.revolverCylinderLoad))
+            {
+                packet.Write(trackedID);
+                if (speedLoader == null)
+                {
+                    packet.Write((byte)classes.Count);
+                    for (int i = 0; i < classes.Count; ++i)
+                    {
+                        packet.Write(classes[i]);
+                    }
+                }
+                else
+                {
+                    packet.Write((byte)speedLoader.Chambers.Count);
+                    for (int i = 0; i < speedLoader.Chambers.Count; ++i)
+                    {
+                        if (speedLoader.Chambers[i].IsLoaded && !speedLoader.Chambers[i].IsSpent)
+                        {
+                            packet.Write((short)speedLoader.Chambers[i].LoadedClass);
+                        }
+                        else
+                        {
+                            packet.Write((short)-1);
+                        }
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

@@ -4602,5 +4602,46 @@ namespace H3MP
                 Mod.LogError("Server got order to load clip " + trackedID + " into firearm " + FATrackedID + " but we are missing item data!");
             }
         }
+
+        public static void RevolverCylinderLoad(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID];
+            if (itemData != null)
+            {
+                int chamberCount = packet.ReadByte();
+                List<short> classes = new List<short>();
+                for (int i = 0; i < chamberCount; ++i)
+                {
+                    classes.Add(packet.ReadShort());
+                }
+
+                if (itemData.controller == 0)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        Revolver revolver = itemData.physicalItem.physicalObject as Revolver;
+                        ++ChamberPatch.chamberSkip;
+                        for(int i=0; i < revolver.Chambers.Length; ++i)
+                        {
+                            if (classes[i] != -1)
+                            {
+                                revolver.Chambers[i].SetRound((FireArmRoundClass)classes[i], revolver.Chambers[i].transform.position, revolver.Chambers[i].transform.rotation);
+                            }
+                        }
+                        --ChamberPatch.chamberSkip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.RevolverCylinderLoad(trackedID, null, classes, clientID);
+                }
+            }
+            else
+            {
+                Mod.LogError("Server got order to load revolver cylinder " + trackedID + " with speedloader but we are missing item data!");
+            }
+        }
     }
 }

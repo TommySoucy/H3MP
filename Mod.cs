@@ -2298,6 +2298,13 @@ namespace H3MP
             harmony.Patch(speedLoaderFixedUpdateOriginal, null, null, new HarmonyMethod(speedLoaderFixedUpdateTranspiler));
             harmony.Patch(speedLoaderUpdateOriginal, null, null, new HarmonyMethod(speedLoaderUpdateTranspiler));
 
+            // RevolverCylinderPatch
+            MethodInfo revolverCylinderLoadOriginal = typeof(RevolverCylinder).GetMethod("LoadFromSpeedLoader", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo revolverCylinderLoadPrefix = typeof(RevolverCylinderPatch).GetMethod("LoadFromSpeedLoaderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(revolverCylinderLoadOriginal, harmony, false);
+            harmony.Patch(revolverCylinderLoadOriginal, new HarmonyMethod(revolverCylinderLoadPrefix));
+
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo wristMenuPatchUpdatePrefix = typeof(WristMenuPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -10254,6 +10261,33 @@ namespace H3MP
                 }
             }
             return instructionList;
+        }
+    }
+
+    // Patches RevolverCylinder
+    class RevolverCylinderPatch
+    {
+        // public static int loadSkip;
+
+        static void LoadFromSpeedLoaderPrefix(RevolverCylinder __instance, Speedloader loader)
+        {
+            if(Mod.managerObject == null /*|| loadSkip > 0*/)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.Revolver, out trackedItem) ? trackedItem : __instance.Revolver.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.RevolverCylinderLoad(trackedItem.data.trackedID, loader);
+                }
+                else
+                {
+                    H3MP_ClientSend.RevolverCylinderLoad(trackedItem.data.trackedID, loader);
+                }
+            }
         }
     }
 #endregion
