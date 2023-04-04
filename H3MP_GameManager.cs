@@ -797,6 +797,8 @@ namespace H3MP
                                     H3MP_Client.waitingLocalItems.Add(trackedItem.data.localWaitingIndex, trackedItem.data);
                                     H3MP_ClientSend.TrackedItem(trackedItem.data);
                                 }
+
+                                trackedItem.data.OnItemTracked();
                             }
                             else
                             {
@@ -1170,6 +1172,85 @@ namespace H3MP
                 }
             }
             data.ammoStores = (int[])Mod.SosigInventory_m_ammoStores.GetValue(sosigScript.Inventory);
+            data.inventory = new int[2 + sosigScript.Inventory.Slots.Count];
+            if(sosigScript.Hand_Primary.HeldObject == null)
+            {
+                data.inventory[0] = -1;
+            }
+            else
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemBySosigWeapon.TryGetValue(sosigScript.Hand_Primary.HeldObject, out trackedItem) ? trackedItem : sosigScript.Hand_Primary.HeldObject.O.GetComponent<H3MP_TrackedItem>();
+                if(trackedItem == null)
+                {
+                    H3MP_TrackedItem.unknownSosigInventoryObjects.Add(sosigScript.Hand_Primary.HeldObject, new KeyValuePair<H3MP_TrackedSosigData, int>(data, 0));
+                    data.inventory[0] = -1;
+                }
+                else
+                {
+                    if(trackedItem.data.trackedID == -1)
+                    {
+                        H3MP_TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<H3MP_TrackedSosigData, int>(data, 0));
+                        data.inventory[0] = -1;
+                    }
+                    else
+                    {
+                        data.inventory[0] = trackedItem.data.trackedID;
+                    }
+                }
+            }
+            if(sosigScript.Hand_Secondary.HeldObject == null)
+            {
+                data.inventory[1] = -1;
+            }
+            else
+            {
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemBySosigWeapon.TryGetValue(sosigScript.Hand_Secondary.HeldObject, out trackedItem) ? trackedItem : sosigScript.Hand_Secondary.HeldObject.O.GetComponent<H3MP_TrackedItem>();
+                if(trackedItem == null)
+                {
+                    H3MP_TrackedItem.unknownSosigInventoryObjects.Add(sosigScript.Hand_Primary.HeldObject, new KeyValuePair<H3MP_TrackedSosigData, int>(data, 1));
+                    data.inventory[1] = -1;
+                }
+                else
+                {
+                    if(trackedItem.data.trackedID == -1)
+                    {
+                        H3MP_TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<H3MP_TrackedSosigData, int>(data, 1));
+                        data.inventory[1] = -1;
+                    }
+                    else
+                    {
+                        data.inventory[1] = trackedItem.data.trackedID;
+                    }
+                }
+            }
+            for(int i=0; i < sosigScript.Inventory.Slots.Count; ++i)
+            {
+                if (sosigScript.Inventory.Slots[i].HeldObject == null)
+                {
+                    data.inventory[i + 2] = -1;
+                }
+                else
+                {
+                    H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemBySosigWeapon.TryGetValue(sosigScript.Inventory.Slots[i].HeldObject, out trackedItem) ? trackedItem : sosigScript.Inventory.Slots[i].HeldObject.O.GetComponent<H3MP_TrackedItem>();
+                    if (trackedItem == null)
+                    {
+                        H3MP_TrackedItem.unknownSosigInventoryObjects.Add(sosigScript.Hand_Primary.HeldObject, new KeyValuePair<H3MP_TrackedSosigData, int>(data, i + 2));
+                        data.inventory[i + 2] = -1;
+                    }
+                    else
+                    {
+                        if (trackedItem.data.trackedID == -1)
+                        {
+                            H3MP_TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<H3MP_TrackedSosigData, int>(data, i + 2));
+                            data.inventory[i + 2] = -1;
+                        }
+                        else
+                        {
+                            data.inventory[i + 2] = trackedItem.data.trackedID;
+                        }
+                    }
+                }
+            }
             data.controller = ID;
             data.initTracker = ID;
             data.mustard = sosigScript.Mustard;

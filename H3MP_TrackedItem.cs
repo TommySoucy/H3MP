@@ -22,6 +22,8 @@ namespace H3MP
         public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
         public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
         public static Dictionary<uint, byte> unknownCrateHolding = new Dictionary<uint, byte>();
+        public static Dictionary<SosigWeapon, KeyValuePair<H3MP_TrackedSosigData, int>> unknownSosigInventoryObjects = new Dictionary<SosigWeapon, KeyValuePair<H3MP_TrackedSosigData, int>>();
+        public static Dictionary<uint, KeyValuePair<H3MP_TrackedSosigData, int>> unknownSosigInventoryItems = new Dictionary<uint, KeyValuePair<H3MP_TrackedSosigData, int>>();
 
         // Update
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified

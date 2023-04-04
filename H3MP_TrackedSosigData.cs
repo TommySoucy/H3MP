@@ -62,6 +62,7 @@ namespace H3MP
         public Vector3 idleToPoint;
         public Vector3 idleDominantDir;
         public Vector3 pathToLookDir;
+        public int[] inventory; // 0 and 1 primary and other hand, 2..n inventory slots
 
         public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(-1, null);
 
@@ -159,6 +160,42 @@ namespace H3MP
                     break;
             }
             physicalObject.physicalSosigScript.FallbackOrder = fallbackOrder;
+
+            // Setup inventory
+            H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
+            ++SosigPickUpPatch.skip;
+            ++SosigPlaceObjectInPatch.skip;
+            for (int i=0; i < inventory.Length; ++i)
+            {
+                if (inventory[i] != -1)
+                {
+                    if (arrToUse[inventory[i]] == null)
+                    {
+                        Mod.LogError("Sosig instantiation: inventory[" + i + "] = "+ inventory[i] + " is missing item data!");
+                    }
+                    else if(arrToUse[inventory[i]].physicalItem == null)
+                    {
+                        arrToUse[inventory[i]].toPutInSosigInventory = new int[] { trackedID, i };
+                    }
+                    else
+                    {
+                        if (i == 0)
+                        {
+                            physicalObject.physicalSosigScript.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)arrToUse[inventory[i]].physicalItem.physicalObject).W);
+                        }
+                        else if (i == 1)
+                        {
+                            physicalObject.physicalSosigScript.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)arrToUse[inventory[i]].physicalItem.physicalObject).W);
+                        }
+                        else
+                        {
+                            physicalObject.physicalSosigScript.Inventory.Slots[i - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)arrToUse[inventory[i]].physicalItem.physicalObject).W);
+                        }
+                    }
+                }
+            }
+            --SosigPickUpPatch.skip;
+            --SosigPlaceObjectInPatch.skip;
 
             ProcessData();
 

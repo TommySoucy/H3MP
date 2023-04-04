@@ -734,6 +734,18 @@ namespace H3MP
                         Write(trackedSosig.pathToLookDir);
                         break;
                 }
+                if(trackedSosig.inventory == null)
+                {
+                    Write((byte)0);
+                }
+                else
+                {
+                    Write((byte)trackedSosig.inventory.Length);
+                    for (int i = 0; i < trackedSosig.inventory.Length; ++i)
+                    {
+                        Write(trackedSosig.inventory[i]);
+                    }
+                }
             }
             else
             {
@@ -1559,6 +1571,12 @@ namespace H3MP
                         trackedSosig.pathToPoint = ReadVector3();
                         trackedSosig.pathToLookDir = ReadVector3();
                         break;
+                }
+                byte inventoryLength = ReadByte();
+                trackedSosig.inventory = new int[inventoryLength];
+                for(int i=0; i < inventoryLength; ++i)
+                {
+                    trackedSosig.inventory[i] = ReadInt();
                 }
             }
             else

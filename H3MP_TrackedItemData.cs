@@ -47,6 +47,7 @@ namespace H3MP
         public int childIndex = -1; // The index of this item in its parent's children list
         public int ignoreParentChanged;
         public bool removeFromListOnDestroy = true;
+        public int[] toPutInSosigInventory;
 
         public IEnumerator Instantiate()
         {
@@ -151,6 +152,32 @@ namespace H3MP
                     }
                 }
                 childrenToParent.Clear();
+
+                // Add to sosig inventory if necessary
+                if(toPutInSosigInventory != null)
+                {
+                    H3MP_TrackedSosigData trackedSosig = H3MP_ThreadManager.host ? H3MP_Server.sosigs[toPutInSosigInventory[0]] : H3MP_Client.sosigs[toPutInSosigInventory[0]];
+                    if(trackedSosig != null && trackedSosig.inventory[toPutInSosigInventory[1]] == trackedID)
+                    {
+
+                        ++SosigPickUpPatch.skip;
+                        ++SosigPlaceObjectInPatch.skip;
+                        if (toPutInSosigInventory[1] == 0)
+                        {
+                            trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)physicalItem.physicalObject).W);
+                        }
+                        else if (toPutInSosigInventory[1] == 1)
+                        {
+                            trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)physicalItem.physicalObject).W);
+                        }
+                        else
+                        {
+                            trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[toPutInSosigInventory[1] - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)physicalItem.physicalObject).W);
+                        }
+                        --SosigPickUpPatch.skip;
+                        --SosigPlaceObjectInPatch.skip;
+                    }
+                }
             }
             catch(Exception e)
             {
@@ -637,6 +664,74 @@ namespace H3MP
                 }
 
                 H3MP_TrackedItem.unknownCrateHolding.Remove(localWaitingIndex);
+            }
+            if (localTrackedID != -1 && H3MP_TrackedItem.unknownSosigInventoryItems.TryGetValue(localWaitingIndex, out KeyValuePair<H3MP_TrackedSosigData, int> entry))
+            {
+                if (entry.Key.physicalObject == null)
+                {
+                    Mod.LogError("On item tracked: unknownSosigInventoryItems: Missing sosig phys!");
+                }
+                else
+                {
+                    if (trackedID == -1)
+                    {
+                        H3MP_TrackedItem.unknownSosigInventoryItems.Add(localWaitingIndex, new KeyValuePair<H3MP_TrackedSosigData, int>(entry.Key, entry.Value));
+                    }
+                    else
+                    {
+                        H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
+                        if (entry.Value == 0)
+                        {
+                            entry.Key.physicalObject.physicalSosigScript.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[0]].physicalItem.physicalObject).W);
+                        }
+                        else if (entry.Value == 1)
+                        {
+                            entry.Key.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[1]].physicalItem.physicalObject).W);
+                        }
+                        else
+                        {
+                            entry.Key.physicalObject.physicalSosigScript.Inventory.Slots[entry.Value - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[entry.Value]].physicalItem.physicalObject).W);
+                        }
+                    }
+                }
+
+                H3MP_TrackedItem.unknownCrateHolding.Remove(localWaitingIndex);
+            }
+        }
+
+        public void OnItemTracked()
+        {
+            if (H3MP_TrackedItem.unknownSosigInventoryObjects.TryGetValue((physicalItem.physicalObject as SosigWeaponPlayerInterface).W, out KeyValuePair<H3MP_TrackedSosigData, int> entry))
+            {
+                if(entry.Key.physicalObject == null)
+                {
+                    Mod.LogError("On item tracked: unknownSosigInventoryObjects: Missing sosig phys!");
+                }
+                else
+                {
+                    if (trackedID == -1)
+                    {
+                        H3MP_TrackedItem.unknownSosigInventoryItems.Add(localWaitingIndex, new KeyValuePair<H3MP_TrackedSosigData, int>(entry.Key, entry.Value));
+                    }
+                    else
+                    {
+                        H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
+                        if (entry.Value == 0)
+                        {
+                            entry.Key.physicalObject.physicalSosigScript.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[0]].physicalItem.physicalObject).W);
+                        }
+                        else if (entry.Value == 1)
+                        {
+                            entry.Key.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[1]].physicalItem.physicalObject).W);
+                        }
+                        else
+                        {
+                            entry.Key.physicalObject.physicalSosigScript.Inventory.Slots[entry.Value - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[entry.Value]].physicalItem.physicalObject).W);
+                        }
+                    }
+                }
+
+                H3MP_TrackedItem.unknownSosigInventoryObjects.Remove((physicalItem.physicalObject as SosigWeaponPlayerInterface).W);
             }
         }
 
