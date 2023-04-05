@@ -669,33 +669,29 @@ namespace H3MP
             {
                 if (entry.Key.physicalObject == null)
                 {
-                    Mod.LogError("On item tracked: unknownSosigInventoryItems: Missing sosig phys!");
+                    Mod.LogError("On item ID received: unknownSosigInventoryItems: Missing sosig phys!");
                 }
                 else
                 {
-                    if (trackedID == -1)
+                    // Set the value in our data
+                    entry.Key.inventory[entry.Value] = trackedID;
+
+                    // Send to others
+                    if (entry.Value == 0)
                     {
-                        H3MP_TrackedItem.unknownSosigInventoryItems.Add(localWaitingIndex, new KeyValuePair<H3MP_TrackedSosigData, int>(entry.Key, entry.Value));
+                        H3MP_ClientSend.SosigPickUpItem(entry.Key.physicalObject, trackedID, true);
+                    }
+                    else if (entry.Value == 1)
+                    {
+                        H3MP_ClientSend.SosigPickUpItem(entry.Key.physicalObject, trackedID, false);
                     }
                     else
                     {
-                        H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
-                        if (entry.Value == 0)
-                        {
-                            entry.Key.physicalObject.physicalSosigScript.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[0]].physicalItem.physicalObject).W);
-                        }
-                        else if (entry.Value == 1)
-                        {
-                            entry.Key.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[1]].physicalItem.physicalObject).W);
-                        }
-                        else
-                        {
-                            entry.Key.physicalObject.physicalSosigScript.Inventory.Slots[entry.Value - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[entry.Value]].physicalItem.physicalObject).W);
-                        }
+                        H3MP_ClientSend.SosigPlaceItemIn(entry.Key.trackedID, entry.Value - 2, trackedID);
                     }
                 }
 
-                H3MP_TrackedItem.unknownCrateHolding.Remove(localWaitingIndex);
+                H3MP_TrackedItem.unknownSosigInventoryItems.Remove(localWaitingIndex);
             }
         }
 
@@ -715,18 +711,42 @@ namespace H3MP
                     }
                     else
                     {
-                        H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
+                        // Set the value in our data
+                        entry.Key.inventory[entry.Value] = trackedID;
+
+                        // Send to others
                         if (entry.Value == 0)
                         {
-                            entry.Key.physicalObject.physicalSosigScript.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[0]].physicalItem.physicalObject).W);
+                            if (H3MP_ThreadManager.host)
+                            {
+                                H3MP_ServerSend.SosigPickUpItem(entry.Key.trackedID, trackedID, true);
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.SosigPickUpItem(entry.Key.physicalObject, trackedID, true);
+                            }
                         }
-                        else if (entry.Value == 1)
+                        else if(entry.Value == 1)
                         {
-                            entry.Key.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[1]].physicalItem.physicalObject).W);
+                            if (H3MP_ThreadManager.host)
+                            {
+                                H3MP_ServerSend.SosigPickUpItem(entry.Key.trackedID, trackedID, false);
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.SosigPickUpItem(entry.Key.physicalObject, trackedID, false);
+                            }
                         }
                         else
                         {
-                            entry.Key.physicalObject.physicalSosigScript.Inventory.Slots[entry.Value - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)arrToUse[entry.Key.inventory[entry.Value]].physicalItem.physicalObject).W);
+                            if (H3MP_ThreadManager.host)
+                            {
+                                H3MP_ServerSend.SosigPlaceItemIn(entry.Key.trackedID, entry.Value - 2, trackedID);
+                            }
+                            else
+                            {
+                                H3MP_ClientSend.SosigPlaceItemIn(entry.Key.trackedID, entry.Value - 2, trackedID);
+                            }
                         }
                     }
                 }
@@ -794,7 +814,9 @@ namespace H3MP
 
         public static void TakeControlRecursive(H3MP_TrackedItemData currentTrackedItem)
         {
-            if(currentTrackedItem.trackedID < 0)
+            // Note: we can return right away if we don't have tracked ID because not tracked ID implies taht this item is already under our control
+            // So TakeControlRecursive should never be called without tracked ID in the first place
+            if (currentTrackedItem.trackedID < 0)
             {
                 return;
             }

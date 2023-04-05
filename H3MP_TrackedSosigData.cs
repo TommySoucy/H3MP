@@ -652,16 +652,20 @@ namespace H3MP
                     switch (upper[i].Key)
                     {
                         case 0:
-                            H3MP_ClientSend.SosigPickUpItem(physicalObject, upper[i].Value.Key, upper[i].Value.Value == 1);
+                            H3MP_ClientSend.SosigPickUpItem(physicalObject, upper[i].Value.Key, upper[i].Value.Value == 0);
+                            inventory[upper[i].Value.Value] = upper[i].Value.Key;
                             break;
                         case 1:
                             H3MP_ClientSend.SosigPlaceItemIn(trackedID, upper[i].Value.Value, upper[i].Value.Key);
+                            inventory[upper[i].Value.Value + 2] = upper[i].Value.Key;
                             break;
                         case 2:
-                            H3MP_ClientSend.SosigDropSlot(trackedID, upper[i].Value.Key);
+                            H3MP_ClientSend.SosigDropSlot(trackedID, upper[i].Value.Value);
+                            inventory[upper[i].Value.Value + 2] = upper[i].Value.Key;
                             break;
                         case 3:
-                            H3MP_ClientSend.SosigHandDrop(trackedID, upper[i].Value.Key == 1);
+                            H3MP_ClientSend.SosigHandDrop(trackedID, upper[i].Value.Key == 0);
+                            inventory[upper[i].Value.Value] = upper[i].Value.Key;
                             break;
                     }
                 }
