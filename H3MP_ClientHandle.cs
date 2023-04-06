@@ -4236,7 +4236,6 @@ namespace H3MP
                 }
             }
         }
-        TODO: Make sure when we exchange sosig control we also exchange control of any items in inventory
 
         public static void GrappleGunLoad(H3MP_Packet packet)
         {

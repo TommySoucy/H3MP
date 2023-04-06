@@ -4096,7 +4096,7 @@ namespace H3MP
             }
         }
     }
-    Todo track all changes to sosig inventory and hands to sync data.inventory and make sure that popogates to network in the handles
+
     // Patches SosigHand.PickUp so we can keep track of item control and inventory
     class SosigPickUpPatch
     {
@@ -4127,8 +4127,9 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        H3MP_ServerSend.SosigPickUpItem(trackedSosig.data.trackedID, trackedItem.data.trackedID, primaryHand);
                     }
+
+                    H3MP_ServerSend.SosigPickUpItem(trackedSosig.data.trackedID, trackedItem.data.trackedID, primaryHand);
                 }
                 else
                 {
@@ -4141,21 +4142,22 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        if (trackedSosig.data.trackedID == -1)
+                    }
+
+                    if (trackedSosig.data.trackedID == -1)
+                    {
+                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
                         {
-                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
-                            {
-                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 0 : 1)));
-                            }
-                            else
-                            {
-                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 0 : 1)) });
-                            }
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 0 : 1)));
                         }
                         else
                         {
-                            H3MP_ClientSend.SosigPickUpItem(trackedSosig, trackedItem.data.trackedID, primaryHand);
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(0, new KeyValuePair<int, int>(trackedItem.data.trackedID, primaryHand ? 0 : 1)) });
                         }
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.SosigPickUpItem(trackedSosig, trackedItem.data.trackedID, primaryHand);
                     }
                 }
             }
@@ -4180,8 +4182,11 @@ namespace H3MP
             }
 
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<H3MP_TrackedSosig>();
-            if (trackedSosig != null && trackedSosig.data.trackedID != -1)
+            if (trackedSosig != null)
             {
+                int handIndex = __instance == __instance.S.Hand_Primary ? 0 : 1;
+                trackedSosig.data.inventory[handIndex] = -1;
+
                 if (H3MP_ThreadManager.host)
                 {
                     H3MP_ServerSend.SosigHandDrop(trackedSosig.data.trackedID, __instance.S.Hand_Primary == __instance);
@@ -4190,13 +4195,39 @@ namespace H3MP
                 {
                     if (trackedSosig.data.trackedID == -1)
                     {
-                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        bool found = false;
+                        if(H3MP_TrackedSosig.unknownItemInteractTrackedIDs.TryGetValue(trackedSosig.data.localWaitingIndex, out List<KeyValuePair<int,KeyValuePair<int,int>>> interactions))
                         {
-                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(__instance.S.Hand_Primary == __instance ? 0 : 1, 0)));
+                            for(int i = interactions.Count; i >= 0; --i)
+                            {
+                                // If the interaction is pickup of the same hand
+                                if(interactions[i].Key == 0 && interactions[i].Value.Value == handIndex)
+                                {
+                                    found = true;
+
+                                    // Remove from the unknown
+                                    interactions.RemoveAt(i);
+
+                                    if(interactions.Count == 0)
+                                    {
+                                        H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(trackedSosig.data.localWaitingIndex);
+                                        break;
+                                    }
+                                }
+                            }
                         }
-                        else
+
+                        if (!found)
                         {
-                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(__instance.S.Hand_Primary == __instance ? 0 : 1, 0)) });
+                            // Haven't found an interaction to remove so will need to send this to others
+                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
+                            {
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(handIndex, 0)));
+                            }
+                            else
+                            {
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(3, new KeyValuePair<int, int>(handIndex, 0)) });
+                            }
                         }
                     }
                     else
@@ -4235,7 +4266,6 @@ namespace H3MP
                 }
                 trackedSosig.data.inventory[slotIndex + 2] = trackedItem.data.trackedID;
 
-                review this entire process, need to handle not having trackedID yet when using take control recursive
                 if (H3MP_ThreadManager.host)
                 {
                     if (trackedItem.data.controller != 0)
@@ -4244,7 +4274,12 @@ namespace H3MP
 
                         // Send to all clients
                         H3MP_TrackedItemData.TakeControlRecursive(trackedItem.data);
+
+                        // Update locally
+                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                     }
+
+                    H3MP_ServerSend.SosigPlaceItemIn(trackedSosig.data.trackedID, slotIndex, trackedItem.data.trackedID);
                 }
                 else
                 {
@@ -4257,27 +4292,24 @@ namespace H3MP
 
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        if (trackedSosig.data.trackedID == -1)
+                    }
+
+                    if (trackedSosig.data.trackedID == -1)
+                    {
+                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
                         {
-                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
-                            {
-                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)));
-                            }
-                            else
-                            {
-                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)) });
-                            }
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)));
                         }
                         else
                         {
-                            H3MP_ClientSend.SosigPlaceItemIn(trackedSosig.data.trackedID, slotIndex, trackedItem.data.trackedID);
+                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(1, new KeyValuePair<int, int>(trackedItem.data.trackedID, slotIndex)) });
                         }
                     }
+                    else
+                    {
+                        H3MP_ClientSend.SosigPlaceItemIn(trackedSosig.data.trackedID, slotIndex, trackedItem.data.trackedID);
+                    }
                 }
-
-                // Update locally
-                Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                H3MP_ServerSend.SosigPlaceItemIn(trackedSosig.data.trackedID, slotIndex, trackedItem.data.trackedID);
             }
         }
     }
@@ -4302,39 +4334,58 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.ContainsKey(__instance.I.S) ? H3MP_GameManager.trackedSosigBySosig[__instance.I.S] : __instance.I.S.GetComponent<H3MP_TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.trackedID != -1)
             {
+                int slotIndex = 0;
+                for (int i = 0; i < __instance.I.Slots.Count; ++i)
+                {
+                    if (__instance.I.Slots[i] == __instance)
+                    {
+                        slotIndex = i;
+                        break;
+                    }
+                }
+                trackedSosig.data.inventory[slotIndex + 2] = -1;
+
                 if (H3MP_ThreadManager.host)
                 {
-                    int slotIndex = 0;
-                    for (int i = 0; i < __instance.I.Slots.Count; ++i)
-                    {
-                        if (__instance.I.Slots[i] == __instance)
-                        {
-                            slotIndex = i;
-                            break;
-                        }
-                    }
                     H3MP_ServerSend.SosigDropSlot(trackedSosig.data.trackedID, slotIndex);
                 }
                 else
                 {
-                    int slotIndex = 0;
-                    for (int i = 0; i < __instance.I.Slots.Count; ++i)
-                    {
-                        if (__instance.I.Slots[i] == __instance)
-                        {
-                            slotIndex = i;
-                            break;
-                        }
-                    }
                     if (trackedSosig.data.trackedID == -1)
                     {
-                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        bool found = false;
+                        if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.TryGetValue(trackedSosig.data.localWaitingIndex, out List<KeyValuePair<int, KeyValuePair<int, int>>> interactions))
                         {
-                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)));
+                            for (int i = interactions.Count; i >= 0; --i)
+                            {
+                                // If the interaction is pickup of the same slot
+                                if (interactions[i].Key == 1 && interactions[i].Value.Value == slotIndex)
+                                {
+                                    found = true;
+
+                                    // Remove from the unknown
+                                    interactions.RemoveAt(i);
+
+                                    if (interactions.Count == 0)
+                                    {
+                                        H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(trackedSosig.data.localWaitingIndex);
+                                        break;
+                                    }
+                                }
+                            }
                         }
-                        else
+
+                        if (!found)
                         {
-                            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)) });
+                            // Haven't found an interaction to remove so will need to send this to others
+                            if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
+                            {
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)));
+                            }
+                            else
+                            {
+                                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<int, int>>>() { new KeyValuePair<int, KeyValuePair<int, int>>(2, new KeyValuePair<int, int>(slotIndex, slotIndex)) });
+                            }
                         }
                     }
                     else
