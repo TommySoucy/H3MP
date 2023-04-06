@@ -2288,9 +2288,9 @@ namespace H3MP
             harmony.Patch(chamberSetRoundRoundBoolOriginal, new HarmonyMethod(chamberSetRoundRoundPrefix));
 
             // SpeedloaderPatch
-            MethodInfo speedLoaderFixedUpdateOriginal = typeof(FVRFireArmChamber).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo speedLoaderFixedUpdateOriginal = typeof(Speedloader).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo speedLoaderFixedUpdateTranspiler = typeof(SpeedloaderPatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo speedLoaderUpdateOriginal = typeof(FVRFireArmChamber).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo speedLoaderUpdateOriginal = typeof(Speedloader).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo speedLoaderUpdateTranspiler = typeof(SpeedloaderPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(speedLoaderFixedUpdateOriginal, harmony, false);
@@ -10220,8 +10220,8 @@ namespace H3MP
                 {
                     if (!startFound)
                     {
-                        instruction.labels.Add(startLoadLabel);
-                        instructionList.InsertRange(i, toInsert);
+                        instructionList[i + 1].labels.Add(startLoadLabel);
+                        instructionList.InsertRange(i + 1, toInsert);
                         i += toInsert.Count;
 
                         startFound = true;
