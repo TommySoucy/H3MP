@@ -1869,18 +1869,23 @@ namespace H3MP
             bool primaryHand = packet.ReadBool();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            if (trackedSosig != null)
             {
-                ++SosigPickUpPatch.skip;
-                if (primaryHand)
+                trackedSosig.inventory[primaryHand ? 0 : 1] = itemTrackedID;
+
+                if (trackedSosig.physicalObject != null && H3MP_Server.items[itemTrackedID] != null && H3MP_Server.items[itemTrackedID].physicalItem != null)
                 {
-                    trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                    ++SosigPickUpPatch.skip;
+                    if (primaryHand)
+                    {
+                        trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                    }
+                    else
+                    {
+                        trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                    }
+                    --SosigPickUpPatch.skip;
                 }
-                else
-                {
-                    trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
-                }
-                --SosigPickUpPatch.skip;
             }
 
             H3MP_ServerSend.SosigPickUpItem(sosigTrackedID, itemTrackedID, primaryHand, clientID);
@@ -1893,11 +1898,16 @@ namespace H3MP
             int slotIndex = packet.ReadInt();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            if (trackedSosig != null)
             {
-                ++SosigPlaceObjectInPatch.skip;
-                trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
-                --SosigPlaceObjectInPatch.skip;
+                trackedSosig.inventory[slotIndex + 2] = itemTrackedID;
+
+                if (trackedSosig.physicalObject != null)
+                {
+                    ++SosigPlaceObjectInPatch.skip;
+                    trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                    --SosigPlaceObjectInPatch.skip;
+                }
             }
 
             H3MP_ServerSend.SosigPlaceItemIn(sosigTrackedID, slotIndex, itemTrackedID, clientID);
@@ -1909,9 +1919,16 @@ namespace H3MP
             int slotIndex = packet.ReadInt();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            if (trackedSosig != null)
             {
-                trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].DetachHeldObject();
+                trackedSosig.inventory[slotIndex + 2] = -1;
+
+                if (trackedSosig.physicalObject != null)
+                {
+                    ++SosigSlotDetachPatch.skip;
+                    trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].DetachHeldObject();
+                    --SosigSlotDetachPatch.skip;
+                }
             }
 
             H3MP_ServerSend.SosigDropSlot(sosigTrackedID, slotIndex, clientID);
@@ -1923,15 +1940,22 @@ namespace H3MP
             bool primaryHand = packet.ReadBool();
 
             H3MP_TrackedSosigData trackedSosig = H3MP_Server.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            if (trackedSosig != null)
             {
-                if (primaryHand)
+                trackedSosig.inventory[primaryHand ? 0 : 1] = -1;
+
+                if (trackedSosig.physicalObject != null)
                 {
-                    trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.DropHeldObject();
-                }
-                else
-                {
-                    trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.DropHeldObject();
+                    ++SosigHandDropPatch.skip;
+                    if (primaryHand)
+                    {
+                        trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.DropHeldObject();
+                    }
+                    else
+                    {
+                        trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.DropHeldObject();
+                    }
+                    --SosigHandDropPatch.skip;
                 }
             }
 

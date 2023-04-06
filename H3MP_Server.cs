@@ -369,6 +369,12 @@ namespace H3MP
                     trackedSosig.localTrackedID = -1;
                 }
 
+                Mod.LogInfo("Server added tracked sosig with inventory:");
+                for (int i = 0; i < trackedSosig.inventory.Length; ++i)
+                {
+                    Mod.LogInfo("\t" + trackedSosig.inventory[i]);
+                }
+
                 // Manage control for TNH
                 //if (H3MP_GameManager.TNHInstances.TryGetValue(trackedSosig.instance, out H3MP_TNHInstance TNHInstance) &&
                 //    TNHInstance.controller != trackedSosig.controller && 

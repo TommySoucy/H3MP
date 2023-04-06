@@ -1251,6 +1251,11 @@ namespace H3MP
                     }
                 }
             }
+            Mod.LogInfo("Sosig tracked with inventory:");
+            for(int i=0; i < data.inventory.Length; ++i)
+            {
+                Mod.LogInfo("\t" + data.inventory[i]);
+            }
             data.controller = ID;
             data.initTracker = ID;
             data.mustard = sosigScript.Mustard;
