@@ -751,10 +751,13 @@ namespace H3MP
         {
             for(int i=0; i < inventory.Length; ++i)
             {
-                H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
-                if (arrToUse[inventory[i]] != null && arrToUse[inventory[i]].controller != H3MP_GameManager.ID)
+                if (inventory[i] != -1)
                 {
-                    H3MP_TrackedItemData.TakeControlRecursive(arrToUse[inventory[i]]);
+                    H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
+                    if (arrToUse[inventory[i]] != null && arrToUse[inventory[i]].controller != H3MP_GameManager.ID)
+                    {
+                        H3MP_TrackedItemData.TakeControlRecursive(arrToUse[inventory[i]]);
+                    }
                 }
             }
         }
