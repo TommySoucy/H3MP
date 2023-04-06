@@ -528,6 +528,11 @@ namespace H3MP
                 if (!destroyed)
                 {
                     trackedSosig.controller = controllerID;
+
+                    if(controllerID == H3MP_GameManager.ID)
+                    {
+                        trackedSosig.TakeInventoryControl();
+                    }
                 }
             }
         }

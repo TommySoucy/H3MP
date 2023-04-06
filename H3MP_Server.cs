@@ -370,52 +370,52 @@ namespace H3MP
                 }
 
                 // Manage control for TNH
-                if (H3MP_GameManager.TNHInstances.TryGetValue(trackedSosig.instance, out H3MP_TNHInstance TNHInstance) &&
-                    TNHInstance.controller != trackedSosig.controller && 
-                    ((TNHInstance.controller == 0 && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene)) ||
-                    (TNHInstance.controller != 0 && trackedSosig.scene.Equals(clients[TNHInstance.controller].player.scene))))
-                {
-                    // Sosig is in a TNH instance with the instance's controller but is not controlled by the controller, give control
-                    if(TNHInstance.controller == 0)
-                    {
-                        // Us, take control
-                        trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
-                        H3MP_GameManager.sosigs.Add(trackedSosig);
-                        if (trackedSosig.physicalObject == null)
-                        {
-                            if (!trackedSosig.awaitingInstantiation)
-                            {
-                                trackedSosig.awaitingInstantiation = true;
-                                AnvilManager.Run(trackedSosig.Instantiate());
-                            }
-                        }
-                        else
-                        {
-                            if (GM.CurrentAIManager != null)
-                            {
-                                GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
-                            }
-                            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
-                        }
+                //if (H3MP_GameManager.TNHInstances.TryGetValue(trackedSosig.instance, out H3MP_TNHInstance TNHInstance) &&
+                //    TNHInstance.controller != trackedSosig.controller && 
+                //    ((TNHInstance.controller == 0 && trackedSosig.scene.Equals(H3MP_GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : H3MP_GameManager.scene)) ||
+                //    (TNHInstance.controller != 0 && trackedSosig.scene.Equals(clients[TNHInstance.controller].player.scene))))
+                //{
+                //    // Sosig is in a TNH instance with the instance's controller but is not controlled by the controller, give control
+                //    if(TNHInstance.controller == 0)
+                //    {
+                //        // Us, take control
+                //        trackedSosig.localTrackedID = H3MP_GameManager.sosigs.Count;
+                //        H3MP_GameManager.sosigs.Add(trackedSosig);
+                //        if (trackedSosig.physicalObject == null)
+                //        {
+                //            if (!trackedSosig.awaitingInstantiation)
+                //            {
+                //                trackedSosig.awaitingInstantiation = true;
+                //                AnvilManager.Run(trackedSosig.Instantiate());
+                //            }
+                //        }
+                //        else
+                //        {
+                //            if (GM.CurrentAIManager != null)
+                //            {
+                //                GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                //            }
+                //            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
+                //        }
 
-                    }
-                    else if(trackedSosig.controller == 0)
-                    {
-                        // Was us, give up control
-                        trackedSosig.RemoveFromLocal();
-                        if (trackedSosig.physicalObject != null)
-                        {
-                            if (GM.CurrentAIManager != null)
-                            {
-                                GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
-                            }
-                            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
-                        }
-                    }
+                //    }
+                //    else if(trackedSosig.controller == 0)
+                //    {
+                //        // Was us, give up control
+                //        trackedSosig.RemoveFromLocal();
+                //        if (trackedSosig.physicalObject != null)
+                //        {
+                //            if (GM.CurrentAIManager != null)
+                //            {
+                //                GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                //            }
+                //            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
+                //        }
+                //    }
 
-                    trackedSosig.controller = TNHInstance.controller;
-                    H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, TNHInstance.controller, null);
-                }
+                //    trackedSosig.controller = TNHInstance.controller;
+                //    H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, TNHInstance.controller, null);
+                //}
             }
             else
             {

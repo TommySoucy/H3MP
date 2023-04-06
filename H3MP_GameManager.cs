@@ -2643,6 +2643,11 @@ namespace H3MP
                         trackedSosig.controller = newController;
 
                         H3MP_ServerSend.GiveSosigControl(trackedSosig.trackedID, newController, null);
+
+                        if (newController == H3MP_GameManager.ID)
+                        {
+                            trackedSosig.TakeInventoryControl();
+                        }
                     }
                 }
             }

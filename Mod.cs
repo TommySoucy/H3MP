@@ -4007,6 +4007,8 @@ namespace H3MP
                                 trackedSosig.data.localTrackedID = H3MP_GameManager.sosigs.Count;
                                 H3MP_GameManager.sosigs.Add(trackedSosig.data);
                             }
+
+                            trackedSosig.data.TakeInventoryControl();
                         }
                     }
                     else // Although AutoMeater turrets have FVRPhysicalObjects, they don't have an objectWrapper, so they won't be tracked items

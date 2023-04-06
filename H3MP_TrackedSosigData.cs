@@ -746,13 +746,13 @@ namespace H3MP
                 Mod.LogWarning("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
             }
         }
-        //TODO: Call this whenever we take control of a sosig
+
         public void TakeInventoryControl()
         {
             for(int i=0; i < inventory.Length; ++i)
             {
                 H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
-                if (arrToUse[inventory[i]] != null)
+                if (arrToUse[inventory[i]] != null && arrToUse[inventory[i]].controller != H3MP_GameManager.ID)
                 {
                     H3MP_TrackedItemData.TakeControlRecursive(arrToUse[inventory[i]]);
                 }
