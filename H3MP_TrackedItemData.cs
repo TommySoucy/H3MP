@@ -697,7 +697,8 @@ namespace H3MP
 
         public void OnItemTracked()
         {
-            if (H3MP_TrackedItem.unknownSosigInventoryObjects.TryGetValue((physicalItem.physicalObject as SosigWeaponPlayerInterface).W, out KeyValuePair<H3MP_TrackedSosigData, int> entry))
+            if (physicalItem.physicalObject is SosigWeaponPlayerInterface &&
+                H3MP_TrackedItem.unknownSosigInventoryObjects.TryGetValue((physicalItem.physicalObject as SosigWeaponPlayerInterface).W, out KeyValuePair<H3MP_TrackedSosigData, int> entry))
             {
                 if(entry.Key.physicalObject == null)
                 {
