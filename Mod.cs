@@ -2278,7 +2278,7 @@ namespace H3MP
             MethodInfo chamberSetRoundClassPrefix = typeof(ChamberPatch).GetMethod("SetRoundClassPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo chamberSetRoundRoundVectorOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(Vector3), typeof(Quaternion) }, null);
             MethodInfo chamberSetRoundRoundBoolOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool) }, null);
-            MethodInfo chamberSetRoundRoundPrefix = typeof(ChamberPatch).GetMethod("SetRoundClassPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo chamberSetRoundRoundPrefix = typeof(ChamberPatch).GetMethod("SetRoundRoundPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(chamberSetRoundClassOriginal, harmony, false);
             PatchVerify.Verify(chamberSetRoundRoundVectorOriginal, harmony, false);
@@ -10007,7 +10007,7 @@ namespace H3MP
         public static int loadSkip;
 
         // Patches Load() to track event
-        static void AddRoundPrefix(SpeedloaderChamber __instance, FireArmRoundClass rClass)
+        static void AddRoundPrefix(SpeedloaderChamber __instance, FireArmRoundClass rclass)
         {
             if(Mod.managerObject == null || loadSkip > 0)
             {
@@ -10032,11 +10032,11 @@ namespace H3MP
                 {
                     if (H3MP_ThreadManager.host)
                     {
-                        H3MP_ServerSend.SpeedloaderChamberLoad(trackedItem.data.trackedID, rClass, chamberIndex);
+                        H3MP_ServerSend.SpeedloaderChamberLoad(trackedItem.data.trackedID, rclass, chamberIndex);
                     }
                     else
                     {
-                        H3MP_ClientSend.SpeedloaderChamberLoad(trackedItem.data.trackedID, rClass, chamberIndex);
+                        H3MP_ClientSend.SpeedloaderChamberLoad(trackedItem.data.trackedID, rclass, chamberIndex);
                     }
                 }
             }
