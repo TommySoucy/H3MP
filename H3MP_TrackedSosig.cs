@@ -16,7 +16,7 @@ namespace H3MP
         // Unknown tracked ID queues
         public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
         public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
-        public static Dictionary<uint, List<KeyValuePair<int, KeyValuePair<int, int>>>> unknownItemInteractTrackedIDs = new Dictionary<uint, List<KeyValuePair<int, KeyValuePair<int, int>>>>();
+        public static Dictionary<uint, List<KeyValuePair<int, KeyValuePair<H3MP_TrackedItemData, int>>>> unknownItemInteract = new Dictionary<uint, List<KeyValuePair<int, KeyValuePair<H3MP_TrackedItemData, int>>>>();
         public static Dictionary<uint, int> unknownSetIFFs = new Dictionary<uint, int>();
         public static Dictionary<uint, int> unknownSetOriginalIFFs = new Dictionary<uint, int>();
         public static Dictionary<uint, Sosig.SosigBodyState> unknownBodyStates = new Dictionary<uint, Sosig.SosigBodyState>();

@@ -243,12 +243,14 @@ namespace H3MP
             H3MP_TrackedItem.unknownDestroyTrackedIDs.Clear();
             H3MP_TrackedItem.unknownParentTrackedIDs.Clear();
             H3MP_TrackedItem.unknownCrateHolding.Clear();
+            H3MP_TrackedItem.unknownSosigInventoryItems.Clear();
+            H3MP_TrackedItem.unknownSosigInventoryObjects.Clear();
 
             H3MP_TrackedSosig.unknownBodyStates.Clear();
             H3MP_TrackedSosig.unknownControlTrackedIDs.Clear();
             H3MP_TrackedSosig.unknownDestroyTrackedIDs.Clear();
             H3MP_TrackedSosig.unknownIFFChart.Clear();
-            H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Clear();
+            H3MP_TrackedSosig.unknownItemInteract.Clear();
             H3MP_TrackedSosig.unknownSetIFFs.Clear();
             H3MP_TrackedSosig.unknownSetOriginalIFFs.Clear();
             H3MP_TrackedSosig.unknownTNHKills.Clear();
@@ -1250,11 +1252,6 @@ namespace H3MP
                         }
                     }
                 }
-            }
-            Mod.LogInfo("Sosig tracked with inventory:");
-            for(int i=0; i < data.inventory.Length; ++i)
-            {
-                Mod.LogInfo("\t" + data.inventory[i]);
             }
             data.controller = ID;
             data.initTracker = ID;

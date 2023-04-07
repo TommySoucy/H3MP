@@ -162,6 +162,9 @@ namespace H3MP
             physicalObject.physicalSosigScript.FallbackOrder = fallbackOrder;
 
             // Setup inventory
+            // Make sure sosig hands and inventory are initialized first
+            physicalObject.physicalSosigScript.InitHands();
+            physicalObject.physicalSosigScript.Inventory.Init();
             H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
             ++SosigPickUpPatch.skip;
             ++SosigPlaceObjectInPatch.skip;
@@ -643,34 +646,42 @@ namespace H3MP
                     RemoveFromLocal();
                 }
             }
-            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(localWaitingIndex))
+            if (localTrackedID != -1 && H3MP_TrackedSosig.unknownItemInteract.ContainsKey(localWaitingIndex))
             {
-                List<KeyValuePair<int, KeyValuePair<int, int>>> upper = H3MP_TrackedSosig.unknownItemInteractTrackedIDs[localWaitingIndex];
+                List<KeyValuePair<int, KeyValuePair<H3MP_TrackedItemData, int>>> upper = H3MP_TrackedSosig.unknownItemInteract[localWaitingIndex];
 
-                for(int i = 0; i < upper.Count; i++)
+                for (int i = 0; i < upper.Count; i++)
                 {
                     switch (upper[i].Key)
                     {
                         case 0:
-                            H3MP_ClientSend.SosigPickUpItem(physicalObject, upper[i].Value.Key, upper[i].Value.Value == 0);
-                            inventory[upper[i].Value.Value] = upper[i].Value.Key;
+                            if (upper[i].Value.Key.trackedID != -1)
+                            {
+                                H3MP_ClientSend.SosigPickUpItem(physicalObject, upper[i].Value.Key.trackedID, upper[i].Value.Value == 0);
+                                inventory[upper[i].Value.Value] = upper[i].Value.Key.trackedID;
+                            }
+                            // else, item does not yet have tracked ID, this interaction will be sent when it receives it
                             break;
                         case 1:
-                            H3MP_ClientSend.SosigPlaceItemIn(trackedID, upper[i].Value.Value, upper[i].Value.Key);
-                            inventory[upper[i].Value.Value + 2] = upper[i].Value.Key;
+                            if (upper[i].Value.Key.trackedID != -1)
+                            {
+                                H3MP_ClientSend.SosigPlaceItemIn(trackedID, upper[i].Value.Value, upper[i].Value.Key.trackedID);
+                                inventory[upper[i].Value.Value + 2] = upper[i].Value.Key.trackedID;
+                            }
+                            // else, item does not yet have tracked ID, this interaction will be sent when it receives it
                             break;
                         case 2:
                             H3MP_ClientSend.SosigDropSlot(trackedID, upper[i].Value.Value);
-                            inventory[upper[i].Value.Value + 2] = upper[i].Value.Key;
+                            inventory[upper[i].Value.Value + 2] = -1;
                             break;
                         case 3:
-                            H3MP_ClientSend.SosigHandDrop(trackedID, upper[i].Value.Key == 0);
-                            inventory[upper[i].Value.Value] = upper[i].Value.Key;
+                            H3MP_ClientSend.SosigHandDrop(trackedID, upper[i].Value.Value == 0);
+                            inventory[upper[i].Value.Value] = -1;
                             break;
                     }
                 }
 
-                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownItemInteract.Remove(localWaitingIndex);
             }
             if (localTrackedID != -1 && H3MP_TrackedSosig.unknownSetIFFs.ContainsKey(localWaitingIndex))
             {
@@ -723,7 +734,7 @@ namespace H3MP
             {
                 H3MP_TrackedSosig.unknownControlTrackedIDs.Remove(localWaitingIndex);
                 H3MP_TrackedSosig.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
-                H3MP_TrackedSosig.unknownItemInteractTrackedIDs.Remove(localWaitingIndex);
+                H3MP_TrackedSosig.unknownItemInteract.Remove(localWaitingIndex);
                 H3MP_TrackedSosig.unknownSetIFFs.Remove(localWaitingIndex);
                 H3MP_TrackedSosig.unknownSetOriginalIFFs.Remove(localWaitingIndex);
                 H3MP_TrackedSosig.unknownBodyStates.Remove(localWaitingIndex);

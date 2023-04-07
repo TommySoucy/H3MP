@@ -972,12 +972,6 @@ namespace H3MP
                     }
                 }
             }
-
-            Mod.LogInfo("Client added tracked sosig with inventory:");
-            for (int i = 0; i < trackedSosig.inventory.Length; ++i)
-            {
-                Mod.LogInfo("\t" + trackedSosig.inventory[i]);
-            }
         }
 
         public static void AddTrackedAutoMeater(H3MP_TrackedAutoMeaterData trackedAutoMeater)
