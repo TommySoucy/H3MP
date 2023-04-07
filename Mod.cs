@@ -1865,6 +1865,8 @@ namespace H3MP
             MethodInfo TNH_ManagerDelayedInitOriginal = typeof(TNH_Manager).GetMethod("DelayedInit", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ManagerDelayedInitPrefix = typeof(TNH_ManagerPatch).GetMethod("DelayedInitPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerDelayedInitPostfix = typeof(TNH_ManagerPatch).GetMethod("DelayedInitPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerObjectCleanupInHoldOriginal = typeof(TNH_Manager).GetMethod("ObjectCleanupInHold", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo TNH_ManagerObjectCleanupInHoldTranspiler = typeof(TNH_ManagerPatch).GetMethod("ObjectCleanupInHoldTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(TNH_ManagerPatchPlayerDiedOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerPatchAddTokensOriginal, harmony, true);
@@ -1882,6 +1884,7 @@ namespace H3MP
             PatchVerify.Verify(TNH_ManagerGenerateSentryPatrolOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerGeneratePatrolOriginal, harmony, true);
             PatchVerify.Verify(TNH_ManagerDelayedInitOriginal, harmony, true);
+            PatchVerify.Verify(TNH_ManagerObjectCleanupInHoldOriginal, harmony, false);
             harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
@@ -1898,6 +1901,7 @@ namespace H3MP
             harmony.Patch(TNH_ManagerGenerateSentryPatrolOriginal, new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPrefix), new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPostfix));
             harmony.Patch(TNH_ManagerGeneratePatrolOriginal, new HarmonyMethod(TNH_ManagerGeneratePatrolPrefix), new HarmonyMethod(TNH_ManagerGeneratePatrolPostfix));
             harmony.Patch(TNH_ManagerDelayedInitOriginal, new HarmonyMethod(TNH_ManagerDelayedInitPrefix), new HarmonyMethod(TNH_ManagerDelayedInitPostfix));
+            harmony.Patch(TNH_ManagerObjectCleanupInHoldOriginal, null, null, new HarmonyMethod(TNH_ManagerObjectCleanupInHoldTranspiler));
 
             // TNHSupplyPointPatch
             if (TNHTweakerAsmIdx > -1)
@@ -4117,6 +4121,7 @@ namespace H3MP
             {
                 bool primaryHand = __instance == __instance.S.Hand_Primary;
                 trackedSosig.data.inventory[primaryHand ? 0 : 1] = trackedItem.data.trackedID;
+                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " picked up item " + trackedItem.data.itemID + " at " + trackedItem.data.trackedID+" in hand primary?: "+primaryHand);
 
                 if (H3MP_ThreadManager.host)
                 {
@@ -4146,6 +4151,7 @@ namespace H3MP
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                     }
 
+                    todo handle case tracked item not have ID yet
                     if (trackedSosig.data.trackedID == -1)
                     {
                         if (H3MP_TrackedSosig.unknownItemInteractTrackedIDs.ContainsKey(trackedSosig.data.localWaitingIndex))
@@ -4188,6 +4194,7 @@ namespace H3MP
             {
                 int handIndex = __instance == __instance.S.Hand_Primary ? 0 : 1;
                 trackedSosig.data.inventory[handIndex] = -1;
+                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " dropped item in hand: " + handIndex);
 
                 if (H3MP_ThreadManager.host)
                 {
@@ -4257,6 +4264,7 @@ namespace H3MP
             H3MP_TrackedSosig trackedSosig = H3MP_GameManager.trackedSosigBySosig.TryGetValue(__instance.I.S, out trackedSosig) ? trackedSosig : __instance.I.S.GetComponent<H3MP_TrackedSosig>();
             if (trackedItem != null && trackedSosig != null)
             {
+
                 int slotIndex = 0;
                 for (int i = 0; i < __instance.I.Slots.Count; ++i)
                 {
@@ -4266,6 +4274,7 @@ namespace H3MP
                         break;
                     }
                 }
+                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " placed item " + trackedItem.data.itemID + " at " + trackedItem.data.trackedID + " in slot: " + slotIndex);
                 trackedSosig.data.inventory[slotIndex + 2] = trackedItem.data.trackedID;
 
                 if (H3MP_ThreadManager.host)
@@ -4345,6 +4354,7 @@ namespace H3MP
                         break;
                     }
                 }
+                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " drop item in slot: " + slotIndex);
                 trackedSosig.data.inventory[slotIndex + 2] = -1;
 
                 if (H3MP_ThreadManager.host)
@@ -14817,6 +14827,78 @@ namespace H3MP
             {
                 Mod.LogWarning("Manager spawned enemy sosig: "+Environment.StackTrace);
             }
+        }
+
+        static IEnumerable<CodeInstruction> ObjectCleanupInHoldTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            // (3) Declare local for the tracked item
+            LocalBuilder localTrackedItem = il.DeclareLocal(typeof(H3MP_TrackedItem));
+            localTrackedItem.SetLocalSymInfo("trackedItem");
+
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Mod), "managerObject"))); // Load managerObject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Inequality"))); // Compare for inequality (true if connected) ***
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Init trackedItem to null
+            toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe inequality call result on stack (true if connected)
+            Label afterGettingTrackedItemLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemLabel)); // If false (not connected) skip trying to get a tracked item
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(H3MP_GameManager), "trackedItemByItem"))); // Load trackedItemByItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load physical object
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloca_S, 3)); // Load trackedItem address
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<FVRPhysicalObject, H3MP_TrackedItem>), "TryGetValue"))); // Call TryGetValue trackedItemByItem
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemLabel)); // If true (found physical object in trackedItemByItem) skip trying to get a tracked item component directly
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load physical object
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "GetComponent", null, new Type[] { typeof(H3MP_TrackedItem) }))); // Get H3MP_TrackedItem component directly from physical object
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set trackedItem
+
+            Label startActionLabel = il.DefineLabel();
+            CodeInstruction afterGettingTrackedItem = new CodeInstruction(OpCodes.Brfalse_S, startActionLabel); // If false (not connected) (see *** above), skip to start of destruction
+            afterGettingTrackedItem.labels.Add(afterGettingTrackedItemLabel);
+            toInsert.Add(afterGettingTrackedItem);
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Equality"))); // Compare for equality (true if dont have trackedItem)
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, startActionLabel)); // If true (trackedItem is null), goto start of destruction
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItem), "data"))); // Load trackedItem data
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItemData), "controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(H3MP_GameManager), "ID"))); // Load our ID
+            toInsert.Add(new CodeInstruction(OpCodes.Beq, startActionLabel)); // Compare our ID with controller, if we are controller goto start of destruction
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItem), "data"))); // Load trackedItem data
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItemData), "underActiveControl"))); // Load underActiveControl
+            Label afterActionLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterActionLabel)); // If true (underActiveControl), skip destruction
+
+            bool retFound = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ret)
+                {
+                    if (retFound)
+                    {
+                        instruction.labels.Add(afterActionLabel);
+                        break;
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i + 1, toInsert);
+                        i += toInsert.Count;
+                        retFound = true;
+                    }
+                }
+            }
+            return instructionList;
         }
     }
 
