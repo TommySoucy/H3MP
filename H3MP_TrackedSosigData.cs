@@ -760,14 +760,22 @@ namespace H3MP
 
         public void TakeInventoryControl()
         {
+            Mod.LogInfo("Taking sosig " + trackedID + " control");
             for(int i=0; i < inventory.Length; ++i)
             {
+                Mod.LogInfo("\tChecking inventory "+i);
                 if (inventory[i] != -1)
                 {
                     H3MP_TrackedItemData[] arrToUse = H3MP_ThreadManager.host ? H3MP_Server.items : H3MP_Client.items;
+                    Mod.LogInfo("\t\tGot ID: " + inventory[i]+", arr to use null?: "+ (arrToUse[inventory[i]] == null)+", controller: "+ arrToUse[inventory[i]].controller);
                     if (arrToUse[inventory[i]] != null && arrToUse[inventory[i]].controller != H3MP_GameManager.ID)
                     {
+                        Mod.LogInfo("\t\t\tTaking control if item "+ inventory[i]);
                         H3MP_TrackedItemData.TakeControlRecursive(arrToUse[inventory[i]]);
+                        if (arrToUse[inventory[i]].physicalItem != null)
+                        {
+                            Mod.SetKinematicRecursive(arrToUse[inventory[i]].physicalItem.transform, false);
+                        }
                     }
                 }
             }

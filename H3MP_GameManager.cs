@@ -2244,8 +2244,8 @@ namespace H3MP
             }
             else // Finished loading
             {
-                H3MP_GameManager.scene = LoadLevelBeginPatch.loadingLevel;
-                Mod.LogInfo("Arrived in scene: " + H3MP_GameManager.scene, false);
+                scene = LoadLevelBeginPatch.loadingLevel;
+                Mod.LogInfo("Arrived in scene: " + scene, false);
                 sceneLoading = false;
 
                 // Send an update to let others know we changed scene
@@ -2268,12 +2268,15 @@ namespace H3MP
                 playersPresent = 0;
                 if (!nonSynchronizedScenes.ContainsKey(scene))
                 {
+                    Mod.LogInfo("Arrived in synchronized scene");
                     controlOverride = true;
                     firstPlayerInSceneInstance = true;
                     foreach (KeyValuePair<int, H3MP_PlayerManager> player in players)
                     {
+                        Mod.LogInfo("\tChecking other player "+player.Key+" with scene: "+player.Value.scene+" and instance: "+player.Value.instance);
                         if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                         {
+                            Mod.LogInfo("\t\tThis player is in our scene/instance: "+ scene+"/"+instance);
                             ++playersPresent;
 
                             // NOTE: Calculating control override when we finish loading here is necessary

@@ -218,6 +218,7 @@ namespace H3MP
             }
 
             H3MP_TrackedItemData trackedItem = H3MP_Client.items[trackedID];
+            Mod.LogInfo("Client received order to set control of item " + trackedID + " to " + controllerID);
 
             if (trackedItem != null)
             {

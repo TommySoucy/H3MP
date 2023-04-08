@@ -16,7 +16,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR;
-using static FistVR.SosigInventory;
 
 namespace H3MP
 {
@@ -4135,6 +4134,8 @@ namespace H3MP
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                     }
 
+                    trackedSosig.data.inventory[primaryHand ? 0 : 1] = trackedItem.data.trackedID;
+
                     H3MP_ServerSend.SosigPickUpItem(trackedSosig.data.trackedID, trackedItem.data.trackedID, primaryHand);
                 }
                 else
@@ -4306,6 +4307,8 @@ namespace H3MP
                         // Update locally
                         Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
                     }
+
+                    trackedSosig.data.inventory[slotIndex + 2] = trackedItem.data.trackedID;
 
                     H3MP_ServerSend.SosigPlaceItemIn(trackedSosig.data.trackedID, slotIndex, trackedItem.data.trackedID);
                 }
