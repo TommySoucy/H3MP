@@ -2567,7 +2567,6 @@ namespace H3MP
                 packet.Write(clientID);
                 packet.Write(instance);
 
-
                 if (clientID == 0)
                 {
                     SendTCPDataToAll(packet);

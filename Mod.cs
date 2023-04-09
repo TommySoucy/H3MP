@@ -10556,7 +10556,7 @@ namespace H3MP
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load CarlGustafShellInsertEject instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0 (false)
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEject), "SetShellSlideState"))); // Call our method
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEjectPatch), "SetShellSlideState"))); // Call our method
 
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
