@@ -934,6 +934,8 @@ namespace H3MP
                 H3MP_ServerHandle.RevolverCylinderLoad,
                 H3MP_ServerHandle.RevolvingShotgunLoad,
                 H3MP_ServerHandle.GrappleGunLoad,
+                H3MP_ServerHandle.CarlGustafLatchSate,
+                H3MP_ServerHandle.CarlGustafShellSlideSate,
             };
 
             items = new H3MP_TrackedItemData[100];

@@ -4783,5 +4783,106 @@ namespace H3MP
                 Mod.LogError("Server got order to load revolving shotgun " + trackedID + " with speedloader but we are missing item data!");
             }
         }
+
+        public static void CarlGustafLatchSate(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID];
+            if (itemData != null)
+            {
+                byte type = packet.ReadByte();
+                byte state = packet.ReadByte();
+
+                if (itemData.controller == 0)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        CarlGustafLatch latch = (itemData.physicalItem.physicalObject as CarlGustaf).TailLatch;
+                        if(type == 1)
+                        {
+                            latch = latch.RestrictingLatch;
+                        }
+
+                        ++CarlGustafLatchPatch.skip;
+                        if (state == 0) // Closed
+                        {
+                            if (latch.LState != CarlGustafLatch.CGLatchState.Closed)
+                            {
+                                float val = latch.IsMinOpen ? latch.RotMax : latch.RotMin;
+                                Mod.CarlGustafLatch_m_curRot.SetValue(latch, val);
+                                Mod.CarlGustafLatch_m_tarRot.SetValue(latch, val);
+                                latch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                                latch.LState = CarlGustafLatch.CGLatchState.Closed;
+                            }
+                        }
+                        else if (latch.LState != CarlGustafLatch.CGLatchState.Open)
+                        {
+                            float val = latch.IsMinOpen ? latch.RotMin : latch.RotMax;
+                            Mod.CarlGustafLatch_m_curRot.SetValue(latch, val);
+                            Mod.CarlGustafLatch_m_tarRot.SetValue(latch, val);
+                            latch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                            latch.LState = CarlGustafLatch.CGLatchState.Open;
+                        }
+                        --CarlGustafLatchPatch.skip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.CarlGustafLatchSate(trackedID, (CarlGustafLatch.CGLatchType)type, (CarlGustafLatch.CGLatchState)state, clientID);
+                }
+            }
+            else
+            {
+                Mod.LogError("Server got order to set latch state of CG " + trackedID + " but we are missing item data!");
+            }
+        }
+
+        public static void CarlGustafShellSlideSate(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            H3MP_TrackedItemData itemData = H3MP_Server.items[trackedID];
+            if (itemData != null)
+            {
+                byte state = packet.ReadByte();
+
+                if (itemData.controller == 0)
+                {
+                    if (itemData.physicalItem != null)
+                    {
+                        CarlGustaf asCG = itemData.physicalItem.physicalObject as CarlGustaf;
+
+                        ++CarlGustafShellInsertEjectPatch.skip;
+                        if (state == 0) // In
+                        {
+                            if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.In)
+                            {
+                                Mod.CarlGustafShellInsertEject_m_curZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Forward.localPosition.z);
+                                Mod.CarlGustafShellInsertEject_m_tarZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Forward.localPosition.z);
+                                asCG.Chamber.transform.localPosition = new Vector3(asCG.Chamber.transform.localPosition.x, asCG.Chamber.transform.localPosition.y, asCG.ShellInsertEject.ChamberPoint_Forward.localPosition.z);
+                                asCG.ShellInsertEject.CSState = CarlGustafShellInsertEject.ChamberSlideState.In;
+                            }
+                        }
+                        else if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.Out)
+                        {
+                            Mod.CarlGustafShellInsertEject_m_curZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Back.localPosition.z);
+                            Mod.CarlGustafShellInsertEject_m_tarZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Back.localPosition.z);
+                            asCG.Chamber.transform.localPosition = new Vector3(asCG.Chamber.transform.localPosition.x, asCG.Chamber.transform.localPosition.y, asCG.ShellInsertEject.ChamberPoint_Back.localPosition.z);
+                            asCG.ShellInsertEject.CSState = CarlGustafShellInsertEject.ChamberSlideState.Out;
+                        }
+                        --CarlGustafShellInsertEjectPatch.skip;
+                    }
+                }
+                else
+                {
+                    H3MP_ServerSend.CarlGustafShellSlideSate(trackedID, (CarlGustafShellInsertEject.ChamberSlideState)state, clientID);
+                }
+            }
+            else
+            {
+                Mod.LogError("Server got order to set shell slide state of CG " + trackedID + " but we are missing item data!");
+            }
+        }
     }
 }

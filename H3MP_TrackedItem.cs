@@ -1,7 +1,6 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace H3MP
@@ -252,6 +251,17 @@ namespace H3MP
                 dataObject = LAF;
                 getChamberIndex = GetLeverActionFirearmChamberIndex;
                 chamberRound = ChamberLeverActionFirearmRound;
+            }
+            else if (physObj is CarlGustaf)
+            {
+                CarlGustaf asCG = (CarlGustaf)physObj;
+                updateFunc = UpdateCarlGustaf;
+                updateGivenFunc = UpdateGivenCarlGustaf;
+                dataObject = asCG;
+                fireFunc = FireCarlGustaf;
+                setFirearmUpdateOverride = SetCarlGustafUpdateOverride;
+                getChamberIndex = GetFirstChamberIndex;
+                chamberRound = ChamberCarlGustafRound;
             }
             else if (physObj is Molotov)
             {
@@ -4044,6 +4054,264 @@ namespace H3MP
             data.data = newData;
 
             return modified;
+        }
+
+        private bool UpdateCarlGustaf()
+        {
+            CarlGustaf asCG = dataObject as CarlGustaf;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[8];
+                modified = true;
+            }
+
+            // Write chamber round
+            byte preval0 = data.data[0];
+            byte preval1 = data.data[1];
+            byte preval2 = data.data[2];
+            byte preval3 = data.data[3];
+
+            if (asCG.Chamber.GetRound() == null || asCG.Chamber.GetRound().IsSpent)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asCG.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
+                BitConverter.GetBytes((short)asCG.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+            }
+
+            modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
+
+            // Write charge handle state
+            preval0 = data.data[4];
+
+            data.data[4] = (byte)asCG.CHState;
+
+            modified |= preval0 != data.data[4];
+
+            // Write lid latch state
+            preval0 = data.data[5];
+
+            data.data[5] = (byte)asCG.TailLatch.LState;
+
+            modified |= preval0 != data.data[5];
+
+            // Write shell slide state
+            preval0 = data.data[6];
+
+            data.data[6] = (byte)asCG.ShellInsertEject.CSState;
+
+            modified |= preval0 != data.data[6];
+
+            // Write lock latch state
+            preval0 = data.data[7];
+
+            data.data[7] = (byte)asCG.TailLatch.RestrictingLatch.LState;
+
+            modified |= preval0 != data.data[7];
+
+            return modified;
+        }
+
+        private bool UpdateGivenCarlGustaf(byte[] newData)
+        {
+            bool modified = false;
+            CarlGustaf asCG = dataObject as CarlGustaf;
+
+            // Set chamber round
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 0);
+            short chamberClassIndex = BitConverter.ToInt16(newData, 2);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asCG.Chamber.GetRound() != null)
+                {
+                    ++ChamberPatch.chamberSkip;
+                    asCG.Chamber.SetRound(null, false);
+                    --ChamberPatch.chamberSkip;
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asCG.Chamber.GetRound() == null || asCG.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    if (asCG.Chamber.RoundType == roundType)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        asCG.Chamber.SetRound(roundClass, asCG.Chamber.transform.position, asCG.Chamber.transform.rotation);
+                        --ChamberPatch.chamberSkip;
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asCG.Chamber.RoundType;
+                        asCG.Chamber.RoundType = roundType;
+                        ++ChamberPatch.chamberSkip;
+                        asCG.Chamber.SetRound(roundClass, asCG.Chamber.transform.position, asCG.Chamber.transform.rotation);
+                        --ChamberPatch.chamberSkip;
+                        asCG.Chamber.RoundType = prevRoundType;
+                    }
+                    modified = true;
+                }
+            }
+
+            // Set charging handle state
+            if (newData[4] == 0) // Forward
+            {
+                if (asCG.CHState != CarlGustaf.ChargingHandleState.Forward)
+                {
+                    Mod.CarlGustaf_m_curZ.SetValue(asCG, asCG.ChargingHandForward.localPosition.z);
+                    Mod.CarlGustaf_m_tarZ.SetValue(asCG, asCG.ChargingHandForward.localPosition.z);
+                    asCG.ChargingHandle.localPosition = new Vector3(asCG.ChargingHandle.localPosition.x, asCG.ChargingHandle.localPosition.y, asCG.ChargingHandForward.localPosition.z);
+                    asCG.CHState = CarlGustaf.ChargingHandleState.Forward;
+                }
+            }else if (newData[4] == 1) // Middle
+            {
+                if (asCG.CHState != CarlGustaf.ChargingHandleState.Middle)
+                {
+                    float val = Mathf.Lerp(asCG.ChargingHandForward.localPosition.z, asCG.ChargingHandBack.localPosition.z, 0.5f);
+                    Mod.CarlGustaf_m_curZ.SetValue(asCG, val);
+                    Mod.CarlGustaf_m_tarZ.SetValue(asCG, val);
+                    asCG.ChargingHandle.localPosition = new Vector3(asCG.ChargingHandle.localPosition.x, asCG.ChargingHandle.localPosition.y, val);
+                    asCG.CHState = CarlGustaf.ChargingHandleState.Middle;
+                }
+            }
+            else if (asCG.CHState != CarlGustaf.ChargingHandleState.Back)
+            {
+                Mod.CarlGustaf_m_curZ.SetValue(asCG, asCG.ChargingHandBack.localPosition.z);
+                Mod.CarlGustaf_m_tarZ.SetValue(asCG, asCG.ChargingHandBack.localPosition.z);
+                asCG.ChargingHandle.localPosition = new Vector3(asCG.ChargingHandle.localPosition.x, asCG.ChargingHandle.localPosition.y, asCG.ChargingHandBack.localPosition.z);
+                asCG.CHState = CarlGustaf.ChargingHandleState.Back;
+            }
+
+            // Set lid latch state
+            if (newData[5] == 0) // Closed
+            {
+                if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Closed)
+                {
+                    float val = asCG.TailLatch.IsMinOpen ? asCG.TailLatch.RotMax : asCG.TailLatch.RotMin;
+                    Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch, val);
+                    Mod.CarlGustafLatch_m_tarRot.SetValue(asCG.TailLatch, val);
+                    asCG.TailLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                    asCG.TailLatch.LState = CarlGustafLatch.CGLatchState.Closed;
+                }
+            }
+            else if (newData[5] == 1) // Middle
+            {
+                if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Middle)
+                {
+                    float val = Mathf.Lerp(asCG.TailLatch.RotMin, asCG.TailLatch.RotMax, 0.5f);
+                    Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch, val);
+                    Mod.CarlGustafLatch_m_tarRot.SetValue(asCG.TailLatch, val);
+                    asCG.TailLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                    asCG.TailLatch.LState = CarlGustafLatch.CGLatchState.Middle;
+                }
+            }
+            else if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Open)
+            {
+                    float val = asCG.TailLatch.IsMinOpen ? asCG.TailLatch.RotMin : asCG.TailLatch.RotMax;
+                    Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch, val);
+                    Mod.CarlGustafLatch_m_tarRot.SetValue(asCG.TailLatch, val);
+                    asCG.TailLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                    asCG.TailLatch.LState = CarlGustafLatch.CGLatchState.Open;
+            }
+
+            // Set shell slide state
+            if (newData[6] == 0) // In
+            {
+                if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.In)
+                {
+                    Mod.CarlGustafShellInsertEject_m_curZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Forward.localPosition.z);
+                    Mod.CarlGustafShellInsertEject_m_tarZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Forward.localPosition.z);
+                    asCG.Chamber.transform.localPosition = new Vector3(asCG.Chamber.transform.localPosition.x, asCG.Chamber.transform.localPosition.y, asCG.ShellInsertEject.ChamberPoint_Forward.localPosition.z);
+                    asCG.ShellInsertEject.CSState = CarlGustafShellInsertEject.ChamberSlideState.In;
+                }
+            }
+            else if (newData[6] == 1) // Middle
+            {
+                if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.Middle)
+                {
+                    float val = Mathf.Lerp(asCG.TailLatch.RotMin, asCG.TailLatch.RotMax, 0.5f);
+                    Mod.CarlGustafShellInsertEject_m_curZ.SetValue(asCG.ShellInsertEject, val);
+                    Mod.CarlGustafShellInsertEject_m_tarZ.SetValue(asCG.ShellInsertEject, val);
+                    asCG.Chamber.transform.localPosition = new Vector3(asCG.Chamber.transform.localPosition.x, asCG.Chamber.transform.localPosition.y, val);
+                    asCG.ShellInsertEject.CSState = CarlGustafShellInsertEject.ChamberSlideState.Middle;
+                }
+            }
+            else if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.Out)
+            {
+                Mod.CarlGustafShellInsertEject_m_curZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Back.localPosition.z);
+                Mod.CarlGustafShellInsertEject_m_tarZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Back.localPosition.z);
+                asCG.Chamber.transform.localPosition = new Vector3(asCG.Chamber.transform.localPosition.x, asCG.Chamber.transform.localPosition.y, asCG.ShellInsertEject.ChamberPoint_Back.localPosition.z);
+                asCG.ShellInsertEject.CSState = CarlGustafShellInsertEject.ChamberSlideState.Out;
+            }
+
+            // Set lock latch state
+            if (newData[7] == 0) // Closed
+            {
+                if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Closed)
+                {
+                    float val = asCG.TailLatch.RestrictingLatch.IsMinOpen ? asCG.TailLatch.RestrictingLatch.RotMax : asCG.TailLatch.RestrictingLatch.RotMin;
+                    Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
+                    Mod.CarlGustafLatch_m_tarRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
+                    asCG.TailLatch.RestrictingLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                    asCG.TailLatch.RestrictingLatch.LState = CarlGustafLatch.CGLatchState.Closed;
+                }
+            }
+            else if (newData[7] == 1) // Middle
+            {
+                if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Middle)
+                {
+                    float val = Mathf.Lerp(asCG.TailLatch.RestrictingLatch.RotMin, asCG.TailLatch.RestrictingLatch.RotMax, 0.5f);
+                    Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
+                    Mod.CarlGustafLatch_m_tarRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
+                    asCG.TailLatch.RestrictingLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                    asCG.TailLatch.RestrictingLatch.LState = CarlGustafLatch.CGLatchState.Middle;
+                }
+            }
+            else if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Open)
+            {
+                    float val = asCG.TailLatch.RestrictingLatch.IsMinOpen ? asCG.TailLatch.RestrictingLatch.RotMin : asCG.TailLatch.RestrictingLatch.RotMax;
+                    Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
+                    Mod.CarlGustafLatch_m_tarRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
+                    asCG.TailLatch.RestrictingLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                    asCG.TailLatch.RestrictingLatch.LState = CarlGustafLatch.CGLatchState.Open;
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private void ChamberCarlGustafRound(FireArmRoundClass roundClass, FireArmRoundType roundType, int chamberIndex)
+        {
+            CarlGustaf asCG = dataObject as CarlGustaf;
+
+            ++ChamberPatch.chamberSkip;
+            asCG.Chamber.SetRound(roundClass, asCG.Chamber.transform.position, asCG.Chamber.transform.rotation);
+            --ChamberPatch.chamberSkip;
+        }
+
+        private bool FireCarlGustaf(int chamberIndex)
+        {
+            Mod.CarlGustaf_TryToFire.Invoke(dataObject as CarlGustaf, null);
+            return true;
+        }
+
+        private void SetCarlGustafUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
+        {
+            CarlGustaf asCG = dataObject as CarlGustaf;
+
+            FireArmRoundType prevRoundType = asCG.Chamber.RoundType;
+            asCG.Chamber.RoundType = roundType;
+            ++ChamberPatch.chamberSkip;
+            asCG.Chamber.SetRound(roundClass, asCG.Chamber.transform.position, asCG.Chamber.transform.rotation);
+            --ChamberPatch.chamberSkip;
+            asCG.Chamber.RoundType = prevRoundType;
         }
 
         private bool UpdateLeverActionFirearm()

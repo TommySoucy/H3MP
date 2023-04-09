@@ -508,6 +508,8 @@ namespace H3MP
                 H3MP_ClientHandle.RevolverCylinderLoad,
                 H3MP_ClientHandle.RevolvingShotgunLoad,
                 H3MP_ClientHandle.GrappleGunLoad,
+                H3MP_ClientHandle.CarlGustafLatchSate,
+                H3MP_ClientHandle.CarlGustafShellSlideSate,
             };
 
             // All vanilla scenes can be synced by default

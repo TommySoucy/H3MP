@@ -289,6 +289,12 @@ namespace H3MP
         public static readonly FieldInfo FVRWristMenuSection_CleanUp_askConfirm_CleanupEmpties = typeof(FVRWristMenuSection_CleanUp).GetField("askConfirm_CleanupEmpties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRWristMenuSection_CleanUp_askConfirm_CleanupAllMags = typeof(FVRWristMenuSection_CleanUp).GetField("askConfirm_CleanupAllMags", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo FVRWristMenuSection_CleanUp_askConfirm_CleanupGuns = typeof(FVRWristMenuSection_CleanUp).GetField("askConfirm_CleanupGuns", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo CarlGustaf_m_curZ = typeof(CarlGustaf).GetField("m_curZ", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo CarlGustaf_m_tarZ = typeof(CarlGustaf).GetField("m_tarZ", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo CarlGustafLatch_m_curRot = typeof(CarlGustafLatch).GetField("m_curRot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo CarlGustafLatch_m_tarRot = typeof(CarlGustafLatch).GetField("m_tarRot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo CarlGustafShellInsertEject_m_curZ = typeof(CarlGustafShellInsertEject).GetField("m_curZ", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo CarlGustafShellInsertEject_m_tarZ = typeof(CarlGustafShellInsertEject).GetField("m_tarZ", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -360,6 +366,7 @@ namespace H3MP
         public static readonly MethodInfo FVRWristMenuSection_CleanUp_AskConfirm_CleanupGuns = typeof(FVRWristMenuSection_CleanUp).GetMethod("AskConfirm_CleanupGuns", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo FVRViveHand_SetGrabbityHovered = typeof(FVRViveHand).GetMethod("SetGrabbityHovered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Molotov_Shatter = typeof(Molotov).GetMethod("Shatter", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo CarlGustaf_TryToFire = typeof(CarlGustaf).GetMethod("TryToFire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
         // Debug
@@ -2321,6 +2328,20 @@ namespace H3MP
 
             PatchVerify.Verify(grappleGunLoadOriginal, harmony, false);
             harmony.Patch(grappleGunLoadOriginal, new HarmonyMethod(grappleGunLoadPrefix));
+
+            // CarlGustafLatchPatch
+            MethodInfo carlGustafLatchUpdateOriginal = typeof(CarlGustafLatch).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo carlGustafLatchUpdateTranspiler = typeof(CarlGustafLatchPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(carlGustafLatchUpdateOriginal, harmony, false);
+            harmony.Patch(carlGustafLatchUpdateOriginal, null, null, new HarmonyMethod(carlGustafLatchUpdateTranspiler));
+
+            // CarlGustafShellInsertEjectPatch
+            MethodInfo carlGustafShellSlideUpdateOriginal = typeof(CarlGustafShellInsertEject).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo carlGustafShellSlideUpdateTranspiler = typeof(CarlGustafShellInsertEjectPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(carlGustafShellSlideUpdateOriginal, harmony, false);
+            harmony.Patch(carlGustafShellSlideUpdateOriginal, null, null, new HarmonyMethod(carlGustafShellSlideUpdateTranspiler));
 
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -10457,9 +10478,137 @@ namespace H3MP
             }
         }
     }
-#endregion
 
-#region Instantiation Patches
+    // Patches CarlGustafLatch
+    class CarlGustafLatchPatch
+    {
+        public static int skip;
+
+        // Patches FVRUpdate to keep track of events
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load CarlGustafLatch instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0 (false)
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafLatchPatch), "SetLatchState"))); // Call our method
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("PlayAudioAsHandling"))
+                {
+                    if (!found)
+                    {
+                        instructionList.InsertRange(i, toInsert);
+                        i += toInsert.Count;
+
+                        found = true;
+
+                        // Switch load int instruction to load 1 (true)
+                        toInsert[1] = new CodeInstruction(OpCodes.Ldc_I4_1);
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i, toInsert);
+
+                        break;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SetLatchState(CarlGustafLatch latch, bool open)
+        {
+            if(Mod.managerObject == null || skip > 0)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(latch.CG, out trackedItem) ? trackedItem : latch.CG.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.CarlGustafLatchSate(trackedItem.data.trackedID, latch.LType, latch.LState);
+                }
+                else
+                {
+                    H3MP_ClientSend.CarlGustafLatchSate(trackedItem.data.trackedID, latch.LType, latch.LState);
+                }
+            }
+        }
+    }
+
+    // Patches CarlGustafShellInsertEject
+    class CarlGustafShellInsertEjectPatch
+    {
+        public static int skip;
+
+        // Patches FVRUpdate to keep track of events
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load CarlGustafShellInsertEject instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0 (false)
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEject), "SetShellSlideState"))); // Call our method
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("PlayAudioAsHandling"))
+                {
+                    if (!found)
+                    {
+                        instructionList.InsertRange(i, toInsert);
+                        i += toInsert.Count;
+
+                        found = true;
+
+                        // Switch load int instruction to load 1 (true)
+                        toInsert[1] = new CodeInstruction(OpCodes.Ldc_I4_1);
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i, toInsert);
+
+                        break;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SetShellSlideState(CarlGustafShellInsertEject slide, bool slideIn)
+        {
+            if(Mod.managerObject == null || skip > 0)
+            {
+                return;
+            }
+
+            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(slide.CG, out trackedItem) ? trackedItem : slide.CG.GetComponent<H3MP_TrackedItem>();
+            if(trackedItem != null && trackedItem.data.controller != H3MP_GameManager.ID)
+            {
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.CarlGustafShellSlideSate(trackedItem.data.trackedID, slide.CSState);
+                }
+                else
+                {
+                    H3MP_ClientSend.CarlGustafShellSlideSate(trackedItem.data.trackedID, slide.CSState);
+                }
+            }
+        }
+    }
+    #endregion
+
+    #region Instantiation Patches
     // Patches FVRFireArmChamber.EjectRound so we can keep track of when a round is ejected from a chamber
     class ChamberEjectRoundPatch
     {
@@ -11006,6 +11155,8 @@ namespace H3MP
             }
 
             inInitPrefabSpawn = true;
+
+            Mod.LogInfo("AnvilPrefabSpawn: " + __instance.name + ", loading?: " + H3MP_GameManager.sceneLoading + ", override?: " + H3MP_GameManager.controlOverride + ", firstPlayerInSceneInstance?: " + H3MP_GameManager.firstPlayerInSceneInstance);
 
             // Prevent spawning if loading but we have control override, or we aren't loading but we were first in scene
             return (H3MP_GameManager.sceneLoading && H3MP_GameManager.controlOverride) || (!H3MP_GameManager.sceneLoading && H3MP_GameManager.firstPlayerInSceneInstance);

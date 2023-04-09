@@ -2744,5 +2744,28 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void CarlGustafLatchSate(int trackedID, CarlGustafLatch.CGLatchType type, CarlGustafLatch.CGLatchState state)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.carlGustafLatchSate))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)type);
+                packet.Write((byte)state);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void CarlGustafShellSlideSate(int trackedID, CarlGustafShellInsertEject.ChamberSlideState state)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.carlGustafShellSlideSate))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)state);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

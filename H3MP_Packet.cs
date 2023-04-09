@@ -174,7 +174,9 @@ namespace H3MP
         clipLoad = 163,
         revolverCylinderLoad = 164,
         revolvingShotgunLoad = 165,
-        grappleGunLoad = 166
+        grappleGunLoad = 166,
+        carlGustafLatchSate = 167,
+        carlGustafShellSlideSate = 168
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -342,7 +344,9 @@ namespace H3MP
         clipLoad = 160,
         revolverCylinderLoad = 161,
         revolvingShotgunLoad = 162,
-        grappleGunLoad = 163
+        grappleGunLoad = 163,
+        carlGustafLatchSate = 164,
+        carlGustafShellSlideSate = 165
     }
 
     public class H3MP_Packet : IDisposable
