@@ -8912,6 +8912,7 @@ namespace H3MP
                         {
                             if (parentTrackedItem.data.trackedID != data.parent)
                             {
+                                Mod.LogInfo(name + " has new parent: " + parentTrackedItem.data.itemID + ", sending");
                                 // We have a parent trackedItem and it is new
                                 // Update other clients
                                 if (H3MP_ThreadManager.host)
@@ -8955,6 +8956,7 @@ namespace H3MP
                     }
                     else
                     {
+                        Mod.LogInfo(name + " was unparented, sending to others");
                         // We were detached from current parent
                         // Update other clients
                         if (H3MP_ThreadManager.host)

@@ -1631,13 +1631,16 @@ namespace H3MP
             int itemTrackedID = packet.ReadInt();
             bool primaryHand = packet.ReadBool();
 
+            Mod.LogInfo("Client received SosigPickUpItem for sosig:" + sosigTrackedID + " to pickup item: " + itemTrackedID + ", in primary hand?: " + primaryHand + ", sosigs array null?: " + (H3MP_Client.sosigs == null), false);
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if(trackedSosig != null)
             {
+                Mod.LogInfo("\tGot sosig data, inventory null?: " + (trackedSosig.inventory == null), false);
                 trackedSosig.inventory[primaryHand ? 0 : 1] = itemTrackedID;
 
                 if (trackedSosig.physicalObject != null)
                 {
+                    Mod.LogInfo("\t\tGot phys, primary hand null?: " + (trackedSosig.physicalObject.physicalSosigScript.Hand_Primary == null) +", sencondary hand null?: " + (trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary == null), false);
                     ++SosigPickUpPatch.skip;
                     if (primaryHand)
                     {
@@ -1658,9 +1661,12 @@ namespace H3MP
             int itemTrackedID = packet.ReadInt();
             int slotIndex = packet.ReadInt();
 
+            Mod.LogInfo("Client received SosigPlaceItemIn for sosig:" + sosigTrackedID + " to pickup item: " + itemTrackedID + ", in slot: " + slotIndex + ", sosigs array null?: " + (H3MP_Client.sosigs == null), false);
+
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if(trackedSosig != null)
             {
+                Mod.LogInfo("\tGot sosig data, inventory null?: " + (trackedSosig.inventory == null), false);
                 trackedSosig.inventory[slotIndex + 2] = itemTrackedID;
 
                 if (trackedSosig.physicalObject != null)

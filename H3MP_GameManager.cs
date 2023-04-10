@@ -784,6 +784,8 @@ namespace H3MP
                     {
                         if (controlEverything || IsControlled(physObj))
                         {
+                            Mod.LogInfo("Making " + physObj.name + " tracked with parent: "+(parent == null ? "null" : parent.itemID));
+
                             H3MP_TrackedItem trackedItem = MakeItemTracked(physObj, parent);
                             if (trackedItem.awoken)
                             {

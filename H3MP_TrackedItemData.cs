@@ -541,6 +541,7 @@ namespace H3MP
                     {
                         if (parentItemData.trackedID != parent)
                         {
+                            Mod.LogInfo(itemID + " has new parent from unknown: " + parentItemData.itemID + ", sending");
                             // We have a parent trackedItem and it is new
                             // Update other clients
                             if (H3MP_ThreadManager.host)
@@ -561,6 +562,7 @@ namespace H3MP
                 {
                     if (parentPair.Key == uint.MaxValue)
                     {
+                        Mod.LogInfo(itemID + " was unparented from unknown, sending to others");
                         // We were detached from current parent
                         // Update other clients
                         if (H3MP_ThreadManager.host)
@@ -622,6 +624,7 @@ namespace H3MP
                 {
                     if (arrToUse[childID] != null)
                     {
+                        Mod.LogInfo(arrToUse[childID].itemID + " has new parent from unknownParentTrackedIDs: " + itemID + ", sending");
                         // Update other clients
                         if (H3MP_ThreadManager.host)
                         {
