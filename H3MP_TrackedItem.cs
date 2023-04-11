@@ -5403,8 +5403,8 @@ namespace H3MP
                     }
                 }
 
-                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null)
+                // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
+                if (mount != null && asM203.Attachment.curMount != mount)
                 {
                     ++data.ignoreParentChanged;
                     if (asM203.Attachment.curMount != null)
@@ -5605,7 +5605,7 @@ namespace H3MP
                 }
 
                 // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null)
+                if (mount != null && asGP25.Attachment.curMount != mount)
                 {
                     ++data.ignoreParentChanged;
                     if (asGP25.Attachment.curMount != null)
@@ -5847,7 +5847,7 @@ namespace H3MP
                 }
 
                 // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null)
+                if (mount != null && asATF.Attachment.curMount != mount)
                 {
                     ++data.ignoreParentChanged;
                     if (asATF.Attachment.curMount != null)
@@ -6123,7 +6123,7 @@ namespace H3MP
                 }
 
                 // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null)
+                if (mount != null && asACBW.Attachment.curMount != mount)
                 {
                     ++data.ignoreParentChanged;
                     if (asACBW.Attachment.curMount != null)
@@ -6368,7 +6368,7 @@ namespace H3MP
                 }
 
                 // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null)
+                if (mount != null && asABA.Attachment.curMount != mount)
                 {
                     ++data.ignoreParentChanged;
                     if (asABA.Attachment.curMount != null)
