@@ -10606,9 +10606,9 @@ namespace H3MP
             }
         }
     }
-    #endregion
+#endregion
 
-    #region Instantiation Patches
+#region Instantiation Patches
     // Patches FVRFireArmChamber.EjectRound so we can keep track of when a round is ejected from a chamber
     class ChamberEjectRoundPatch
     {
@@ -13237,6 +13237,12 @@ namespace H3MP
             if (Mod.managerObject == null)
             {
                 return true;
+            }
+
+            if (__instance.Target == null)
+            {
+                Mod.LogError("Damaged an encryption sub target that is missing reference to main target!");
+                return false;
             }
 
             // If in control of the damaged Encryption, we want to process the damage

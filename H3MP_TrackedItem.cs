@@ -5394,7 +5394,7 @@ namespace H3MP
                     parentTrackedItemData = H3MP_Client.items[data.parent];
                 }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
                     if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
@@ -5412,7 +5412,10 @@ namespace H3MP
                         asM203.Attachment.DetachFromMount();
                     }
 
-                    asM203.Attachment.AttachToMount(mount, true);
+                    if (mount.isMountableOn(asM203.Attachment))
+                    {
+                        asM203.Attachment.AttachToMount(mount, true);
+                    }
                     currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
                 }
@@ -5592,7 +5595,7 @@ namespace H3MP
                     parentTrackedItemData = H3MP_Client.items[data.parent];
                 }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
                     if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
@@ -5610,7 +5613,10 @@ namespace H3MP
                         asGP25.Attachment.DetachFromMount();
                     }
 
-                    asGP25.Attachment.AttachToMount(mount, true);
+                    if (mount.isMountableOn(asGP25.Attachment)) 
+                    { 
+                        asGP25.Attachment.AttachToMount(mount, true);
+                    }
                     currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
                 }
@@ -5831,7 +5837,7 @@ namespace H3MP
                     parentTrackedItemData = H3MP_Client.items[data.parent];
                 }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
                     if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
@@ -5849,7 +5855,10 @@ namespace H3MP
                         asATF.Attachment.DetachFromMount();
                     }
 
-                    asATF.Attachment.AttachToMount(mount, true);
+                    if (mount.isMountableOn(asATF.Attachment)) 
+                    { 
+                        asATF.Attachment.AttachToMount(mount, true);
+                    }
                     currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
                 }
@@ -6104,7 +6113,7 @@ namespace H3MP
                     parentTrackedItemData = H3MP_Client.items[data.parent];
                 }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
                     if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
@@ -6122,7 +6131,10 @@ namespace H3MP
                         asACBW.Attachment.DetachFromMount();
                     }
 
-                    asACBW.Attachment.AttachToMount(mount, true);
+                    if (mount.isMountableOn(asACBW.Attachment))
+                    { 
+                        asACBW.Attachment.AttachToMount(mount, true);
+                    }
                     currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
                 }
@@ -6346,7 +6358,7 @@ namespace H3MP
                     parentTrackedItemData = H3MP_Client.items[data.parent];
                 }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
                     if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
@@ -6364,7 +6376,10 @@ namespace H3MP
                         asABA.Attachment.DetachFromMount();
                     }
 
-                    asABA.Attachment.AttachToMount(mount, true);
+                    if (mount.isMountableOn(asABA.Attachment)) 
+                    { 
+                        asABA.Attachment.AttachToMount(mount, true);
+                    }
                     currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
                 }
@@ -6472,7 +6487,7 @@ namespace H3MP
                         parentTrackedItemData = H3MP_Client.items[data.parent];
                     }
 
-                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
                         mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[currentMountIndex];
                     }
@@ -6480,9 +6495,12 @@ namespace H3MP
                     // If not yet physically mounted to anything, can right away mount to the proper mount
                     if (asAttachment.curMount == null)
                     {
-                        ++data.ignoreParentChanged;
-                        asAttachment.AttachToMount(mount, true);
-                        --data.ignoreParentChanged;
+                        if (mount.isMountableOn(asAttachment))
+                        {
+                            ++data.ignoreParentChanged;
+                            asAttachment.AttachToMount(mount, true);
+                            --data.ignoreParentChanged;
+                        }
                     }
                     else if (asAttachment.curMount != mount) // Already mounted, but not on the right one, need to unmount, then mount of right one
                     {
@@ -6492,7 +6510,10 @@ namespace H3MP
                             asAttachment.DetachFromMount();
                         }
 
-                        asAttachment.AttachToMount(mount, true);
+                        if (mount.isMountableOn(asAttachment))
+                        {
+                            asAttachment.AttachToMount(mount, true);
+                        }
                         --data.ignoreParentChanged;
                     }
                 }
@@ -7612,7 +7633,7 @@ namespace H3MP
                     parentTrackedItemData = H3MP_Client.items[data.parent];
                 }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
                     if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
@@ -7630,7 +7651,10 @@ namespace H3MP
                         asAttachment.DetachFromMount();
                     }
 
-                    asAttachment.AttachToMount(mount, true);
+                    if (mount.isMountableOn(asAttachment))
+                    {
+                        asAttachment.AttachToMount(mount, true);
+                    }
                     currentMountIndex = newData[0];
                     --data.ignoreParentChanged;
                 }
@@ -7759,7 +7783,7 @@ namespace H3MP
                     parentTrackedItemData = H3MP_Client.items[data.parent];
                 }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
                     if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
@@ -7777,7 +7801,10 @@ namespace H3MP
                     }
 
                     Mod.LogInfo("Item " + name + " got update to attach to mount " + mount.name + ", mount parent null?: " + (mount.Parent == null));
-                    asAttachment.AttachToMount(mount, true);
+                    if (mount.isMountableOn(asAttachment)) 
+                    { 
+                        asAttachment.AttachToMount(mount, true);
+                    }
                     currentMountIndex = newData[0];
                 }
             }
@@ -7829,7 +7856,7 @@ namespace H3MP
                         parentTrackedItemData = H3MP_Client.items[data.parent];
                     }
 
-                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem)
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
                         mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[currentMountIndex];
                     }
@@ -7837,9 +7864,12 @@ namespace H3MP
                     // If not yet physically mounted to anything, can right away mount to the proper mount
                     if (asAttachment.curMount == null)
                     {
-                        ++data.ignoreParentChanged;
-                        asAttachment.AttachToMount(mount, true);
-                        --data.ignoreParentChanged;
+                        if (mount.isMountableOn(asAttachment))
+                        { 
+                            ++data.ignoreParentChanged;
+                            asAttachment.AttachToMount(mount, true);
+                            --data.ignoreParentChanged;
+                        }
                     }
                     else if(asAttachment.curMount != mount) // Already mounted, but not on the right one, need to unmount, then mount of right one
                     {
@@ -7849,7 +7879,10 @@ namespace H3MP
                             asAttachment.DetachFromMount();
                         }
 
-                        asAttachment.AttachToMount(mount, true);
+                        if (mount.isMountableOn(asAttachment))
+                        {
+                            asAttachment.AttachToMount(mount, true);
+                        }
                         --data.ignoreParentChanged;
                     }
                 }
