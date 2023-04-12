@@ -14277,6 +14277,9 @@ namespace H3MP
             // We want to prevent call to SetPhase unless we are controller not init or initializer init
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
+                Mod.LogInfo("SetPhasePrefix: phase: " + p + ", preventing: " + ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                                                                               (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.initializer != -1 &&
+                                                                               (!H3MP_ThreadManager.host || !Mod.currentTNHInstance.initializationRequested))), false);
                 return (TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
                        (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.initializer != -1 && 
                        (!H3MP_ThreadManager.host || !Mod.currentTNHInstance.initializationRequested));
@@ -14306,16 +14309,20 @@ namespace H3MP
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
+                Mod.LogInfo("SetPhaseTakePrefix: In MP TNH");
                 if (inDelayedInit)
                 {
+                    Mod.LogInfo("\tIn DelayedInit, this is init SetPhase_Take");
                     if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                     {
+                        Mod.LogInfo("\t\tWe are initializer, set initialized and continuing");
                         TNHInitialized = true;
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         return true;
                     }
                     else
                     {
+                        Mod.LogInfo("\t\tWe are not initializer, initializing with data");
                         // We are controller finishing our init in a TNH instance that has already been inited
                         InitJoinTNH();
 
@@ -14326,13 +14333,16 @@ namespace H3MP
                 }
                 else
                 {
+                    Mod.LogInfo("\tNot in DelayedInit");
                     if (Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                     {
+                        Mod.LogInfo("\tWe are controller, continuing");
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         return true;
                     }
                     else
                     {
+                        Mod.LogInfo("\tWe are not controller, setting take phase with data");
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
 
@@ -14681,9 +14691,11 @@ namespace H3MP
             {
                 if (Mod.currentTNHInstance.initializer == -1 && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
                 {
+                    Mod.LogInfo("DelayedInitPrefix: No initializer yet and we are controller", false);
                     // Not yet init, we are controller
                     if (H3MP_ThreadManager.host)
                     {
+                        Mod.LogInfo("\tWe are server, taking initialization. Scene still loading?: "+ H3MP_GameManager.sceneLoading, false);
                         // We are server, init right away
                         Mod.currentTNHInstance.initializer = 0;
                         TNHInitializing = true;
@@ -14691,6 +14703,7 @@ namespace H3MP
                     }
                     else if (!Mod.currentTNHInstance.initializationRequested) // Client, request initializtion if haven't already
                     {
+                        Mod.LogInfo("\tWe are client and have not yet requested init perm, requesting", false);
                         H3MP_ClientSend.RequestTNHInitialization(Mod.currentTNHInstance.instance);
                         Mod.currentTNHInstance.initializationRequested = true;
                     }
@@ -14698,9 +14711,11 @@ namespace H3MP
                 }
                 else if (Mod.currentTNHInstance.initializer == H3MP_GameManager.ID)
                 {
+                    Mod.LogInfo("DelayedInitPrefix: We are initializer", false);
                     // We have an initializer, it's us
                     if (Mod.currentTNHInstance.initializationRequested)
                     {
+                        Mod.LogInfo("\tWe were waiting for perm, initializing. Scene still loading?: " + H3MP_GameManager.sceneLoading, false);
                         // This is the first call to DelayedInit since we received initialization perm, set initializing
                         Mod.currentTNHInstance.initializationRequested = false;
                         TNHInitializing = true;
@@ -14709,6 +14724,7 @@ namespace H3MP
                 }
                 else // We are not initializer and no initializer or not controller
                 {
+                    Mod.LogInfo("DelayedInitPrefix: Waiting for initialization. Scene loading?: "+ H3MP_GameManager.sceneLoading+", initializer: "+ Mod.currentTNHInstance.initializer+", requested: "+ Mod.currentTNHInstance.initializationRequested, false);
                     // Wait until we have initializer before continuing
                     // Also check if not requested here because a server will set the initializer locally and set requested flag indicating that it is waiting for init
                     return !H3MP_GameManager.sceneLoading && Mod.currentTNHInstance.initializer != -1 && !Mod.currentTNHInstance.initializationRequested;
@@ -14721,6 +14737,7 @@ namespace H3MP
             // If we were initializing and we are done
             if (TNHInitializing && TNHInitialized)
             {
+                Mod.LogInfo("DelayedInitPostfix: We were initializing and are now initialized, sending initializer", false);
                 TNHInitializing = false;
                 TNHInitialized = false; 
 
@@ -14785,6 +14802,7 @@ namespace H3MP
 
         public static void InitJoinTNH()
         {
+            Mod.LogInfo("InitJoinTNH called", false);
             Mod.currentTNHInstance.manager.Phase = Mod.currentTNHInstance.phase;
             TNH_HoldPoint curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
             Mod.TNH_Manager_m_curHoldPoint.SetValue(Mod.currentTNHInstance.manager, curHoldPoint);
@@ -14792,6 +14810,7 @@ namespace H3MP
             Mod.TNH_Manager_m_activeSupplyPointIndicies.SetValue(Mod.currentTNHInstance.manager, Mod.currentTNHInstance.activeSupplyPointIndices);
             if (Mod.currentTNHInstance.holdOngoing)
             {
+                Mod.LogInfo("\tHold "+ Mod.currentTNHInstance.curHoldIndex + " ongoing", false);
                 // Set the hold
                 TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
@@ -14846,6 +14865,7 @@ namespace H3MP
             }
             else
             {
+                Mod.LogInfo("\tNo hold ongoing", false);
                 // Set the hold
                 TNH_Progression.Level curLevel = (TNH_Progression.Level)Mod.TNH_Manager_m_curLevel.GetValue(Mod.currentTNHInstance.manager);
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
@@ -14906,7 +14926,7 @@ namespace H3MP
                     }
                 }
 
-                // Spawn at intial supply point
+                // Spawn at initial supply point
                 // We will already have been TPed to our char's starting point by delayed init
                 // Now check if valid, if not find first player to spawn on
                 if (Mod.currentTNHInstance.activeSupplyPointIndices != null)
@@ -14957,6 +14977,7 @@ namespace H3MP
             // with which they can spawn their own starting equipment
             if (!Mod.currentTNHInstance.spawnedStartEquip && Mod.TNHStartEquipButton == null)
             {
+                Mod.LogInfo("\tSpawning init start button", false);
                 Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
                 Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
             }
@@ -15130,45 +15151,55 @@ namespace H3MP
             // Skip if connected, have TNH instance, and we are not controller
             if(Mod.managerObject != null && ___m_isInHold && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != H3MP_GameManager.ID)
             {
-                switch (Mod.currentTNHInstance.holdState)
+                try
                 {
-                    case TNH_HoldPoint.HoldState.Beginning:
-                        ___m_systemNode.SetDisplayString("SCANNING SYSTEM");
-                        break;
-                    case TNH_HoldPoint.HoldState.Analyzing:
-                        Mod.currentTNHInstance.tickDownToID -= Time.deltaTime;
-                        if (__instance.M.TargetMode == TNHSetting_TargetMode.NoTargets)
-                        {
-                            ___m_systemNode.SetDisplayString("ANALYZING " + __instance.FloatToTime(Mod.currentTNHInstance.tickDownToID, "0:00.00"));
-                        }
-                        else
-                        {
-                            ___m_systemNode.SetDisplayString("ANALYZING");
-                        }
-                        break;
-                    case TNH_HoldPoint.HoldState.Hacking:
-                        Mod.currentTNHInstance.tickDownToFailure -= Time.deltaTime;
-                        if (!___m_hasPlayedTimeWarning1 && Mod.currentTNHInstance.tickDownToFailure < 60f)
-                        {
-                            ___m_hasPlayedTimeWarning1 = true;
-                            __instance.M.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Reminder1);
-                            __instance.M.Increment(1, false);
-                        }
-                        if (!___m_hasPlayedTimeWarning2 && Mod.currentTNHInstance.tickDownToFailure < 30f)
-                        {
-                            ___m_hasPlayedTimeWarning2 = true;
-                            __instance.M.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Reminder2);
-                            ___m_numWarnings++;
-                            __instance.M.Increment(1, false);
-                        }
-                        ___m_systemNode.SetDisplayString("FAILURE IN: " + __instance.FloatToTime(Mod.currentTNHInstance.tickDownToFailure, "0:00.00"));
-                        break;
-                    case TNH_HoldPoint.HoldState.Transition:
-                        if(___m_systemNode != null)
-                        {
+                    switch (Mod.currentTNHInstance.holdState)
+                    {
+                        case TNH_HoldPoint.HoldState.Beginning:
                             ___m_systemNode.SetDisplayString("SCANNING SYSTEM");
-                        }
-                        break;
+                            break;
+                        case TNH_HoldPoint.HoldState.Analyzing:
+                            Mod.currentTNHInstance.tickDownToID -= Time.deltaTime;
+                            if (__instance.M.TargetMode == TNHSetting_TargetMode.NoTargets)
+                            {
+                                ___m_systemNode.SetDisplayString("ANALYZING " + __instance.FloatToTime(Mod.currentTNHInstance.tickDownToID, "0:00.00"));
+                            }
+                            else
+                            {
+                                ___m_systemNode.SetDisplayString("ANALYZING");
+                            }
+                            break;
+                        case TNH_HoldPoint.HoldState.Hacking:
+                            Mod.currentTNHInstance.tickDownToFailure -= Time.deltaTime;
+                            if (!___m_hasPlayedTimeWarning1 && Mod.currentTNHInstance.tickDownToFailure < 60f)
+                            {
+                                ___m_hasPlayedTimeWarning1 = true;
+                                __instance.M.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Reminder1);
+                                __instance.M.Increment(1, false);
+                            }
+                            if (!___m_hasPlayedTimeWarning2 && Mod.currentTNHInstance.tickDownToFailure < 30f)
+                            {
+                                ___m_hasPlayedTimeWarning2 = true;
+                                __instance.M.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Reminder2);
+                                ___m_numWarnings++;
+                                __instance.M.Increment(1, false);
+                            }
+                            ___m_systemNode.SetDisplayString("FAILURE IN: " + __instance.FloatToTime(Mod.currentTNHInstance.tickDownToFailure, "0:00.00"));
+                            break;
+                        case TNH_HoldPoint.HoldState.Transition:
+                            if (___m_systemNode != null)
+                            {
+                                ___m_systemNode.SetDisplayString("SCANNING SYSTEM");
+                            }
+                            break;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Mod.LogError("Caught " + ex.Message + "\nIn Holdpoint patch update prefix\nDebug:");
+                    Mod.LogError("Hold state: "+ Mod.currentTNHInstance.holdState);
+                    Mod.LogError("Instance M null?: "+ (__instance.M == null));
+                    Mod.LogError("Sys node null?: " + (___m_systemNode == null));
                 }
 
                 return false;

@@ -2529,6 +2529,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.requestTNHInit))
             {
+                Mod.LogInfo("Sending request for perm to init TNH " + instance, false);
                 packet.Write(instance);
 
                 SendTCPData(packet);
@@ -2539,6 +2540,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHInit))
             {
+                Mod.LogInfo("Sending TNH "+instance+" init signal", false);
                 packet.Write(instance);
 
                 SendTCPData(packet);
