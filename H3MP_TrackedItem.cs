@@ -5319,9 +5319,9 @@ namespace H3MP
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asM203.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                for (int i = 0; i < asM203.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    if (asM203.Attachment.curMount.Parent.AttachmentMounts[i] == asM203.Attachment.curMount)
+                    if (asM203.Attachment.curMount.MyObject.AttachmentMounts[i] == asM203.Attachment.curMount)
                     {
                         data.data[0] = (byte)i;
                         found = true;
@@ -5513,9 +5513,9 @@ namespace H3MP
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asGP25.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                for (int i = 0; i < asGP25.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    if (asGP25.Attachment.curMount.Parent.AttachmentMounts[i] == asGP25.Attachment.curMount)
+                    if (asGP25.Attachment.curMount.MyObject.AttachmentMounts[i] == asGP25.Attachment.curMount)
                     {
                         data.data[0] = (byte)i;
                         found = true;
@@ -5731,9 +5731,9 @@ namespace H3MP
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asATF.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                for (int i = 0; i < asATF.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    if (asATF.Attachment.curMount.Parent.AttachmentMounts[i] == asATF.Attachment.curMount)
+                    if (asATF.Attachment.curMount.MyObject.AttachmentMounts[i] == asATF.Attachment.curMount)
                     {
                         data.data[0] = (byte)i;
                         found = true;
@@ -6017,9 +6017,9 @@ namespace H3MP
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asACBW.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                for (int i = 0; i < asACBW.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    if (asACBW.Attachment.curMount.Parent.AttachmentMounts[i] == asACBW.Attachment.curMount)
+                    if (asACBW.Attachment.curMount.MyObject.AttachmentMounts[i] == asACBW.Attachment.curMount)
                     {
                         data.data[0] = (byte)i;
                         found = true;
@@ -6276,9 +6276,9 @@ namespace H3MP
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asABA.Attachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                for (int i = 0; i < asABA.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    if (asABA.Attachment.curMount.Parent.AttachmentMounts[i] == asABA.Attachment.curMount)
+                    if (asABA.Attachment.curMount.MyObject.AttachmentMounts[i] == asABA.Attachment.curMount)
                     {
                         data.data[0] = (byte)i;
                         found = true;
@@ -7562,9 +7562,9 @@ namespace H3MP
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asAttachment.curMount.Parent.AttachmentMounts.Count; ++i)
+                for (int i = 0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    if (asAttachment.curMount.Parent.AttachmentMounts[i] == asAttachment.curMount)
+                    if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
                     {
                         data.data[0] = (byte)i;
                         found = true;
@@ -7800,7 +7800,6 @@ namespace H3MP
                         asAttachment.DetachFromMount();
                     }
 
-                    Mod.LogInfo("Item " + name + " got update to attach to mount " + mount.name + ", mount parent null?: " + (mount.Parent == null));
                     if (mount.isMountableOn(asAttachment)) 
                     { 
                         asAttachment.AttachToMount(mount, true);
@@ -7834,11 +7833,19 @@ namespace H3MP
             return modified || (preMountIndex != currentMountIndex);
         }
 
+        // This should be called when the parent of an attachment changes
+        // The point is that the attachment could have gotten up to date data telling it that it should
+        // be attached to a specific mount on its parent
+        // But when it got this update, it was not yet parented to the correct parent
+        // This would mean that it was attached on the wrong mount or not mounted at all
+        // This data will not change until something changes on controller side
+        // Data update does not specify parent, the parent must be set by sending a specific order to update it (TODO: Review: could we just send the parent ID in every update instead of only full?)
+        // So when the parent changes, we must call this to attach it to proper mount on new parent
         private void UpdateAttachmentParent()
         {
             FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
 
-            if(currentMountIndex != 255) // We want to be attached to a mount
+            if (data.data[0] != 255) // We want to be attached to a mount
             {
                 if (data.parent != -1) // We have parent
                 {

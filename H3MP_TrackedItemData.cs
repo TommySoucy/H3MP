@@ -326,10 +326,8 @@ namespace H3MP
         {
             if (newParent == null)
             {
-                Mod.LogInfo("\tNew parent null");
                 if (parent != -1) // We had parent before, need to unparent
                 {
-                    Mod.LogInfo("\t\tCurrent parent not null, unsetting");
                     H3MP_TrackedItemData previousParent = null;
                     int clientID = -1;
                     if (H3MP_ThreadManager.host)
@@ -408,10 +406,6 @@ namespace H3MP
                 // Physically parent
                 if (physicallyParent && physicalItem != null)
                 {
-                    ++ignoreParentChanged;
-                    physicalItem.transform.parent = newParent.physicalItem.transform;
-                    --ignoreParentChanged;
-
                     // Set Controller to parent's
                     SetController(newParent.controller, true);
 
@@ -421,10 +415,21 @@ namespace H3MP
                         Mod.SetKinematicRecursive(physicalItem.transform, false);
                     }
 
-                    // Call updateParent delegate on item if it has one
-                    if (physicalItem.updateParentFunc != null)
+                    if (newParent.physicalItem == null)
                     {
-                        physicalItem.updateParentFunc();
+                        newParent.childrenToParent.Add(trackedID);
+                    }
+                    else
+                    {
+                        ++ignoreParentChanged;
+                        physicalItem.transform.parent = newParent.physicalItem.transform;
+                        --ignoreParentChanged;
+
+                        // Call updateParent delegate on item if it has one
+                        if (physicalItem.updateParentFunc != null)
+                        {
+                            physicalItem.updateParentFunc();
+                        }
                     }
                 }
             }

@@ -2222,10 +2222,13 @@ namespace H3MP
                 }
 
                 // Check if there are other players where we are going to prevent things like prefab spawns
+                Mod.LogInfo("\tChecking if have control at load start");
                 if (playersByInstanceByScene.TryGetValue(LoadLevelBeginPatch.loadingLevel, out Dictionary<int, List<int>> relevantInstances))
                 {
-                    if(relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
+                    Mod.LogInfo("\t\tThere are "+ relevantInstances .Count+ " instances listed in the level we are loading: "+ LoadLevelBeginPatch.loadingLevel);
+                    if (relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
                     {
+                        Mod.LogInfo("\t\t\tThere are " + relevantPlayers.Count + " players listed in the instance we are in: " + instance);
                         controlOverride = relevantPlayers.Count == 0;
                         firstPlayerInSceneInstance = controlOverride;
                     }
@@ -2240,6 +2243,7 @@ namespace H3MP
                     controlOverride = true;
                     firstPlayerInSceneInstance = true;
                 }
+                Mod.LogInfo("\tAt load start, controlOverride: " + controlOverride + ", first in scene: " + firstPlayerInSceneInstance);
 
                 // Clear any of our tracked items that have not awoken in the previous scene
                 ClearUnawoken();

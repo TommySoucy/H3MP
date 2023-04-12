@@ -2420,6 +2420,12 @@ namespace H3MP
 
             //harmony.Patch(chamberSetRoundPatchOriginal, new HarmonyMethod(chamberSetRoundPatchPrefix));
 
+            //// DestroyPatch
+            //MethodInfo destroyPatchOriginal = typeof(UnityEngine.Object).GetMethod("Destroy", BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(UnityEngine.Object) }, null);
+            //MethodInfo destroyPatchPrefix = typeof(DestroyPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            //harmony.Patch(destroyPatchOriginal, new HarmonyMethod(destroyPatchPrefix));
+
             if (PatchVerify.writeWhenDone)
             {
                 File.WriteAllText(H3MPPath + "/PatchHashes.json", JObject.FromObject(PatchVerify.hashes).ToString());
@@ -3938,6 +3944,15 @@ namespace H3MP
         static void Prefix(Vector3 point)
         {
             Mod.LogWarning("TeleportToPoint called with point: (" + point.x + "," + point.y + "," + point.z + "):\n" + Environment.StackTrace);
+        }
+    }
+
+    // DEBUG PATCH Patches Object.Destroy
+    class DestroyPatch
+    {
+        static void Prefix(UnityEngine.Object obj)
+        {
+            Mod.LogInfo("Destroying " + obj + ":\n" + Environment.StackTrace);
         }
     }
 #endregion
