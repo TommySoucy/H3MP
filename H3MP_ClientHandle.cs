@@ -1128,13 +1128,20 @@ namespace H3MP
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 BreakActionWeapon asBAW = H3MP_Client.items[trackedID].physicalItem.physicalObject as BreakActionWeapon;
-                FireArmRoundType prevRoundType = asBAW.Barrels[barrelIndex].Chamber.RoundType;
-                asBAW.Barrels[barrelIndex].Chamber.RoundType = roundType;
-                ++ChamberPatch.chamberSkip;
-                asBAW.Barrels[barrelIndex].Chamber.SetRound(roundClass, asBAW.Barrels[barrelIndex].Chamber.transform.position, asBAW.Barrels[barrelIndex].Chamber.transform.rotation);
-                --ChamberPatch.chamberSkip;
-                asBAW.Barrels[barrelIndex].Chamber.RoundType = prevRoundType;
-                asBAW.Fire(barrelIndex, false, 0);
+                if (asBAW != null)
+                {
+                    FireArmRoundType prevRoundType = asBAW.Barrels[barrelIndex].Chamber.RoundType;
+                    asBAW.Barrels[barrelIndex].Chamber.RoundType = roundType;
+                    ++ChamberPatch.chamberSkip;
+                    asBAW.Barrels[barrelIndex].Chamber.SetRound(roundClass, asBAW.Barrels[barrelIndex].Chamber.transform.position, asBAW.Barrels[barrelIndex].Chamber.transform.rotation);
+                    --ChamberPatch.chamberSkip;
+                    asBAW.Barrels[barrelIndex].Chamber.RoundType = prevRoundType;
+                    asBAW.Fire(barrelIndex, false, 0);
+                }
+                else
+                {
+                    Mod.LogError("Received order to fire break action weapon at " + trackedID + " but the item is not a BreakActionWeapon. It is actually: "+(H3MP_Client.items[trackedID].physicalItem.physicalObject.GetType()));
+                }
             }
         }
 
