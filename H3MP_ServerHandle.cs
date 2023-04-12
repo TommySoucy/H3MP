@@ -3492,9 +3492,12 @@ namespace H3MP
             {
                 if (H3MP_Server.items[trackedID].controller == H3MP_GameManager.ID)
                 {
-                    ++TNH_ShatterableCrateDamagePatch.skip;
-                    H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
-                    --TNH_ShatterableCrateDamagePatch.skip;
+                    if (H3MP_Server.items[trackedID].physicalItem != null)
+                    {
+                        ++TNH_ShatterableCrateDamagePatch.skip;
+                        H3MP_Server.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
+                        --TNH_ShatterableCrateDamagePatch.skip;
+                    }
                 }
                 else
                 {

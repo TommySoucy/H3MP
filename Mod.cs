@@ -14277,12 +14277,11 @@ namespace H3MP
             // We want to prevent call to SetPhase unless we are controller not init or initializer init
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
-                Mod.LogInfo("SetPhasePrefix: phase: " + p + ", preventing: " + ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
-                                                                               (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.initializer != -1 &&
-                                                                               (!H3MP_ThreadManager.host || !Mod.currentTNHInstance.initializationRequested))), false);
-                return (TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
-                       (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.initializer != -1 && 
-                       (!H3MP_ThreadManager.host || !Mod.currentTNHInstance.initializationRequested));
+                bool cont = (TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == H3MP_GameManager.ID) ||
+                            (Mod.currentTNHInstance.controller == H3MP_GameManager.ID && Mod.currentTNHInstance.initializer != -1 &&
+                            (!H3MP_ThreadManager.host || !Mod.currentTNHInstance.initializationRequested));
+                Mod.LogInfo("SetPhasePrefix: phase: " + p + ", preventing: " + cont, false);
+                return cont;
             }
             return true;
         }

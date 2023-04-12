@@ -3041,15 +3041,21 @@ namespace H3MP
         {
             int trackedID = packet.ReadInt();
 
-            if (H3MP_Client.items[trackedID] != null && H3MP_Client.items[trackedID].controller == H3MP_GameManager.ID)
+            if (H3MP_Client.items[trackedID] != null)
             {
-                ++TNH_ShatterableCrateDamagePatch.skip;
-                H3MP_Client.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
-                --TNH_ShatterableCrateDamagePatch.skip;
-            }
-            else
-            {
-                H3MP_ClientSend.ShatterableCrateDamage(packet);
+                if (H3MP_Client.items[trackedID].controller == H3MP_GameManager.ID)
+                {
+                    if (H3MP_Client.items[trackedID].physicalItem != null)
+                    {
+                        ++TNH_ShatterableCrateDamagePatch.skip;
+                        H3MP_Client.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
+                        --TNH_ShatterableCrateDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    H3MP_ClientSend.ShatterableCrateDamage(packet);
+                }
             }
         }
 
