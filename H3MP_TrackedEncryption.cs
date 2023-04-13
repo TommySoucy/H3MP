@@ -14,7 +14,7 @@ namespace H3MP
         // Unknown tracked ID queues
         public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
         public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
-        public static Dictionary<uint, List<int>> unknownInit = new Dictionary<uint, List<int>>();
+        public static Dictionary<uint, KeyValuePair<List<int>, List<Vector3>>> unknownInit = new Dictionary<uint, KeyValuePair<List<int>, List<Vector3>>>();
         public static Dictionary<uint, List<int>> unknownSpawnSubTarg = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<int>> unknownDisableSubTarg = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownSpawnGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
@@ -98,6 +98,18 @@ namespace H3MP
             if (skipFullDestroy)
             {
                 return;
+            }
+
+            // Type specific destruction
+            // In the case of encryptions we want to make sure the tendrils and subtargs are also destroyed because they usually are in TNH_EncryptionTarget.Destroy
+            // but this will not have been called if we are not the one to have destroyed it
+            if(data.controller != H3MP_GameManager.ID && physicalEncryptionScript.UsesRegenerativeSubTarg)
+            {
+                for (int i = 0; i < this.physicalEncryptionScript.Tendrils.Count; i++)
+                {
+                    Destroy(physicalEncryptionScript.Tendrils[i]);
+                    Destroy(physicalEncryptionScript.SubTargs[i]);
+                }
             }
 
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore

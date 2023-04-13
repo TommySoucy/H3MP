@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Valve.VR.InteractionSystem;
+using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -3730,6 +3731,7 @@ namespace H3MP
                 H3MP_Server.encryptions[trackedID].subTargsPos[index] = point;
                 H3MP_Server.encryptions[trackedID].subTargsActive[index] = true;
                 H3MP_Server.encryptions[trackedID].tendrilFloats[index] = 1f;
+
                 if (H3MP_Server.encryptions[trackedID].physicalObject != null)
                 {
                     Vector3 forward = point - H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
@@ -3750,29 +3752,36 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             int count = packet.ReadInt();
             List<int> indices = new List<int>();
-            for(int i=0; i < count; i++)
+            List<Vector3> points = new List<Vector3>();
+            for (int i = 0; i < count; i++)
             {
                 indices.Add(packet.ReadInt());
+                points.Add(packet.ReadVector3());
             }
 
             if (H3MP_Server.encryptions[trackedID] != null)
             {
                 for (int i = 0; i < count; ++i)
                 {
+                    H3MP_Server.encryptions[trackedID].tendrilsActive[indices[i]] = true;
+                    H3MP_Server.encryptions[trackedID].growthPoints[indices[i]] = points[i];
+                    H3MP_Server.encryptions[trackedID].subTargsPos[indices[i]] = points[i];
                     H3MP_Server.encryptions[trackedID].subTargsActive[indices[i]] = true;
+                    H3MP_Server.encryptions[trackedID].tendrilFloats[indices[i]] = 1f;
                 }
 
                 if (H3MP_Server.encryptions[trackedID].physicalObject != null)
                 {
+                    ++EncryptionSpawnGrowthPatch.skip;
                     for (int i = 0; i < count; ++i)
                     {
-                        H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
+                        Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { indices[i], points[i] });
                     }
-                    Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Server.encryptions[trackedID].physicalObject.physicalEncryptionScript, count);
+                    --EncryptionSpawnGrowthPatch.skip;
                 }
             }
 
-            H3MP_ServerSend.EncryptionInit(clientID, trackedID, indices);
+            H3MP_ServerSend.EncryptionInit(clientID, trackedID, indices, points);
         }
 
         public static void EncryptionResetGrowth(int clientID, H3MP_Packet packet)

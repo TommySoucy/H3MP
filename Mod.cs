@@ -8546,6 +8546,7 @@ namespace H3MP
 
         static void Prefix(ref TNH_EncryptionTarget __instance, int index, Vector3 point)
         {
+            Mod.LogInfo("EncryptionSpawnGrowthPatch prefix");
             if (skip > 0)
             {
                 return;
@@ -8567,6 +8568,7 @@ namespace H3MP
 
                     if (H3MP_ThreadManager.host)
                     {
+                        Mod.LogInfo("\rServer sending");
                         H3MP_ServerSend.EncryptionSpawnGrowth(trackedEncryption.data.trackedID, index, point);
                     }
                     else
@@ -9301,7 +9303,9 @@ namespace H3MP
                                 ref Vector3 ___agileStartPos, ref Quaternion ___m_fromRot, ref float ___m_timeTilWarp, ref float ___m_warpSpeed,
                                 ref List<Vector3> ___m_validAgilePos, ref int ___m_numSubTargsLeft)
         {
-            if(Mod.managerObject == null)
+            ++EncryptionSpawnGrowthPatch.skip;
+
+            if (Mod.managerObject == null)
             {
                 return true;
             }
@@ -9354,21 +9358,25 @@ namespace H3MP
 
         static void StartPostfix(TNH_EncryptionTarget __instance)
         {
-            if(Mod.managerObject != null && trackedEncryption != null)
+            --EncryptionSpawnGrowthPatch.skip;
+
+            if (Mod.managerObject != null && trackedEncryption != null)
             {
                 List<int> indices = new List<int>();
+                List<Vector3> points = new List<Vector3>();
                 for (int i = 0; i < __instance.SubTargs.Count; ++i)
                 {
                     if (__instance.SubTargs[i].activeSelf)
                     {
                         indices.Add(i);
+                        points.Add(__instance.SubTargs[i].transform.position);
                     }
                 }
                 if (indices.Count > 0)
                 {
                     if (H3MP_ThreadManager.host)
                     {
-                        H3MP_ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices);
+                        H3MP_ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, points);
                     }
                     else
                     {
@@ -9376,16 +9384,16 @@ namespace H3MP
                         {
                             if (H3MP_TrackedEncryption.unknownInit.ContainsKey(trackedEncryption.data.localWaitingIndex))
                             {
-                                H3MP_TrackedEncryption.unknownInit[trackedEncryption.data.localWaitingIndex] = indices;
+                                H3MP_TrackedEncryption.unknownInit[trackedEncryption.data.localWaitingIndex] = new KeyValuePair<List<int>, List<Vector3>>(indices, points);
                             }
                             else
                             {
-                                H3MP_TrackedEncryption.unknownInit.Add(trackedEncryption.data.localWaitingIndex, indices);
+                                H3MP_TrackedEncryption.unknownInit.Add(trackedEncryption.data.localWaitingIndex, new KeyValuePair<List<int>, List<Vector3>>(indices, points));
                             }
                         }
                         else
                         {
-                            H3MP_ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices);
+                            H3MP_ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, points);
                         }
                     }
                 }

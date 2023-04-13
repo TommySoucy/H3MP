@@ -2241,7 +2241,7 @@ namespace H3MP
             }
         }
 
-        public static void EncryptionInit(int trackedID, List<int> indices)
+        public static void EncryptionInit(int trackedID, List<int> indices, List<Vector3> points)
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionInit))
             {
@@ -2253,9 +2253,10 @@ namespace H3MP
                 else
                 {
                     packet.Write(indices.Count);
-                    foreach(int index in indices)
+                    for(int i=0; i < indices.Count; ++i)
                     {
-                        packet.Write(index);
+                        packet.Write(indices[i]);
+                        packet.Write(points[i]);
                     }
                 }
 

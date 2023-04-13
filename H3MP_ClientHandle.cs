@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using static FistVR.RemoteGun;
+using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -3238,24 +3239,32 @@ namespace H3MP
             int trackedID = packet.ReadInt();
             int count = packet.ReadInt();
             List<int> indices = new List<int>();
+            List<Vector3> points = new List<Vector3>();
             for (int i = 0; i < count; i++)
             {
                 indices.Add(packet.ReadInt());
+                points.Add(packet.ReadVector3());
             }
 
             if (H3MP_Client.encryptions[trackedID] != null)
             {
                 for (int i = 0; i < count; ++i)
                 {
+                    H3MP_Client.encryptions[trackedID].tendrilsActive[indices[i]] = true;
+                    H3MP_Client.encryptions[trackedID].growthPoints[indices[i]] = points[i];
+                    H3MP_Client.encryptions[trackedID].subTargsPos[indices[i]] = points[i];
                     H3MP_Client.encryptions[trackedID].subTargsActive[indices[i]] = true;
+                    H3MP_Client.encryptions[trackedID].tendrilFloats[indices[i]] = 1f;
                 }
+
                 if (H3MP_Client.encryptions[trackedID].physicalObject != null)
                 {
+                    ++EncryptionSpawnGrowthPatch.skip;
                     for (int i = 0; i < count; ++i)
                     {
-                        H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
+                        Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { indices[i], points[i] });
                     }
-                    Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, count);
+                    --EncryptionSpawnGrowthPatch.skip;
                 }
             }
         }

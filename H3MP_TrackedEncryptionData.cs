@@ -332,9 +332,10 @@ namespace H3MP
             }
             if (localTrackedID != -1 && H3MP_TrackedEncryption.unknownInit.ContainsKey(localWaitingIndex))
             {
-                List<int> indices = H3MP_TrackedEncryption.unknownInit[localWaitingIndex];
+                List<int> indices = H3MP_TrackedEncryption.unknownInit[localWaitingIndex].Key;
+                List<Vector3> points = H3MP_TrackedEncryption.unknownInit[localWaitingIndex].Value;
 
-                H3MP_ClientSend.EncryptionInit(trackedID, indices);
+                H3MP_ClientSend.EncryptionInit(trackedID, indices, points);
 
                 H3MP_TrackedEncryption.unknownInit.Remove(localWaitingIndex);
             }
