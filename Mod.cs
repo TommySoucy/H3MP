@@ -557,6 +557,17 @@ namespace H3MP
             }
         }
 
+#if DEBUG
+        public GameObject SpawnItem(string itemID)
+        {
+            if(IM.OD.TryGetValue(itemID, out FVRObject obj))
+            {
+                return Instantiate(obj.GetGameObject(), Camera.main.transform.position + Camera.main.transform.forward, Quaternion.identity);
+            }
+            return null;
+        }
+#endif
+
         private void SpawnDummyPlayer()
         {
             GameObject player = Instantiate(playerPrefab);

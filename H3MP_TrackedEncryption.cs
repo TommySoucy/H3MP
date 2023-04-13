@@ -70,25 +70,26 @@ namespace H3MP
             {
                 targetScript.SpawnPoints = new List<Transform>();
             }
-            GameObject trackedItemRef = new GameObject();
-            trackedItemRef.SetActive(false);
+            GameObject trackedEncryptionRef = new GameObject();
+            trackedEncryptionRef.SetActive(false);
             if (availableTrackedEncryptionRefIndices.Count == 0)
             {
-                H3MP_TrackedEncryption[] tempItems = trackedEncryptionReferences;
-                trackedEncryptionReferences = new H3MP_TrackedEncryption[tempItems.Length + 100];
-                for (int i = 0; i < tempItems.Length; ++i)
+                H3MP_TrackedEncryption[] tempEncryptions = trackedEncryptionReferences;
+                trackedEncryptionReferences = new H3MP_TrackedEncryption[tempEncryptions.Length + 100];
+                for (int i = 0; i < tempEncryptions.Length; ++i)
                 {
-                    trackedEncryptionReferences[i] = tempItems[i];
+                    trackedEncryptionReferences[i] = tempEncryptions[i];
                 }
-                for (int i = tempItems.Length; i < trackedEncryptionReferences.Length; ++i)
+                for (int i = tempEncryptions.Length; i < trackedEncryptionReferences.Length; ++i)
                 {
                     availableTrackedEncryptionRefIndices.Add(i);
                 }
             }
-            trackedEncryptionReferences[availableTrackedEncryptionRefIndices.Count - 1] = this;
-            trackedItemRef.name = availableTrackedEncryptionRefIndices[availableTrackedEncryptionRefIndices.Count - 1].ToString();
+            int refIndex = availableTrackedEncryptionRefIndices[availableTrackedEncryptionRefIndices.Count - 1];
             availableTrackedEncryptionRefIndices.RemoveAt(availableTrackedEncryptionRefIndices.Count - 1);
-            targetScript.SpawnPoints.Add(trackedItemRef.transform);
+            trackedEncryptionReferences[refIndex] = this;
+            trackedEncryptionRef.name = refIndex.ToString();
+            targetScript.SpawnPoints.Add(trackedEncryptionRef.transform);
         }
 
         private void OnDestroy()
