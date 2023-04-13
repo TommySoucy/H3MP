@@ -65,6 +65,7 @@ namespace H3MP
         public static bool sceneLoading;
         public static int instanceAtSceneLoadStart;
         public static string sceneAtSceneLoadStart;
+        public static bool connectedAtLoadStart;
         public static int colorIndex = 0;
         public static readonly string[] colorNames = new string[] { "White", "Red", "Green", "Blue", "Black", "Desert", "Forest" };
         public static readonly Color[] colors = new Color[] { Color.white, Color.red, Color.green, Color.blue, Color.black, new Color(0.98431f, 0.86275f, 0.71373f), new Color(0.31373f, 0.31373f, 0.15294f) };
@@ -2167,6 +2168,7 @@ namespace H3MP
                     sceneLoading = true;
                     instanceAtSceneLoadStart = instance;
                     sceneAtSceneLoadStart = H3MP_GameManager.scene;
+                    connectedAtLoadStart = false;
                 }
                 else
                 {
@@ -2182,6 +2184,7 @@ namespace H3MP
                 sceneLoading = true;
                 instanceAtSceneLoadStart = instance;
                 sceneAtSceneLoadStart = H3MP_GameManager.scene;
+                connectedAtLoadStart = true;
 
                 ++giveControlOfDestroyed;
 
@@ -2266,9 +2269,12 @@ namespace H3MP
                     H3MP_ClientSend.PlayerScene(LoadLevelBeginPatch.loadingLevel);
                 }
 
-                --Mod.skipAllInstantiates;
+                if (connectedAtLoadStart)
+                {
+                    --Mod.skipAllInstantiates;
 
-                --giveControlOfDestroyed;
+                    --giveControlOfDestroyed;
+                }
 
                 // Update players' active state depending on which are in the same scene/instance
                 playersPresent = 0;
@@ -2327,6 +2333,10 @@ namespace H3MP
 
                         UpdatePlayerHidden(player.Value);
                     }
+
+                    // Only ever want to track objects if we were connected before we started loading
+                    controlOverride &= connectedAtLoadStart;
+                    firstPlayerInSceneInstance &= connectedAtLoadStart;
 
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
