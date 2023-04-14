@@ -105,7 +105,7 @@ namespace H3MP
             // but this will not have been called if we are not the one to have destroyed it
             if(data.controller != H3MP_GameManager.ID && physicalEncryptionScript.UsesRegenerativeSubTarg)
             {
-                for (int i = 0; i < this.physicalEncryptionScript.Tendrils.Count; i++)
+                for (int i = 0; i < physicalEncryptionScript.Tendrils.Count; i++)
                 {
                     Destroy(physicalEncryptionScript.Tendrils[i]);
                     Destroy(physicalEncryptionScript.SubTargs[i]);

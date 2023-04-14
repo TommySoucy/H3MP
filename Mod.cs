@@ -3991,7 +3991,7 @@ namespace H3MP
                 return;
             }
 
-            if (preObject == null && ___m_currentInteractable != null)
+            if (preObject != ___m_currentInteractable && ___m_currentInteractable != null)
             {
                 // If spectating we are just going to force break the interaction
                 if (Mod.TNHSpectating)
@@ -4003,10 +4003,13 @@ namespace H3MP
                 H3MP_TrackedItem trackedItem = ___m_currentInteractable.GetComponent<H3MP_TrackedItem>();
                 if (trackedItem != null)
                 {
+                    Mod.LogInfo("Interacted with item " + trackedItem.name+" at "+trackedItem.data.trackedID);
                     if (H3MP_ThreadManager.host)
                     {
+                        Mod.LogInfo("\tWe are host");
                         if (trackedItem.data.controller != 0)
                         {
+                            Mod.LogInfo("\t\tWe are not controller, taking control");
                             // Take control
 
                             // Send to all clients

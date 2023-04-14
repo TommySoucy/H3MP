@@ -809,6 +809,7 @@ namespace H3MP
 
         public void SetController(int newController, bool recursive = false)
         {
+            Mod.LogInfo("\t\t\t\tSetting controller of "+itemID+" at "+trackedID+" to "+newController);
             if (recursive)
             {
                 SetControllerRecursive(this, newController);
@@ -834,6 +835,7 @@ namespace H3MP
 
         public static void TakeControlRecursive(H3MP_TrackedItemData currentTrackedItem)
         {
+            Mod.LogInfo("\t\t\tTakeControlRecursive called on "+currentTrackedItem.itemID+" at "+currentTrackedItem.trackedID);
             // Note: we can return right away if we don't have tracked ID because not tracked ID implies taht this item is already under our control
             // So TakeControlRecursive should never be called without tracked ID in the first place
             if (currentTrackedItem.trackedID < 0)
@@ -843,15 +845,19 @@ namespace H3MP
 
             if (H3MP_ThreadManager.host)
             {
+                Mod.LogInfo("\t\t\t\tWe are host, sending order to give control");
                 H3MP_ServerSend.GiveControl(currentTrackedItem.trackedID, H3MP_GameManager.ID, null);
             }
             else
             {
+                Mod.LogInfo("\t\t\t\tWe are client, sending order to give control");
                 H3MP_ClientSend.GiveControl(currentTrackedItem.trackedID, H3MP_GameManager.ID, null);
             }
+            Mod.LogInfo("\t\t\t\tSetting controller");
             currentTrackedItem.SetController(H3MP_GameManager.ID);
             if (currentTrackedItem.localTrackedID == -1)
             {
+                Mod.LogInfo("\t\t\t\t\tAdding to local");
                 currentTrackedItem.localTrackedID = H3MP_GameManager.items.Count;
                 H3MP_GameManager.items.Add(currentTrackedItem);
             }

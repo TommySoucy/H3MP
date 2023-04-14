@@ -223,9 +223,11 @@ namespace H3MP
 
             if (trackedItem != null)
             {
+                Mod.LogInfo("\tGot item data for "+trackedItem.itemID);
                 bool destroyed = false;
                 if (trackedItem.controller == H3MP_Client.singleton.ID && controllerID != H3MP_Client.singleton.ID)
                 {
+                    Mod.LogInfo("\t\tGiving up control");
                     FVRPhysicalObject physObj = trackedItem.physicalItem.GetComponent<FVRPhysicalObject>();
 
                     H3MP_GameManager.EnsureUncontrolled(physObj);
@@ -236,6 +238,7 @@ namespace H3MP
                 }
                 else if (trackedItem.controller != H3MP_Client.singleton.ID && controllerID == H3MP_Client.singleton.ID)
                 {
+                    Mod.LogInfo("\t\tTaking control");
                     trackedItem.localTrackedID = H3MP_GameManager.items.Count;
                     H3MP_GameManager.items.Add(trackedItem);
                     if (trackedItem.physicalItem == null)
