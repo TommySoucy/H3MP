@@ -809,7 +809,7 @@ namespace H3MP
 
         public void SetController(int newController, bool recursive = false)
         {
-            Mod.LogInfo("\t\t\t\tSetting controller of "+itemID+" at "+trackedID+" to "+newController);
+            Mod.LogInfo("\t\t\t\tSetting controller of "+itemID+" at "+trackedID+" to "+newController+":\n"+Environment.StackTrace);
             if (recursive)
             {
                 SetControllerRecursive(this, newController);
