@@ -176,7 +176,8 @@ namespace H3MP
         revolvingShotgunLoad = 165,
         grappleGunLoad = 166,
         carlGustafLatchSate = 167,
-        carlGustafShellSlideSate = 168
+        carlGustafShellSlideSate = 168,
+        itemUpdate = 169
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -346,7 +347,8 @@ namespace H3MP
         revolvingShotgunLoad = 162,
         grappleGunLoad = 163,
         carlGustafLatchSate = 164,
-        carlGustafShellSlideSate = 165
+        carlGustafShellSlideSate = 165,
+        itemUpdate = 166
     }
 
     public class H3MP_Packet : IDisposable

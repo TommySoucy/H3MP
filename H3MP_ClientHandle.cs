@@ -149,6 +149,11 @@ namespace H3MP
             }
         }
 
+        public static void ItemUpdate(H3MP_Packet packet)
+        {
+            H3MP_GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
+        }
+
         public static void TrackedSosigs(H3MP_Packet packet)
         {
             // Reconstruct passed trackedSosigs from packet

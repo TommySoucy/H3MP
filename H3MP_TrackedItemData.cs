@@ -406,15 +406,6 @@ namespace H3MP
                 // Physically parent
                 if (physicallyParent && physicalItem != null)
                 {
-                    // Set Controller to parent's
-                    SetController(newParent.controller, true);
-
-                    // If in control, we want to enable rigidbody
-                    if (controller == H3MP_GameManager.ID)
-                    {
-                        Mod.SetKinematicRecursive(physicalItem.transform, false);
-                    }
-
                     if (newParent.physicalItem == null)
                     {
                         newParent.childrenToParent.Add(trackedID);
@@ -431,6 +422,19 @@ namespace H3MP
                             physicalItem.updateParentFunc();
                         }
                     }
+                }
+
+                // Set Controller to parent's
+                SetController(newParent.controller, true);
+
+                // If in control, we want to enable rigidbody
+                if (controller == H3MP_GameManager.ID)
+                {
+                    Mod.SetKinematicRecursive(physicalItem.transform, false);
+                }
+                else
+                {
+                    Mod.SetKinematicRecursive(physicalItem.transform, true);
                 }
             }
         }
@@ -809,7 +813,7 @@ namespace H3MP
 
         public void SetController(int newController, bool recursive = false)
         {
-            Mod.LogInfo("\t\t\t\tSetting controller of "+itemID+" at "+trackedID+" to "+newController+":\n"+Environment.StackTrace);
+            Mod.LogInfo("\t\t\t\tSetting controller of "+itemID+" at "+trackedID+" to "+newController);
             if (recursive)
             {
                 SetControllerRecursive(this, newController);

@@ -240,6 +240,16 @@ namespace H3MP
             }
         }
 
+        public static void ItemUpdate(H3MP_TrackedItemData itemData)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.itemUpdate))
+            {
+                packet.Write(itemData, true, false);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void TrackedSosigs()
         {
             int index = 0;

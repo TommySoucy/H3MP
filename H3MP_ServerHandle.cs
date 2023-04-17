@@ -1,12 +1,9 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Valve.VR.InteractionSystem;
-using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
@@ -269,6 +266,14 @@ namespace H3MP
             {
                 H3MP_GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
             }
+        }
+
+        public static void ItemUpdate(int clientID, H3MP_Packet packet)
+        {
+            H3MP_GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
+
+            // Send to all other clients
+            H3MP_ServerSend.ItemUpdate(packet, clientID);
         }
 
         public static void TrackedSosigs(int clientID, H3MP_Packet packet)

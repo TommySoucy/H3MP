@@ -8964,6 +8964,19 @@ namespace H3MP
                                     H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
                                 }
 
+                                // Call an update on the item so we can send latest data considering the new parent
+                                data.Update();
+
+                                // Send latest data through TCP to make sure others mount the item properly
+                                if (H3MP_ThreadManager.host)
+                                {
+                                    H3MP_ServerSend.ItemUpdate(data);
+                                }
+                                else
+                                {
+                                    H3MP_ClientSend.ItemUpdate(data);
+                                }
+
                                 // Update local
                                 data.SetParent(parentTrackedItem.data, false);
                             }

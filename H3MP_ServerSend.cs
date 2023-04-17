@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using UnityEngine;
+using Valve.VR.InteractionSystem;
 
 namespace H3MP
 {
@@ -98,6 +99,21 @@ namespace H3MP
             foreach(int clientID in clientIDs)
             {
                 H3MP_Server.clients[clientID].udp.SendData(packet);
+            }
+        }
+
+        private static void SendTCPDataToClients(H3MP_Packet packet, List<int> clientIDs)
+        {
+#if DEBUG
+            if (Input.GetKey(KeyCode.PageDown))
+            {
+                Mod.LogInfo("SendTCPDataToClients: " + BitConverter.ToInt32(packet.ToArray(), 0));
+            }
+#endif
+            packet.WriteLength();
+            foreach(int clientID in clientIDs)
+            {
+                H3MP_Server.clients[clientID].tcp.SendData(packet);
             }
         }
 
@@ -408,6 +424,56 @@ namespace H3MP
                     }
                 }
             }
+        }
+
+        public static void ItemUpdate(H3MP_TrackedItemData itemData)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.itemUpdate))
+            {
+                packet.Write(itemData, true, false);
+
+                List<int> playersToSendTo = new List<int>();
+                foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.itemsByInstanceByScene)
+                {
+                    foreach (KeyValuePair<int, List<int>> inner in outer.Value)
+                    {
+                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                            playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                        {
+                            playersToSendTo.AddRange(players);
+                        }
+                    }
+                }
+
+                SendTCPDataToClients(packet, playersToSendTo);
+            }
+        }
+
+        public static void ItemUpdate(H3MP_Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.itemUpdate);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            List<int> playersToSendTo = new List<int>();
+            foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.itemsByInstanceByScene)
+            {
+                foreach (KeyValuePair<int, List<int>> inner in outer.Value)
+                {
+                    if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                        playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                    {
+                        playersToSendTo.AddRange(players);
+                    }
+                }
+            }
+
+            playersToSendTo.Remove(clientID);
+
+            SendTCPDataToClients(packet, playersToSendTo);
         }
 
         public static void TrackedSosigs()
