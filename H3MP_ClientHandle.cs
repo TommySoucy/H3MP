@@ -5,8 +5,6 @@ using System.Net;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using static FistVR.RemoteGun;
-using static Valve.VR.SteamVR_TrackedObject;
 
 namespace H3MP
 {
