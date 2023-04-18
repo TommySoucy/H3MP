@@ -18,7 +18,9 @@ namespace H3MP
         public int localTrackedID = -1; // This item's index in local items list
         public uint localWaitingIndex = uint.MaxValue; // The unique index this item had while waiting for its tracked ID
         public int initTracker; // The ID of the client who initially tracked this item
-        public int controller = 0; // Client controlling this item, 0 for host
+        private int _controller = 0; // Client controlling this item, 0 for host
+        // TODO: Review: Perhaps do everything about control through this, like set kinematic and so on
+        public int controller { get { return _controller; } set { if (_controller != value) { _controller = value; OnControl(); } else { _controller = value; } } }
         public bool active;
         private bool previousActive;
         public bool underActiveControl;
@@ -424,13 +426,21 @@ namespace H3MP
                     }
                 }
 
+                int preController = controller;
+
                 // Set Controller to parent's
                 SetController(newParent.controller, true);
 
-                // If in control, we want to enable rigidbody
+                // If newly in control, we want to enable rigidbody and add to list
                 if (controller == H3MP_GameManager.ID)
                 {
-                    Mod.SetKinematicRecursive(physicalItem.transform, false);
+                    if (preController != controller)
+                    {
+                        Mod.SetKinematicRecursive(physicalItem.transform, false);
+
+                        localTrackedID = H3MP_GameManager.items.Count;
+                        H3MP_GameManager.items.Add(this);
+                    }
                 }
                 else
                 {
@@ -873,6 +883,11 @@ namespace H3MP
                     TakeControlRecursive(child);
                 }
             }
+        }
+
+        public void OnControl()
+        {
+            insuranceCounter = insuranceCount;
         }
     }
 }

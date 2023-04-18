@@ -9705,7 +9705,7 @@ namespace H3MP
 
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load trackedItem
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItem), "data"))); // Load trackedItem data
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItemData), "controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(H3MP_TrackedItemData), "get_controller"))); // Load trackedItem's controller index
             toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(H3MP_GameManager), "ID"))); // Load our ID
             int labelIndex4 = toInsert.Count;
             Label afterLoadChamberLabel = il.DefineLabel();
@@ -10314,7 +10314,7 @@ namespace H3MP
 
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItem), "data"))); // Load trackedItem data
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItemData), "controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(H3MP_TrackedItemData), "get_controller"))); // Load trackedItem's controller index
             toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(H3MP_GameManager), "ID"))); // Load our ID
             Label afterLoadLabel = il.DefineLabel();
             toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadLabel)); // Compare our ID with controller, if we are not controller skip load into cylinder
@@ -10386,7 +10386,7 @@ namespace H3MP
 
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load trackedItem
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItem), "data"))); // Load trackedItem data
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItemData), "controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(H3MP_TrackedItemData), "get_controller"))); // Load trackedItem's controller index
             toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(H3MP_GameManager), "ID"))); // Load our ID
             Label afterLoadLabel = il.DefineLabel();
             toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadLabel)); // Compare our ID with controller, if we are not controller skip load into cylinder
@@ -15122,7 +15122,7 @@ namespace H3MP
 
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItem), "data"))); // Load trackedItem data
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(H3MP_TrackedItemData), "controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(H3MP_TrackedItemData), "get_controller"))); // Load trackedItem's controller index
             toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(H3MP_GameManager), "ID"))); // Load our ID
             toInsert.Add(new CodeInstruction(OpCodes.Beq, startActionLabel)); // Compare our ID with controller, if we are controller goto start of destruction
 
