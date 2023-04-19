@@ -55,6 +55,8 @@ namespace H3MP
         public UnityEngine.Object dataObject;
         public FVRPhysicalObject physicalObject;
         public int attachmentInterfaceDataSize;
+        private bool positionSet;
+        private bool rotationSet;
 
         // StingerLauncher specific
         public StingerMissile stingerMissile;
@@ -8708,18 +8710,39 @@ namespace H3MP
         {
             if (interpolated && physicalObject != null && data.controller != H3MP_GameManager.ID && data.position != null && data.rotation != null)
             {
-                if (data.previousPos != null && data.velocity.magnitude < 1f)
+                // TODO: Improvement: Should consider is it really necessary to process position of parented items as local?
+                //                    Should we just use position no matter what?
+                //                    When checking to see if position has changed to know if we need to send an update we could still check
+                //                    local pos for parented items so that we only send an update when its local pos has changed
+                //                    but instead of sending the local pos we send the world pos, so that here, we don't need to make the parented check
+                //                    and also risk fucking up because our parentage may not be consistent with controller yet.
+                if (Vector3.Distance(data.parent == -1 ? physicalObject.transform.position : physicalObject.transform.localPosition, data.position) > 0.001f)
                 {
-                    if (data.parent == -1)
+                    positionSet = false;
+                    if (data.previousPos != null && data.velocity.magnitude < 1f)
                     {
-                        physicalObject.transform.position = Vector3.Lerp(physicalObject.transform.position, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                        if (data.parent == -1)
+                        {
+                            physicalObject.transform.position = Vector3.Lerp(physicalObject.transform.position, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                        }
+                        else
+                        {
+                            physicalObject.transform.localPosition = Vector3.Lerp(physicalObject.transform.localPosition, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                        }
                     }
                     else
                     {
-                        physicalObject.transform.localPosition = Vector3.Lerp(physicalObject.transform.localPosition, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                        if (data.parent == -1)
+                        {
+                            physicalObject.transform.position = data.position;
+                        }
+                        else
+                        {
+                            physicalObject.transform.localPosition = data.position;
+                        }
                     }
                 }
-                else
+                else if(!positionSet)
                 {
                     if (data.parent == -1)
                     {
@@ -8729,14 +8752,31 @@ namespace H3MP
                     {
                         physicalObject.transform.localPosition = data.position;
                     }
+                    positionSet = true;
                 }
-                if (data.parent == -1)
+                if (Quaternion.Angle(data.parent == -1 ? physicalObject.transform.rotation : physicalObject.transform.localRotation, data.rotation) > 0.1f)
                 {
-                    physicalObject.transform.rotation = Quaternion.Lerp(physicalObject.transform.rotation, data.rotation, interpolationSpeed * Time.deltaTime);
+                    rotationSet = false;
+                    if (data.parent == -1)
+                    {
+                        physicalObject.transform.rotation = Quaternion.Lerp(physicalObject.transform.rotation, data.rotation, interpolationSpeed * Time.deltaTime);
+                    }
+                    else
+                    {
+                        physicalObject.transform.localRotation = Quaternion.Lerp(physicalObject.transform.localRotation, data.rotation, interpolationSpeed * Time.deltaTime);
+                    }
                 }
-                else
+                else if (!rotationSet)
                 {
-                    physicalObject.transform.localRotation = Quaternion.Lerp(physicalObject.transform.localRotation, data.rotation, interpolationSpeed * Time.deltaTime);
+                    if (data.parent == -1)
+                    {
+                        physicalObject.transform.rotation = data.rotation;
+                    }
+                    else
+                    {
+                        physicalObject.transform.localRotation = data.rotation;
+                    }
+                    rotationSet = true;
                 }
             }
         }
@@ -8899,58 +8939,58 @@ namespace H3MP
                 return;
             }
 
-            if (data.controller == H3MP_GameManager.ID)
+            Transform currentParent = transform.parent;
+            H3MP_TrackedItem parentTrackedItem = null;
+            while (currentParent != null)
             {
-                Transform currentParent = transform.parent;
-                H3MP_TrackedItem parentTrackedItem = null;
-                while (currentParent != null)
-                {
-                    parentTrackedItem = currentParent.GetComponent<H3MP_TrackedItem>();
-                    if (parentTrackedItem != null)
-                    {
-                        break;
-                    }
-                    currentParent = currentParent.parent;
-                }
+                parentTrackedItem = currentParent.GetComponent<H3MP_TrackedItem>();
                 if (parentTrackedItem != null)
                 {
-                    // Handle case of unknown tracked IDs
-                    //      If ours is not yet known, put our waiting index in a wait dict with value as parent's LOCAL tracked ID if it is under our control
-                    //      and the actual tracked ID if not, when we receive the tracked ID we set the parent
-                    //          Note that if the parent is under our control, we need to store the local tracked ID because we might not have its tracked ID yet either
-                    //          If it is not under our control then we have guarantee that is has a tracked ID
-                    //      If the parent's tracked ID is not yet known, put it in a wait dict where key is the local tracked ID of the parent,
-                    //      and the value is a list of all children that must be attached to this parent once we know the parent's tracked ID
-                    //          Note that if we do not know the parent's tracked ID, it is because it is under our control
-                    bool haveParentID = parentTrackedItem.data.trackedID > -1;
-                    if (data.trackedID == -1)
+                    break;
+                }
+                currentParent = currentParent.parent;
+            }
+            if (parentTrackedItem != null)
+            {
+                // Handle case of unknown tracked IDs
+                //      If ours is not yet known, put our waiting index in a wait dict with value as parent's LOCAL tracked ID if it is under our control
+                //      and the actual tracked ID if not, when we receive the tracked ID we set the parent
+                //          Note that if the parent is under our control, we need to store the local tracked ID because we might not have its tracked ID yet either
+                //          If it is not under our control then we have guarantee that is has a tracked ID
+                //      If the parent's tracked ID is not yet known, put it in a wait dict where key is the local tracked ID of the parent,
+                //      and the value is a list of all children that must be attached to this parent once we know the parent's tracked ID
+                //          Note that if we do not know the parent's tracked ID, it is because it is under our control
+                bool haveParentID = parentTrackedItem.data.trackedID > -1;
+                if (data.trackedID == -1)
+                {
+                    KeyValuePair<uint, bool> parentIDPair = new KeyValuePair<uint, bool>(haveParentID ? (uint)parentTrackedItem.data.trackedID : parentTrackedItem.data.localWaitingIndex, haveParentID);
+                    if (unknownTrackedIDs.ContainsKey(data.localWaitingIndex))
                     {
-                        KeyValuePair<uint, bool> parentIDPair = new KeyValuePair<uint, bool>(haveParentID ? (uint)parentTrackedItem.data.trackedID : parentTrackedItem.data.localWaitingIndex, haveParentID);
-                        if (unknownTrackedIDs.ContainsKey(data.localWaitingIndex))
-                        {
-                            unknownTrackedIDs[data.localWaitingIndex] = parentIDPair;
-                        }
-                        else
-                        {
-                            unknownTrackedIDs.Add(data.localWaitingIndex, parentIDPair);
-                        }
-                        if (!haveParentID)
-                        {
-                            if (unknownParentWaitList.TryGetValue(parentTrackedItem.data.localWaitingIndex, out List<uint> waitList))
-                            {
-                                waitList.Add(data.localWaitingIndex);
-                            }
-                            else
-                            {
-                                unknownParentWaitList.Add(parentTrackedItem.data.localWaitingIndex, new List<uint>() { data.localWaitingIndex });
-                            }
-                        }
+                        unknownTrackedIDs[data.localWaitingIndex] = parentIDPair;
                     }
                     else
                     {
-                        if (haveParentID)
+                        unknownTrackedIDs.Add(data.localWaitingIndex, parentIDPair);
+                    }
+                    if (!haveParentID)
+                    {
+                        if (unknownParentWaitList.TryGetValue(parentTrackedItem.data.localWaitingIndex, out List<uint> waitList))
                         {
-                            if (parentTrackedItem.data.trackedID != data.parent)
+                            waitList.Add(data.localWaitingIndex);
+                        }
+                        else
+                        {
+                            unknownParentWaitList.Add(parentTrackedItem.data.localWaitingIndex, new List<uint>() { data.localWaitingIndex });
+                        }
+                    }
+                }
+                else
+                {
+                    if (haveParentID)
+                    {
+                        if (parentTrackedItem.data.trackedID != data.parent)
+                        {
+                            if (data.controller == H3MP_GameManager.ID)
                             {
                                 Mod.LogInfo(name + " has new parent: " + parentTrackedItem.data.itemID + ", sending");
                                 // We have a parent trackedItem and it is new
@@ -8964,6 +9004,8 @@ namespace H3MP
                                     H3MP_ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
                                 }
 
+                                // Do the following after sending itemParent order in case updateParentFunc is not set for the item and is therefore dependent on 
+                                // an update to attach itself to the parent properly
                                 // Call an update on the item so we can send latest data considering the new parent
                                 data.Update();
 
@@ -8976,12 +9018,15 @@ namespace H3MP
                                 {
                                     H3MP_ClientSend.ItemUpdate(data);
                                 }
-
-                                // Update local
-                                data.SetParent(parentTrackedItem.data, false);
                             }
+
+                            // Update local
+                            data.SetParent(parentTrackedItem.data, false);
                         }
-                        else
+                    }
+                    else
+                    {
+                        if (data.controller == H3MP_GameManager.ID)
                         {
                             if (unknownParentTrackedIDs.ContainsKey(parentTrackedItem.data.localWaitingIndex))
                             {
@@ -8994,11 +9039,14 @@ namespace H3MP
                         }
                     }
                 }
-                else if (data.parent != -1)
+            }
+            else if (data.parent != -1)
+            {
+                if (data.trackedID == -1)
                 {
-                    if (data.trackedID == -1)
+                    if (data.controller == H3MP_GameManager.ID)
                     {
-                        if(unknownTrackedIDs.TryGetValue(data.localWaitingIndex, out KeyValuePair<uint, bool> entry))
+                        if (unknownTrackedIDs.TryGetValue(data.localWaitingIndex, out KeyValuePair<uint, bool> entry))
                         {
                             if (!entry.Value && unknownParentWaitList.TryGetValue(entry.Key, out List<uint> waitlist))
                             {
@@ -9007,7 +9055,10 @@ namespace H3MP
                         }
                         unknownTrackedIDs.Remove(data.localWaitingIndex);
                     }
-                    else
+                }
+                else
+                {
+                    if (data.controller == H3MP_GameManager.ID)
                     {
                         Mod.LogInfo(name + " was unparented, sending to others");
                         // We were detached from current parent
@@ -9020,10 +9071,10 @@ namespace H3MP
                         {
                             H3MP_ClientSend.ItemParent(data.trackedID, -1);
                         }
-
-                        // Update locally
-                        data.SetParent(null, false);
                     }
+
+                    // Update locally
+                    data.SetParent(null, false);
                 }
             }
         }

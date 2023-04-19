@@ -376,8 +376,18 @@ namespace H3MP
             }
             else // We have new parent
             {
+                Mod.LogInfo("Item " + itemID + " at " + trackedID + " got parented to "+newParent.itemID+" at "+newParent.trackedID);
                 if (parent != -1) // We had parent before, need to unparent first
                 {
+                    Mod.LogInfo("\tAlready had parent");
+                    if (newParent.trackedID == parent)
+                    {
+                        Mod.LogInfo("\t\tAlready same parent, returning");
+                        // Already attached to correct parent
+                        return;
+                    }
+                    Mod.LogInfo("\t\tDetaching");
+
                     H3MP_TrackedItemData previousParent = null;
                     if (H3MP_ThreadManager.host)
                     {
@@ -395,6 +405,7 @@ namespace H3MP
                         previousParent.children = null;
                     }
                 }
+                Mod.LogInfo("\t\tAttaching");
 
                 // Set new parent
                 parent = newParent.trackedID;
