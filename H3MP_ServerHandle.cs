@@ -451,11 +451,11 @@ namespace H3MP
                 }
                 else if (trackedItem.controller == 0 && newController != 0)
                 {
-                    if (trackedItem.physicalItem != null) 
+                    if (trackedItem.physicalItem != null)
                     {
-                        Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
-
                         H3MP_GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
+
+                        Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
                     }
                     trackedItem.RemoveFromLocal();
                 }
