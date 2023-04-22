@@ -313,7 +313,12 @@ namespace H3MP
         public static void UpdatePlayerScene(int playerID, string sceneName)
         {
             Mod.LogInfo("Player " + playerID + " joining scene " + sceneName, false);
-            H3MP_PlayerManager player = players[playerID];
+            H3MP_PlayerManager player = null;
+            if (!players.TryGetValue(playerID, out player))
+            {
+                // Player not yet spawned, which can happen if received scene update of another player while server was still sending us welcome
+                return;
+            }
 
             // Remove from scene/instance
             playersByInstanceByScene[player.scene][player.instance].Remove(player.ID);
