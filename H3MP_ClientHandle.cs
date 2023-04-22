@@ -1645,26 +1645,34 @@ namespace H3MP
             int itemTrackedID = packet.ReadInt();
             bool primaryHand = packet.ReadBool();
 
-            Mod.LogInfo("Client received SosigPickUpItem for sosig:" + sosigTrackedID + " to pickup item: " + itemTrackedID + ", in primary hand?: " + primaryHand + ", sosigs array null?: " + (H3MP_Client.sosigs == null), false);
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if(trackedSosig != null)
             {
-                Mod.LogInfo("\tGot sosig data, inventory null?: " + (trackedSosig.inventory == null), false);
                 trackedSosig.inventory[primaryHand ? 0 : 1] = itemTrackedID;
 
                 if (trackedSosig.physicalObject != null)
                 {
-                    Mod.LogInfo("\t\tGot phys, primary hand null?: " + (trackedSosig.physicalObject.physicalSosigScript.Hand_Primary == null) +", sencondary hand null?: " + (trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary == null), false);
-                    ++SosigPickUpPatch.skip;
-                    if (primaryHand)
+                    if (H3MP_Client.items[itemTrackedID] == null)
                     {
-                        trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        Mod.LogError("SosigPickUpItem: item at "+itemTrackedID+" is missing item data!");
+                    }
+                    else if (H3MP_Client.items[itemTrackedID].physicalItem == null)
+                    {
+                        H3MP_Client.items[itemTrackedID].toPutInSosigInventory = new int[] { sosigTrackedID, primaryHand ? 0 : 1 };
                     }
                     else
                     {
-                        trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        ++SosigPickUpPatch.skip;
+                        if (primaryHand)
+                        {
+                            trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        }
+                        else
+                        {
+                            trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        }
+                        --SosigPickUpPatch.skip;
                     }
-                    --SosigPickUpPatch.skip;
                 }
             }
         }
@@ -1675,19 +1683,27 @@ namespace H3MP
             int itemTrackedID = packet.ReadInt();
             int slotIndex = packet.ReadInt();
 
-            Mod.LogInfo("Client received SosigPlaceItemIn for sosig:" + sosigTrackedID + " to pickup item: " + itemTrackedID + ", in slot: " + slotIndex + ", sosigs array null?: " + (H3MP_Client.sosigs == null), false);
-
             H3MP_TrackedSosigData trackedSosig = H3MP_Client.sosigs[sosigTrackedID];
             if(trackedSosig != null)
             {
-                Mod.LogInfo("\tGot sosig data, inventory null?: " + (trackedSosig.inventory == null), false);
                 trackedSosig.inventory[slotIndex + 2] = itemTrackedID;
 
                 if (trackedSosig.physicalObject != null)
                 {
-                    ++SosigPlaceObjectInPatch.skip;
-                    trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
-                    --SosigPlaceObjectInPatch.skip;
+                    if (H3MP_Client.items[itemTrackedID] == null)
+                    {
+                        Mod.LogError("SosigPickUpItem: item at " + itemTrackedID + " is missing item data!");
+                    }
+                    else if (H3MP_Client.items[itemTrackedID].physicalItem == null)
+                    {
+                        H3MP_Client.items[itemTrackedID].toPutInSosigInventory = new int[] { sosigTrackedID, slotIndex + 2 };
+                    }
+                    else
+                    {
+                        ++SosigPlaceObjectInPatch.skip;
+                        trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        --SosigPlaceObjectInPatch.skip;
+                    }
                 }
             }
         }
@@ -3251,11 +3267,14 @@ namespace H3MP
                 indices.Add(packet.ReadInt());
                 points.Add(packet.ReadVector3());
             }
+            Mod.LogInfo("Client received encryption init for encryption at " + trackedID);
 
             if (H3MP_Client.encryptions[trackedID] != null)
             {
+                Mod.LogInfo("\tGot encryption "+ H3MP_Client.encryptions[trackedID].type+ ", tendrils active null?: "+(H3MP_Client.encryptions[trackedID].tendrilsActive == null)+ ", growthPoints null?: "+ (H3MP_Client.encryptions[trackedID].growthPoints == null)+ ", subTargsPos null?: " + (H3MP_Client.encryptions[trackedID].subTargsPos == null)+ ", subTargsActive null?: " + (H3MP_Client.encryptions[trackedID].subTargsActive == null)+ ", subTargsActive null?: " + (H3MP_Client.encryptions[trackedID].subTargsActive == null)+ ", tendrilFloats null?: " + (H3MP_Client.encryptions[trackedID].tendrilFloats == null));
                 for (int i = 0; i < count; ++i)
                 {
+                    Mod.LogInfo("\t\tGot active growth at " + indices[i]);
                     H3MP_Client.encryptions[trackedID].tendrilsActive[indices[i]] = true;
                     H3MP_Client.encryptions[trackedID].growthPoints[indices[i]] = points[i];
                     H3MP_Client.encryptions[trackedID].subTargsPos[indices[i]] = points[i];
@@ -3263,11 +3282,14 @@ namespace H3MP
                     H3MP_Client.encryptions[trackedID].tendrilFloats[indices[i]] = 1f;
                 }
 
+                Mod.LogInfo("\tInited growths");
                 if (H3MP_Client.encryptions[trackedID].physicalObject != null)
                 {
+                    Mod.LogInfo("\t\tGot phys");
                     ++EncryptionSpawnGrowthPatch.skip;
                     for (int i = 0; i < count; ++i)
                     {
+                        Mod.LogInfo("\t\t\tSpawning growth at "+ indices[i]);
                         Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { indices[i], points[i] });
                     }
                     --EncryptionSpawnGrowthPatch.skip;

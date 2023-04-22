@@ -1879,18 +1879,29 @@ namespace H3MP
             {
                 trackedSosig.inventory[primaryHand ? 0 : 1] = itemTrackedID;
 
-                if (trackedSosig.physicalObject != null && H3MP_Server.items[itemTrackedID] != null && H3MP_Server.items[itemTrackedID].physicalItem != null)
+                if (trackedSosig.physicalObject != null)
                 {
-                    ++SosigPickUpPatch.skip;
-                    if (primaryHand)
+                    if (H3MP_Server.items[itemTrackedID] == null)
                     {
-                        trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        Mod.LogError("SosigPickUpItem: item at " + itemTrackedID + " is missing item data!");
+                    }
+                    else if (H3MP_Server.items[itemTrackedID].physicalItem == null)
+                    {
+                        H3MP_Server.items[itemTrackedID].toPutInSosigInventory = new int[] { sosigTrackedID, primaryHand ? 0 : 1 };
                     }
                     else
                     {
-                        trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        ++SosigPickUpPatch.skip;
+                        if (primaryHand)
+                        {
+                            trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        }
+                        else
+                        {
+                            trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        }
+                        --SosigPickUpPatch.skip;
                     }
-                    --SosigPickUpPatch.skip;
                 }
             }
 
@@ -1910,9 +1921,20 @@ namespace H3MP
 
                 if (trackedSosig.physicalObject != null)
                 {
-                    ++SosigPlaceObjectInPatch.skip;
-                    trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
-                    --SosigPlaceObjectInPatch.skip;
+                    if (H3MP_Server.items[itemTrackedID] == null)
+                    {
+                        Mod.LogError("SosigPickUpItem: item at " + itemTrackedID + " is missing item data!");
+                    }
+                    else if (H3MP_Server.items[itemTrackedID].physicalItem == null)
+                    {
+                        H3MP_Server.items[itemTrackedID].toPutInSosigInventory = new int[] { sosigTrackedID, slotIndex + 2 };
+                    }
+                    else
+                    {
+                        ++SosigPlaceObjectInPatch.skip;
+                        trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[slotIndex].PlaceObjectIn(H3MP_Server.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        --SosigPlaceObjectInPatch.skip;
+                    }
                 }
             }
 
