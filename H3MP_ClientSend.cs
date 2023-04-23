@@ -2780,5 +2780,15 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void TNHHostStartHold(int instance)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHostStartHold))
+            {
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

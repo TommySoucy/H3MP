@@ -4923,5 +4923,23 @@ namespace H3MP
                 Mod.LogError("Server got order to set shell slide state of CG " + trackedID + " but we are missing item data!");
             }
         }
+
+        public static void TNHHostStartHold(int clientID, H3MP_Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+            {
+                if (Mod.currentTNHInstance.manager != null && !Mod.currentTNHInstance.holdOngoing)
+                {
+                    GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode.position, true);
+                    Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].BeginHoldChallenge();
+                }
+            }
+            else
+            {
+                H3MP_ServerSend.TNHHostStartHold(Mod.currentTNHInstance.instance, clientID);
+            }
+        }
     }
 }

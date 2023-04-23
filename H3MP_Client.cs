@@ -511,6 +511,7 @@ namespace H3MP
                 H3MP_ClientHandle.CarlGustafLatchSate,
                 H3MP_ClientHandle.CarlGustafShellSlideSate,
                 H3MP_ClientHandle.ItemUpdate,
+                H3MP_ClientHandle.TNHHostStartHold,
             };
 
             // All vanilla scenes can be synced by default

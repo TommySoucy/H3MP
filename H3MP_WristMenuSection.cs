@@ -74,11 +74,13 @@ namespace H3MP
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousIFFClicked, "<", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnColorByIFFClicked, "Color by IFF ("+H3MP_GameManager.colorByIFF+")", out colorByIFFText);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnNameplatesClicked, "Nameplates ("+ (H3MP_GameManager.nameplateMode == 0 ? "All" : (H3MP_GameManager.nameplateMode == 1 ? "Friendly Only" : "None"))+ ")", out nameplateText);
+            
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarModeClicked, "Radar mode ("+ (H3MP_GameManager.radarMode == 0 ? "All" : (H3MP_GameManager.radarMode == 1 ? "Friendly Only" : "None"))+ ")", out radarModeText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarColorClicked, "Radar color IFF ("+ H3MP_GameManager.radarColor + ")", out radarColorText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnMaxHealthClicked, "Max health: "+ (H3MP_GameManager.maxHealthIndex == -1 ? "Not set" : H3MP_GameManager.maxHealths[H3MP_GameManager.maxHealthIndex].ToString()), out maxHealthText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnHostStartHoldClicked, "Debug: Host start hold", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
@@ -633,6 +635,44 @@ namespace H3MP
             {
                 SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
             }
+        }
+
+        private void OnHostStartHoldClicked(Text textRef)
+        {
+            if (Mod.managerObject == null)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
+                return;
+            }
+
+            if(Mod.currentTNHInstance != null && !Mod.currentTNHInstance.holdOngoing && Mod.currentTNHInstance.controller != -1)
+            {
+                if(Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
+                {
+                    if (Mod.currentTNHInstance.manager != null)
+                    {
+                        SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+                        GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode.position, true);
+                        Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].BeginHoldChallenge();
+                        return;
+                    }
+                }
+                else
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        H3MP_ServerSend.TNHHostStartHold(Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        H3MP_ClientSend.TNHHostStartHold(Mod.currentTNHInstance.instance);
+                    }
+                    return;
+                }
+            }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
         }
 
         private void OnNextOptionsClicked(Text textRef)
