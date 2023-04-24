@@ -4193,7 +4193,7 @@ namespace H3MP
             // Set lid latch state
             if (newData[5] == 0) // Closed
             {
-                if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Closed)
+                if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Closed && asCG.TailLatch.m_hand == null)
                 {
                     float val = asCG.TailLatch.IsMinOpen ? asCG.TailLatch.RotMax : asCG.TailLatch.RotMin;
                     Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch, val);
@@ -4204,7 +4204,7 @@ namespace H3MP
             }
             else if (newData[5] == 1) // Middle
             {
-                if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Middle)
+                if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Middle && asCG.TailLatch.m_hand == null)
                 {
                     float val = Mathf.Lerp(asCG.TailLatch.RotMin, asCG.TailLatch.RotMax, 0.5f);
                     Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch, val);
@@ -4213,7 +4213,7 @@ namespace H3MP
                     asCG.TailLatch.LState = CarlGustafLatch.CGLatchState.Middle;
                 }
             }
-            else if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Open)
+            else if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Open && asCG.TailLatch.m_hand == null)
             {
                     float val = asCG.TailLatch.IsMinOpen ? asCG.TailLatch.RotMin : asCG.TailLatch.RotMax;
                     Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch, val);
@@ -4225,7 +4225,7 @@ namespace H3MP
             // Set shell slide state
             if (newData[6] == 0) // In
             {
-                if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.In)
+                if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.In && asCG.ShellInsertEject.m_hand == null)
                 {
                     Mod.CarlGustafShellInsertEject_m_curZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Forward.localPosition.z);
                     Mod.CarlGustafShellInsertEject_m_tarZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Forward.localPosition.z);
@@ -4235,7 +4235,7 @@ namespace H3MP
             }
             else if (newData[6] == 1) // Middle
             {
-                if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.Middle)
+                if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.Middle && asCG.ShellInsertEject.m_hand == null)
                 {
                     float val = Mathf.Lerp(asCG.TailLatch.RotMin, asCG.TailLatch.RotMax, 0.5f);
                     Mod.CarlGustafShellInsertEject_m_curZ.SetValue(asCG.ShellInsertEject, val);
@@ -4244,7 +4244,7 @@ namespace H3MP
                     asCG.ShellInsertEject.CSState = CarlGustafShellInsertEject.ChamberSlideState.Middle;
                 }
             }
-            else if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.Out)
+            else if (asCG.ShellInsertEject.CSState != CarlGustafShellInsertEject.ChamberSlideState.Out && asCG.ShellInsertEject.m_hand == null)
             {
                 Mod.CarlGustafShellInsertEject_m_curZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Back.localPosition.z);
                 Mod.CarlGustafShellInsertEject_m_tarZ.SetValue(asCG.ShellInsertEject, asCG.ShellInsertEject.ChamberPoint_Back.localPosition.z);
@@ -4255,7 +4255,7 @@ namespace H3MP
             // Set lock latch state
             if (newData[7] == 0) // Closed
             {
-                if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Closed)
+                if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Closed && asCG.TailLatch.RestrictingLatch.m_hand == null)
                 {
                     float val = asCG.TailLatch.RestrictingLatch.IsMinOpen ? asCG.TailLatch.RestrictingLatch.RotMax : asCG.TailLatch.RestrictingLatch.RotMin;
                     Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
@@ -4266,7 +4266,7 @@ namespace H3MP
             }
             else if (newData[7] == 1) // Middle
             {
-                if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Middle)
+                if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Middle && asCG.TailLatch.RestrictingLatch.m_hand == null)
                 {
                     float val = Mathf.Lerp(asCG.TailLatch.RestrictingLatch.RotMin, asCG.TailLatch.RestrictingLatch.RotMax, 0.5f);
                     Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
@@ -4275,13 +4275,13 @@ namespace H3MP
                     asCG.TailLatch.RestrictingLatch.LState = CarlGustafLatch.CGLatchState.Middle;
                 }
             }
-            else if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Open)
+            else if (asCG.TailLatch.RestrictingLatch.LState != CarlGustafLatch.CGLatchState.Open && asCG.TailLatch.RestrictingLatch.m_hand == null)
             {
-                    float val = asCG.TailLatch.RestrictingLatch.IsMinOpen ? asCG.TailLatch.RestrictingLatch.RotMin : asCG.TailLatch.RestrictingLatch.RotMax;
-                    Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
-                    Mod.CarlGustafLatch_m_tarRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
-                    asCG.TailLatch.RestrictingLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
-                    asCG.TailLatch.RestrictingLatch.LState = CarlGustafLatch.CGLatchState.Open;
+                float val = asCG.TailLatch.RestrictingLatch.IsMinOpen ? asCG.TailLatch.RestrictingLatch.RotMin : asCG.TailLatch.RestrictingLatch.RotMax;
+                Mod.CarlGustafLatch_m_curRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
+                Mod.CarlGustafLatch_m_tarRot.SetValue(asCG.TailLatch.RestrictingLatch, val);
+                asCG.TailLatch.RestrictingLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                asCG.TailLatch.RestrictingLatch.LState = CarlGustafLatch.CGLatchState.Open;
             }
 
             data.data = newData;
