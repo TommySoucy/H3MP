@@ -4133,7 +4133,7 @@ namespace H3MP
                     }
                     else
                     {
-                        AutoMeater autoMeater = ___m_currentInteractable.GetComponent<AutoMeater>();
+                        AutoMeater autoMeater = preObject.GetComponent<AutoMeater>();
                         if (autoMeater != null)
                         {
                             // We just dropped an AutoMeater

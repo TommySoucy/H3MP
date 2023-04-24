@@ -1,9 +1,7 @@
-﻿using ErosionBrushPlugin;
-using FistVR;
+﻿using FistVR;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 
 namespace H3MP
