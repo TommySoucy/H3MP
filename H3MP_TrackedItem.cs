@@ -1,7 +1,9 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using static FistVR.sblpCell;
 
 namespace H3MP
 {
@@ -144,126 +146,351 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenSpeedloader;
                 dataObject = physObj as Speedloader;
             }
-            else if (physObj is ClosedBoltWeapon)
+            else if(physObj is FVRFireArm)
             {
-                ClosedBoltWeapon asCBW = (ClosedBoltWeapon)physObj;
-                updateFunc = UpdateClosedBoltWeapon;
-                updateGivenFunc = UpdateGivenClosedBoltWeapon;
-                dataObject = asCBW;
-                fireFunc = FireCBW;
-                setFirearmUpdateOverride = SetCBWUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-                chamberRound = ChamberClosedBoltWeaponRound;
-            }
-            else if (physObj is OpenBoltReceiver)
-            {
-                OpenBoltReceiver asOBR = (OpenBoltReceiver)physObj;
-                updateFunc = UpdateOpenBoltReceiver;
-                updateGivenFunc = UpdateGivenOpenBoltReceiver;
-                dataObject = asOBR;
-                fireFunc = FireOBR;
-                setFirearmUpdateOverride = SetOBRUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-                chamberRound = ChamberOpenBoltReceiverRound;
-            }
-            else if (physObj is BoltActionRifle)
-            {
-                BoltActionRifle asBAR = (BoltActionRifle)physObj;
-                updateFunc = UpdateBoltActionRifle;
-                updateGivenFunc = UpdateGivenBoltActionRifle;
-                dataObject = asBAR;
-                fireFunc = FireBAR;
-                setFirearmUpdateOverride = SetBARUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-                chamberRound = ChamberBoltActionRifleRound;
-            }
-            else if (physObj is Handgun)
-            {
-                Handgun asHandgun = (Handgun)physObj;
-                updateFunc = UpdateHandgun;
-                updateGivenFunc = UpdateGivenHandgun;
-                dataObject = asHandgun;
-                fireFunc = FireHandgun;
-                setFirearmUpdateOverride = SetHandgunUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-                chamberRound = ChamberHandgunRound;
-            }
-            else if (physObj is TubeFedShotgun)
-            {
-                TubeFedShotgun asTFS = (TubeFedShotgun)physObj;
-                updateFunc = UpdateTubeFedShotgun;
-                updateGivenFunc = UpdateGivenTubeFedShotgun;
-                dataObject = asTFS;
-                fireFunc = FireTFS;
-                setFirearmUpdateOverride = SetTFSUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-                chamberRound = ChamberTubeFedShotgunRound;
-            }
-            else if (physObj is Revolver)
-            {
-                Revolver asRevolver = (Revolver)physObj;
-                updateFunc = UpdateRevolver;
-                updateGivenFunc = UpdateGivenRevolver;
-                dataObject = asRevolver; 
-                getChamberIndex = GetRevolverChamberIndex;
-                chamberRound = ChamberRevolverRound;
-            }
-            else if (physObj is SingleActionRevolver)
-            {
-                SingleActionRevolver asSAR = (SingleActionRevolver)physObj;
-                updateFunc = UpdateSingleActionRevolver;
-                updateGivenFunc = UpdateGivenSingleActionRevolver;
-                dataObject = asSAR;
-                getChamberIndex = GetSingleActionRevolverChamberIndex;
-                chamberRound = ChamberSingleActionRevolverRound;
-            }
-            else if (physObj is RevolvingShotgun)
-            {
-                RevolvingShotgun asRS = (RevolvingShotgun)physObj;
-                updateFunc = UpdateRevolvingShotgun;
-                updateGivenFunc = UpdateGivenRevolvingShotgun;
-                dataObject = asRS;
-                getChamberIndex = GetRevolvingShotgunChamberIndex;
-                chamberRound = ChamberRevolvingShotgunRound;
-            }
-            else if (physObj is BAP)
-            {
-                BAP asBAP = (BAP)physObj;
-                updateFunc = UpdateBAP;
-                updateGivenFunc = UpdateGivenBAP;
-                dataObject = asBAP;
-                fireFunc = FireBAP;
-                setFirearmUpdateOverride = SetBAPUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-                chamberRound = ChamberBAPRound;
-            }
-            else if (physObj is BreakActionWeapon)
-            {
-                updateFunc = UpdateBreakActionWeapon;
-                updateGivenFunc = UpdateGivenBreakActionWeapon;
-                dataObject = physObj as BreakActionWeapon;
-                getChamberIndex = GetBreakActionWeaponChamberIndex;
-                chamberRound = ChamberBreakActionWeaponRound;
-            }
-            else if (physObj is LeverActionFirearm)
-            {
-                LeverActionFirearm LAF = (LeverActionFirearm)physObj;
-                updateFunc = UpdateLeverActionFirearm;
-                updateGivenFunc = UpdateGivenLeverActionFirearm;
-                dataObject = LAF;
-                getChamberIndex = GetLeverActionFirearmChamberIndex;
-                chamberRound = ChamberLeverActionFirearmRound;
-            }
-            else if (physObj is CarlGustaf)
-            {
-                CarlGustaf asCG = (CarlGustaf)physObj;
-                updateFunc = UpdateCarlGustaf;
-                updateGivenFunc = UpdateGivenCarlGustaf;
-                dataObject = asCG;
-                fireFunc = FireCarlGustaf;
-                setFirearmUpdateOverride = SetCarlGustafUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-                chamberRound = ChamberCarlGustafRound;
+                FVRFireArm asFA = physObj as FVRFireArm;
+
+                // Process integrated attachable firearm if we have one
+                if (asFA.GetIntegratedAttachableFirearm() != null)
+                {
+                    if (asFA.GetIntegratedAttachableFirearm() is AttachableBreakActions)
+                    {
+                        attachableFirearmFireFunc = (asFA.GetIntegratedAttachableFirearm() as AttachableBreakActions).Fire;
+                        attachableFirearmChamberRoundFunc = AttachableBreakActionsChamberRound;
+                        attachableFirearmGetChamberFunc = AttachableBreakActionsGetChamber;
+                    }
+                    else if (asFA.GetIntegratedAttachableFirearm() is AttachableClosedBoltWeapon)
+                    {
+                        attachableFirearmFireFunc = (asFA.GetIntegratedAttachableFirearm() as AttachableClosedBoltWeapon).Fire;
+                        attachableFirearmChamberRoundFunc = AttachableClosedBoltWeaponChamberRound;
+                        attachableFirearmGetChamberFunc = AttachableClosedBoltWeaponGetChamber;
+                    }
+                    else if (asFA.GetIntegratedAttachableFirearm() is AttachableTubeFed)
+                    {
+                        attachableFirearmFireFunc = (asFA.GetIntegratedAttachableFirearm() as AttachableTubeFed).Fire;
+                        attachableFirearmChamberRoundFunc = AttachableTubeFedChamberRound;
+                        attachableFirearmGetChamberFunc = AttachableTubeFedGetChamber;
+                    }
+                    else if (asFA.GetIntegratedAttachableFirearm() is GP25)
+                    {
+                        attachableFirearmFireFunc = (asFA.GetIntegratedAttachableFirearm() as GP25).Fire;
+                        attachableFirearmChamberRoundFunc = GP25ChamberRound;
+                        attachableFirearmGetChamberFunc = GP25GetChamber;
+                    }
+                    else if (asFA.GetIntegratedAttachableFirearm() is M203)
+                    {
+                        attachableFirearmFireFunc = (asFA.GetIntegratedAttachableFirearm() as M203).Fire;
+                        attachableFirearmChamberRoundFunc = M203ChamberRound;
+                        attachableFirearmGetChamberFunc = M203GetChamber;
+                    }
+                }
+
+                // Process the type
+                if (asFA is ClosedBoltWeapon)
+                {
+                    ClosedBoltWeapon asCBW = (ClosedBoltWeapon)physObj;
+                    updateFunc = UpdateClosedBoltWeapon;
+                    updateGivenFunc = UpdateGivenClosedBoltWeapon;
+                    dataObject = asCBW;
+                    fireFunc = FireCBW;
+                    setFirearmUpdateOverride = SetCBWUpdateOverride;
+                    getChamberIndex = GetClosedBoltWeaponChamberIndex;
+                    chamberRound = ChamberClosedBoltWeaponRound;
+                }
+                else if (asFA is OpenBoltReceiver)
+                {
+                    OpenBoltReceiver asOBR = (OpenBoltReceiver)physObj;
+                    updateFunc = UpdateOpenBoltReceiver;
+                    updateGivenFunc = UpdateGivenOpenBoltReceiver;
+                    dataObject = asOBR;
+                    fireFunc = FireOBR;
+                    setFirearmUpdateOverride = SetOBRUpdateOverride;
+                    getChamberIndex = GetOpenBoltReceiverChamberIndex;
+                    chamberRound = ChamberOpenBoltReceiverRound;
+                }
+                else if (asFA is BoltActionRifle)
+                {
+                    BoltActionRifle asBAR = (BoltActionRifle)physObj;
+                    updateFunc = UpdateBoltActionRifle;
+                    updateGivenFunc = UpdateGivenBoltActionRifle;
+                    dataObject = asBAR;
+                    fireFunc = FireBAR;
+                    setFirearmUpdateOverride = SetBARUpdateOverride;
+                    getChamberIndex = GetBoltActionRifleChamberIndex;
+                    chamberRound = ChamberBoltActionRifleRound;
+                }
+                else if (asFA is Handgun)
+                {
+                    Handgun asHandgun = (Handgun)physObj;
+                    updateFunc = UpdateHandgun;
+                    updateGivenFunc = UpdateGivenHandgun;
+                    dataObject = asHandgun;
+                    fireFunc = FireHandgun;
+                    setFirearmUpdateOverride = SetHandgunUpdateOverride;
+                    getChamberIndex = GetHandgunChamberIndex;
+                    chamberRound = ChamberHandgunRound;
+                }
+                else if (asFA is TubeFedShotgun)
+                {
+                    TubeFedShotgun asTFS = (TubeFedShotgun)physObj;
+                    updateFunc = UpdateTubeFedShotgun;
+                    updateGivenFunc = UpdateGivenTubeFedShotgun;
+                    dataObject = asTFS;
+                    fireFunc = FireTFS;
+                    setFirearmUpdateOverride = SetTFSUpdateOverride;
+                    getChamberIndex = GetTubeFedShotgunChamberIndex;
+                    chamberRound = ChamberTubeFedShotgunRound;
+                }
+                else if (asFA is Revolver)
+                {
+                    Revolver asRevolver = (Revolver)physObj;
+                    updateFunc = UpdateRevolver;
+                    updateGivenFunc = UpdateGivenRevolver;
+                    dataObject = asRevolver;
+                    getChamberIndex = GetRevolverChamberIndex;
+                    chamberRound = ChamberRevolverRound;
+                }
+                else if (asFA is SingleActionRevolver)
+                {
+                    SingleActionRevolver asSAR = (SingleActionRevolver)physObj;
+                    updateFunc = UpdateSingleActionRevolver;
+                    updateGivenFunc = UpdateGivenSingleActionRevolver;
+                    dataObject = asSAR;
+                    getChamberIndex = GetSingleActionRevolverChamberIndex;
+                    chamberRound = ChamberSingleActionRevolverRound;
+                }
+                else if (asFA is RevolvingShotgun)
+                {
+                    RevolvingShotgun asRS = (RevolvingShotgun)physObj;
+                    updateFunc = UpdateRevolvingShotgun;
+                    updateGivenFunc = UpdateGivenRevolvingShotgun;
+                    dataObject = asRS;
+                    getChamberIndex = GetRevolvingShotgunChamberIndex;
+                    chamberRound = ChamberRevolvingShotgunRound;
+                }
+                else if (asFA is BAP)
+                {
+                    BAP asBAP = (BAP)physObj;
+                    updateFunc = UpdateBAP;
+                    updateGivenFunc = UpdateGivenBAP;
+                    dataObject = asBAP;
+                    fireFunc = FireBAP;
+                    setFirearmUpdateOverride = SetBAPUpdateOverride;
+                    getChamberIndex = GetBAPChamberIndex;
+                    chamberRound = ChamberBAPRound;
+                }
+                else if (asFA is BreakActionWeapon)
+                {
+                    updateFunc = UpdateBreakActionWeapon;
+                    updateGivenFunc = UpdateGivenBreakActionWeapon;
+                    dataObject = physObj as BreakActionWeapon;
+                    getChamberIndex = GetBreakActionWeaponChamberIndex;
+                    chamberRound = ChamberBreakActionWeaponRound;
+                }
+                else if (asFA is LeverActionFirearm)
+                {
+                    LeverActionFirearm LAF = (LeverActionFirearm)physObj;
+                    updateFunc = UpdateLeverActionFirearm;
+                    updateGivenFunc = UpdateGivenLeverActionFirearm;
+                    dataObject = LAF;
+                    getChamberIndex = GetLeverActionFirearmChamberIndex;
+                    chamberRound = ChamberLeverActionFirearmRound;
+                }
+                else if (asFA is CarlGustaf)
+                {
+                    CarlGustaf asCG = (CarlGustaf)physObj;
+                    updateFunc = UpdateCarlGustaf;
+                    updateGivenFunc = UpdateGivenCarlGustaf;
+                    dataObject = asCG;
+                    fireFunc = FireCarlGustaf;
+                    setFirearmUpdateOverride = SetCarlGustafUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                    chamberRound = ChamberCarlGustafRound;
+                }
+                else if (asFA is Derringer)
+                {
+                    updateFunc = UpdateDerringer;
+                    updateGivenFunc = UpdateGivenDerringer;
+                    dataObject = physObj as Derringer;
+                    getChamberIndex = GetDerringerChamberIndex;
+                }
+                else if (asFA is FlameThrower)
+                {
+                    updateFunc = UpdateFlameThrower;
+                    updateGivenFunc = UpdateGivenFlameThrower;
+                    dataObject = physObj as FlameThrower;
+                }
+                else if (asFA is sblp)
+                {
+                    updateFunc = UpdateLaserGun;
+                    updateGivenFunc = UpdateGivenLaserGun;
+                    dataObject = physObj as sblp;
+                }
+                else if (asFA is Flaregun)
+                {
+                    Flaregun asFG = physObj as Flaregun;
+                    updateFunc = UpdateFlaregun;
+                    updateGivenFunc = UpdateGivenFlaregun;
+                    dataObject = asFG;
+                    fireFunc = FireFlaregun;
+                    setFirearmUpdateOverride = SetFlaregunUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is Airgun)
+                {
+                    Airgun asAG = (Airgun)physObj;
+                    updateFunc = UpdateAirgun;
+                    updateGivenFunc = UpdateGivenAirgun;
+                    dataObject = asAG;
+                    fireFunc = FireAirgun;
+                    setFirearmUpdateOverride = SetAirgunUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is FlintlockWeapon)
+                {
+                    updateFunc = UpdateFlintlockWeapon;
+                    updateGivenFunc = UpdateGivenFlintlockWeapon;
+                    dataObject = physObj.GetComponentInChildren<FlintlockBarrel>();
+                }
+                else if (asFA is GBeamer)
+                {
+                    updateFunc = UpdateGBeamer;
+                    updateGivenFunc = UpdateGivenGBeamer;
+                    dataObject = physObj as GBeamer;
+                }
+                else if (asFA is GrappleGun)
+                {
+                    updateFunc = UpdateGrappleGun;
+                    updateGivenFunc = UpdateGivenGrappleGun;
+                    dataObject = physObj as GrappleGun;
+                    getChamberIndex = GetGrappleGunChamberIndex;
+                }
+                else if (asFA is HCB)
+                {
+                    updateFunc = UpdateHCB;
+                    updateGivenFunc = UpdateGivenHCB;
+                    dataObject = physObj as HCB;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is M72)
+                {
+                    M72 asM72 = physObj as M72;
+                    updateFunc = UpdateM72;
+                    updateGivenFunc = UpdateGivenM72;
+                    dataObject = asM72;
+                    fireFunc = FireM72;
+                    setFirearmUpdateOverride = SetM72UpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is Minigun)
+                {
+                    updateFunc = UpdateMinigun;
+                    updateGivenFunc = UpdateGivenMinigun;
+                    dataObject = physObj as Minigun;
+                }
+                else if (asFA is PotatoGun)
+                {
+                    PotatoGun asPG = physObj as PotatoGun;
+                    updateFunc = UpdatePotatoGun;
+                    updateGivenFunc = UpdateGivenPotatoGun;
+                    dataObject = asPG;
+                    fireFunc = FirePotatoGun;
+                    setFirearmUpdateOverride = SetPotatoGunUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is RemoteMissileLauncher)
+                {
+                    RemoteMissileLauncher asRML = physObj as RemoteMissileLauncher;
+                    updateFunc = UpdateRemoteMissileLauncher;
+                    updateGivenFunc = UpdateGivenRemoteMissileLauncher;
+                    dataObject = asRML;
+                    fireFunc = FireRemoteMissileLauncher;
+                    setFirearmUpdateOverride = SetRemoteMissileLauncherUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is StingerLauncher)
+                {
+                    updateFunc = UpdateStingerLauncher;
+                    updateGivenFunc = UpdateGivenStingerLauncher;
+                    dataObject = physObj as StingerLauncher;
+                }
+                else if (asFA is RGM40)
+                {
+                    RGM40 asRGM40 = physObj as RGM40;
+                    updateFunc = UpdateRGM40;
+                    updateGivenFunc = UpdateGivenRGM40;
+                    dataObject = asRGM40;
+                    fireFunc = FireRGM40;
+                    setFirearmUpdateOverride = SetRGM40UpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is RollingBlock)
+                {
+                    RollingBlock asRB = physObj as RollingBlock;
+                    updateFunc = UpdateRollingBlock;
+                    updateGivenFunc = UpdateGivenRollingBlock;
+                    dataObject = asRB;
+                    fireFunc = FireRollingBlock;
+                    setFirearmUpdateOverride = SetRollingBlockUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is RPG7)
+                {
+                    RPG7 asRPG7 = physObj as RPG7;
+                    updateFunc = UpdateRPG7;
+                    updateGivenFunc = UpdateGivenRPG7;
+                    dataObject = asRPG7;
+                    fireFunc = FireRPG7;
+                    setFirearmUpdateOverride = SetRPG7UpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is SimpleLauncher)
+                {
+                    SimpleLauncher asSimpleLauncher = physObj as SimpleLauncher;
+                    updateFunc = UpdateSimpleLauncher;
+                    updateGivenFunc = UpdateGivenSimpleLauncher;
+                    dataObject = asSimpleLauncher;
+                    fireFunc = FireSimpleLauncher;
+                    setFirearmUpdateOverride = SetSimpleLauncherUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is SimpleLauncher2)
+                {
+                    SimpleLauncher2 asSimpleLauncher = physObj as SimpleLauncher2;
+                    updateFunc = UpdateSimpleLauncher2;
+                    updateGivenFunc = UpdateGivenSimpleLauncher2;
+                    dataObject = asSimpleLauncher;
+                    fireFunc = FireSimpleLauncher2;
+                    setFirearmUpdateOverride = SetSimpleLauncher2UpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is MF2_RL)
+                {
+                    MF2_RL asMF2_RL = physObj as MF2_RL;
+                    updateFunc = UpdateMF2_RL;
+                    updateGivenFunc = UpdateGivenMF2_RL;
+                    dataObject = asMF2_RL;
+                    fireFunc = FireMF2_RL;
+                    setFirearmUpdateOverride = SetMF2_RLUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
+                else if (asFA is LAPD2019)
+                {
+                    updateFunc = UpdateLAPD2019;
+                    updateGivenFunc = UpdateGivenLAPD2019;
+                    dataObject = physObj as LAPD2019;
+                    getChamberIndex = GetLAPD2019ChamberIndex;
+                }
+                else
+                {
+                    updateFunc = UpdateFireArm;
+                    updateGivenFunc = UpdateGivenFireArm;
+                    dataObject = asFA;
+                    fireFunc = FireFireArm;
+                    setFirearmUpdateOverride = SetFireArmUpdateOverride;
+                    getChamberIndex = GetFireArmChamberIndex;
+                    chamberRound = ChamberFireArmRound;
+                }
             }
             else if (physObj is Molotov)
             {
@@ -374,180 +601,6 @@ namespace H3MP
                 updateFunc = UpdateSLAM;
                 updateGivenFunc = UpdateGivenSLAM;
                 dataObject = asSLAM;
-            }
-            else if (physObj is Derringer)
-            {
-                updateFunc = UpdateDerringer;
-                updateGivenFunc = UpdateGivenDerringer;
-                dataObject = physObj as Derringer;
-                getChamberIndex = GetDerringerChamberIndex;
-            }
-            else if (physObj is FlameThrower)
-            {
-                updateFunc = UpdateFlameThrower;
-                updateGivenFunc = UpdateGivenFlameThrower;
-                dataObject = physObj as FlameThrower;
-            }
-            else if (physObj is sblp)
-            {
-                updateFunc = UpdateLaserGun;
-                updateGivenFunc = UpdateGivenLaserGun;
-                dataObject = physObj as sblp;
-            }
-            else if (physObj is Flaregun)
-            {
-                Flaregun asFG = physObj as Flaregun;
-                updateFunc = UpdateFlaregun;
-                updateGivenFunc = UpdateGivenFlaregun;
-                dataObject = asFG;
-                fireFunc = FireFlaregun;
-                setFirearmUpdateOverride = SetFlaregunUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is Airgun)
-            {
-                Airgun asAG = (Airgun)physObj;
-                updateFunc = UpdateAirgun;
-                updateGivenFunc = UpdateGivenAirgun;
-                dataObject = asAG;
-                fireFunc = FireAirgun;
-                setFirearmUpdateOverride = SetAirgunUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is FlintlockWeapon)
-            {
-                updateFunc = UpdateFlintlockWeapon;
-                updateGivenFunc = UpdateGivenFlintlockWeapon;
-                dataObject = physObj.GetComponentInChildren<FlintlockBarrel>();
-            }
-            else if (physObj is GBeamer)
-            {
-                updateFunc = UpdateGBeamer;
-                updateGivenFunc = UpdateGivenGBeamer;
-                dataObject = physObj as GBeamer;
-            }
-            else if (physObj is GrappleGun)
-            {
-                updateFunc = UpdateGrappleGun;
-                updateGivenFunc = UpdateGivenGrappleGun;
-                dataObject = physObj as GrappleGun;
-                getChamberIndex = GetGrappleGunChamberIndex;
-            }
-            else if (physObj is HCB)
-            {
-                updateFunc = UpdateHCB;
-                updateGivenFunc = UpdateGivenHCB;
-                dataObject = physObj as HCB;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is M72)
-            {
-                M72 asM72 = physObj as M72;
-                updateFunc = UpdateM72;
-                updateGivenFunc = UpdateGivenM72;
-                dataObject = asM72;
-                fireFunc = FireM72;
-                setFirearmUpdateOverride = SetM72UpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is Minigun)
-            {
-                updateFunc = UpdateMinigun;
-                updateGivenFunc = UpdateGivenMinigun;
-                dataObject = physObj as Minigun;
-            }
-            else if (physObj is PotatoGun)
-            {
-                PotatoGun asPG = physObj as PotatoGun;
-                updateFunc = UpdatePotatoGun;
-                updateGivenFunc = UpdateGivenPotatoGun;
-                dataObject = asPG;
-                fireFunc = FirePotatoGun;
-                setFirearmUpdateOverride = SetPotatoGunUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is RemoteMissileLauncher)
-            {
-                RemoteMissileLauncher asRML = physObj as RemoteMissileLauncher;
-                updateFunc = UpdateRemoteMissileLauncher;
-                updateGivenFunc = UpdateGivenRemoteMissileLauncher;
-                dataObject = asRML;
-                fireFunc = FireRemoteMissileLauncher;
-                setFirearmUpdateOverride = SetRemoteMissileLauncherUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is StingerLauncher)
-            {
-                updateFunc = UpdateStingerLauncher;
-                updateGivenFunc = UpdateGivenStingerLauncher;
-                dataObject = physObj as StingerLauncher;
-            }
-            else if (physObj is RGM40)
-            {
-                RGM40 asRGM40 = physObj as RGM40;
-                updateFunc = UpdateRGM40;
-                updateGivenFunc = UpdateGivenRGM40;
-                dataObject = asRGM40;
-                fireFunc = FireRGM40;
-                setFirearmUpdateOverride = SetRGM40UpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is RollingBlock)
-            {
-                RollingBlock asRB = physObj as RollingBlock;
-                updateFunc = UpdateRollingBlock;
-                updateGivenFunc = UpdateGivenRollingBlock;
-                dataObject = asRB;
-                fireFunc = FireRollingBlock;
-                setFirearmUpdateOverride = SetRollingBlockUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is RPG7)
-            {
-                RPG7 asRPG7 = physObj as RPG7;
-                updateFunc = UpdateRPG7;
-                updateGivenFunc = UpdateGivenRPG7;
-                dataObject = asRPG7;
-                fireFunc = FireRPG7;
-                setFirearmUpdateOverride = SetRPG7UpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is SimpleLauncher)
-            {
-                SimpleLauncher asSimpleLauncher = physObj as SimpleLauncher;
-                updateFunc = UpdateSimpleLauncher;
-                updateGivenFunc = UpdateGivenSimpleLauncher;
-                dataObject = asSimpleLauncher;
-                fireFunc = FireSimpleLauncher;
-                setFirearmUpdateOverride = SetSimpleLauncherUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is SimpleLauncher2)
-            {
-                SimpleLauncher2 asSimpleLauncher = physObj as SimpleLauncher2;
-                updateFunc = UpdateSimpleLauncher2;
-                updateGivenFunc = UpdateGivenSimpleLauncher2;
-                dataObject = asSimpleLauncher;
-                fireFunc = FireSimpleLauncher2;
-                setFirearmUpdateOverride = SetSimpleLauncher2UpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is MF2_RL)
-            {
-                MF2_RL asMF2_RL = physObj as MF2_RL;
-                updateFunc = UpdateMF2_RL;
-                updateGivenFunc = UpdateGivenMF2_RL;
-                dataObject = asMF2_RL;
-                fireFunc = FireMF2_RL;
-                setFirearmUpdateOverride = SetMF2_RLUpdateOverride;
-                getChamberIndex = GetFirstChamberIndex;
-            }
-            else if (physObj is LAPD2019)
-            {
-                updateFunc = UpdateLAPD2019;
-                updateGivenFunc = UpdateGivenLAPD2019;
-                dataObject = physObj as LAPD2019;
-                getChamberIndex = GetLAPD2019ChamberIndex;
             }
             else if (physObj is LAPD2019Battery)
             {
@@ -692,17 +745,6 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenSosigWeaponInterface;
                 dataObject = asInterface;
                 sosigWeaponfireFunc = asInterface.W.FireGun;
-            }
-            else if(physObj is FVRFireArm)
-            {
-                FVRFireArm asFA = physObj as FVRFireArm;
-                updateFunc = UpdateFireArm;
-                updateGivenFunc = UpdateGivenFireArm;
-                dataObject = asFA;
-                fireFunc = FireFireArm;
-                setFirearmUpdateOverride = SetFireArmUpdateOverride;
-                getChamberIndex = GetFireArmChamberIndex;
-                chamberRound = ChamberFireArmRound;
             }
         }
 
@@ -2040,7 +2082,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[necessarySize];
+                data.data = new byte[asRevolver.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
                 modified = true;
             }
 
@@ -2081,6 +2123,28 @@ namespace H3MP
                 }
 
                 modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+            }
+
+            if (asRevolver.GetIntegratedAttachableFirearm() != null)
+            {
+                preval0 = data.data[necessarySize];
+                preval1 = data.data[necessarySize + 1];
+                preval2 = data.data[necessarySize + 2];
+                preval3 = data.data[necessarySize + 3];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, necessarySize + 2);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, necessarySize);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, necessarySize + 2);
+                }
+
+                modified |= (preval0 != data.data[necessarySize] || preval1 != data.data[necessarySize + 1] || preval2 != data.data[necessarySize + 2] || preval3 != data.data[necessarySize + 3]);
             }
 
             return modified;
@@ -2159,6 +2223,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asRevolver.GetIntegratedAttachableFirearm() != null)
+            {
+                short chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
+                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -2174,7 +2280,12 @@ namespace H3MP
                 return -1;
             }
 
-            for(int i=0; i < chambers.Count; ++i)
+            if (asRevolver.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
+            {
+                return chambers.Count;
+            }
+
+            for (int i=0; i < chambers.Count; ++i)
             {
                 if (chambers[i] == chamber)
                 {
@@ -2190,7 +2301,14 @@ namespace H3MP
             SingleActionRevolver asRevolver = dataObject as SingleActionRevolver;
 
             ++ChamberPatch.chamberSkip;
-            asRevolver.GetChambers()[chamberIndex].SetRound(roundClass, asRevolver.GetChambers()[chamberIndex].transform.position, asRevolver.GetChambers()[chamberIndex].transform.rotation);
+            if(chamberIndex == asRevolver.GetChambers().Count)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asRevolver.GetChambers()[chamberIndex].transform.position, asRevolver.GetChambers()[chamberIndex].transform.rotation);
+            }
+            else
+            {
+                asRevolver.GetChambers()[chamberIndex].SetRound(roundClass, asRevolver.GetChambers()[chamberIndex].transform.position, asRevolver.GetChambers()[chamberIndex].transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -3262,7 +3380,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[6];
+                data.data = new byte[asOBR.GetIntegratedAttachableFirearm() == null ? 6 : 10];
                 modified = true;
             }
 
@@ -3297,6 +3415,28 @@ namespace H3MP
             }
 
             modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+
+            if (asOBR.GetIntegratedAttachableFirearm() != null)
+            {
+                preval = data.data[6];
+                preval0 = data.data[7];
+                preval1 = data.data[8];
+                preval2 = data.data[9];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 8);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 6);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 8);
+                }
+
+                modified |= (preval != data.data[6] || preval0 != data.data[7] || preval1 != data.data[8] || preval2 != data.data[9]);
+            }
 
             return modified;
         }
@@ -3370,6 +3510,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asOBR.GetIntegratedAttachableFirearm() != null)
+            {
+                chamberTypeIndex = BitConverter.ToInt16(newData, 6);
+                chamberClassIndex = BitConverter.ToInt16(newData, 8);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -3387,12 +3569,33 @@ namespace H3MP
             asOBR.Chamber.RoundType = prevRoundType;
         }
 
+        private int GetOpenBoltReceiverChamberIndex(FVRFireArmChamber chamber)
+        {
+            OpenBoltReceiver asOBR = dataObject as OpenBoltReceiver;
+
+            if (asOBR.GetIntegratedAttachableFirearm() == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return chamber == asOBR.Chamber ? 0 : 1;
+            }
+        }
+
         private void ChamberOpenBoltReceiverRound(FireArmRoundClass roundClass, FireArmRoundType roundType, int chamberIndex)
         {
             OpenBoltReceiver asOBR = dataObject as OpenBoltReceiver;
 
             ++ChamberPatch.chamberSkip;
-            asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+            if (chamberIndex == 1)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+            }
+            else
+            {
+                asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -4171,7 +4374,8 @@ namespace H3MP
                     asCG.ChargingHandle.localPosition = new Vector3(asCG.ChargingHandle.localPosition.x, asCG.ChargingHandle.localPosition.y, asCG.ChargingHandForward.localPosition.z);
                     asCG.CHState = CarlGustaf.ChargingHandleState.Forward;
                 }
-            }else if (newData[4] == 1) // Middle
+            }
+            else if (newData[4] == 1) // Middle
             {
                 if (asCG.CHState != CarlGustaf.ChargingHandleState.Middle)
                 {
@@ -4323,7 +4527,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[10];
+                data.data = new byte[asLAF.GetIntegratedAttachableFirearm() == null ? 10 : 14];
                 modified = true;
             }
 
@@ -4378,6 +4582,28 @@ namespace H3MP
                 data.data[9] = ((bool)Mod.LeverActionFirearm_m_isHammerCocked2.GetValue(asLAF)) ? (byte)1 : (byte)0;
 
                 modified |= preval0 != data.data[9];
+            }
+
+            if (asLAF.GetIntegratedAttachableFirearm() != null)
+            {
+                preval0 = data.data[10];
+                preval1 = data.data[11];
+                preval2 = data.data[12];
+                preval3 = data.data[13];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 12);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 10);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 12);
+                }
+
+                modified |= (preval0 != data.data[10] || preval1 != data.data[11] || preval2 != data.data[12] || preval3 != data.data[13]);
             }
 
             return modified;
@@ -4473,6 +4699,48 @@ namespace H3MP
                 Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, newData[9] == 1);
             }
 
+            // Set integrated firearm chamber
+            if (asLAF.GetIntegratedAttachableFirearm() != null)
+            {
+                chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
+                chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -4495,6 +4763,10 @@ namespace H3MP
             {
                 return 1;
             }
+            else if(asLAF.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
+            {
+                return 2;
+            }
 
             return -1;
         }
@@ -4509,10 +4781,16 @@ namespace H3MP
                 asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
                 --ChamberPatch.chamberSkip;
             }
-            else
+            else if(chamberIndex == 1)
             {
                 ++ChamberPatch.chamberSkip;
                 asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                --ChamberPatch.chamberSkip;
+            }
+            else if(chamberIndex == 2)
+            {
+                ++ChamberPatch.chamberSkip;
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
                 --ChamberPatch.chamberSkip;
             }
         }
@@ -4677,7 +4955,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[necessarySize];
+                data.data = new byte[asBreakActionWeapon.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
                 modified = true;
             }
 
@@ -4713,6 +4991,28 @@ namespace H3MP
                 data.data[firstIndex + 4] = asBreakActionWeapon.Barrels[i].m_isHammerCocked ? (byte)1 : (byte)0;
 
                 modified |= preval0 != data.data[firstIndex + 4];
+            }
+
+            if (asBreakActionWeapon.GetIntegratedAttachableFirearm() != null)
+            {
+                preval0 = data.data[necessarySize];
+                preval1 = data.data[necessarySize + 1];
+                preval2 = data.data[necessarySize + 2];
+                preval3 = data.data[necessarySize + 3];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, necessarySize + 2);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, necessarySize);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, necessarySize + 2);
+                }
+
+                modified |= (preval0 != data.data[necessarySize] || preval1 != data.data[necessarySize + 1] || preval2 != data.data[necessarySize + 2] || preval3 != data.data[necessarySize + 3]);
             }
 
             return modified;
@@ -4767,6 +5067,48 @@ namespace H3MP
                 asBreakActionWeapon.Barrels[i].m_isHammerCocked = newData[firstIndex + 4] == 1;
             }
 
+            // Set integrated firearm chamber
+            if (asBreakActionWeapon.GetIntegratedAttachableFirearm() != null)
+            {
+                short chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
+                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -4780,6 +5122,11 @@ namespace H3MP
             if (chamber == null)
             {
                 return -1;
+            }
+
+            if (asBreakActionWeapon.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
+            {
+                return barrels.Length;
             }
 
             for (int i = 0; i < barrels.Length; ++i)
@@ -4798,7 +5145,14 @@ namespace H3MP
             BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
 
             ++ChamberPatch.chamberSkip;
-            asBreakActionWeapon.GetChambers()[chamberIndex].SetRound(roundClass, asBreakActionWeapon.GetChambers()[chamberIndex].transform.position, asBreakActionWeapon.GetChambers()[chamberIndex].transform.rotation);
+            if(chamberIndex == asBreakActionWeapon.Barrels.Length)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asBreakActionWeapon.GetChambers()[chamberIndex].transform.position, asBreakActionWeapon.GetChambers()[chamberIndex].transform.rotation);
+            }
+            else
+            {
+                asBreakActionWeapon.GetChambers()[chamberIndex].SetRound(roundClass, asBreakActionWeapon.GetChambers()[chamberIndex].transform.position, asBreakActionWeapon.GetChambers()[chamberIndex].transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -4809,7 +5163,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[6];
+                data.data = new byte[asBAP.GetIntegratedAttachableFirearm() == null ? 6 : 10];
                 modified = true;
             }
 
@@ -4844,6 +5198,28 @@ namespace H3MP
             }
 
             modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+
+            if (asBAP.GetIntegratedAttachableFirearm() != null)
+            {
+                preval = data.data[6];
+                preval0 = data.data[7];
+                preval1 = data.data[8];
+                preval2 = data.data[9];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 8);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 6);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 8);
+                }
+
+                modified |= (preval != data.data[6] || preval0 != data.data[7] || preval1 != data.data[8] || preval2 != data.data[9]);
+            }
 
             return modified;
         }
@@ -4926,6 +5302,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asBAP.GetIntegratedAttachableFirearm() != null)
+            {
+                chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
+                chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -4948,8 +5366,29 @@ namespace H3MP
             BAP asBAP = dataObject as BAP;
 
             ++ChamberPatch.chamberSkip;
-            asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+            if(chamberIndex == 1)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+            }
+            else
+            {
+                asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
+        }
+
+        private int GetBAPChamberIndex(FVRFireArmChamber chamber)
+        {
+            BAP asBAP = dataObject as BAP;
+
+            if (asBAP.GetIntegratedAttachableFirearm() == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return chamber == asBAP.Chamber ? 0 : 1;
+            }
         }
 
         private bool FireBAP(int chamberIndex)
@@ -4966,7 +5405,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[necessarySize];
+                data.data = new byte[asRS.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
                 modified = true;
             }
 
@@ -5007,6 +5446,28 @@ namespace H3MP
                 }
 
                 modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+            }
+
+            if (asRS.GetIntegratedAttachableFirearm() != null)
+            {
+                preval0 = data.data[necessarySize];
+                preval1 = data.data[necessarySize + 1];
+                preval2 = data.data[necessarySize + 2];
+                preval3 = data.data[necessarySize + 3];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, necessarySize + 2);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, necessarySize);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, necessarySize + 2);
+                }
+
+                modified |= (preval0 != data.data[necessarySize] || preval1 != data.data[necessarySize + 1] || preval2 != data.data[necessarySize + 2] || preval3 != data.data[necessarySize + 3]);
             }
 
             return modified;
@@ -5117,6 +5578,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asRS.GetIntegratedAttachableFirearm() != null)
+            {
+                short chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
+                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -5132,7 +5635,12 @@ namespace H3MP
                 return -1;
             }
 
-            for(int i=0; i < chambers.Length; ++i)
+            if (asRS.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
+            {
+                return chambers.Length;
+            }
+
+            for (int i=0; i < chambers.Length; ++i)
             {
                 if (chambers[i] == chamber)
                 {
@@ -5148,7 +5656,14 @@ namespace H3MP
             RevolvingShotgun asRS = dataObject as RevolvingShotgun;
 
             ++ChamberPatch.chamberSkip;
-            asRS.GetChambers()[chamberIndex].SetRound(roundClass, asRS.GetChambers()[chamberIndex].transform.position, asRS.GetChambers()[chamberIndex].transform.rotation);
+            if(chamberIndex == asRS.GetChambers().Count)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asRS.GetChambers()[chamberIndex].transform.position, asRS.GetChambers()[chamberIndex].transform.rotation);
+            }
+            else
+            {
+                asRS.GetChambers()[chamberIndex].SetRound(roundClass, asRS.GetChambers()[chamberIndex].transform.position, asRS.GetChambers()[chamberIndex].transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -5161,7 +5676,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[necessarySize];
+                data.data = new byte[asRevolver.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
                 modified = true;
             }
 
@@ -5195,6 +5710,28 @@ namespace H3MP
                 }
 
                 modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+            }
+
+            if (asRevolver.GetIntegratedAttachableFirearm() != null)
+            {
+                preval0 = data.data[necessarySize];
+                preval1 = data.data[necessarySize + 1];
+                preval2 = data.data[necessarySize + 2];
+                preval3 = data.data[necessarySize + 3];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, necessarySize + 2);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, necessarySize);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, necessarySize + 2);
+                }
+
+                modified |= (preval0 != data.data[necessarySize] || preval1 != data.data[necessarySize + 1] || preval2 != data.data[necessarySize + 2] || preval3 != data.data[necessarySize + 3]);
             }
 
             return modified;
@@ -5264,6 +5801,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asRevolver.GetIntegratedAttachableFirearm() != null)
+            {
+                short chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
+                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -5277,6 +5856,11 @@ namespace H3MP
             if (chamber == null)
             {
                 return -1;
+            }
+
+            if(asRevolver.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
+            {
+                return chambers.Length;
             }
 
             for (int i = 0; i < chambers.Length; ++i)
@@ -5295,7 +5879,14 @@ namespace H3MP
             Revolver asRevolver = dataObject as Revolver;
 
             ++ChamberPatch.chamberSkip;
-            asRevolver.Chambers[chamberIndex].SetRound(roundClass, asRevolver.Chambers[chamberIndex].transform.position, asRevolver.Chambers[chamberIndex].transform.rotation);
+            if(chamberIndex == asRevolver.Chambers.Length)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asRevolver.Chambers[chamberIndex].transform.position, asRevolver.Chambers[chamberIndex].transform.rotation);
+            }
+            else
+            {
+                asRevolver.Chambers[chamberIndex].SetRound(roundClass, asRevolver.Chambers[chamberIndex].transform.position, asRevolver.Chambers[chamberIndex].transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -5469,7 +6060,15 @@ namespace H3MP
 
         private void M203ChamberRound(FireArmRoundType roundType, FireArmRoundClass roundClass)
         {
-            M203 asM203 = dataObject as M203;
+            M203 asM203 = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asM203 = dataObject as M203;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asM203 = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as M203;
+            }
             FireArmRoundType prevRoundType = asM203.Chamber.RoundType;
             asM203.Chamber.RoundType = roundType;
             ++ChamberPatch.chamberSkip;
@@ -5480,7 +6079,15 @@ namespace H3MP
 
         private FVRFireArmChamber M203GetChamber()
         {
-            M203 asM203 = dataObject as M203;
+            M203 asM203 = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asM203 = dataObject as M203;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asM203 = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as M203;
+            }
             return asM203.Chamber;
         }
 
@@ -5687,7 +6294,15 @@ namespace H3MP
 
         private void GP25ChamberRound(FireArmRoundType roundType, FireArmRoundClass roundClass)
         {
-            GP25 asGP25 = dataObject as GP25;
+            GP25 asGP25 = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asGP25 = dataObject as GP25;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asGP25 = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as GP25;
+            }
             FireArmRoundType prevRoundType = asGP25.Chamber.RoundType;
             asGP25.Chamber.RoundType = roundType;
             ++ChamberPatch.chamberSkip;
@@ -5698,7 +6313,15 @@ namespace H3MP
 
         private FVRFireArmChamber GP25GetChamber()
         {
-            GP25 asGP25 = dataObject as GP25;
+            GP25 asGP25 = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asGP25 = dataObject as GP25;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asGP25 = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as GP25;
+            }
             return asGP25.Chamber;
         }
 
@@ -5973,7 +6596,15 @@ namespace H3MP
 
         private void AttachableTubeFedChamberRound(FireArmRoundType roundType, FireArmRoundClass roundClass)
         {
-            AttachableTubeFed asATF = dataObject as AttachableTubeFed;
+            AttachableTubeFed asATF = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asATF = dataObject as AttachableTubeFed;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asATF = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableTubeFed;
+            }
             FireArmRoundType prevRoundType = asATF.Chamber.RoundType;
             asATF.Chamber.RoundType = roundType;
             ++ChamberPatch.chamberSkip;
@@ -5984,7 +6615,15 @@ namespace H3MP
 
         private FVRFireArmChamber AttachableTubeFedGetChamber()
         {
-            AttachableTubeFed asATF = dataObject as AttachableTubeFed;
+            AttachableTubeFed asATF = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asATF = dataObject as AttachableTubeFed;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asATF = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableTubeFed;
+            }
             return asATF.Chamber;
         }
 
@@ -6232,7 +6871,15 @@ namespace H3MP
 
         private void AttachableClosedBoltWeaponChamberRound(FireArmRoundType roundType, FireArmRoundClass roundClass)
         {
-            AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
+            AttachableClosedBoltWeapon asACBW = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asACBW = dataObject as AttachableClosedBoltWeapon;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asACBW = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableClosedBoltWeapon;
+            }
             FireArmRoundType prevRoundType = asACBW.Chamber.RoundType;
             asACBW.Chamber.RoundType = roundType;
             ++ChamberPatch.chamberSkip;
@@ -6243,7 +6890,15 @@ namespace H3MP
 
         private FVRFireArmChamber AttachableClosedBoltWeaponGetChamber()
         {
-            AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
+            AttachableClosedBoltWeapon asACBW = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asACBW = dataObject as AttachableClosedBoltWeapon;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asACBW = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableClosedBoltWeapon;
+            }
             return asACBW.Chamber;
         }
 
@@ -6443,7 +7098,15 @@ namespace H3MP
 
         private void AttachableBreakActionsChamberRound(FireArmRoundType roundType, FireArmRoundClass roundClass)
         {
-            AttachableBreakActions asABA = dataObject as AttachableBreakActions;
+            AttachableBreakActions asABA = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asABA = dataObject as AttachableBreakActions;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asABA = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableBreakActions;
+            }
             FireArmRoundType prevRoundType = asABA.Chamber.RoundType;
             asABA.Chamber.RoundType = roundType;
             ++ChamberPatch.chamberSkip;
@@ -6454,7 +7117,15 @@ namespace H3MP
 
         private FVRFireArmChamber AttachableBreakActionsGetChamber()
         {
-            AttachableBreakActions asABA = dataObject as AttachableBreakActions;
+            AttachableBreakActions asABA = null;
+            if (dataObject is AttachableFirearm)
+            {
+                asABA = dataObject as AttachableBreakActions;
+            }
+            else // FVRFireArm and this refers to an integrated attachable firearm
+            {
+                asABA = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableBreakActions;
+            }
             return asABA.Chamber;
         }
 
@@ -6818,7 +7489,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[7];
+                data.data = new byte[asCBW.GetIntegratedAttachableFirearm() == null ? 7 : 11];
                 modified = true;
             }
 
@@ -6860,6 +7531,28 @@ namespace H3MP
             }
 
             modified |= (preval != data.data[3] || preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6]);
+
+            if (asCBW.GetIntegratedAttachableFirearm() != null)
+            {
+                preval = data.data[7];
+                preval0 = data.data[8];
+                preval1 = data.data[9];
+                preval2 = data.data[10];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 9);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 7);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 9);
+                }
+
+                modified |= (preval != data.data[7] || preval0 != data.data[8] || preval1 != data.data[9] || preval2 != data.data[10]);
+            }
 
             return modified;
         }
@@ -6951,6 +7644,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asCBW.GetIntegratedAttachableFirearm() != null)
+            {
+                chamberTypeIndex = BitConverter.ToInt16(newData, 7);
+                chamberClassIndex = BitConverter.ToInt16(newData, 9);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -6973,8 +7708,29 @@ namespace H3MP
             ClosedBoltWeapon asCBW = (ClosedBoltWeapon)dataObject;
 
             ++ChamberPatch.chamberSkip;
-            asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+            if(chamberIndex == 1)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+            }
+            else
+            {
+                asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
+        }
+
+        private int GetClosedBoltWeaponChamberIndex(FVRFireArmChamber chamber)
+        {
+            ClosedBoltWeapon asCBW = (ClosedBoltWeapon)dataObject;
+
+            if (asCBW.GetIntegratedAttachableFirearm() == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return chamber == asCBW.Chamber ? 0 : 1;
+            }
         }
 
         private bool FireCBW(int chamberIndex)
@@ -6989,7 +7745,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[7];
+                data.data = new byte[asHandgun.GetIntegratedAttachableFirearm() == null ? 7 : 11];
                 modified = true;
             }
 
@@ -7031,6 +7787,28 @@ namespace H3MP
             }
 
             modified |= (preval != data.data[3] || preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6]);
+
+            if (asHandgun.GetIntegratedAttachableFirearm() != null)
+            {
+                preval = data.data[7];
+                preval0 = data.data[8];
+                preval1 = data.data[9];
+                preval2 = data.data[10];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 9);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 7);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 9);
+                }
+
+                modified |= (preval != data.data[7] || preval0 != data.data[8] || preval1 != data.data[9] || preval2 != data.data[10]);
+            }
 
             return modified;
         }
@@ -7124,6 +7902,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asHandgun.GetIntegratedAttachableFirearm() != null)
+            {
+                chamberTypeIndex = BitConverter.ToInt16(newData, 7);
+                chamberClassIndex = BitConverter.ToInt16(newData, 9);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -7141,12 +7961,33 @@ namespace H3MP
             asHandgun.Chamber.RoundType = prevRoundType;
         }
 
+        private int GetHandgunChamberIndex(FVRFireArmChamber chamber)
+        {
+            Handgun asHandgun = dataObject as Handgun;
+
+            if (asHandgun.GetIntegratedAttachableFirearm() == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return chamber == asHandgun.Chamber ? 0 : 1;
+            }
+        }
+
         private void ChamberHandgunRound(FireArmRoundClass roundClass, FireArmRoundType roundType, int chamberIndex)
         {
             Handgun asHandgun = dataObject as Handgun;
 
             ++ChamberPatch.chamberSkip;
-            asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+            if(chamberIndex == 1)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+            }
+            else
+            {
+                asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -7162,7 +8003,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[8];
+                data.data = new byte[asTFS.GetIntegratedAttachableFirearm() == null ? 8 : 12];
                 modified = true;
             }
 
@@ -7213,6 +8054,28 @@ namespace H3MP
                 data.data[7] = (byte)asTFS.Handle.CurPos;
 
                 modified |= preval != data.data[7];
+            }
+
+            if (asTFS.GetIntegratedAttachableFirearm() != null)
+            {
+                preval = data.data[8];
+                preval0 = data.data[9];
+                preval1 = data.data[10];
+                preval2 = data.data[11];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 10);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 8);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 10);
+                }
+
+                modified |= (preval != data.data[8] || preval0 != data.data[9] || preval1 != data.data[10] || preval2 != data.data[11]);
             }
 
             return modified;
@@ -7322,6 +8185,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asTFS.GetIntegratedAttachableFirearm() != null)
+            {
+                chamberTypeIndex = BitConverter.ToInt16(newData, 8);
+                chamberClassIndex = BitConverter.ToInt16(newData, 11);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -7339,12 +8244,33 @@ namespace H3MP
             asTFS.Chamber.RoundType = prevRoundType;
         }
 
+        private int GetTubeFedShotgunChamberIndex(FVRFireArmChamber chamber)
+        {
+            TubeFedShotgun asTFS = dataObject as TubeFedShotgun;
+
+            if (asTFS.GetIntegratedAttachableFirearm() == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return chamber == asTFS.Chamber ? 0 : 1;
+            }
+        }
+
         private void ChamberTubeFedShotgunRound(FireArmRoundClass roundClass, FireArmRoundType roundType, int chamberIndex)
         {
             TubeFedShotgun asTFS = dataObject as TubeFedShotgun;
 
             ++ChamberPatch.chamberSkip;
-            asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+            if(chamberIndex == 1)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+            }
+            else
+            {
+                asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -7360,7 +8286,7 @@ namespace H3MP
 
             if (data.data == null)
             {
-                data.data = new byte[8];
+                data.data = new byte[asBAR.GetIntegratedAttachableFirearm() == null ? 8 : 12];
                 modified = true;
             }
 
@@ -7409,6 +8335,28 @@ namespace H3MP
             data.data[7] = (byte)asBAR.BoltHandle.HandleRot;
 
             modified |= preval != data.data[7];
+
+            if (asBAR.GetIntegratedAttachableFirearm() != null)
+            {
+                preval = data.data[8];
+                preval0 = data.data[9];
+                preval1 = data.data[10];
+                preval2 = data.data[11];
+
+                // Write chambered round class
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                {
+                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 10);
+                }
+                else
+                {
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 8);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 10);
+                }
+
+                modified |= (preval != data.data[8] || preval0 != data.data[9] || preval1 != data.data[10] || preval2 != data.data[11]);
+            }
 
             return modified;
         }
@@ -7511,6 +8459,48 @@ namespace H3MP
                 }
             }
 
+            // Set integrated firearm chamber
+            if (asBAR.GetIntegratedAttachableFirearm() != null)
+            {
+                chamberTypeIndex = BitConverter.ToInt16(newData, 8);
+                chamberClassIndex = BitConverter.ToInt16(newData, 11);
+                FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
+                if (chamberClassIndex == -1) // We don't want round in chamber
+                {
+                    if (integratedChamber.GetRound() != null)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        integratedChamber.SetRound(null, false);
+                        --ChamberPatch.chamberSkip;
+                        modified = true;
+                    }
+                }
+                else // We want a round in the chamber
+                {
+                    FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                    FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                    if (integratedChamber.GetRound() == null || integratedChamber.GetRound().RoundClass != roundClass)
+                    {
+                        if (integratedChamber.RoundType == roundType)
+                        {
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                        }
+                        else
+                        {
+                            FireArmRoundType prevRoundType = integratedChamber.RoundType;
+                            integratedChamber.RoundType = roundType;
+                            ++ChamberPatch.chamberSkip;
+                            integratedChamber.SetRound(roundClass, integratedChamber.transform.position, integratedChamber.transform.rotation);
+                            --ChamberPatch.chamberSkip;
+                            integratedChamber.RoundType = prevRoundType;
+                        }
+                        modified = true;
+                    }
+                }
+            }
+
             data.data = newData;
 
             return modified;
@@ -7528,12 +8518,33 @@ namespace H3MP
             asBar.Chamber.RoundType = prevRoundType;
         }
 
+        private int GetBoltActionRifleChamberIndex(FVRFireArmChamber chamber)
+        {
+            BoltActionRifle asBar = dataObject as BoltActionRifle;
+
+            if (asBar.GetIntegratedAttachableFirearm() == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return chamber == asBar.Chamber ? 0 : 1;
+            }
+        }
+
         private void ChamberBoltActionRifleRound(FireArmRoundClass roundClass, FireArmRoundType roundType, int chamberIndex)
         {
             BoltActionRifle asBar = dataObject as BoltActionRifle;
 
             ++ChamberPatch.chamberSkip;
-            asBar.Chamber.SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
+            if(chamberIndex == 1)
+            {
+                attachableFirearmGetChamberFunc().SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
+            }
+            else
+            {
+                asBar.Chamber.SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 

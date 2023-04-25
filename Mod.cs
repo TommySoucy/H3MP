@@ -5826,7 +5826,7 @@ namespace H3MP
                 fireSuccessful = false;
             }
         }
-
+        
         static void Postfix(ref AttachableFirearm __instance, bool firedFromInterface)
         {
             --Mod.skipAllInstantiates;
@@ -5850,8 +5850,30 @@ namespace H3MP
             }
 
             // Get tracked item
-            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance.Attachment) ? H3MP_GameManager.trackedItemByItem[__instance.Attachment] : __instance.Attachment.GetComponent<H3MP_TrackedItem>();
-            if (trackedItem != null)
+            H3MP_TrackedItem trackedItem = null;
+            if(__instance.Attachment != null)
+            {
+                trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance.Attachment) ? H3MP_GameManager.trackedItemByItem[__instance.Attachment] : __instance.Attachment.GetComponent<H3MP_TrackedItem>();
+            }
+            if (trackedItem == null) // This AttachableFirearm isn't independent, it is integrated into its OverrideFA
+            {
+                trackedItem = H3MP_GameManager.trackedItemByItem.ContainsKey(__instance.OverrideFA) ? H3MP_GameManager.trackedItemByItem[__instance.OverrideFA] : __instance.OverrideFA.GetComponent<H3MP_TrackedItem>();
+                if (trackedItem != null) 
+                {
+                    if (H3MP_ThreadManager.host)
+                    {
+                        if (trackedItem.data.controller == 0)
+                        {
+                            H3MP_ServerSend.IntegratedFirearmFire(0, trackedItem.data.trackedID, roundType, roundClass, positions, directions);
+                        }
+                    }
+                    else if (trackedItem.data.controller == H3MP_Client.singleton.ID)
+                    {
+                        H3MP_ClientSend.IntegratedFirearmFire(trackedItem.data.trackedID, roundType, roundClass, positions, directions);
+                    }
+                }
+            }
+            else
             {
                 // Send the fire action to other clients only if we control it
                 if (H3MP_ThreadManager.host)

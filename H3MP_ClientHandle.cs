@@ -1561,6 +1561,31 @@ namespace H3MP
                 H3MP_Client.items[trackedID].physicalItem.attachableFirearmFireFunc(firedFromInterface);
             }
         }
+        
+        public static void IntegratedFirearmFire(H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (H3MP_Client.items[trackedID] != null && H3MP_Client.items[trackedID].physicalItem != null)
+            {
+                FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
+                FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
+                FireAttachableFirearmPatch.positions = new List<Vector3>();
+                FireAttachableFirearmPatch.directions = new List<Vector3>();
+                byte count = packet.ReadByte();
+                for (int i = 0; i < count; ++i)
+                {
+                    FireAttachableFirearmPatch.positions.Add(packet.ReadVector3());
+                    FireAttachableFirearmPatch.directions.Add(packet.ReadVector3());
+                }
+                FireAttachableFirearmPatch.overriden = true;
+
+                // Make sure we skip next fire so we don't have a firing feedback loop between clients
+                ++Mod.skipNextFires;
+                H3MP_Client.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundType, roundClass);
+                H3MP_Client.items[trackedID].physicalItem.attachableFirearmFireFunc(false);
+            }
+        }
 
         public static void LAPD2019LoadBattery(H3MP_Packet packet)
         {

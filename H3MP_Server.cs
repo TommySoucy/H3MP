@@ -938,6 +938,7 @@ namespace H3MP
                 H3MP_ServerHandle.CarlGustafShellSlideSate,
                 H3MP_ServerHandle.ItemUpdate,
                 H3MP_ServerHandle.TNHHostStartHold,
+                H3MP_ServerHandle.IntegratedFirearmFire,
             };
 
             items = new H3MP_TrackedItemData[100];
