@@ -14783,6 +14783,8 @@ namespace H3MP
             if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == H3MP_GameManager.ID)
             {
                 Mod.LogInfo("SetPhaseCompletePostfix, we are controller, sending", false);
+                Mod.currentTNHInstance.Reset();
+
                 if (H3MP_ThreadManager.host)
                 {
                     H3MP_ServerSend.TNHSetPhaseComplete(Mod.currentTNHInstance.instance);

@@ -3751,9 +3751,16 @@ namespace H3MP
         {
             int instance = packet.ReadInt();
 
-            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
+            if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))
             {
-                Mod.TNH_Manager_SetPhase_Completed.Invoke(Mod.currentTNHInstance.manager, null);
+                // Update state if necessary
+                if (actualInstance.manager != null)
+                {
+                    Mod.TNH_Manager_SetPhase_Completed.Invoke(Mod.currentTNHInstance.manager, null);
+                }
+
+                // Update data
+                actualInstance.Reset();
             }
 
             H3MP_ServerSend.TNHSetPhaseComplete(instance, clientID);
