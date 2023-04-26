@@ -15466,6 +15466,18 @@ namespace H3MP
 
                     if (beginHoldSendSkip == 0)
                     {
+                        Mod.LogInfo("\t\tNot skipped sending", false);
+                        if (H3MP_ThreadManager.host)
+                        {
+                            H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, false, Mod.currentTNHInstance.controller);
+                        }
+                        else
+                        {
+                            H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false);
+                        }
+                    }
+                    else // Told to skip, begin hold was an order from controller, prepare for data
+                    {
                         // Deletion burst
                         ___m_activeSosigs.Clear();
                         (Mod.TNH_Manager_m_miscEnemies.GetValue(Mod.currentTNHInstance.manager) as List<GameObject>).Clear();
@@ -15485,16 +15497,6 @@ namespace H3MP
                         __instance.M.EnqueueLine(TNH_VoiceLineID.BASE_ResponseTeamEnRoute);
                         ___m_isInHold = true;
                         ___m_numWarnings = 0;
-
-                        Mod.LogInfo("\t\tNot skipped sending", false);
-                        if (H3MP_ThreadManager.host)
-                        {
-                            H3MP_ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, false, Mod.currentTNHInstance.controller);
-                        }
-                        else
-                        {
-                            H3MP_ClientSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false);
-                        }
                     }
 
                     return false;
