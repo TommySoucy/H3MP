@@ -2067,6 +2067,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.TNHHoldBeginChallenge))
             {
+                Mod.LogInfo("TNHHoldBeginChallenge client send", false);
                 packet.Write(instance);
                 packet.Write(controller);
 

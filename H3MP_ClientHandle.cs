@@ -3029,6 +3029,7 @@ namespace H3MP
         {
             int instance = packet.ReadInt();
             bool fromController = packet.ReadBool();
+            Mod.LogInfo("TNHHoldBeginChallenge client handle", false);
             if (fromController)
             {
                 if (H3MP_GameManager.TNHInstances.TryGetValue(instance, out H3MP_TNHInstance actualInstance))

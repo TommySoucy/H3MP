@@ -15463,28 +15463,29 @@ namespace H3MP
                 else
                 {
                     Mod.LogInfo("\tWe are not controller", false);
-                    // Deletion burst
-                    ___m_activeSosigs.Clear();
-                    (Mod.TNH_Manager_m_miscEnemies.GetValue(Mod.currentTNHInstance.manager) as List<GameObject>).Clear();
-
-                    // DeleteAllActiveEntities
-                    ___m_activeTargets.Clear();
-                    Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(__instance, null);
-                    Mod.TNH_HoldPoint_DeleteBarriers.Invoke(__instance, null);
-                    //(Mod.TNH_HoldPoint_m_activeSosigs.GetValue(__instance) as List<Sosig>).Clear(); Done in deletion burst
-                    ___m_activeTurrets.Clear();
-
-                    __instance.NavBlockers.SetActive(true);
-                    ___m_phaseIndex = 0;
-                    ___m_maxPhases = __instance.H.Phases.Count;
-                    __instance.M.EnqueueLine(TNH_VoiceLineID.BASE_IntrusionDetectedInitiatingLockdown);
-                    __instance.M.EnqueueLine(TNH_VoiceLineID.AI_InterfacingWithSystemNode);
-                    __instance.M.EnqueueLine(TNH_VoiceLineID.BASE_ResponseTeamEnRoute);
-                    ___m_isInHold = true;
-                    ___m_numWarnings = 0;
 
                     if (beginHoldSendSkip == 0)
                     {
+                        // Deletion burst
+                        ___m_activeSosigs.Clear();
+                        (Mod.TNH_Manager_m_miscEnemies.GetValue(Mod.currentTNHInstance.manager) as List<GameObject>).Clear();
+
+                        // DeleteAllActiveEntities
+                        ___m_activeTargets.Clear();
+                        Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(__instance, null);
+                        Mod.TNH_HoldPoint_DeleteBarriers.Invoke(__instance, null);
+                        //(Mod.TNH_HoldPoint_m_activeSosigs.GetValue(__instance) as List<Sosig>).Clear(); Done in deletion burst
+                        ___m_activeTurrets.Clear();
+
+                        __instance.NavBlockers.SetActive(true);
+                        ___m_phaseIndex = 0;
+                        ___m_maxPhases = __instance.H.Phases.Count;
+                        __instance.M.EnqueueLine(TNH_VoiceLineID.BASE_IntrusionDetectedInitiatingLockdown);
+                        __instance.M.EnqueueLine(TNH_VoiceLineID.AI_InterfacingWithSystemNode);
+                        __instance.M.EnqueueLine(TNH_VoiceLineID.BASE_ResponseTeamEnRoute);
+                        ___m_isInHold = true;
+                        ___m_numWarnings = 0;
+
                         Mod.LogInfo("\t\tNot skipped sending", false);
                         if (H3MP_ThreadManager.host)
                         {

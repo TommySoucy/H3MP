@@ -3118,6 +3118,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.TNHHoldBeginChallenge))
             {
+                Mod.LogInfo("TNHHoldBeginChallenge server send", false);
                 packet.Write(instance);
                 packet.Write(controller);
 
