@@ -5814,16 +5814,36 @@ namespace H3MP
             ++Mod.skipAllInstantiates;
             if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireAttachableFirearmPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
 
-            H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.Attachment, out H3MP_TrackedItem item) ? item : __instance.Attachment.GetComponent<H3MP_TrackedItem>();
-            if(trackedItem != null && trackedItem.attachableFirearmGetChamberFunc().GetRound() != null)
+            if(__instance.Attachment == null)
             {
-                fireSuccessful = true;
-                roundType = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundType;
-                roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
+                if (__instance.OverrideFA)
+                {
+                    H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.OverrideFA, out H3MP_TrackedItem item) ? item : __instance.OverrideFA.GetComponent<H3MP_TrackedItem>();
+                    if (trackedItem != null && trackedItem.attachableFirearmGetChamberFunc().GetRound() != null)
+                    {
+                        fireSuccessful = true;
+                        roundType = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundType;
+                        roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
+                    }
+                    else
+                    {
+                        fireSuccessful = false;
+                    }
+                }
             }
             else
             {
-                fireSuccessful = false;
+                H3MP_TrackedItem trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(__instance.Attachment, out H3MP_TrackedItem item) ? item : __instance.Attachment.GetComponent<H3MP_TrackedItem>();
+                if (trackedItem != null && trackedItem.attachableFirearmGetChamberFunc().GetRound() != null)
+                {
+                    fireSuccessful = true;
+                    roundType = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundType;
+                    roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
+                }
+                else
+                {
+                    fireSuccessful = false;
+                }
             }
         }
         
