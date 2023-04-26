@@ -1176,7 +1176,9 @@ namespace H3MP
                     // Make sure we skip next fire so we don't have a firing feedback loop between clients
                     ++Mod.skipNextFires;
                     H3MP_Server.items[trackedID].physicalItem.setFirearmUpdateOverride((FireArmRoundType)roundType, (FireArmRoundClass)roundClass, chamberIndex);
+                    ++ProjectileFirePatch.skipBlast;
                     H3MP_Server.items[trackedID].physicalItem.fireFunc(chamberIndex);
+                    --ProjectileFirePatch.skipBlast;
                 }
             }
 
@@ -1303,7 +1305,9 @@ namespace H3MP
                 asBAW.Barrels[barrelIndex].Chamber.RoundType = prevRoundType;
                 // NOTE: Only barrel index is used in the Fire method, other arguments are presumably reserved for later,
                 // TODO: Future: will need to add support later if implemented
+                ++ProjectileFirePatch.skipBlast;
                 asBAW.Fire(barrelIndex, false, 0);
+                --ProjectileFirePatch.skipBlast;
             }
 
             // Send to other clients
@@ -1340,7 +1344,9 @@ namespace H3MP
                 --ChamberPatch.chamberSkip;
                 asDerringer.Barrels[barrelIndex].Chamber.RoundType = prevRoundType;
                 Mod.Derringer_m_curBarrel.SetValue(asDerringer, barrelIndex);
+                ++ProjectileFirePatch.skipBlast;
                 Mod.Derringer_FireBarrel.Invoke(asDerringer, new object[] { barrelIndex });
+                --ProjectileFirePatch.skipBlast;
             }
 
             // Send to other clients
@@ -1377,7 +1383,9 @@ namespace H3MP
                 asRS.Chambers[curChamber].SetRound(roundClass, asRS.Chambers[curChamber].transform.position, asRS.Chambers[curChamber].transform.rotation);
                 --ChamberPatch.chamberSkip;
                 asRS.Chambers[curChamber].RoundType = prevRoundType;
+                ++ProjectileFirePatch.skipBlast;
                 Mod.RevolvingShotgun_Fire.Invoke(asRS, null);
+                --ProjectileFirePatch.skipBlast;
             }
 
             // Send to other clients
@@ -1426,7 +1434,9 @@ namespace H3MP
                 {
                     asRevolver.ChamberOffset = oldOffset;
                 }
+                ++ProjectileFirePatch.skipBlast;
                 Mod.Revolver_Fire.Invoke(asRevolver, null);
+                --ProjectileFirePatch.skipBlast;
             }
 
             // Send to other clients
@@ -1463,7 +1473,9 @@ namespace H3MP
                 asRevolver.Cylinder.Chambers[curChamber].SetRound(roundClass, asRevolver.Cylinder.Chambers[curChamber].transform.position, asRevolver.Cylinder.Chambers[curChamber].transform.rotation);
                 --ChamberPatch.chamberSkip;
                 asRevolver.Cylinder.Chambers[curChamber].RoundType = prevRoundType;
+                ++ProjectileFirePatch.skipBlast;
                 Mod.SingleActionRevolver_Fire.Invoke(asRevolver, null);
+                --ProjectileFirePatch.skipBlast;
             }
 
             // Send to other clients
@@ -1553,7 +1565,9 @@ namespace H3MP
                 ++FireStingerLauncherPatch.skip;
                 StingerLauncher asStingerLauncher = H3MP_Server.items[trackedID].physicalItem.physicalObject as StingerLauncher;
                 Mod.StingerLauncher_m_hasMissile.SetValue(asStingerLauncher, true);
+                ++ProjectileFirePatch.skipBlast;
                 asStingerLauncher.Fire();
+                --ProjectileFirePatch.skipBlast;
                 --FireStingerLauncherPatch.skip;
             }
 
@@ -1593,7 +1607,9 @@ namespace H3MP
                     --ChamberPatch.chamberSkip;
                     asLAF.Chamber.RoundType = prevRoundType;
                     Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, true);
+                    ++ProjectileFirePatch.skipBlast;
                     Mod.LeverActionFirearm_Fire.Invoke(asLAF, null);
+                    --ProjectileFirePatch.skipBlast;
                 }
                 else
                 {
@@ -1622,7 +1638,9 @@ namespace H3MP
                     --ChamberPatch.chamberSkip;
                     asLAF.Chamber2.RoundType = prevRoundType;
                     Mod.LeverActionFirearm_m_isHammerCocked2.SetValue(asLAF, true);
+                    ++ProjectileFirePatch.skipBlast;
                     Mod.LeverActionFirearm_Fire.Invoke(asLAF, null);
+                    --ProjectileFirePatch.skipBlast;
                     if (reCock)
                     {
                         Mod.LeverActionFirearm_m_isHammerCocked.SetValue(asLAF, true);
@@ -1724,7 +1742,9 @@ namespace H3MP
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 H3MP_Server.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundType, roundClass);
+                ++ProjectileFirePatch.skipBlast;
                 H3MP_Server.items[trackedID].physicalItem.attachableFirearmFireFunc(firedFromInterface);
+                --ProjectileFirePatch.skipBlast;
             }
 
             // Send to other clients
@@ -1753,7 +1773,9 @@ namespace H3MP
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
                 H3MP_Server.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundType, roundClass);
+                ++ProjectileFirePatch.skipBlast;
                 H3MP_Server.items[trackedID].physicalItem.attachableFirearmFireFunc(false);
+                --ProjectileFirePatch.skipBlast;
             }
 
             // Send to other clients
@@ -1790,7 +1812,9 @@ namespace H3MP
                 asLAPD2019.Chambers[asLAPD2019.CurChamber].SetRound(roundClass, asLAPD2019.Chambers[asLAPD2019.CurChamber].transform.position, asLAPD2019.Chambers[asLAPD2019.CurChamber].transform.rotation);
                 --ChamberPatch.chamberSkip;
                 asLAPD2019.Chambers[asLAPD2019.CurChamber].RoundType = prevRoundType;
+                ++ProjectileFirePatch.skipBlast;
                 Mod.LAPD2019_Fire.Invoke(asLAPD2019, null);
+                --ProjectileFirePatch.skipBlast;
             }
 
             // Send to other clients

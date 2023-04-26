@@ -1355,10 +1355,11 @@ namespace H3MP
 
             // ProjectileFirePatch
             MethodInfo projectileFirePatchOriginal = typeof(BallisticProjectile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(float), typeof(Vector3), typeof(FVRFireArm), typeof(bool) }, null);
-            MethodInfo projectileFirePatchPostfix = typeof(ProjectileFirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo projectileFirePatchPostfix = typeof(ProjectileFirePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo projectileFirePatchTranspiler = typeof(ProjectileFirePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchVerify.Verify(projectileFirePatchOriginal, harmony, true);
-            harmony.Patch(projectileFirePatchOriginal, new HarmonyMethod(projectileFirePatchPostfix));
+            harmony.Patch(projectileFirePatchOriginal, new HarmonyMethod(projectileFirePatchPostfix), null, new HarmonyMethod(projectileFirePatchTranspiler));
 
             // ProjectileDamageablePatch
             MethodInfo ballisticProjectileDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -11323,9 +11324,35 @@ namespace H3MP
     // Patches BallisticProjectile.Fire to keep a reference to the source firearm
     class ProjectileFirePatch
     {
-        static void Postfix(ref FVRFireArm ___tempFA, ref FVRFireArm firearm)
+        public static int skipBlast;
+
+        static void Prefix(ref FVRFireArm ___tempFA, ref FVRFireArm firearm)
         {
             ___tempFA = firearm;
+        }
+
+        // Patches Fire to prevent blast if flag is set
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(ProjectileFirePatch), "skipBlast"))); // Load skipBlast value
+            toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+            Label skipLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Bgt_S, skipLabel)); // Goto label if skipBlast > 0
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("get_CurrentMovementManager"))
+                {
+                    instructionList[i + 7].labels.Add(skipLabel);
+                    instructionList.InsertRange(i, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
         }
     }
 
