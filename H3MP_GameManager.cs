@@ -856,12 +856,6 @@ namespace H3MP
             data.physicalItem = trackedItem;
             data.physicalItem.physicalObject = physObj;
 
-            // Call an init update because the one in awake won't be called because data was not set yet
-            if(trackedItem.updateFunc != null)
-            {
-                trackedItem.updateFunc();
-            }
-
             H3MP_GameManager.trackedItemByItem.Add(physObj, trackedItem);
             if(physObj is SosigWeaponPlayerInterface)
             {
@@ -895,6 +889,12 @@ namespace H3MP
             // Add to local list
             data.localTrackedID = items.Count;
             items.Add(data);
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedItem.updateFunc != null)
+            {
+                trackedItem.updateFunc();
+            }
 
             return trackedItem;
         }
@@ -1045,12 +1045,6 @@ namespace H3MP
             data.physicalObject = trackedSosig;
             trackedSosig.physicalSosigScript = sosigScript;
             H3MP_GameManager.trackedSosigBySosig.Add(sosigScript, trackedSosig);
-
-            // Call an init update because the one in awake won't be called because data was not set yet
-            if (trackedSosig.awoken)
-            {
-                trackedSosig.data.Update(true);
-            }
 
             data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
             data.configTemplate.AppliesDamageResistToIntegrityLoss = sosigScript.AppliesDamageResistToIntegrityLoss;
@@ -1299,6 +1293,14 @@ namespace H3MP
             data.localTrackedID = sosigs.Count;
             sosigs.Add(data);
 
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedSosig.awoken)
+            {
+                trackedSosig.data.Update(true);
+            }
+
+            Mod.LogInfo("Made sosig " + trackedSosig.name + " tracked", false);
+
             return trackedSosig;
         }
 
@@ -1412,12 +1414,6 @@ namespace H3MP
             trackedAutoMeater.physicalAutoMeaterScript = autoMeaterScript;
             H3MP_GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
 
-            // Call an init update because the one in awake won't be called because data was not set yet
-            if (trackedAutoMeater.awoken)
-            {
-                trackedAutoMeater.data.Update(true);
-            }
-
             data.position = autoMeaterScript.RB.position;
             data.rotation = autoMeaterScript.RB.rotation;
             data.active = trackedAutoMeater.gameObject.activeInHierarchy;
@@ -1477,6 +1473,12 @@ namespace H3MP
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
             autoMeaters.Add(data);
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedAutoMeater.awoken)
+            {
+                trackedAutoMeater.data.Update(true);
+            }
 
             return trackedAutoMeater;
         }
@@ -1566,12 +1568,6 @@ namespace H3MP
             data.physicalObject = trackedEncryption;
             data.physicalObject.physicalEncryptionScript = encryption;
 
-            // Call an init update because the one in awake won't be called because data was not set yet
-            if (trackedEncryption.awoken)
-            {
-                trackedEncryption.data.Update(true);
-            }
-
             data.type = encryption.Type;
             data.position = trackedEncryption.transform.position;
             data.rotation = trackedEncryption.transform.rotation;
@@ -1619,6 +1615,12 @@ namespace H3MP
             data.instance = instance;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
             encryptions.Add(data);
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedEncryption.awoken)
+            {
+                trackedEncryption.data.Update(true);
+            }
 
             return trackedEncryption;
         }

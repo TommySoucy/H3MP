@@ -773,7 +773,7 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig)
         {
-            Mod.LogInfo("Received full sosig");
+            Mod.LogInfo("Received full sosig with trackedID: "+trackedSosig.trackedID, false);
             H3MP_TrackedSosigData actualTrackedSosig = null;
             // If this is a scene init object the server rejected
             if (trackedSosig.trackedID == -2)
@@ -798,7 +798,7 @@ namespace H3MP
 
             if (trackedSosig.controller == H3MP_Client.singleton.ID)
             {
-                Mod.LogInfo("\tWe are controller, tracked id: "+ trackedSosig.trackedID+", have actual?: "+(sosigs[trackedSosig.trackedID] != null));
+                Mod.LogInfo("\tWe are controller, tracked id: "+ trackedSosig.trackedID+", have actual?: "+(sosigs[trackedSosig.trackedID] != null), false);
                 if (waitingLocalSosigs.TryGetValue(trackedSosig.localWaitingIndex, out actualTrackedSosig))
                 {
                     if (trackedSosig.initTracker == H3MP_GameManager.ID)
@@ -923,6 +923,7 @@ namespace H3MP
             }
             else
             {
+                Mod.LogInfo("\tWe are not controller, tracked id: " + trackedSosig.trackedID + ", have actual?: " + (sosigs[trackedSosig.trackedID] != null), false);
                 if (sosigs[trackedSosig.trackedID] == null)
                 {
                     trackedSosig.localTrackedID = -1;

@@ -288,8 +288,10 @@ namespace H3MP
 
         public static void AddTrackedSosig(H3MP_TrackedSosigData trackedSosig, int clientID)
         {
+            Mod.LogInfo("Received full sosig with trackedID: " + trackedSosig.trackedID+" from client "+clientID, false);
             if (trackedSosig.trackedID == -1)
             {
+                Mod.LogInfo("\tNot tracked yet, tracking", false);
                 // If this is a sceneInit sosig received from client that we haven't tracked yet
                 // And if the controller is not the first player in scene/instance
                 if (trackedSosig.controller != 0 && trackedSosig.sceneInit && !clients[trackedSosig.controller].player.firstInSceneInstance)
@@ -419,6 +421,7 @@ namespace H3MP
             }
             else
             {
+                Mod.LogInfo("\tInit update", false);
                 // This is a sosig we already received full data for and assigned a tracked ID to but things may
                 // have happened to it since we sent the tracked ID, so use this data to update our's and everyones else's
                 sosigs[trackedSosig.trackedID].Update(trackedSosig, true);

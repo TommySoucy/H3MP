@@ -1674,6 +1674,7 @@ namespace H3MP
             H3MP_PlayerHitbox.Part part = (H3MP_PlayerHitbox.Part)packet.ReadByte();
             Damage damage = packet.ReadDamage();
 
+            Mod.LogInfo("Client received player damage for itself",false);
             H3MP_GameManager.ProcessPlayerDamage(part, damage);
         }
 
@@ -3316,40 +3317,69 @@ namespace H3MP
         public static void EncryptionInit(H3MP_Packet packet)
         {
             int trackedID = packet.ReadInt();
-            int count = packet.ReadInt();
+            int indexCount = packet.ReadInt();
             List<int> indices = new List<int>();
-            List<Vector3> points = new List<Vector3>();
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < indexCount; i++)
             {
                 indices.Add(packet.ReadInt());
+            }
+            int pointCount = packet.ReadInt();
+            List<Vector3> points = new List<Vector3>();
+            for (int i = 0; i < pointCount; i++)
+            {
                 points.Add(packet.ReadVector3());
             }
             Mod.LogInfo("Client received encryption init for encryption at " + trackedID);
 
             if (H3MP_Client.encryptions[trackedID] != null)
             {
-                Mod.LogInfo("\tGot encryption "+ H3MP_Client.encryptions[trackedID].type+ ", tendrils active null?: "+(H3MP_Client.encryptions[trackedID].tendrilsActive == null)+ ", growthPoints null?: "+ (H3MP_Client.encryptions[trackedID].growthPoints == null)+ ", subTargsPos null?: " + (H3MP_Client.encryptions[trackedID].subTargsPos == null)+ ", subTargsActive null?: " + (H3MP_Client.encryptions[trackedID].subTargsActive == null)+ ", subTargsActive null?: " + (H3MP_Client.encryptions[trackedID].subTargsActive == null)+ ", tendrilFloats null?: " + (H3MP_Client.encryptions[trackedID].tendrilFloats == null));
-                for (int i = 0; i < count; ++i)
+                Mod.LogInfo("\tGot encryption "+ H3MP_Client.encryptions[trackedID].type+ ", tendrils active null?: "+(H3MP_Client.encryptions[trackedID].tendrilsActive == null)+ ", growthPoints null?: "+ (H3MP_Client.encryptions[trackedID].growthPoints == null)+ ", subTargsPos null?: " + (H3MP_Client.encryptions[trackedID].subTargsPos == null)+ ", subTargsActive null?: " + (H3MP_Client.encryptions[trackedID].subTargsActive == null)+ ", tendrilFloats null?: " + (H3MP_Client.encryptions[trackedID].tendrilFloats == null));
+                if (pointCount > 0)
                 {
-                    Mod.LogInfo("\t\tGot active growth at " + indices[i]);
-                    H3MP_Client.encryptions[trackedID].tendrilsActive[indices[i]] = true;
-                    H3MP_Client.encryptions[trackedID].growthPoints[indices[i]] = points[i];
-                    H3MP_Client.encryptions[trackedID].subTargsPos[indices[i]] = points[i];
-                    H3MP_Client.encryptions[trackedID].subTargsActive[indices[i]] = true;
-                    H3MP_Client.encryptions[trackedID].tendrilFloats[indices[i]] = 1f;
-                }
-
-                Mod.LogInfo("\tInited growths");
-                if (H3MP_Client.encryptions[trackedID].physicalObject != null)
-                {
-                    Mod.LogInfo("\t\tGot phys");
-                    ++EncryptionSpawnGrowthPatch.skip;
-                    for (int i = 0; i < count; ++i)
+                    for (int i = 0; i < indexCount; ++i)
                     {
-                        Mod.LogInfo("\t\t\tSpawning growth at "+ indices[i]);
-                        Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { indices[i], points[i] });
+                        Mod.LogInfo("\t\tGot active growth at " + indices[i]);
+                        H3MP_Client.encryptions[trackedID].tendrilsActive[indices[i]] = true;
+                        H3MP_Client.encryptions[trackedID].growthPoints[indices[i]] = points[i];
+                        H3MP_Client.encryptions[trackedID].subTargsPos[indices[i]] = points[i];
+                        H3MP_Client.encryptions[trackedID].subTargsActive[indices[i]] = true;
+                        H3MP_Client.encryptions[trackedID].tendrilFloats[indices[i]] = 1f;
                     }
-                    --EncryptionSpawnGrowthPatch.skip;
+
+                    Mod.LogInfo("\tInited growths");
+                    if (H3MP_Client.encryptions[trackedID].physicalObject != null)
+                    {
+                        Mod.LogInfo("\t\tGot phys");
+                        ++EncryptionSpawnGrowthPatch.skip;
+                        for (int i = 0; i < indexCount; ++i)
+                        {
+                            Mod.LogInfo("\t\t\tSpawning growth at " + indices[i]);
+                            Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { indices[i], points[i] });
+                        }
+                        --EncryptionSpawnGrowthPatch.skip;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < indexCount; ++i)
+                    {
+                        Mod.LogInfo("\t\tGot active subtarget at " + indices[i]);
+                        H3MP_Client.encryptions[trackedID].subTargsActive[indices[i]] = true;
+                    }
+
+                    if (H3MP_Client.encryptions[trackedID].physicalObject != null)
+                    {
+                        Mod.LogInfo("\t\tGot phys");
+                        ++EncryptionSpawnGrowthPatch.skip;
+                        for (int i = 0; i < indexCount; ++i)
+                        {
+                            Mod.LogInfo("\t\t\tSetting subtarg active at " + indices[i]);
+                            H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
+                        }
+                        --EncryptionSpawnGrowthPatch.skip;
+
+                        Mod.TNH_EncryptionTarget_m_numSubTargsLeft.SetValue(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, indexCount);
+                    }
                 }
             }
         }

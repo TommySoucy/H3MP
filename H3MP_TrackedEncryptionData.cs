@@ -26,7 +26,6 @@ namespace H3MP
         public bool previousActive;
         public bool active;
 
-        public TNH_EncryptionTarget_SubTarget[] subTargets;
         public bool[] tendrilsActive;
         public Vector3[] growthPoints;
         public Vector3[] subTargsPos;
@@ -82,13 +81,6 @@ namespace H3MP
                 TNH_HoldPoint curHoldPoint = (TNH_HoldPoint)Mod.TNH_Manager_m_curHoldPoint.GetValue(GM.TNH_Manager);
                 physicalObject.physicalEncryptionScript.SetHoldPoint(curHoldPoint);
                 curHoldPoint.RegisterNewTarget(physicalObject.physicalEncryptionScript);
-            }
-
-            // Keep references to sub targets
-            subTargets = new TNH_EncryptionTarget_SubTarget[physicalObject.physicalEncryptionScript.SubTargs.Count];
-            for(int i=0; i < subTargets.Length; ++i)
-            {
-                subTargets[i] = physicalObject.physicalEncryptionScript.SubTargs[i].GetComponent<TNH_EncryptionTarget_SubTarget>();
             }
 
             // Init growths

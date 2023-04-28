@@ -1993,6 +1993,7 @@ namespace H3MP
         {
             using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.playerDamage))
             {
+                Mod.LogInfo("Sending player damage to " + clientID + "\n" + Environment.StackTrace,false);
                 packet.Write(part);
                 packet.Write(damage);
 
@@ -3417,6 +3418,17 @@ namespace H3MP
                     for (int i = 0; i < indices.Count; ++i)
                     {
                         packet.Write(indices[i]);
+                    }
+                }
+                if (points == null || points.Count == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(points.Count);
+                    for (int i = 0; i < points.Count; ++i)
+                    {
                         packet.Write(points[i]);
                     }
                 }

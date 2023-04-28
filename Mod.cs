@@ -9471,22 +9471,39 @@ namespace H3MP
             Mod.LogInfo("Encryption target StartPostfix: "+ __instance.name);
             --EncryptionSpawnGrowthPatch.skip;
 
-            if (Mod.managerObject != null && __instance.Type == TNH_EncryptionType.Regenerative && trackedEncryption != null && trackedEncryption.data.controller == H3MP_GameManager.ID)
+            if (Mod.managerObject != null && trackedEncryption != null && trackedEncryption.data.controller == H3MP_GameManager.ID)
             {
                 Mod.LogInfo("\tWe have a tracked encryption and we are controller");
-                List<int> indices = new List<int>();
-                List<Vector3> points = new List<Vector3>();
-                for (int i = 0; i < __instance.SubTargs.Count; ++i)
+                List<int> indices = null;
+                List<Vector3> points = null;
+                if (__instance.Type == TNH_EncryptionType.Regenerative)
                 {
-                    if (__instance.SubTargs[i].activeSelf)
+                    indices = new List<int>();
+                    points = new List<Vector3>();
+                    for (int i = 0; i < __instance.SubTargs.Count; ++i)
                     {
-                        indices.Add(i);
-                        points.Add(__instance.SubTargs[i].transform.position);
+                        if (__instance.SubTargs[i].activeSelf)
+                        {
+                            indices.Add(i);
+                            points.Add(__instance.SubTargs[i].transform.position);
+                        }
                     }
                 }
-                if (indices.Count > 0)
+                else if(__instance.Type == TNH_EncryptionType.Recursive)
                 {
-                    Mod.LogInfo("\t\tGot "+indices.Count+" active subtargets");
+                    indices = new List<int>();
+                    for (int i = 0; i < __instance.SubTargs.Count; ++i)
+                    {
+                        if (__instance.SubTargs[i].activeSelf)
+                        {
+                            indices.Add(i);
+                        }
+                    }
+                }
+
+                if (indices != null && indices.Count > 0)
+                {
+                    Mod.LogInfo("\t\tGot " + indices.Count + " active subtargets");
                     if (H3MP_ThreadManager.host)
                     {
                         Mod.LogInfo("\t\t\tHost, sending");
