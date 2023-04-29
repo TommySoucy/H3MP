@@ -3329,16 +3329,13 @@ namespace H3MP
             {
                 points.Add(packet.ReadVector3());
             }
-            Mod.LogInfo("Client received encryption init for encryption at " + trackedID);
 
             if (H3MP_Client.encryptions[trackedID] != null)
             {
-                Mod.LogInfo("\tGot encryption "+ H3MP_Client.encryptions[trackedID].type+ ", tendrils active null?: "+(H3MP_Client.encryptions[trackedID].tendrilsActive == null)+ ", growthPoints null?: "+ (H3MP_Client.encryptions[trackedID].growthPoints == null)+ ", subTargsPos null?: " + (H3MP_Client.encryptions[trackedID].subTargsPos == null)+ ", subTargsActive null?: " + (H3MP_Client.encryptions[trackedID].subTargsActive == null)+ ", tendrilFloats null?: " + (H3MP_Client.encryptions[trackedID].tendrilFloats == null));
                 if (pointCount > 0)
                 {
                     for (int i = 0; i < indexCount; ++i)
                     {
-                        Mod.LogInfo("\t\tGot active growth at " + indices[i]);
                         H3MP_Client.encryptions[trackedID].tendrilsActive[indices[i]] = true;
                         H3MP_Client.encryptions[trackedID].growthPoints[indices[i]] = points[i];
                         H3MP_Client.encryptions[trackedID].subTargsPos[indices[i]] = points[i];
@@ -3346,14 +3343,11 @@ namespace H3MP
                         H3MP_Client.encryptions[trackedID].tendrilFloats[indices[i]] = 1f;
                     }
 
-                    Mod.LogInfo("\tInited growths");
                     if (H3MP_Client.encryptions[trackedID].physicalObject != null)
                     {
-                        Mod.LogInfo("\t\tGot phys");
                         ++EncryptionSpawnGrowthPatch.skip;
                         for (int i = 0; i < indexCount; ++i)
                         {
-                            Mod.LogInfo("\t\t\tSpawning growth at " + indices[i]);
                             Mod.TNH_EncryptionTarget_SpawnGrowth.Invoke(H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript, new object[] { indices[i], points[i] });
                         }
                         --EncryptionSpawnGrowthPatch.skip;
@@ -3363,17 +3357,14 @@ namespace H3MP
                 {
                     for (int i = 0; i < indexCount; ++i)
                     {
-                        Mod.LogInfo("\t\tGot active subtarget at " + indices[i]);
                         H3MP_Client.encryptions[trackedID].subTargsActive[indices[i]] = true;
                     }
 
                     if (H3MP_Client.encryptions[trackedID].physicalObject != null)
                     {
-                        Mod.LogInfo("\t\tGot phys");
                         ++EncryptionSpawnGrowthPatch.skip;
                         for (int i = 0; i < indexCount; ++i)
                         {
-                            Mod.LogInfo("\t\t\tSetting subtarg active at " + indices[i]);
                             H3MP_Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
                         }
                         --EncryptionSpawnGrowthPatch.skip;
