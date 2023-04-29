@@ -40,7 +40,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.5.5";
+        public const string pluginVersion = "1.5.6";
 
         // Assets
         public static JObject config;
@@ -9468,12 +9468,10 @@ namespace H3MP
 
         static void StartPostfix(TNH_EncryptionTarget __instance)
         {
-            Mod.LogInfo("Encryption target StartPostfix: "+ __instance.name);
             --EncryptionSpawnGrowthPatch.skip;
 
             if (Mod.managerObject != null && trackedEncryption != null && trackedEncryption.data.controller == H3MP_GameManager.ID)
             {
-                Mod.LogInfo("\tWe have a tracked encryption and we are controller");
                 List<int> indices = null;
                 List<Vector3> points = null;
                 if (__instance.Type == TNH_EncryptionType.Regenerative)
@@ -9503,10 +9501,8 @@ namespace H3MP
 
                 if (indices != null && indices.Count > 0)
                 {
-                    Mod.LogInfo("\t\tGot " + indices.Count + " active subtargets");
                     if (H3MP_ThreadManager.host)
                     {
-                        Mod.LogInfo("\t\t\tHost, sending");
                         H3MP_ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, points);
                     }
                     else
