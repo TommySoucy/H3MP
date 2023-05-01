@@ -180,7 +180,10 @@ namespace H3MP
         itemUpdate = 169,
         TNHHostStartHold = 170,
         integratedFirearmFire = 171,
-        grappleAttached = 172
+        grappleAttached = 172,
+        sosigUpdate = 173,
+        autoMeaterUpdate = 174,
+        encryptionUpdate = 175
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -354,7 +357,10 @@ namespace H3MP
         itemUpdate = 166,
         TNHHostStartHold = 167,
         integratedFirearmFire = 168,
-        grappleAttached = 169
+        grappleAttached = 169,
+        sosigUpdate = 170,
+        autoMeaterUpdate = 171,
+        encryptionUpdate = 172
     }
 
     public class H3MP_Packet : IDisposable

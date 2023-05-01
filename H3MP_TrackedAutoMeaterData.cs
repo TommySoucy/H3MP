@@ -8,8 +8,7 @@ namespace H3MP
 {
     public class H3MP_TrackedAutoMeaterData
     {
-        public static int insuranceCount = 5; // Amount of times to send the most up to date version of this data to ensure we don't miss packets
-        public int insuranceCounter = insuranceCount; // Amount of times left to send this data
+        public bool latestUpdateSent = false; // Whether the latest update of this data was sent
         public byte order; // The index of this AutoMeater's data packet used to ensure we process this data in the correct order
 
         public int trackedID = -1;

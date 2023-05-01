@@ -286,6 +286,14 @@ namespace H3MP
             }
         }
 
+        public static void SosigUpdate(int clientID, H3MP_Packet packet)
+        {
+            H3MP_GameManager.UpdateTrackedSosig(packet.ReadTrackedSosig());
+
+            // Send to all other clients
+            H3MP_ServerSend.SosigUpdate(packet, clientID);
+        }
+
         public static void TrackedAutoMeaters(int clientID, H3MP_Packet packet)
         {
             // Reconstruct passed trackedAutoMeaters from packet
@@ -296,6 +304,14 @@ namespace H3MP
             }
         }
 
+        public static void AutoMeaterUpdate(int clientID, H3MP_Packet packet)
+        {
+            H3MP_GameManager.UpdateTrackedAutoMeater(packet.ReadTrackedAutoMeater());
+
+            // Send to all other clients
+            H3MP_ServerSend.AutoMeaterUpdate(packet, clientID);
+        }
+
         public static void TrackedEncryptions(int clientID, H3MP_Packet packet)
         {
             // Reconstruct passed trackedEncryptions from packet
@@ -304,6 +320,14 @@ namespace H3MP
             {
                 H3MP_GameManager.UpdateTrackedEncryption(packet.ReadTrackedEncryption());
             }
+        }
+
+        public static void EncryptionUpdate(int clientID, H3MP_Packet packet)
+        {
+            H3MP_GameManager.UpdateTrackedEncryption(packet.ReadTrackedEncryption());
+
+            // Send to all other clients
+            H3MP_ServerSend.EncryptionUpdate(packet, clientID);
         }
 
         public static void GiveControl(int clientID, H3MP_Packet packet)

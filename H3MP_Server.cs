@@ -943,6 +943,9 @@ namespace H3MP
                 H3MP_ServerHandle.TNHHostStartHold,
                 H3MP_ServerHandle.IntegratedFirearmFire,
                 H3MP_ServerHandle.GrappleAttached,
+                H3MP_ServerHandle.SosigUpdate,
+                H3MP_ServerHandle.AutoMeaterUpdate,
+                H3MP_ServerHandle.EncryptionUpdate,
             };
 
             items = new H3MP_TrackedItemData[100];

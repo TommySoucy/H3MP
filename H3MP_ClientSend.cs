@@ -193,7 +193,7 @@ namespace H3MP
 
                         if (trackedItem.Update())
                         {
-                            trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                            trackedItem.latestUpdateSent = false;
 
                             packet.Write(trackedItem, true, false);
 
@@ -205,19 +205,12 @@ namespace H3MP
                                 break;
                             }
                         }
-                        else if(trackedItem.insuranceCounter > 0)
+                        else if(!trackedItem.latestUpdateSent)
                         {
-                            --trackedItem.insuranceCounter;
+                            trackedItem.latestUpdateSent = true;
 
-                            packet.Write(trackedItem, true, false);
-
-                            ++count;
-
-                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                            if (packet.buffer.Count >= 1300)
-                            {
-                                break;
-                            }
+                            // Send latest update on its own
+                            ItemUpdate(trackedItem);
                         }
 
                         ++index;
@@ -274,7 +267,7 @@ namespace H3MP
 
                         if (trackedSosig.Update())
                         {
-                            trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                            trackedSosig.latestUpdateSent = false;
 
                             packet.Write(trackedSosig, true, false);
 
@@ -286,19 +279,11 @@ namespace H3MP
                                 break;
                             }
                         }
-                        else if(trackedSosig.insuranceCounter > 0)
+                        else if(!trackedSosig.latestUpdateSent)
                         {
-                            --trackedSosig.insuranceCounter;
+                            trackedSosig.latestUpdateSent = true;
 
-                            packet.Write(trackedSosig, true, false);
-
-                            ++count;
-
-                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
-                            if (packet.buffer.Count >= 1300)
-                            {
-                                break;
-                            }
+                            SosigUpdate(trackedSosig);
                         }
 
                         ++index;
@@ -318,6 +303,16 @@ namespace H3MP
 
                     SendUDPData(packet);
                 }
+            }
+        }
+
+        public static void SosigUpdate(H3MP_TrackedSosigData sosigData)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.sosigUpdate))
+            {
+                packet.Write(sosigData, true, false);
+
+                SendTCPData(packet);
             }
         }
 
@@ -345,7 +340,7 @@ namespace H3MP
 
                         if (trackedAutoMeater.Update())
                         {
-                            trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
+                            trackedAutoMeater.latestUpdateSent = false;
 
                             packet.Write(trackedAutoMeater, true, false);
 
@@ -357,19 +352,11 @@ namespace H3MP
                                 break;
                             }
                         }
-                        else if(trackedAutoMeater.insuranceCounter > 0)
+                        else if(!trackedAutoMeater.latestUpdateSent)
                         {
-                            --trackedAutoMeater.insuranceCounter;
+                            trackedAutoMeater.latestUpdateSent = true;
 
-                            packet.Write(trackedAutoMeater, true, false);
-
-                            ++count;
-
-                            // Limit buffer size to MTU, will send next set of tracked automeaters in separate packet
-                            if (packet.buffer.Count >= 1300)
-                            {
-                                break;
-                            }
+                            AutoMeaterUpdate(trackedAutoMeater);
                         }
 
                         ++index;
@@ -389,6 +376,16 @@ namespace H3MP
 
                     SendUDPData(packet);
                 }
+            }
+        }
+
+        public static void AutoMeaterUpdate(H3MP_TrackedAutoMeaterData autoMeaterData)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.autoMeaterUpdate))
+            {
+                packet.Write(autoMeaterData, true, false);
+
+                SendTCPData(packet);
             }
         }
 
@@ -416,7 +413,7 @@ namespace H3MP
 
                         if (trackedEncryption.Update())
                         {
-                            trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
+                            trackedEncryption.latestUpdateSent = false;
 
                             packet.Write(trackedEncryption, true, false);
 
@@ -428,19 +425,11 @@ namespace H3MP
                                 break;
                             }
                         }
-                        else if(trackedEncryption.insuranceCounter > 0)
+                        else if(!trackedEncryption.latestUpdateSent)
                         {
-                            --trackedEncryption.insuranceCounter;
+                            trackedEncryption.latestUpdateSent = true;
 
-                            packet.Write(trackedEncryption, true, false);
-
-                            ++count;
-
-                            // Limit buffer size to MTU, will send next set of tracked Encryptions in separate packet
-                            if (packet.buffer.Count >= 1300)
-                            {
-                                break;
-                            }
+                            EncryptionUpdate(trackedEncryption);
                         }
 
                         ++index;
@@ -460,6 +449,16 @@ namespace H3MP
 
                     SendUDPData(packet);
                 }
+            }
+        }
+
+        public static void EncryptionUpdate(H3MP_TrackedEncryptionData encryptionData)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.encryptionUpdate))
+            {
+                packet.Write(encryptionData, true, false);
+
+                SendTCPData(packet);
             }
         }
 
@@ -1562,7 +1561,7 @@ namespace H3MP
                             continue;
                         }
 
-                        trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                        trackedItem.latestUpdateSent = false;
 
                         trackedItem.Update(true);
                         packet.Write(trackedItem, false, true);
@@ -1609,7 +1608,7 @@ namespace H3MP
                             continue;
                         }
 
-                        trackedSosig.insuranceCounter = H3MP_TrackedSosigData.insuranceCount;
+                        trackedSosig.latestUpdateSent = false;
 
                         trackedSosig.Update(true);
                         packet.Write(trackedSosig, false, true);
@@ -1656,7 +1655,7 @@ namespace H3MP
                             continue;
                         }
 
-                        trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
+                        trackedAutoMeater.latestUpdateSent = false;
 
                         trackedAutoMeater.Update(true);
                         packet.Write(trackedAutoMeater, false, true);
@@ -1703,7 +1702,7 @@ namespace H3MP
                             continue;
                         }
 
-                        trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
+                        trackedEncryption.latestUpdateSent = false;
 
                         trackedEncryption.Update(true);
                         packet.Write(trackedEncryption, false, true);

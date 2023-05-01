@@ -1,9 +1,8 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using UnityEngine;
-using Valve.VR.InteractionSystem;
+using static FistVR.Grillhouse2Story_PointSet;
 
 namespace H3MP
 {
@@ -348,7 +347,7 @@ namespace H3MP
                                         {
                                             if (trackedItem.Update())
                                             {
-                                                trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                                                trackedItem.latestUpdateSent = false;
 
                                                 packet.Write(trackedItem, true, false);
 
@@ -360,24 +359,16 @@ namespace H3MP
                                                     break;
                                                 }
                                             }
-                                            else if (trackedItem.insuranceCounter > 0)
+                                            else if (!trackedItem.latestUpdateSent)
                                             {
-                                                --trackedItem.insuranceCounter;
+                                                trackedItem.latestUpdateSent = true;
 
-                                                packet.Write(trackedItem, true, false);
-
-                                                ++count;
-
-                                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                                if (packet.buffer.Count >= 1300)
-                                                {
-                                                    break;
-                                                }
+                                                ItemUpdate(trackedItem);
                                             }
                                         }
                                         else if (trackedItem.NeedsUpdate())
                                         {
-                                            trackedItem.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                                            trackedItem.latestUpdateSent = false;
 
                                             packet.Write(trackedItem, false, false);
 
@@ -389,19 +380,11 @@ namespace H3MP
                                                 break;
                                             }
                                         }
-                                        else if (trackedItem.insuranceCounter > 0)
+                                        else if (!trackedItem.latestUpdateSent)
                                         {
-                                            --trackedItem.insuranceCounter;
+                                            trackedItem.latestUpdateSent = true;
 
-                                            packet.Write(trackedItem, false, false);
-
-                                            ++count;
-
-                                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                            if (packet.buffer.Count >= 1300)
-                                            {
-                                                break;
-                                            }
+                                            ItemUpdate(trackedItem);
                                         }
                                     }
                                 }
@@ -433,6 +416,7 @@ namespace H3MP
                 packet.Write(itemData, true, false);
 
                 List<int> playersToSendTo = new List<int>();
+                // TODO: Review: This seems to send data of EVERY item to ALL players in the same scene/instance, but shouldn't it only send the given item data?
                 foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.itemsByInstanceByScene)
                 {
                     foreach (KeyValuePair<int, List<int>> inner in outer.Value)
@@ -504,7 +488,7 @@ namespace H3MP
                                         {
                                             if (trackedSosig.Update())
                                             {
-                                                trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                                                trackedSosig.latestUpdateSent = false;
 
                                                 packet.Write(trackedSosig, true, false);
 
@@ -516,24 +500,16 @@ namespace H3MP
                                                     break;
                                                 }
                                             }
-                                            else if (trackedSosig.insuranceCounter > 0)
+                                            else if (!trackedSosig.latestUpdateSent)
                                             {
-                                                --trackedSosig.insuranceCounter;
+                                                trackedSosig.latestUpdateSent = true;
 
-                                                packet.Write(trackedSosig, true, false);
-
-                                                ++count;
-
-                                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                                if (packet.buffer.Count >= 1300)
-                                                {
-                                                    break;
-                                                }
+                                                SosigUpdate(trackedSosig);
                                             }
                                         }
                                         else if (trackedSosig.NeedsUpdate())
                                         {
-                                            trackedSosig.insuranceCounter = H3MP_TrackedItemData.insuranceCount;
+                                            trackedSosig.latestUpdateSent = false;
 
                                             packet.Write(trackedSosig, false, false);
 
@@ -545,19 +521,11 @@ namespace H3MP
                                                 break;
                                             }
                                         }
-                                        else if (trackedSosig.insuranceCounter > 0)
+                                        else if (!trackedSosig.latestUpdateSent)
                                         {
-                                            --trackedSosig.insuranceCounter;
+                                            trackedSosig.latestUpdateSent = true;
 
-                                            packet.Write(trackedSosig, false, false);
-
-                                            ++count;
-
-                                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
-                                            if (packet.buffer.Count >= 1300)
-                                            {
-                                                break;
-                                            }
+                                            SosigUpdate(trackedSosig);
                                         }
                                     }
                                 }
@@ -580,6 +548,56 @@ namespace H3MP
                     }
                 }
             }
+        }
+
+        public static void SosigUpdate(H3MP_TrackedSosigData sosigData)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.sosigUpdate))
+            {
+                packet.Write(sosigData, true, false);
+
+                List<int> playersToSendTo = new List<int>();
+                foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.sosigsByInstanceByScene)
+                {
+                    foreach (KeyValuePair<int, List<int>> inner in outer.Value)
+                    {
+                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                            playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                        {
+                            playersToSendTo.AddRange(players);
+                        }
+                    }
+                }
+
+                SendTCPDataToClients(packet, playersToSendTo);
+            }
+        }
+
+        public static void SosigUpdate(H3MP_Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.sosigUpdate);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            List<int> playersToSendTo = new List<int>();
+            foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.sosigsByInstanceByScene)
+            {
+                foreach (KeyValuePair<int, List<int>> inner in outer.Value)
+                {
+                    if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                        playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                    {
+                        playersToSendTo.AddRange(players);
+                    }
+                }
+            }
+
+            playersToSendTo.Remove(clientID);
+
+            SendTCPDataToClients(packet, playersToSendTo);
         }
 
         public static void TrackedAutoMeaters()
@@ -610,7 +628,7 @@ namespace H3MP
                                         {
                                             if (trackedAutoMeater.Update())
                                             {
-                                                trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
+                                                trackedAutoMeater.latestUpdateSent = false;
 
                                                 packet.Write(trackedAutoMeater, true, false);
 
@@ -622,24 +640,16 @@ namespace H3MP
                                                     break;
                                                 }
                                             }
-                                            else if (trackedAutoMeater.insuranceCounter > 0)
+                                            else if (!trackedAutoMeater.latestUpdateSent)
                                             {
-                                                --trackedAutoMeater.insuranceCounter;
+                                                trackedAutoMeater.latestUpdateSent = true;
 
-                                                packet.Write(trackedAutoMeater, true, false);
-
-                                                ++count;
-
-                                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                                if (packet.buffer.Count >= 1300)
-                                                {
-                                                    break;
-                                                }
+                                                AutoMeaterUpdate(trackedAutoMeater);
                                             }
                                         }
                                         else if (trackedAutoMeater.NeedsUpdate())
                                         {
-                                            trackedAutoMeater.insuranceCounter = H3MP_TrackedAutoMeaterData.insuranceCount;
+                                            trackedAutoMeater.latestUpdateSent = false;
 
                                             packet.Write(trackedAutoMeater, false, false);
 
@@ -651,19 +661,11 @@ namespace H3MP
                                                 break;
                                             }
                                         }
-                                        else if (trackedAutoMeater.insuranceCounter > 0)
+                                        else if (!trackedAutoMeater.latestUpdateSent)
                                         {
-                                            --trackedAutoMeater.insuranceCounter;
+                                            trackedAutoMeater.latestUpdateSent = true;
 
-                                            packet.Write(trackedAutoMeater, false, false);
-
-                                            ++count;
-
-                                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
-                                            if (packet.buffer.Count >= 1300)
-                                            {
-                                                break;
-                                            }
+                                            AutoMeaterUpdate(trackedAutoMeater);
                                         }
                                     }
                                 }
@@ -686,6 +688,56 @@ namespace H3MP
                     }
                 }
             }
+        }
+
+        public static void AutoMeaterUpdate(H3MP_TrackedAutoMeaterData autoMeaterData)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.autoMeaterUpdate))
+            {
+                packet.Write(autoMeaterData, true, false);
+
+                List<int> playersToSendTo = new List<int>();
+                foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.autoMeatersByInstanceByScene)
+                {
+                    foreach (KeyValuePair<int, List<int>> inner in outer.Value)
+                    {
+                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                            playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                        {
+                            playersToSendTo.AddRange(players);
+                        }
+                    }
+                }
+
+                SendTCPDataToClients(packet, playersToSendTo);
+            }
+        }
+
+        public static void AutoMeaterUpdate(H3MP_Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.autoMeaterUpdate);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            List<int> playersToSendTo = new List<int>();
+            foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.autoMeatersByInstanceByScene)
+            {
+                foreach (KeyValuePair<int, List<int>> inner in outer.Value)
+                {
+                    if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                        playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                    {
+                        playersToSendTo.AddRange(players);
+                    }
+                }
+            }
+
+            playersToSendTo.Remove(clientID);
+
+            SendTCPDataToClients(packet, playersToSendTo);
         }
 
         public static void TrackedEncryptions()
@@ -716,7 +768,7 @@ namespace H3MP
                                         {
                                             if (trackedEncryption.Update())
                                             {
-                                                trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
+                                                trackedEncryption.latestUpdateSent = false;
 
                                                 packet.Write(trackedEncryption, true, false);
 
@@ -728,24 +780,16 @@ namespace H3MP
                                                     break;
                                                 }
                                             }
-                                            else if (trackedEncryption.insuranceCounter > 0)
+                                            else if (!trackedEncryption.latestUpdateSent)
                                             {
-                                                --trackedEncryption.insuranceCounter;
+                                                trackedEncryption.latestUpdateSent = true;
 
-                                                packet.Write(trackedEncryption, true, false);
-
-                                                ++count;
-
-                                                // Limit buffer size to MTU, will send next set of tracked Encryptions in separate packet
-                                                if (packet.buffer.Count >= 1300)
-                                                {
-                                                    break;
-                                                }
+                                                EncryptionUpdate(trackedEncryption);
                                             }
                                         }
                                         else if (trackedEncryption.NeedsUpdate())
                                         {
-                                            trackedEncryption.insuranceCounter = H3MP_TrackedEncryptionData.insuranceCount;
+                                            trackedEncryption.latestUpdateSent = false;
 
                                             packet.Write(trackedEncryption, false, false);
 
@@ -757,19 +801,11 @@ namespace H3MP
                                                 break;
                                             }
                                         }
-                                        else if (trackedEncryption.insuranceCounter > 0)
+                                        else if (!trackedEncryption.latestUpdateSent)
                                         {
-                                            --trackedEncryption.insuranceCounter;
+                                            trackedEncryption.latestUpdateSent = true;
 
-                                            packet.Write(trackedEncryption, false, false);
-
-                                            ++count;
-
-                                            // Limit buffer size to MTU, will send next set of tracked Encryptions in separate packet
-                                            if (packet.buffer.Count >= 1300)
-                                            {
-                                                break;
-                                            }
+                                            EncryptionUpdate(trackedEncryption);
                                         }
                                     }
                                 }
@@ -792,6 +828,56 @@ namespace H3MP
                     }
                 }
             }
+        }
+
+        public static void EncryptionUpdate(H3MP_TrackedEncryptionData encryptionData)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.encryptionUpdate))
+            {
+                packet.Write(encryptionData, true, false);
+
+                List<int> playersToSendTo = new List<int>();
+                foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.encryptionsByInstanceByScene)
+                {
+                    foreach (KeyValuePair<int, List<int>> inner in outer.Value)
+                    {
+                        if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                            playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                        {
+                            playersToSendTo.AddRange(players);
+                        }
+                    }
+                }
+
+                SendTCPDataToClients(packet, playersToSendTo);
+            }
+        }
+
+        public static void EncryptionUpdate(H3MP_Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.encryptionUpdate);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            List<int> playersToSendTo = new List<int>();
+            foreach (KeyValuePair<string, Dictionary<int, List<int>>> outer in H3MP_GameManager.encryptionsByInstanceByScene)
+            {
+                foreach (KeyValuePair<int, List<int>> inner in outer.Value)
+                {
+                    if (H3MP_GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                        playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                    {
+                        playersToSendTo.AddRange(players);
+                    }
+                }
+            }
+
+            playersToSendTo.Remove(clientID);
+
+            SendTCPDataToClients(packet, playersToSendTo);
         }
 
         public static void TrackedItem(H3MP_TrackedItemData trackedItem, List<int> toClients)
