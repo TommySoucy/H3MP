@@ -2828,5 +2828,17 @@ namespace H3MP
                 SendTCPData(packet);
             }
         }
+
+        public static void GrappleAttached(int trackedID, byte[] data)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ClientPackets.grappleAttached))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)data.Length);
+                packet.Write(data);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

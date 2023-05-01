@@ -5030,5 +5030,64 @@ namespace H3MP
                 H3MP_ServerSend.TNHHostStartHold(Mod.currentTNHInstance.instance, clientID);
             }
         }
+
+        public static void GrappleAttached(int clientID, H3MP_Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            byte[] data = packet.ReadBytes(packet.ReadShort());
+
+            if (H3MP_Server.items[trackedID] != null && H3MP_Server.items[trackedID].controller != H3MP_GameManager.ID)
+            {
+                H3MP_Server.items[trackedID].additionalData = data;
+
+                if (H3MP_Server.items[trackedID].physicalItem != null)
+                {
+                    GrappleThrowable asGrappleThrowable = H3MP_Server.items[trackedID].physicalItem.physicalObject as GrappleThrowable;
+                    Mod.GrappleThrowable_m_isRopeFree.SetValue(asGrappleThrowable, true);
+                    asGrappleThrowable.BundledRope.SetActive(false);
+                    Mod.GrappleThrowable_m_hasBeenThrown.SetValue(asGrappleThrowable, true);
+                    Mod.GrappleThrowable_m_hasLanded.SetValue(asGrappleThrowable, true);
+                    List<GameObject> ropeLengths = (List<GameObject>)Mod.GrappleThrowable_m_ropeLengths.GetValue(asGrappleThrowable);
+                    if (ropeLengths.Count > 0)
+                    {
+                        for (int i = ropeLengths.Count - 1; i >= 0; i--)
+                        {
+                            UnityEngine.Object.Destroy(ropeLengths[i]);
+                        }
+                        ropeLengths.Clear();
+                    }
+                    List<Vector3> finalRopePoints = (List<Vector3>)Mod.GrappleThrowable_finalRopePoints.GetValue(asGrappleThrowable);
+                    finalRopePoints.Clear();
+                    asGrappleThrowable.FakeRopeLength.SetActive(false);
+
+                    int count = H3MP_Server.items[trackedID].additionalData[1];
+                    Vector3 currentRopePoint = new Vector3(BitConverter.ToSingle(H3MP_Server.items[trackedID].additionalData, 2), BitConverter.ToSingle(H3MP_Server.items[trackedID].additionalData, 6), BitConverter.ToSingle(H3MP_Server.items[trackedID].additionalData, 10));
+                    for (int i = 1; i < count; ++i)
+                    {
+                        Vector3 newPoint = new Vector3(BitConverter.ToSingle(H3MP_Server.items[trackedID].additionalData, i * 12 + 2), BitConverter.ToSingle(H3MP_Server.items[trackedID].additionalData, i * 12 + 6), BitConverter.ToSingle(H3MP_Server.items[trackedID].additionalData, i * 12 + 10));
+                        Vector3 vector = newPoint - currentRopePoint;
+
+                        GameObject gameObject = UnityEngine.Object.Instantiate(asGrappleThrowable.RopeLengthPrefab, newPoint, Quaternion.LookRotation(-vector, Vector3.up));
+                        gameObject.transform.localScale = new Vector3(1f, 1f, vector.magnitude);
+                        FVRHandGrabPoint fvrhandGrabPoint = null;
+                        if (ropeLengths.Count > 0)
+                        {
+                            fvrhandGrabPoint = ropeLengths[ropeLengths.Count - 1].GetComponent<FVRHandGrabPoint>();
+                        }
+                        FVRHandGrabPoint component = gameObject.GetComponent<FVRHandGrabPoint>();
+                        ropeLengths.Add(gameObject);
+                        if (fvrhandGrabPoint != null && component != null)
+                        {
+                            fvrhandGrabPoint.ConnectedGrabPoint_Base = component;
+                            component.ConnectedGrabPoint_End = fvrhandGrabPoint;
+                        }
+                        finalRopePoints.Add(newPoint);
+                        currentRopePoint = newPoint;
+                    }
+                }
+
+                H3MP_ServerSend.GrappleAttached(trackedID, data, clientID);
+            }
+        }
     }
 }

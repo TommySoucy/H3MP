@@ -295,6 +295,12 @@ namespace H3MP
         public static readonly FieldInfo CarlGustafLatch_m_tarRot = typeof(CarlGustafLatch).GetField("m_tarRot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo CarlGustafShellInsertEject_m_curZ = typeof(CarlGustafShellInsertEject).GetField("m_curZ", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly FieldInfo CarlGustafShellInsertEject_m_tarZ = typeof(CarlGustafShellInsertEject).GetField("m_tarZ", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GrappleThrowable_m_hasLanded = typeof(GrappleThrowable).GetField("m_hasLanded", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GrappleThrowable_finalRopePoints = typeof(GrappleThrowable).GetField("finalRopePoints", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GrappleThrowable_m_isRopeFree = typeof(GrappleThrowable).GetField("m_isRopeFree", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GrappleThrowable_m_hasBeenThrown = typeof(GrappleThrowable).GetField("m_hasBeenThrown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GrappleThrowable_m_ropeLengths = typeof(GrappleThrowable).GetField("m_ropeLengths", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly FieldInfo GrappleThrowable_currentRopePoint = typeof(GrappleThrowable).GetField("currentRopePoint", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
         // Reused private MethodInfos
         public static readonly MethodInfo Sosig_Speak_State = typeof(Sosig).GetMethod("Speak_State", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -367,6 +373,7 @@ namespace H3MP
         public static readonly MethodInfo FVRViveHand_SetGrabbityHovered = typeof(FVRViveHand).GetMethod("SetGrabbityHovered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo Molotov_Shatter = typeof(Molotov).GetMethod("Shatter", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public static readonly MethodInfo CarlGustaf_TryToFire = typeof(CarlGustaf).GetMethod("TryToFire", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        public static readonly MethodInfo GrappleThrowable_ClearRopeLengths = typeof(GrappleThrowable).GetMethod("ClearRopeLengths", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         #endregion
 
         // Debug
@@ -2353,6 +2360,13 @@ namespace H3MP
 
             PatchVerify.Verify(carlGustafShellSlideUpdateOriginal, harmony, false);
             harmony.Patch(carlGustafShellSlideUpdateOriginal, null, null, new HarmonyMethod(carlGustafShellSlideUpdateTranspiler));
+
+            // GrappleThrowablePatch
+            MethodInfo grappleThrowableCollisionOriginal = typeof(GrappleThrowable).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo grappleThrowableCollisionTranspiler = typeof(GrappleThrowablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchVerify.Verify(grappleThrowableCollisionOriginal, harmony, false);
+            harmony.Patch(grappleThrowableCollisionOriginal, null, null, new HarmonyMethod(grappleThrowableCollisionTranspiler));
 
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -10763,6 +10777,100 @@ namespace H3MP
                 else
                 {
                     H3MP_ClientSend.CarlGustafShellSlideSate(trackedItem.data.trackedID, slide.CSState);
+                }
+            }
+        }
+    }
+
+    class GrappleThrowablePatch
+    {
+        private static H3MP_TrackedItem trackedItem;
+
+        // Patches OnCollisionEnter to keep track of when we attach to surcface
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load GrappleThrowable instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GrappleThrowablePatch), "AttachToSurface"))); // Call our method
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load GrappleThrowable instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GrappleThrowablePatch), "CheckController"))); // Call our method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("OnCollisionEnter"))
+                {
+                    toInsert0.Add(instructionList[i + 3]);
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("SetActive"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static bool CheckController(GrappleThrowable grappleThrowable)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            trackedItem = H3MP_GameManager.trackedItemByItem.TryGetValue(grappleThrowable, out trackedItem) ? trackedItem : grappleThrowable.GetComponent<H3MP_TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.controller == H3MP_GameManager.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    trackedItem = null;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static void AttachToSurface(GrappleThrowable grappleThrowable)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if(trackedItem != null && trackedItem.data.controller == H3MP_GameManager.ID)
+            {
+                List<Vector3> finalRopePoints = Mod.GrappleThrowable_finalRopePoints.GetValue(grappleThrowable) as List<Vector3>;
+                trackedItem.data.additionalData = new byte[finalRopePoints.Count * 12 + 2];
+
+                trackedItem.data.additionalData[0] = ((bool)Mod.GrappleThrowable_m_hasLanded.GetValue(grappleThrowable)) ? (byte)1 : (byte)0;
+                trackedItem.data.additionalData[1] = (byte)finalRopePoints.Count;
+                if (finalRopePoints.Count > 0)
+                {
+                    for (int i = 0; i < finalRopePoints.Count; ++i)
+                    {
+                        BitConverter.GetBytes(finalRopePoints[i].x).CopyTo(trackedItem.data.additionalData, i * 12 + 2);
+                        BitConverter.GetBytes(finalRopePoints[i].y).CopyTo(trackedItem.data.additionalData, i * 12 + 6);
+                        BitConverter.GetBytes(finalRopePoints[i].z).CopyTo(trackedItem.data.additionalData, i * 12 + 10);
+                    }
+                }
+
+                if (H3MP_ThreadManager.host)
+                {
+                    H3MP_ServerSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.data.additionalData);
+                }
+                else
+                {
+                    H3MP_ClientSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.data.additionalData);
                 }
             }
         }

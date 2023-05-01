@@ -1,9 +1,7 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using static FistVR.sblpCell;
 
 namespace H3MP
 {
@@ -745,6 +743,13 @@ namespace H3MP
                 updateGivenFunc = UpdateGivenSosigWeaponInterface;
                 dataObject = asInterface;
                 sosigWeaponfireFunc = asInterface.W.FireGun;
+            }
+            else if (physObj is GrappleThrowable)
+            {
+                GrappleThrowable asGrappleThrowable = (GrappleThrowable)physObj;
+                updateFunc = UpdateGrappleThrowable;
+                updateGivenFunc = UpdateGivenGrappleThrowable;
+                dataObject = asGrappleThrowable;
             }
         }
 
@@ -7473,6 +7478,125 @@ namespace H3MP
                 {
                     // Set MechaState
                     asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
+                    modified = true;
+                }
+            }
+
+            data.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateGrappleThrowable()
+        {
+            GrappleThrowable asGrappleThrowable = dataObject as GrappleThrowable;
+            bool modified = false;
+
+            if (data.data == null)
+            {
+                data.data = new byte[3];
+                modified = true;
+            }
+
+            // Write rope free
+            byte preval = data.data[0];
+
+            data.data[0] = asGrappleThrowable.IsRopeFree ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[0];
+
+            // Write has been thrown
+            preval = data.data[1];
+
+            data.data[1] = (bool)Mod.GrappleThrowable_m_hasBeenThrown.GetValue(asGrappleThrowable) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[1];
+
+            // Write has landed
+            preval = data.data[2];
+
+            data.data[2] = (bool)Mod.GrappleThrowable_m_hasLanded.GetValue(asGrappleThrowable) ? (byte)1 : (byte)0;
+
+            modified |= preval != data.data[2];
+
+            return modified;
+        }
+
+        private bool UpdateGivenGrappleThrowable(byte[] newData)
+        {
+            bool modified = false;
+            GrappleThrowable asGrappleThrowable = dataObject as GrappleThrowable;
+
+            if (data.data == null)
+            {
+                // Set rope free
+                if (newData[0] == 0)
+                {
+                    Mod.GrappleThrowable_m_isRopeFree.SetValue(asGrappleThrowable, false);
+                    asGrappleThrowable.BundledRope.SetActive(true);
+                    Mod.GrappleThrowable_ClearRopeLengths.Invoke(asGrappleThrowable, null);
+                    asGrappleThrowable.FakeRopeLength.SetActive(false);
+                    asGrappleThrowable.FakeKnot.SetActive(false);
+                }
+                else
+                {
+                    asGrappleThrowable.FreeRope();
+                    asGrappleThrowable.FakeRopeLength.SetActive(true);
+                }
+
+                // Set has been thrown
+                if (newData[1] == 0)
+                {
+                    Mod.GrappleThrowable_m_hasBeenThrown.SetValue(asGrappleThrowable, false);
+                }
+                else
+                {
+                    Mod.GrappleThrowable_m_hasBeenThrown.SetValue(asGrappleThrowable, true);
+                    asGrappleThrowable.FakeRopeLength.SetActive(false);
+                }
+
+                // Set has landed
+                Mod.GrappleThrowable_m_hasLanded.SetValue(asGrappleThrowable, newData[2] == 1);
+
+                modified = true;
+            }
+            else
+            {
+                // Set rope free
+                if (asGrappleThrowable.IsRopeFree && data.data[0] == 0)
+                {
+                    Mod.GrappleThrowable_m_isRopeFree.SetValue(asGrappleThrowable, false);
+                    asGrappleThrowable.BundledRope.SetActive(true);
+                    Mod.GrappleThrowable_ClearRopeLengths.Invoke(asGrappleThrowable, null);
+                    asGrappleThrowable.FakeRopeLength.SetActive(false);
+                    asGrappleThrowable.FakeKnot.SetActive(false);
+                    modified = true;
+                }
+                else if (!asGrappleThrowable.IsRopeFree && data.data[0] == 1)
+                {
+                    asGrappleThrowable.FreeRope();
+                    asGrappleThrowable.FakeRopeLength.SetActive(true);
+                    modified = true;
+                }
+
+                // Set has been thrown
+                if (newData[1] == 0 && (bool)Mod.GrappleThrowable_m_hasBeenThrown.GetValue(asGrappleThrowable))
+                {
+                    Mod.GrappleThrowable_m_hasBeenThrown.SetValue(asGrappleThrowable, false);
+                    modified = true;
+                }
+                else if (newData[1] == 1 && !(bool)Mod.GrappleThrowable_m_hasBeenThrown.GetValue(asGrappleThrowable))
+                {
+                    Mod.GrappleThrowable_m_hasBeenThrown.SetValue(asGrappleThrowable, true);
+                    asGrappleThrowable.FakeRopeLength.SetActive(false);
+                    modified = true;
+                }
+
+                // Set has landed
+                if ((newData[2] == 0 && (bool)Mod.GrappleThrowable_m_hasLanded.GetValue(asGrappleThrowable))||
+                    (newData[2] == 1 && !(bool)Mod.GrappleThrowable_m_hasLanded.GetValue(asGrappleThrowable)))
+                {
+                    Mod.GrappleThrowable_m_hasLanded.SetValue(asGrappleThrowable, newData[2] == 1);
                     modified = true;
                 }
             }

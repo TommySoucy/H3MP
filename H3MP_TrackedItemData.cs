@@ -22,7 +22,7 @@ namespace H3MP
         public bool active;
         private bool previousActive;
         public bool underActiveControl;
-        private bool previousActiveControl;
+        public bool previousActiveControl;
         public string scene;
         public int instance;
         public bool sceneInit;
@@ -131,10 +131,11 @@ namespace H3MP
                     Mod.SetKinematicRecursive(physicalItem.transform, true);
                 }
 
-                ProcessAdditionalData();
-
                 // Initially set itself
                 Update(this, true);
+
+                // Process the initialdata. This must be done after the update so it can override it
+                ProcessAdditionalData();
 
                 // Process childrenToParent
                 for (int i = 0; i < childrenToParent.Count; ++i)
@@ -190,11 +191,59 @@ namespace H3MP
         // MOD: This will be called at the end of instantiation so mods can use it to process the additionalData array
         private void ProcessAdditionalData()
         {
-            if (Mod.currentTNHInstance != null && Mod.currentlyPlayingTNH)
+            if (physicalItem.GetComponent<TNH_ShatterableCrate>() != null)
             {
-                if (additionalData[0] == 1)
+                if (Mod.currentTNHInstance != null && Mod.currentlyPlayingTNH && additionalData[0] == 1)
                 {
                     (Mod.TNH_SupplyPoint_m_spawnBoxes.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[BitConverter.ToInt16(additionalData, 1)]) as List<GameObject>).Add(physicalItem.gameObject);
+                }
+            }
+            else if(physicalItem.physicalObject is GrappleThrowable)
+            {
+                if (additionalData[0] == 1 && data[0] == 1)
+                {
+                    GrappleThrowable asGrappleThrowable = H3MP_Client.items[trackedID].physicalItem.physicalObject as GrappleThrowable;
+                    Mod.GrappleThrowable_m_isRopeFree.SetValue(asGrappleThrowable, true);
+                    asGrappleThrowable.BundledRope.SetActive(false);
+                    Mod.GrappleThrowable_m_hasBeenThrown.SetValue(asGrappleThrowable, true);
+                    Mod.GrappleThrowable_m_hasLanded.SetValue(asGrappleThrowable, true);
+                    List<GameObject> ropeLengths = (List<GameObject>)Mod.GrappleThrowable_m_ropeLengths.GetValue(asGrappleThrowable);
+                    if (ropeLengths.Count > 0)
+                    {
+                        for (int i = ropeLengths.Count - 1; i >= 0; i--)
+                        {
+                            UnityEngine.Object.Destroy(ropeLengths[i]);
+                        }
+                        ropeLengths.Clear();
+                    }
+                    List<Vector3> finalRopePoints = (List<Vector3>)Mod.GrappleThrowable_finalRopePoints.GetValue(asGrappleThrowable);
+                    finalRopePoints.Clear();
+                    asGrappleThrowable.FakeRopeLength.SetActive(false);
+
+                    int count = H3MP_Client.items[trackedID].additionalData[1];
+                    Vector3 currentRopePoint = new Vector3(BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, 2), BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, 6), BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, 10));
+                    for (int i = 1; i < count; ++i)
+                    {
+                        Vector3 newPoint = new Vector3(BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, i * 12 + 2), BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, i * 12 + 6), BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, i * 12 + 10));
+                        Vector3 vector = newPoint - currentRopePoint;
+
+                        GameObject gameObject = UnityEngine.Object.Instantiate(asGrappleThrowable.RopeLengthPrefab, newPoint, Quaternion.LookRotation(-vector, Vector3.up));
+                        gameObject.transform.localScale = new Vector3(1f, 1f, vector.magnitude);
+                        FVRHandGrabPoint fvrhandGrabPoint = null;
+                        if (ropeLengths.Count > 0)
+                        {
+                            fvrhandGrabPoint = ropeLengths[ropeLengths.Count - 1].GetComponent<FVRHandGrabPoint>();
+                        }
+                        FVRHandGrabPoint component = gameObject.GetComponent<FVRHandGrabPoint>();
+                        ropeLengths.Add(gameObject);
+                        if (fvrhandGrabPoint != null && component != null)
+                        {
+                            fvrhandGrabPoint.ConnectedGrabPoint_Base = component;
+                            component.ConnectedGrabPoint_End = fvrhandGrabPoint;
+                        }
+                        finalRopePoints.Add(newPoint);
+                        currentRopePoint = newPoint;
+                    }
                 }
             }
         }

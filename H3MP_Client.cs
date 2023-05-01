@@ -513,6 +513,7 @@ namespace H3MP
                 H3MP_ClientHandle.ItemUpdate,
                 H3MP_ClientHandle.TNHHostStartHold,
                 H3MP_ClientHandle.IntegratedFirearmFire,
+                H3MP_ClientHandle.GrappleAttached,
             };
 
             // All vanilla scenes can be synced by default

@@ -904,12 +904,33 @@ namespace H3MP
         //      For more information and example, take a look at CollectExternalData(H3MP_TrackedSosigData)
         private static void CollectExternalData(H3MP_TrackedItemData trackedItemData)
         {
-            trackedItemData.additionalData = new byte[3];
-
-            trackedItemData.additionalData[0] = TNH_SupplyPointPatch.inSpawnBoxes ? (byte)1 : (byte)0;
-            if (TNH_SupplyPointPatch.inSpawnBoxes)
+            if (trackedItemData.physicalItem.GetComponent<TNH_ShatterableCrate>() != null)
             {
-                BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(trackedItemData.additionalData, 1);
+                trackedItemData.additionalData = new byte[3];
+
+                trackedItemData.additionalData[0] = TNH_SupplyPointPatch.inSpawnBoxes ? (byte)1 : (byte)0;
+                if (TNH_SupplyPointPatch.inSpawnBoxes)
+                {
+                    BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(trackedItemData.additionalData, 1);
+                }
+            }
+            else if(trackedItemData.physicalItem.physicalObject is GrappleThrowable)
+            {
+                GrappleThrowable asGrappleThrowable = (GrappleThrowable)trackedItemData.physicalItem.physicalObject;
+                List<Vector3> finalRopePoints = Mod.GrappleThrowable_finalRopePoints.GetValue(asGrappleThrowable) as List<Vector3>;
+                trackedItemData.additionalData = new byte[finalRopePoints.Count * 12 + 2];
+
+                trackedItemData.additionalData[0] = ((bool)Mod.GrappleThrowable_m_hasLanded.GetValue(asGrappleThrowable)) ? (byte)1: (byte)0;
+                trackedItemData.additionalData[1] = (byte)finalRopePoints.Count;
+                if (finalRopePoints.Count > 0)
+                {
+                    for(int i = 0; i < finalRopePoints.Count; ++i)
+                    {
+                        BitConverter.GetBytes(finalRopePoints[i].x).CopyTo(trackedItemData.additionalData, i * 12 + 2);
+                        BitConverter.GetBytes(finalRopePoints[i].y).CopyTo(trackedItemData.additionalData, i * 12 + 6);
+                        BitConverter.GetBytes(finalRopePoints[i].z).CopyTo(trackedItemData.additionalData, i * 12 + 10);
+                    }
+                }
             }
         }
 

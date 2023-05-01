@@ -4490,5 +4490,24 @@ namespace H3MP
                 }
             }
         }
+
+        public static void GrappleAttached(int trackedID, byte[] data, int clientID = 0)
+        {
+            using (H3MP_Packet packet = new H3MP_Packet((int)ServerPackets.grappleAttached))
+            {
+                packet.Write(trackedID);
+                packet.Write((short)data.Length);
+                packet.Write(data);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }
