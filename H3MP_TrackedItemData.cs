@@ -202,7 +202,8 @@ namespace H3MP
             {
                 if (additionalData[0] == 1 && data[0] == 1)
                 {
-                    GrappleThrowable asGrappleThrowable = H3MP_Client.items[trackedID].physicalItem.physicalObject as GrappleThrowable;
+                    GrappleThrowable asGrappleThrowable = physicalItem.physicalObject as GrappleThrowable;
+                    asGrappleThrowable.RootRigidbody.isKinematic = true;
                     Mod.GrappleThrowable_m_isRopeFree.SetValue(asGrappleThrowable, true);
                     asGrappleThrowable.BundledRope.SetActive(false);
                     Mod.GrappleThrowable_m_hasBeenThrown.SetValue(asGrappleThrowable, true);
@@ -220,11 +221,11 @@ namespace H3MP
                     finalRopePoints.Clear();
                     asGrappleThrowable.FakeRopeLength.SetActive(false);
 
-                    int count = H3MP_Client.items[trackedID].additionalData[1];
-                    Vector3 currentRopePoint = new Vector3(BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, 2), BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, 6), BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, 10));
+                    int count = additionalData[1];
+                    Vector3 currentRopePoint = new Vector3(BitConverter.ToSingle(additionalData, 2), BitConverter.ToSingle(additionalData, 6), BitConverter.ToSingle(additionalData, 10));
                     for (int i = 1; i < count; ++i)
                     {
-                        Vector3 newPoint = new Vector3(BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, i * 12 + 2), BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, i * 12 + 6), BitConverter.ToSingle(H3MP_Client.items[trackedID].additionalData, i * 12 + 10));
+                        Vector3 newPoint = new Vector3(BitConverter.ToSingle(additionalData, i * 12 + 2), BitConverter.ToSingle(additionalData, i * 12 + 6), BitConverter.ToSingle(additionalData, i * 12 + 10));
                         Vector3 vector = newPoint - currentRopePoint;
 
                         GameObject gameObject = UnityEngine.Object.Instantiate(asGrappleThrowable.RopeLengthPrefab, newPoint, Quaternion.LookRotation(-vector, Vector3.up));

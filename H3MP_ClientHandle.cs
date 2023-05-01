@@ -4559,6 +4559,7 @@ namespace H3MP
                 if (H3MP_Client.items[trackedID].physicalItem != null)
                 {
                     GrappleThrowable asGrappleThrowable = H3MP_Client.items[trackedID].physicalItem.physicalObject as GrappleThrowable;
+                    asGrappleThrowable.RootRigidbody.isKinematic = true;
                     Mod.GrappleThrowable_m_isRopeFree.SetValue(asGrappleThrowable, true);
                     asGrappleThrowable.BundledRope.SetActive(false);
                     Mod.GrappleThrowable_m_hasBeenThrown.SetValue(asGrappleThrowable, true);
