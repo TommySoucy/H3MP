@@ -8161,7 +8161,7 @@ namespace H3MP
                 BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval != data.data[4] || preval0 != data.data[5]);
+            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
 
             preval = data.data[6];
 
