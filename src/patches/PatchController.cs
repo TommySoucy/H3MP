@@ -1,0 +1,277 @@
+﻿using Anvil;
+using BepInEx;
+using BepInEx.Bootstrap;
+using FistVR;
+using HarmonyLib;
+using HarmonyLib.Public.Patching;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using UnityEngine;
+using Valve.Newtonsoft.Json.Linq;
+
+namespace H3MP.Patches
+{
+    public class PatchController
+    {
+        // Patch verification stuff
+        static Type ILManipulatorType;
+        static MethodInfo getInstructionsMethod;
+
+        public static Dictionary<string, int> hashes;
+        public static bool writeWhenDone;
+        public static int breakingPatchVerify = 0;
+        public static int warningPatchVerify = 0;
+
+        // Mod compatibility stuff
+        public static Assembly[] assemblies;
+
+        // TNH Tweaker
+        public static int TNHTweakerAsmIdx = -1;
+        public static Type TNHTweaker_TNHTweaker;
+        public static FieldInfo TNHTweaker_TNHTweaker_SpawnedBossIndexes;
+        public static FieldInfo TNHTweaker_TNHTweaker_PreventOutfitFunctionality;
+        public static Type TNHTweaker_TNHPatches;
+        public static MethodInfo TNHTweaker_TNHPatches_ConfigureSupplyPoint;
+        public static Type TNHTweaker_PatrolPatches;
+        public static Type TNHTweaker_Patrol;
+        public static Type TNHTweaker_LoadedTemplateManager;
+        public static FieldInfo TNHTweaker_LoadedTemplateManager_LoadedCharactersDict;
+        public static Type TNHTweaker_CustomCharacter;
+        public static MethodInfo TNHTweaker_CustomCharacter_GetCurrentLevel;
+        public static FieldInfo TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality;
+
+        // Collects fields/types relevant to mod compatibility patches
+        private static void GetCompatibilityData()
+        {
+            // Look for supported mod assemblies we may need to patch for
+            assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; ++i)
+            {
+                if (assemblies[i].GetName().Name.Equals("TakeAndHoldTweaker"))
+                {
+                    TNHTweakerAsmIdx = i;
+                    TNHTweaker_TNHPatches = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.Patches.TNHPatches");
+                    TNHTweaker_TNHPatches_ConfigureSupplyPoint = TNHTweaker_TNHPatches.GetMethod("ConfigureSupplyPoint", BindingFlags.Public | BindingFlags.Static);
+                    TNHTweaker_PatrolPatches = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.Patches.PatrolPatches");
+                    TNHTweaker_Patrol = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.ObjectTemplates.Patrol");
+                    TNHTweaker_LoadedTemplateManager = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.LoadedTemplateManager");
+                    TNHTweaker_LoadedTemplateManager_LoadedCharactersDict = TNHTweaker_LoadedTemplateManager.GetField("LoadedCharactersDict", BindingFlags.Public | BindingFlags.Static);
+                    TNHTweaker_CustomCharacter = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.ObjectTemplates.CustomCharacter");
+                    TNHTweaker_CustomCharacter_GetCurrentLevel = TNHTweaker_CustomCharacter.GetMethod("GetCurrentLevel", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_ForceDisableOutfitFunctionality = TNHTweaker_CustomCharacter.GetField("ForceDisableOutfitFunctionality", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_TNHTweaker = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.TNHTweaker");
+                    TNHTweaker_TNHTweaker_SpawnedBossIndexes = TNHTweaker_TNHTweaker.GetField("SpawnedBossIndexes", BindingFlags.Public | BindingFlags.Static);
+                    TNHTweaker_TNHTweaker_PreventOutfitFunctionality = TNHTweaker_TNHTweaker.GetField("PreventOutfitFunctionality", BindingFlags.Public | BindingFlags.Static);
+                }
+            }
+        }
+
+        // Verifies patch integrity by comparing original method's hash with stored hash
+        public static void Verify(MethodInfo methodInfo, Harmony harmony, bool breaking)
+        {
+            if (hashes == null)
+            {
+                if (File.Exists(Mod.H3MPPath + "/PatchHashes.json"))
+                {
+                    hashes = JObject.Parse(File.ReadAllText(Mod.H3MPPath + "/PatchHashes.json")).ToObject<Dictionary<string, int>>();
+                }
+                else
+                {
+                    hashes = new Dictionary<string, int>();
+                    writeWhenDone = true;
+                }
+            }
+
+            if (ILManipulatorType == null)
+            {
+                ILManipulatorType = typeof(HarmonyManipulator).Assembly.GetType("HarmonyLib.Internal.Patching.ILManipulator");
+                getInstructionsMethod = ILManipulatorType.GetMethod("GetInstructions", BindingFlags.Public | BindingFlags.Instance);
+            }
+
+            string identifier = methodInfo.DeclaringType.Name + "." + methodInfo.Name + GetParamArrHash(methodInfo.GetParameters()).ToString();
+
+            // Get IL instructions of the method
+            ILGenerator generator = PatchProcessor.CreateILGenerator(methodInfo);
+            Mono.Cecil.Cil.MethodBody bodyCopy = PatchManager.GetMethodPatcher(methodInfo).CopyOriginal().Definition.Body;
+            object ilManipulator = Activator.CreateInstance(ILManipulatorType, bodyCopy, false);
+            object[] paramArr = new object[] { generator, null };
+            List<CodeInstruction> instructions = (List<CodeInstruction>)getInstructionsMethod.Invoke(ilManipulator, paramArr);
+
+            // Build hash from all instructions
+            string s = "";
+            for (int i = 0; i < instructions.Count; ++i)
+            {
+                CodeInstruction instruction = instructions[i];
+                OpCode oc = instruction.opcode;
+                if (oc == null)
+                {
+                    s += "null opcode" + (instruction.operand == null ? "null operand" : instruction.operand.ToString());
+                }
+                else
+                {
+                    // This is done because the code changes if a mod is loaded using MonoMod loader? Some calls become virtual
+                    s += (oc == OpCodes.Call || oc == OpCodes.Callvirt ? "c" : oc.ToString()) + (instruction.operand == null ? "null operand" : instruction.operand.ToString());
+                }
+            }
+            int hash = s.GetHashCode();
+
+            // Verify hash
+            if (hashes.TryGetValue(identifier, out int originalHash))
+            {
+                if (originalHash != hash)
+                {
+                    if (breaking)
+                    {
+#if DEBUG
+                        Mod.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
+#endif
+                        ++breakingPatchVerify;
+                    }
+                    else
+                    {
+#if DEBUG
+                        Mod.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
+#endif
+                        ++warningPatchVerify;
+                    }
+
+                    hashes[identifier] = hash;
+                }
+            }
+            else
+            {
+                hashes.Add(identifier, hash);
+                if (!writeWhenDone)
+                {
+#if DEBUG
+                    Mod.LogWarning("PatchVerify: " + identifier + " not found in hashes. Most probably a new patch. This warning will remain until new hash file is written.");
+#endif
+                }
+            }
+        }
+
+        private static int GetParamArrHash(ParameterInfo[] paramArr)
+        {
+            int hash = 0;
+            foreach (ParameterInfo t in paramArr)
+            {
+                hash += t.ParameterType.Name.GetHashCode();
+            }
+            return hash;
+        }
+
+        public static void DoPatching()
+        {
+            Harmony harmony = new Harmony("VIP.TommySoucy.H3MP");
+
+            GetCompatibilityData();
+
+            GeneralPatches.DoPatching(harmony);
+            InteractionPatches.DoPatching(harmony);
+            ActionPatches.DoPatching(harmony);
+            InstantiationPatches.DoPatching(harmony);
+            DamagePatches.DoPatching(harmony);
+            TNHPatches.DoPatching(harmony);
+
+            ProcessPatchResult();
+        }
+
+        private static void ProcessPatchResult()
+        {
+            if (writeWhenDone)
+            {
+                File.WriteAllText(Mod.H3MPPath + "/PatchHashes.json", JObject.FromObject(hashes).ToString());
+            }
+
+            if (breakingPatchVerify > 0)
+            {
+                Mod.LogError("PatchVerify report: " + breakingPatchVerify + " breaking, " + warningPatchVerify + " warnings.\nIf you have other mods installed this may be normal. Refer to H3MP mod compatibility list in case things break.");
+            }
+            else if (warningPatchVerify > 0)
+            {
+                Mod.LogWarning("PatchVerify report: 0 breaking, " + warningPatchVerify + " warnings.\nIf you have other mods installed this may be normal. Refer to H3MP mod compatibility list in case things break.");
+            }
+
+            List<string> supportedMods = new List<string>();
+            object[] dependencyAttributes = typeof(Mod).GetCustomAttributes(typeof(BepInDependency), false);
+            for (int i = 0; i < dependencyAttributes.Length; ++i)
+            {
+                BepInDependency dependency = dependencyAttributes[i] as BepInDependency;
+                if (dependency != null)
+                {
+                    supportedMods.Add(dependency.DependencyGUID);
+                }
+            }
+            int unknownModCount = 0;
+#if DEBUG
+            List<string> unknownMods = new List<string>();
+#endif
+            foreach (KeyValuePair<string, PluginInfo> otherPlugin in Chainloader.PluginInfos)
+            {
+                if (!otherPlugin.Key.Equals("VIP.TommySoucy.H3MP") && !supportedMods.Contains(otherPlugin.Key))
+                {
+                    ++unknownModCount;
+#if DEBUG
+                    unknownMods.Add(otherPlugin.Key);
+#endif
+                }
+
+                switch (otherPlugin.Key)
+                {
+                    case "dll.wfiost.h3vrutilities":
+                        Mod.LogWarning("You have H3VRUtilities installed! Note that any object/entity that uses the scripts included in this mod may not work with H3MP!");
+                        break;
+                    case "h3vr.cityrobo.OpenScripts":
+                        Mod.LogWarning("You have OpenScripts installed! Note that any object/entity that uses the scripts included in this mod may not work with H3MP!");
+                        break;
+                    case "h3vr.OpenScripts2":
+                        Mod.LogWarning("You have OpenScripts2 installed! Note that any object/entity that uses the scripts included in this mod may not work with H3MP!");
+                        break;
+                    case "h3vr.andrew_ftw.afcl":
+                        Mod.LogWarning("You have FTW Arms AFCL installed! Note that any object/entity that uses the scripts included in this mod may not work with H3MP!");
+                        break;
+                }
+            }
+            Mod.LogWarning("You have at least " + unknownModCount + " mods installed that are either unrecognized or unsupported by H3MP");
+#if DEBUG
+            Mod.LogWarning("Unknown/Unsupported mods:");
+            for (int i = 0; i < unknownMods.Count; ++i)
+            {
+                Mod.LogWarning(unknownMods[i]);
+            }
+#endif
+        }
+
+        // This is a copy of HarmonyX's AccessTools extension method EnumeratorMoveNext (i think)
+        // Gets MoveNext() of a Coroutine
+        public static MethodInfo EnumeratorMoveNext(MethodBase method)
+        {
+            if (method is null)
+            {
+                return null;
+            }
+
+            var codes = PatchProcessor.ReadMethodBody(method).Where(pair => pair.Key == OpCodes.Newobj);
+            if (codes.Count() != 1)
+            {
+                return null;
+            }
+            var ctor = codes.First().Value as ConstructorInfo;
+            if (ctor == null)
+            {
+                return null;
+            }
+            var type = ctor.DeclaringType;
+            if (type == null)
+            {
+                return null;
+            }
+            return AccessTools.Method(type, nameof(IEnumerator.MoveNext));
+        }
+    }
+}

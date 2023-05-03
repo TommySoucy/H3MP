@@ -1,0 +1,216 @@
+﻿using FistVR;
+using H3MP.Networking;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace H3MP
+{
+    public class PlayerManager : MonoBehaviour
+    {
+        public int ID;
+        public string username;
+
+        // Player transforms and state data
+        public Transform head;
+        public PlayerHitbox headHitBox;
+        public Material headMat;
+        public AIEntity headEntity;
+        public Transform torso;
+        public Material torsoMat;
+        public PlayerHitbox torsoHitBox;
+        public AIEntity torsoEntity;
+        public Transform leftHand;
+        public PlayerHitbox leftHandHitBox;
+        public Material leftHandMat;
+        public Transform rightHand;
+        public PlayerHitbox rightHandHitBox;
+        public Material rightHandMat;
+        public Billboard overheadDisplayBillboard;
+        public Text usernameLabel;
+        public Text healthIndicator;
+        public int IFF;
+        public int colorIndex;
+        public TAH_ReticleContact reticleContact;
+        public float health;
+
+        public string scene;
+        public int instance;
+        public bool firstInSceneInstance;
+
+        public bool visible;
+
+        private void Awake()
+        {
+            head = transform.GetChild(0);
+            headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
+            headEntity.Beacons = new List<AIEntityIFFBeacon>();
+            headEntity.IFFCode = IFF;
+            headHitBox = head.gameObject.AddComponent<PlayerHitbox>();
+            headHitBox.manager = this;
+            headHitBox.part = PlayerHitbox.Part.Head;
+            torso = transform.GetChild(1);
+            torsoEntity = torso.GetChild(0).gameObject.AddComponent<AIEntity>();
+            torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
+            torsoEntity.IFFCode = IFF;
+            torsoHitBox = torso.gameObject.AddComponent<PlayerHitbox>();
+            torsoHitBox.manager = this;
+            torsoHitBox.part = PlayerHitbox.Part.Torso;
+            leftHand = transform.GetChild(2);
+            leftHandHitBox = leftHand.gameObject.AddComponent<PlayerHitbox>();
+            leftHandHitBox.manager = this;
+            leftHandHitBox.part = PlayerHitbox.Part.LeftHand;
+            rightHand = transform.GetChild(3);
+            rightHandHitBox = rightHand.gameObject.AddComponent<PlayerHitbox>();
+            rightHandHitBox.manager = this;
+            rightHandHitBox.part = PlayerHitbox.Part.RightHand;
+            overheadDisplayBillboard = transform.GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<Billboard>();
+            usernameLabel = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
+            healthIndicator = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
+            headMat = head.GetComponent<Renderer>().material;
+            torsoMat = torso.GetComponent<Renderer>().material;
+            leftHandMat = leftHand.GetComponent<Renderer>().material;
+            rightHandMat = rightHand.GetComponent<Renderer>().material;
+        }
+
+        public void Damage(PlayerHitbox.Part part, Damage damage)
+        {
+            if (ID != -1)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.PlayerDamage(ID, (byte)part, damage);
+                }
+                else
+                {
+                    ClientSend.PlayerDamage(ID, (byte)part, damage);
+                }
+            }
+            else
+            {
+                Mod.LogInfo("Dummy player has receive damage on " + part);
+            }
+        }
+
+        public void SetEntitiesRegistered(bool registered)
+        {
+            if(GM.CurrentAIManager != null)
+            {
+                if (registered)
+                {
+                    GM.CurrentAIManager.RegisterAIEntity(headEntity);
+                    GM.CurrentAIManager.RegisterAIEntity(torsoEntity);
+                }
+                else
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(headEntity);
+                    GM.CurrentAIManager.DeRegisterAIEntity(torsoEntity);
+                }
+            }
+        }
+
+        public void SetVisible(bool visible)
+        {
+            this.visible = visible;
+
+            head.gameObject.SetActive(visible);
+            torso.gameObject.SetActive(visible);
+            leftHand.gameObject.SetActive(visible);
+            rightHand.gameObject.SetActive(visible);
+            overheadDisplayBillboard.gameObject.SetActive(visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+
+            if (visible && reticleContact == null &&
+                Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null &&
+                Mod.currentTNHInstance.manager.TAHReticle != null)
+            {
+                reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(head, (TAH_ReticleContact.ContactType)(GameManager.radarColor ? (IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : colorIndex - 4));
+            }
+            else if(!visible && reticleContact != null)
+            {
+                for (int i = GM.TNH_Manager.TAHReticle.Contacts.Count - 1; i >= 0; i--)
+                {
+                    if (GM.TNH_Manager.TAHReticle.Contacts[i] == reticleContact)
+                    {
+                        GM.TNH_Manager.TAHReticle.m_trackedTransforms.Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                        UnityEngine.Object.Destroy(GM.TNH_Manager.TAHReticle.Contacts[i].gameObject);
+                        GM.TNH_Manager.TAHReticle.Contacts.RemoveAt(i);
+                        reticleContact = null;
+                        break;
+                    }
+                }
+            }
+
+            SetEntitiesRegistered(visible);
+        }
+
+        public void SetIFF(int IFF)
+        {
+            int preIFF = this.IFF;
+            this.IFF = IFF;
+            if (headEntity != null)
+            {
+                headEntity.IFFCode = IFF;
+                torsoEntity.IFFCode = IFF;
+            }
+
+            if (GameManager.colorByIFF)
+            {
+                SetColor(IFF);
+            }
+
+            overheadDisplayBillboard.gameObject.SetActive(visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+
+            if (GameManager.radarMode == 1)
+            {
+                if (visible &&
+                    Mod.currentTNHInstance != null &&
+                    Mod.currentTNHInstance.manager != null &&
+                    Mod.currentTNHInstance.currentlyPlaying.Contains(ID) &&
+                    reticleContact == null)
+                {
+                    reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(head, (TAH_ReticleContact.ContactType)(GameManager.radarColor ? (IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : colorIndex - 4));
+                }
+                else if(!visible ||
+                Mod.currentTNHInstance == null ||
+                Mod.currentTNHInstance.manager == null ||
+                        !Mod.currentTNHInstance.currentlyPlaying.Contains(ID) ||
+                        reticleContact != null)
+                {
+                    for (int i = GM.TNH_Manager.TAHReticle.Contacts.Count - 1; i >= 0; i--)
+                    {
+                        if (GM.TNH_Manager.TAHReticle.Contacts[i] == reticleContact)
+                        {
+                            GM.TNH_Manager.TAHReticle.m_trackedTransforms.Remove(GM.TNH_Manager.TAHReticle.Contacts[i].TrackedTransform);
+                            Destroy(GM.TNH_Manager.TAHReticle.Contacts[i].gameObject);
+                            GM.TNH_Manager.TAHReticle.Contacts.RemoveAt(i);
+                            reticleContact = null;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (GameManager.radarColor && reticleContact != null)
+            {
+                reticleContact.R_Arrow.material.color = IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? Color.green : Color.red;
+                reticleContact.R_Icon.material.color = IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? Color.green : Color.red;
+            }
+        }
+
+        public void SetColor(int colorIndex)
+        {
+            this.colorIndex = Mathf.Abs(colorIndex % GameManager.colors.Length);
+
+            headMat.color = GameManager.colors[colorIndex];
+            torsoMat.color = GameManager.colors[colorIndex];
+            leftHandMat.color = GameManager.colors[colorIndex];
+            rightHandMat.color = GameManager.colors[colorIndex];
+
+            if (!GameManager.radarColor && reticleContact != null)
+            {
+                reticleContact.R_Arrow.material.color = GameManager.colors[colorIndex];
+                reticleContact.R_Icon.material.color = GameManager.colors[colorIndex];
+            }
+        }
+    }
+}

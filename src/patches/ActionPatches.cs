@@ -1,0 +1,6723 @@
+﻿using FistVR;
+using H3MP.Networking;
+using H3MP.Tracking;
+using HarmonyLib;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using UnityEngine;
+
+namespace H3MP.Patches
+{
+    public class ActionPatches
+    {
+        public static void DoPatching(Harmony harmony)
+        {
+            // FirePatch
+            MethodInfo firePatchOriginal = typeof(FVRFireArm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo firePatchPrefix = typeof(FirePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo firePatchTranspiler = typeof(FirePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo firePatchPostfix = typeof(FirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(firePatchOriginal, harmony, true);
+            harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix), new HarmonyMethod(firePatchTranspiler));
+
+            // FireSosigWeaponPatch
+            MethodInfo fireSosigWeaponPatchOriginal = typeof(SosigWeapon).GetMethod("FireGun", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireSosigWeaponPatchPrefix = typeof(FireSosigWeaponPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireSosigWeaponPatchTranspiler = typeof(FireSosigWeaponPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireSosigWeaponPatchPostfix = typeof(FireSosigWeaponPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireSosigWeaponPatchOriginal, harmony, true);
+            harmony.Patch(fireSosigWeaponPatchOriginal, new HarmonyMethod(fireSosigWeaponPatchPrefix), new HarmonyMethod(fireSosigWeaponPatchPostfix), new HarmonyMethod(fireSosigWeaponPatchTranspiler));
+
+            // FireLAPD2019Patch
+            MethodInfo fireLAPD2019PatchOriginal = typeof(LAPD2019).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireLAPD2019PatchPrefix = typeof(FireLAPD2019Patch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireLAPD2019PatchTranspiler = typeof(FireLAPD2019Patch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireLAPD2019PatchPostfix = typeof(FireLAPD2019Patch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireLAPD2019PatchOriginal, harmony, false);
+            harmony.Patch(fireLAPD2019PatchOriginal, new HarmonyMethod(fireLAPD2019PatchPrefix), new HarmonyMethod(fireLAPD2019PatchPostfix), new HarmonyMethod(fireLAPD2019PatchTranspiler));
+
+            // FireMinigunPatch
+            MethodInfo fireMinigunPatchOriginal = typeof(Minigun).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireMinigunPatchPrefix = typeof(FireMinigunPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireMinigunPatchTranspiler = typeof(FireMinigunPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireMinigunPatchPostfix = typeof(FireMinigunPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireMinigunPatchOriginal, harmony, false);
+            harmony.Patch(fireMinigunPatchOriginal, new HarmonyMethod(fireMinigunPatchPrefix), new HarmonyMethod(fireMinigunPatchPostfix), new HarmonyMethod(fireMinigunPatchTranspiler));
+
+            // FireAttachableFirearmPatch
+            MethodInfo fireAttachableFirearmPatchOriginal = typeof(AttachableFirearm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireAttachableFirearmPatchTranspiler = typeof(FireAttachableFirearmPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireAttachableBreakActionsPatchOriginal = typeof(AttachableBreakActions).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
+            MethodInfo fireAttachableBreakActionsPatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireAttachableBreakActionsPatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireAttachableClosedBoltWeaponPatchOriginal = typeof(AttachableClosedBoltWeapon).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
+            MethodInfo fireAttachableClosedBoltWeaponPatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireAttachableClosedBoltWeaponPatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireAttachableTubeFedPatchOriginal = typeof(AttachableTubeFed).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
+            MethodInfo fireAttachableTubeFedPatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireAttachableTubeFedPatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireGP25PatchOriginal = typeof(GP25).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
+            MethodInfo fireGP25PatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireGP25PatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireM203PatchOriginal = typeof(M203).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(bool) }, null);
+            MethodInfo fireM203PatchPrefix = typeof(FireAttachableFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireM203PatchPostfix = typeof(FireAttachableFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireAttachableFirearmPatchOriginal, harmony, false);
+            PatchController.Verify(fireAttachableBreakActionsPatchOriginal, harmony, false);
+            PatchController.Verify(fireAttachableClosedBoltWeaponPatchOriginal, harmony, false);
+            PatchController.Verify(fireAttachableTubeFedPatchOriginal, harmony, false);
+            PatchController.Verify(fireGP25PatchOriginal, harmony, false);
+            PatchController.Verify(fireM203PatchOriginal, harmony, false);
+            harmony.Patch(fireAttachableFirearmPatchOriginal, null, null, new HarmonyMethod(fireAttachableFirearmPatchTranspiler));
+            harmony.Patch(fireAttachableBreakActionsPatchOriginal, new HarmonyMethod(fireAttachableBreakActionsPatchPrefix), new HarmonyMethod(fireAttachableBreakActionsPatchPostfix));
+            harmony.Patch(fireAttachableClosedBoltWeaponPatchOriginal, new HarmonyMethod(fireAttachableClosedBoltWeaponPatchPrefix), new HarmonyMethod(fireAttachableClosedBoltWeaponPatchPostfix));
+            harmony.Patch(fireAttachableTubeFedPatchOriginal, new HarmonyMethod(fireAttachableTubeFedPatchPrefix), new HarmonyMethod(fireAttachableTubeFedPatchPostfix));
+            harmony.Patch(fireGP25PatchOriginal, new HarmonyMethod(fireGP25PatchPrefix), new HarmonyMethod(fireGP25PatchPostfix));
+            harmony.Patch(fireM203PatchOriginal, new HarmonyMethod(fireM203PatchPrefix), new HarmonyMethod(fireM203PatchPostfix));
+
+            // FireRevolvingShotgunPatch
+            MethodInfo fireRevolvingShotgunPatchOriginal = typeof(RevolvingShotgun).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireRevolvingShotgunPatchPrefix = typeof(FireRevolvingShotgunPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireRevolvingShotgunPatchPostfix = typeof(FireRevolvingShotgunPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireRevolvingShotgunPatchOriginal, harmony, false);
+            harmony.Patch(fireRevolvingShotgunPatchOriginal, new HarmonyMethod(fireRevolvingShotgunPatchPrefix), new HarmonyMethod(fireRevolvingShotgunPatchPostfix));
+
+            // FireRevolverPatch
+            MethodInfo fireRevolverPatchOriginal = typeof(Revolver).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireRevolverPatchPrefix = typeof(FireRevolverPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireRevolverPatchPostfix = typeof(FireRevolverPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireRevolverPatchOriginal, harmony, false);
+            harmony.Patch(fireRevolverPatchOriginal, new HarmonyMethod(fireRevolverPatchPrefix), new HarmonyMethod(fireRevolverPatchPostfix));
+
+            // FireSingleActionRevolverPatch
+            MethodInfo fireSingleActionRevolverPatchOriginal = typeof(SingleActionRevolver).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireSingleActionRevolverPatchPrefix = typeof(FireSingleActionRevolverPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireSingleActionRevolverPatchPostfix = typeof(FireSingleActionRevolverPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireSingleActionRevolverPatchOriginal, harmony, false);
+            harmony.Patch(fireSingleActionRevolverPatchOriginal, new HarmonyMethod(fireSingleActionRevolverPatchPrefix), new HarmonyMethod(fireSingleActionRevolverPatchPostfix));
+
+            // FireGrappleGunPatch
+            MethodInfo fireGrappleGunPatchOriginal = typeof(GrappleGun).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[0], null);
+            MethodInfo fireGrappleGunPatchPrefix = typeof(FireGrappleGunPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireGrappleGunPatchPostfix = typeof(FireGrappleGunPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireGrappleGunPatchOriginal, harmony, false);
+            harmony.Patch(fireGrappleGunPatchOriginal, new HarmonyMethod(fireGrappleGunPatchPrefix), new HarmonyMethod(fireGrappleGunPatchPostfix));
+
+            // FireDerringerPatch
+            MethodInfo fireDerringerPatchOriginal = typeof(Derringer).GetMethod("FireBarrel", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireDerringerPatchPrefix = typeof(FireDerringerPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireDerringerPatchPostfix = typeof(FireDerringerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireDerringerPatchOriginal, harmony, false);
+            harmony.Patch(fireDerringerPatchOriginal, new HarmonyMethod(fireDerringerPatchPrefix), new HarmonyMethod(fireDerringerPatchPostfix));
+
+            // FireBreakActionWeaponPatch
+            MethodInfo fireBreakActionWeaponPatchOriginal = typeof(BreakActionWeapon).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(int), typeof(bool), typeof(int) }, null);
+            MethodInfo fireBreakActionWeaponPatchPrefix = typeof(FireBreakActionWeaponPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireBreakActionWeaponPatchPostfix = typeof(FireBreakActionWeaponPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireBreakActionWeaponPatchOriginal, harmony, false);
+            harmony.Patch(fireBreakActionWeaponPatchOriginal, new HarmonyMethod(fireBreakActionWeaponPatchPrefix), new HarmonyMethod(fireBreakActionWeaponPatchPostfix));
+
+            // FireLeverActionFirearmPatch
+            MethodInfo fireLeverActionFirearmPatchOriginal = typeof(LeverActionFirearm).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireLeverActionFirearmPatchPrefix = typeof(FireLeverActionFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireLeverActionFirearmPatchPostfix = typeof(FireLeverActionFirearmPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireLeverActionFirearmPatchOriginal, harmony, false);
+            harmony.Patch(fireLeverActionFirearmPatchOriginal, new HarmonyMethod(fireLeverActionFirearmPatchPrefix), new HarmonyMethod(fireLeverActionFirearmPatchPostfix));
+
+            // FireFlintlockWeaponPatch
+            MethodInfo fireFlintlockWeaponPatchBurnOffOuterOriginal = typeof(FlintlockBarrel).GetMethod("BurnOffOuter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo fireFlintlockWeaponPatchBurnOffOuterPrefix = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponPatchBurnOffOuterTranspiler = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponPatchBurnOffOuterPostfix = typeof(FireFlintlockWeaponPatch).GetMethod("BurnOffOuterPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponFireOriginal = typeof(FlintlockBarrel).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireFlintlockWeaponFirePrefix = typeof(FireFlintlockWeaponPatch).GetMethod("FirePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponFireTranspiler = typeof(FireFlintlockWeaponPatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireFlintlockWeaponFirePostfix = typeof(FireFlintlockWeaponPatch).GetMethod("FirePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireFlintlockWeaponPatchBurnOffOuterOriginal, harmony, false);
+            PatchController.Verify(fireFlintlockWeaponFireOriginal, harmony, false);
+            harmony.Patch(fireFlintlockWeaponPatchBurnOffOuterOriginal, new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPrefix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPostfix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterTranspiler));
+            harmony.Patch(fireFlintlockWeaponFireOriginal, new HarmonyMethod(fireFlintlockWeaponFirePrefix), new HarmonyMethod(fireFlintlockWeaponFirePostfix), new HarmonyMethod(fireFlintlockWeaponFireTranspiler));
+
+            // FireHCBPatch
+            MethodInfo fireHCBPatchOriginal = typeof(HCB).GetMethod("ReleaseSled", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireHCBPatchPrefix = typeof(FireHCBPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireHCBPatchPostfix = typeof(FireHCBPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireHCBPatchOriginal, harmony, false);
+            harmony.Patch(fireHCBPatchOriginal, new HarmonyMethod(fireHCBPatchPrefix), new HarmonyMethod(fireHCBPatchPostfix));
+
+            // FireStingerLauncherPatch
+            MethodInfo fireStingerLauncherOriginal = typeof(StingerLauncher).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { }, null);
+            MethodInfo fireStingerLauncherPrefix = typeof(FireStingerLauncherPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireStingerLauncherTranspiler = typeof(FireStingerLauncherPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireStingerLauncherPostfix = typeof(FireStingerLauncherPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireStingerMissileOriginal = typeof(StingerMissile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(AIEntity) }, null);
+            MethodInfo fireStingerMissilePrefix = typeof(FireStingerLauncherPatch).GetMethod("MissileFirePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireStingerLauncherOriginal, harmony, false);
+            PatchController.Verify(fireStingerMissileOriginal, harmony, false);
+            harmony.Patch(fireStingerLauncherOriginal, new HarmonyMethod(fireStingerLauncherPrefix), new HarmonyMethod(fireStingerLauncherPostfix), new HarmonyMethod(fireStingerLauncherTranspiler));
+            harmony.Patch(fireStingerMissileOriginal, new HarmonyMethod(fireStingerMissilePrefix));
+
+            // RemoteMissileDetonatePatch
+            MethodInfo remoteMissileDetonatePatchOriginal = typeof(RemoteMissile).GetMethod("Detonante", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo remoteMissileDetonatePatchPrefix = typeof(RemoteMissileDetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(remoteMissileDetonatePatchOriginal, harmony, false);
+            harmony.Patch(remoteMissileDetonatePatchOriginal, new HarmonyMethod(remoteMissileDetonatePatchPrefix));
+
+            // StingerMissileExplodePatch
+            MethodInfo stingerMissileExplodePatchOriginal = typeof(StingerMissile).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo stingerMissileExplodePatchPrefix = typeof(StingerMissileExplodePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(stingerMissileExplodePatchOriginal, harmony, false);
+            harmony.Patch(stingerMissileExplodePatchOriginal, new HarmonyMethod(stingerMissileExplodePatchPrefix));
+
+            // SosigWeaponShatterPatch
+            MethodInfo sosigWeaponShatterPatchOriginal = typeof(SosigWeapon).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigWeaponShatterPatchPrefix = typeof(SosigWeaponShatterPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigWeaponShatterPatchOriginal, harmony, false);
+            harmony.Patch(sosigWeaponShatterPatchOriginal, new HarmonyMethod(sosigWeaponShatterPatchPrefix));
+
+            // SosigConfigurePatch
+            MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigConfigurePatchPrefix = typeof(SosigConfigurePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigConfigurePatchOriginal, harmony, false);
+            harmony.Patch(sosigConfigurePatchOriginal, new HarmonyMethod(sosigConfigurePatchPrefix));
+
+            // SosigUpdatePatch
+            MethodInfo sosigUpdatePatchOriginal = typeof(Sosig).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigUpdatePatchPrefix = typeof(SosigUpdatePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigHandPhysUpdatePatchOriginal = typeof(Sosig).GetMethod("HandPhysUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigHandPhysUpdatePatchPrefix = typeof(SosigUpdatePatch).GetMethod("HandPhysUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigUpdatePatchOriginal, harmony, true);
+            harmony.Patch(sosigUpdatePatchOriginal, new HarmonyMethod(sosigUpdatePatchPrefix));
+            harmony.Patch(sosigHandPhysUpdatePatchOriginal, new HarmonyMethod(sosigHandPhysUpdatePatchPrefix));
+
+            // InventoryUpdatePatch
+            MethodInfo sosigInvUpdatePatchOriginal = typeof(SosigInventory).GetMethod("PhysHold", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigInvUpdatePatchPrefix = typeof(SosigInvUpdatePatch).GetMethod("PhysHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigInvUpdatePatchOriginal, harmony, false);
+            harmony.Patch(sosigInvUpdatePatchOriginal, new HarmonyMethod(sosigInvUpdatePatchPrefix));
+
+            // SosigActionPatch
+            MethodInfo sosigDiesPatchOriginal = typeof(Sosig).GetMethod("SosigDies", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigDiesPatchPrefix = typeof(SosigActionPatch).GetMethod("SosigDiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigDiesPatchPosfix = typeof(SosigActionPatch).GetMethod("SosigDiesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigBodyStatePatchOriginal = typeof(Sosig).GetMethod("SetBodyState", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigBodyStatePatchPrefix = typeof(SosigActionPatch).GetMethod("SetBodyStatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigBodyUpdatePatchOriginal = typeof(Sosig).GetMethod("BodyUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigBodyUpdatePatchTranspiler = typeof(SosigActionPatch).GetMethod("FootStepTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigSpeechUpdatePatchOriginal = typeof(Sosig).GetMethod("SpeechUpdate_State", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigSpeechUpdatePatchTranspiler = typeof(SosigActionPatch).GetMethod("SpeechUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigSetCurrentOrderPatchOriginal = typeof(Sosig).GetMethod("SetCurrentOrder", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigSetCurrentOrderPatchPrefix = typeof(SosigActionPatch).GetMethod("SetCurrentOrderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigVaporizePatchOriginal = typeof(Sosig).GetMethod("Vaporize", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigVaporizePatchPrefix = typeof(SosigActionPatch).GetMethod("SosigVaporizePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigVaporizePatchPostfix = typeof(SosigActionPatch).GetMethod("SosigVaporizePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigRequestHitDecalPatchOriginal = typeof(Sosig).GetMethod("RequestHitDecal", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(float), typeof(SosigLink) }, null);
+            MethodInfo sosigRequestHitDecalPatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigRequestHitDecalEdgePatchOriginal = typeof(Sosig).GetMethod("RequestHitDecal", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(SosigLink) }, null);
+            MethodInfo sosigRequestHitDecalEdgePatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalEdgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandGuardPointPatchOriginal = typeof(Sosig).GetMethod("CommandGuardPoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigCommandGuardPointPatchPrefix = typeof(SosigActionPatch).GetMethod("CommandGuardPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandGuardPointPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandGuardPointPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandAssaultPatchOriginal = typeof(Sosig).GetMethod("CommandAssaultPoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigCommandAssaultPatchPrefix = typeof(SosigActionPatch).GetMethod("CommandAssaultPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandAssaultPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandAssaultPointPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandIdlePatchOriginal = typeof(Sosig).GetMethod("CommandIdle", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigCommandIdlePatchPrefix = typeof(SosigActionPatch).GetMethod("CommandIdlePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandIdlePatchPostfix = typeof(SosigActionPatch).GetMethod("CommandIdlePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandPathToPatchOriginalTransform = typeof(Sosig).GetMethod("CommandPathTo", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(List<Transform>), typeof(float), typeof(Vector2), typeof(float), typeof(Sosig.SosigMoveSpeed), typeof(Sosig.PathLoopType), typeof(List<Sosig>), typeof(float), typeof(float), typeof(bool), typeof(float) }, null);
+            MethodInfo sosigCommandPathToPatchOriginalVector = typeof(Sosig).GetMethod("CommandPathTo", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(List<Vector3>), typeof(List<Vector3>), typeof(float), typeof(Vector2), typeof(float), typeof(Sosig.SosigMoveSpeed), typeof(Sosig.PathLoopType), typeof(List<Sosig>), typeof(float), typeof(float), typeof(bool), typeof(float) }, null);
+            MethodInfo sosigCommandPathToPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandPathToPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigDiesPatchOriginal, harmony, false);
+            PatchController.Verify(sosigBodyStatePatchOriginal, harmony, false);
+            PatchController.Verify(sosigBodyUpdatePatchOriginal, harmony, true);
+            PatchController.Verify(sosigSpeechUpdatePatchOriginal, harmony, false);
+            PatchController.Verify(sosigSetCurrentOrderPatchOriginal, harmony, false);
+            PatchController.Verify(sosigRequestHitDecalPatchOriginal, harmony, false);
+            PatchController.Verify(sosigRequestHitDecalEdgePatchOriginal, harmony, false);
+            PatchController.Verify(sosigCommandGuardPointPatchOriginal, harmony, false);
+            PatchController.Verify(sosigCommandAssaultPatchOriginal, harmony, false);
+            PatchController.Verify(sosigCommandPathToPatchOriginalTransform, harmony, false);
+            PatchController.Verify(sosigCommandPathToPatchOriginalVector, harmony, false);
+            harmony.Patch(sosigDiesPatchOriginal, new HarmonyMethod(sosigDiesPatchPrefix), new HarmonyMethod(sosigDiesPatchPosfix));
+            harmony.Patch(sosigBodyStatePatchOriginal, new HarmonyMethod(sosigBodyStatePatchPrefix));
+            harmony.Patch(sosigBodyUpdatePatchOriginal, null, null, new HarmonyMethod(sosigBodyUpdatePatchTranspiler));
+            harmony.Patch(sosigSpeechUpdatePatchOriginal, null, null, new HarmonyMethod(sosigSpeechUpdatePatchTranspiler));
+            harmony.Patch(sosigSetCurrentOrderPatchOriginal, new HarmonyMethod(sosigSetCurrentOrderPatchPrefix));
+            //harmony.Patch(sosigVaporizePatchOriginal, new HarmonyMethod(sosigVaporizePatchPrefix), new HarmonyMethod(sosigVaporizePatchPostfix));
+            harmony.Patch(sosigRequestHitDecalPatchOriginal, new HarmonyMethod(sosigRequestHitDecalPatchPrefix));
+            harmony.Patch(sosigRequestHitDecalEdgePatchOriginal, new HarmonyMethod(sosigRequestHitDecalEdgePatchPrefix));
+            harmony.Patch(sosigCommandGuardPointPatchOriginal, new HarmonyMethod(sosigCommandGuardPointPatchPrefix), new HarmonyMethod(sosigCommandGuardPointPatchPostfix));
+            harmony.Patch(sosigCommandAssaultPatchOriginal, new HarmonyMethod(sosigCommandAssaultPatchPrefix), new HarmonyMethod(sosigCommandAssaultPatchPostfix));
+            harmony.Patch(sosigCommandPathToPatchOriginalTransform, null, new HarmonyMethod(sosigCommandPathToPatchPostfix));
+            harmony.Patch(sosigCommandPathToPatchOriginalVector, null, new HarmonyMethod(sosigCommandPathToPatchPostfix));
+
+            // SosigLinkActionPatch
+            MethodInfo sosigLinkRegisterWearablePatchOriginal = typeof(SosigLink).GetMethod("RegisterWearable", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkRegisterWearablePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("RegisterWearablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkDeRegisterWearablePatchOriginal = typeof(SosigLink).GetMethod("DeRegisterWearable", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkDeRegisterWearablePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("DeRegisterWearablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkExplodesPatchOriginal = typeof(SosigLink).GetMethod("LinkExplodes", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkExplodesPatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkExplodesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkExplodesPatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkExplodesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkBreakPatchOriginal = typeof(SosigLink).GetMethod("BreakJoint", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkBreakPatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkBreakPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkBreakPatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkBreakPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkSeverPatchOriginal = typeof(SosigLink).GetMethod("SeverJoint", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sosigLinkSeverPatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkSeverPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkSeverPatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkSeverPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkVaporizePatchOriginal = typeof(SosigLink).GetMethod("Vaporize", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigLinkVaporizePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("LinkVaporizePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigLinkVaporizePatchPosfix = typeof(SosigLinkActionPatch).GetMethod("LinkVaporizePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigLinkRegisterWearablePatchOriginal, harmony, false);
+            PatchController.Verify(sosigLinkDeRegisterWearablePatchOriginal, harmony, false);
+            //Verify(sosigLinkExplodesPatchOriginal, harmony, false);
+            PatchController.Verify(sosigLinkBreakPatchOriginal, harmony, false);
+            //Verify(sosigLinkSeverPatchOriginal, harmony, false);
+            //Verify(sosigLinkVaporizePatchOriginal, harmony, false);
+            harmony.Patch(sosigLinkRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkRegisterWearablePatchPrefix));
+            harmony.Patch(sosigLinkDeRegisterWearablePatchOriginal, new HarmonyMethod(sosigLinkDeRegisterWearablePatchPrefix));
+            //harmony.Patch(sosigLinkExplodesPatchOriginal, new HarmonyMethod(sosigLinkExplodesPatchPrefix), new HarmonyMethod(sosigLinkExplodesPatchPosfix));
+            harmony.Patch(sosigLinkBreakPatchOriginal, new HarmonyMethod(sosigLinkBreakPatchPrefix), new HarmonyMethod(sosigLinkBreakPatchPosfix));
+            //harmony.Patch(sosigLinkSeverPatchOriginal, new HarmonyMethod(sosigLinkSeverPatchPrefix), new HarmonyMethod(sosigLinkSeverPatchPosfix));
+            //harmony.Patch(sosigLinkVaporizePatchOriginal, new HarmonyMethod(sosigLinkVaporizePatchPrefix), new HarmonyMethod(sosigLinkVaporizePatchPosfix));
+
+            // SosigIFFPatch
+            MethodInfo sosigSetIFFPatchOriginal = typeof(Sosig).GetMethod("SetIFF", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigSetIFFPatchPrefix = typeof(SosigIFFPatch).GetMethod("SetIFFPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigSetOriginalIFFPatchOriginal = typeof(Sosig).GetMethod("SetOriginalIFFTeam", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigSetOriginalIFFPatchPrefix = typeof(SosigIFFPatch).GetMethod("SetOriginalIFFPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigSetIFFPatchOriginal, harmony, false);
+            PatchController.Verify(sosigSetOriginalIFFPatchOriginal, harmony, false);
+            harmony.Patch(sosigSetIFFPatchOriginal, new HarmonyMethod(sosigSetIFFPatchPrefix));
+            harmony.Patch(sosigSetOriginalIFFPatchOriginal, new HarmonyMethod(sosigSetOriginalIFFPatchPrefix));
+
+            // SosigEventReceivePatch
+            MethodInfo sosigEventReceivePatchOriginal = typeof(Sosig).GetMethod("EventReceive", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigEventReceivePatchPrefix = typeof(SosigEventReceivePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigEventReceivePatchOriginal, harmony, false);
+            harmony.Patch(sosigEventReceivePatchOriginal, new HarmonyMethod(sosigEventReceivePatchPrefix));
+
+            // AutoMeaterUpdatePatch
+            MethodInfo autoMeaterUpdatePatchOriginal = typeof(AutoMeater).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterFixedUpdatePatchOriginal = typeof(AutoMeater).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterUpdatePatchPrefix = typeof(AutoMeaterUpdatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(autoMeaterUpdatePatchOriginal, harmony, false);
+            harmony.Patch(autoMeaterUpdatePatchOriginal, new HarmonyMethod(autoMeaterUpdatePatchPrefix));
+            harmony.Patch(autoMeaterFixedUpdatePatchOriginal, new HarmonyMethod(autoMeaterUpdatePatchPrefix));
+
+            // AutoMeaterEventPatch
+            MethodInfo autoMeaterEventReceivePatchOriginal = typeof(AutoMeater).GetMethod("EventReceive", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo autoMeaterEventReceivePatchPrefix = typeof(AutoMeaterEventPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(autoMeaterEventReceivePatchOriginal, harmony, false);
+            harmony.Patch(autoMeaterEventReceivePatchOriginal, new HarmonyMethod(autoMeaterEventReceivePatchPrefix));
+
+            // LAPD2019ActionPatch
+            MethodInfo LAPD2019PatchLoadOriginal = typeof(LAPD2019).GetMethod("LoadBattery", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo LAPD2019PatchLoadPrefix = typeof(LAPD2019ActionPatch).GetMethod("LoadBatteryPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo LAPD2019PatchExtractOriginal = typeof(LAPD2019).GetMethod("ExtractBattery", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo LAPD2019PatchExtractPrefix = typeof(LAPD2019ActionPatch).GetMethod("ExtractBatteryPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(LAPD2019PatchLoadOriginal, harmony, false);
+            PatchController.Verify(LAPD2019PatchExtractOriginal, harmony, false);
+            harmony.Patch(LAPD2019PatchLoadOriginal, new HarmonyMethod(LAPD2019PatchLoadPrefix));
+            harmony.Patch(LAPD2019PatchExtractOriginal, new HarmonyMethod(LAPD2019PatchExtractPrefix));
+
+            // AutoMeaterSetStatePatch
+            MethodInfo autoMeaterSetStatePatchOriginal = typeof(AutoMeater).GetMethod("SetState", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterSetStatePatchPostfix = typeof(AutoMeaterSetStatePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(autoMeaterSetStatePatchOriginal, harmony, false);
+            harmony.Patch(autoMeaterSetStatePatchOriginal, null, new HarmonyMethod(autoMeaterSetStatePatchPostfix));
+
+            // AutoMeaterUpdateFlightPatch
+            MethodInfo autoMeaterUpdateFlightPatchOriginal = typeof(AutoMeater).GetMethod("UpdateFlight", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterUpdateFlightPatchPrefix = typeof(AutoMeaterUpdateFlightPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo autoMeaterUpdateFlightPatchTranspiler = typeof(AutoMeaterUpdateFlightPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(autoMeaterUpdateFlightPatchOriginal, harmony, false);
+            harmony.Patch(autoMeaterUpdateFlightPatchOriginal, new HarmonyMethod(autoMeaterUpdateFlightPatchPrefix), null, new HarmonyMethod(autoMeaterUpdateFlightPatchTranspiler));
+
+            // AutoMeaterFirearmFireShotPatch
+            MethodInfo autoMeaterFirearmFireShotPatchOriginal = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo autoMeaterFirearmFireShotPatchPrefix = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo autoMeaterFirearmFireShotPatchPostfix = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo autoMeaterFirearmFireShotPatchTranspiler = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(autoMeaterFirearmFireShotPatchOriginal, harmony, false);
+            harmony.Patch(autoMeaterFirearmFireShotPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireShotPatchPrefix), new HarmonyMethod(autoMeaterFirearmFireShotPatchPostfix), new HarmonyMethod(autoMeaterFirearmFireShotPatchTranspiler));
+
+            // AutoMeaterFirearmFireAtWillPatch
+            MethodInfo autoMeaterFirearmFireAtWillPatchOriginal = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("SetFireAtWill", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo autoMeaterFirearmFireAtWillPatchPrefix = typeof(AutoMeaterFirearmFireAtWillPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(autoMeaterFirearmFireAtWillPatchOriginal, harmony, false);
+            harmony.Patch(autoMeaterFirearmFireAtWillPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireAtWillPatchPrefix));
+
+            // EncryptionRespawnRandSubPatch
+            MethodInfo encryptionRespawnRandSubPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("RespawnRandomSubTarg", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionRespawnRandSubPatchTranspiler = typeof(EncryptionRespawnRandSubPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(encryptionRespawnRandSubPatchOriginal, harmony, false);
+            harmony.Patch(encryptionRespawnRandSubPatchOriginal, null, null, new HarmonyMethod(encryptionRespawnRandSubPatchTranspiler));
+
+            // EncryptionResetGrowthPatch
+            MethodInfo encryptionResetGrowthPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("ResetGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionResetGrowthPatchPrefix = typeof(EncryptionResetGrowthPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(encryptionResetGrowthPatchOriginal, harmony, false);
+            harmony.Patch(encryptionResetGrowthPatchOriginal, new HarmonyMethod(encryptionResetGrowthPatchPrefix));
+
+            // EncryptionDisableSubtargPatch
+            MethodInfo encryptionDisableSubtargPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("DisableSubtarg", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo encryptionDisableSubtargPatchPrefix = typeof(EncryptionDisableSubtargPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo encryptionDisableSubtargPatchPostfix = typeof(EncryptionDisableSubtargPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(encryptionDisableSubtargPatchOriginal, harmony, false);
+            harmony.Patch(encryptionDisableSubtargPatchOriginal, new HarmonyMethod(encryptionDisableSubtargPatchPrefix), new HarmonyMethod(encryptionDisableSubtargPatchPostfix));
+
+            // SosigTargetPrioritySystemPatch
+            MethodInfo sosigTargetPrioritySystemPatchDefaultOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetDefaultIFFChart", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchMakeEnemyOriginal = typeof(SosigTargetPrioritySystem).GetMethod("MakeEnemy", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchMakeFriendlyOriginal = typeof(SosigTargetPrioritySystem).GetMethod("MakeFriendly", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchSetAllEnemyOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetAllEnemy", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchSetAllFriendlyOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetAllFriendly", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchSetAllyMatrixOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetAllyMatrix", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigTargetPrioritySystemPatchPostfix = typeof(SosigTargetPrioritySystemPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sosigTargetPrioritySystemPatchDefaultOriginal, harmony, false);
+            PatchController.Verify(sosigTargetPrioritySystemPatchMakeEnemyOriginal, harmony, false);
+            PatchController.Verify(sosigTargetPrioritySystemPatchMakeFriendlyOriginal, harmony, false);
+            PatchController.Verify(sosigTargetPrioritySystemPatchSetAllEnemyOriginal, harmony, false);
+            PatchController.Verify(sosigTargetPrioritySystemPatchSetAllFriendlyOriginal, harmony, false);
+            PatchController.Verify(sosigTargetPrioritySystemPatchSetAllyMatrixOriginal, harmony, false);
+            harmony.Patch(sosigTargetPrioritySystemPatchDefaultOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchMakeEnemyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchMakeFriendlyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchSetAllEnemyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchSetAllFriendlyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+            harmony.Patch(sosigTargetPrioritySystemPatchSetAllyMatrixOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
+
+            // SimpleLauncher2CycleModePatch
+            MethodInfo simpleLauncher2CycleModePatchOriginal = typeof(SimpleLauncher2).GetMethod("CycleMode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo simpleLauncher2CycleModePatchPrefix = typeof(SimpleLauncher2CycleModePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(simpleLauncher2CycleModePatchOriginal, harmony, false);
+            harmony.Patch(simpleLauncher2CycleModePatchOriginal, new HarmonyMethod(simpleLauncher2CycleModePatchPrefix));
+
+            // PinnedGrenadePatch
+            MethodInfo pinnedGrenadePatchUpdateOriginal = typeof(PinnedGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo pinnedGrenadePatchFixedUpdateOriginal = typeof(PinnedGrenade).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo pinnedGrenadePatchUpdatePrefix = typeof(PinnedGrenadePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo pinnedGrenadePatchUpdateTranspiler = typeof(PinnedGrenadePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo pinnedGrenadePatchUpdatePostfix = typeof(PinnedGrenadePatch).GetMethod("UpdatePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo pinnedGrenadePatchCollisionOriginal = typeof(PinnedGrenade).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo pinnedGrenadePatchCollisionTranspiler = typeof(PinnedGrenadePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(pinnedGrenadePatchUpdateOriginal, harmony, false);
+            PatchController.Verify(pinnedGrenadePatchFixedUpdateOriginal, harmony, false);
+            PatchController.Verify(pinnedGrenadePatchCollisionOriginal, harmony, false);
+            harmony.Patch(pinnedGrenadePatchUpdateOriginal, new HarmonyMethod(pinnedGrenadePatchUpdatePrefix), new HarmonyMethod(pinnedGrenadePatchUpdatePostfix), new HarmonyMethod(pinnedGrenadePatchUpdateTranspiler));
+            harmony.Patch(pinnedGrenadePatchFixedUpdateOriginal, new HarmonyMethod(pinnedGrenadePatchUpdatePrefix));
+            harmony.Patch(pinnedGrenadePatchCollisionOriginal, null, null, new HarmonyMethod(pinnedGrenadePatchCollisionTranspiler));
+
+            // FVRGrenadePatch
+            MethodInfo FVRGrenadePatchUpdateOriginal = typeof(FVRGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo FVRGrenadePatchUpdatePrefix = typeof(FVRGrenadePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo FVRGrenadePatchUpdatePostfix = typeof(FVRGrenadePatch).GetMethod("UpdatePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(FVRGrenadePatchUpdateOriginal, harmony, false);
+            harmony.Patch(FVRGrenadePatchUpdateOriginal, new HarmonyMethod(FVRGrenadePatchUpdatePrefix), new HarmonyMethod(FVRGrenadePatchUpdatePostfix));
+
+            // FusePatch
+            MethodInfo FVRFusePatchIgniteOriginal = typeof(FVRFuse).GetMethod("Ignite", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo FVRFusePatchIgnitePostfix = typeof(FusePatch).GetMethod("IgnitePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo FVRFusePatchBoomOriginal = typeof(FVRFuse).GetMethod("Boom", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo FVRFusePatchBoomPrefix = typeof(FusePatch).GetMethod("BoomPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(FVRFusePatchIgniteOriginal, harmony, false);
+            PatchController.Verify(FVRFusePatchBoomOriginal, harmony, false);
+            harmony.Patch(FVRFusePatchIgniteOriginal, null, new HarmonyMethod(FVRFusePatchIgnitePostfix));
+            harmony.Patch(FVRFusePatchBoomOriginal, new HarmonyMethod(FVRFusePatchBoomPrefix));
+
+            // MolotovPatch
+            MethodInfo MolotovPatchShatterOriginal = typeof(Molotov).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo MolotovPatchShatterPrefix = typeof(MolotovPatch).GetMethod("ShatterPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo MolotovPatchDamageOriginal = typeof(Molotov).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo MolotovPatchDamagePrefix = typeof(MolotovPatch).GetMethod("DamagePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(MolotovPatchShatterOriginal, harmony, false);
+            PatchController.Verify(MolotovPatchDamageOriginal, harmony, false);
+            harmony.Patch(MolotovPatchShatterOriginal, new HarmonyMethod(MolotovPatchShatterPrefix));
+            harmony.Patch(MolotovPatchDamageOriginal, new HarmonyMethod(MolotovPatchDamagePrefix));
+
+            // EncryptionPatch
+            MethodInfo EncryptionPatchUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo EncryptionPatchFixedUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo EncryptionPatchUpdatePrefix = typeof(EncryptionPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchStartOriginal = typeof(TNH_EncryptionTarget).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo EncryptionPatchStartPrefix = typeof(EncryptionPatch).GetMethod("StartPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchStartPostfix = typeof(EncryptionPatch).GetMethod("StartPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(EncryptionPatchUpdateOriginal, harmony, true);
+            PatchController.Verify(EncryptionPatchFixedUpdateOriginal, harmony, true);
+            PatchController.Verify(EncryptionPatchStartOriginal, harmony, true);
+            harmony.Patch(EncryptionPatchUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix));
+            harmony.Patch(EncryptionPatchFixedUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix));
+            harmony.Patch(EncryptionPatchStartOriginal, new HarmonyMethod(EncryptionPatchStartPrefix), new HarmonyMethod(EncryptionPatchStartPostfix));
+
+            // BangSnapPatch
+            MethodInfo bangSnapPatchSplodeOriginal = typeof(BangSnap).GetMethod("Splode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo bangSnapPatchSplodePrefix = typeof(BangSnapPatch).GetMethod("SplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo bangSnapPatchCollisionOriginal = typeof(BangSnap).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo bangSnapPatchCollisionTranspiler = typeof(BangSnapPatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(bangSnapPatchSplodeOriginal, harmony, false);
+            PatchController.Verify(bangSnapPatchCollisionOriginal, harmony, false);
+            harmony.Patch(bangSnapPatchSplodeOriginal, new HarmonyMethod(bangSnapPatchSplodePrefix));
+            harmony.Patch(bangSnapPatchCollisionOriginal, null, null, new HarmonyMethod(bangSnapPatchCollisionTranspiler));
+
+            // C4DetonatePatch
+            MethodInfo C4DetonatePatchOriginal = typeof(C4).GetMethod("Detonate", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo C4DetonatePatchPrefix = typeof(C4DetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(C4DetonatePatchOriginal, harmony, false);
+            harmony.Patch(C4DetonatePatchOriginal, new HarmonyMethod(C4DetonatePatchPrefix));
+
+            // ClaymoreMineDetonatePatch
+            MethodInfo claymoreMineDetonatePatchOriginal = typeof(ClaymoreMine).GetMethod("Detonate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo claymoreMineDetonatePatchPrefix = typeof(ClaymoreMineDetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(claymoreMineDetonatePatchOriginal, harmony, false);
+            harmony.Patch(claymoreMineDetonatePatchOriginal, new HarmonyMethod(claymoreMineDetonatePatchPrefix));
+
+            // SLAMDetonatePatch
+            MethodInfo SLAMDetonatePatchOriginal = typeof(SLAM).GetMethod("Detonate", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo SLAMDetonatePatchPrefix = typeof(SLAMDetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(SLAMDetonatePatchOriginal, harmony, false);
+            harmony.Patch(SLAMDetonatePatchOriginal, new HarmonyMethod(SLAMDetonatePatchPrefix));
+
+            // RoundPatch
+            MethodInfo roundPatchFixedUpdateOriginal = typeof(FVRFireArmRound).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo roundPatchFixedUpdateTranspiler = typeof(RoundPatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(roundPatchFixedUpdateOriginal, harmony, false);
+            harmony.Patch(roundPatchFixedUpdateOriginal, null, null, new HarmonyMethod(roundPatchFixedUpdateTranspiler));
+
+            // MagazinePatch
+            MethodInfo magAddRoundClassOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
+            MethodInfo magAddRoundClassTranspiler = typeof(MagazinePatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magAddRoundRoundOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool), typeof(bool), typeof(bool) }, null);
+            MethodInfo magAddRoundRoundTranspiler = typeof(MagazinePatch).GetMethod("AddRoundRoundTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magLoadFireArmOriginal = typeof(FVRFireArmMagazine).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArm) }, null);
+            MethodInfo magLoadFireArmPrefix = typeof(MagazinePatch).GetMethod("LoadFireArmPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magLoadIntoSecondaryOriginal = typeof(FVRFireArmMagazine).GetMethod("LoadIntoSecondary", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo magLoadIntoSecondaryPrefix = typeof(MagazinePatch).GetMethod("LoadIntoSecondaryPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo magLoadAttachableOriginal = typeof(FVRFireArmMagazine).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(AttachableFirearm) }, null);
+            MethodInfo magLoadAttachablePrefix = typeof(MagazinePatch).GetMethod("LoadAttachablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(magAddRoundClassOriginal, harmony, false);
+            PatchController.Verify(magAddRoundRoundOriginal, harmony, false);
+            PatchController.Verify(magLoadFireArmOriginal, harmony, false);
+            PatchController.Verify(magLoadIntoSecondaryOriginal, harmony, false);
+            PatchController.Verify(magLoadAttachableOriginal, harmony, false);
+            harmony.Patch(magAddRoundClassOriginal, null, null, new HarmonyMethod(magAddRoundClassTranspiler));
+            harmony.Patch(magAddRoundRoundOriginal, null, null, new HarmonyMethod(magAddRoundRoundTranspiler));
+            harmony.Patch(magLoadFireArmOriginal, new HarmonyMethod(magLoadFireArmPrefix));
+            harmony.Patch(magLoadIntoSecondaryOriginal, new HarmonyMethod(magLoadIntoSecondaryPrefix));
+            harmony.Patch(magLoadAttachableOriginal, new HarmonyMethod(magLoadAttachablePrefix));
+
+            // ClipPatch
+            MethodInfo clipAddRoundClassOriginal = typeof(FVRFireArmClip).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
+            MethodInfo clipAddRoundClassTranspiler = typeof(ClipPatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo clipAddRoundRoundOriginal = typeof(FVRFireArmClip).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool), typeof(bool) }, null);
+            MethodInfo clipAddRoundRoundTranspiler = typeof(ClipPatch).GetMethod("AddRoundRoundTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo clipLoadOriginal = typeof(FVRFireArmClip).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo clipLoadPrefix = typeof(ClipPatch).GetMethod("LoadPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(clipAddRoundClassOriginal, harmony, false);
+            PatchController.Verify(clipAddRoundRoundOriginal, harmony, false);
+            PatchController.Verify(clipLoadOriginal, harmony, false);
+            harmony.Patch(clipAddRoundClassOriginal, null, null, new HarmonyMethod(clipAddRoundClassTranspiler));
+            harmony.Patch(clipAddRoundRoundOriginal, null, null, new HarmonyMethod(clipAddRoundRoundTranspiler));
+            harmony.Patch(clipLoadOriginal, new HarmonyMethod(clipLoadPrefix));
+
+            // SpeedloaderChamberPatch
+            MethodInfo SLChamberLoadOriginal = typeof(SpeedloaderChamber).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo SLChamberLoadPrefix = typeof(SpeedloaderChamberPatch).GetMethod("AddRoundPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(SLChamberLoadOriginal, harmony, false);
+            harmony.Patch(SLChamberLoadOriginal, new HarmonyMethod(SLChamberLoadPrefix));
+
+            // RemoteGunPatch
+            MethodInfo remoteGunChamberOriginal = typeof(RemoteGun).GetMethod("ChamberCartridge", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo remoteGunChamberPrefix = typeof(RemoteGunPatch).GetMethod("ChamberCartridgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(remoteGunChamberOriginal, harmony, false);
+            harmony.Patch(remoteGunChamberOriginal, new HarmonyMethod(remoteGunChamberPrefix));
+
+            // ChamberPatch
+            MethodInfo chamberSetRoundClassOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(Vector3), typeof(Quaternion) }, null);
+            MethodInfo chamberSetRoundClassPrefix = typeof(ChamberPatch).GetMethod("SetRoundClassPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo chamberSetRoundRoundVectorOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(Vector3), typeof(Quaternion) }, null);
+            MethodInfo chamberSetRoundRoundBoolOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FVRFireArmRound), typeof(bool) }, null);
+            MethodInfo chamberSetRoundRoundPrefix = typeof(ChamberPatch).GetMethod("SetRoundRoundPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(chamberSetRoundClassOriginal, harmony, false);
+            PatchController.Verify(chamberSetRoundRoundVectorOriginal, harmony, false);
+            PatchController.Verify(chamberSetRoundRoundBoolOriginal, harmony, false);
+            harmony.Patch(chamberSetRoundClassOriginal, new HarmonyMethod(chamberSetRoundClassPrefix));
+            harmony.Patch(chamberSetRoundRoundVectorOriginal, new HarmonyMethod(chamberSetRoundRoundPrefix));
+            harmony.Patch(chamberSetRoundRoundBoolOriginal, new HarmonyMethod(chamberSetRoundRoundPrefix));
+
+            // SpeedloaderPatch
+            MethodInfo speedLoaderFixedUpdateOriginal = typeof(Speedloader).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo speedLoaderFixedUpdateTranspiler = typeof(SpeedloaderPatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo speedLoaderUpdateOriginal = typeof(Speedloader).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo speedLoaderUpdateTranspiler = typeof(SpeedloaderPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(speedLoaderFixedUpdateOriginal, harmony, false);
+            PatchController.Verify(speedLoaderUpdateOriginal, harmony, false);
+            harmony.Patch(speedLoaderFixedUpdateOriginal, null, null, new HarmonyMethod(speedLoaderFixedUpdateTranspiler));
+            harmony.Patch(speedLoaderUpdateOriginal, null, null, new HarmonyMethod(speedLoaderUpdateTranspiler));
+
+            // RevolverCylinderPatch
+            MethodInfo revolverCylinderLoadOriginal = typeof(RevolverCylinder).GetMethod("LoadFromSpeedLoader", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo revolverCylinderLoadPrefix = typeof(RevolverCylinderPatch).GetMethod("LoadFromSpeedLoaderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(revolverCylinderLoadOriginal, harmony, false);
+            harmony.Patch(revolverCylinderLoadOriginal, new HarmonyMethod(revolverCylinderLoadPrefix));
+
+            // RevolvingShotgunPatch
+            MethodInfo revolvingShotgunLoadOriginal = typeof(RevolvingShotgun).GetMethod("LoadCylinder", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo revolvingShotgunLoadPrefix = typeof(RevolvingShotgunPatch).GetMethod("LoadCylinderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(revolvingShotgunLoadOriginal, harmony, false);
+            harmony.Patch(revolvingShotgunLoadOriginal, new HarmonyMethod(revolvingShotgunLoadPrefix));
+
+            // GrappleGunPatch
+            MethodInfo grappleGunLoadOriginal = typeof(GrappleGun).GetMethod("LoadCylinder", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo grappleGunLoadPrefix = typeof(GrappleGunPatch).GetMethod("LoadCylinderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(grappleGunLoadOriginal, harmony, false);
+            harmony.Patch(grappleGunLoadOriginal, new HarmonyMethod(grappleGunLoadPrefix));
+
+            // CarlGustafLatchPatch
+            MethodInfo carlGustafLatchUpdateOriginal = typeof(CarlGustafLatch).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo carlGustafLatchUpdateTranspiler = typeof(CarlGustafLatchPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(carlGustafLatchUpdateOriginal, harmony, false);
+            harmony.Patch(carlGustafLatchUpdateOriginal, null, null, new HarmonyMethod(carlGustafLatchUpdateTranspiler));
+
+            // CarlGustafShellInsertEjectPatch
+            MethodInfo carlGustafShellSlideUpdateOriginal = typeof(CarlGustafShellInsertEject).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo carlGustafShellSlideUpdateTranspiler = typeof(CarlGustafShellInsertEjectPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(carlGustafShellSlideUpdateOriginal, harmony, false);
+            harmony.Patch(carlGustafShellSlideUpdateOriginal, null, null, new HarmonyMethod(carlGustafShellSlideUpdateTranspiler));
+
+            // GrappleThrowablePatch
+            MethodInfo grappleThrowableCollisionOriginal = typeof(GrappleThrowable).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo grappleThrowableCollisionTranspiler = typeof(GrappleThrowablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(grappleThrowableCollisionOriginal, harmony, false);
+            harmony.Patch(grappleThrowableCollisionOriginal, null, null, new HarmonyMethod(grappleThrowableCollisionTranspiler));
+
+            // EncryptionSpawnGrowthPatch
+            MethodInfo encryptionSpawnGrowthOriginal = typeof(TNH_EncryptionTarget).GetMethod("SpawnGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionSpawnGrowthPrefix = typeof(EncryptionSpawnGrowthPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(encryptionSpawnGrowthOriginal, harmony, false);
+            harmony.Patch(encryptionSpawnGrowthOriginal, new HarmonyMethod(encryptionSpawnGrowthPrefix));
+        }
+    }
+
+    // Note: All projectile fire patches are necessary for 2 things: synchronizing fire action,
+    //       and making sure that the shot is in same position/direction on all clients
+    //       Synchronizing the action is simple, it is the pos/dir that requires transpilers and make these so complex
+    // Note: There is an important problem to keep in mind that make passing the round class necessary
+    //       When we fire a weapon, consider a handgun, the fire packet is sent
+    //       An update of the handgun then gets sent, now telling other clients that this handgun's chamber is empty
+    //       The fire is sent through TCP, while the update is sent through UDP. Although the fire gets sent first, the update gets there first
+    //       Other client's chambers then return false from their Fire(), preventing the weapon from firing
+    //       On other clients, we use the passed round class to fill the chamber prior to firing, and then set it back to its previous state
+    //       So, it is necessary to send, alongside the fire packet, data to override the latest update with just what we need to ensure we can fire
+    /* TODO: Fire patches for
+     * EncryptionBotAgile.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
+     * EncryptionBotCrystal.FirePulseShot // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
+     * EncryptionBotHardened.Fire // Does not inherit from FVRPhysicalObject, need to check this type's structure to know how to handle it
+     * RemoteGun.Fire // THIS IS NOT A REMOTE MISSILE LAUNCHER, NEED TO FIND OUT WHAT IT IS
+     * AIFireArm.FireBullet // Will have to check if this is necessary (it is actually used?), it is also an FVRDestroyableObject, need to see how to handle that
+     * RonchWeapon.Fire // Considering ronch is an enemy type, we will probably have to make it into its own sync object type with its own lists
+     * DodecaLauncher // Uses dodeca missiles
+     */
+    // Patches FVRFireArm.Fire so we can keep track of when a firearm is fired
+    class FirePatch
+    {
+        public static int skipSending;
+        public static bool overriden;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
+
+        // Update override data
+        public static bool fireSuccessful;
+        public static FireArmRoundClass roundClass;
+        public static FireArmRoundType roundType;
+
+        static void Prefix(FVRFireArmChamber chamber)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at firepatch prefix, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            FVRFireArmRound round = chamber.GetRound();
+            if (round == null || round.IsSpent)
+            {
+                fireSuccessful = false;
+            }
+            else
+            {
+                fireSuccessful = true;
+                roundClass = round.RoundClass;
+                roundType = round.RoundType;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load index
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FirePatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load index
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FirePatch), "GetDirection"))); // Call our GetDirection method
+
+            bool skippedFirstDir = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("op_Subtraction"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    if (skippedFirstDir)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert1);
+                    }
+                    else
+                    {
+                        skippedFirstDir = true;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Postfix(ref FVRFireArm __instance, FVRFireArmChamber chamber)
+        {
+            --Mod.skipAllInstantiates;
+
+            // Skip sending will prevent fire patch from handling its own data, as we want to handle it elsewhere
+            if (skipSending > 0)
+            {
+                return;
+            }
+
+            overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        int chamberIndex = -1;
+                        for (int i = 0; i < __instance.GetChambers().Count; ++i)
+                        {
+                            if (__instance.GetChambers()[i] == chamber)
+                            {
+                                chamberIndex = i;
+                                break;
+                            }
+                        }
+                        ServerSend.WeaponFire(0, trackedItem.data.trackedID, roundType, roundClass, positions, directions, chamberIndex);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    int chamberIndex = 0;
+                    for (int i = 0; i < __instance.GetChambers().Count; ++i)
+                    {
+                        if (__instance.GetChambers()[i] == chamber)
+                        {
+                            chamberIndex = i;
+                            break;
+                        }
+                    }
+                    ClientSend.WeaponFire(trackedItem.data.trackedID, roundType, roundClass, positions, directions, chamberIndex);
+                }
+            }
+
+            positions = null;
+            directions = null;
+        }
+    }
+
+    // Patches SosigWeapon.FireGun so we can keep track of when a SosigWeapon is fired
+    class FireSosigWeaponPatch
+    {
+        public static bool overriden;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
+
+        // Update override data
+        static bool fireSuccessful;
+
+        static void Prefix(ref SosigWeapon __instance, int ___m_shotsLeft)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at sosig weapon fire patch, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            fireSuccessful = ___m_shotsLeft > 0 && __instance.MechaState == SosigWeapon.SosigWeaponMechaState.ReadyToFire;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireSosigWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireSosigWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            bool skippedFirstPos = false;
+            bool skippedFirstDir = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldloc_1)
+                {
+                    if (skippedFirstPos)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert0);
+                    }
+                    else
+                    {
+                        skippedFirstPos = true;
+                    }
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    if (skippedFirstDir)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert1);
+                        break;
+                    }
+                    else
+                    {
+                        skippedFirstDir = true;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Postfix(ref SosigWeapon __instance, float recoilMult)
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemBySosigWeapon.ContainsKey(__instance) ? GameManager.trackedItemBySosigWeapon[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.trackedID != -1)
+                {
+                    // Send the fire action to other clients only if we control it
+                    if (ThreadManager.host)
+                    {
+                        if (trackedItem.data.controller == 0)
+                        {
+                            ServerSend.SosigWeaponFire(0, trackedItem.data.trackedID, recoilMult, positions, directions);
+                        }
+                    }
+                    else if (trackedItem.data.controller == Client.singleton.ID)
+                    {
+                        ClientSend.SosigWeaponFire(trackedItem.data.trackedID, recoilMult, positions, directions);
+                    }
+                }
+            }
+
+            positions = null;
+            directions = null;
+        }
+    }
+
+    // Patches LAPD2019.Fire so we can keep track of when an LAPD2019 is fired
+    class FireLAPD2019Patch
+    {
+        public static bool overriden;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
+
+        // Update override data
+        static bool fireSucessful;
+        static int curChamber;
+        static FireArmRoundClass roundClass;
+        static FireArmRoundType roundType;
+
+        static void Prefix(ref LAPD2019 __instance, bool ___m_isCapacitorCharged)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireLAPD2019Patch, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            curChamber = __instance.CurChamber;
+            if (__instance.Chambers[__instance.CurChamber].GetRound() != null)
+            {
+                roundType = __instance.Chambers[__instance.CurChamber].GetRound().RoundType;
+                roundClass = __instance.Chambers[__instance.CurChamber].GetRound().RoundClass;
+                fireSucessful = true;
+            }
+            else
+            {
+                fireSucessful = false;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load index i
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load index i
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetDirection"))); // Call our GetDirection method
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_S, 14)); // Load index j
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert3 = new List<CodeInstruction>();
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 14)); // Load index j
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 15)); // Load gameObject
+            toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetDirection"))); // Call our GetDirection method
+
+            bool foundFirstPos = false;
+            bool foundFirstDir = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("GetMuzzle") &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
+                {
+                    if (foundFirstPos)
+                    {
+                        instructionList.InsertRange(i + 2, toInsert2);
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i + 2, toInsert0);
+                        foundFirstPos = true;
+                    }
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
+                    instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    if (foundFirstDir)
+                    {
+                        instructionList.InsertRange(i + 2, toInsert3);
+                        break;
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i + 2, toInsert1);
+                        foundFirstDir = true;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Postfix(ref LAPD2019 __instance)
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!fireSucessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.LAPD2019Fire(0, trackedItem.data.trackedID, curChamber, roundType, roundClass, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.LAPD2019Fire(trackedItem.data.trackedID, curChamber, roundType, roundClass, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
+        }
+    }
+
+    // Patches Minigun.Fire so we can keep track of when an LAPD2019 is fired
+    class FireMinigunPatch
+    {
+        public static bool overriden;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
+
+        static Minigun currentMinigun;
+        static TrackedItem trackedItem;
+
+        // Update override data
+        static bool fireSucessful;
+        static FireArmRoundClass roundClass;
+
+        static bool Prefix(ref Minigun __instance, int ___m_numBullets)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireMinigunPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            fireSucessful = ___m_numBullets > 0;
+            if (__instance != currentMinigun)
+            {
+                currentMinigun = __instance;
+                trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            }
+            if (trackedItem != null && !overriden && trackedItem.data.controller != GameManager.ID)
+            {
+                fireSucessful = false;
+                return false;
+            }
+            roundClass = __instance.LoadedRounds[0].LR_Class;
+
+            return true;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireMinigunPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireMinigunPatch), "GetDirection"))); // Call our GetDirection method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldloc_0)
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
+                    instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 2, toInsert1);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Postfix(ref Minigun __instance)
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (fireSucessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.MinigunFire(0, trackedItem.data.trackedID, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.MinigunFire(trackedItem.data.trackedID, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
+        }
+    }
+
+    // Patches AttachableFirearm.Fire so we can keep track of when an AttachableFirearm is fired
+    class FireAttachableFirearmPatch
+    {
+        public static bool overriden;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
+
+        // Update override data
+        static bool fireSuccessful;
+        static FireArmRoundType roundType;
+        static FireArmRoundClass roundClass;
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireAttachableFirearmPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireAttachableFirearmPatch), "GetDirection"))); // Call our GetDirection method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == null || instruction.operand == null)
+                {
+                    continue;
+                }
+
+                if (instruction.operand.ToString().Contains("op_Subtraction"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 2, toInsert1);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void Prefix(ref AttachableFirearm __instance)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireAttachableFirearmPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            if (__instance.Attachment == null)
+            {
+                if (__instance.OverrideFA)
+                {
+                    TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.OverrideFA, out TrackedItem item) ? item : __instance.OverrideFA.GetComponent<TrackedItem>();
+                    if (trackedItem != null && trackedItem.attachableFirearmGetChamberFunc().GetRound() != null)
+                    {
+                        fireSuccessful = true;
+                        roundType = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundType;
+                        roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
+                    }
+                    else
+                    {
+                        fireSuccessful = false;
+                    }
+                }
+            }
+            else
+            {
+                TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.Attachment, out TrackedItem item) ? item : __instance.Attachment.GetComponent<TrackedItem>();
+                if (trackedItem != null && trackedItem.attachableFirearmGetChamberFunc().GetRound() != null)
+                {
+                    fireSuccessful = true;
+                    roundType = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundType;
+                    roundClass = trackedItem.attachableFirearmGetChamberFunc().GetRound().RoundClass;
+                }
+                else
+                {
+                    fireSuccessful = false;
+                }
+            }
+        }
+
+        static void Postfix(ref AttachableFirearm __instance, bool firedFromInterface)
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = null;
+            if (__instance.Attachment != null)
+            {
+                trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance.Attachment) ? GameManager.trackedItemByItem[__instance.Attachment] : __instance.Attachment.GetComponent<TrackedItem>();
+            }
+            if (trackedItem == null) // This AttachableFirearm isn't independent, it is integrated into its OverrideFA
+            {
+                trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance.OverrideFA) ? GameManager.trackedItemByItem[__instance.OverrideFA] : __instance.OverrideFA.GetComponent<TrackedItem>();
+                if (trackedItem != null)
+                {
+                    if (ThreadManager.host)
+                    {
+                        if (trackedItem.data.controller == 0)
+                        {
+                            ServerSend.IntegratedFirearmFire(0, trackedItem.data.trackedID, roundType, roundClass, positions, directions);
+                        }
+                    }
+                    else if (trackedItem.data.controller == Client.singleton.ID)
+                    {
+                        ClientSend.IntegratedFirearmFire(trackedItem.data.trackedID, roundType, roundClass, positions, directions);
+                    }
+                }
+            }
+            else
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.AttachableFirearmFire(0, trackedItem.data.trackedID, roundType, roundClass, firedFromInterface, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.AttachableFirearmFire(trackedItem.data.trackedID, roundType, roundClass, firedFromInterface, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
+        }
+    }
+
+    // Patches RevolvingShotgun.Fire so we can skip 
+    class FireRevolvingShotgunPatch
+    {
+        static void Prefix()
+        {
+            ++FirePatch.skipSending;
+        }
+
+        static void Postfix(ref RevolvingShotgun __instance)
+        {
+            --FirePatch.skipSending;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.RevolvingShotgunFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.RevolvingShotgunFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches Revolver.Fire so we can track fire action
+    class FireRevolverPatch
+    {
+        static void Prefix()
+        {
+            ++FirePatch.skipSending;
+        }
+
+        static void Postfix(ref Revolver __instance)
+        {
+            --FirePatch.skipSending;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.RevolverFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.RevolverFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches SingleActionRevolver.Fire so we can track fire action
+    class FireSingleActionRevolverPatch
+    {
+        static void Prefix(SingleActionRevolver __instance)
+        {
+            ++FirePatch.skipSending;
+
+            FVRFireArmChamber chamber = __instance.Cylinder.Chambers[__instance.CurChamber];
+            FirePatch.fireSuccessful = chamber.IsFull && chamber.GetRound() != null && !chamber.IsSpent;
+        }
+
+        static void Postfix(ref SingleActionRevolver __instance)
+        {
+            --FirePatch.skipSending;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.SingleActionRevolverFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.SingleActionRevolverFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, __instance.CurChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches GrappleGun.Fire so we can skip 
+    class FireGrappleGunPatch
+    {
+        static int preChamber;
+
+        static void Prefix(GrappleGun __instance, int ___m_curChamber)
+        {
+            ++FirePatch.skipSending;
+
+            FVRFireArmChamber chamber = __instance.Chambers[___m_curChamber];
+            FirePatch.fireSuccessful = chamber.IsFull && chamber.GetRound() != null && !chamber.IsSpent;
+
+            preChamber = ___m_curChamber;
+        }
+
+        static void Postfix(ref GrappleGun __instance)
+        {
+            --FirePatch.skipSending;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.GrappleGunFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, preChamber, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.GrappleGunFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, preChamber, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches Derringer.FireBarrel so we can skip 
+    class FireDerringerPatch
+    {
+        static void Prefix(Derringer __instance, Derringer.HingeState ___m_hingeState, int ___m_curBarrel)
+        {
+            ++FirePatch.skipSending;
+
+            FVRFireArmChamber chamber = __instance.Barrels[___m_curBarrel].Chamber;
+            FirePatch.fireSuccessful = ___m_hingeState == Derringer.HingeState.Closed && chamber.IsFull && chamber.GetRound() != null && !chamber.IsSpent;
+        }
+
+        static void Postfix(ref Derringer __instance, int i)
+        {
+            --FirePatch.skipSending;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.DerringerFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, i, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.DerringerFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, i, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches BreakActionWeapon.Fire so we can skip 
+    class FireBreakActionWeaponPatch
+    {
+        static void Prefix(BreakActionWeapon __instance, int b)
+        {
+            ++FirePatch.skipSending;
+
+            FVRFireArmChamber chamber = __instance.Barrels[b].Chamber;
+            FirePatch.fireSuccessful = chamber.IsFull && chamber.GetRound() != null && !chamber.IsSpent;
+        }
+
+        static void Postfix(ref BreakActionWeapon __instance, int b)
+        {
+            --FirePatch.skipSending;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.BreakActionWeaponFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, b, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.BreakActionWeaponFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, b, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches LeverActionFirearm.Fire so we can skip 
+    class FireLeverActionFirearmPatch
+    {
+        static bool hammer1Cocked;
+        static bool hammer2Cocked;
+
+        static void Prefix(bool ___m_isHammerCocked, bool ___m_isHammerCocked2)
+        {
+            ++FirePatch.skipSending;
+
+            hammer1Cocked = ___m_isHammerCocked;
+            hammer2Cocked = ___m_isHammerCocked2;
+        }
+
+        static void Postfix(ref LeverActionFirearm __instance, bool ___m_isHammerCocked, bool ___m_isHammerCocked2)
+        {
+            --FirePatch.skipSending;
+
+            FirePatch.overriden = false;
+
+            if (Mod.skipNextFires > 0)
+            {
+                --Mod.skipNextFires;
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                FirePatch.positions = null;
+                FirePatch.directions = null;
+                return;
+            }
+
+            //  Get which hammer went down
+            bool hammer1 = true;
+            if (!___m_isHammerCocked2 && hammer2Cocked)
+            {
+                hammer1 = false;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.LeverActionFirearmFire(0, trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, hammer1, FirePatch.positions, FirePatch.directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.LeverActionFirearmFire(trackedItem.data.trackedID, FirePatch.roundType, FirePatch.roundClass, hammer1, FirePatch.positions, FirePatch.directions);
+                }
+            }
+
+            FirePatch.positions = null;
+            FirePatch.directions = null;
+        }
+    }
+
+    // Patches FlintlockBarrel to keep track of fire actions
+    class FireFlintlockWeaponPatch
+    {
+        public static bool overriden;
+        public static List<Vector3> positions;
+        public static List<Vector3> directions;
+        public static int burnSkip;
+        public static int fireSkip;
+
+        // Update override data
+        public static bool fireSuccessful;
+        public static FlintlockBarrel.LoadedElementType[] loadedElementTypes;
+        public static float[] loadedElementPositions;
+        public static int powderAmount;
+        public static bool ramRod;
+        public static float num2;
+
+        public static int[] loadedElementPowderAmounts;
+        public static float num5;
+
+        static void BurnOffOuterPrefix(FlintlockBarrel __instance)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at BurnOffOuterPrefix, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            if (burnSkip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            fireSuccessful = __instance.LoadedElements.Count > 0 && __instance.LoadedElements[__instance.LoadedElements.Count - 1].Type == FlintlockBarrel.LoadedElementType.Powder;
+            if (fireSuccessful)
+            {
+                loadedElementTypes = new FlintlockBarrel.LoadedElementType[__instance.LoadedElements.Count];
+                loadedElementPositions = new float[__instance.LoadedElements.Count];
+                for (int i = 0; i < __instance.LoadedElements.Count; ++i)
+                {
+                    loadedElementTypes[i] = __instance.LoadedElements[i].Type;
+                    loadedElementPositions[i] = __instance.LoadedElements[i].Position;
+                }
+                powderAmount = __instance.LoadedElements[__instance.LoadedElements.Count - 1].PowderAmount;
+                ramRod = __instance.GetWeapon().RamRod.GetCurBarrel() == __instance;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> BurnOffOuterTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load index 0
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load index 0
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 6)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load index
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert3 = new List<CodeInstruction>();
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load index
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 10)); // Load gameObject
+            toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To get num2
+            List<CodeInstruction> toInsert4 = new List<CodeInstruction>();
+            toInsert4.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load num2
+            toInsert4.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetNum2"))); // Call our GetNum2
+            toInsert4.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set num2
+
+            bool foundFirstPos = false;
+            bool skippedSecondDir = false;
+            bool foundFirstDir = false;
+            bool foundNum2 = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (!foundNum2 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("System.Single (4)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert4);
+                    foundNum2 = true;
+                    continue;
+                }
+
+                if (!foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                    foundFirstPos = true;
+                    continue;
+                }
+                if (foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert2);
+                    continue;
+                }
+
+                if (!foundFirstDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert1);
+                    foundFirstDir = true;
+                    continue;
+                }
+                if (foundFirstDir && !skippedSecondDir)
+                {
+                    skippedSecondDir = true;
+                    continue;
+                }
+                if (foundFirstDir && skippedSecondDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert3);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static float GetNum2(float num2)
+        {
+            if (overriden)
+            {
+                return FireFlintlockWeaponPatch.num2;
+            }
+            else
+            {
+                FireFlintlockWeaponPatch.num2 = num2;
+                return num2;
+            }
+        }
+
+        public static float GetNum5(float num5)
+        {
+            if (overriden)
+            {
+                return FireFlintlockWeaponPatch.num5;
+            }
+            else
+            {
+                FireFlintlockWeaponPatch.num5 = num5;
+                return num5;
+            }
+        }
+
+        public static Vector3 GetPosition(Vector3 position, int index)
+        {
+            if (overriden)
+            {
+                if (positions != null && positions.Count > index)
+                {
+                    return positions[index];
+                }
+                else
+                {
+                    return position;
+                }
+            }
+            else
+            {
+                AddFirePos(position);
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                if (directions != null && directions.Count > index)
+                {
+                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
+                    return directions[index];
+                }
+                else
+                {
+                    return direction;
+                }
+            }
+            else
+            {
+                AddFireDir(direction);
+                return direction;
+            }
+        }
+
+        static void AddFirePos(Vector3 pos)
+        {
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            positions.Add(pos);
+        }
+
+        static void AddFireDir(Vector3 dir)
+        {
+
+            if (Mod.skipNextFires > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            if (positions == null)
+            {
+                positions = new List<Vector3>();
+                directions = new List<Vector3>();
+            }
+
+            directions.Add(dir);
+        }
+
+        static void BurnOffOuterPostfix(ref FlintlockBarrel __instance)
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (burnSkip > 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance.GetWeapon()) ? GameManager.trackedItemByItem[__instance.GetWeapon()] : __instance.GetWeapon().GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.FlintlockWeaponBurnOffOuter(0, trackedItem.data.trackedID, loadedElementTypes, loadedElementPositions, powderAmount, ramRod, num2, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.FlintlockWeaponBurnOffOuter(trackedItem.data.trackedID, loadedElementTypes, loadedElementPositions, powderAmount, ramRod, num2, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
+        }
+
+        static void FirePrefix(FlintlockBarrel __instance)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at flint lock FirePrefix, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            if (fireSkip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            fireSuccessful = __instance.LoadedElements.Count > 0 && __instance.LoadedElements[__instance.LoadedElements.Count - 1].Type == FlintlockBarrel.LoadedElementType.Powder;
+            if (fireSuccessful)
+            {
+                loadedElementTypes = new FlintlockBarrel.LoadedElementType[__instance.LoadedElements.Count];
+                loadedElementPositions = new float[__instance.LoadedElements.Count];
+                loadedElementPowderAmounts = new int[__instance.LoadedElements.Count];
+                for (int i = 0; i < __instance.LoadedElements.Count; ++i)
+                {
+                    loadedElementTypes[i] = __instance.LoadedElements[i].Type;
+                    loadedElementPositions[i] = __instance.LoadedElements[i].Position;
+                    loadedElementPowderAmounts[i] = __instance.LoadedElements[i].PowderAmount;
+                }
+                ramRod = __instance.GetWeapon().RamRod.GetCurBarrel() == __instance;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> FireTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load index 0
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load index 0
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 11)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_S, 12)); // Load index
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert3 = new List<CodeInstruction>();
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 12)); // Load index
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 15)); // Load gameObject
+            toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To get num5
+            List<CodeInstruction> toInsert4 = new List<CodeInstruction>();
+            toInsert4.Add(new CodeInstruction(OpCodes.Ldloc_S, 9)); // Load num5
+            toInsert4.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetNum5"))); // Call our GetNum5
+            toInsert4.Add(new CodeInstruction(OpCodes.Stloc_S, 9)); // Set num5
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert5 = new List<CodeInstruction>();
+            toInsert5.Add(new CodeInstruction(OpCodes.Ldloc_S, 20)); // Load index
+            toInsert5.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert6 = new List<CodeInstruction>();
+            toInsert6.Add(new CodeInstruction(OpCodes.Ldloc_S, 20)); // Load index
+            toInsert6.Add(new CodeInstruction(OpCodes.Ldloc_S, 22)); // Load gameObject
+            toInsert6.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
+
+            bool foundFirstPos = false;
+            bool foundFirstDir = false;
+            bool foundNum5 = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (!foundNum5 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.Single (9)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert4);
+                    foundNum5 = true;
+                    continue;
+                }
+
+                if (!foundFirstPos && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("Muzzle") &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
+                {
+                    instructionList.InsertRange(i + 2, toInsert0);
+                    foundFirstPos = true;
+                    continue;
+                }
+                if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.Vector3 (13)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert2);
+                    continue;
+                }
+                if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.Vector3 (21)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert5);
+                    continue;
+                }
+
+
+                if (!foundFirstDir && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("Muzzle") &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 2, toInsert1);
+                    foundFirstDir = true;
+                    continue;
+                }
+                if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (15)") &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_transform") &&
+                    instructionList[i + 2].opcode == OpCodes.Callvirt && instructionList[i + 2].operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 3, toInsert3);
+                    continue;
+                }
+                if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (22)") &&
+                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_transform") &&
+                    instructionList[i + 2].opcode == OpCodes.Callvirt && instructionList[i + 2].operand.ToString().Contains("get_forward"))
+                {
+                    instructionList.InsertRange(i + 3, toInsert6);
+                    break; ;
+                }
+            }
+            return instructionList;
+        }
+
+        static void FirePostfix(ref FlintlockBarrel __instance)
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (fireSkip > 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                positions = null;
+                directions = null;
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance.GetWeapon()) ? GameManager.trackedItemByItem[__instance.GetWeapon()] : __instance.GetWeapon().GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.FlintlockWeaponFire(0, trackedItem.data.trackedID, loadedElementTypes, loadedElementPositions, loadedElementPowderAmounts, ramRod, num5, positions, directions);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.FlintlockWeaponFire(trackedItem.data.trackedID, loadedElementTypes, loadedElementPositions, loadedElementPowderAmounts, ramRod, num5, positions, directions);
+                }
+            }
+
+            positions = null;
+            directions = null;
+        }
+    }
+
+    // Patches HCB.ReleaseSled to keep track of fire actions
+    class FireHCBPatch
+    {
+        public static bool overriden;
+        public static Vector3 position;
+        public static Vector3 direction;
+        public static int releaseSledSkip;
+
+        static bool Prefix(HCB __instance, ref HCB.SledState ___m_sledState, ref float ___m_cookedAmount)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireHCBPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            ___m_sledState = HCB.SledState.Forward;
+            __instance.Sled.localPosition = __instance.SledPos_Forward.localPosition;
+            __instance.UpdateStrings();
+            if (__instance.Chamber.IsFull)
+            {
+                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.BoltPrefab, GetPos(__instance.MuzzlePos.position), __instance.MuzzlePos.rotation);
+                HCBBolt component = gameObject.GetComponent<HCBBolt>();
+                component.Fire(GetDir(__instance.MuzzlePos.forward), GetPos(__instance.MuzzlePos.position), 1f);
+                component.SetCookedAmount(___m_cookedAmount);
+                __instance.Chamber.SetRound(null, false);
+            }
+            ___m_cookedAmount = 0;
+            __instance.PlayAudioAsHandling(__instance.AudEvent_Fire, __instance.Sled.transform.position);
+
+            if (releaseSledSkip == 0)
+            {
+                // Get tracked item
+                TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+                if (trackedItem != null)
+                {
+                    // Send the fire action to other clients only if we control it
+                    if (ThreadManager.host)
+                    {
+                        if (trackedItem.data.controller == 0)
+                        {
+                            ServerSend.HCBReleaseSled(0, trackedItem.data.trackedID, ___m_cookedAmount, position, direction);
+                        }
+                    }
+                    else if (trackedItem.data.controller == Client.singleton.ID)
+                    {
+                        ClientSend.HCBReleaseSled(trackedItem.data.trackedID, ___m_cookedAmount, position, direction);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        static Vector3 GetPos(Vector3 original)
+        {
+            if (overriden)
+            {
+                return position;
+            }
+            else
+            {
+                position = original;
+                return original;
+            }
+        }
+
+        static Vector3 GetDir(Vector3 original)
+        {
+            if (overriden)
+            {
+                return direction;
+            }
+            else
+            {
+                direction = original;
+                return original;
+            }
+        }
+
+        static void Postfix()
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+        }
+    }
+
+    // Patches StingerLauncher.Fire so we can keep track of fire event
+    class FireStingerLauncherPatch
+    {
+        public static bool overriden;
+        public static Vector3 targetPos;
+        public static Vector3 position;
+        public static Vector3 direction;
+        static TrackedItem trackedItem;
+        public static int skip;
+
+        static void Prefix(ref StingerLauncher __instance, AIEntity ___m_targetEntity)
+        {
+            // Make sure we skip projectile instantiation
+            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireStingerLauncherPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
+
+            trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out TrackedItem item) ? item : __instance.GetComponent<TrackedItem>();
+
+            if (___m_targetEntity != null)
+            {
+                targetPos = ___m_targetEntity.transform.position;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "GetPosition"))); // Call our GetPosition method
+
+            // To get correct dir considering potential override
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load gameObject
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "GetDirection"))); // Call our GetDirection method
+
+            // To set missle ref in trackedItem
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load StingerMissile
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "SetStingerMissile"))); // Call our SetStingerMissile method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert0);
+                    continue;
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_rotation"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert1);
+                    continue;
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Fire"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert2);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SetStingerMissile(StingerMissile missile)
+        {
+            if (trackedItem != null)
+            {
+                trackedItem.stingerMissile = missile;
+                TrackedItemReference reference = missile.gameObject.AddComponent<TrackedItemReference>();
+                reference.trackedItemRef = trackedItem;
+            }
+        }
+
+        public static Vector3 GetPosition(Vector3 position)
+        {
+            if (overriden)
+            {
+                return FireStingerLauncherPatch.position;
+            }
+            else
+            {
+                FireStingerLauncherPatch.position = position;
+                return position;
+            }
+        }
+
+        public static Vector3 GetDirection(Vector3 direction, GameObject gameObject)
+        {
+            if (overriden)
+            {
+                gameObject.transform.rotation = Quaternion.LookRotation(FireStingerLauncherPatch.direction);
+                return FireStingerLauncherPatch.direction;
+            }
+            else
+            {
+                FireStingerLauncherPatch.direction = direction;
+                return direction;
+            }
+        }
+
+        static void Postfix()
+        {
+            --Mod.skipAllInstantiates;
+
+            overriden = false;
+
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            if (trackedItem != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.StingerLauncherFire(0, trackedItem.data.trackedID, targetPos, position, direction);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.StingerLauncherFire(trackedItem.data.trackedID, targetPos, position, direction);
+                }
+            }
+        }
+
+        static bool MissileFirePrefix(StingerMissile __instance)
+        {
+            if (Mod.managerObject != null && overriden)
+            {
+                __instance.Fire(targetPos, 12);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    // Patches RemoteMissile.Detonante to keep track of the event and prevent it on non controlling clients
+    class RemoteMissileDetonatePatch
+    {
+        public static bool overriden;
+
+        static bool Prefix(RemoteMissile __instance, RemoteMissileLauncher ___m_launcher)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(___m_launcher, out trackedItem) ? trackedItem : ___m_launcher.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.controller == GameManager.ID)
+                {
+                    // Send to other clients
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.RemoteMissileDetonate(0, trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                    else
+                    {
+                        ClientSend.RemoteMissileDetonate(trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                }
+                else
+                {
+                    // In the case in which we do not control the launcher, we do not want to detonate if it wasn't an order from the controller
+                    if (overriden)
+                    {
+                        overriden = false;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches StingerMissile.Explode to keep track of the event and prevent it on non controlling clients
+    class StingerMissileExplodePatch
+    {
+        public static bool overriden;
+
+        static bool Prefix(StingerMissile __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = __instance.GetComponent<TrackedItemReference>().trackedItemRef;
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.controller == GameManager.ID)
+                {
+                    // Send to other clients
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.StingerMissileExplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                    else
+                    {
+                        ClientSend.StingerMissileExplode(trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                }
+                else
+                {
+                    // In the case in which we do not control the launcher, we do not want to detonate if it wasn't an order from the controller
+                    if (overriden)
+                    {
+                        overriden = false;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches SosigWeapon.Shatter so we can keep track of the event
+    class SosigWeaponShatterPatch
+    {
+        public static int skip;
+
+        static void Prefix(ref SosigWeapon __instance)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            TrackedItem trackedItem = GameManager.trackedItemBySosigWeapon.ContainsKey(__instance) ? GameManager.trackedItemBySosigWeapon[__instance] : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Send the shatter action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedItem.data.controller == 0)
+                    {
+                        ServerSend.SosigWeaponShatter(0, trackedItem.data.trackedID);
+                    }
+                }
+                else if (trackedItem.data.controller == Client.singleton.ID)
+                {
+                    ClientSend.SosigWeaponShatter(trackedItem.data.trackedID);
+                }
+            }
+        }
+    }
+
+    // Patches Sosig.Configure to keep a reference to the config template
+    class SosigConfigurePatch
+    {
+        public static bool skipConfigure;
+
+        static void Prefix(ref Sosig __instance, SosigConfigTemplate t)
+        {
+            if (skipConfigure)
+            {
+                skipConfigure = false;
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                trackedSosig.data.configTemplate = t;
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigConfigure(trackedSosig.data.trackedID, t);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        ClientSend.SosigConfigure(trackedSosig.data.trackedID, t);
+                    }
+                    else
+                    {
+                        if (TrackedSosig.unknownConfiguration.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            TrackedSosig.unknownConfiguration[trackedSosig.data.localWaitingIndex] = t;
+                        }
+                        else
+                        {
+                            TrackedSosig.unknownConfiguration.Add(trackedSosig.data.localWaitingIndex, t);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches Sosig update methods to prevent processing on non controlling client
+    class SosigUpdatePatch
+    {
+        static bool UpdatePrefix(ref Sosig __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                bool runOriginal = trackedSosig.data.controller == GameManager.ID;
+                if (!runOriginal)
+                {
+                    // Call Sosig update methods we don't want to skip
+                    __instance.VaporizeUpdate();
+                    __instance.HeadIconUpdate();
+                }
+                return runOriginal;
+            }
+            return true;
+        }
+
+        static bool HandPhysUpdatePrefix(ref Sosig __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                return trackedSosig.data.controller == GameManager.ID;
+            }
+            return true;
+        }
+    }
+
+    // Patches SosigInventory update methods to prevent processing on non controlling client
+    class SosigInvUpdatePatch
+    {
+        static bool PhysHoldPrefix(ref SosigInventory __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                return trackedSosig.data.controller == GameManager.ID;
+            }
+            return true;
+        }
+    }
+
+    // Patches Sosig to keep track of all actions taken on a sosig
+    class SosigActionPatch
+    {
+        public static int sosigDiesSkip;
+        public static int sosigClearSkip;
+        public static int sosigSetBodyStateSkip;
+        public static int sosigVaporizeSkip;
+        public static int sosigSetCurrentOrderSkip;
+        public static int sosigRequestHitDecalSkip;
+        public static int skipSendingOrder;
+
+        static void SosigDiesPrefix(ref Sosig __instance, Damage.DamageClass damClass, Sosig.SosigDeathType deathType)
+        {
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            if (sosigDiesSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.trackedID != -1)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigDies(trackedSosig.data.trackedID, damClass, deathType);
+                }
+                else
+                {
+                    ClientSend.SosigDies(trackedSosig.data.trackedID, damClass, deathType);
+                }
+            }
+        }
+
+        static void SosigDiesPostfix()
+        {
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+
+        static void SosigClearPrefix(ref Sosig __instance)
+        {
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+            ++SosigLinkActionPatch.skipLinkExplodes;
+
+            if (sosigClearSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                trackedSosig.sendDestroy = false;
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigClear(trackedSosig.data.trackedID);
+                }
+                else
+                {
+                    ClientSend.SosigClear(trackedSosig.data.trackedID);
+                }
+            }
+        }
+
+        static void SosigClearPostfix()
+        {
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+            --SosigLinkActionPatch.skipLinkExplodes;
+        }
+
+        static void SetBodyStatePrefix(ref Sosig __instance, Sosig.SosigBodyState s)
+        {
+            if (sosigSetBodyStateSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.data.trackedID == -1)
+                {
+                    TrackedSosig.unknownBodyStates.Add(trackedSosig.data.localWaitingIndex, s);
+                }
+                else
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigSetBodyState(trackedSosig.data.trackedID, s);
+                    }
+                    else
+                    {
+                        ClientSend.SosigSetBodyState(trackedSosig.data.trackedID, s);
+                    }
+                }
+            }
+        }
+
+        static IEnumerable<CodeInstruction> FootStepTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsertSecond = new List<CodeInstruction>();
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig gameobject
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_I4_S, 10)); // Load value of FVRPooledAudioType.GenericClose
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig gameobject
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "get_transform"))); // Get Sosig transform
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "get_position"))); // Get position of Sosig transform
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load num3
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 0.35f)); // Load 4 byte real literal 0.35
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Mul)); // Multiply
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load num3
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 0.4f)); // Load 4 byte real literal 0.4
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Mul)); // Multiply
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(Vector2), new Type[] { typeof(float), typeof(float) }))); // Create new Vector2
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 0.95f)); // Load 4 byte real literal 0.95
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 1.05f)); // Load 4 byte real literal 1.05
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(Vector2), new Type[] { typeof(float), typeof(float) }))); // Create new Vector2
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load delay
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendFootStepSound"))); // Call our own method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("PlayCoreSoundDelayedOverrides"))
+                {
+                    instructionList.InsertRange(i + 1, toInsertSecond);
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SendFootStepSound(Sosig sosig, FVRPooledAudioType audioType, Vector3 position, Vector2 vol, Vector2 pitch, float delay)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(sosig) ? GameManager.trackedSosigBySosig[sosig] : sosig.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.PlaySosigFootStepSound(trackedSosig.data.trackedID, audioType, position, vol, pitch, delay);
+                }
+                else
+                {
+                    ClientSend.PlaySosigFootStepSound(trackedSosig.data.trackedID, audioType, position, vol, pitch, delay);
+                }
+            }
+        }
+
+        static IEnumerable<CodeInstruction> SpeechUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Sosig), "CurrentOrder"))); // Load CurrentOrder
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendSpeakState"))); // Call our own method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("Speak_State"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SendSpeakState(Sosig sosig, Sosig.SosigOrder currentOrder)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(sosig) ? GameManager.trackedSosigBySosig[sosig] : sosig.GetComponent<TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.trackedID != -1)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigSpeakState(trackedSosig.data.trackedID, currentOrder);
+                }
+                else
+                {
+                    ClientSend.SosigSpeakState(trackedSosig.data.trackedID, currentOrder);
+                }
+            }
+        }
+
+        static void SetCurrentOrderPrefix(ref Sosig __instance, Sosig.SosigOrder o)
+        {
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
+            {
+                trackedSosig.data.currentOrder = o;
+
+                if (skipSendingOrder == 0)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                    }
+                    else
+                    {
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            ClientSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                        }
+                        else
+                        {
+                            if (TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                            {
+                                TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = o;
+                            }
+                            else
+                            {
+                                TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, o);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        static void CommandGuardPointPrefix()
+        {
+            ++skipSendingOrder;
+        }
+
+        static void CommandGuardPointPostfix(Sosig __instance, Vector3 point, bool hardguard)
+        {
+            --skipSendingOrder;
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
+            {
+                trackedSosig.data.guardPoint = point;
+                trackedSosig.data.hardGuard = hardguard;
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.GuardPoint);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.GuardPoint);
+                    }
+                    else
+                    {
+                        if (TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = Sosig.SosigOrder.GuardPoint;
+                        }
+                        else
+                        {
+                            TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, Sosig.SosigOrder.GuardPoint);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void CommandAssaultPointPrefix()
+        {
+            ++skipSendingOrder;
+        }
+
+        static void CommandAssaultPointPostfix(Sosig __instance, Vector3 point)
+        {
+            --skipSendingOrder;
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
+            {
+                trackedSosig.data.assaultPoint = point;
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Assault);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Assault);
+                    }
+                    else
+                    {
+                        if (TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = Sosig.SosigOrder.Assault;
+                        }
+                        else
+                        {
+                            TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, Sosig.SosigOrder.Assault);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void CommandIdlePrefix()
+        {
+            ++skipSendingOrder;
+        }
+
+        static void CommandIdlePostfix(Sosig __instance, Vector3 point, Vector3 dominantDir)
+        {
+            --skipSendingOrder;
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
+            {
+                trackedSosig.data.idleToPoint = point;
+                trackedSosig.data.idleDominantDir = dominantDir;
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Idle);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Idle);
+                    }
+                    else
+                    {
+                        if (TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = Sosig.SosigOrder.Idle;
+                        }
+                        else
+                        {
+                            TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, Sosig.SosigOrder.Idle);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void CommandPathToPostfix(Sosig __instance)
+        {
+            if (sosigSetCurrentOrderSkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
+            {
+                trackedSosig.data.pathToPoint = trackedSosig.physicalSosigScript.m_pathToPoint;
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.PathTo);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.PathTo);
+                    }
+                    else
+                    {
+                        if (TrackedSosig.unknownCurrentOrder.ContainsKey(trackedSosig.data.localWaitingIndex))
+                        {
+                            TrackedSosig.unknownCurrentOrder[trackedSosig.data.localWaitingIndex] = Sosig.SosigOrder.PathTo;
+                        }
+                        else
+                        {
+                            TrackedSosig.unknownCurrentOrder.Add(trackedSosig.data.localWaitingIndex, Sosig.SosigOrder.PathTo);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void SosigVaporizePrefix(ref Sosig __instance, int iff)
+        {
+            ++sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++sosigSetBodyStateSkip;
+
+            if (sosigVaporizeSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        ClientSend.SosigVaporize(trackedSosig.data.trackedID, iff);
+                    }
+                }
+            }
+        }
+
+        static void SosigVaporizePostfix()
+        {
+            --sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --sosigSetBodyStateSkip;
+        }
+
+        static void RequestHitDecalPrefix(ref Sosig __instance, Vector3 point, Vector3 normal, float scale, SosigLink l)
+        {
+            if (sosigRequestHitDecalSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < __instance.Links.Count; ++i)
+            {
+                if (__instance.Links[i] == l)
+                {
+                    TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+                    if (trackedSosig != null)
+                    {
+                        SendRequestHitDecal(trackedSosig.data.trackedID, point, normal, UnityEngine.Random.onUnitSphere, scale, i);
+                    }
+                    break;
+                }
+            }
+        }
+
+        static void RequestHitDecalEdgePrefix(ref Sosig __instance, Vector3 point, Vector3 normal, Vector3 edgeNormal, float scale, SosigLink l)
+        {
+            if (sosigRequestHitDecalSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < __instance.Links.Count; ++i)
+            {
+                if (__instance.Links[i] == l)
+                {
+                    TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+                    if (trackedSosig != null)
+                    {
+                        SendRequestHitDecal(trackedSosig.data.trackedID, point, normal, edgeNormal, scale, i);
+                    }
+                    break;
+                }
+            }
+        }
+
+        static void SendRequestHitDecal(int sosigTrackedID, Vector3 point, Vector3 normal, Vector3 edgeNormal, float scale, int linkIndex)
+        {
+            if (ThreadManager.host)
+            {
+                ServerSend.SosigRequestHitDecal(sosigTrackedID, point, normal, edgeNormal, scale, linkIndex);
+            }
+            else
+            {
+                ClientSend.SosigRequestHitDecal(sosigTrackedID, point, normal, edgeNormal, scale, linkIndex);
+            }
+        }
+    }
+
+    // Patches SosigLink to keep track of all actions taken on a link
+    class SosigLinkActionPatch
+    {
+        public static string knownWearableID;
+        public static int skipRegisterWearable;
+        public static int skipDeRegisterWearable;
+        public static int skipLinkExplodes;
+        public static int sosigLinkBreakSkip;
+        public static int sosigLinkSeverSkip;
+
+        static void RegisterWearablePrefix(ref SosigLink __instance, SosigWearable w)
+        {
+            if (skipRegisterWearable > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if (linkIndex == -1)
+                {
+                    Mod.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if (knownWearableID == null)
+                    {
+                        knownWearableID = w.name;
+                        if (knownWearableID.EndsWith("(Clone)"))
+                        {
+                            knownWearableID = knownWearableID.Substring(0, knownWearableID.Length - 7);
+                        }
+                        if (Mod.sosigWearableMap.ContainsKey(knownWearableID))
+                        {
+                            knownWearableID = Mod.sosigWearableMap[knownWearableID];
+                        }
+                        else
+                        {
+                            Mod.LogError("SosigWearable: " + knownWearableID + " not found in map");
+                        }
+                    }
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                    }
+                    else
+                    {
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            ClientSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        }
+                    }
+
+                    trackedSosig.data.wearables[linkIndex].Add(knownWearableID);
+
+                    knownWearableID = null;
+                }
+            }
+        }
+
+        static void DeRegisterWearablePrefix(ref SosigLink __instance, SosigWearable w)
+        {
+            if (skipDeRegisterWearable > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if (linkIndex == -1)
+                {
+                    Mod.LogError("RegisterWearablePrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if (knownWearableID == null)
+                    {
+                        knownWearableID = w.name;
+                        if (knownWearableID.EndsWith("(Clone)"))
+                        {
+                            knownWearableID = knownWearableID.Substring(0, knownWearableID.Length - 7);
+                        }
+                        if (Mod.sosigWearableMap.ContainsKey(knownWearableID))
+                        {
+                            knownWearableID = Mod.sosigWearableMap[knownWearableID];
+                        }
+                        else
+                        {
+                            Mod.LogError("SosigWearable: " + knownWearableID + " not found in map");
+                        }
+                    }
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigLinkDeRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                    }
+                    else
+                    {
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            ClientSend.SosigLinkDeRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        }
+                    }
+
+                    trackedSosig.data.wearables[linkIndex].Remove(knownWearableID);
+
+                    knownWearableID = null;
+                }
+            }
+        }
+
+        static void LinkExplodesPrefix(ref SosigLink __instance, Damage.DamageClass damClass)
+        {
+            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            if (skipLinkExplodes > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if (linkIndex == -1)
+                {
+                    Mod.LogError("LinkExplodesPrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigLinkExplodes(trackedSosig.data.trackedID, linkIndex, damClass);
+                    }
+                    else
+                    {
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            ClientSend.SosigLinkExplodes(trackedSosig.data.trackedID, linkIndex, damClass);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void LinkExplodesPostfix()
+        {
+            --SosigActionPatch.sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+
+        static bool LinkBreakPrefix(ref SosigLink __instance, bool isStart, Damage.DamageClass damClass)
+        {
+            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            if (sosigLinkBreakSkip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.data.controller != GameManager.ID)
+                {
+                    return false;
+                }
+
+                int linkIndex = -1;
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if (linkIndex == -1)
+                {
+                    Mod.LogError("LinkBreakPrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigLinkBreak(trackedSosig.data.trackedID, linkIndex, isStart, (byte)damClass);
+                    }
+                    else
+                    {
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            ClientSend.SosigLinkBreak(trackedSosig.data.trackedID, linkIndex, isStart, damClass);
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static void LinkBreakPostfix()
+        {
+            --SosigActionPatch.sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+
+        static void LinkSeverPrefix(ref SosigLink __instance, Damage.DamageClass damClass, bool isPullApart)
+        {
+            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            if (sosigLinkSeverSkip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                int linkIndex = -1;
+                for (int i = 0; i < __instance.S.Links.Count; ++i)
+                {
+                    if (__instance.S.Links[i] == __instance)
+                    {
+                        linkIndex = i;
+                        break;
+                    }
+                }
+
+                if (linkIndex == -1)
+                {
+                    Mod.LogError("LinkSeverPrefix called on link whos sosig doesn't have the link");
+                }
+                else
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigLinkSever(trackedSosig.data.trackedID, linkIndex, (byte)damClass, isPullApart);
+                    }
+                    else
+                    {
+                        if (trackedSosig.data.trackedID != -1)
+                        {
+                            ClientSend.SosigLinkSever(trackedSosig.data.trackedID, linkIndex, damClass, isPullApart);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void LinkSeverPostfix()
+        {
+            --SosigActionPatch.sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+
+        static void LinkVaporizePrefix(ref SosigLink __instance, int IFF)
+        {
+            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigHandDropPatch.skip;
+            ++SosigSlotDetachPatch.skip;
+            ++SosigActionPatch.sosigSetBodyStateSkip;
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigVaporize(trackedSosig.data.trackedID, IFF);
+                }
+                else
+                {
+                    if (trackedSosig.data.trackedID != -1)
+                    {
+                        ClientSend.SosigVaporize(trackedSosig.data.trackedID, IFF);
+                    }
+                }
+            }
+        }
+
+        static void LinkVaporizePostfix()
+        {
+            --SosigActionPatch.sosigDiesSkip;
+            --SosigHandDropPatch.skip;
+            --SosigSlotDetachPatch.skip;
+            --SosigActionPatch.sosigSetBodyStateSkip;
+        }
+    }
+
+    // Patches Sosig IFF methods to keep track of changes to the IFF
+    class SosigIFFPatch
+    {
+        public static int skip;
+
+        static void SetIFFPrefix(ref Sosig __instance, int i)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.data.trackedID == -1)
+                {
+                    TrackedSosig.unknownSetIFFs.Add(trackedSosig.data.localWaitingIndex, i);
+                }
+                else
+                {
+                    trackedSosig.data.IFF = (byte)i;
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigSetIFF(trackedSosig.data.trackedID, i);
+                    }
+                    else
+                    {
+                        ClientSend.SosigSetIFF(trackedSosig.data.trackedID, i);
+                    }
+                }
+            }
+        }
+
+        static void SetOriginalIFFPrefix(ref Sosig __instance, int i)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (trackedSosig.data.trackedID == -1)
+                {
+                    TrackedSosig.unknownSetOriginalIFFs.Add(trackedSosig.data.localWaitingIndex, i);
+                }
+                else
+                {
+                    trackedSosig.data.IFF = (byte)i;
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
+                    }
+                    else
+                    {
+                        ClientSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches Sosig.EventReceive to prevent event processing on non-controlling client
+    class SosigEventReceivePatch
+    {
+        static bool Prefix(ref Sosig __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // Possible if instance has been destroyed but still accessible
+            if (__instance == null)
+            {
+                return false;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                return trackedSosig.data.controller == GameManager.ID;
+            }
+            return true;
+        }
+    }
+
+    // Patches AutoMeater.Update and FixedUpdate to prevent updating on non-controlling client
+    class AutoMeaterUpdatePatch
+    {
+        static bool Prefix(ref AutoMeater __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedAutoMeater trackedAutoMeater = GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                bool runOriginal = trackedAutoMeater.data.controller == GameManager.ID;
+                if (!runOriginal)
+                {
+                    // Call AutoMeater update methods we don't want to skip
+                    if (trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].IsFlameThrower)
+                    {
+                        trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].Tick(Time.deltaTime);
+                    }
+                }
+                return runOriginal;
+            }
+            return true;
+        }
+    }
+
+    // Patches AutoMeater.EventReceive to prevent event processing on non-controlling client
+    class AutoMeaterEventPatch
+    {
+        static bool Prefix(ref AutoMeater __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedAutoMeater trackedAutoMeater = GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                return trackedAutoMeater.data.controller == GameManager.ID;
+            }
+            return true;
+        }
+    }
+
+    // Patches AutoMeater.SetState to send to other clients
+    class AutoMeaterSetStatePatch
+    {
+        public static int skip;
+
+        static void Postfix(ref AutoMeater __instance, AutoMeater.AutoMeaterState s)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (skip > 0)
+            {
+                return;
+            }
+
+            TrackedAutoMeater trackedAutoMeater = GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.AutoMeaterSetState(trackedAutoMeater.data.trackedID, (byte)s);
+                }
+                else
+                {
+                    if (trackedAutoMeater.data.trackedID != -1)
+                    {
+                        ClientSend.AutoMeaterSetState(trackedAutoMeater.data.trackedID, (byte)s);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches AutoMeater.UpdateFlight to send to blade activation to other clients ad prevent update on non-controlling clients
+    class AutoMeaterUpdateFlightPatch
+    {
+        static bool Prefix(ref AutoMeater __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedAutoMeater trackedAutoMeater = GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance) ? GameManager.trackedAutoMeaterByAutoMeater[__instance] : __instance.GetComponent<TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                return trackedAutoMeater.data.controller == GameManager.ID;
+            }
+            return true;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsertActive = new List<CodeInstruction>();
+            toInsertActive.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeater gameobject
+            toInsertActive.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load true
+            toInsertActive.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterUpdateFlightPatch), "SetAutoMeaterBladesActive"))); // Call SetAutoMeaterBladesActive
+            List<CodeInstruction> toInsertInactive = new List<CodeInstruction>();
+            toInsertActive.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeater gameobject
+            toInsertActive.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load false
+            toInsertActive.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterUpdateFlightPatch), "SetAutoMeaterBladesActive"))); // Call SetAutoMeaterBladesActive
+
+            bool active = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("UsesBlades"))
+                {
+                    instructionList.InsertRange(i + 2, active ? toInsertActive : toInsertInactive);
+                    active = !active;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SetAutoMeaterBladesActive(AutoMeater autoMeater, bool active)
+        {
+            TrackedAutoMeater trackedAutoMeater = GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(autoMeater) ? GameManager.trackedAutoMeaterByAutoMeater[autoMeater] : autoMeater.GetComponent<TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.AutoMeaterSetBladesActive(trackedAutoMeater.data.trackedID, active);
+                }
+                else
+                {
+                    if (trackedAutoMeater.data.trackedID != -1)
+                    {
+                        ClientSend.AutoMeaterSetBladesActive(trackedAutoMeater.data.trackedID, active);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches AutoMeaterFirearm.FireShot to send to fire action to other clients
+    class AutoMeaterFirearmFireShotPatch
+    {
+        public static int skip;
+        public static bool angleOverride;
+        public static Vector3 muzzleAngles;
+
+        static void Prefix()
+        {
+            // Make sure we skip projectile instantiation
+            ++Mod.skipAllInstantiates;
+            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at AutoMeaterFirearmFireShotPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
+        }
+
+        static void Postfix(ref AutoMeater.AutoMeaterFirearm __instance)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            TrackedAutoMeater trackedAutoMeater = GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance.M) ? GameManager.trackedAutoMeaterByAutoMeater[__instance.M] : __instance.M.GetComponent<TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                // Send the fire action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedAutoMeater.data.controller == 0)
+                    {
+                        ServerSend.AutoMeaterFirearmFireShot(0, trackedAutoMeater.data.trackedID, __instance.Muzzle.localEulerAngles);
+                    }
+                }
+                else if (trackedAutoMeater.data.controller == Client.singleton.ID)
+                {
+                    if (trackedAutoMeater.data.trackedID != -1)
+                    {
+                        ClientSend.AutoMeaterFirearmFireShot(trackedAutoMeater.data.trackedID, __instance.Muzzle.localEulerAngles);
+                    }
+                }
+            }
+
+            --Mod.skipAllInstantiates;
+        }
+
+        public static Vector3 GetMuzzleAngles(Vector3 currentAngles)
+        {
+            if (angleOverride)
+            {
+                angleOverride = false;
+                return muzzleAngles;
+            }
+            return currentAngles;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeaterFirearm instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(AutoMeater.AutoMeaterFirearm), "Muzzle"))); // Load Muzzle
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load AutoMeaterFirearm instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(AutoMeater.AutoMeaterFirearm), "Muzzle"))); // Load Muzzle
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "get_localEulerAngles"))); // Get current angles
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterFirearmFireShotPatch), "GetMuzzleAngles"))); // Call GetMuzzleAngles
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "set_localEulerAngles"))); // Set angles
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("set_localEulerAngles"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches AutoMeaterFirearm.SetFireAtWill to send to sync with other clients
+    class AutoMeaterFirearmFireAtWillPatch
+    {
+        public static int skip;
+
+        static void Prefix(ref AutoMeater.AutoMeaterFirearm __instance, bool b, float d)
+        {
+            if (skip > 0)
+            {
+                return;
+            }
+
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            {
+                return;
+            }
+
+            // Get tracked item
+            TrackedAutoMeater trackedAutoMeater = GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance.M) ? GameManager.trackedAutoMeaterByAutoMeater[__instance.M] : __instance.M.GetComponent<TrackedAutoMeater>();
+            if (trackedAutoMeater != null)
+            {
+                // Send the fire at will setting action to other clients only if we control it
+                if (ThreadManager.host)
+                {
+                    if (trackedAutoMeater.data.controller == 0)
+                    {
+                        int firearmIndex = -1;
+                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
+                        {
+                            if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
+                            {
+                                firearmIndex = i;
+                                break;
+                            }
+                        }
+                        ServerSend.AutoMeaterFirearmFireAtWill(trackedAutoMeater.data.trackedID, firearmIndex, b, d);
+                    }
+                }
+                else if (trackedAutoMeater.data.controller == Client.singleton.ID)
+                {
+                    if (trackedAutoMeater.data.trackedID != -1)
+                    {
+                        int firearmIndex = -1;
+                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
+                        {
+                            if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
+                            {
+                                firearmIndex = i;
+                                break;
+                            }
+                        }
+                        ClientSend.AutoMeaterFirearmFireAtWill(trackedAutoMeater.data.trackedID, firearmIndex, b, d);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.RespawnRandomSubTarg to sync subtargets with other clients
+    class EncryptionRespawnRandSubPatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionRespawnRandSubPatch), "RespawnSubTarg"))); // Call RespawnSubTarg
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction != null && instruction.operand != null)
+                {
+                    if (instruction.operand.ToString().Contains("get_activeSelf"))
+                    {
+                        instructionList.InsertRange(i + 2, toInsert);
+                        break;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static void RespawnSubTarg(TNH_EncryptionTarget encryption, int index)
+        {
+            if (Mod.managerObject != null)
+            {
+                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(encryption) ? GameManager.trackedEncryptionByEncryption[encryption] : encryption.GetComponent<TrackedEncryption>();
+                if (trackedEncryption != null && trackedEncryption.data.controller == GameManager.ID)
+                {
+                    trackedEncryption.data.subTargsActive[index] = true;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
+                    }
+                    else
+                    {
+                        if (trackedEncryption.data.trackedID == -1)
+                        {
+                            if (TrackedEncryption.unknownSpawnSubTarg.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<int> l))
+                            {
+                                l.Add(index);
+                            }
+                            else
+                            {
+                                TrackedEncryption.unknownSpawnSubTarg.Add(trackedEncryption.data.localWaitingIndex, new List<int>() { index });
+                            }
+                        }
+                        else
+                        {
+                            ClientSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.SpawnGrowth to sync with other clients
+    class EncryptionSpawnGrowthPatch
+    {
+        public static int skip;
+
+        static void Prefix(ref TNH_EncryptionTarget __instance, int index, Vector3 point)
+        {
+            Mod.LogInfo("EncryptionSpawnGrowthPatch prefix");
+            if (skip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
+                if (trackedEncryption != null && trackedEncryption.data.controller == GameManager.ID)
+                {
+                    trackedEncryption.data.tendrilsActive[index] = true;
+                    trackedEncryption.data.growthPoints[index] = point;
+                    trackedEncryption.data.subTargsPos[index] = point;
+                    trackedEncryption.data.subTargsActive[index] = true;
+                    trackedEncryption.data.tendrilFloats[index] = 1f;
+                    Vector3 forward = point - trackedEncryption.physicalEncryptionScript.Tendrils[index].transform.position;
+                    trackedEncryption.data.tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    trackedEncryption.data.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+
+                    if (ThreadManager.host)
+                    {
+                        Mod.LogInfo("\rServer sending");
+                        ServerSend.EncryptionSpawnGrowth(trackedEncryption.data.trackedID, index, point);
+                    }
+                    else
+                    {
+                        if (trackedEncryption.data.trackedID == -1)
+                        {
+                            if (TrackedEncryption.unknownSpawnGrowth.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<KeyValuePair<int, Vector3>> l))
+                            {
+                                l.Add(new KeyValuePair<int, Vector3>(index, point));
+                            }
+                            else
+                            {
+                                TrackedEncryption.unknownSpawnGrowth.Add(trackedEncryption.data.localWaitingIndex, new List<KeyValuePair<int, Vector3>>() { new KeyValuePair<int, Vector3>(index, point) });
+                            }
+                        }
+                        else
+                        {
+                            ClientSend.EncryptionSpawnGrowth(trackedEncryption.data.trackedID, index, point);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.ResetGrowth to sync with other clients
+    class EncryptionResetGrowthPatch
+    {
+        public static int skip;
+
+        static bool Prefix(ref TNH_EncryptionTarget __instance, int index, Vector3 point)
+        {
+            if (skip > 0)
+            {
+                return true;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    if (trackedEncryption.data.controller == GameManager.ID)
+                    {
+                        trackedEncryption.data.growthPoints[index] = point;
+                        trackedEncryption.data.tendrilFloats[index] = 0;
+                        Vector3 forward = point - __instance.Tendrils[index].transform.position;
+                        trackedEncryption.data.tendrilsRot[index] = Quaternion.LookRotation(forward);
+                        trackedEncryption.data.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.EncryptionResetGrowth(trackedEncryption.data.trackedID, index, point);
+                        }
+                        else
+                        {
+                            if (trackedEncryption.data.trackedID == -1)
+                            {
+                                if (TrackedEncryption.unknownResetGrowth.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<KeyValuePair<int, Vector3>> l))
+                                {
+                                    l.Add(new KeyValuePair<int, Vector3>(index, point));
+                                }
+                                else
+                                {
+                                    TrackedEncryption.unknownResetGrowth.Add(trackedEncryption.data.localWaitingIndex, new List<KeyValuePair<int, Vector3>>() { new KeyValuePair<int, Vector3>(index, point) });
+                                }
+                            }
+                            else
+                            {
+                                ClientSend.EncryptionResetGrowth(trackedEncryption.data.trackedID, index, point);
+                            }
+                        }
+
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches TNH_EncryptionTarget.DisableSubtarg to sync with other clients
+    class EncryptionDisableSubtargPatch
+    {
+        static bool wasActive;
+
+        static void Prefix(ref TNH_EncryptionTarget __instance, int i)
+        {
+            if (Mod.managerObject != null)
+            {
+                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    wasActive = __instance.SubTargs[i].activeSelf;
+                }
+            }
+        }
+
+        static void Postfix(ref TNH_EncryptionTarget __instance, int i)
+        {
+            // Instance could be null if destroyed by the method, in which case we don't need to send anything, the destruction will be sent instead
+            if (Mod.managerObject != null && __instance != null && wasActive && !__instance.SubTargs[i].activeSelf)
+            {
+                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    trackedEncryption.data.subTargsActive[i] = false;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                    }
+                    else
+                    {
+                        if (trackedEncryption.data.trackedID == -1)
+                        {
+                            if (TrackedEncryption.unknownDisableSubTarg.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<int> l))
+                            {
+                                l.Add(i);
+                            }
+                            else
+                            {
+                                TrackedEncryption.unknownDisableSubTarg.Add(trackedEncryption.data.localWaitingIndex, new List<int>() { i });
+                            }
+                        }
+                        else
+                        {
+                            ClientSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches LAPD2019 to sync actions
+    class LAPD2019ActionPatch
+    {
+        public static int loadBatterySkip;
+        public static int extractBatterySkip;
+
+        static void LoadBatteryPrefix(ref LAPD2019 __instance, LAPD2019Battery battery)
+        {
+            if (loadBatterySkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                TrackedItem trackedGun = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+                TrackedItem trackedBattery = GameManager.trackedItemByItem.ContainsKey(battery) ? GameManager.trackedItemByItem[battery] : battery.GetComponent<TrackedItem>();
+                if (trackedGun != null && trackedBattery != null)
+                {
+                    if (trackedGun.data.controller != GameManager.ID)
+                    {
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.LAPD2019LoadBattery(0, trackedGun.data.trackedID, trackedGun.data.trackedID);
+                        }
+                        else
+                        {
+                            ClientSend.LAPD2019LoadBattery(trackedGun.data.trackedID, trackedGun.data.trackedID);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void ExtractBatteryPrefix(ref LAPD2019 __instance)
+        {
+            if (extractBatterySkip > 0)
+            {
+                return;
+            }
+
+            if (Mod.managerObject != null)
+            {
+                TrackedItem trackedGun = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+                if (trackedGun != null)
+                {
+                    if (trackedGun.data.controller != GameManager.ID)
+                    {
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.LAPD2019ExtractBattery(0, trackedGun.data.trackedID);
+                        }
+                        else
+                        {
+                            ClientSend.LAPD2019ExtractBattery(trackedGun.data.trackedID);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches SosigTargetPrioritySystem methods to keep track of changes to IFFChart
+    class SosigTargetPrioritySystemPatch
+    {
+        public static int BoolArrToInt(bool[] arr)
+        {
+            int i = 0;
+            for (int index = 0; index < arr.Length; ++index)
+            {
+                if (arr[index])
+                {
+                    i |= (1 << index);
+                }
+            }
+            return i;
+        }
+
+        public static bool[] IntToBoolArr(int i)
+        {
+            bool[] arr = new bool[32];
+            for (int index = arr.Length - 1; index >= 0; --index)
+            {
+                arr[index] = ((i >> index) | 1) == 1;
+            }
+            return arr;
+        }
+
+        static void Postfix(ref SosigTargetPrioritySystem __instance, ref AIEntity ___E)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedSosig trackedSosig = ___E.GetComponent<TrackedSosig>();
+            if (trackedSosig != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.SosigPriorityIFFChart(0, trackedSosig.data.trackedID, BoolArrToInt(__instance.IFFChart));
+                }
+                else if (trackedSosig.data.trackedID != -1)
+                {
+                    ClientSend.SosigPriorityIFFChart(trackedSosig.data.trackedID, BoolArrToInt(__instance.IFFChart));
+                }
+                else // Unknown tracked ID, keep for late update
+                {
+                    if (TrackedSosig.unknownIFFChart.ContainsKey(trackedSosig.data.localWaitingIndex))
+                    {
+                        TrackedSosig.unknownIFFChart[trackedSosig.data.localWaitingIndex] = BoolArrToInt(__instance.IFFChart);
+                    }
+                    else
+                    {
+                        TrackedSosig.unknownIFFChart.Add(trackedSosig.data.localWaitingIndex, BoolArrToInt(__instance.IFFChart));
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches SimpleLauncher2.CycleMode to prevent it from going into DR mode if not in control
+    class SimpleLauncher2CycleModePatch
+    {
+        static bool Prefix(SimpleLauncher2 __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (__instance.Mode == SimpleLauncher2.fMode.sa)
+                {
+                    __instance.Mode = SimpleLauncher2.fMode.tr;
+                }
+                else if (__instance.Mode == SimpleLauncher2.fMode.tr)
+                {
+                    __instance.Mode = SimpleLauncher2.fMode.sa;
+                }
+                else if (__instance.Mode == SimpleLauncher2.fMode.dr)
+                {
+                    __instance.Mode = SimpleLauncher2.fMode.sa;
+                }
+                __instance.SetAnimatedComponent(__instance.ModeSwitch, __instance.ModeVars[(int)__instance.Mode], __instance.ModeSwitch_Interp, __instance.ModeSwitch_Axis);
+                __instance.PlayAudioEvent(FirearmAudioEventType.FireSelector, 1f);
+
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    // Patches PinnedGrenade to sync
+    class PinnedGrenadePatch
+    {
+        // This patch is quite complex because pinned grenades work entirely through updates
+        // Actions like exploding the grenade are not put into a single method we can patch
+        // The state of the grenade must be synced through the item update packets
+        // The main problem is that once our grenade is up to date, if the pin is removed, locally the grenade
+        // may be held by a remote player but logically physicalObject.IsHeld will still be false
+        // causing the local grenade to release its lever and countdown towards explosion while this is not the case 
+        // on the grenade's controller's side. This is only one of a few/many such desync problems caused by this
+        // update structured behavior
+        // The solution to this is to not let update happen to begin with if we are not in control of the grenade
+        // The next problem is how to check if we are in control of the grenade EVERY frame efficiently
+        // The obvious inefficient solution would be to find the item's trackedItem in trackedItemByItem dict every frame, but this would take too long
+        // We want to access our trackedItem in O(1)
+
+        // My solution is hijacking a variable of the PinnedGrenade, in this case its SpawnOnSplode list, to somehow reference the trackedItem
+        // To do this, when we track a PinnedGrenade, I add a new GameObject to the SpawnOnSplode list
+        // This GameObject has its name set to an index
+        // This index is the index of the tracked item in the trackedItemReferences static array if TrackedItem
+        // So to know if our PinnedGrenade is under our control, we get the last gameObject in the SpawnOnSplode list
+        // We get its name, which we then use to get our TrackedItem
+        // We can then check trackedItem.Controller
+        // Note: We also now need to prevent the PinnedGrenade from actually spawning the last item in SpawnOnSplode
+
+        static bool exploded;
+
+        // To prevent FVR(Fixed)Update from happening
+        static bool UpdatePrefix(PinnedGrenade __instance, bool ___m_hasSploded, List<PinnedGrenadeRing> ___m_rings, ref bool ___m_isPinPulled)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            exploded = ___m_hasSploded;
+
+            if (__instance.SpawnOnSplode != null && __instance.SpawnOnSplode.Count > 0 && __instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1] != null &&
+                int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int index))
+            {
+                // Return true (run original), index doesn't fit in references, reference null, or we control
+                if (TrackedItem.trackedItemReferences.Length <= index ||
+                    TrackedItem.trackedItemReferences[index] == null ||
+                    TrackedItem.trackedItemReferences[index].data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else // This is tracked pinned grenade we are not in control of
+                {
+                    // Do part of update we still want as non controller
+                    bool prePulled = ___m_isPinPulled;
+                    if (___m_rings.Count > 0)
+                    {
+                        ___m_isPinPulled = true;
+                        for (int i = 0; i < ___m_rings.Count; i++)
+                        {
+                            if (!___m_rings[i].HasPinDetached())
+                            {
+                                ___m_isPinPulled = false;
+                            }
+                        }
+                    }
+
+                    // Even if not controller, if we pulled the pin on this grenade we want to tell controller to do the same
+                    // We also check if ___m_isPinPulled because for some reason it can end up with prePulled true but ___m_isPinPulled false on first update
+                    if (prePulled != ___m_isPinPulled && ___m_isPinPulled)
+                    {
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.PinnedGrenadePullPin(TrackedItem.trackedItemReferences[index].data.trackedID);
+                        }
+                        else
+                        {
+                            ClientSend.PinnedGrenadePullPin(TrackedItem.trackedItemReferences[index].data.trackedID);
+                        }
+                    }
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // To prevent spawning of our added element to SpawnOnSplode
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 5)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load index j
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(PinnedGrenade), "SpawnOnSplode"))); // Load SpawnOnSplode
+            toInsert0.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(List<GameObject>), "get_Count"))); // Get count
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load 1
+            toInsert0.Add(new CodeInstruction(OpCodes.Sub)); // Sub. 1 from count
+            Label lastIndexLabel = il.DefineLabel();
+            toInsert0.Add(new CodeInstruction(OpCodes.Beq, lastIndexLabel)); // If last index, break to label lastIndexLabel
+
+            Label loopStartLabel = il.DefineLabel();
+            CodeInstruction notLastIndexInstruction = new CodeInstruction(OpCodes.Br, loopStartLabel);
+            toInsert0.Add(notLastIndexInstruction); // If not last index, break to begin loop as usual
+
+            CodeInstruction controlCheckInstanceLoad = new CodeInstruction(OpCodes.Ldarg_0);
+            controlCheckInstanceLoad.labels.Add(lastIndexLabel);
+            toInsert0.Add(controlCheckInstanceLoad); // Load PinnedGrenade instance (lastIndexLabel)
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PinnedGrenadePatch), "SkipLast"))); // Call our SkipLast method
+            Label skipLabel = il.DefineLabel();
+            toInsert0.Add(new CodeInstruction(OpCodes.Brtrue, skipLabel)); // If skip last, break to label controlledLabel
+
+            toInsert0.Add(notLastIndexInstruction); // If not skip last index, break to begin loop as usual
+
+            CodeInstruction skipLastLoadIndex = new CodeInstruction(OpCodes.Ldloc_S, 4);
+            skipLastLoadIndex.labels.Add(skipLabel);
+            toInsert0.Add(skipLastLoadIndex); // Load index j (controlledLabel)
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load 1
+            toInsert0.Add(new CodeInstruction(OpCodes.Add)); // Add 1 to j
+            toInsert0.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set index j
+            CodeInstruction breakToLoopHead = new CodeInstruction(OpCodes.Br);
+            toInsert0.Add(breakToLoopHead); // Break to loop head, where we will check index j against SpawnOnSplode.Count and break out of loop
+
+            bool applied = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (!applied && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("SpawnOnSplode"))
+                {
+                    breakToLoopHead.operand = instructionList[i - 2].operand;
+                    instructionList[i - 1].labels.Add(loopStartLabel);
+                    instructionList.InsertRange(i - 1, toInsert0);
+                    applied = true;
+                }
+
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (5)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static bool SkipLast(PinnedGrenade grenade)
+        {
+            if (Mod.managerObject == null)
+            {
+                return false;
+            }
+
+            return grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && (grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1] == null || int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index));
+        }
+
+        // To know if grenade exploded in latest update
+        static void UpdatePostfix(PinnedGrenade __instance, bool ___m_hasSploded)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (!exploded && ___m_hasSploded)
+            {
+                TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+                if (trackedItem != null && trackedItem.data.trackedID != -1 && trackedItem.data.controller == GameManager.ID)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.PinnedGrenadeExplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                    else
+                    {
+                        ClientSend.PinnedGrenadeExplode(trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                }
+            }
+        }
+
+        // To prevent collision explosion if not in control
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load explosion gameobject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load PinnedGrenade instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PinnedGrenadePatch), "GrenadeControlled"))); // Call our GrenadeControlled method
+            Label l = il.DefineLabel();
+            toInsert0.Add(new CodeInstruction(OpCodes.Brtrue, l)); // If controlled, break to continue as usual
+
+            toInsert0.Add(new CodeInstruction(OpCodes.Ret)); // If not controlled return right away
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("OnCollisionEnter"))
+                {
+                    instructionList[i + 1].labels.Add(l);
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+
+                if (instruction.opcode == OpCodes.Stloc_1)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static bool GrenadeControlled(PinnedGrenade grenade)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (grenade.SpawnOnSplode != null && grenade.SpawnOnSplode.Count > 0 && grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1] != null &&
+                int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index))
+            {
+                // Return true (controlled), index fits in references, reference not null, and we control
+                return TrackedItem.trackedItemReferences.Length <= index &&
+                       TrackedItem.trackedItemReferences[index] != null &&
+                       TrackedItem.trackedItemReferences[index].data.controller == GameManager.ID;
+            }
+
+            return true;
+        }
+
+        public static void ExplodePinnedGrenade(PinnedGrenade grenade, Vector3 pos)
+        {
+            grenade.m_hasSploded = true;
+            for (int i = 0; i < grenade.SpawnOnSplode.Count; i++)
+            {
+                if (i == grenade.SpawnOnSplode.Count - 1 && int.TryParse(grenade.SpawnOnSplode[i].name, out int index))
+                {
+                    break;
+                }
+
+                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(grenade.SpawnOnSplode[i], pos, Quaternion.identity);
+                Explosion component = gameObject.GetComponent<Explosion>();
+                if (component != null)
+                {
+                    component.IFF = grenade.IFF;
+                }
+                ExplosionSound component2 = gameObject.GetComponent<ExplosionSound>();
+                if (component2 != null)
+                {
+                    component2.IFF = grenade.IFF;
+                }
+                GrenadeExplosion component3 = gameObject.GetComponent<GrenadeExplosion>();
+                if (component3 != null)
+                {
+                    component3.IFF = grenade.IFF;
+                }
+            }
+            if (grenade.SmokeEmitter != null)
+            {
+                grenade.SmokeEmitter.Engaged = true;
+            }
+            else
+            {
+                if (grenade.IsHeld)
+                {
+                    grenade.m_hand.ForceSetInteractable(null);
+                    grenade.EndInteraction(grenade.m_hand);
+                }
+                UnityEngine.Object.Destroy(grenade.gameObject);
+            }
+        }
+    }
+
+    // Patches FVRFuse to keep track of events
+    class FusePatch
+    {
+        public static int igniteSkip;
+
+        static void IgnitePostfix(FVRFuse __instance, ref bool ___m_isIgnited)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.Dynamite, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // If not controller we don't want the ignite flag to be set because we don't want it to update
+                if (trackedItem.data.controller != GameManager.ID)
+                {
+                    ___m_isIgnited = false;
+                }
+
+                if (igniteSkip == 0)
+                {
+                    // Send order to others
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.FuseIgnite(trackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        ClientSend.FuseIgnite(trackedItem.data.trackedID);
+                    }
+                }
+            }
+        }
+
+        static void BoomPrefix(FVRFuse __instance, ref bool ___m_isIgnited)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.Dynamite, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
+            {
+                // Send order to others
+                if (ThreadManager.host)
+                {
+                    ServerSend.FuseBoom(trackedItem.data.trackedID);
+                }
+                else
+                {
+                    ClientSend.FuseBoom(trackedItem.data.trackedID);
+                }
+            }
+        }
+    }
+
+    // Patches Molotov to keep track of events
+    class MolotovPatch
+    {
+        public static int shatterSkip;
+        public static int damageSkip;
+
+        static bool ShatterPrefix(Molotov __instance)
+        {
+            if (Mod.managerObject == null || shatterSkip > 0)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.controller == GameManager.ID)
+                {
+                    // Send order to others
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.MolotovShatter(trackedItem.data.trackedID, __instance.Igniteable.IsOnFire());
+                    }
+                    else
+                    {
+                        ClientSend.MolotovShatter(trackedItem.data.trackedID, __instance.Igniteable.IsOnFire());
+                    }
+                }
+                else
+                {
+                    // Don't want to let shatter happen on its own if not controller, like on collision for example
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        static bool DamagePrefix(Molotov __instance, Damage d)
+        {
+            if (Mod.managerObject == null || damageSkip > 0)
+            {
+                return true;
+            }
+
+            // If in control of the damaged molotov, we want to process the damage
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else // Not in control, send damage to controller
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.MolotovDamage(trackedItem.data, d);
+                    }
+                    else
+                    {
+                        ClientSend.MolotovDamage(trackedItem.data.trackedID, d);
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    // Patches TNH_EncryptionTarget to sync
+    class EncryptionPatch
+    {
+        static TrackedEncryption trackedEncryption;
+
+        // To prevent (Fixed)Update from happening
+        static bool UpdatePrefix(TNH_EncryptionTarget __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (__instance.SpawnPoints != null && __instance.SpawnPoints.Count > 0 && int.TryParse(__instance.SpawnPoints[__instance.SpawnPoints.Count - 1].name, out int index))
+            {
+                // Return true (run original), index doesn't fit in references, reference null, or we control
+                return TrackedEncryption.trackedEncryptionReferences.Length <= index ||
+                       TrackedEncryption.trackedEncryptionReferences[index] == null ||
+                       TrackedEncryption.trackedEncryptionReferences[index].data.controller == GameManager.ID;
+            }
+
+            return true;
+        }
+
+        // To prevent Start from overriding initial data we got from controller
+        static bool StartPrefix(TNH_EncryptionTarget __instance, ref int ___m_numHitsLeft, ref int ___m_maxHits, ref float ___m_damLeftForAHit,
+                                ref Vector3 ___agileStartPos, ref Quaternion ___m_fromRot, ref float ___m_timeTilWarp, ref float ___m_warpSpeed,
+                                ref List<Vector3> ___m_validAgilePos, ref int ___m_numSubTargsLeft)
+        {
+            ++EncryptionSpawnGrowthPatch.skip;
+
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            trackedEncryption = GameManager.trackedEncryptionByEncryption.TryGetValue(__instance, out trackedEncryption) ? trackedEncryption : __instance.GetComponent<TrackedEncryption>();
+            if (trackedEncryption != null)
+            {
+                if (trackedEncryption.data.controller != GameManager.ID)
+                {
+                    ___m_numHitsLeft = __instance.NumHitsTilDestroyed;
+                    ___m_maxHits = __instance.NumHitsTilDestroyed;
+                    ___m_damLeftForAHit = __instance.DamagePerHit;
+                    ___agileStartPos = __instance.transform.position;
+                    ___m_fromRot = __instance.transform.rotation;
+                    ___m_timeTilWarp = 0f;
+                    ___m_warpSpeed = UnityEngine.Random.Range(4f, 5f);
+                    if (__instance.UsesAgileMovement)
+                    {
+                        ___m_validAgilePos = new List<Vector3>();
+                    }
+                    if (__instance.UsesRegenerativeSubTarg)
+                    {
+                        for (int i = 0; i < __instance.Tendrils.Count; i++)
+                        {
+                            __instance.Tendrils[i].transform.SetParent(null);
+                            __instance.SubTargs[i].transform.SetParent(null);
+                        }
+                        ___m_numSubTargsLeft = __instance.StartingRegenSubTarg;
+                    }
+                    if (__instance.UsesRecursiveSubTarg)
+                    {
+                        for (int i = 0; i < trackedEncryption.data.subTargsActive.Length; ++i)
+                        {
+                            if (trackedEncryption.data.subTargsActive[i])
+                            {
+                                ++___m_numSubTargsLeft;
+                            }
+                        }
+                    }
+                    if (__instance.UsesSubTargs && !__instance.UsesRecursiveSubTarg && !__instance.UsesRegenerativeSubTarg)
+                    {
+                        ___m_numSubTargsLeft = __instance.SubTargs.Count;
+                    }
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        static void StartPostfix(TNH_EncryptionTarget __instance)
+        {
+            --EncryptionSpawnGrowthPatch.skip;
+
+            if (Mod.managerObject != null && trackedEncryption != null && trackedEncryption.data.controller == GameManager.ID)
+            {
+                List<int> indices = null;
+                List<Vector3> points = null;
+                if (__instance.Type == TNH_EncryptionType.Regenerative)
+                {
+                    indices = new List<int>();
+                    points = new List<Vector3>();
+                    for (int i = 0; i < __instance.SubTargs.Count; ++i)
+                    {
+                        if (__instance.SubTargs[i].activeSelf)
+                        {
+                            indices.Add(i);
+                            points.Add(__instance.SubTargs[i].transform.position);
+                        }
+                    }
+                }
+                else if (__instance.Type == TNH_EncryptionType.Recursive)
+                {
+                    indices = new List<int>();
+                    for (int i = 0; i < __instance.SubTargs.Count; ++i)
+                    {
+                        if (__instance.SubTargs[i].activeSelf)
+                        {
+                            indices.Add(i);
+                        }
+                    }
+                }
+
+                if (indices != null && indices.Count > 0)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, points);
+                    }
+                    else
+                    {
+                        if (trackedEncryption.data.trackedID == -1)
+                        {
+                            if (TrackedEncryption.unknownInit.ContainsKey(trackedEncryption.data.localWaitingIndex))
+                            {
+                                TrackedEncryption.unknownInit[trackedEncryption.data.localWaitingIndex] = new KeyValuePair<List<int>, List<Vector3>>(indices, points);
+                            }
+                            else
+                            {
+                                TrackedEncryption.unknownInit.Add(trackedEncryption.data.localWaitingIndex, new KeyValuePair<List<int>, List<Vector3>>(indices, points));
+                            }
+                        }
+                        else
+                        {
+                            ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, points);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches FVRGrenade to sync
+    class FVRGrenadePatch
+    {
+        static bool exploded;
+
+        // To prevent FVRUpdate from happening if not in control
+        static bool UpdatePrefix(FVRGrenade __instance, bool ___m_hasSploded, Dictionary<int, float> ___FuseTimings)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            exploded = ___m_hasSploded;
+
+            if (___FuseTimings != null && ___FuseTimings.TryGetValue(-1, out float indexFloat))
+            {
+                // Return true (run original), if dont have an index, index doesn't fit in references (shouldn't happen?), reference null (shouldn't happen), or we control
+                int index = (int)indexFloat;
+                return index <= 0 ||
+                       TrackedItem.trackedItemReferences.Length <= index ||
+                       TrackedItem.trackedItemReferences[index] == null ||
+                       TrackedItem.trackedItemReferences[index].data.controller == GameManager.ID;
+            }
+
+            return true;
+        }
+
+        // To know if grenade exploded in latest update
+        static void UpdatePostfix(FVRGrenade __instance, bool ___m_hasSploded)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (!exploded && ___m_hasSploded)
+            {
+                TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+                if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.FVRGrenadeExplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                    else
+                    {
+                        ClientSend.FVRGrenadeExplode(trackedItem.data.trackedID, __instance.transform.position);
+                    }
+                }
+            }
+        }
+
+        public static void ExplodeGrenade(FVRGrenade grenade, Vector3 pos)
+        {
+            grenade.m_hasSploded = true;
+            if (grenade.ExplosionFX != null)
+            {
+                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(grenade.ExplosionFX, grenade.transform.position, Quaternion.identity);
+                Explosion component = gameObject.GetComponent<Explosion>();
+                if (component != null)
+                {
+                    component.IFF = grenade.IFF;
+                }
+                ExplosionSound component2 = gameObject.GetComponent<ExplosionSound>();
+                if (component2 != null)
+                {
+                    component2.IFF = grenade.IFF;
+                }
+            }
+            if (grenade.ExplosionSoundFX != null)
+            {
+                GameObject gameObject2 = UnityEngine.Object.Instantiate<GameObject>(grenade.ExplosionSoundFX, grenade.transform.position, Quaternion.identity);
+                Explosion component3 = gameObject2.GetComponent<Explosion>();
+                if (component3 != null)
+                {
+                    component3.IFF = grenade.IFF;
+                }
+                ExplosionSound component4 = gameObject2.GetComponent<ExplosionSound>();
+                if (component4 != null)
+                {
+                    component4.IFF = grenade.IFF;
+                }
+            }
+            if (grenade.SmokeEmitter != null)
+            {
+                grenade.SmokeEmitter.Engaged = true;
+            }
+            else
+            {
+                if (grenade.IsHeld)
+                {
+                    grenade.m_hand.ForceSetInteractable(null);
+                    grenade.EndInteraction(grenade.m_hand);
+                }
+                UnityEngine.Object.Destroy(grenade.gameObject);
+            }
+        }
+    }
+
+    // Patches BangSnap to send explosion and prevent collision on non controllers
+    class BangSnapPatch
+    {
+        public static int skip;
+
+        // To send explosion
+        static void SplodePrefix(BangSnap __instance)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.BangSnapSplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                }
+                else
+                {
+                    ClientSend.BangSnapSplode(trackedItem.data.trackedID, __instance.transform.position);
+                }
+            }
+        }
+
+        // To prevent collision explosion if not in control
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load BangSnap instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BangSnapPatch), "Controlled"))); // Call our Controlled method
+            Label l = il.DefineLabel();
+            toInsert0.Add(new CodeInstruction(OpCodes.Brtrue, l)); // If controlled, break to continue as usual
+
+            toInsert0.Add(new CodeInstruction(OpCodes.Ret)); // If not controlled return right away
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Brtrue)
+                {
+                    instructionList[i + 1].labels.Add(l);
+                    instructionList.InsertRange(i + 1, toInsert0);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static bool Controlled(BangSnap bangSnap)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(bangSnap, out trackedItem) ? trackedItem : bangSnap.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                return trackedItem.data.controller == GameManager.ID;
+            }
+
+            return true;
+        }
+    }
+
+    // Patches C4.Detonate to track detonation
+    class C4DetonatePatch
+    {
+        public static int skip;
+
+        static void Prefix(C4 __instance)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.C4Detonate(0, trackedItem.data.trackedID, __instance.transform.position);
+                }
+                else
+                {
+                    ClientSend.C4Detonate(trackedItem.data.trackedID, __instance.transform.position);
+                }
+            }
+        }
+    }
+
+    // Patches ClaymoreMine.Detonate to track detonation
+    class ClaymoreMineDetonatePatch
+    {
+        public static int skip;
+
+        static void Prefix(ClaymoreMine __instance)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.ClaymoreMineDetonate(0, trackedItem.data.trackedID, __instance.transform.position);
+                }
+                else
+                {
+                    ClientSend.ClaymoreMineDetonate(trackedItem.data.trackedID, __instance.transform.position);
+                }
+            }
+        }
+    }
+
+    // Patches SLAM.Detonate to track detonation
+    class SLAMDetonatePatch
+    {
+        public static int skip;
+
+        static void Prefix(ClaymoreMine __instance)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.SLAMDetonate(0, trackedItem.data.trackedID, __instance.transform.position);
+                }
+                else
+                {
+                    ClientSend.SLAMDetonate(trackedItem.data.trackedID, __instance.transform.position);
+                }
+            }
+        }
+    }
+
+    // Patches FVRFireArmRound
+    class RoundPatch
+    {
+        // Patches FVRFixedUpdate to prevent insertion into ammo container if we are not round controller
+        static IEnumerable<CodeInstruction> FixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            // (8) Declare local for the tracked item we got on this round
+            LocalBuilder localTrackedItem = il.DeclareLocal(typeof(TrackedItem));
+            localTrackedItem.SetLocalSymInfo("trackedItem");
+
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // Chamber
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Mod), "managerObject"))); // Load managerObject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Inequality"))); // Compare for inequality (true if connected) ***
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 8)); // Init trackedItem to null
+            toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe inequality call result on stack (true if connected)
+            int labelIndex0 = toInsert.Count;
+            Label afterGettingTrackedItemChamberLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemChamberLabel)); // If false (not connected) skip trying to get a tracked item
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "trackedItemByItem"))); // Load trackedItemByItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load round instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloca_S, 8)); // Load trackedItem address
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<FVRPhysicalObject, TrackedItem>), "TryGetValue"))); // Call TryGetValue trackedItemByItem
+            int labelIndex1 = toInsert.Count;
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemChamberLabel)); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load round instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "GetComponent", null, new Type[] { typeof(TrackedItem) }))); // Get TrackedItem component directly from round
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 8)); // Set trackedItem
+
+            int labelIndex2 = toInsert.Count;
+            Label startLoadChamberLabel = il.DefineLabel();
+            CodeInstruction afterGettingTrackedItem = new CodeInstruction(OpCodes.Brfalse_S, startLoadChamberLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+            afterGettingTrackedItem.labels.Add(afterGettingTrackedItemChamberLabel);
+            toInsert.Add(afterGettingTrackedItem);
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Equality"))); // Compare for equality (true if dont have trackedItem)
+            int labelIndex3 = toInsert.Count;
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, startLoadChamberLabel)); // If true (trackedItem is null), goto start chamber load
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(TrackedItem), "data"))); // Load trackedItem data
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(TrackedItemData), "get_controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "ID"))); // Load our ID
+            int labelIndex4 = toInsert.Count;
+            Label afterLoadChamberLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadChamberLabel)); // Compare our ID with controller, if we are not controller skip load into chamber
+
+            // Define clip label
+            Label startLoadClipLabel = il.DefineLabel();
+
+            // Define SLChamber label
+            Label startLoadSLChamberLabel = il.DefineLabel();
+
+            // Define RemoteGun label
+            Label startLoadRemoteGunLabel = il.DefineLabel();
+
+            // Define Mag label
+            Label startLoadMagLabel = il.DefineLabel();
+
+            // Define final return label
+            Label returnLabel = il.DefineLabel();
+
+            bool doubleInstanceFound = false;
+            bool chamberEndFound = false;
+            int getCountFound = 0;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldarg_0 && instructionList[i + 1].opcode == OpCodes.Ldarg_0)
+                {
+                    if (!doubleInstanceFound)
+                    {
+                        instruction.labels.Add(startLoadChamberLabel);
+                        instructionList.InsertRange(i, toInsert);
+                        i += toInsert.Count;
+
+                        doubleInstanceFound = true;
+                    }
+                }
+                if (instruction.opcode == OpCodes.Ldarg_0 && instructionList[i + 1].opcode == OpCodes.Ldnull)
+                {
+                    if (!chamberEndFound)
+                    {
+                        instruction.labels.Add(afterLoadChamberLabel);
+
+                        chamberEndFound = true;
+
+                        // Set labels for Clip
+                        Label afterGettingTrackedItemClipLabel = il.DefineLabel();
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemClipLabel); // If false (not connected) skip trying to get a tracked item
+
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemClipLabel); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+                        CodeInstruction afterGettingTrackedItemClip = new CodeInstruction(OpCodes.Brfalse_S, startLoadClipLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+                        afterGettingTrackedItemClip.labels.Add(afterGettingTrackedItemClipLabel);
+                        toInsert[labelIndex2] = afterGettingTrackedItemClip;
+
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadClipLabel); // If false (trackedItem is null), goto start chamber load
+
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, returnLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                    }
+                }
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_Count"))
+                {
+                    if (getCountFound == 1)
+                    {
+                        instructionList[i - 2].labels.Add(startLoadClipLabel);
+                        instructionList.InsertRange(i - 2, toInsert);
+                        i += toInsert.Count;
+
+                        // Set labels for SL Chamber
+                        Label afterGettingTrackedItemSLChamberLabel = il.DefineLabel();
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemSLChamberLabel); // If false (not connected) skip trying to get a tracked item
+
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemSLChamberLabel); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+                        CodeInstruction afterGettingTrackedItemSLChamber = new CodeInstruction(OpCodes.Brfalse_S, startLoadSLChamberLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+                        afterGettingTrackedItemSLChamber.labels.Add(afterGettingTrackedItemSLChamberLabel);
+                        toInsert[labelIndex2] = afterGettingTrackedItemSLChamber;
+
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadSLChamberLabel); // If false (trackedItem is null), goto start chamber load
+
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, returnLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                    }
+                    else if (getCountFound == 2)
+                    {
+                        instructionList[i - 2].labels.Add(startLoadSLChamberLabel);
+                        instructionList.InsertRange(i - 2, toInsert);
+                        i += toInsert.Count;
+
+                        // Set labels for RemoteGun
+                        Label afterGettingTrackedItemRemoteGunLabel = il.DefineLabel();
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemRemoteGunLabel); // If false (not connected) skip trying to get a tracked item
+
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemRemoteGunLabel); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+                        CodeInstruction afterGettingTrackedItemRemoteGun = new CodeInstruction(OpCodes.Brfalse_S, startLoadRemoteGunLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+                        afterGettingTrackedItemRemoteGun.labels.Add(afterGettingTrackedItemRemoteGunLabel);
+                        toInsert[labelIndex2] = afterGettingTrackedItemRemoteGun;
+
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadRemoteGunLabel); // If false (trackedItem is null), goto start chamber load
+
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, returnLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                    }
+                    else if (getCountFound == 3)
+                    {
+                        instructionList[i - 2].labels.Add(startLoadRemoteGunLabel);
+                        instructionList.InsertRange(i - 2, toInsert);
+                        i += toInsert.Count;
+
+                        // Set labels for Mag
+                        Label afterGettingTrackedItemMagLabel = il.DefineLabel();
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemMagLabel); // If false (not connected) skip trying to get a tracked item
+
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemMagLabel); // If true (found round in trackedItemByItem) skip trying to get a tracked item component directly
+
+                        CodeInstruction afterGettingTrackedItemMag = new CodeInstruction(OpCodes.Brfalse_S, startLoadMagLabel); // If false (not connected) (see *** above), skip or to start of chamber load
+                        afterGettingTrackedItemMag.labels.Add(afterGettingTrackedItemMagLabel);
+                        toInsert[labelIndex2] = afterGettingTrackedItemMag;
+
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, startLoadMagLabel); // If false (trackedItem is null), goto start chamber load
+
+                        toInsert[labelIndex4] = new CodeInstruction(OpCodes.Bne_Un, returnLabel); // Compare our ID with controller, if we are not controller skip load into chamber
+                    }
+                    else if (getCountFound == 5)
+                    {
+                        instructionList[i - 2].labels.Add(startLoadMagLabel);
+                        instructionList.InsertRange(i - 2, toInsert);
+                        i += toInsert.Count;
+                    }
+                    ++getCountFound;
+                }
+                if (instruction.opcode == OpCodes.Ret)
+                {
+                    instruction.labels.Add(returnLabel);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches FVRFireArmMagazine
+    class MagazinePatch
+    {
+        public static int addRoundSkip;
+        public static int loadSkip;
+
+        // Patches AddRound(FireArmRoundClass) to keep track of event
+        static IEnumerable<CodeInstruction> AddRoundClassTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load mag instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load rClass
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MagazinePatch), "AddRound"))); // Call our AddRound method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Bge)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches AddRound(FVRFireArmRound) to keep track of event
+        static IEnumerable<CodeInstruction> AddRoundRoundTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load mag instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load round
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRFireArmRound), "RoundClass"))); // Load round class
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MagazinePatch), "AddRound"))); // Call our AddRound method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Bge)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void AddRound(FVRFireArmMagazine mag, FireArmRoundClass roundClass)
+        {
+            if (Mod.managerObject == null || addRoundSkip > 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(mag, out trackedItem) ? trackedItem : mag.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.MagazineAddRound(trackedItem.data.trackedID, roundClass);
+                }
+                else
+                {
+                    ClientSend.MagazineAddRound(trackedItem.data.trackedID, roundClass);
+                }
+            }
+        }
+
+        // Patches Load(FVRFireArm) to control and keep track of event
+        static bool LoadFireArmPrefix(FVRFireArmMagazine __instance, FVRFireArm fireArm)
+        {
+            return Load(__instance, fireArm);
+        }
+
+        // Patches LoadIntoSecondary() to control and keep track of event
+        static bool LoadIntoSecondaryPrefix(FVRFireArmMagazine __instance, FVRFireArm fireArm, int slot)
+        {
+            return Load(__instance, fireArm, slot);
+        }
+
+        private static bool Load(FVRFireArmMagazine magInstance, FVRFireArm fireArm, int slot = -1)
+        {
+            if (Mod.managerObject == null || loadSkip > 0)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(magInstance, out trackedItem) ? trackedItem : magInstance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Don't want to load if we are not controller
+                if (trackedItem.data.controller != GameManager.ID)
+                {
+                    return false;
+                }
+
+                TrackedItem FATrackedItem = GameManager.trackedItemByItem.TryGetValue(fireArm, out FATrackedItem) ? FATrackedItem : fireArm.GetComponent<TrackedItem>();
+                // Only need to send order to load if we are not firearm controller
+                if (FATrackedItem != null && FATrackedItem.data.controller != GameManager.ID)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.MagazineLoad(trackedItem.data.trackedID, FATrackedItem.data.trackedID, slot);
+                    }
+                    else
+                    {
+                        ClientSend.MagazineLoad(trackedItem.data.trackedID, FATrackedItem.data.trackedID, slot);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // Patches Load(AttachableFirearm) to control and keep track of event
+        static bool LoadAttachablePrefix(FVRFireArmMagazine __instance, AttachableFirearm fireArm)
+        {
+            if (Mod.managerObject == null || loadSkip > 0)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Don't want to load if we are not controller
+                if (trackedItem.data.controller != GameManager.ID)
+                {
+                    return false;
+                }
+
+                TrackedItem FATrackedItem = GameManager.trackedItemByItem.TryGetValue(fireArm.Attachment, out FATrackedItem) ? FATrackedItem : fireArm.Attachment.GetComponent<TrackedItem>();
+                // Only need to send order to load if we are not firearm controller
+                if (FATrackedItem != null && FATrackedItem.data.controller != GameManager.ID)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.MagazineLoadAttachable(trackedItem.data.trackedID, FATrackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        ClientSend.MagazineLoadAttachable(trackedItem.data.trackedID, FATrackedItem.data.trackedID);
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches FVRFireArmClip
+    class ClipPatch
+    {
+        public static int addRoundSkip;
+        public static int loadSkip;
+
+        // Patches AddRound(FireArmRoundClass) to keep track of event
+        static IEnumerable<CodeInstruction> AddRoundClassTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load clip instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load rClass
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ClipPatch), "AddRound"))); // Call our AddRound method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Bge)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches AddRound(FVRFireArmRound) to keep track of event
+        static IEnumerable<CodeInstruction> AddRoundRoundTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load clip instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load round
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRFireArmRound), "RoundClass"))); // Load round class
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ClipPatch), "AddRound"))); // Call our AddRound method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Bge)
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void AddRound(FVRFireArmClip clip, FireArmRoundClass roundClass)
+        {
+            if (Mod.managerObject == null || addRoundSkip > 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(clip, out trackedItem) ? trackedItem : clip.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.ClipAddRound(trackedItem.data.trackedID, roundClass);
+                }
+                else
+                {
+                    ClientSend.ClipAddRound(trackedItem.data.trackedID, roundClass);
+                }
+            }
+        }
+
+        // Patches Load() to control and keep track of event
+        static bool LoadPrefix(FVRFireArmClip __instance, FVRFireArm fireArm)
+        {
+            if (Mod.managerObject == null || loadSkip > 0)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // Don't want to load if we are not controller
+                if (trackedItem.data.controller != GameManager.ID)
+                {
+                    return false;
+                }
+
+                TrackedItem FATrackedItem = GameManager.trackedItemByItem.TryGetValue(fireArm, out FATrackedItem) ? FATrackedItem : fireArm.GetComponent<TrackedItem>();
+                // Only need to send order to load if we are not firearm controller
+                if (FATrackedItem != null && FATrackedItem.data.controller != GameManager.ID)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.ClipLoad(trackedItem.data.trackedID, FATrackedItem.data.trackedID);
+                    }
+                    else
+                    {
+                        ClientSend.ClipLoad(trackedItem.data.trackedID, FATrackedItem.data.trackedID);
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches SpeedloaderChamber
+    class SpeedloaderChamberPatch
+    {
+        public static int loadSkip;
+
+        // Patches Load() to track event
+        static void AddRoundPrefix(SpeedloaderChamber __instance, FireArmRoundClass rclass)
+        {
+            if (Mod.managerObject == null || loadSkip > 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.SpeedLoader, out trackedItem) ? trackedItem : __instance.SpeedLoader.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                Speedloader speedLoader = trackedItem.physicalObject as Speedloader;
+                int chamberIndex = -1;
+                for (int i = 0; i < speedLoader.Chambers.Count; ++i)
+                {
+                    if (speedLoader.Chambers[i] == __instance)
+                    {
+                        chamberIndex = i;
+                        break;
+                    }
+                }
+
+                if (chamberIndex > -1)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SpeedloaderChamberLoad(trackedItem.data.trackedID, rclass, chamberIndex);
+                    }
+                    else
+                    {
+                        ClientSend.SpeedloaderChamberLoad(trackedItem.data.trackedID, rclass, chamberIndex);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches RemoteGun
+    class RemoteGunPatch
+    {
+        public static int chamberSkip;
+
+        // Patches ChamberCartridge() to track event
+        static void ChamberCartridgePrefix(RemoteGun __instance, FVRFireArmRound round)
+        {
+            if (Mod.managerObject == null || chamberSkip > 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.RemoteGunChamber(trackedItem.data.trackedID, round.RoundClass, round.RoundType);
+                }
+                else
+                {
+                    ClientSend.RemoteGunChamber(trackedItem.data.trackedID, round.RoundClass, round.RoundType);
+                }
+            }
+        }
+    }
+
+    // Patches FVRFireArmChamber
+    class ChamberPatch
+    {
+        public static int chamberSkip;
+
+        static void SetRoundClassPrefix(FVRFireArmChamber __instance, FireArmRoundClass rclass)
+        {
+            if (Mod.managerObject == null || chamberSkip > 0)
+            {
+                return;
+            }
+
+            // Find item this chamber is attached to
+            TrackedItem trackedItem = null;
+            Transform currentParent = __instance.transform;
+            while (currentParent != null)
+            {
+                trackedItem = currentParent.GetComponent<TrackedItem>();
+                if (trackedItem != null)
+                {
+                    break;
+                }
+                currentParent = currentParent.parent;
+            }
+
+            // If we have a tracked item and we are not its controller, we need to send order to controller to set the round on their side
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID && trackedItem.getChamberIndex != null)
+            {
+                // Find the chamber's index on the tracked item
+                int chamberIndex = trackedItem.getChamberIndex(__instance);
+                if (chamberIndex == -1)
+                {
+                    Mod.LogError("SetRound(Class) called on chamber attached to " + trackedItem.name + " but chamber was not found on the item!");
+                }
+                else
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.ChamberRound(trackedItem.data.trackedID, rclass, chamberIndex);
+                    }
+                    else
+                    {
+                        ClientSend.ChamberRound(trackedItem.data.trackedID, rclass, chamberIndex);
+                    }
+                }
+            }
+        }
+
+        static void SetRoundRoundPrefix(FVRFireArmChamber __instance, FVRFireArmRound round)
+        {
+            if (Mod.managerObject == null || chamberSkip > 0 || round == null)
+            {
+                return;
+            }
+
+            // Find item this chamber is attached to
+            TrackedItem trackedItem = null;
+            Transform currentParent = __instance.transform;
+            while (currentParent != null)
+            {
+                trackedItem = currentParent.GetComponent<TrackedItem>();
+                if (trackedItem != null)
+                {
+                    break;
+                }
+                currentParent = currentParent.parent;
+            }
+
+            // If we have a tracked item and we are not its controller, we need to send order to controller to set the round on their side
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID && trackedItem.getChamberIndex != null)
+            {
+                // Find the chamber's index on the tracked item
+                int chamberIndex = trackedItem.getChamberIndex(__instance);
+                if (chamberIndex == -1)
+                {
+                    Mod.LogError("SetRound(Round) called on chamber attached to " + trackedItem.name + " but chamber was not found on the item!");
+                }
+                else
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.ChamberRound(trackedItem.data.trackedID, round.RoundClass, chamberIndex);
+                    }
+                    else
+                    {
+                        ClientSend.ChamberRound(trackedItem.data.trackedID, round.RoundClass, chamberIndex);
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches Speedloader
+    class SpeedloaderPatch
+    {
+        // Patches FVRFixedUpdate to prevent load in cylinder if we are not loader controller
+        static IEnumerable<CodeInstruction> FixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            // (3) Declare local for the tracked item we got on this round
+            LocalBuilder localTrackedItem = il.DeclareLocal(typeof(TrackedItem));
+            localTrackedItem.SetLocalSymInfo("trackedItem");
+
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Mod), "managerObject"))); // Load managerObject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Inequality"))); // Compare for inequality (true if connected) ***
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Init trackedItem to null
+            toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe inequality call result on stack (true if connected)
+            Label afterGettingTrackedItemLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemLabel)); // If false (not connected) skip trying to get a tracked item
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "trackedItemByItem"))); // Load trackedItemByItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load speedloader instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloca_S, 3)); // Load trackedItem address
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<FVRPhysicalObject, TrackedItem>), "TryGetValue"))); // Call TryGetValue trackedItemByItem
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemLabel)); // If true (found speedloader in trackedItemByItem) skip trying to get a tracked item component directly
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load speedloader instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "GetComponent", null, new Type[] { typeof(TrackedItem) }))); // Get TrackedItem component directly from speedloader
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set trackedItem
+
+            Label startLoadLabel = il.DefineLabel();
+            CodeInstruction afterGettingTrackedItem = new CodeInstruction(OpCodes.Brfalse_S, startLoadLabel); // If false (not connected) (see *** above), skip or to start of cylinder load
+            afterGettingTrackedItem.labels.Add(afterGettingTrackedItemLabel);
+            toInsert.Add(afterGettingTrackedItem);
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Equality"))); // Compare for equality (true if dont have trackedItem)
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, startLoadLabel)); // If true (trackedItem is null), goto start cylinder load
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(TrackedItem), "data"))); // Load trackedItem data
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(TrackedItemData), "get_controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "ID"))); // Load our ID
+            Label afterLoadLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadLabel)); // Compare our ID with controller, if we are not controller skip load into cylinder
+
+            bool startFound = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stfld && instruction.operand.ToString().Contains("TimeTilLoadAttempt"))
+                {
+                    if (!startFound)
+                    {
+                        instructionList[i + 1].labels.Add(startLoadLabel);
+                        instructionList.InsertRange(i + 1, toInsert);
+                        i += toInsert.Count;
+
+                        startFound = true;
+                    }
+                }
+                if (instruction.opcode == OpCodes.Ret)
+                {
+                    instruction.labels.Add(afterLoadLabel);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        // Patches FVRUpdate to prevent load in cylinder if we are not loader controller
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            // (0) Declare local for the tracked item we got on this round
+            LocalBuilder localTrackedItem = il.DeclareLocal(typeof(TrackedItem));
+            localTrackedItem.SetLocalSymInfo("trackedItem");
+
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Mod), "managerObject"))); // Load managerObject
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Inequality"))); // Compare for inequality (true if connected) ***
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Init trackedItem to null
+            toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe inequality call result on stack (true if connected)
+            Label afterGettingTrackedItemLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemLabel)); // If false (not connected) skip trying to get a tracked item
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "trackedItemByItem"))); // Load trackedItemByItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load speedloader instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloca_S, 0)); // Load trackedItem address
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<FVRPhysicalObject, TrackedItem>), "TryGetValue"))); // Call TryGetValue trackedItemByItem
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemLabel)); // If true (found speedloader in trackedItemByItem) skip trying to get a tracked item component directly
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load speedloader instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "GetComponent", null, new Type[] { typeof(TrackedItem) }))); // Get TrackedItem component directly from speedloader
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set trackedItem
+
+            int labelIndex = toInsert.Count;
+            Label startLoadLabel = il.DefineLabel();
+            CodeInstruction afterGettingTrackedItem = new CodeInstruction(OpCodes.Brfalse_S, startLoadLabel); // If false (not connected) (see *** above), skip or to start of cylinder load
+            afterGettingTrackedItem.labels.Add(afterGettingTrackedItemLabel);
+            toInsert.Add(afterGettingTrackedItem);
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Equality"))); // Compare for equality (true if dont have trackedItem)
+            int labelIndex1 = toInsert.Count;
+            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, startLoadLabel)); // If true (trackedItem is null), goto start cylinder load
+
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load trackedItem
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(TrackedItem), "data"))); // Load trackedItem data
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(TrackedItemData), "get_controller"))); // Load trackedItem's controller index
+            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "ID"))); // Load our ID
+            Label afterLoadLabel = il.DefineLabel();
+            toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadLabel)); // Compare our ID with controller, if we are not controller skip load into cylinder
+
+            // Define grappling start label
+            Label startGrapplingLoadLabel = il.DefineLabel();
+
+            bool firstStartFound = false;
+            bool secondStartFound = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("LoadCylinder"))
+                {
+                    if (!firstStartFound)
+                    {
+                        instructionList[i - 4].labels.Add(startLoadLabel);
+                        instructionList.InsertRange(i - 4, toInsert);
+                        i += toInsert.Count;
+
+                        firstStartFound = true;
+
+                        // Switch the start label instructions for the grappling one
+                        toInsert[labelIndex] = new CodeInstruction(OpCodes.Brfalse_S, startGrapplingLoadLabel);
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, startGrapplingLoadLabel);
+                    }
+                    else if (!secondStartFound)
+                    {
+                        instructionList[i - 4].labels.Add(startGrapplingLoadLabel);
+                        instructionList.InsertRange(i - 4, toInsert);
+                        i += toInsert.Count;
+
+                        secondStartFound = true;
+                    }
+                }
+                if (instruction.opcode == OpCodes.Ret)
+                {
+                    instruction.labels.Add(afterLoadLabel);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+    }
+
+    // Patches RevolverCylinder
+    class RevolverCylinderPatch
+    {
+        // public static int loadSkip;
+
+        // Patches LoadFromSpeedLoader() to track the event
+        static void LoadFromSpeedLoaderPrefix(RevolverCylinder __instance, Speedloader loader)
+        {
+            if (Mod.managerObject == null /*|| loadSkip > 0*/)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.Revolver, out trackedItem) ? trackedItem : __instance.Revolver.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.RevolverCylinderLoad(trackedItem.data.trackedID, loader);
+                }
+                else
+                {
+                    ClientSend.RevolverCylinderLoad(trackedItem.data.trackedID, loader);
+                }
+            }
+        }
+    }
+
+    // Patches RevolvingShotgun
+    class RevolvingShotgunPatch
+    {
+        // public static int loadSkip;
+
+        // Patches LoadCylinder() to track the event
+        static void LoadCylinderPrefix(RevolvingShotgun __instance, Speedloader s)
+        {
+            if (Mod.managerObject == null /*|| loadSkip > 0*/)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.RevolvingShotgunLoad(trackedItem.data.trackedID, s);
+                }
+                else
+                {
+                    ClientSend.RevolvingShotgunLoad(trackedItem.data.trackedID, s);
+                }
+            }
+        }
+    }
+
+    // Patches GrappleGun
+    class GrappleGunPatch
+    {
+        // public static int loadSkip;
+
+        // Patches LoadCylinder() to track the event
+        static void LoadCylinderPrefix(GrappleGun __instance, Speedloader s)
+        {
+            if (Mod.managerObject == null /*|| loadSkip > 0*/)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.GrappleGunLoad(trackedItem.data.trackedID, s);
+                }
+                else
+                {
+                    ClientSend.GrappleGunLoad(trackedItem.data.trackedID, s);
+                }
+            }
+        }
+    }
+
+    // Patches CarlGustafLatch
+    class CarlGustafLatchPatch
+    {
+        public static int skip;
+
+        // Patches FVRUpdate to keep track of events
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load CarlGustafLatch instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0 (false)
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafLatchPatch), "SetLatchState"))); // Call our method
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("PlayAudioAsHandling"))
+                {
+                    if (!found)
+                    {
+                        instructionList.InsertRange(i, toInsert);
+                        i += toInsert.Count;
+
+                        found = true;
+
+                        // Switch load int instruction to load 1 (true)
+                        toInsert[1] = new CodeInstruction(OpCodes.Ldc_I4_1);
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i, toInsert);
+
+                        break;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SetLatchState(CarlGustafLatch latch, bool open)
+        {
+            if (Mod.managerObject == null || skip > 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(latch.CG, out trackedItem) ? trackedItem : latch.CG.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.CarlGustafLatchSate(trackedItem.data.trackedID, latch.LType, latch.LState);
+                }
+                else
+                {
+                    ClientSend.CarlGustafLatchSate(trackedItem.data.trackedID, latch.LType, latch.LState);
+                }
+            }
+        }
+    }
+
+    // Patches CarlGustafShellInsertEject
+    class CarlGustafShellInsertEjectPatch
+    {
+        public static int skip;
+
+        // Patches FVRUpdate to keep track of events
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load CarlGustafShellInsertEject instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0 (false)
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEjectPatch), "SetShellSlideState"))); // Call our method
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("PlayAudioAsHandling"))
+                {
+                    if (!found)
+                    {
+                        instructionList.InsertRange(i, toInsert);
+                        i += toInsert.Count;
+
+                        found = true;
+
+                        // Switch load int instruction to load 1 (true)
+                        toInsert[1] = new CodeInstruction(OpCodes.Ldc_I4_1);
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i, toInsert);
+
+                        break;
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static void SetShellSlideState(CarlGustafShellInsertEject slide, bool slideIn)
+        {
+            if (Mod.managerObject == null || skip > 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(slide.CG, out trackedItem) ? trackedItem : slide.CG.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.CarlGustafShellSlideSate(trackedItem.data.trackedID, slide.CSState);
+                }
+                else
+                {
+                    ClientSend.CarlGustafShellSlideSate(trackedItem.data.trackedID, slide.CSState);
+                }
+            }
+        }
+    }
+
+    class GrappleThrowablePatch
+    {
+        private static TrackedItem trackedItem;
+
+        // Patches OnCollisionEnter to keep track of when we attach to surcface
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load GrappleThrowable instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GrappleThrowablePatch), "AttachToSurface"))); // Call our method
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load GrappleThrowable instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GrappleThrowablePatch), "CheckController"))); // Call our method
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("OnCollisionEnter"))
+                {
+                    toInsert0.Add(instructionList[i + 3]);
+                    instructionList.InsertRange(i + 1, toInsert0);
+                }
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("SetActive"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static bool CheckController(GrappleThrowable grappleThrowable)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            trackedItem = GameManager.trackedItemByItem.TryGetValue(grappleThrowable, out trackedItem) ? trackedItem : grappleThrowable.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                if (trackedItem.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    trackedItem = null;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static void AttachToSurface(GrappleThrowable grappleThrowable)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
+            {
+                trackedItem.data.additionalData = new byte[grappleThrowable.finalRopePoints.Count * 12 + 2];
+
+                trackedItem.data.additionalData[0] = grappleThrowable.m_hasLanded ? (byte)1 : (byte)0;
+                trackedItem.data.additionalData[1] = (byte)grappleThrowable.finalRopePoints.Count;
+                if (grappleThrowable.finalRopePoints.Count > 0)
+                {
+                    for (int i = 0; i < grappleThrowable.finalRopePoints.Count; ++i)
+                    {
+                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].x).CopyTo(trackedItem.data.additionalData, i * 12 + 2);
+                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].y).CopyTo(trackedItem.data.additionalData, i * 12 + 6);
+                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].z).CopyTo(trackedItem.data.additionalData, i * 12 + 10);
+                    }
+                }
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.data.additionalData);
+                }
+                else
+                {
+                    ClientSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.data.additionalData);
+                }
+            }
+        }
+    }
+}

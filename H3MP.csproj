@@ -14,6 +14,8 @@
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,73 +37,97 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.5.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\BepInEx\core\0Harmony.dll</HintPath>
+    <Compile Include="src\scripts\Billboard.cs" />
+    <Compile Include="src\networking\Client.cs" />
+    <Compile Include="src\networking\ClientHandle.cs" />
+    <Compile Include="src\networking\ClientSend.cs" />
+    <Compile Include="src\scripts\ControllerReference.cs" />
+    <Compile Include="src\GameManager.cs" />
+    <Compile Include="src\scripts\HoverScroll.cs" />
+    <Compile Include="src\scripts\KinematicMarker.cs" />
+    <Compile Include="src\networking\Player.cs" />
+    <Compile Include="src\scripts\PlayerHitbox.cs" />
+    <Compile Include="src\scripts\PlayerManager.cs" />
+    <Compile Include="src\networking\ServerClient.cs" />
+    <Compile Include="src\networking\ServerHandle.cs" />
+    <Compile Include="src\networking\Packet.cs" />
+    <Compile Include="src\networking\ServerSend.cs" />
+    <Compile Include="src\scripts\TrackedItemReference.cs" />
+    <Compile Include="src\networking\ThreadManager.cs" />
+    <Compile Include="src\scripts\TimerDestroyer.cs" />
+    <Compile Include="src\networking\TNHInstance.cs" />
+    <Compile Include="src\tracking\TrackedAutoMeater.cs" />
+    <Compile Include="src\tracking\TrackedAutoMeaterData.cs" />
+    <Compile Include="src\tracking\TrackedEncryption.cs" />
+    <Compile Include="src\tracking\TrackedEncryptionData.cs" />
+    <Compile Include="src\tracking\TrackedItem.cs" />
+    <Compile Include="src\tracking\TrackedItemData.cs" />
+    <Compile Include="src\tracking\TrackedSosig.cs" />
+    <Compile Include="src\tracking\TrackedSosigData.cs" />
+    <Compile Include="src\scripts\WristMenuSection.cs" />
+    <Compile Include="src\Mod.cs" />
+    <Compile Include="src\networking\Server.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\patches\ActionPatches.cs" />
+    <Compile Include="src\patches\DamagePatches.cs" />
+    <Compile Include="src\patches\GeneralPatches.cs" />
+    <Compile Include="src\patches\InstantiationPatches.cs" />
+    <Compile Include="src\patches\InteractionPatches.cs" />
+    <Compile Include="src\patches\PatchController.cs" />
+    <Compile Include="src\patches\TNHPatches.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony, Version=2.10.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\HarmonyX.2.10.1\lib\net35\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\h3vr_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>packages\H3VR.GameLibs.0.109.1\lib\net35\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="BepInEx, Version=5.4.17.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\BepInEx\core\BepInEx.dll</HintPath>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\H3VR.GameLibs.0.109.1\lib\net35\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx, Version=5.4.20.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\BepInEx.BaseLib.5.4.20\lib\net35\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\BepInEx\core\Mono.Cecil.dll</HintPath>
+      <HintPath>packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.Utils, Version=21.9.19.1, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\BepInEx\core\MonoMod.Utils.dll</HintPath>
+    <Reference Include="Mono.Cecil.Mdb, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour, Version=22.3.23.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\MonoMod.RuntimeDetour.22.3.23.4\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.Utils, Version=22.3.23.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\MonoMod.Utils.22.3.23.4\lib\net35\MonoMod.Utils.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\h3vr_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>packages\UnityEngine.5.6.1\lib\net35\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\h3vr_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>packages\H3VR.GameLibs.0.109.1\lib\net35\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Valve.Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\h3vr_Data\Managed\Valve.Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\H3VR.GameLibs.0.109.1\lib\net35\Valve.Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="H3MP_Billboard.cs" />
-    <Compile Include="H3MP_CameraController.cs" />
-    <Compile Include="H3MP_Client.cs" />
-    <Compile Include="H3MP_ClientHandle.cs" />
-    <Compile Include="H3MP_ClientSend.cs" />
-    <Compile Include="H3MP_ControllerReference.cs" />
-    <Compile Include="H3MP_GameManager.cs" />
-    <Compile Include="H3MP_HoverScroll.cs" />
-    <Compile Include="H3MP_KinematicMarker.cs" />
-    <Compile Include="H3MP_Player.cs" />
-    <Compile Include="H3MP_PlayerHitbox.cs" />
-    <Compile Include="H3MP_PlayerManager.cs" />
-    <Compile Include="H3MP_ServerClient.cs" />
-    <Compile Include="H3MP_ServerHandle.cs" />
-    <Compile Include="H3MP_Packet.cs" />
-    <Compile Include="H3MP_ServerSend.cs" />
-    <Compile Include="H3MP_TrackedItemReference.cs" />
-    <Compile Include="H3MP_ThreadManager.cs" />
-    <Compile Include="H3MP_TimerDestroyer.cs" />
-    <Compile Include="H3MP_TNHInstance.cs" />
-    <Compile Include="H3MP_TrackedAutoMeater.cs" />
-    <Compile Include="H3MP_TrackedAutoMeaterData.cs" />
-    <Compile Include="H3MP_TrackedEncryption.cs" />
-    <Compile Include="H3MP_TrackedEncryptionData.cs" />
-    <Compile Include="H3MP_TrackedItem.cs" />
-    <Compile Include="H3MP_TrackedItemData.cs" />
-    <Compile Include="H3MP_TrackedSosig.cs" />
-    <Compile Include="H3MP_TrackedSosigData.cs" />
-    <Compile Include="H3MP_WristMenuSection.cs" />
-    <Compile Include="Mod.cs" />
-    <Compile Include="H3MP_Server.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="packages\BepInEx.Core.5.4.21\build\BepInEx.Core.targets" Condition="Exists('packages\BepInEx.Core.5.4.21\build\BepInEx.Core.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\BepInEx.Core.5.4.21\build\BepInEx.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\BepInEx.Core.5.4.21\build\BepInEx.Core.targets'))" />
+  </Target>
 </Project>
