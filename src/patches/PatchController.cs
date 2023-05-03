@@ -1,7 +1,5 @@
-﻿using Anvil;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Bootstrap;
-using FistVR;
 using HarmonyLib;
 using HarmonyLib.Public.Patching;
 using System;
@@ -11,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using UnityEngine;
 using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP.Patches

@@ -4,10 +4,8 @@ using H3MP.Tracking;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 using UnityEngine;
 
 namespace H3MP.Patches
