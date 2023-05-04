@@ -349,7 +349,7 @@ namespace H3MP.Patches
             if (trackedItem != null && trackedSosig != null)
             {
                 bool primaryHand = __instance == __instance.S.Hand_Primary;
-                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " picked up item " + trackedItem.data.itemID + " at " + trackedItem.data.trackedID + " in hand primary?: " + primaryHand);
+                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " picked up item " + trackedItem.data.prefabID + " at " + trackedItem.data.trackedID + " in hand primary?: " + primaryHand);
 
                 if (ThreadManager.host)
                 {
@@ -523,7 +523,7 @@ namespace H3MP.Patches
                         break;
                     }
                 }
-                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " placed item " + trackedItem.data.itemID + " at " + trackedItem.data.trackedID + " in slot: " + slotIndex);
+                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " placed item " + trackedItem.data.prefabID + " at " + trackedItem.data.trackedID + " in slot: " + slotIndex);
 
                 if (ThreadManager.host)
                 {

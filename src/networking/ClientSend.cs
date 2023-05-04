@@ -462,6 +462,16 @@ namespace H3MP.Networking
             }
         }
 
+        public static void TrackedObject(TrackedObjectData trackedObject)
+        {
+            using(Packet packet = new Packet((int)ClientPackets.trackedObject))
+            {
+                trackedObject.WriteToPacket(packet, false, true);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void TrackedItem(TrackedItemData trackedItem)
         {
             using(Packet packet = new Packet((int)ClientPackets.trackedItem))

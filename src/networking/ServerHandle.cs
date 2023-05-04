@@ -1139,6 +1139,11 @@ namespace H3MP.Networking
             ServerSend.DestroyItem(trackedID, removeFromList, clientID);
         }
 
+        public static void TrackedObject(int clientID, Packet packet)
+        {
+            Server.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypes[packet.ReadString()], packet), clientID);
+        }
+
         public static void TrackedItem(int clientID, Packet packet)
         {
             Server.AddTrackedItem(packet.ReadTrackedItem(true), clientID);

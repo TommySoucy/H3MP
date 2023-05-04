@@ -16,6 +16,8 @@ namespace H3MP.Networking
         public static Dictionary<int, ServerClient> clients = new Dictionary<int, ServerClient>();
         public delegate void PacketHandler(int clientID, Packet packet);
         public static PacketHandler[] packetHandlers;
+        public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under
+        public static List<int> availableObjectIndices;
         public static TrackedItemData[] items; // All tracked items, regardless of whos control they are under
         public static List<int> availableItemIndices;
         public static TrackedSosigData[] sosigs; // All tracked Sosigs, regardless of whos control they are under
@@ -186,6 +188,105 @@ namespace H3MP.Networking
             catch(Exception ex)
             {
                 Mod.LogInfo($"Error sending UDP data to {clientEndPoint}: {ex}", false);
+            }
+        }
+
+        public static void AddTrackedObject(TrackedObjectData trackedObject, int clientID)
+        {
+            // If this is a sceneInit object received from client that we haven't tracked yet
+            // And if the controller is not the first player in scene/instance
+            if(trackedObject.trackedID == -1 && trackedObject.controller != 0 && trackedObject.sceneInit && !clients[trackedObject.controller].player.firstInSceneInstance)
+            {
+                // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
+                // indicate this to the sending client so they can destroy their item
+                trackedObject.trackedID = -2;
+                ServerSend.TrackedObjectSpecific(trackedObject, trackedObject.controller);
+                return;
+            }
+
+            // Adjust objects size to acommodate if necessary
+            if (availableObjectIndices.Count == 0)
+            {
+                IncreaseObjectsSize();
+            }
+
+            // Add it to server global list
+            trackedObject.trackedID = availableObjectIndices[availableObjectIndices.Count - 1];
+            availableObjectIndices.RemoveAt(availableObjectIndices.Count - 1);
+
+            objects[trackedObject.trackedID] = trackedObject;
+
+            // Add to item tracking list
+            if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))
+            {
+                if (relevantInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
+                {
+                    objectList.Add(trackedObject.trackedID);
+                }
+                else
+                {
+                    relevantInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                }
+            }
+            else
+            {
+                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                newInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                GameManager.objectsByInstanceByScene.Add(trackedObject.scene, newInstances);
+            }
+
+            // Add to parent children if has parent and we are not initTracker (It isn't already in the list)
+            if (trackedObject.parent != -1 && trackedObject.initTracker != GameManager.ID)
+            {
+                // Note that this should never be null, we should always receive the parent data before receiving the children's
+                // TODO: Review: If this is actually true: is the hierarchy maintained when server sends relevant objects to a client when the client joins a scene/instance?
+                TrackedObjectData parentData = objects[trackedObject.parent];
+
+                if (parentData.children == null)
+                {
+                    parentData.children = new List<TrackedObjectData>();
+                }
+
+                trackedObject.childIndex = parentData.children.Count;
+                parentData.children.Add(trackedObject);
+            }
+
+            // Instantiate item if it is in the current scene and not controlled by us
+            if (clientID != 0 && trackedObject.IsIdentifiable())
+            {
+                // Here, we don't want to instantiate if this is a scene we are in the process of loading
+                // This is due to the possibility of objects only being identifiable in certain contexts like TNH_ShatterableCrates needing a TNH_manager
+                if (!trackedObject.awaitingInstantiation && trackedObject.scene.Equals(GameManager.scene) && trackedObject.instance == GameManager.instance)
+                {
+                    trackedObject.awaitingInstantiation = true;
+                    AnvilManager.Run(trackedObject.Instantiate());
+                }
+            }
+
+            // Send to all clients in same scene/instance, including controller because they need confirmation from server that this object was added and its trackedID
+            List<int> toClients = new List<int>();
+            if (clientID != 0)
+            {
+                // We explicitly include clientID in the list because the client might have changed scene/instance since, but they still need to get the data
+                toClients.Add(clientID);
+            }
+            if (GameManager.playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(trackedObject.instance, out List<int> players))
+            {
+                for(int i=0; i < players.Count; ++i)
+                {
+                    if (players[i] != clientID)
+                    {
+                        toClients.Add(players[i]);
+                    }
+                }
+            }
+            ServerSend.TrackedObject(trackedObject, toClients);
+
+            // Update the local tracked ID at the end because we need to send that back to the original client intact
+            if (trackedObject.controller != 0)
+            {
+                trackedObject.localTrackedID = -1;
             }
         }
 
@@ -710,6 +811,20 @@ namespace H3MP.Networking
             }
         }
 
+        private static void IncreaseObjectsSize()
+        {
+            TrackedObjectData[] tempObjects = objects;
+            objects = new TrackedObjectData[tempObjects.Length + 100];
+            for(int i=0; i< tempObjects.Length;++i)
+            {
+                objects[i] = tempObjects[i];
+            }
+            for (int i = tempObjects.Length; i < objects.Length; ++i) 
+            {
+                availableObjectIndices.Add(i);
+            }
+        }
+
         private static void IncreaseItemsSize()
         {
             TrackedItemData[] tempItems = items;
@@ -948,7 +1063,20 @@ namespace H3MP.Networking
                 ServerHandle.SosigUpdate,
                 ServerHandle.AutoMeaterUpdate,
                 ServerHandle.EncryptionUpdate,
+                ServerHandle.TrackedObject,
             };
+
+            objects = new TrackedObjectData[100];
+            availableObjectIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9,
+                                                       10,11,12,13,14,15,16,17,18,19,
+                                                       20,21,22,23,24,25,26,27,28,29,
+                                                       30,31,32,33,34,35,36,37,38,39,
+                                                       40,41,42,43,44,45,46,47,48,49,
+                                                       50,51,52,53,54,55,56,57,58,59,
+                                                       60,61,62,63,64,65,66,67,68,69,
+                                                       70,71,72,73,74,75,76,77,78,79,
+                                                       80,81,82,83,84,85,86,87,88,89,
+                                                       90,91,92,93,94,95,96,97,98,99};
 
             items = new TrackedItemData[100];
             availableItemIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9,

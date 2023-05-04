@@ -880,6 +880,16 @@ namespace H3MP.Networking
             SendTCPDataToClients(packet, playersToSendTo);
         }
 
+        public static void TrackedObject(TrackedObjectData trackedObject, List<int> toClients)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.trackedObject))
+            {
+                trackedObject.WriteToPacket(packet, false, true);
+
+                SendTCPData(toClients, packet);
+            }
+        }
+
         public static void TrackedItem(TrackedItemData trackedItem, List<int> toClients)
         {
             using (Packet packet = new Packet((int)ServerPackets.trackedItem))
@@ -917,6 +927,16 @@ namespace H3MP.Networking
                 packet.Write(trackedEncryption, false, true);
 
                 SendTCPData(toClients, packet);
+            }
+        }
+
+        public static void TrackedObjectSpecific(TrackedObjectData trackedObject, int toClientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.trackedObject))
+            {
+                trackedObject.WriteToPacket(packet, false, true);
+
+                SendTCPData(toClientID, packet);
             }
         }
 

@@ -183,6 +183,11 @@ namespace H3MP.Networking
             }
         }
 
+        public static void TrackedObject(Packet packet)
+        {
+            Client.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypes[packet.ReadString()], packet));
+        }
+
         public static void TrackedItem(Packet packet)
         {
             Client.AddTrackedItem(packet.ReadTrackedItem(true));

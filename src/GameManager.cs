@@ -4,6 +4,8 @@ using H3MP.Patches;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -32,11 +34,9 @@ namespace H3MP
 
         public static Dictionary<int, PlayerManager> players = new Dictionary<int, PlayerManager>();
         public static List<int> spectatorHosts = new List<int>(); // List of all spectator hosts, not necessarily available 
-        public static List<TrackedItemData> items = new List<TrackedItemData>(); // Tracked items under control of this gameManager
-        public static List<TrackedSosigData> sosigs = new List<TrackedSosigData>(); // Tracked sosigs under control of this gameManager
-        public static List<TrackedAutoMeaterData> autoMeaters = new List<TrackedAutoMeaterData>(); // Tracked AutoMeaters under control of this gameManager
-        public static List<TrackedEncryptionData> encryptions = new List<TrackedEncryptionData>(); // Tracked TNH_EncryptionTarget under control of this gameManager
+        public static List<TrackedObjectData> objects = new List<TrackedObjectData>(); // Tracked objects under control of this gameManager
         public static Dictionary<string, int> nonSynchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
+        public static Dictionary<MonoBehaviour, TrackedObject> trackedObjectByObject = new Dictionary<MonoBehaviour, TrackedObject>();
         public static Dictionary<FVRPhysicalObject, TrackedItem> trackedItemByItem = new Dictionary<FVRPhysicalObject, TrackedItem>();
         public static Dictionary<SosigWeapon, TrackedItem> trackedItemBySosigWeapon = new Dictionary<SosigWeapon, TrackedItem>();
         public static Dictionary<Sosig, TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, TrackedSosig>();
@@ -46,6 +46,7 @@ namespace H3MP
         public static Dictionary<int, TNHInstance> TNHInstances = new Dictionary<int, TNHInstance>();
         public static List<int> playersAtLoadStart;
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
+        public static Dictionary<string, Dictionary<int, List<int>>> objectsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> itemsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> sosigsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> autoMeatersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
@@ -186,10 +187,6 @@ namespace H3MP
             }
             players.Clear();
             spectatorHosts.Clear();
-            items.Clear();
-            sosigs.Clear();
-            autoMeaters.Clear();
-            encryptions.Clear();
             trackedItemByItem.Clear();
             trackedSosigBySosig.Clear();
             trackedItemBySosigWeapon.Clear();
@@ -763,7 +760,7 @@ namespace H3MP
             }
         }
 
-        public static void SyncTrackedItems(bool init = false, bool inControl = false)
+        public static void SyncTrackedObjects(bool init = false, bool inControl = false)
         {
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
@@ -772,82 +769,75 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach(GameObject root in roots)
             {
-                SyncTrackedItems(root.transform, init ? inControl : controlOverride, null, GameManager.scene);
+                SyncTrackedObjects(root.transform, init ? inControl : controlOverride, null, GameManager.scene);
             }
         }
 
-        public static void SyncTrackedItems(Transform root, bool controlEverything, TrackedItemData parent, string scene)
+        public static void SyncTrackedObjects(Transform root, bool controlEverything, TrackedObjectData parent, string scene)
         {
-            // NOTE: When we sync tracked items, we always send the parent before its children, through TCP. This means we are guaranteed 
-            //       that if we receive a full item packet on the server or any client and it has a parent,
-            //       this parent is guaranteed to be in the global list already
-            //       We are later dependent on this fact so if we modify anything here, ensure this remains true
-            FVRPhysicalObject physObj = root.GetComponent<FVRPhysicalObject>();
-            if (physObj != null)
+            if (GetTrackedObjectType(root, out Type trackedObjectType))
             {
-                if (IsObjectIdentifiable(physObj))
+                // Check if already tracked
+                TrackedObject currentTrackedObject = root.GetComponent<TrackedObject>();
+                if (currentTrackedObject == null)
                 {
-                    TrackedItem currentTrackedItem = root.GetComponent<TrackedItem>();
-                    if (currentTrackedItem == null)
+                    // Check if we want to track this on our side, so if we are controlling it
+                    if (controlEverything || IsControlled(root, trackedObjectType))
                     {
-                        if (controlEverything || IsControlled(physObj))
+                        TrackedObject trackedObject = MakeObjectTracked(root, parent, trackedObjectType);
+                        if (trackedObject != null)
                         {
-                            Mod.LogInfo("Making " + physObj.name + " tracked with parent: "+(parent == null ? "null" : parent.itemID));
-
-                            TrackedItem trackedItem = MakeItemTracked(physObj, parent);
-                            if (trackedItem.awoken)
+                            if (trackedObject.awoken)
                             {
                                 if (ThreadManager.host)
                                 {
-                                    // This will also send a packet with the item to be added in the client's global item list
-                                    Server.AddTrackedItem(trackedItem.data, 0);
+                                    // This will also send a packet with the object to be added in the client's global item list
+                                    Server.AddTrackedObject(trackedObject.data, 0);
                                 }
                                 else
                                 {
-                                    // Tell the server we need to add this item to global tracked items
-                                    trackedItem.data.localWaitingIndex = Client.localItemCounter++;
-                                    Client.waitingLocalItems.Add(trackedItem.data.localWaitingIndex, trackedItem.data);
-                                    ClientSend.TrackedItem(trackedItem.data);
+                                    // Tell the server we need to add this item to global tracked objects
+                                    trackedObject.data.localWaitingIndex = Client.localObjectCounter++;
+                                    Client.waitingLocalObjects.Add(trackedObject.data.localWaitingIndex, trackedObject.data);
+                                    ClientSend.TrackedObject(trackedObject.data);
                                 }
 
-                                trackedItem.data.OnItemTracked();
+                                trackedObject.data.OnTracked();
                             }
                             else
                             {
-                                trackedItem.sendOnAwake = true;
+                                trackedObject.sendOnAwake = true;
                             }
 
                             foreach (Transform child in root)
                             {
-                                SyncTrackedItems(child, controlEverything, trackedItem.data, scene);
+                                SyncTrackedObjects(child, controlEverything, trackedObject.data, scene);
                             }
                         }
-                        else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
-                        {
-                            Destroy(root.gameObject);
-                        }
                     }
-                    else
+                    else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
                     {
-                        // It already has tracked item on it, this is possible of we received new item from server before we sync
-                        return;
+                        Destroy(root.gameObject);
                     }
                 }
                 else
                 {
-                    foreach (Transform child in root)
-                    {
-                        SyncTrackedItems(child, controlEverything, parent, scene);
-                    }
+                    // It is already tracked, this is possible of we received new object from server before we sync
+                    return;
                 }
             }
             else
             {
                 foreach (Transform child in root)
                 {
-                    SyncTrackedItems(child, controlEverything, parent, scene);
+                    SyncTrackedObjects(child, controlEverything, parent, scene);
                 }
             }
+        }
+
+        private static TrackedObject MakeObjectTracked(Transform root, TrackedObjectData parent, Type trackedObjectType)
+        {
+            return (TrackedObject)trackedObjectType.InvokeMember("MakeTracked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, null, new object[] { root, parent });
         }
 
         private static TrackedItem MakeItemTracked(FVRPhysicalObject physObj, TrackedItemData parent)
@@ -855,8 +845,8 @@ namespace H3MP
             TrackedItem trackedItem = physObj.gameObject.AddComponent<TrackedItem>();
             TrackedItemData data = new TrackedItemData();
             trackedItem.data = data;
-            data.physicalItem = trackedItem;
-            data.physicalItem.physicalObject = physObj;
+            data.physical = trackedItem;
+            data.physical.physical = physObj;
 
             GameManager.trackedItemByItem.Add(physObj, trackedItem);
             if(physObj is SosigWeaponPlayerInterface)
@@ -979,15 +969,6 @@ namespace H3MP
 
                 return;
             }
-        }
-
-        // MOD: Certain FVRPhysicalObjects don't have an ObjectWrapper or an IDSpawnedFrom
-        //      We would normally not want to track these but there may be some exceptions, like TNH_ShatterableCrates
-        public static bool IsObjectIdentifiable(FVRPhysicalObject physObj)
-        {
-            return physObj.ObjectWrapper != null ||
-                   (physObj.IDSpawnedFrom != null && (IM.OD.ContainsKey(physObj.IDSpawnedFrom.name) || IM.OD.ContainsKey(physObj.IDSpawnedFrom.ItemID))) ||
-                   physObj.GetComponent<TNH_ShatterableCrate>() != null;
         }
 
         // MOD: When the server receives an item to track, it will first check if it can identify the item on its side
@@ -2121,21 +2102,6 @@ namespace H3MP
             WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
         }
 
-        // MOD: When a client takes control of an item that is under our control, we will need to make sure that we are not 
-        //      in control of the item anymore. If your mod patched IsControlled() then it should also patch this to ensure
-        //      that the checks made in IsControlled() are false
-        public static void EnsureUncontrolled(FVRPhysicalObject physObj)
-        {
-            if (physObj.m_hand != null)
-            {
-                physObj.ForceBreakInteraction();
-            }
-            if (physObj.QuickbeltSlot != null)
-            {
-                physObj.ClearQuickbeltState();
-            }
-        }
-
         // MOD: When player state data gets sent between clients, the sender will call this
         //      to let mods write any custom data they want to the packet
         //      This is data you want to have communicated with the other clients about yourself (ex.: scores, health, etc.)
@@ -2152,12 +2118,30 @@ namespace H3MP
 
         }
 
-        // MOD: This will be called to check if the given physObj is controlled by this client
-        //      This currently only checks if item is in a slot or is being held
-        //      A mod can postfix this to change the return value if it wants to have control of items based on other criteria
-        public static bool IsControlled(FVRPhysicalObject physObj)
+        public static bool GetTrackedObjectType(Transform t, out Type trackedObjectType)
         {
-            return physObj.m_hand != null || physObj.QuickbeltSlot != null;
+            foreach(KeyValuePair<string, Type> entry in Mod.trackedObjectTypes)
+            {
+                if ((bool)entry.Value.InvokeMember("IsOfType", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, null, new object[] { t }))
+                {
+                    trackedObjectType = entry.Value;
+                    return true;
+                }
+            }
+
+            trackedObjectType = null;
+            return false;
+        }
+
+        public static bool IsControlled(Transform root, Type trackedObjectType)
+        {
+            MethodInfo method = trackedObjectType.GetMethod("IsControlled", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (method != null && method.ReturnType == typeof(bool) && method.GetParameters()[0].ParameterType == typeof(Transform))
+            {
+                return (bool)method.Invoke(null, new object[] { root });
+            }
+
+            return false;
         }
 
         // MOD: This will be called to check if the given sosig is controlled by this client
@@ -2366,46 +2350,19 @@ namespace H3MP
                     // Just arrived in syncable scene, sync items with server/clients
                     // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
                     inPostSceneLoadTrack = true;
-                    SyncTrackedSosigs();
-                    SyncTrackedAutoMeaters();
-                    SyncTrackedItems();
-                    SyncTrackedEncryptions();
+                    SyncTrackedObjects();
                     inPostSceneLoadTrack = false;
 
                     controlOverride = false;
 
                     // Instantiate any object we control that we have not yet instantiated
                     // This could happen if we are given control of an objects while loading
-                    for (int i = 0; i < items.Count; ++i)
+                    for (int i = 0; i < objects.Count; ++i)
                     {
-                        if (items[i].physicalItem == null && !items[i].awaitingInstantiation)
+                        if (objects[i].physical == null && !objects[i].awaitingInstantiation)
                         {
-                            items[i].awaitingInstantiation = true;
-                            AnvilManager.Run(items[i].Instantiate());
-                        }
-                    }
-                    for (int i = 0; i < sosigs.Count; ++i)
-                    {
-                        if (sosigs[i].physicalObject == null && !sosigs[i].awaitingInstantiation)
-                        {
-                            sosigs[i].awaitingInstantiation = true;
-                            AnvilManager.Run(sosigs[i].Instantiate());
-                        }
-                    }
-                    for (int i = 0; i < autoMeaters.Count; ++i)
-                    {
-                        if (autoMeaters[i].physicalObject == null && !autoMeaters[i].awaitingInstantiation)
-                        {
-                            autoMeaters[i].awaitingInstantiation = true;
-                            AnvilManager.Run(autoMeaters[i].Instantiate());
-                        }
-                    }
-                    for (int i = 0; i < encryptions.Count; ++i)
-                    {
-                        if (encryptions[i].physicalObject == null && !encryptions[i].awaitingInstantiation)
-                        {
-                            encryptions[i].awaitingInstantiation = true;
-                            AnvilManager.Run(encryptions[i].Instantiate());
+                            objects[i].awaitingInstantiation = true;
+                            AnvilManager.Run(objects[i].Instantiate());
                         }
                     }
                 }
@@ -2424,36 +2381,15 @@ namespace H3MP
 
         public static void ClearUnawoken()
         {
-            // Clear any tracked object that we are supposed to be controlling that doesn't have a physicalItem assigned
-            // These can build up in certain cases. The main one is when we load into a level which contains items that are inactive by default
-            // These items will never be awoken, they will therefore be tracked but not synced with other clients. When we leave the scene, these items 
-            // may be destroyed but their OnDestroy will not be called because they were never awoken, meaning they will still be in the items list
-            for(int i = items.Count-1; i >= 0; --i)
+            // Clear any tracked object that we are supposed to be controlling that doesn't have a physical assigned
+            // These can build up in certain cases. The main one is when we load into a level which contains objects that are inactive by default
+            // These objects will never be awoken, they will therefore be tracked but not synced with other clients. When we leave the scene, these objects 
+            // may be destroyed but their OnDestroy will not be called because they were never awoken, meaning they will still be in the objects list
+            for(int i = objects.Count-1; i >= 0; --i)
             {
-                if ((items[i].physicalItem != null && !items[i].physicalItem.awoken) || (items[i].physicalItem == null && !items[i].awaitingInstantiation))
+                if ((objects[i].physical != null && !objects[i].physical.awoken) || (objects[i].physical == null && !objects[i].awaitingInstantiation))
                 {
-                    items[i].RemoveFromLocal();
-                }
-            }
-            for(int i = sosigs.Count - 1; i >= 0; --i)
-            {
-                if ((sosigs[i].physicalObject != null && !sosigs[i].physicalObject.awoken) || (sosigs[i].physicalObject == null && !sosigs[i].awaitingInstantiation))
-                {
-                    sosigs[i].RemoveFromLocal();
-                }
-            }
-            for(int i = autoMeaters.Count - 1; i >= 0; --i)
-            {
-                if ((autoMeaters[i].physicalObject != null && !autoMeaters[i].physicalObject.awoken) || (autoMeaters[i].physicalObject == null && !autoMeaters[i].awaitingInstantiation))
-                {
-                    autoMeaters[i].RemoveFromLocal();
-                }
-            }
-            for(int i = encryptions.Count - 1; i >= 0; --i)
-            {
-                if ((encryptions[i].physicalObject != null && !encryptions[i].physicalObject.awoken) || (encryptions[i].physicalObject == null && !encryptions[i].awaitingInstantiation))
-                {
-                    encryptions[i].RemoveFromLocal();
+                    objects[i].RemoveFromLocal();
                 }
             }
         }

@@ -185,7 +185,8 @@ namespace H3MP.Networking
         grappleAttached = 172,
         sosigUpdate = 173,
         autoMeaterUpdate = 174,
-        encryptionUpdate = 175
+        encryptionUpdate = 175,
+        trackedObject = 176
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -362,7 +363,8 @@ namespace H3MP.Networking
         grappleAttached = 169,
         sosigUpdate = 170,
         autoMeaterUpdate = 171,
-        encryptionUpdate = 172
+        encryptionUpdate = 172,
+        trackedObject = 173
     }
 
     public class Packet : IDisposable

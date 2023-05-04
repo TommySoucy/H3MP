@@ -41,10 +41,14 @@ namespace H3MP.Networking
         private delegate void PacketHandler(Packet packet);
         private static PacketHandler[] packetHandlers;
         public static Dictionary<string, int> synchronizedScenes;
+        public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under
         public static TrackedItemData[] items; // All tracked items, regardless of whos control they are under
         public static TrackedSosigData[] sosigs; // All tracked Sosigs, regardless of whos control they are under
         public static TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
         public static TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
+
+        public static uint localObjectCounter = 0;
+        public static Dictionary<uint, TrackedObjectData> waitingLocalObjects = new Dictionary<uint, TrackedObjectData>();
 
         public static uint localItemCounter = 0;
         public static Dictionary<uint, TrackedItemData> waitingLocalItems = new Dictionary<uint, TrackedItemData>();
@@ -515,6 +519,7 @@ namespace H3MP.Networking
                 ClientHandle.TNHHostStartHold,
                 ClientHandle.IntegratedFirearmFire,
                 ClientHandle.GrappleAttached,
+                ClientHandle.TrackedObject,
             };
 
             // All vanilla scenes can be synced by default
@@ -525,6 +530,8 @@ namespace H3MP.Networking
                 synchronizedScenes.Add(System.IO.Path.GetFileNameWithoutExtension(UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i)), 0);
             }
 
+            objects = new TrackedObjectData[100];
+
             items = new TrackedItemData[100];
 
             sosigs = new TrackedSosigData[100];
@@ -533,6 +540,8 @@ namespace H3MP.Networking
 
             encryptions = new TrackedEncryptionData[100];
 
+            localObjectCounter = 0;
+            waitingLocalObjects.Clear();
             localItemCounter = 0;
             waitingLocalItems.Clear();
             localSosigCounter = 0;
@@ -543,6 +552,179 @@ namespace H3MP.Networking
             waitingLocalEncryptions.Clear();
 
             Mod.LogInfo("Initialized client", false);
+        }
+
+        public static void AddTrackedObject(TrackedObjectData trackedObject)
+        {
+            TrackedObjectData actualTrackedObject = null;
+            // If this is a scene init object the server rejected
+            if (trackedObject.trackedID == -2)
+            {
+                actualTrackedObject = waitingLocalObjects[trackedObject.localWaitingIndex];
+                if (actualTrackedObject.physical != null)
+                {
+                    // Get rid of the object
+                    actualTrackedObject.physical.skipDestroyProcessing = true;
+                    actualTrackedObject.trackedID = -2;
+                    actualTrackedObject.physical.sendDestroy = false;
+                    Destroy(actualTrackedObject.physical.gameObject);
+                }
+                return;
+            }
+
+            // Adjust items size to acommodate if necessary
+            if (items.Length <= trackedObject.trackedID)
+            {
+                IncreaseItemsSize(trackedObject.trackedID);
+            }
+
+            if (trackedObject.controller == GameManager.ID) // We control this object
+            {
+                // Check if we were waiting for this object's data
+                bool notLocalWaiting = true;
+                if (waitingLocalObjects.TryGetValue(trackedObject.localWaitingIndex, out actualTrackedObject) && trackedObject.initTracker == GameManager.ID)
+                {
+                    // Get our object
+                    waitingLocalObjects.Remove(trackedObject.localWaitingIndex);
+
+                    // Set its new tracked ID
+                    actualTrackedObject.trackedID = trackedObject.trackedID;
+
+                    // Add the object to client global list
+                    objects[actualTrackedObject.trackedID] = actualTrackedObject;
+
+                    // Add to object tracking list
+                    if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))
+                    {
+                        if (relevantInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
+                        {
+                            objectList.Add(trackedObject.trackedID);
+                        }
+                        else
+                        {
+                            relevantInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                        }
+                    }
+                    else
+                    {
+                        Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                        newInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                        GameManager.objectsByInstanceByScene.Add(trackedObject.scene, newInstances);
+                    }
+
+                    actualTrackedObject.OnTrackedIDReceived();
+
+                    notLocalWaiting = false;
+                }
+
+                if (notLocalWaiting) // We were not waiting for this data, process by trackedID instead
+                {
+                    // Check if already have object data
+                    TrackedObjectData actual = objects[trackedObject.trackedID];
+                    if (actual == null)
+                    {
+                        // Dont have object data yet, set it
+                        objects[trackedObject.trackedID] = trackedObject;
+                        actual = trackedObject;
+
+                        // Add to object tracking list
+                        if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))
+                        {
+                            if (relevantInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
+                            {
+                                objectList.Add(trackedObject.trackedID);
+                            }
+                            else
+                            {
+                                relevantInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                            newInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                            GameManager.objectsByInstanceByScene.Add(trackedObject.scene, newInstances);
+                        }
+
+                        // Add local list
+                        trackedObject.localTrackedID = GameManager.objects.Count;
+                        GameManager.objects.Add(trackedObject);
+                    }
+
+                    if (actual.physical == null && !actual.awaitingInstantiation &&
+                        !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
+                    {
+                        actual.awaitingInstantiation = true;
+                        AnvilManager.Run(actual.Instantiate());
+                    }
+                }
+            }
+            else // We are not controller
+            {
+                // We might already have the object
+                if (objects[trackedObject.trackedID] != null)
+                {
+                    // We could have received this data again from relevant objects, if so, need to instantiate
+                    actualTrackedObject = objects[trackedObject.trackedID];
+                    if (actualTrackedObject.physical == null && !actualTrackedObject.awaitingInstantiation &&
+                        actualTrackedObject.scene.Equals(GameManager.scene) &&
+                        actualTrackedObject.instance == GameManager.instance)
+                    {
+                        actualTrackedObject.awaitingInstantiation = true;
+                        AnvilManager.Run(actualTrackedObject.Instantiate());
+                    }
+                    return;
+                }
+
+                trackedObject.localTrackedID = -1;
+
+                // Add the object to client global list
+                objects[trackedObject.trackedID] = trackedObject;
+
+                // Add to object tracking list
+                if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))
+                {
+                    if(relevantInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
+                    {
+                        objectList.Add(trackedObject.trackedID);
+                    }
+                    else
+                    {
+                        relevantInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                    }
+                }
+                else
+                {
+                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                    newInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                    GameManager.objectsByInstanceByScene.Add(trackedObject.scene, newInstances);
+                }
+
+                // Add to parent children if has parent and we are not initTracker (It isn't already in the list)
+                if (trackedObject.parent != -1 && trackedObject.initTracker != GameManager.ID)
+                {
+                    // Note that this should never be null, we should always receive the parent data before receiving the children's
+                    TrackedObjectData parentData = items[trackedObject.parent];
+
+                    if (parentData.children == null)
+                    {
+                        parentData.children = new List<TrackedObjectData>();
+                    }
+
+                    trackedObject.childIndex = parentData.children.Count;
+                    parentData.children.Add(trackedObject);
+                }
+
+                // Instantiate object if it is identiafiable and in the current scene/instance
+                if (!trackedObject.awaitingInstantiation &&
+                    trackedObject.IsIdentifiable() &&
+                    trackedObject.scene.Equals(GameManager.scene) &&
+                    trackedObject.instance == GameManager.instance)
+                {
+                    trackedObject.awaitingInstantiation = true;
+                    AnvilManager.Run(trackedObject.Instantiate());
+                }
+            }
         }
 
         public static void AddTrackedItem(TrackedItemData trackedItem)

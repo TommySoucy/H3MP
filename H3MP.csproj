@@ -62,6 +62,8 @@
     <Compile Include="src\tracking\TrackedEncryptionData.cs" />
     <Compile Include="src\tracking\TrackedItem.cs" />
     <Compile Include="src\tracking\TrackedItemData.cs" />
+    <Compile Include="src\tracking\TrackedObject.cs" />
+    <Compile Include="src\tracking\TrackedObjectData.cs" />
     <Compile Include="src\tracking\TrackedSosig.cs" />
     <Compile Include="src\tracking\TrackedSosigData.cs" />
     <Compile Include="src\scripts\WristMenuSection.cs" />

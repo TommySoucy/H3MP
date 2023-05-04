@@ -4,38 +4,19 @@ using H3MP.Patches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace H3MP.Tracking
 {
-    public class TrackedItemData
+    public class TrackedItemData : TrackedObjectData
     {
-        //public static int insuranceCount = 5; // Amount of times to send the most up to date version of this data to ensure we don't miss packets
-        //public int insuranceCounter = insuranceCount; // Amount of times left to send this data
-        public bool latestUpdateSent = false; // Whether the latest update of this data was sent
-        public byte order; // The index of this item's data packet used to ensure we process this data in the correct order
-
-        public int trackedID = -1; // This item's unique ID to identify it across systems (index in global items arrays)
-        public int localTrackedID = -1; // This item's index in local items list
-        public uint localWaitingIndex = uint.MaxValue; // The unique index this item had while waiting for its tracked ID
-        public int initTracker; // The ID of the client who initially tracked this item
-        private int _controller = 0; // Client controlling this item, 0 for host
-        // TODO: Review: Perhaps do everything about control through this, like set kinematic and so on
-        public int controller { get { return _controller; } set { if (_controller != value) { _controller = value; OnControl(); } else { _controller = value; } } }
-        public bool active;
-        private bool previousActive;
         public bool underActiveControl;
         public bool previousActiveControl;
-        public string scene;
-        public int instance;
-        public bool sceneInit;
-        public bool awaitingInstantiation;
 
         // Data
-        public string itemID; // The ID of this item so it can be spawned by clients and host
+        public string itemID;
         public byte[] identifyingData;
-        public byte[] previousData;
-        public byte[] data;
         public byte[] additionalData;
 
         // State
@@ -44,17 +25,13 @@ namespace H3MP.Tracking
         public Vector3 previousPos;
         public Quaternion previousRot;
         public Vector3 velocity = Vector3.zero;
-        public TrackedItem physicalItem;
 
-        public int parent = -1; // The tracked ID of item this item is attached to
-        public List<TrackedItemData> children; // The items attached to this item
-        public List<int> childrenToParent = new List<int>(); // The items to attach to this item once we instantiate it
-        public int childIndex = -1; // The index of this item in its parent's children list
-        public int ignoreParentChanged;
+        public byte[] data; // Generic data that may need to be passed every update
+        public byte[] previousData;
         public bool removeFromListOnDestroy = true;
         public int[] toPutInSosigInventory;
 
-        public IEnumerator Instantiate()
+        public override IEnumerator Instantiate()
         {
             GameObject itemPrefab = GetItemPrefab();
             if (itemPrefab == null)
@@ -89,12 +66,12 @@ namespace H3MP.Tracking
                 if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at item instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
                 --Mod.skipAllInstantiates;
-                physicalItem = itemObject.AddComponent<TrackedItem>();
+                physical = itemObject.AddComponent<TrackedItem>();
                 awaitingInstantiation = false;
-                physicalItem.data = this;
-                physicalItem.physicalObject = itemObject.GetComponent<FVRPhysicalObject>();
+                physical.data = this;
+                physical.physical = itemObject.GetComponent<FVRPhysicalObject>();
 
-                if (GameManager.trackedItemByItem.TryGetValue(physicalItem.physicalObject, out TrackedItem t))
+                if (GameManager.trackedItemByItem.TryGetValue(physical.physical, out TrackedItem t))
                 {
                     Mod.LogError("Error at instantiation of: " + itemID + ": Item's physical object already exists in trackedItemByItem\n\tTrackedID: "+ t.data.trackedID);
                 }
@@ -568,7 +545,7 @@ namespace H3MP.Tracking
             }
         }
 
-        public void OnTrackedIDReceived()
+        public override void OnTrackedIDReceived()
         {
             if (TrackedItem.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
@@ -778,7 +755,7 @@ namespace H3MP.Tracking
             }
         }
 
-        public void OnItemTracked()
+        public override void OnTracked()
         {
             if (physicalItem.physicalObject is SosigWeaponPlayerInterface &&
                 TrackedItem.unknownSosigInventoryObjects.TryGetValue((physicalItem.physicalObject as SosigWeaponPlayerInterface).W, out KeyValuePair<TrackedSosigData, int> entry))
@@ -841,7 +818,7 @@ namespace H3MP.Tracking
             }
         }
 
-        public void RemoveFromLocal()
+        public override void RemoveFromLocal()
         {
             // Manage unknown lists
             if (trackedID == -1)
@@ -859,24 +836,13 @@ namespace H3MP.Tracking
                 TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
                 TrackedItem.unknownCrateHolding.Remove(localWaitingIndex);
                 TrackedItem.unknownSosigInventoryItems.Remove(localWaitingIndex);
-                if (physicalItem != null && physicalItem.physicalObject is SosigWeaponPlayerInterface)
+                if (physical != null && physical.physical is SosigWeaponPlayerInterface)
                 {
-                    TrackedItem.unknownSosigInventoryObjects.Remove((physicalItem.physicalObject as SosigWeaponPlayerInterface).W);
+                    TrackedItem.unknownSosigInventoryObjects.Remove((physical.physical as SosigWeaponPlayerInterface).W);
                 }
             }
 
-            if (localTrackedID > -1 && localTrackedID < GameManager.items.Count)
-            {
-                // Remove from actual local items list and update the localTrackedID of the item we are moving
-                GameManager.items[localTrackedID] = GameManager.items[GameManager.items.Count - 1];
-                GameManager.items[localTrackedID].localTrackedID = localTrackedID;
-                GameManager.items.RemoveAt(GameManager.items.Count - 1);
-                localTrackedID = -1;
-            }
-            else
-            {
-                Mod.LogWarning("\tlocaltrackedID out of range!:\n"+Environment.StackTrace);
-            }
+            base.RemoveFromLocal();
         }
 
         public void SetController(int newController, bool recursive = false)
@@ -943,9 +909,36 @@ namespace H3MP.Tracking
             }
         }
 
-        public void OnControl()
+        // MOD: Optional method in case the object is of a type taht can be under active control
+        public static bool IsControlled(Transform root)
         {
-            latestUpdateSent = false;
+            FVRInteractiveObject interactive = root.GetComponent<FVRInteractiveObject>();
+            if (interactive != null)
+            {
+                if (interactive.m_hand != null)
+                {
+                    return true;
+                }
+                else if (interactive is FVRPhysicalObject)
+                {
+                    return (interactive as FVRPhysicalObject).QuickbeltSlot != null;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool IfOfType(Transform t)
+        {
+            FVRPhysicalObject physicalObject = t.GetComponent<FVRPhysicalObject>();
+            if(physicalObject != null)
+            {
+                return physicalObject.ObjectWrapper != null ||
+                       (physicalObject.IDSpawnedFrom != null && (IM.OD.ContainsKey(physicalObject.IDSpawnedFrom.name) || IM.OD.ContainsKey(physicalObject.IDSpawnedFrom.ItemID))) ||
+                       physicalObject.GetComponent<TNH_ShatterableCrate>() != null;
+            }
+
+            return false;
         }
     }
 }

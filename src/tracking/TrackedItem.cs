@@ -7,14 +7,10 @@ using UnityEngine;
 
 namespace H3MP.Tracking
 {
-    public class TrackedItem : MonoBehaviour
+    public class TrackedItem : TrackedObject
     {
         public static float interpolationSpeed = 12f;
         public static bool interpolated = true;
-
-        public TrackedItemData data;
-        public bool awoken;
-        public bool sendOnAwake;
 
         // Unknown tracked ID queues
         public static Dictionary<uint, KeyValuePair<uint, bool>> unknownTrackedIDs = new Dictionary<uint, KeyValuePair<uint, bool>>();
@@ -79,10 +75,6 @@ namespace H3MP.Tracking
                                                                                     80,81,82,83,84,85,86,87,88,89,
                                                                                     90,91,92,93,94,95,96,97,98,99};
 
-        public bool sendDestroy = true; // To prevent feeback loops
-        public bool skipDestroyProcessing;
-        public bool skipFullDestroy;
-        public bool dontGiveControl;
 
         private void Awake()
         {
@@ -9902,7 +9894,7 @@ namespace H3MP.Tracking
             }
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
@@ -9910,15 +9902,16 @@ namespace H3MP.Tracking
                 return;
             }
 
-            // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
-            GameManager.trackedItemByItem.Remove(physicalObject);
             if (physicalObject is SosigWeaponPlayerInterface)
             {
                 GameManager.trackedItemBySosigWeapon.Remove((physicalObject as SosigWeaponPlayerInterface).W);
             }
 
             // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
-            GameManager.EnsureUncontrolled(physicalObject);
+            EnsureUncontrolled();
+
+            base.OnDestroy();
+
 
             // Have a flag in case we don't actually want to remove it from local after processing
             // In case we can't detroy gobally because we are still waiting for a tracked ID for example
@@ -9974,7 +9967,7 @@ namespace H3MP.Tracking
                                 // Keep the control change in unknown so we can send it to others if we get a tracked ID
                                 if (unknownControlTrackedIDs.TryGetValue(data.localWaitingIndex, out int val))
                                 {
-                                    if(val != otherPlayer)
+                                    if (val != otherPlayer)
                                     {
                                         unknownControlTrackedIDs[data.localWaitingIndex] = otherPlayer;
                                     }
@@ -10053,6 +10046,21 @@ namespace H3MP.Tracking
             }
         }
 
+        // MOD: When a client takes control of an item that is under our control, we will need to make sure that we are not 
+        //      in control of the item anymore. If your mod patched IsControlled() then it should also patch this to ensure
+        //      that the checks made in IsControlled() are false
+        public virtual void EnsureUncontrolled()
+        {
+            if (physicalObject.m_hand != null)
+            {
+                physicalObject.ForceBreakInteraction();
+            }
+            if (physicalObject.QuickbeltSlot != null)
+            {
+                physicalObject.ClearQuickbeltState();
+            }
+        }
+
         private void OnTransformParentChanged()
         {
             if (data.ignoreParentChanged > 0)
@@ -10113,7 +10121,7 @@ namespace H3MP.Tracking
                         {
                             if (data.controller == GameManager.ID)
                             {
-                                Mod.LogInfo(name + " has new parent: " + parentTrackedItem.data.itemID + ", sending");
+                                Mod.LogInfo(name + " has new parent: " + parentTrackedItem.data.prefabID + ", sending");
                                 // We have a parent trackedItem and it is new
                                 // Update other clients
                                 if (ThreadManager.host)

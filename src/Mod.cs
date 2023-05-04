@@ -2,9 +2,11 @@
 using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
+using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -106,6 +108,7 @@ namespace H3MP
         public static SceneLoader currentTNHSceneLoader;
         public static GameObject TNHStartEquipButton;
         public static bool spectatorHost;
+        public static Dictionary<string, Type> trackedObjectTypes;
 
         // Debug
         public static bool debug;
@@ -544,6 +547,57 @@ namespace H3MP
             playerPrefab.AddComponent<PlayerManager>();
         }
 
+        private void GetTrackedObjectTypes()
+        {
+            trackedObjectTypes = new Dictionary<string, Type>();
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; ++i)
+            {
+                Type[] types = assemblies[i].GetTypes();
+                for (int j = 0; j < types.Length; ++j) 
+                {
+                    if (IsTypeTrackedObject(types[j]))
+                    {
+                        trackedObjectTypes.Add(types[j].Name, types[j]);
+                    }
+                }
+            }
+        }
+
+        // MOD: TrackedObjectData inheriting classes must implement static bool IsOfType(Transform) and
+        //                                                          static TrackedObject MakeTracked(Transform, TrackedObjectData) methods 
+        //                                                              Which must set the typeIdentifier
+        private bool IsTypeTrackedObject(Type type)
+        {
+            if(type.BaseType != null)
+            {
+                if (type.BaseType.Name.Equals("TrackedObjectData"))
+                {
+                    MethodInfo isOfTypeMethod = type.GetMethod("IsOfType", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                    MethodInfo makeTrackedMethod = type.GetMethod("MakeTracked", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+                    if (isOfTypeMethod != null && isOfTypeMethod.ReturnType == typeof(bool) && isOfTypeMethod.GetParameters()[0].ParameterType == typeof(Transform) &&
+                        makeTrackedMethod != null && makeTrackedMethod.ReturnType == typeof(TrackedObject) && makeTrackedMethod.GetParameters()[0].ParameterType == typeof(Transform) && makeTrackedMethod.GetParameters()[1].ParameterType == typeof(TrackedObjectData))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        Mod.LogError("TrackedObjectData inheriting type \""+ type.Name+ "\" is missing implementation for one of the following methods:\n" +
+                            "\tstatic bool IsOfType(Transform)\n" +
+                            "\tstatic TrackedObject MakeTracked(Transform, TrackedObjectData)\n" +
+                            "\tThis type will not be tracked.");
+                    }
+                }
+                else
+                {
+                    return IsTypeTrackedObject(type.BaseType);
+                }
+            }
+
+            return false;
+        }
+
         private void Init()
         {
             Logger.LogInfo("H3MP Init called");
@@ -551,6 +605,8 @@ namespace H3MP
             H3MPPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(Mod)).Location);
             H3MPPath.Replace('\\', '/');
             Mod.LogInfo("H3MP path found: "+ H3MPPath, false);
+
+            GetTrackedObjectTypes();
 
             PatchController.DoPatching();
 
