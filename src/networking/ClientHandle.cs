@@ -138,6 +138,20 @@ namespace H3MP.Networking
             GameManager.UpdatePlayerInstance(ID, instance);
         }
 
+        public static void TrackedObjects(Packet packet)
+        {
+            int count = packet.ReadShort();
+            for (int i = 0; i < count; ++i)
+            {
+                TrackedObjectData.Update(packet);
+            }
+        }
+
+        public static void ObjectUpdate(Packet packet)
+        {
+            TrackedObjectData.Update(packet);
+        }
+
         public static void TrackedItems(Packet packet)
         {
             // Reconstruct passed trackedItems from packet

@@ -186,7 +186,9 @@ namespace H3MP.Networking
         sosigUpdate = 173,
         autoMeaterUpdate = 174,
         encryptionUpdate = 175,
-        trackedObject = 176
+        trackedObject = 176,
+        trackedObjects = 177,
+        objectUpdate = 178
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -364,7 +366,9 @@ namespace H3MP.Networking
         sosigUpdate = 170,
         autoMeaterUpdate = 171,
         encryptionUpdate = 172,
-        trackedObject = 173
+        trackedObject = 173,
+        trackedObjects = 174,
+        objectUpdate = 175
     }
 
     public class Packet : IDisposable

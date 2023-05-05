@@ -42,22 +42,9 @@ namespace H3MP.Networking
         private static PacketHandler[] packetHandlers;
         public static Dictionary<string, int> synchronizedScenes;
         public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under
-        public static TrackedItemData[] items; // All tracked items, regardless of whos control they are under
-        public static TrackedSosigData[] sosigs; // All tracked Sosigs, regardless of whos control they are under
-        public static TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
-        public static TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
 
         public static uint localObjectCounter = 0;
         public static Dictionary<uint, TrackedObjectData> waitingLocalObjects = new Dictionary<uint, TrackedObjectData>();
-
-        public static uint localItemCounter = 0;
-        public static Dictionary<uint, TrackedItemData> waitingLocalItems = new Dictionary<uint, TrackedItemData>();
-        public static uint localSosigCounter = 0;
-        public static Dictionary<uint, TrackedSosigData> waitingLocalSosigs = new Dictionary<uint, TrackedSosigData>();
-        public static uint localAutoMeaterCounter = 0;
-        public static Dictionary<uint, TrackedAutoMeaterData> waitingLocalAutoMeaters = new Dictionary<uint, TrackedAutoMeaterData>();
-        public static uint localEncryptionCounter = 0;
-        public static Dictionary<uint, TrackedEncryptionData> waitingLocalEncryptions = new Dictionary<uint, TrackedEncryptionData>();
 
         private void Awake()
         {
@@ -520,6 +507,8 @@ namespace H3MP.Networking
                 ClientHandle.IntegratedFirearmFire,
                 ClientHandle.GrappleAttached,
                 ClientHandle.TrackedObject,
+                ClientHandle.TrackedObjects,
+                ClientHandle.ObjectUpdate,
             };
 
             // All vanilla scenes can be synced by default

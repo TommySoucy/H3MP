@@ -60,6 +60,7 @@ namespace H3MP.Tracking
 
         public TrackedObjectData(Packet packet)
         {
+            // Full
             typeIdentifier = packet.ReadString();
             controller = packet.ReadInt();
             parent = packet.ReadInt();
@@ -70,6 +71,7 @@ namespace H3MP.Tracking
             localWaitingIndex = packet.ReadUInt();
             initTracker = packet.ReadInt();
 
+            // Update
             trackedID = packet.ReadInt();
             active = packet.ReadBool();
         }
@@ -106,6 +108,122 @@ namespace H3MP.Tracking
             packet.Write(active);
         }
 
+        // Processes an update packet
+        public static void Update(Packet packet)
+        {
+            byte order = packet.ReadByte();
+            int trackedID = packet.ReadInt();
+
+            if (trackedID == -1)
+            {
+                return;
+            }
+
+            TrackedObjectData trackedObjectData = null;
+            if (ThreadManager.host)
+            {
+                if (trackedID < Server.objects.Length)
+                {
+                    trackedObjectData = Server.objects[trackedID];
+                }
+            }
+            else
+            {
+                if (trackedID < Client.objects.Length)
+                {
+                    trackedObjectData = Client.objects[trackedID];
+                }
+            }
+
+            // TODO: Review: Should we keep the up to date data for later if we dont have the tracked object yet?
+            //               Concern is that if we send tracked item TCP packet, but before that arrives, we send the latest update
+            //               meaning we don't have the object for that yet and so when we receive the object itself, we don't have the most up to date
+            //               We could keep only the highest order in a dict by trackedID
+            if (trackedObjectData != null)
+            {
+                // If we take control of an object, we could still receive an updated object from another client
+                // if they haven't received the control update yet, so here we check if this actually needs to update
+                // AND we don't want to take this update if this is a packet that was sent before the previous update
+                // Since the order is kept as a single byte, it will overflow every 256 packets of this object
+                // Here we consider the update out of order if it is within 128 iterations before the latest
+                if (trackedObjectData.controller != GameManager.ID && (order > trackedObjectData.order || trackedObjectData.order - order > 128))
+                {
+                    trackedObjectData.UpdateFromPacket(packet);
+                }
+            }
+        }
+
+        // Updates the object using given data
+        public virtual void UpdateFromData(TrackedObjectData updatedObject)
+        {
+            order = updatedObject.order;
+            if (physical != null)
+            {
+                previousActive = active;
+                active = updatedObject.active;
+                if (active)
+                {
+                    if (!physical.gameObject.activeSelf)
+                    {
+                        physical.gameObject.SetActive(true);
+                    }
+                }
+                else
+                {
+                    if (physical.gameObject.activeSelf)
+                    {
+                        physical.gameObject.SetActive(false);
+                    }
+                }
+            }
+        }
+
+        // Updates the object using given update packet
+        public virtual void UpdateFromPacket(Packet packet)
+        {
+            if (physical != null)
+            {
+                previousActive = active;
+                active = packet.ReadBool();
+                if (active)
+                {
+                    if (!physical.gameObject.activeSelf)
+                    {
+                        physical.gameObject.SetActive(true);
+                    }
+                }
+                else
+                {
+                    if (physical.gameObject.activeSelf)
+                    {
+                        physical.gameObject.SetActive(false);
+                    }
+                }
+            }
+        }
+
+        // Objects updates its data based on its state
+        public virtual bool Update(bool full = false)
+        {
+            // Phys could be null if we were given control of the object while we were loading and we haven't instantiated it on our side yet
+            if (physical == null)
+            {
+                return false;
+            }
+
+            previousActive = active;
+            active = physical.gameObject.activeInHierarchy;
+
+            return previousActive != active;
+        }
+
+
+        // Returns true if the object's new state is different than previous requiring for an update to be sent from server
+        public bool NeedsUpdate()
+        {
+            return previousActive != active;
+        }
+
         public virtual bool IsIdentifiable()
         {
             return true;
@@ -124,8 +242,8 @@ namespace H3MP.Tracking
         {
             if (localTrackedID > -1 && localTrackedID < GameManager.objects.Count)
             {
-                // Remove from actual local items list and update the localTrackedID of the item we are moving
-                GameManager.objects[localTrackedID] = GameManager.objects[GameManager.items.Count - 1];
+                // Remove from actual local objects list and update the localTrackedID of the item we are moving
+                GameManager.objects[localTrackedID] = GameManager.objects[GameManager.objects.Count - 1];
                 GameManager.objects[localTrackedID].localTrackedID = localTrackedID;
                 GameManager.objects.RemoveAt(GameManager.objects.Count - 1);
                 localTrackedID = -1;

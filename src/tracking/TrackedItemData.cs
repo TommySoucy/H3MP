@@ -31,6 +31,32 @@ namespace H3MP.Tracking
         public bool removeFromListOnDestroy = true;
         public int[] toPutInSosigInventory;
 
+        public TrackedItemData(Packet packet) : base(packet)
+        {
+            // Full
+            itemID = packet.ReadString();
+            int identifyingDataLength = packet.ReadInt();
+            if (identifyingDataLength > 0)
+            {
+                identifyingData = packet.ReadBytes(identifyingDataLength);
+            }
+            int additionalDataLen = packet.ReadInt();
+            if (additionalDataLen > 0)
+            {
+                additionalData = packet.ReadBytes(additionalDataLen);
+            }
+
+            // Update
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+            int dataLength = packet.ReadInt();
+            if (dataLength > 0)
+            {
+                data = packet.ReadBytes(dataLength);
+            }
+            underActiveControl = packet.ReadBool();
+        }
+
         public override IEnumerator Instantiate()
         {
             GameObject itemPrefab = GetItemPrefab();
@@ -238,7 +264,7 @@ namespace H3MP.Tracking
             return null;
         }
 
-        public void Update(TrackedItemData updatedItem, bool initial = false)
+        public void Update(TrackedItemData updatedItem)
         {
             order = updatedItem.order;
             previousPos = position;
@@ -939,6 +965,57 @@ namespace H3MP.Tracking
             }
 
             return false;
+        }
+
+        public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
+        {
+            if (full)
+            {
+                packet.Write(itemID);
+                if (identifyingData == null || identifyingData.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(identifyingData.Length);
+                    packet.Write(identifyingData);
+                }
+                packet.Write(parent);
+                if (additionalData == null || additionalData.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(additionalData.Length);
+                    packet.Write(additionalData);
+                }
+            }
+            else
+            {
+                if (incrementOrder)
+                {
+                    packet.Write(order++);
+                }
+                else
+                {
+                    packet.Write(order);
+                }
+            }
+
+            packet.Write(position);
+            packet.Write(rotation);
+            if (data == null || data.Length == 0)
+            {
+                packet.Write(0);
+            }
+            else
+            {
+                packet.Write(data.Length);
+                packet.Write(data);
+            }
+            packet.Write(underActiveControl);
         }
     }
 }

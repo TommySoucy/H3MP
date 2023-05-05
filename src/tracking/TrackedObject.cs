@@ -21,6 +21,32 @@ namespace H3MP.Tracking
         public bool skipFullDestroy;
         public bool dontGiveControl;
 
+        private void Awake()
+        {
+            if (data != null)
+            {
+                data.Update(true);
+            }
+
+            awoken = true;
+            if (sendOnAwake)
+            {
+                Mod.LogInfo(gameObject.name + " awoken");
+                if (ThreadManager.host)
+                {
+                    // This will also send a packet with the object to be added in the client's global object list
+                    Server.AddTrackedObject(data, 0);
+                }
+                else
+                {
+                    // Tell the server we need to add this object to global tracked objects
+                    data.localWaitingIndex = Client.localObjectCounter++;
+                    Client.waitingLocalObjects.Add(data.localWaitingIndex, data);
+                    ClientSend.TrackedObject(data);
+                }
+            }
+        }
+
         protected virtual void OnDestroy()
         {
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection

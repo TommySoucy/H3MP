@@ -258,6 +258,23 @@ namespace H3MP.Networking
             ServerSend.AddNonSyncScene(clientID, scene);
         }
 
+        public static void TrackedObjects(int clientID, Packet packet)
+        {
+            int count = packet.ReadShort();
+            for(int i=0; i < count; ++i)
+            {
+                TrackedObjectData.Update(packet);
+            }
+        }
+
+        public static void ObjectUpdate(int clientID, Packet packet)
+        {
+            TrackedObjectData.Update(packet);
+
+            // Send to all other clients
+            ServerSend.ObjectUpdate(packet, clientID);
+        }
+
         public static void TrackedItems(int clientID, Packet packet)
         {
             // Reconstruct passed trackedItems from packet

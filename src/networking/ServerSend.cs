@@ -101,7 +101,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPDataToClients(Packet packet, List<int> clientIDs)
+        private static void SendTCPDataToClients(Packet packet, List<int> clientIDs, int excluding = -1)
         {
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
@@ -112,7 +112,10 @@ namespace H3MP.Networking
             packet.WriteLength();
             foreach(int clientID in clientIDs)
             {
-                Server.clients[clientID].tcp.SendData(packet);
+                if (excluding == -1 || clientID != excluding)
+                {
+                    Server.clients[clientID].tcp.SendData(packet);
+                }
             }
         }
 
@@ -316,6 +319,126 @@ namespace H3MP.Networking
                 packet.Write(sceneName);
 
                 SendTCPDataToAll(ID, packet);
+            }
+        }
+
+        public static void TrackedObjects()
+        {
+            foreach(KeyValuePair<string, Dictionary<int, List<int>>> outer in GameManager.objectsByInstanceByScene)
+            {
+                foreach(KeyValuePair<int, List<int>> inner in outer.Value)
+                {
+                    if (GameManager.playersByInstanceByScene.TryGetValue(outer.Key, out Dictionary<int, List<int>> playerInstances) &&
+                        playerInstances.TryGetValue(inner.Key, out List<int> players) && players.Count > 0)
+                    {
+                        int index = 0;
+                        while (index < inner.Value.Count)
+                        {
+                            using (Packet packet = new Packet((int)ServerPackets.trackedObjects))
+                            {
+                                // Write place holder int at start to hold the count once we know it
+                                int countPos = packet.buffer.Count;
+                                packet.Write((short)0);
+
+                                short count = 0;
+                                for (int i = index; i < inner.Value.Count; ++i, ++index)
+                                {
+                                    TrackedObjectData trackedObject = Server.objects[inner.Value[i]];
+                                    if (trackedObject != null)
+                                    {
+                                        if (trackedObject.controller == 0)
+                                        {
+                                            if (trackedObject.Update())
+                                            {
+                                                trackedObject.latestUpdateSent = false;
+
+                                                trackedObject.WriteToPacket(packet, true, false);
+
+                                                ++count;
+
+                                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                                if (packet.buffer.Count >= 1300)
+                                                {
+                                                    break;
+                                                }
+                                            }
+                                            else if (!trackedObject.latestUpdateSent)
+                                            {
+                                                trackedObject.latestUpdateSent = true;
+
+                                                ObjectUpdate(trackedObject);
+                                            }
+                                        }
+                                        else if (trackedObject.NeedsUpdate())
+                                        {
+                                            trackedObject.latestUpdateSent = false;
+
+                                            trackedObject.WriteToPacket(packet, false, false);
+
+                                            ++count;
+
+                                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                                            if (packet.buffer.Count >= 1300)
+                                            {
+                                                break;
+                                            }
+                                        }
+                                        else if (!trackedObject.latestUpdateSent)
+                                        {
+                                            trackedObject.latestUpdateSent = true;
+
+                                            ObjectUpdate(trackedObject);
+                                        }
+                                    }
+                                }
+
+                                if (count == 0)
+                                {
+                                    break;
+                                }
+
+                                // Write the count to packet
+                                byte[] countArr = BitConverter.GetBytes(count);
+                                for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                                {
+                                    packet.buffer[i] = countArr[j];
+                                }
+
+                                SendUDPDataToClients(packet, players);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void ObjectUpdate(TrackedObjectData trackedObject)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.objectUpdate))
+            {
+                trackedObject.WriteToPacket(packet, true, false);
+
+                if (GameManager.playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> playerInstances) &&
+                    playerInstances.TryGetValue(trackedObject.instance, out List<int> players) && players.Count > 0)
+                {
+                    SendTCPDataToClients(packet, players, trackedObject.controller);
+                }
+            }
+        }
+
+        public static void ObjectUpdate(Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.objectUpdate);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (GameManager.playersByInstanceByScene.TryGetValue(Server.clients[clientID].player.scene, out Dictionary<int, List<int>> playerInstances) &&
+                    playerInstances.TryGetValue(Server.clients[clientID].player.instance, out List<int> players) && players.Count > 0)
+            {
+                SendTCPDataToClients(packet, players, clientID);
             }
         }
 

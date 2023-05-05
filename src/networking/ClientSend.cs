@@ -169,6 +169,80 @@ namespace H3MP.Networking
             }
         }
 
+        public static void TrackedObjects()
+        {
+            int index = 0;
+            while (index < GameManager.objects.Count)
+            {
+                using (Packet packet = new Packet((int)ClientPackets.trackedObjects))
+                {
+                    // Write place holder int at start to hold the count once we know it
+                    int countPos = packet.buffer.Count;
+                    packet.Write((short)0);
+
+                    short count = 0;
+                    for (int i = index; i < GameManager.objects.Count; ++i)
+                    {
+                        TrackedObjectData trackedObject = GameManager.objects[i];
+
+                        if(trackedObject.trackedID == -1)
+                        {
+                            ++index;
+                            continue;
+                        }
+
+                        if (trackedObject.Update())
+                        {
+                            trackedObject.latestUpdateSent = false;
+
+                            trackedObject.WriteToPacket(packet, true, false);
+
+                            ++count;
+
+                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                            if (packet.buffer.Count >= 1300)
+                            {
+                                break;
+                            }
+                        }
+                        else if(!trackedObject.latestUpdateSent)
+                        {
+                            trackedObject.latestUpdateSent = true;
+
+                            // Send latest update on its own
+                            ObjectUpdate(trackedObject);
+                        }
+
+                        ++index;
+                    }
+
+                    if (count == 0)
+                    {
+                        break;
+                    }
+
+                    // Write the count to packet
+                    byte[] countArr = BitConverter.GetBytes(count);
+                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+                    {
+                        packet.buffer[i] = countArr[j];
+                    }
+
+                    SendUDPData(packet);
+                }
+            }
+        }
+
+        public static void ObjectUpdate(TrackedObjectData objectData)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.objectUpdate))
+            {
+                objectData.WriteToPacket(packet, true, false);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void TrackedItems()
         {
             int index = 0;
