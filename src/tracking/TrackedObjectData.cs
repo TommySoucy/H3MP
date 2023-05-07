@@ -57,6 +57,11 @@ namespace H3MP.Tracking
         public bool active; // Whether the object is active
         private bool previousActive;
 
+        public TrackedObjectData()
+        {
+
+        }
+
         public TrackedObjectData(Packet packet)
         {
             // Full
@@ -223,7 +228,7 @@ namespace H3MP.Tracking
 
 
         // Returns true if the object's new state is different than previous requiring for an update to be sent from server
-        public bool NeedsUpdate()
+        public virtual bool NeedsUpdate()
         {
             return previousActive != active;
         }

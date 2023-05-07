@@ -33,6 +33,11 @@ namespace H3MP.Tracking
         public bool removeFromListOnDestroy = true;
         public int[] toPutInSosigInventory;
 
+        public TrackedItemData()
+        {
+
+        }
+
         public TrackedItemData(Packet packet) : base(packet)
         {
             // Full
@@ -57,6 +62,149 @@ namespace H3MP.Tracking
                 data = packet.ReadBytes(dataLength);
             }
             underActiveControl = packet.ReadBool();
+        }
+
+        public static bool IfOfType(Transform t)
+        {
+            FVRPhysicalObject physicalObject = t.GetComponent<FVRPhysicalObject>();
+            if (physicalObject != null)
+            {
+                return (physicalObject.ObjectWrapper != null && IM.OD.ContainsKey(physicalObject.ObjectWrapper.ItemID)) ||
+                       (physicalObject.IDSpawnedFrom != null && (IM.OD.ContainsKey(physicalObject.IDSpawnedFrom.name) || IM.OD.ContainsKey(physicalObject.IDSpawnedFrom.ItemID))) ||
+                       physicalObject.GetComponent<TNH_ShatterableCrate>() != null;
+            }
+
+            return false;
+        }
+
+        public static TrackedItem MakeTracked(Transform root, TrackedObjectData parent)
+        {
+            TrackedItem trackedItem = root.gameObject.AddComponent<TrackedItem>();
+            TrackedItemData data = new TrackedItemData();
+            trackedItem.data = data;
+            data.physicalItem = trackedItem;
+            data.physical = data.physicalItem;
+            data.physicalItem.physicalItem = root.GetComponent<FVRPhysicalObject>();
+            data.physical.physical = data.physicalItem.physicalItem;
+
+            GameManager.trackedItemByItem.Add(data.physicalItem.physicalItem, trackedItem);
+            if (data.physicalItem.physicalItem is SosigWeaponPlayerInterface)
+            {
+                GameManager.trackedItemBySosigWeapon.Add((data.physicalItem.physicalItem as SosigWeaponPlayerInterface).W, trackedItem);
+            }
+            GameManager.trackedItemByItem.Add(data.physicalItem.physicalItem, trackedItem);
+
+            if (parent != null)
+            {
+                data.parent = parent.trackedID;
+                if (parent.children == null)
+                {
+                    parent.children = new List<TrackedObjectData>();
+                }
+                data.childIndex = parent.children.Count;
+                parent.children.Add(data);
+            }
+            data.SetItemIdentifyingInfo();
+            data.position = trackedItem.transform.position;
+            data.rotation = trackedItem.transform.rotation;
+            data.active = trackedItem.gameObject.activeInHierarchy;
+            data.underActiveControl = data.IsControlled();
+
+            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
+            data.instance = GameManager.instance;
+            data.controller = GameManager.ID;
+            data.initTracker = GameManager.ID;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
+
+            data.CollectExternalData();
+
+            // Add to local list
+            data.localTrackedID = GameManager.objects.Count;
+            GameManager.objects.Add(data);
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedItem.updateFunc != null)
+            {
+                trackedItem.updateFunc();
+            }
+
+            return trackedItem;
+        }
+
+        private void CollectExternalData()
+        {
+            TNH_ShatterableCrate crate = physical.GetComponent<TNH_ShatterableCrate>();
+            if (crate != null)
+            {
+                additionalData = new byte[5];
+
+                additionalData[0] = TNH_SupplyPointPatch.inSpawnBoxes ? (byte)1 : (byte)0;
+                if (TNH_SupplyPointPatch.inSpawnBoxes)
+                {
+                    BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(additionalData, 1);
+                }
+
+                identifyingData[3] = crate.m_isHoldingHealth ? (byte)1 : (byte)0;
+                identifyingData[4] = crate.m_isHoldingToken ? (byte)1 : (byte)0;
+            }
+            else if (physicalItem.physicalItem is GrappleThrowable)
+            {
+                GrappleThrowable asGrappleThrowable = (GrappleThrowable)physicalItem.physicalItem;
+                additionalData = new byte[asGrappleThrowable.finalRopePoints.Count * 12 + 2];
+
+                additionalData[0] = asGrappleThrowable.m_hasLanded ? (byte)1 : (byte)0;
+                additionalData[1] = (byte)asGrappleThrowable.finalRopePoints.Count;
+                if (asGrappleThrowable.finalRopePoints.Count > 0)
+                {
+                    for (int i = 0; i < asGrappleThrowable.finalRopePoints.Count; ++i)
+                    {
+                        BitConverter.GetBytes(asGrappleThrowable.finalRopePoints[i].x).CopyTo(additionalData, i * 12 + 2);
+                        BitConverter.GetBytes(asGrappleThrowable.finalRopePoints[i].y).CopyTo(additionalData, i * 12 + 6);
+                        BitConverter.GetBytes(asGrappleThrowable.finalRopePoints[i].z).CopyTo(additionalData, i * 12 + 10);
+                    }
+                }
+            }
+        }
+
+        public void SetItemIdentifyingInfo()
+        {
+            if (physicalItem.physicalItem.ObjectWrapper != null)
+            {
+                itemID = physicalItem.physicalItem.ObjectWrapper.ItemID;
+                return;
+            }
+            if (physicalItem.physicalItem.IDSpawnedFrom != null)
+            {
+                if (IM.OD.ContainsKey(physicalItem.physicalItem.IDSpawnedFrom.name))
+                {
+                    itemID = physicalItem.physicalItem.IDSpawnedFrom.name;
+                }
+                else if (IM.OD.ContainsKey(physicalItem.physicalItem.IDSpawnedFrom.ItemID))
+                {
+                    itemID = physicalItem.physicalItem.IDSpawnedFrom.ItemID;
+                }
+                return;
+            }
+            TNH_ShatterableCrate crate = physicalItem.physicalItem.GetComponent<TNH_ShatterableCrate>();
+            if (crate != null)
+            {
+                itemID = "TNH_ShatterableCrate";
+                identifyingData = new byte[1];
+                if (crate.name[9] == 'S') // Small
+                {
+                    identifyingData[0] = 2;
+                }
+                else if (crate.name[9] == 'M') // Medium
+                {
+                    identifyingData[0] = 1;
+                }
+                else // Large
+                {
+                    identifyingData[0] = 0;
+                }
+
+                return;
+            }
         }
 
         public override IEnumerator Instantiate()
@@ -366,13 +514,12 @@ namespace H3MP.Tracking
 
         public bool IsControlled()
         {
-            FVRPhysicalObject physObj = physical.physical as FVRPhysicalObject;
-            return physObj.m_hand != null || physObj.QuickbeltSlot != null;
+            return physicalItem.physicalItem.m_hand != null || physicalItem.physicalItem.QuickbeltSlot != null;
         }
 
-        public bool NeedsUpdate()
+        public override bool NeedsUpdate()
         {
-            return previousActive != active || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
+            return base.NeedsUpdate() || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
         }
 
         public void SetParent(TrackedItemData newParent, bool physicallyParent)
@@ -948,19 +1095,6 @@ namespace H3MP.Tracking
                     Mod.SetKinematicRecursive(physical.transform, true);
                 }
             }
-        }
-
-        public static bool IfOfType(Transform t)
-        {
-            FVRPhysicalObject physicalObject = t.GetComponent<FVRPhysicalObject>();
-            if(physicalObject != null)
-            {
-                return physicalObject.ObjectWrapper != null ||
-                       (physicalObject.IDSpawnedFrom != null && (IM.OD.ContainsKey(physicalObject.IDSpawnedFrom.name) || IM.OD.ContainsKey(physicalObject.IDSpawnedFrom.ItemID))) ||
-                       physicalObject.GetComponent<TNH_ShatterableCrate>() != null;
-            }
-
-            return false;
         }
 
         public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
