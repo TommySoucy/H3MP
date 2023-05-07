@@ -9,6 +9,9 @@ namespace H3MP.Tracking
 {
     public class TrackedItem : TrackedObject
     {
+        public TrackedItemData itemData;
+        public FVRPhysicalObject physicalItem; 
+
         public static float interpolationSpeed = 12f;
         public static bool interpolated = true;
 
@@ -51,7 +54,6 @@ namespace H3MP.Tracking
         public ChamberRound chamberRound; // Set round of chamber at gicen index of this item
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public UnityEngine.Object dataObject;
-        public FVRPhysicalObject physicalObject;
         public int attachmentInterfaceDataSize;
         private bool positionSet;
         private bool rotationSet;
@@ -9949,11 +9951,11 @@ namespace H3MP.Tracking
                                 // Give control with us as debounce because we know we are no longer eligible to control this object
                                 if (ThreadManager.host)
                                 {
-                                    ServerSend.GiveControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
+                                    ServerSend.GiveObjectControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
                                 }
                                 else
                                 {
-                                    ClientSend.GiveControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
+                                    ClientSend.GiveObjectControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
                                 }
 
                                 // Also change controller locally
@@ -10046,10 +10048,7 @@ namespace H3MP.Tracking
             }
         }
 
-        // MOD: When a client takes control of an item that is under our control, we will need to make sure that we are not 
-        //      in control of the item anymore. If your mod patched IsControlled() then it should also patch this to ensure
-        //      that the checks made in IsControlled() are false
-        public virtual void EnsureUncontrolled()
+        public override void EnsureUncontrolled()
         {
             if (physicalObject.m_hand != null)
             {
@@ -10126,11 +10125,11 @@ namespace H3MP.Tracking
                                 // Update other clients
                                 if (ThreadManager.host)
                                 {
-                                    ServerSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                                    ServerSend.ObjectParent(data.trackedID, parentTrackedItem.data.trackedID);
                                 }
                                 else
                                 {
-                                    ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
+                                    ClientSend.ObjectParent(data.trackedID, parentTrackedItem.data.trackedID);
                                 }
 
                                 // Do the following after sending itemParent order in case updateParentFunc is not set for the item and is therefore dependent on 
@@ -10194,11 +10193,11 @@ namespace H3MP.Tracking
                         // Update other clients
                         if (ThreadManager.host)
                         {
-                            ServerSend.ItemParent(data.trackedID, -1);
+                            ServerSend.ObjectParent(data.trackedID, -1);
                         }
                         else
                         {
-                            ClientSend.ItemParent(data.trackedID, -1);
+                            ClientSend.ObjectParent(data.trackedID, -1);
                         }
                     }
 

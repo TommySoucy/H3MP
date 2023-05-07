@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace H3MP.Tracking
 {
-    public class TrackedEncryptionData
+    public class TrackedEncryptionData : TrackedObjectData
     {
         public bool latestUpdateSent = false; // Whether the latest update of this data was sent
         public byte order; // The index of this Encryption's data packet used to ensure we process this data in the correct order

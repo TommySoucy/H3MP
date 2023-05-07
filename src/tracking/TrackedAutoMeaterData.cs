@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace H3MP.Tracking
 {
-    public class TrackedAutoMeaterData
+    public class TrackedAutoMeaterData : TrackedObjectData
     {
         public bool latestUpdateSent = false; // Whether the latest update of this data was sent
         public byte order; // The index of this AutoMeater's data packet used to ensure we process this data in the correct order
@@ -286,6 +286,37 @@ namespace H3MP.Tracking
             else
             {
                 Mod.LogWarning("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
+            }
+        }
+
+        public override void OnControlChanged(int newController)
+        {
+            base.OnControlChanged(newController);
+
+            // Note that this only gets called when the new controller is different from the old one
+            if (newController == GameManager.ID) // Gain control
+            {
+                if (physical != null)
+                {
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity((physical.physical as AutoMeater).E);
+                    }
+                    (physical.physical as AutoMeater).RB.isKinematic = false;
+                }
+            }
+            else if (controller == GameManager.ID) // Lose control
+            {
+                if (physical != null)
+                {
+                    physical.EnsureUncontrolled();
+
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.DeRegisterAIEntity((physical.physical as AutoMeater).E);
+                    }
+                    (physical.physical as AutoMeater).RB.isKinematic = true;
+                }
             }
         }
     }

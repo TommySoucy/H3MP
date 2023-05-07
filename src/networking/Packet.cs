@@ -19,9 +19,9 @@ namespace H3MP.Networking
         trackedItems = 6,
         trackedItem = 7,
         shatterableCrateSetHoldingHealth = 8,
-        giveControl = 9,
+        giveObjectControl = 9,
         destroyItem = 10,
-        itemParent = 11,
+        objectParent = 11,
         connectSync = 12,
         weaponFire = 13,
         playerDamage = 14,
@@ -188,7 +188,8 @@ namespace H3MP.Networking
         encryptionUpdate = 175,
         trackedObject = 176,
         trackedObjects = 177,
-        objectUpdate = 178
+        objectUpdate = 178,
+        destroyObject = 179
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -201,9 +202,9 @@ namespace H3MP.Networking
         trackedItems = 5,
         trackedItem = 6,
         shatterableCrateSetHoldingHealth = 7,
-        giveControl = 8,
+        giveObjectControl = 8,
         destroyItem = 9,
-        itemParent = 10,
+        objectParent = 10,
         weaponFire = 11,
         playerDamage = 12,
         trackedSosig = 13,
@@ -233,7 +234,7 @@ namespace H3MP.Networking
         sosigRequestHitDecal = 37,
         sosigLinkBreak = 38,
         sosigLinkSever = 39,
-        updateItemRequest = 40,
+        updateObjectRequest = 40,
         updateSosigRequest = 41,
         playerInstance = 42,
         addTNHInstance = 43,
@@ -368,7 +369,8 @@ namespace H3MP.Networking
         encryptionUpdate = 172,
         trackedObject = 173,
         trackedObjects = 174,
-        objectUpdate = 175
+        objectUpdate = 175,
+        destroyObject = 176
     }
 
     public class Packet : IDisposable

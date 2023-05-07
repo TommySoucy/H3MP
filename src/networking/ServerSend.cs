@@ -1103,9 +1103,9 @@ namespace H3MP.Networking
             }
         }
 
-        public static void GiveControl(int trackedID, int clientID, List<int> debounce)
+        public static void GiveObjectControl(int trackedID, int clientID, List<int> debounce)
         {
-            using (Packet packet = new Packet((int)ServerPackets.giveControl))
+            using (Packet packet = new Packet((int)ServerPackets.giveObjectControl))
             {
                 packet.Write(trackedID);
                 packet.Write(clientID);
@@ -1126,78 +1126,9 @@ namespace H3MP.Networking
             }
         }
 
-        public static void GiveSosigControl(int trackedID, int clientID, List<int> debounce)
+        public static void DestroyObject(int trackedID, bool removeFromList = true, int clientID = -1)
         {
-            using (Packet packet = new Packet((int)ServerPackets.giveSosigControl))
-            {
-                packet.Write(trackedID);
-                packet.Write(clientID);
-                if (debounce == null || debounce.Count == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(debounce.Count);
-                    for (int i = 0; i < debounce.Count; ++i)
-                    {
-                        packet.Write(debounce[i]);
-                    }
-                }
-
-                SendTCPDataToAll(packet);
-            }
-        }
-
-        public static void GiveAutoMeaterControl(int trackedID, int clientID, List<int> debounce)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.giveAutoMeaterControl))
-            {
-                packet.Write(trackedID);
-                packet.Write(clientID);
-                if (debounce == null || debounce.Count == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(debounce.Count);
-                    for (int i = 0; i < debounce.Count; ++i)
-                    {
-                        packet.Write(debounce[i]);
-                    }
-                }
-
-                SendTCPDataToAll(packet);
-            }
-        }
-
-        public static void GiveEncryptionControl(int trackedID, int clientID, List<int> debounce)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.giveEncryptionControl))
-            {
-                packet.Write(trackedID);
-                packet.Write(clientID);
-                if (debounce == null || debounce.Count == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(debounce.Count);
-                    for (int i = 0; i < debounce.Count; ++i)
-                    {
-                        packet.Write(debounce[i]);
-                    }
-                }
-
-                SendTCPDataToAll(packet);
-            }
-        }
-
-        public static void DestroyItem(int trackedID, bool removeFromList = true, int clientID = -1)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.destroyItem))
+            using (Packet packet = new Packet((int)ServerPackets.destroyObject))
             {
                 packet.Write(trackedID);
                 packet.Write(removeFromList);
@@ -1213,63 +1144,9 @@ namespace H3MP.Networking
             }
         }
 
-        public static void DestroySosig(int trackedID, bool removeFromList = true, int clientID = -1)
+        public static void ObjectParent(int trackedID, int newParentID, int clientID = -1)
         {
-            using (Packet packet = new Packet((int)ServerPackets.destroySosig))
-            {
-                packet.Write(trackedID);
-                packet.Write(removeFromList);
-
-                if (clientID == -1)
-                {
-                    SendTCPDataToAll(packet);
-                }
-                else
-                {
-                    SendTCPDataToAll(clientID, packet);
-                }
-            }
-        }
-
-        public static void DestroyAutoMeater(int trackedID, bool removeFromList = true, int clientID = -1)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.destroyAutoMeater))
-            {
-                packet.Write(trackedID);
-                packet.Write(removeFromList);
-
-                if (clientID == -1)
-                {
-                    SendTCPDataToAll(packet);
-                }
-                else
-                {
-                    SendTCPDataToAll(clientID, packet);
-                }
-            }
-        }
-
-        public static void DestroyEncryption(int trackedID, bool removeFromList = true, int clientID = -1)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.destroyEncryption))
-            {
-                packet.Write(trackedID);
-                packet.Write(removeFromList);
-
-                if (clientID == -1)
-                {
-                    SendTCPDataToAll(packet);
-                }
-                else
-                {
-                    SendTCPDataToAll(clientID, packet);
-                }
-            }
-        }
-
-        public static void ItemParent(int trackedID, int newParentID, int clientID = -1)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.itemParent))
+            using (Packet packet = new Packet((int)ServerPackets.objectParent))
             {
                 packet.Write(trackedID);
                 packet.Write(newParentID);

@@ -18,14 +18,6 @@ namespace H3MP.Networking
         public static PacketHandler[] packetHandlers;
         public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under
         public static List<int> availableObjectIndices;
-        public static TrackedItemData[] items; // All tracked items, regardless of whos control they are under
-        public static List<int> availableItemIndices;
-        public static TrackedSosigData[] sosigs; // All tracked Sosigs, regardless of whos control they are under
-        public static List<int> availableSosigIndices;
-        public static TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
-        public static List<int> availableAutoMeaterIndices;
-        public static TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
-        public static List<int> availableEncryptionIndices;
 
         public static List<int> availableSpectatorHosts;
 
@@ -898,7 +890,7 @@ namespace H3MP.Networking
                 ServerHandle.TrackedItems,
                 ServerHandle.TrackedItem,
                 ServerHandle.ShatterableCrateSetHoldingHealth,
-                ServerHandle.GiveControl,
+                ServerHandle.GiveObjectControl,
                 ServerHandle.DestroyItem,
                 ServerHandle.ItemParent,
                 ServerHandle.WeaponFire,

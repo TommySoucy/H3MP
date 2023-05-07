@@ -26,7 +26,6 @@ namespace H3MP.Tracking
         public uint localWaitingIndex = uint.MaxValue; // The unique index this object had while waiting for its tracked ID
         public int initTracker; // The ID of the client who initially tracked this object
         private int _controller = 0; // Client controlling this object, 0 for host
-        // TODO: Review: Perhaps do everything about control through this, like set kinematic and so on
         public int controller 
         { 
             get 
@@ -38,7 +37,7 @@ namespace H3MP.Tracking
             { 
                 if (_controller != value)
                 {
-                    OnControlChanged();
+                    OnControlChanged(value);
                 }
 
                 _controller = value;
@@ -77,6 +76,11 @@ namespace H3MP.Tracking
         }
 
         public abstract IEnumerator Instantiate();
+
+        public void InstantiatedObject()
+        {
+
+        }
 
         public virtual void WriteToPacket(Packet packet, bool incrementOrder, bool full)
         {
@@ -229,7 +233,7 @@ namespace H3MP.Tracking
             return true;
         }
 
-        public virtual void OnControlChanged()
+        public virtual void OnControlChanged(int newController)
         {
             latestUpdateSent = false;
         }
@@ -251,6 +255,31 @@ namespace H3MP.Tracking
             else
             {
                 Mod.LogWarning("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
+            }
+        }
+
+        public void SetController(int newController, bool recursive = false)
+        {
+            if (recursive)
+            {
+                SetControllerRecursive(this, newController);
+            }
+            else
+            {
+                controller = newController;
+            }
+        }
+
+        private void SetControllerRecursive(TrackedObjectData otherTrackedObject, int newController)
+        {
+            otherTrackedObject.controller = newController;
+
+            if (otherTrackedObject.children != null)
+            {
+                foreach (TrackedObjectData child in otherTrackedObject.children)
+                {
+                    SetControllerRecursive(child, newController);
+                }
             }
         }
     }

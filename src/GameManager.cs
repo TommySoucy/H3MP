@@ -896,15 +896,19 @@ namespace H3MP
         //      For more information and example, take a look at CollectExternalData(TrackedSosigData)
         private static void CollectExternalData(TrackedItemData trackedItemData)
         {
-            if (trackedItemData.physicalItem.GetComponent<TNH_ShatterableCrate>() != null)
+            TNH_ShatterableCrate crate = trackedItemData.physical.GetComponent<TNH_ShatterableCrate>();
+            if (crate != null)
             {
-                trackedItemData.additionalData = new byte[3];
+                trackedItemData.additionalData = new byte[5];
 
                 trackedItemData.additionalData[0] = TNH_SupplyPointPatch.inSpawnBoxes ? (byte)1 : (byte)0;
                 if (TNH_SupplyPointPatch.inSpawnBoxes)
                 {
                     BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(trackedItemData.additionalData, 1);
                 }
+
+                trackedItemData.identifyingData[3] = crate.m_isHoldingHealth ? (byte)1 : (byte)0;
+                trackedItemData.identifyingData[4] = crate.m_isHoldingToken ? (byte)1 : (byte)0;
             }
             else if(trackedItemData.physicalItem.physicalObject is GrappleThrowable)
             {
@@ -950,7 +954,7 @@ namespace H3MP
             if(crate != null)
             {
                 trackedItemData.itemID = "TNH_ShatterableCrate";
-                trackedItemData.identifyingData = new byte[3];
+                trackedItemData.identifyingData = new byte[1];
                 if (crate.name[9] == 'S') // Small
                 {
                     trackedItemData.identifyingData[0] = 2;
@@ -963,9 +967,6 @@ namespace H3MP
                 {
                     trackedItemData.identifyingData[0] = 0;
                 }
-
-                trackedItemData.identifyingData[1] = crate.m_isHoldingHealth ? (byte)1 : (byte)0;
-                trackedItemData.identifyingData[2] = crate.m_isHoldingToken ? (byte)1 : (byte)0;
 
                 return;
             }
@@ -2525,7 +2526,7 @@ namespace H3MP
                         {
                             trackedItem.SetController(newController);
 
-                            ServerSend.GiveControl(trackedItem.trackedID, newController, null);
+                            ServerSend.GiveObjectControl(trackedItem.trackedID, newController, null);
                         }
                     }
                 }

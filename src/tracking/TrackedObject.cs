@@ -47,6 +47,13 @@ namespace H3MP.Tracking
             }
         }
 
+        // MOD: When a client takes control of an object that is under our control, we will need to make sure that we are not 
+        //      in control of the object anymore.
+        public virtual void EnsureUncontrolled()
+        {
+
+        }
+
         protected virtual void OnDestroy()
         {
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
@@ -91,11 +98,11 @@ namespace H3MP.Tracking
                                 // Give control with us as debounce because we know we are no longer eligible to control this object
                                 if (ThreadManager.host)
                                 {
-                                    ServerSend.GiveControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
+                                    ServerSend.GiveObjectControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
                                 }
                                 else
                                 {
-                                    ClientSend.GiveControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
+                                    ClientSend.GiveObjectControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
                                 }
 
                                 // Also change controller locally

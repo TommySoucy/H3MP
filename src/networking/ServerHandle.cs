@@ -275,79 +275,7 @@ namespace H3MP.Networking
             ServerSend.ObjectUpdate(packet, clientID);
         }
 
-        public static void TrackedItems(int clientID, Packet packet)
-        {
-            // Reconstruct passed trackedItems from packet
-            int count = packet.ReadShort();
-            for(int i=0; i < count; ++i)
-            {
-                GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
-            }
-        }
-
-        public static void ItemUpdate(int clientID, Packet packet)
-        {
-            GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
-
-            // Send to all other clients
-            ServerSend.ItemUpdate(packet, clientID);
-        }
-
-        public static void TrackedSosigs(int clientID, Packet packet)
-        {
-            // Reconstruct passed trackedSosigs from packet
-            int count = packet.ReadShort();
-            for(int i=0; i < count; ++i)
-            {
-                GameManager.UpdateTrackedSosig(packet.ReadTrackedSosig());
-            }
-        }
-
-        public static void SosigUpdate(int clientID, Packet packet)
-        {
-            GameManager.UpdateTrackedSosig(packet.ReadTrackedSosig());
-
-            // Send to all other clients
-            ServerSend.SosigUpdate(packet, clientID);
-        }
-
-        public static void TrackedAutoMeaters(int clientID, Packet packet)
-        {
-            // Reconstruct passed trackedAutoMeaters from packet
-            int count = packet.ReadShort();
-            for(int i=0; i < count; ++i)
-            {
-                GameManager.UpdateTrackedAutoMeater(packet.ReadTrackedAutoMeater());
-            }
-        }
-
-        public static void AutoMeaterUpdate(int clientID, Packet packet)
-        {
-            GameManager.UpdateTrackedAutoMeater(packet.ReadTrackedAutoMeater());
-
-            // Send to all other clients
-            ServerSend.AutoMeaterUpdate(packet, clientID);
-        }
-
-        public static void TrackedEncryptions(int clientID, Packet packet)
-        {
-            // Reconstruct passed trackedEncryptions from packet
-            int count = packet.ReadShort();
-            for(int i=0; i < count; ++i)
-            {
-                GameManager.UpdateTrackedEncryption(packet.ReadTrackedEncryption());
-            }
-        }
-
-        public static void EncryptionUpdate(int clientID, Packet packet)
-        {
-            GameManager.UpdateTrackedEncryption(packet.ReadTrackedEncryption());
-
-            // Send to all other clients
-            ServerSend.EncryptionUpdate(packet, clientID);
-        }
-
-        public static void GiveControl(int clientID, Packet packet)
+        public static void GiveObjectControl(int clientID, Packet packet)
         {
             int trackedID = packet.ReadInt();
             int newController = packet.ReadInt();
@@ -359,492 +287,144 @@ namespace H3MP.Networking
             }
 
             // Update locally
-            TrackedItemData trackedItem = Server.items[trackedID];
+            TrackedObjectData trackedObject = Server.objects[trackedID];
 
             bool destroyed = false;
 
-            if (trackedItem == null)
+            if (trackedObject == null)
             {
-                Mod.LogError("Server received order to set item " + trackedID + " controller to " + newController + " but item is missing from items array!");
-                ServerSend.DestroyItem(trackedID);
+                Mod.LogError("Server received order to set object " + trackedID + " controller to " + newController + " but object is missing from objects array!");
+                ServerSend.DestroyObject(trackedID);
             }
             else
             {
-                if (trackedItem.controller != 0 && newController == 0)
+                if (trackedObject.controller != 0 && newController == 0)
                 {
-                    trackedItem.localTrackedID = GameManager.items.Count;
-                    GameManager.items.Add(trackedItem);
+                    trackedObject.localTrackedID = GameManager.objects.Count;
+                    GameManager.objects.Add(trackedObject);
                     // Physical object could be null if we are given control while we are loading, the giving client will think we are in their scene/instance
-                    if (trackedItem.physicalItem == null)
+                    if (trackedObject.physical == null)
                     {
                         // If its is null and we receive this after having finished loading, we only want to instantiate if it is in our current scene/instance
                         // Otherwise we send destroy order for the object
                         if (!GameManager.sceneLoading)
                         {
-                            if (trackedItem.scene.Equals(GameManager.scene) && trackedItem.instance == GameManager.instance)
+                            if (trackedObject.scene.Equals(GameManager.scene) && trackedObject.instance == GameManager.instance)
                             {
-                                if (!trackedItem.awaitingInstantiation)
+                                if (!trackedObject.awaitingInstantiation)
                                 {
-                                    trackedItem.awaitingInstantiation = true;
-                                    AnvilManager.Run(trackedItem.Instantiate());
+                                    trackedObject.awaitingInstantiation = true;
+                                    AnvilManager.Run(trackedObject.Instantiate());
                                 }
                             }
                             else
                             {
-                                if (GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> playerInstances) &&
-                                playerInstances.TryGetValue(trackedItem.instance, out List<int> playerList))
+                                if (GameManager.playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> playerInstances) &&
+                                    playerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
                                 {
                                     List<int> newPlayerList = new List<int>(playerList);
                                     for (int i = 0; i < debounce.Count; ++i)
                                     {
                                         newPlayerList.Remove(debounce[i]);
                                     }
-                                    newController = Mod.GetBestPotentialObjectHost(trackedItem.controller, true, true, newPlayerList, trackedItem.scene, trackedItem.instance);
+                                    newController = Mod.GetBestPotentialObjectHost(trackedObject.controller, true, true, newPlayerList, trackedObject.scene, trackedObject.instance);
                                     if (newController == -1)
                                     {
-                                        ServerSend.DestroyItem(trackedID);
-                                        trackedItem.RemoveFromLocal();
-                                        Server.items[trackedID] = null;
-                                        Server.availableItemIndices.Add(trackedID);
-                                        if (GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                            currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                        ServerSend.DestroyObject(trackedID);
+                                        trackedObject.RemoveFromLocal();
+                                        Server.objects[trackedID] = null;
+                                        Server.availableObjectIndices.Add(trackedID);
+                                        if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                            currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                         {
-                                            itemList.Remove(trackedItem.trackedID);
+                                            objectList.Remove(trackedObject.trackedID);
                                         }
-                                        trackedItem.awaitingInstantiation = false;
+                                        trackedObject.awaitingInstantiation = false;
                                         destroyed = true;
                                     }
                                     else
                                     {
-                                        trackedItem.RemoveFromLocal();
+                                        trackedObject.RemoveFromLocal();
                                         debounce.Add(GameManager.ID);
                                         // Don't resend give control here right away, we will send at the end
                                     }
                                 }
                                 else
                                 {
-                                    ServerSend.DestroyItem(trackedID);
-                                    trackedItem.RemoveFromLocal();
-                                    Server.items[trackedID] = null;
-                                    Server.availableItemIndices.Add(trackedID);
-                                    if (GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                        currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                    ServerSend.DestroyObject(trackedID);
+                                    trackedObject.RemoveFromLocal();
+                                    Server.objects[trackedID] = null;
+                                    Server.availableObjectIndices.Add(trackedID);
+                                    if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                        currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                     {
-                                        itemList.Remove(trackedItem.trackedID);
+                                        objectList.Remove(trackedObject.trackedID);
                                     }
-                                    trackedItem.awaitingInstantiation = false;
+                                    trackedObject.awaitingInstantiation = false;
                                     destroyed = true;
                                 }
                             }
                         }
                         else // Loading or not our scene/instance
                         {
-                            if (GameManager.playersByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> playerInstances) &&
-                                playerInstances.TryGetValue(trackedItem.instance, out List<int> playerList))
+                            if (GameManager.playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> playerInstances) &&
+                                playerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
                             {
                                 List<int> newPlayerList = new List<int>(playerList);
                                 for (int i = 0; i < debounce.Count; ++i)
                                 {
                                     newPlayerList.Remove(debounce[i]);
                                 }
-                                newController = Mod.GetBestPotentialObjectHost(trackedItem.controller, true, true, newPlayerList, trackedItem.scene, trackedItem.instance);
+                                newController = Mod.GetBestPotentialObjectHost(trackedObject.controller, true, true, newPlayerList, trackedObject.scene, trackedObject.instance);
                                 if (newController == -1)
                                 {
-                                    ServerSend.DestroyItem(trackedID);
-                                    trackedItem.RemoveFromLocal();
-                                    Server.items[trackedID] = null;
-                                    Server.availableItemIndices.Add(trackedID);
-                                    if (GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                        currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                    ServerSend.DestroyObject(trackedID);
+                                    trackedObject.RemoveFromLocal();
+                                    Server.objects[trackedID] = null;
+                                    Server.availableObjectIndices.Add(trackedID);
+                                    if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                        currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                     {
-                                        itemList.Remove(trackedItem.trackedID);
+                                        objectList.Remove(trackedObject.trackedID);
                                     }
-                                    trackedItem.awaitingInstantiation = false;
+                                    trackedObject.awaitingInstantiation = false;
                                     destroyed = true;
                                 }
                                 else
                                 {
-                                    trackedItem.RemoveFromLocal();
+                                    trackedObject.RemoveFromLocal();
                                     debounce.Add(GameManager.ID);
                                     // Don't resend give control here right away, we will send at the end
                                 }
                             }
                             else
                             {
-                                ServerSend.DestroyItem(trackedID);
-                                trackedItem.RemoveFromLocal();
-                                Server.items[trackedID] = null;
-                                Server.availableItemIndices.Add(trackedID);
-                                if (GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                    currentInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
+                                ServerSend.DestroyObject(trackedID);
+                                trackedObject.RemoveFromLocal();
+                                Server.objects[trackedID] = null;
+                                Server.availableObjectIndices.Add(trackedID);
+                                if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
+                                    currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                 {
-                                    itemList.Remove(trackedItem.trackedID);
+                                    objectList.Remove(trackedObject.trackedID);
                                 }
-                                trackedItem.awaitingInstantiation = false;
+                                trackedObject.awaitingInstantiation = false;
                                 destroyed = true;
                             }
                         }
                     }
-                    else if(trackedItem.parent == -1)
-                    {
-                        Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
-                    }
                 }
-                else if (trackedItem.controller == 0 && newController != 0)
+                else if (trackedObject.controller == 0 && newController != 0)
                 {
-                    if (trackedItem.physicalItem != null)
-                    {
-                        GameManager.EnsureUncontrolled(trackedItem.physicalItem.physicalObject);
-
-                        Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, true);
-                    }
-                    trackedItem.RemoveFromLocal();
+                    trackedObject.RemoveFromLocal();
                 }
 
                 if (!destroyed)
                 {
-                    trackedItem.SetController(newController);
+                    trackedObject.SetController(newController);
 
                     // Send to all other clients
-                    ServerSend.GiveControl(trackedID, newController, debounce);
-                }
-            }
-        }
-
-        public static void GiveSosigControl(int clientID, Packet packet)
-        {
-            int trackedID = packet.ReadInt();
-            int newController = packet.ReadInt();
-            int debounceCount = packet.ReadInt();
-            List<int> debounce = new List<int>();
-            for(int i = 0; i < debounceCount; ++i)
-            {
-                debounce.Add(packet.ReadInt());
-            }
-
-            TrackedSosigData trackedSosig = Server.sosigs[trackedID];
-
-            if (trackedSosig == null)
-            {
-                Mod.LogError("Server received order to set sosig " + trackedID + " controller to " + newController + " but sosig is missing from sosigs array!");
-                ServerSend.DestroySosig(trackedID);
-            }
-            else
-            {
-                bool destroyed = false;
-                if (trackedSosig.controller != 0 && newController == 0)
-                {
-                    trackedSosig.localTrackedID = GameManager.sosigs.Count;
-                    GameManager.sosigs.Add(trackedSosig);
-                    if (trackedSosig.physicalObject == null)
-                    {
-                        // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
-                        // Otherwise we send destroy order for the object
-                        if (!GameManager.sceneLoading)
-                        {
-                            if (trackedSosig.scene.Equals(GameManager.scene) && trackedSosig.instance == GameManager.instance)
-                            {
-                                if (!trackedSosig.awaitingInstantiation)
-                                {
-                                    trackedSosig.awaitingInstantiation = true;
-                                    AnvilManager.Run(trackedSosig.Instantiate());
-                                }
-                            }
-                            else
-                            {
-                                if (GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> sosigInstances) &&
-                                    sosigInstances.TryGetValue(trackedSosig.instance, out List<int> playerList))
-                                {
-                                    List<int> newPlayerList = new List<int>(playerList);
-                                    for (int i = 0; i < debounce.Count; ++i)
-                                    {
-                                        newPlayerList.Remove(debounce[i]);
-                                    }
-                                    newController = Mod.GetBestPotentialObjectHost(trackedSosig.controller, true, true, newPlayerList, trackedSosig.scene, trackedSosig.instance);
-                                    if (newController == -1)
-                                    {
-                                        ServerSend.DestroySosig(trackedID);
-                                        trackedSosig.RemoveFromLocal();
-                                        Server.sosigs[trackedID] = null;
-                                        Server.availableSosigIndices.Add(trackedID);
-                                        if (GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                            currentInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
-                                        {
-                                            sosigList.Remove(trackedSosig.trackedID);
-                                        }
-                                        trackedSosig.awaitingInstantiation = false;
-                                        destroyed = true;
-                                    }
-                                    else
-                                    {
-                                        trackedSosig.RemoveFromLocal();
-                                        debounce.Add(GameManager.ID);
-                                        // Don't resend give control here right away, we will send at the end
-                                    }
-                                }
-                                else
-                                {
-                                    ServerSend.DestroySosig(trackedID);
-                                    trackedSosig.RemoveFromLocal();
-                                    Server.sosigs[trackedID] = null;
-                                    Server.availableSosigIndices.Add(trackedID);
-                                    if (GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                        currentInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
-                                    {
-                                        sosigList.Remove(trackedSosig.trackedID);
-                                    }
-                                    trackedSosig.awaitingInstantiation = false;
-                                    destroyed = true;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (GameManager.playersByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> sosigInstances) &&
-                                    sosigInstances.TryGetValue(trackedSosig.instance, out List<int> playerList))
-                            {
-                                List<int> newPlayerList = new List<int>(playerList);
-                                for (int i = 0; i < debounce.Count; ++i)
-                                {
-                                    newPlayerList.Remove(debounce[i]);
-                                }
-                                newController = Mod.GetBestPotentialObjectHost(trackedSosig.controller, true, true, newPlayerList, trackedSosig.scene, trackedSosig.instance);
-                                if (newController == -1)
-                                {
-                                    ServerSend.DestroySosig(trackedID);
-                                    trackedSosig.RemoveFromLocal();
-                                    Server.sosigs[trackedID] = null;
-                                    Server.availableSosigIndices.Add(trackedID);
-                                    if (GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                        currentInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
-                                    {
-                                        sosigList.Remove(trackedSosig.trackedID);
-                                    }
-                                    trackedSosig.awaitingInstantiation = false;
-                                    destroyed = true;
-                                }
-                                else
-                                {
-                                    trackedSosig.RemoveFromLocal();
-                                    debounce.Add(GameManager.ID);
-                                    // Don't resend give control here right away, we will send at the end
-                                }
-                            }
-                            else
-                            {
-                                ServerSend.DestroySosig(trackedID);
-                                trackedSosig.RemoveFromLocal();
-                                Server.sosigs[trackedID] = null;
-                                Server.availableSosigIndices.Add(trackedID);
-                                if (GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                    currentInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
-                                {
-                                    sosigList.Remove(trackedSosig.trackedID);
-                                }
-                                trackedSosig.awaitingInstantiation = false;
-                                destroyed = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (GM.CurrentAIManager != null)
-                        {
-                            GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
-                        }
-                        trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
-                    }
-                }
-                else if (trackedSosig.controller == 0 && newController != 0)
-                {
-                    trackedSosig.RemoveFromLocal();
-                    if (trackedSosig.physicalObject != null)
-                    {
-                        if (GM.CurrentAIManager != null)
-                        {
-                            GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
-                        }
-                        trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
-                    }
-                }
-
-                if (!destroyed)
-                {
-                    trackedSosig.controller = newController;
-
-                    // Send to all other clients
-                    ServerSend.GiveSosigControl(trackedID, newController, debounce);
-
-                    if (newController == GameManager.ID)
-                    {
-                        trackedSosig.TakeInventoryControl();
-                    }
-                }
-            }
-        }
-
-        public static void GiveAutoMeaterControl(int clientID, Packet packet)
-        {
-            int trackedID = packet.ReadInt();
-            int newController = packet.ReadInt();
-            int debounceCount = packet.ReadInt();
-            List<int> debounce = new List<int>();
-            for (int i = 0; i < debounceCount; ++i)
-            {
-                debounce.Add(packet.ReadInt());
-            }
-
-            TrackedAutoMeaterData trackedAutoMeater = Server.autoMeaters[trackedID];
-
-            if (trackedAutoMeater == null)
-            {
-                Mod.LogError("Server received order to set automeater " + trackedID + " controller to " + newController + " but automeater is missing from automeaters array!");
-                ServerSend.DestroyAutoMeater(trackedID);
-            }
-            else
-            {
-                bool destroyed = false;
-                if (trackedAutoMeater.controller != 0 && newController == 0)
-                {
-                    trackedAutoMeater.localTrackedID = GameManager.autoMeaters.Count;
-                    GameManager.autoMeaters.Add(trackedAutoMeater);
-                    if (trackedAutoMeater.physicalObject == null)
-                    {
-                        // If its is null and we receive this after having finishes loading, we only want to instantiate if it is in our current scene/instance
-                        // Otherwise we send destroy order for the object
-                        if (!GameManager.sceneLoading)
-                        {
-                            if (trackedAutoMeater.scene.Equals(GameManager.scene) && trackedAutoMeater.instance == GameManager.instance)
-                            {
-                                if (!trackedAutoMeater.awaitingInstantiation)
-                                {
-                                    trackedAutoMeater.awaitingInstantiation = true;
-                                    AnvilManager.Run(trackedAutoMeater.Instantiate());
-                                }
-                            }
-                            else
-                            {
-                                if (GameManager.playersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> playerInstances) &&
-                                playerInstances.TryGetValue(trackedAutoMeater.instance, out List<int> playerList))
-                                {
-                                    List<int> newPlayerList = new List<int>(playerList);
-                                    for (int i = 0; i < debounce.Count; ++i)
-                                    {
-                                        newPlayerList.Remove(debounce[i]);
-                                    }
-                                    newController = Mod.GetBestPotentialObjectHost(trackedAutoMeater.controller, true, true, newPlayerList, trackedAutoMeater.scene, trackedAutoMeater.instance);
-                                    if (newController == -1)
-                                    {
-                                        ServerSend.DestroyAutoMeater(trackedID);
-                                        trackedAutoMeater.RemoveFromLocal();
-                                        Server.autoMeaters[trackedID] = null;
-                                        Server.availableAutoMeaterIndices.Add(trackedID);
-                                        if (GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                            currentInstances.TryGetValue(trackedAutoMeater.instance, out List<int> autoMeaterList))
-                                        {
-                                            autoMeaterList.Remove(trackedAutoMeater.trackedID);
-                                        }
-                                        trackedAutoMeater.awaitingInstantiation = false;
-                                        destroyed = true;
-                                    }
-                                    else
-                                    {
-                                        trackedAutoMeater.RemoveFromLocal();
-                                        debounce.Add(GameManager.ID);
-                                        // Don't resend give control here right away, we will send at the end
-                                    }
-                                }
-                                else
-                                {
-                                    ServerSend.DestroyAutoMeater(trackedID);
-                                    trackedAutoMeater.RemoveFromLocal();
-                                    Server.autoMeaters[trackedID] = null;
-                                    Server.availableAutoMeaterIndices.Add(trackedID);
-                                    if (GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                        currentInstances.TryGetValue(trackedAutoMeater.instance, out List<int> autoMeaterList))
-                                    {
-                                        autoMeaterList.Remove(trackedAutoMeater.trackedID);
-                                    }
-                                    trackedAutoMeater.awaitingInstantiation = false;
-                                    destroyed = true;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (GameManager.playersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> playerInstances) &&
-                                playerInstances.TryGetValue(trackedAutoMeater.instance, out List<int> playerList))
-                            {
-                                List<int> newPlayerList = new List<int>(playerList);
-                                for (int i = 0; i < debounce.Count; ++i)
-                                {
-                                    newPlayerList.Remove(debounce[i]);
-                                }
-                                newController = Mod.GetBestPotentialObjectHost(trackedAutoMeater.controller, true, true, newPlayerList, trackedAutoMeater.scene, trackedAutoMeater.instance);
-                                if (newController == -1)
-                                {
-                                    ServerSend.DestroyAutoMeater(trackedID);
-                                    trackedAutoMeater.RemoveFromLocal();
-                                    Server.autoMeaters[trackedID] = null;
-                                    Server.availableAutoMeaterIndices.Add(trackedID);
-                                    if (GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                        currentInstances.TryGetValue(trackedAutoMeater.instance, out List<int> autoMeaterList))
-                                    {
-                                        autoMeaterList.Remove(trackedAutoMeater.trackedID);
-                                    }
-                                    trackedAutoMeater.awaitingInstantiation = false;
-                                    destroyed = true;
-                                }
-                                else
-                                {
-                                    trackedAutoMeater.RemoveFromLocal();
-                                    debounce.Add(GameManager.ID);
-                                    // Don't resend give control here right away, we will send at the end
-                                }
-                            }
-                            else
-                            {
-                                ServerSend.DestroyAutoMeater(trackedID);
-                                trackedAutoMeater.RemoveFromLocal();
-                                Server.autoMeaters[trackedID] = null;
-                                Server.availableAutoMeaterIndices.Add(trackedID);
-                                if (GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> currentInstances) &&
-                                    currentInstances.TryGetValue(trackedAutoMeater.instance, out List<int> autoMeaterList))
-                                {
-                                    autoMeaterList.Remove(trackedAutoMeater.trackedID);
-                                }
-                                trackedAutoMeater.awaitingInstantiation = false;
-                                destroyed = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (GM.CurrentAIManager != null)
-                        {
-                            GM.CurrentAIManager.RegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
-                        }
-                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = false;
-                    }
-                }
-                else if (trackedAutoMeater.controller == 0 && newController != 0)
-                {
-                    trackedAutoMeater.RemoveFromLocal();
-                    if (trackedAutoMeater.physicalObject != null)
-                    {
-                        if (GM.CurrentAIManager != null)
-                        {
-                            GM.CurrentAIManager.DeRegisterAIEntity(trackedAutoMeater.physicalObject.physicalAutoMeaterScript.E);
-                        }
-                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
-                    }
-                }
-                if (!destroyed)
-                {
-                    trackedAutoMeater.controller = newController;
-
-                    // Send to all other clients
-                    ServerSend.GiveAutoMeaterControl(trackedID, newController, debounce);
+                    ServerSend.GiveObjectControl(trackedID, newController, debounce);
                 }
             }
         }
@@ -1190,7 +770,7 @@ namespace H3MP.Networking
             Server.items[trackedID].SetParent(newParentID);
 
             // Send to all other clients
-            ServerSend.ItemParent(trackedID, newParentID, clientID);
+            ServerSend.ObjectParent(trackedID, newParentID, clientID);
         }
 
         public static void WeaponFire(int clientID, Packet packet)

@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace H3MP.Tracking
 {
-    public class TrackedSosigData
+    public class TrackedSosigData : TrackedObjectData
     {
         public bool latestUpdateSent = false; // Whether the latest update of this data was sent
         public byte order; // The index of this sosig's data packet used to ensure we process this data in the correct order
@@ -770,6 +770,39 @@ namespace H3MP.Tracking
                             Mod.SetKinematicRecursive(arrToUse[inventory[i]].physicalItem.transform, false);
                         }
                     }
+                }
+            }
+        }
+
+        public override void OnControlChanged(int newController)
+        {
+            base.OnControlChanged(newController);
+
+            // Note that this only gets called when the new controller is different from the old one
+            if (newController == GameManager.ID) // Gain control
+            {
+                TakeInventoryControl();
+
+                if (physical != null)
+                {
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity((physical.physical as Sosig).E);
+                    }
+                    (physical.physical as Sosig).CoreRB.isKinematic = false;
+                }
+            }
+            else if (controller == GameManager.ID) // Lose control
+            {
+                if (physical != null)
+                {
+                    physical.EnsureUncontrolled();
+
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.DeRegisterAIEntity((physical.physical as Sosig).E);
+                    }
+                    (physical.physical as Sosig).CoreRB.isKinematic = true;
                 }
             }
         }

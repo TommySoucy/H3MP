@@ -199,7 +199,7 @@ namespace H3MP.Networking
 
                             ++count;
 
-                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
+                            // Limit buffer size to MTU, will send next set of tracked objects in separate packet
                             if (packet.buffer.Count >= 1300)
                             {
                                 break;
@@ -243,299 +243,6 @@ namespace H3MP.Networking
             }
         }
 
-        public static void TrackedItems()
-        {
-            int index = 0;
-            while (index < GameManager.items.Count)
-            {
-                using (Packet packet = new Packet((int)ClientPackets.trackedItems))
-                {
-                    // Write place holder int at start to hold the count once we know it
-                    int countPos = packet.buffer.Count;
-                    packet.Write((short)0);
-
-                    short count = 0;
-                    for (int i = index; i < GameManager.items.Count; ++i)
-                    {
-                        TrackedItemData trackedItem = GameManager.items[i];
-
-                        if(trackedItem.trackedID == -1)
-                        {
-                            ++index;
-                            continue;
-                        }
-
-                        if (trackedItem.Update())
-                        {
-                            trackedItem.latestUpdateSent = false;
-
-                            packet.Write(trackedItem, true, false);
-
-                            ++count;
-
-                            // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                            if (packet.buffer.Count >= 1300)
-                            {
-                                break;
-                            }
-                        }
-                        else if(!trackedItem.latestUpdateSent)
-                        {
-                            trackedItem.latestUpdateSent = true;
-
-                            // Send latest update on its own
-                            ItemUpdate(trackedItem);
-                        }
-
-                        ++index;
-                    }
-
-                    if (count == 0)
-                    {
-                        break;
-                    }
-
-                    // Write the count to packet
-                    byte[] countArr = BitConverter.GetBytes(count);
-                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                    {
-                        packet.buffer[i] = countArr[j];
-                    }
-
-                    SendUDPData(packet);
-                }
-            }
-        }
-
-        public static void ItemUpdate(TrackedItemData itemData)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.itemUpdate))
-            {
-                packet.Write(itemData, true, false);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void TrackedSosigs()
-        {
-            int index = 0;
-            while (index < GameManager.sosigs.Count)
-            {
-                using (Packet packet = new Packet((int)ClientPackets.trackedSosigs))
-                {
-                    // Write place holder int at start to hold the count once we know it
-                    int countPos = packet.buffer.Count;
-                    packet.Write((short)0);
-
-                    short count = 0;
-                    for (int i = index; i < GameManager.sosigs.Count; ++i)
-                    {
-                        TrackedSosigData trackedSosig = GameManager.sosigs[i];
-
-                        if (trackedSosig.trackedID == -1)
-                        {
-                            ++index;
-                            continue;
-                        }
-
-                        if (trackedSosig.Update())
-                        {
-                            trackedSosig.latestUpdateSent = false;
-
-                            packet.Write(trackedSosig, true, false);
-
-                            ++count;
-
-                            // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
-                            if (packet.buffer.Count >= 1300)
-                            {
-                                break;
-                            }
-                        }
-                        else if(!trackedSosig.latestUpdateSent)
-                        {
-                            trackedSosig.latestUpdateSent = true;
-
-                            SosigUpdate(trackedSosig);
-                        }
-
-                        ++index;
-                    }
-
-                    if (count == 0)
-                    {
-                        break;
-                    }
-
-                    // Write the count to packet
-                    byte[] countArr = BitConverter.GetBytes(count);
-                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                    {
-                        packet.buffer[i] = countArr[j];
-                    }
-
-                    SendUDPData(packet);
-                }
-            }
-        }
-
-        public static void SosigUpdate(TrackedSosigData sosigData)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.sosigUpdate))
-            {
-                packet.Write(sosigData, true, false);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void TrackedAutoMeaters()
-        {
-            int index = 0;
-            while (index < GameManager.autoMeaters.Count)
-            {
-                using (Packet packet = new Packet((int)ClientPackets.trackedAutoMeaters))
-                {
-                    // Write place holder int at start to hold the count once we know it
-                    int countPos = packet.buffer.Count;
-                    packet.Write((short)0);
-
-                    short count = 0;
-                    for (int i = index; i < GameManager.autoMeaters.Count; ++i)
-                    {
-                        TrackedAutoMeaterData trackedAutoMeater = GameManager.autoMeaters[i];
-
-                        if (trackedAutoMeater.trackedID == -1)
-                        {
-                            ++index;
-                            continue;
-                        }
-
-                        if (trackedAutoMeater.Update())
-                        {
-                            trackedAutoMeater.latestUpdateSent = false;
-
-                            packet.Write(trackedAutoMeater, true, false);
-
-                            ++count;
-
-                            // Limit buffer size to MTU, will send next set of tracked automeaters in separate packet
-                            if (packet.buffer.Count >= 1300)
-                            {
-                                break;
-                            }
-                        }
-                        else if(!trackedAutoMeater.latestUpdateSent)
-                        {
-                            trackedAutoMeater.latestUpdateSent = true;
-
-                            AutoMeaterUpdate(trackedAutoMeater);
-                        }
-
-                        ++index;
-                    }
-
-                    if (count == 0)
-                    {
-                        break;
-                    }
-
-                    // Write the count to packet
-                    byte[] countArr = BitConverter.GetBytes(count);
-                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                    {
-                        packet.buffer[i] = countArr[j];
-                    }
-
-                    SendUDPData(packet);
-                }
-            }
-        }
-
-        public static void AutoMeaterUpdate(TrackedAutoMeaterData autoMeaterData)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.autoMeaterUpdate))
-            {
-                packet.Write(autoMeaterData, true, false);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void TrackedEncryptions()
-        {
-            int index = 0;
-            while (index < GameManager.encryptions.Count)
-            {
-                using (Packet packet = new Packet((int)ClientPackets.trackedEncryptions))
-                {
-                    // Write place holder int at start to hold the count once we know it
-                    int countPos = packet.buffer.Count;
-                    packet.Write((short)0);
-
-                    short count = 0;
-                    for (int i = index; i < GameManager.encryptions.Count; ++i)
-                    {
-                        TrackedEncryptionData trackedEncryption = GameManager.encryptions[i];
-
-                        if (trackedEncryption.trackedID == -1)
-                        {
-                            ++index;
-                            continue;
-                        }
-
-                        if (trackedEncryption.Update())
-                        {
-                            trackedEncryption.latestUpdateSent = false;
-
-                            packet.Write(trackedEncryption, true, false);
-
-                            ++count;
-
-                            // Limit buffer size to MTU, will send next set of tracked Encryptions in separate packet
-                            if (packet.buffer.Count >= 1300)
-                            {
-                                break;
-                            }
-                        }
-                        else if(!trackedEncryption.latestUpdateSent)
-                        {
-                            trackedEncryption.latestUpdateSent = true;
-
-                            EncryptionUpdate(trackedEncryption);
-                        }
-
-                        ++index;
-                    }
-
-                    if (count == 0)
-                    {
-                        break;
-                    }
-
-                    // Write the count to packet
-                    byte[] countArr = BitConverter.GetBytes(count);
-                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                    {
-                        packet.buffer[i] = countArr[j];
-                    }
-
-                    SendUDPData(packet);
-                }
-            }
-        }
-
-        public static void EncryptionUpdate(TrackedEncryptionData encryptionData)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.encryptionUpdate))
-            {
-                packet.Write(encryptionData, true, false);
-
-                SendTCPData(packet);
-            }
-        }
-
         public static void TrackedObject(TrackedObjectData trackedObject)
         {
             using(Packet packet = new Packet((int)ClientPackets.trackedObject))
@@ -546,49 +253,9 @@ namespace H3MP.Networking
             }
         }
 
-        public static void TrackedItem(TrackedItemData trackedItem)
+        public static void GiveObjectControl(int trackedID, int newController, List<int> debounce)
         {
-            using(Packet packet = new Packet((int)ClientPackets.trackedItem))
-            {
-                packet.Write(trackedItem, false, true);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void TrackedSosig(TrackedSosigData trackedSosig)
-        {
-            using(Packet packet = new Packet((int)ClientPackets.trackedSosig))
-            {
-                packet.Write(trackedSosig, false, true);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void TrackedAutoMeater(TrackedAutoMeaterData trackedAutoMeater)
-        {
-            using(Packet packet = new Packet((int)ClientPackets.trackedAutoMeater))
-            {
-                packet.Write(trackedAutoMeater, false, true);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void TrackedEncryption(TrackedEncryptionData trackedEncryption)
-        {
-            using(Packet packet = new Packet((int)ClientPackets.trackedEncryption))
-            {
-                packet.Write(trackedEncryption, false, true);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void GiveControl(int trackedID, int newController, List<int> debounce)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.giveControl))
+            using (Packet packet = new Packet((int)ClientPackets.giveObjectControl))
             {
                 packet.Write(trackedID);
                 packet.Write(newController);
@@ -609,78 +276,9 @@ namespace H3MP.Networking
             }
         }
 
-        public static void GiveSosigControl(int trackedID, int newController, List<int> debounce)
+        public static void DestroyObject(int trackedID, bool removeFromList = true)
         {
-            using (Packet packet = new Packet((int)ClientPackets.giveSosigControl))
-            {
-                packet.Write(trackedID);
-                packet.Write(newController);
-                if (debounce == null || debounce.Count == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(debounce.Count);
-                    for (int i = 0; i < debounce.Count; ++i)
-                    {
-                        packet.Write(debounce[i]);
-                    }
-                }
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void GiveAutoMeaterControl(int trackedID, int newController, List<int> debounce)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.giveAutoMeaterControl))
-            {
-                packet.Write(trackedID);
-                packet.Write(newController);
-                if (debounce == null || debounce.Count == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(debounce.Count);
-                    for (int i = 0; i < debounce.Count; ++i)
-                    {
-                        packet.Write(debounce[i]);
-                    }
-                }
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void GiveEncryptionControl(int trackedID, int newController, List<int> debounce)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.giveEncryptionControl))
-            {
-                packet.Write(trackedID);
-                packet.Write(newController);
-                if (debounce == null || debounce.Count == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(debounce.Count);
-                    for (int i = 0; i < debounce.Count; ++i)
-                    {
-                        packet.Write(debounce[i]);
-                    }
-                }
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void DestroyItem(int trackedID, bool removeFromList = true)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.destroyItem))
+            using (Packet packet = new Packet((int)ClientPackets.destroyObject))
             {
                 packet.Write(trackedID);
                 packet.Write(removeFromList);
@@ -689,42 +287,9 @@ namespace H3MP.Networking
             }
         }
 
-        public static void DestroySosig(int trackedID, bool removeFromList = true)
+        public static void ObjectParent(int trackedID, int newParentID)
         {
-            using (Packet packet = new Packet((int)ClientPackets.destroySosig))
-            {
-                packet.Write(trackedID);
-                packet.Write(removeFromList);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void DestroyAutoMeater(int trackedID, bool removeFromList = true)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.destroyAutoMeater))
-            {
-                packet.Write(trackedID);
-                packet.Write(removeFromList);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void DestroyEncryption(int trackedID, bool removeFromList = true)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.destroyEncryption))
-            {
-                packet.Write(trackedID);
-                packet.Write(removeFromList);
-
-                SendTCPData(packet);
-            }
-        }
-
-        public static void ItemParent(int trackedID, int newParentID)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.itemParent))
+            using (Packet packet = new Packet((int)ClientPackets.objectParent))
             {
                 packet.Write(trackedID);
                 packet.Write(newParentID);
@@ -1625,9 +1190,9 @@ namespace H3MP.Networking
         public static void UpToDateObjects(bool instantiateOnReceive, int forClient)
         {
             int index = 0;
-            while (index < GameManager.items.Count)
+            while (index < GameManager.objects.Count)
             {
-                using (Packet packet = new Packet((int)ClientPackets.updateItemRequest))
+                using (Packet packet = new Packet((int)ClientPackets.updateObjectRequest))
                 {
                     // Write place holder int at start to hold the count once we know it
                     int countPos = packet.buffer.Count;
@@ -1635,167 +1200,26 @@ namespace H3MP.Networking
                     packet.Write(instantiateOnReceive);
 
                     short count = 0;
-                    for (int i = index; i < GameManager.items.Count; ++i)
+                    for (int i = index; i < GameManager.objects.Count; ++i)
                     {
-                        TrackedItemData trackedItem = GameManager.items[i];
+                        TrackedObjectData trackedObject = GameManager.objects[i];
 
-                        if(trackedItem.trackedID == -1)
+                        if(trackedObject.trackedID == -1)
                         {
                             ++index;
                             continue;
                         }
 
-                        trackedItem.latestUpdateSent = false;
+                        trackedObject.latestUpdateSent = false;
 
-                        trackedItem.Update(true);
-                        packet.Write(trackedItem, false, true);
-
-                        ++count;
-
-                        ++index;
-
-                        // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                        if (packet.buffer.Count >= 1300)
-                        {
-                            break;
-                        }
-                    }
-
-                    // Write the count to packet
-                    byte[] countArr = BitConverter.GetBytes(count);
-                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                    {
-                        packet.buffer[i] = countArr[j];
-                    }
-
-                    SendTCPData(packet);
-                }
-            }
-            index = 0;
-            while (index < GameManager.sosigs.Count)
-            {
-                using (Packet packet = new Packet((int)ClientPackets.updateSosigRequest))
-                {
-                    // Write place holder int at start to hold the count once we know it
-                    int countPos = packet.buffer.Count;
-                    packet.Write((short)0);
-                    packet.Write(instantiateOnReceive);
-
-                    short count = 0;
-                    for (int i = index; i < GameManager.sosigs.Count; ++i)
-                    {
-                        TrackedSosigData trackedSosig = GameManager.sosigs[i];
-
-                        if (trackedSosig.trackedID == -1)
-                        {
-                            ++index;
-                            continue;
-                        }
-
-                        trackedSosig.latestUpdateSent = false;
-
-                        trackedSosig.Update(true);
-                        packet.Write(trackedSosig, false, true);
+                        trackedObject.Update(true);
+                        trackedObject.WriteToPacket(packet, false, true);
 
                         ++count;
 
                         ++index;
 
-                        // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
-                        if (packet.buffer.Count >= 1300)
-                        {
-                            break;
-                        }
-                    }
-
-                    // Write the count to packet
-                    byte[] countArr = BitConverter.GetBytes(count);
-                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                    {
-                        packet.buffer[i] = countArr[j];
-                    }
-
-                    SendTCPData(packet);
-                }
-            }
-            index = 0;
-            while (index < GameManager.autoMeaters.Count)
-            {
-                using (Packet packet = new Packet((int)ClientPackets.updateAutoMeatersRequest))
-                {
-                    // Write place holder int at start to hold the count once we know it
-                    int countPos = packet.buffer.Count;
-                    packet.Write((short)0);
-                    packet.Write(instantiateOnReceive);
-
-                    short count = 0;
-                    for (int i = index; i < GameManager.autoMeaters.Count; ++i)
-                    {
-                        TrackedAutoMeaterData trackedAutoMeater = GameManager.autoMeaters[i];
-
-                        if (trackedAutoMeater.trackedID == -1)
-                        {
-                            ++index;
-                            continue;
-                        }
-
-                        trackedAutoMeater.latestUpdateSent = false;
-
-                        trackedAutoMeater.Update(true);
-                        packet.Write(trackedAutoMeater, false, true);
-
-                        ++count;
-
-                        ++index;
-
-                        // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
-                        if (packet.buffer.Count >= 1300)
-                        {
-                            break;
-                        }
-                    }
-
-                    // Write the count to packet
-                    byte[] countArr = BitConverter.GetBytes(count);
-                    for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                    {
-                        packet.buffer[i] = countArr[j];
-                    }
-
-                    SendTCPData(packet);
-                }
-            }
-            index = 0;
-            while (index < GameManager.encryptions.Count)
-            {
-                using (Packet packet = new Packet((int)ClientPackets.updateEncryptionsRequest))
-                {
-                    // Write place holder int at start to hold the count once we know it
-                    int countPos = packet.buffer.Count;
-                    packet.Write((short)0);
-                    packet.Write(instantiateOnReceive);
-
-                    short count = 0;
-                    for (int i = index; i < GameManager.encryptions.Count; ++i)
-                    {
-                        TrackedEncryptionData trackedEncryption = GameManager.encryptions[i];
-
-                        if (trackedEncryption.trackedID == -1)
-                        {
-                            ++index;
-                            continue;
-                        }
-
-                        trackedEncryption.latestUpdateSent = false;
-
-                        trackedEncryption.Update(true);
-                        packet.Write(trackedEncryption, false, true);
-
-                        ++count;
-
-                        ++index;
-
-                        // Limit buffer size to MTU, will send next set of tracked sosigs in separate packet
+                        // Limit buffer size to MTU, will send next set of tracked objects in separate packet
                         if (packet.buffer.Count >= 1300)
                         {
                             break;

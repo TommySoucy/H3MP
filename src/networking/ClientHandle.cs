@@ -152,74 +152,9 @@ namespace H3MP.Networking
             TrackedObjectData.Update(packet);
         }
 
-        public static void TrackedItems(Packet packet)
-        {
-            // Reconstruct passed trackedItems from packet
-            int count = packet.ReadShort();
-            for (int i = 0; i < count; ++i)
-            {
-                GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
-            }
-        }
-
-        public static void ItemUpdate(Packet packet)
-        {
-            GameManager.UpdateTrackedItem(packet.ReadTrackedItem());
-        }
-
-        public static void TrackedSosigs(Packet packet)
-        {
-            // Reconstruct passed trackedSosigs from packet
-            int count = packet.ReadShort();
-            for (int i = 0; i < count; ++i)
-            {
-                GameManager.UpdateTrackedSosig(packet.ReadTrackedSosig());
-            }
-        }
-
-        public static void TrackedAutoMeaters(Packet packet)
-        {
-            // Reconstruct passed trackedAutoMeaters from packet
-            int count = packet.ReadShort();
-            for (int i = 0; i < count; ++i)
-            {
-                GameManager.UpdateTrackedAutoMeater(packet.ReadTrackedAutoMeater());
-            }
-        }
-
-        public static void TrackedEncryptions(Packet packet)
-        {
-            // Reconstruct passed TrackedEncryptions from packet
-            int count = packet.ReadShort();
-            for (int i = 0; i < count; ++i)
-            {
-                GameManager.UpdateTrackedEncryption(packet.ReadTrackedEncryption());
-            }
-        }
-
         public static void TrackedObject(Packet packet)
         {
             Client.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypes[packet.ReadString()], packet));
-        }
-
-        public static void TrackedItem(Packet packet)
-        {
-            Client.AddTrackedItem(packet.ReadTrackedItem(true));
-        }
-
-        public static void TrackedSosig(Packet packet)
-        {
-            Client.AddTrackedSosig(packet.ReadTrackedSosig(true));
-        }
-
-        public static void TrackedAutoMeater(Packet packet)
-        {
-            Client.AddTrackedAutoMeater(packet.ReadTrackedAutoMeater(true));
-        }
-
-        public static void TrackedEncryption(Packet packet)
-        {
-            Client.AddTrackedEncryption(packet.ReadTrackedEncryption(true));
         }
 
         public static void AddNonSyncScene(Packet packet)
@@ -306,7 +241,7 @@ namespace H3MP.Networking
                                     {
                                         trackedItem.RemoveFromLocal();
                                         debounce.Add(GameManager.ID);
-                                        ClientSend.GiveControl(trackedID, controllerID, debounce);
+                                        ClientSend.GiveObjectControl(trackedID, controllerID, debounce);
                                     }
                                 }
                                 else
@@ -355,7 +290,7 @@ namespace H3MP.Networking
                                     {
                                         trackedItem.RemoveFromLocal();
                                         debounce.Add(GameManager.ID);
-                                        ClientSend.GiveControl(trackedID, controllerID, debounce);
+                                        ClientSend.GiveObjectControl(trackedID, controllerID, debounce);
                                     }
                                 }
                                 else
