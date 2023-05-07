@@ -11,7 +11,7 @@ namespace H3MP.Tracking
 {
     public class TrackedItemData : TrackedObjectData
     {
-        TrackedItem physicalItem;
+        public TrackedItem physicalItem;
 
         public bool underActiveControl;
         public bool previousActiveControl;
@@ -30,7 +30,6 @@ namespace H3MP.Tracking
 
         public byte[] data; // Generic data that may need to be passed every update
         public byte[] previousData;
-        public bool removeFromListOnDestroy = true;
         public int[] toPutInSosigInventory;
 
         public TrackedItemData()
@@ -92,7 +91,7 @@ namespace H3MP.Tracking
             {
                 GameManager.trackedItemBySosigWeapon.Add((data.physicalItem.physicalItem as SosigWeaponPlayerInterface).W, trackedItem);
             }
-            GameManager.trackedItemByItem.Add(data.physicalItem.physicalItem, trackedItem);
+            GameManager.trackedObjectByObject.Add(data.physicalItem.physicalItem, trackedItem);
 
             if (parent != null)
             {
@@ -469,10 +468,6 @@ namespace H3MP.Tracking
             UpdateData(updatedItem.data);
         }
 
-        private void SetInitialData()
-        {
-        }
-
         public override bool Update(bool full = false)
         {
             // Phys could be null if we were given control of the item while we were loading and we haven't instantiated it on our side yet
@@ -522,166 +517,6 @@ namespace H3MP.Tracking
             return base.NeedsUpdate() || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
         }
 
-        public void SetParent(TrackedItemData newParent, bool physicallyParent)
-        {
-            if (newParent == null)
-            {
-                if (parent != -1) // We had parent before, need to unparent
-                {
-                    TrackedItemData previousParent = null;
-                    int clientID = -1;
-                    if (ThreadManager.host)
-                    {
-                        previousParent = Server.items[parent];
-                        clientID = 0;
-                    }
-                    else
-                    {
-                        previousParent = Client.items[parent];
-                        clientID = Client.singleton.ID;
-                    }
-                    previousParent.children[childIndex] = previousParent.children[previousParent.children.Count - 1];
-                    previousParent.children[childIndex].childIndex = childIndex;
-                    previousParent.children.RemoveAt(previousParent.children.Count - 1);
-                    if (previousParent.children.Count == 0)
-                    {
-                        previousParent.children = null;
-                    }
-                    parent = -1;
-                    childIndex = -1;
-
-                    // Physically unparent if necessary
-                    if (physicallyParent && physicalItem != null)
-                    {
-                        ++ignoreParentChanged;
-                        physicalItem.transform.parent = GetGeneralParent();
-                        --ignoreParentChanged;
-
-                        // If in control, we want to enable rigidbody
-                        if (controller == clientID)
-                        {
-                            Mod.SetKinematicRecursive(physicalItem.transform, false);
-                        }
-
-                        // Call updateParent delegate on item if it has one
-                        if(physicalItem.updateParentFunc != null)
-                        {
-                            physicalItem.updateParentFunc();
-                        }
-                    }
-                }
-                // Already unparented, nothing changes
-            }
-            else // We have new parent
-            {
-                if (parent != -1) // We had parent before, need to unparent first
-                {
-                    if (newParent.trackedID == parent)
-                    {
-                        // Already attached to correct parent
-                        return;
-                    }
-
-                    TrackedItemData previousParent = null;
-                    if (ThreadManager.host)
-                    {
-                        previousParent = Server.items[parent];
-                    }
-                    else
-                    {
-                        previousParent = Client.items[parent];
-                    }
-                    previousParent.children[childIndex] = previousParent.children[previousParent.children.Count - 1];
-                    previousParent.children[childIndex].childIndex = childIndex;
-                    previousParent.children.RemoveAt(previousParent.children.Count - 1);
-                    if (previousParent.children.Count == 0)
-                    {
-                        previousParent.children = null;
-                    }
-                }
-
-                // Set new parent
-                parent = newParent.trackedID;
-                if (newParent.children == null)
-                {
-                    newParent.children = new List<TrackedItemData>();
-                }
-                childIndex = newParent.children.Count;
-                newParent.children.Add(this);
-
-                // Physically parent
-                if (physicallyParent && physicalItem != null)
-                {
-                    if (newParent.physicalItem == null)
-                    {
-                        newParent.childrenToParent.Add(trackedID);
-                    }
-                    else
-                    {
-                        ++ignoreParentChanged;
-                        physicalItem.transform.parent = newParent.physicalItem.transform;
-                        --ignoreParentChanged;
-
-                        // Call updateParent delegate on item if it has one
-                        if (physicalItem.updateParentFunc != null)
-                        {
-                            physicalItem.updateParentFunc();
-                        }
-                    }
-                }
-
-                int preController = controller;
-
-                // Set Controller to parent's
-                SetController(newParent.controller, true);
-
-                // If newly in control, we want to enable rigidbody and add to list
-                if (controller == GameManager.ID)
-                {
-                    if (preController != controller)
-                    {
-                        if (physicalItem != null)
-                        {
-                            Mod.SetKinematicRecursive(physicalItem.transform, false);
-                        }
-
-                        localTrackedID = GameManager.items.Count;
-                        GameManager.items.Add(this);
-                    }
-                }
-                else if(physicalItem != null)
-                {
-                    Mod.SetKinematicRecursive(physicalItem.transform, true);
-                }
-            }
-        }
-
-        public void SetParent(int trackedID)
-        {
-            if (trackedID == -1)
-            {
-                SetParent(null, true);
-            }
-            else
-            {
-                if (ThreadManager.host)
-                {
-                    SetParent(Server.items[trackedID], true);
-                }
-                else
-                {
-                    SetParent(Client.items[trackedID], true);
-                }
-            }
-        }
-
-        // MOD: When unparented, an item will have its transform's parent set to null
-        //      If you want it to be set to a specific transform, patch this to return the transform you want
-        public Transform GetGeneralParent()
-        {
-            return null;
-        }
-
         private bool DataEqual()
         {
             if(data == null && previousData == null)
@@ -719,154 +554,8 @@ namespace H3MP.Tracking
 
         public override void OnTrackedIDReceived()
         {
-            if (TrackedItem.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
-            {
-                ClientSend.DestroyItem(trackedID);
+            base.OnTrackedIDReceived();
 
-                // Note that if we receive a tracked ID that was previously unknown, we must be a client
-                Client.items[trackedID] = null;
-
-                // Remove from itemsByInstanceByScene
-                GameManager.itemsByInstanceByScene[scene][instance].Remove(trackedID);
-
-                // Remove from local
-                RemoveFromLocal();
-            }
-            if (localTrackedID != -1 && TrackedItem.unknownControlTrackedIDs.ContainsKey(localWaitingIndex))
-            {
-                int newController = TrackedItem.unknownControlTrackedIDs[localWaitingIndex];
-
-                ClientSend.GiveObjectControl(trackedID, newController, null);
-
-                // Also change controller locally
-                SetController(newController, true);
-
-                TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
-
-                // Remove from local
-                if (GameManager.ID != controller)
-                {
-                    RemoveFromLocal();
-                }
-            }
-            if (localTrackedID != -1 && TrackedItem.unknownTrackedIDs.ContainsKey(localWaitingIndex))
-            {
-                KeyValuePair<uint, bool> parentPair = TrackedItem.unknownTrackedIDs[localWaitingIndex];
-                if (parentPair.Value)
-                {
-                    TrackedItemData parentItemData = null;
-                    if (ThreadManager.host)
-                    {
-                        parentItemData = Server.items[parentPair.Key];
-                    }
-                    else
-                    {
-                        parentItemData = Client.items[parentPair.Key];
-                    }
-                    if (parentItemData != null)
-                    {
-                        if (parentItemData.trackedID != parent)
-                        {
-                            Mod.LogInfo(itemID + " has new parent from unknown: " + parentItemData.itemID + ", sending");
-                            // We have a parent trackedItem and it is new
-                            // Update other clients
-                            if (ThreadManager.host)
-                            {
-                                ServerSend.ObjectParent(trackedID, parentItemData.trackedID);
-                            }
-                            else
-                            {
-                                ClientSend.ObjectParent(trackedID, parentItemData.trackedID);
-                            }
-
-                            // Update local
-                            SetParent(parentItemData, false);
-                        }
-                    }
-                }
-                else
-                {
-                    if (parentPair.Key == uint.MaxValue)
-                    {
-                        Mod.LogInfo(itemID + " was unparented from unknown, sending to others");
-                        // We were detached from current parent
-                        // Update other clients
-                        if (ThreadManager.host)
-                        {
-                            ServerSend.ObjectParent(trackedID, -1);
-                        }
-                        else
-                        {
-                            ClientSend.ObjectParent(trackedID, -1);
-                        }
-
-                        // Update locally
-                        SetParent(null, false);
-                    }
-                    else // We received our tracked ID but not our parent's
-                    {
-                        if (TrackedItem.unknownParentTrackedIDs.ContainsKey(parentPair.Key))
-                        {
-                            TrackedItem.unknownParentTrackedIDs[parentPair.Key].Add(trackedID);
-                        }
-                        else
-                        {
-                            TrackedItem.unknownParentTrackedIDs.Add(parentPair.Key, new List<int>() { trackedID });
-                        }
-                    }
-                }
-
-                if (!parentPair.Value && TrackedItem.unknownParentWaitList.TryGetValue(parentPair.Key, out List<uint> waitlist))
-                {
-                    waitlist.Remove(localWaitingIndex);
-                }
-                TrackedItem.unknownTrackedIDs.Remove(localWaitingIndex);
-            }
-            if (localTrackedID != -1 && TrackedItem.unknownParentWaitList.ContainsKey(localWaitingIndex))
-            {
-                List<uint> waitlist = TrackedItem.unknownParentWaitList[localWaitingIndex];
-                foreach(uint childID in waitlist)
-                {
-                    if (TrackedItem.unknownTrackedIDs.TryGetValue(childID, out KeyValuePair<uint, bool> childEntry))
-                    {
-                        TrackedItem.unknownTrackedIDs[childID] = new KeyValuePair<uint, bool>((uint)trackedID, true);
-                    }
-                }
-                TrackedItem.unknownParentWaitList.Remove(localWaitingIndex);
-            }
-            if (localTrackedID != -1 && TrackedItem.unknownParentTrackedIDs.ContainsKey(localWaitingIndex))
-            {
-                List<int> childrenList = TrackedItem.unknownParentTrackedIDs[localWaitingIndex];
-                TrackedItemData[] arrToUse = null;
-                if (ThreadManager.host)
-                {
-                    arrToUse = Server.items;
-                }
-                else
-                {
-                    arrToUse = Client.items;
-                }
-                foreach(int childID in childrenList)
-                {
-                    if (arrToUse[childID] != null)
-                    {
-                        Mod.LogInfo(arrToUse[childID].itemID + " has new parent from unknownParentTrackedIDs: " + itemID + ", sending");
-                        // Update other clients
-                        if (ThreadManager.host)
-                        {
-                            ServerSend.ObjectParent(arrToUse[childID].trackedID, trackedID);
-                        }
-                        else
-                        {
-                            ClientSend.ObjectParent(arrToUse[childID].trackedID, trackedID);
-                        }
-
-                        // Update local
-                        arrToUse[childID].SetParent(this, false);
-                    }
-                }
-                TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
-            }
             if (localTrackedID != -1 && TrackedItem.unknownCrateHolding.TryGetValue(localWaitingIndex, out byte option))
             {
                 bool health = option == 0 || option == 2;
@@ -929,8 +618,8 @@ namespace H3MP.Tracking
 
         public override void OnTracked()
         {
-            if (physicalItem.physicalObject is SosigWeaponPlayerInterface &&
-                TrackedItem.unknownSosigInventoryObjects.TryGetValue((physicalItem.physicalObject as SosigWeaponPlayerInterface).W, out KeyValuePair<TrackedSosigData, int> entry))
+            if (physicalItem.physicalItem is SosigWeaponPlayerInterface &&
+                TrackedItem.unknownSosigInventoryObjects.TryGetValue((physicalItem.physicalItem as SosigWeaponPlayerInterface).W, out KeyValuePair<TrackedSosigData, int> entry))
             {
                 if(entry.Key.physicalObject != null)
                 {
@@ -986,7 +675,7 @@ namespace H3MP.Tracking
                 }
                 // else, sosig has been destroyed
 
-                TrackedItem.unknownSosigInventoryObjects.Remove((physicalItem.physicalObject as SosigWeaponPlayerInterface).W);
+                TrackedItem.unknownSosigInventoryObjects.Remove((physicalItem.physicalItem as SosigWeaponPlayerInterface).W);
             }
         }
 
@@ -1015,63 +704,6 @@ namespace H3MP.Tracking
             }
 
             base.RemoveFromLocal();
-        }
-
-        public static void TakeControlRecursive(TrackedItemData currentTrackedItem)
-        {
-            Mod.LogInfo("\t\t\tTakeControlRecursive called on "+currentTrackedItem.itemID+" at "+currentTrackedItem.trackedID);
-            // Note: we can return right away if we don't have tracked ID because not tracked ID implies taht this item is already under our control
-            // So TakeControlRecursive should never be called without tracked ID in the first place
-            if (currentTrackedItem.trackedID < 0)
-            {
-                return;
-            }
-
-            if (ThreadManager.host)
-            {
-                Mod.LogInfo("\t\t\t\tWe are host, sending order to give control");
-                ServerSend.GiveObjectControl(currentTrackedItem.trackedID, GameManager.ID, null);
-            }
-            else
-            {
-                Mod.LogInfo("\t\t\t\tWe are client, sending order to give control");
-                ClientSend.GiveObjectControl(currentTrackedItem.trackedID, GameManager.ID, null);
-            }
-            Mod.LogInfo("\t\t\t\tSetting controller");
-            currentTrackedItem.SetController(GameManager.ID);
-            if (currentTrackedItem.localTrackedID == -1)
-            {
-                Mod.LogInfo("\t\t\t\t\tAdding to local");
-                currentTrackedItem.localTrackedID = GameManager.items.Count;
-                GameManager.items.Add(currentTrackedItem);
-            }
-
-            if (currentTrackedItem.children != null)
-            {
-                foreach (TrackedItemData child in currentTrackedItem.children)
-                {
-                    TakeControlRecursive(child);
-                }
-            }
-        }
-
-        // MOD: Optional method in case the object is of a type taht can be under active control
-        public static bool IsControlled(Transform root)
-        {
-            FVRInteractiveObject interactive = root.GetComponent<FVRInteractiveObject>();
-            if (interactive != null)
-            {
-                if (interactive.m_hand != null)
-                {
-                    return true;
-                }
-                else if (interactive is FVRPhysicalObject)
-                {
-                    return (interactive as FVRPhysicalObject).QuickbeltSlot != null;
-                }
-            }
-
-            return false;
         }
 
         public override void OnControlChanged(int newController)
@@ -1146,6 +778,15 @@ namespace H3MP.Tracking
                 packet.Write(data);
             }
             packet.Write(underActiveControl);
+        }
+
+        public override void ParentChanged()
+        {
+            // Call updateParent delegate on item if it has one
+            if (physicalItem.updateParentFunc != null)
+            {
+                physicalItem.updateParentFunc();
+            }
         }
     }
 }

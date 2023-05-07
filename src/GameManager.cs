@@ -47,10 +47,6 @@ namespace H3MP
         public static List<int> playersAtLoadStart;
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> objectsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
-        public static Dictionary<string, Dictionary<int, List<int>>> itemsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
-        public static Dictionary<string, Dictionary<int, List<int>>> sosigsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
-        public static Dictionary<string, Dictionary<int, List<int>>> autoMeatersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
-        public static Dictionary<string, Dictionary<int, List<int>>> encryptionsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
 
         public static int giveControlOfDestroyed;
         public static bool controlOverride;
