@@ -3544,7 +3544,7 @@ namespace H3MP.Patches
             TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
             {
-                trackedSosig.data.pathToPoint = trackedSosig.physicalSosigScript.m_pathToPoint;
+                trackedSosig.data.pathToPoint = trackedSosig.physicalSosig.m_pathToPoint;
 
                 if (ThreadManager.host)
                 {

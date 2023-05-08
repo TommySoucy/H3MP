@@ -76,11 +76,17 @@ namespace H3MP.Tracking
             return false;
         }
 
+        public override bool IsIdentifiable()
+        {
+            return IM.OD.ContainsKey(itemID) || itemID.Equals("TNH_ShatterableCrate");
+        }
+
         public static TrackedItem MakeTracked(Transform root, TrackedObjectData parent)
         {
             TrackedItem trackedItem = root.gameObject.AddComponent<TrackedItem>();
             TrackedItemData data = new TrackedItemData();
             trackedItem.data = data;
+            trackedItem.itemData = data;
             data.physicalItem = trackedItem;
             data.physical = data.physicalItem;
             data.physicalItem.physicalItem = root.GetComponent<FVRPhysicalObject>();
@@ -332,15 +338,15 @@ namespace H3MP.Tracking
                         ++SosigPlaceObjectInPatch.skip;
                         if (toPutInSosigInventory[1] == 0)
                         {
-                            trackedSosig.physicalObject.physicalSosigScript.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)physicalItem.physicalItem).W);
+                            trackedSosig.physicalSosig.physicalSosig.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)physicalItem.physicalItem).W);
                         }
                         else if (toPutInSosigInventory[1] == 1)
                         {
-                            trackedSosig.physicalObject.physicalSosigScript.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)physicalItem.physicalItem).W);
+                            trackedSosig.physicalSosig.physicalSosig.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)physicalItem.physicalItem).W);
                         }
                         else
                         {
-                            trackedSosig.physicalObject.physicalSosigScript.Inventory.Slots[toPutInSosigInventory[1] - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)physicalItem.physicalItem).W);
+                            trackedSosig.physicalSosig.physicalSosig.Inventory.Slots[toPutInSosigInventory[1] - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)physicalItem.physicalItem).W);
                         }
                         --SosigPickUpPatch.skip;
                         --SosigPlaceObjectInPatch.skip;
@@ -438,7 +444,6 @@ namespace H3MP.Tracking
             base.UpdateFromData(updatedObject);
 
             TrackedItemData updatedItem = updatedObject as TrackedItemData;
-            order = updatedItem.order;
             previousPos = position;
             previousRot = rotation;
             position = updatedItem.position;
@@ -470,6 +475,8 @@ namespace H3MP.Tracking
 
         public override bool Update(bool full = false)
         {
+            bool updated = base.Update(full);
+
             // Phys could be null if we were given control of the item while we were loading and we haven't instantiated it on our side yet
             if(physical == null)
             {
@@ -494,7 +501,7 @@ namespace H3MP.Tracking
 
             // Note: UpdateData() must be done first in this expression, otherwise, if active/position/rotation is different,
             // it will return true before making the call
-            return UpdateData() || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+            return updated || UpdateData() || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation);
         }
 
         public static bool IsControlled(Transform root)
@@ -587,7 +594,7 @@ namespace H3MP.Tracking
             }
             if (localTrackedID != -1 && TrackedItem.unknownSosigInventoryItems.TryGetValue(localWaitingIndex, out KeyValuePair<TrackedSosigData, int> entry))
             {
-                if (entry.Key.physicalObject != null)
+                if (entry.Key.physicalSosig != null)
                 {
                     if (entry.Key.trackedID != -1)
                     {
@@ -597,11 +604,11 @@ namespace H3MP.Tracking
                         // Send to others
                         if (entry.Value == 0)
                         {
-                            ClientSend.SosigPickUpItem(entry.Key.physicalObject, trackedID, true);
+                            ClientSend.SosigPickUpItem(entry.Key.physicalSosig, trackedID, true);
                         }
                         else if (entry.Value == 1)
                         {
-                            ClientSend.SosigPickUpItem(entry.Key.physicalObject, trackedID, false);
+                            ClientSend.SosigPickUpItem(entry.Key.physicalSosig, trackedID, false);
                         }
                         else
                         {
@@ -621,7 +628,7 @@ namespace H3MP.Tracking
             if (physicalItem.physicalItem is SosigWeaponPlayerInterface &&
                 TrackedItem.unknownSosigInventoryObjects.TryGetValue((physicalItem.physicalItem as SosigWeaponPlayerInterface).W, out KeyValuePair<TrackedSosigData, int> entry))
             {
-                if(entry.Key.physicalObject != null)
+                if(entry.Key.physicalSosig != null)
                 {
                     if (trackedID == -1)
                     {
@@ -644,7 +651,7 @@ namespace H3MP.Tracking
                                 }
                                 else
                                 {
-                                    ClientSend.SosigPickUpItem(entry.Key.physicalObject, trackedID, true);
+                                    ClientSend.SosigPickUpItem(entry.Key.physicalSosig, trackedID, true);
                                 }
                             }
                             else if (entry.Value == 1)
@@ -655,7 +662,7 @@ namespace H3MP.Tracking
                                 }
                                 else
                                 {
-                                    ClientSend.SosigPickUpItem(entry.Key.physicalObject, trackedID, false);
+                                    ClientSend.SosigPickUpItem(entry.Key.physicalSosig, trackedID, false);
                                 }
                             }
                             else
@@ -713,24 +720,26 @@ namespace H3MP.Tracking
             // Note that this only gets called when the new controller is different from the old one
             if(newController == GameManager.ID) // Gain control
             {
-                if (physical != null && parent == -1)
+                if (physicalItem != null && parent == -1)
                 {
-                    Mod.SetKinematicRecursive(physical.transform, false);
+                    Mod.SetKinematicRecursive(physicalItem.transform, false);
                 }
             }
             else if(controller == GameManager.ID) // Lose control
             {
-                if (physical != null)
+                if (physicalItem != null)
                 {
-                    physical.EnsureUncontrolled();
+                    physicalItem.EnsureUncontrolled();
 
-                    Mod.SetKinematicRecursive(physical.transform, true);
+                    Mod.SetKinematicRecursive(physicalItem.transform, true);
                 }
             }
         }
 
         public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
         {
+            base.WriteToPacket(packet, incrementOrder, full);
+
             if (full)
             {
                 packet.Write(itemID);
@@ -752,17 +761,6 @@ namespace H3MP.Tracking
                 {
                     packet.Write(additionalData.Length);
                     packet.Write(additionalData);
-                }
-            }
-            else
-            {
-                if (incrementOrder)
-                {
-                    packet.Write(order++);
-                }
-                else
-                {
-                    packet.Write(order);
                 }
             }
 

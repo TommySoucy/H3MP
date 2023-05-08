@@ -5,16 +5,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP.Tracking
 {
     public class TrackedSosigData : TrackedObjectData
     {
-        public bool latestUpdateSent = false; // Whether the latest update of this data was sent
-        public byte order; // The index of this sosig's data packet used to ensure we process this data in the correct order
+        public TrackedSosig physicalSosig;
 
-        public int trackedID = -1;
-        public int controller;
         public Vector3 previousPos;
         public Quaternion previousRot;
         public Vector3 position;
@@ -27,12 +25,6 @@ namespace H3MP.Tracking
         public float previousMustard;
         public float mustard;
         public SosigConfigTemplate configTemplate;
-        public TrackedSosig physicalObject;
-        public int localTrackedID;
-        public uint localWaitingIndex = uint.MaxValue;
-        public int initTracker;
-        public bool previousActive;
-        public bool active;
         public List<List<string>> wearables;
         public float[][] linkData;
         public byte IFF;
@@ -42,12 +34,7 @@ namespace H3MP.Tracking
         public Sosig.SosigOrder previousOrder;
         public Sosig.SosigOrder currentOrder;
         public Sosig.SosigOrder fallbackOrder;
-        public bool removeFromListOnDestroy = true;
-        public string scene;
-        public int instance;
         public byte[] data;
-        public bool sceneInit;
-        public bool awaitingInstantiation;
         public Vector3 guardPoint;
         public Vector3 guardDir;
         public bool hardGuard;
@@ -64,7 +51,582 @@ namespace H3MP.Tracking
 
         public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(-1, null);
 
-        public IEnumerator Instantiate()
+        public TrackedSosigData()
+        {
+
+        }
+
+        public TrackedSosigData(Packet packet) : base(packet)
+        {
+            // Full
+            byte sosigLinkDataLength = packet.ReadByte();
+            if (sosigLinkDataLength > 0)
+            {
+                if (linkData == null)
+                {
+                    linkData = new float[sosigLinkDataLength][];
+                }
+                for (int i = 0; i < sosigLinkDataLength; ++i)
+                {
+                    if (linkData[i] == null || linkData[i].Length != 5)
+                    {
+                        linkData[i] = new float[5];
+                    }
+
+                    for (int j = 0; j < 5; ++j)
+                    {
+                        linkData[i][j] = packet.ReadFloat();
+                    }
+                }
+            }
+            IFF = packet.ReadByte();
+            configTemplate = packet.ReadSosigConfig();
+            byte linkCount = packet.ReadByte();
+            wearables = new List<List<string>>();
+            for (int i = 0; i < linkCount; ++i)
+            {
+                wearables.Add(new List<string>());
+                byte wearableCount = packet.ReadByte();
+                if (wearableCount > 0)
+                {
+                    for (int j = 0; j < wearableCount; ++j)
+                    {
+                        wearables[i].Add(packet.ReadString());
+                    }
+                }
+            }
+            IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(packet.ReadInt());
+            int dataLen = packet.ReadInt();
+            if (dataLen > 0)
+            {
+                data = packet.ReadBytes(dataLen);
+            }
+            switch (currentOrder)
+            {
+                case Sosig.SosigOrder.GuardPoint:
+                    guardPoint = packet.ReadVector3();
+                    guardDir = packet.ReadVector3();
+                    hardGuard = packet.ReadBool();
+                    break;
+                case Sosig.SosigOrder.Skirmish:
+                    skirmishPoint = packet.ReadVector3();
+                    pathToPoint = packet.ReadVector3();
+                    assaultPoint = packet.ReadVector3();
+                    faceTowards = packet.ReadVector3();
+                    break;
+                case Sosig.SosigOrder.Investigate:
+                    guardPoint = packet.ReadVector3();
+                    hardGuard = packet.ReadBool();
+                    faceTowards = packet.ReadVector3();
+                    break;
+                case Sosig.SosigOrder.SearchForEquipment:
+                case Sosig.SosigOrder.Wander:
+                    wanderPoint = packet.ReadVector3();
+                    break;
+                case Sosig.SosigOrder.Assault:
+                    assaultPoint = packet.ReadVector3();
+                    assaultSpeed = (Sosig.SosigMoveSpeed)packet.ReadByte();
+                    faceTowards = packet.ReadVector3();
+                    break;
+                case Sosig.SosigOrder.Idle:
+                    idleToPoint = packet.ReadVector3();
+                    idleDominantDir = packet.ReadVector3();
+                    break;
+                case Sosig.SosigOrder.PathTo:
+                    pathToPoint = packet.ReadVector3();
+                    pathToLookDir = packet.ReadVector3();
+                    break;
+            }
+            byte inventoryLength = packet.ReadByte();
+            inventory = new int[inventoryLength];
+            for (int i = 0; i < inventoryLength; ++i)
+            {
+                inventory[i] = packet.ReadInt();
+            }
+
+            // Update
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+            mustard = packet.ReadFloat();
+            byte ammoStoreLength = packet.ReadByte();
+            if (ammoStoreLength > 0)
+            {
+                ammoStores = new int[ammoStoreLength];
+                for (int i = 0; i < ammoStoreLength; ++i)
+                {
+                    ammoStores[i] = packet.ReadInt();
+                }
+            }
+            bodyPose = (Sosig.SosigBodyPose)packet.ReadByte();
+            byte sosigLinkIntegrityLength = packet.ReadByte();
+            if (sosigLinkIntegrityLength > 0)
+            {
+                if (linkIntegrity == null)
+                {
+                    linkIntegrity = new float[sosigLinkIntegrityLength];
+                }
+                for (int i = 0; i < sosigLinkIntegrityLength; ++i)
+                {
+                    linkIntegrity[i] = packet.ReadFloat();
+                }
+            }
+            fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
+            currentOrder = (Sosig.SosigOrder)packet.ReadByte();
+        }
+
+        public static bool IfOfType(Transform t)
+        {
+            return t.GetComponent<Sosig>() != null;
+        }
+
+        public static bool IsControlled(Transform root)
+        {
+            Sosig sosig = root.GetComponent<Sosig>();
+            if (sosig != null && sosig.Links != null)
+            {
+                for(int i=0; i<sosig.Links.Count; ++i)
+                {
+                    if(sosig.Links[i].O.m_hand != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static TrackedSosig MakeTracked(Transform root, TrackedObjectData parent)
+        {
+            TrackedSosig trackedSosig = root.gameObject.AddComponent<TrackedSosig>();
+            TrackedSosigData data = new TrackedSosigData();
+            trackedSosig.sosigData = data;
+            trackedSosig.data = data;
+            data.physicalSosig = trackedSosig;
+            data.physical = trackedSosig;
+            Sosig sosigScript = root.GetComponent<Sosig>();
+            data.physicalSosig.physicalSosig = sosigScript;
+            data.physical.physical = sosigScript;
+
+            GameManager.trackedSosigBySosig.Add(data.physicalSosig.physicalSosig, trackedSosig);
+            GameManager.trackedObjectByObject.Add(data.physicalSosig.physicalSosig, trackedSosig);
+
+            data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
+            data.configTemplate.AppliesDamageResistToIntegrityLoss = sosigScript.AppliesDamageResistToIntegrityLoss;
+            data.configTemplate.DoesDropWeaponsOnBallistic = sosigScript.DoesDropWeaponsOnBallistic;
+            data.configTemplate.TotalMustard = sosigScript.m_maxMustard;
+            data.configTemplate.BleedDamageMult = sosigScript.BleedDamageMult;
+            data.configTemplate.BleedRateMultiplier = sosigScript.BleedRateMult;
+            data.configTemplate.BleedVFXIntensity = sosigScript.BleedVFXIntensity;
+            data.configTemplate.SearchExtentsModifier = sosigScript.SearchExtentsModifier;
+            data.configTemplate.ShudderThreshold = sosigScript.ShudderThreshold;
+            data.configTemplate.ConfusionThreshold = sosigScript.ConfusionThreshold;
+            data.configTemplate.ConfusionMultiplier = sosigScript.ConfusionMultiplier;
+            data.configTemplate.ConfusionTimeMax = sosigScript.m_maxConfusedTime;
+            data.configTemplate.StunThreshold = sosigScript.StunThreshold;
+            data.configTemplate.StunMultiplier = sosigScript.StunMultiplier;
+            data.configTemplate.StunTimeMax = sosigScript.m_maxStunTime;
+            data.configTemplate.HasABrain = sosigScript.HasABrain;
+            data.configTemplate.DoesDropWeaponsOnBallistic = sosigScript.DoesDropWeaponsOnBallistic;
+            data.configTemplate.RegistersPassiveThreats = sosigScript.RegistersPassiveThreats;
+            data.configTemplate.CanBeKnockedOut = sosigScript.CanBeKnockedOut;
+            data.configTemplate.MaxUnconsciousTime = sosigScript.m_maxUnconsciousTime;
+            data.configTemplate.AssaultPointOverridesSkirmishPointWhenFurtherThan = sosigScript.m_assaultPointOverridesSkirmishPointWhenFurtherThan;
+            data.configTemplate.ViewDistance = sosigScript.MaxSightRange;
+            data.configTemplate.HearingDistance = sosigScript.MaxHearingRange;
+            data.configTemplate.MaxFOV = sosigScript.MaxFOV;
+            data.configTemplate.StateSightRangeMults = sosigScript.StateSightRangeMults;
+            data.configTemplate.StateHearingRangeMults = sosigScript.StateHearingRangeMults;
+            data.configTemplate.StateFOVMults = sosigScript.StateFOVMults;
+            data.configTemplate.CanPickup_Ranged = sosigScript.CanPickup_Ranged;
+            data.configTemplate.CanPickup_Melee = sosigScript.CanPickup_Melee;
+            data.configTemplate.CanPickup_Other = sosigScript.CanPickup_Other;
+            data.configTemplate.DoesJointBreakKill_Head = sosigScript.m_doesJointBreakKill_Head;
+            data.configTemplate.DoesJointBreakKill_Upper = sosigScript.m_doesJointBreakKill_Upper;
+            data.configTemplate.DoesJointBreakKill_Lower = sosigScript.m_doesJointBreakKill_Lower;
+            data.configTemplate.DoesSeverKill_Head = sosigScript.m_doesSeverKill_Head;
+            data.configTemplate.DoesSeverKill_Upper = sosigScript.m_doesSeverKill_Upper;
+            data.configTemplate.DoesSeverKill_Lower = sosigScript.m_doesSeverKill_Lower;
+            data.configTemplate.DoesExplodeKill_Head = sosigScript.m_doesExplodeKill_Head;
+            data.configTemplate.DoesExplodeKill_Upper = sosigScript.m_doesExplodeKill_Upper;
+            data.configTemplate.DoesExplodeKill_Lower = sosigScript.m_doesExplodeKill_Lower;
+            data.configTemplate.CrawlSpeed = sosigScript.Speed_Crawl;
+            data.configTemplate.SneakSpeed = sosigScript.Speed_Sneak;
+            data.configTemplate.WalkSpeed = sosigScript.Speed_Walk;
+            data.configTemplate.RunSpeed = sosigScript.Speed_Run;
+            data.configTemplate.TurnSpeed = sosigScript.Speed_Turning;
+            data.configTemplate.MovementRotMagnitude = sosigScript.MovementRotMagnitude;
+            data.configTemplate.DamMult_Projectile = sosigScript.DamMult_Projectile;
+            data.configTemplate.DamMult_Explosive = sosigScript.DamMult_Explosive;
+            data.configTemplate.DamMult_Melee = sosigScript.DamMult_Melee;
+            data.configTemplate.DamMult_Piercing = sosigScript.DamMult_Piercing;
+            data.configTemplate.DamMult_Blunt = sosigScript.DamMult_Blunt;
+            data.configTemplate.DamMult_Cutting = sosigScript.DamMult_Cutting;
+            data.configTemplate.DamMult_Thermal = sosigScript.DamMult_Thermal;
+            data.configTemplate.DamMult_Chilling = sosigScript.DamMult_Chilling;
+            data.configTemplate.DamMult_EMP = sosigScript.DamMult_EMP;
+            data.configTemplate.CanBeSurpressed = sosigScript.CanBeSuppresed;
+            data.configTemplate.SuppressionMult = sosigScript.SuppressionMult;
+            data.configTemplate.CanBeGrabbed = sosigScript.CanBeGrabbed;
+            data.configTemplate.CanBeSevered = sosigScript.CanBeSevered;
+            data.configTemplate.CanBeStabbed = sosigScript.CanBeStabbed;
+            data.configTemplate.MaxJointLimit = sosigScript.m_maxJointLimit;
+            data.configTemplate.OverrideSpeech = sosigScript.Speech;
+            data.configTemplate.LinkDamageMultipliers = new List<float>();
+            data.configTemplate.LinkStaggerMultipliers = new List<float>();
+            data.configTemplate.StartingLinkIntegrity = new List<Vector2>();
+            data.configTemplate.StartingChanceBrokenJoint = new List<float>();
+            for (int i = 0; i < sosigScript.Links.Count; ++i)
+            {
+                data.configTemplate.LinkDamageMultipliers.Add(sosigScript.Links[i].DamMult);
+                data.configTemplate.LinkStaggerMultipliers.Add(sosigScript.Links[i].StaggerMagnitude);
+                float actualLinkIntegrity = sosigScript.Links[i].m_integrity;
+                data.configTemplate.StartingLinkIntegrity.Add(new Vector2(actualLinkIntegrity, actualLinkIntegrity));
+                data.configTemplate.StartingChanceBrokenJoint.Add(sosigScript.Links[i].m_isJointBroken ? 1 : 0);
+            }
+            if (sosigScript.Priority != null)
+            {
+                data.configTemplate.TargetCapacity = sosigScript.Priority.m_eventCapacity;
+                data.configTemplate.TargetTrackingTime = sosigScript.Priority.m_maxTrackingTime;
+                data.configTemplate.NoFreshTargetTime = sosigScript.Priority.m_timeToNoFreshTarget;
+            }
+            data.position = sosigScript.CoreRB.position;
+            data.velocity = sosigScript.CoreRB.velocity;
+            data.rotation = sosigScript.CoreRB.rotation;
+            data.active = trackedSosig.gameObject.activeInHierarchy;
+            data.linkData = new float[sosigScript.Links.Count][];
+            data.linkIntegrity = new float[data.linkData.Length];
+            for (int i = 0; i < sosigScript.Links.Count; ++i)
+            {
+                data.linkData[i] = new float[5];
+                data.linkData[i][0] = sosigScript.Links[i].StaggerMagnitude;
+                data.linkData[i][1] = sosigScript.Links[i].DamMult;
+                data.linkData[i][2] = sosigScript.Links[i].DamMultAVG;
+                data.linkData[i][3] = sosigScript.Links[i].CollisionBluntDamageMultiplier;
+                if (sosigScript.Links[i] == null)
+                {
+                    data.linkData[i][4] = 0;
+                    data.linkIntegrity[i] = 0;
+                }
+                else
+                {
+                    data.linkData[i][4] = sosigScript.Links[i].m_integrity;
+                    data.linkIntegrity[i] = data.linkData[i][4];
+                }
+            }
+
+            data.wearables = new List<List<string>>();
+            for (int i = 0; i < sosigScript.Links.Count; ++i)
+            {
+                data.wearables.Add(new List<string>());
+                for (int j = 0; j < sosigScript.Links[i].m_wearables.Count; ++j)
+                {
+                    data.wearables[i].Add(sosigScript.Links[i].m_wearables[j].name);
+                    if (data.wearables[i][j].EndsWith("(Clone)"))
+                    {
+                        data.wearables[i][j] = data.wearables[i][j].Substring(0, data.wearables[i][j].Length - 7);
+                    }
+                    if (Mod.sosigWearableMap.ContainsKey(data.wearables[i][j]))
+                    {
+                        data.wearables[i][j] = Mod.sosigWearableMap[data.wearables[i][j]];
+                    }
+                    else
+                    {
+                        Mod.LogError("SosigWearable: " + data.wearables[i][j] + " not found in map");
+                    }
+                }
+            }
+            data.ammoStores = sosigScript.Inventory.m_ammoStores;
+            data.inventory = new int[2 + sosigScript.Inventory.Slots.Count];
+            if (sosigScript.Hand_Primary.HeldObject == null)
+            {
+                data.inventory[0] = -1;
+            }
+            else
+            {
+                TrackedItem trackedItem = GameManager.trackedItemBySosigWeapon.TryGetValue(sosigScript.Hand_Primary.HeldObject, out trackedItem) ? trackedItem : sosigScript.Hand_Primary.HeldObject.O.GetComponent<TrackedItem>();
+                if (trackedItem == null)
+                {
+                    TrackedItem.unknownSosigInventoryObjects.Add(sosigScript.Hand_Primary.HeldObject, new KeyValuePair<TrackedSosigData, int>(data, 0));
+                    data.inventory[0] = -1;
+                }
+                else
+                {
+                    if (trackedItem.data.trackedID == -1)
+                    {
+                        TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<TrackedSosigData, int>(data, 0));
+                        data.inventory[0] = -1;
+                    }
+                    else
+                    {
+                        data.inventory[0] = trackedItem.data.trackedID;
+                    }
+                }
+            }
+            if (sosigScript.Hand_Secondary.HeldObject == null)
+            {
+                data.inventory[1] = -1;
+            }
+            else
+            {
+                TrackedItem trackedItem = GameManager.trackedItemBySosigWeapon.TryGetValue(sosigScript.Hand_Secondary.HeldObject, out trackedItem) ? trackedItem : sosigScript.Hand_Secondary.HeldObject.O.GetComponent<TrackedItem>();
+                if (trackedItem == null)
+                {
+                    TrackedItem.unknownSosigInventoryObjects.Add(sosigScript.Hand_Secondary.HeldObject, new KeyValuePair<TrackedSosigData, int>(data, 1));
+                    data.inventory[1] = -1;
+                }
+                else
+                {
+                    if (trackedItem.data.trackedID == -1)
+                    {
+                        TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<TrackedSosigData, int>(data, 1));
+                        data.inventory[1] = -1;
+                    }
+                    else
+                    {
+                        data.inventory[1] = trackedItem.data.trackedID;
+                    }
+                }
+            }
+            for (int i = 0; i < sosigScript.Inventory.Slots.Count; ++i)
+            {
+                if (sosigScript.Inventory.Slots[i].HeldObject == null)
+                {
+                    data.inventory[i + 2] = -1;
+                }
+                else
+                {
+                    TrackedItem trackedItem = GameManager.trackedItemBySosigWeapon.TryGetValue(sosigScript.Inventory.Slots[i].HeldObject, out trackedItem) ? trackedItem : sosigScript.Inventory.Slots[i].HeldObject.O.GetComponent<TrackedItem>();
+                    if (trackedItem == null)
+                    {
+                        TrackedItem.unknownSosigInventoryObjects.Add(sosigScript.Inventory.Slots[i].HeldObject, new KeyValuePair<TrackedSosigData, int>(data, i + 2));
+                        data.inventory[i + 2] = -1;
+                    }
+                    else
+                    {
+                        if (trackedItem.data.trackedID == -1)
+                        {
+                            TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<TrackedSosigData, int>(data, i + 2));
+                            data.inventory[i + 2] = -1;
+                        }
+                        else
+                        {
+                            data.inventory[i + 2] = trackedItem.data.trackedID;
+                        }
+                    }
+                }
+            }
+            data.controller = GameManager.ID;
+            data.initTracker = GameManager.ID;
+            data.mustard = sosigScript.Mustard;
+            data.bodyPose = sosigScript.BodyPose;
+            data.currentOrder = sosigScript.CurrentOrder;
+            data.fallbackOrder = sosigScript.FallbackOrder;
+            data.IFF = (byte)sosigScript.GetIFF();
+            data.IFFChart = sosigScript.Priority.IFFChart;
+            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
+            data.instance = GameManager.instance;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
+
+            // Brain
+            // GuardPoint
+            data.guardPoint = sosigScript.GetGuardPoint();
+            data.guardDir = sosigScript.GetGuardDir();
+            data.hardGuard = sosigScript.m_hardGuard;
+            // Skirmish
+            data.skirmishPoint = sosigScript.m_skirmishPoint;
+            data.pathToPoint = sosigScript.m_pathToPoint;
+            data.assaultPoint = sosigScript.GetAssaultPoint();
+            data.faceTowards = sosigScript.m_faceTowards;
+            // SearchForEquipment
+            data.wanderPoint = sosigScript.m_wanderPoint;
+            // Assault
+            data.assaultSpeed = sosigScript.m_assaultSpeed;
+            // Idle
+            data.idleToPoint = sosigScript.m_idlePoint;
+            data.idleDominantDir = sosigScript.m_idleDominantDir;
+            // PathTo
+            data.pathToLookDir = sosigScript.m_pathToLookDir;
+
+            data.CollectExternalData();
+
+            // Add to local list
+            data.localTrackedID = GameManager.objects.Count;
+            GameManager.objects.Add(data);
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedSosig.awoken)
+            {
+                trackedSosig.data.Update(true);
+            }
+
+            Mod.LogInfo("Made sosig " + trackedSosig.name + " tracked", false);
+
+            return trackedSosig;
+        }
+
+        public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
+        {
+            if (full)
+            {
+                if (linkData == null || linkData.Length == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)linkData.Length);
+                    for (int i = 0; i < linkData.Length; ++i)
+                    {
+                        for (int k = 0; k < 5; ++k)
+                        {
+                            packet.Write(linkData[i][k]);
+                        }
+                    }
+                }
+                packet.Write(IFF);
+                packet.Write(configTemplate);
+                packet.Write((byte)wearables.Count);
+                for (int i = 0; i < wearables.Count; ++i)
+                {
+                    if (wearables[i] == null || wearables[i].Count == 0)
+                    {
+                        packet.Write((byte)0);
+                    }
+                    else
+                    {
+                        packet.Write((byte)wearables[i].Count);
+                        for (int j = 0; j < wearables[i].Count; ++j)
+                        {
+                            packet.Write(wearables[i][j]);
+                        }
+                    }
+                }
+                packet.Write(SosigTargetPrioritySystemPatch.BoolArrToInt(IFFChart));
+                if (data == null || data.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(data.Length);
+                    packet.Write(data);
+                }
+                switch (currentOrder)
+                {
+                    case Sosig.SosigOrder.GuardPoint:
+                        packet.Write(guardPoint);
+                        packet.Write(guardDir);
+                        packet.Write(hardGuard);
+                        break;
+                    case Sosig.SosigOrder.Skirmish:
+                        packet.Write(skirmishPoint);
+                        packet.Write(pathToPoint);
+                        packet.Write(assaultPoint);
+                        packet.Write(faceTowards);
+                        break;
+                    case Sosig.SosigOrder.Investigate:
+                        packet.Write(guardPoint);
+                        packet.Write(hardGuard);
+                        packet.Write(faceTowards);
+                        break;
+                    case Sosig.SosigOrder.SearchForEquipment:
+                    case Sosig.SosigOrder.Wander:
+                        packet.Write(wanderPoint);
+                        break;
+                    case Sosig.SosigOrder.Assault:
+                        packet.Write(assaultPoint);
+                        packet.Write((byte)assaultSpeed);
+                        packet.Write(faceTowards);
+                        break;
+                    case Sosig.SosigOrder.Idle:
+                        packet.Write(idleToPoint);
+                        packet.Write(idleDominantDir);
+                        break;
+                    case Sosig.SosigOrder.PathTo:
+                        packet.Write(pathToPoint);
+                        packet.Write(pathToLookDir);
+                        break;
+                }
+                if (inventory == null)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)inventory.Length);
+                    for (int i = 0; i < inventory.Length; ++i)
+                    {
+                        packet.Write(inventory[i]);
+                    }
+                }
+            }
+
+            packet.Write(position);
+            packet.Write(rotation);
+            packet.Write(mustard);
+            if (ammoStores != null && ammoStores.Length > 0)
+            {
+                packet.Write((byte)ammoStores.Length);
+                for (int i = 0; i < ammoStores.Length; ++i)
+                {
+                    packet.Write(ammoStores[i]);
+                }
+            }
+            else
+            {
+                packet.Write((byte)0);
+            }
+            packet.Write((byte)bodyPose);
+            if (linkIntegrity == null || linkIntegrity.Length == 0)
+            {
+                packet.Write((byte)0);
+            }
+            else
+            {
+                packet.Write((byte)linkIntegrity.Length);
+                for (int i = 0; i < linkIntegrity.Length; ++i)
+                {
+                    packet.Write(linkIntegrity[i]);
+                }
+            }
+            packet.Write((byte)fallbackOrder);
+            packet.Write((byte)currentOrder);
+        }
+
+        private void CollectExternalData()
+        {
+            data = new byte[9 + (12 * ((TNH_ManagerPatch.inGenerateSentryPatrol || TNH_ManagerPatch.inGeneratePatrol) ? (TNH_ManagerPatch.patrolPoints == null ? 0 : TNH_ManagerPatch.patrolPoints.Count) : 0))];
+
+            // Write TNH context
+            data[0] = TNH_HoldPointPatch.inSpawnEnemyGroup ? (byte)1 : (byte)0;
+            //trackedSosigData.data[1] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)0;
+            data[1] = TNH_SupplyPointPatch.inSpawnTakeEnemyGroup ? (byte)1 : (byte)0;
+            BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(data, 2);
+            //trackedSosigData.data[3] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)0;
+            data[4] = TNH_ManagerPatch.inGenerateSentryPatrol ? (byte)1 : (byte)0;
+            data[5] = TNH_ManagerPatch.inGeneratePatrol ? (byte)1 : (byte)0;
+            if (TNH_ManagerPatch.inGenerateSentryPatrol || TNH_ManagerPatch.inGeneratePatrol)
+            {
+                BitConverter.GetBytes((short)TNH_ManagerPatch.patrolIndex).CopyTo(data, 6);
+                if (TNH_ManagerPatch.patrolPoints == null || TNH_ManagerPatch.patrolPoints.Count == 0)
+                {
+                    data[8] = (byte)0;
+                }
+                else
+                {
+                    data[8] = (byte)TNH_ManagerPatch.patrolPoints.Count;
+                    for (int i = 0; i < TNH_ManagerPatch.patrolPoints.Count; ++i)
+                    {
+                        int index = i * 12 + 9;
+                        BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].x).CopyTo(data, index);
+                        BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].y).CopyTo(data, index + 4);
+                        BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].z).CopyTo(data, index + 8);
+                    }
+                }
+            }
+        }
+
+        public override IEnumerator Instantiate()
         {
             yield return IM.OD["SosigBody_Default"].GetGameObjectAsync();
             GameObject sosigPrefab = IM.OD["SosigBody_Default"].GetGameObject();
@@ -84,15 +646,16 @@ namespace H3MP.Tracking
             if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at sosig instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
             GameObject sosigInstance = GameObject.Instantiate(sosigPrefab, position, rotation);
             --Mod.skipAllInstantiates;
-            physicalObject = sosigInstance.AddComponent<TrackedSosig>();
+            physicalSosig = sosigInstance.AddComponent<TrackedSosig>();
             awaitingInstantiation = false;
-            physicalObject.data = this;
+            physicalSosig.data = this;
 
-            physicalObject.physicalSosigScript = sosigInstance.GetComponent<Sosig>();
+            physicalSosig.physicalSosig = sosigInstance.GetComponent<Sosig>();
             SosigConfigurePatch.skipConfigure = true;
-            physicalObject.physicalSosigScript.Configure(configTemplate);
+            physicalSosig.physicalSosig.Configure(configTemplate);
 
-            GameManager.trackedSosigBySosig.Add(physicalObject.physicalSosigScript, physicalObject);
+            GameManager.trackedSosigBySosig.Add(physicalSosig.physicalSosig, physicalSosig);
+            GameManager.trackedObjectByObject.Add(physicalSosig.physicalSosig, physicalSosig);
 
             AnvilManager.Run(EquipWearables());
 
@@ -102,95 +665,96 @@ namespace H3MP.Tracking
             {
                 if (GM.CurrentAIManager != null)
                 {
-                    GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalSosigScript.E);
+                    GM.CurrentAIManager.DeRegisterAIEntity(physicalSosig.physicalSosig.E);
                 }
-                physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
+                physicalSosig.physicalSosig.CoreRB.isKinematic = true;
             }
 
             // Initially set IFF
             ++SosigIFFPatch.skip;
-            physicalObject.physicalSosigScript.SetIFF(IFF);
+            physicalSosig.physicalSosig.SetIFF(IFF);
             --SosigIFFPatch.skip;
 
             // Set IFFChart
-            physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
+            physicalSosig.physicalSosig.Priority.IFFChart = IFFChart;
 
             // Initially set order
             switch (currentOrder)
             {
                 case Sosig.SosigOrder.GuardPoint:
-                    physicalObject.physicalSosigScript.CommandGuardPoint(guardPoint, hardGuard);
-                    physicalObject.physicalSosigScript.m_guardDominantDirection = guardDir;
+                    physicalSosig.physicalSosig.CommandGuardPoint(guardPoint, hardGuard);
+                    physicalSosig.physicalSosig.m_guardDominantDirection = guardDir;
                     break;
                 case Sosig.SosigOrder.Skirmish:
-                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
-                    physicalObject.physicalSosigScript.m_skirmishPoint = skirmishPoint;
-                    physicalObject.physicalSosigScript.m_pathToPoint = pathToPoint;
-                    physicalObject.physicalSosigScript.m_assaultPoint = assaultPoint;
-                    physicalObject.physicalSosigScript.m_faceTowards = faceTowards;
+                    physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
+                    physicalSosig.physicalSosig.m_skirmishPoint = skirmishPoint;
+                    physicalSosig.physicalSosig.m_pathToPoint = pathToPoint;
+                    physicalSosig.physicalSosig.m_assaultPoint = assaultPoint;
+                    physicalSosig.physicalSosig.m_faceTowards = faceTowards;
                     break;
                 case Sosig.SosigOrder.Investigate:
-                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
-                    physicalObject.physicalSosigScript.UpdateGuardPoint(guardPoint);
-                    physicalObject.physicalSosigScript.m_hardGuard = hardGuard;
-                    physicalObject.physicalSosigScript.m_faceTowards = faceTowards;
+                    physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
+                    physicalSosig.physicalSosig.UpdateGuardPoint(guardPoint);
+                    physicalSosig.physicalSosig.m_hardGuard = hardGuard;
+                    physicalSosig.physicalSosig.m_faceTowards = faceTowards;
                     break;
                 case Sosig.SosigOrder.SearchForEquipment:
                 case Sosig.SosigOrder.Wander:
-                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
-                    physicalObject.physicalSosigScript.m_wanderPoint = wanderPoint;
+                    physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
+                    physicalSosig.physicalSosig.m_wanderPoint = wanderPoint;
                     break;
                 case Sosig.SosigOrder.Assault:
-                    physicalObject.physicalSosigScript.CommandAssaultPoint(assaultPoint);
-                    physicalObject.physicalSosigScript.m_faceTowards = faceTowards;
-                    physicalObject.physicalSosigScript.SetAssaultSpeed(assaultSpeed);
+                    physicalSosig.physicalSosig.CommandAssaultPoint(assaultPoint);
+                    physicalSosig.physicalSosig.m_faceTowards = faceTowards;
+                    physicalSosig.physicalSosig.SetAssaultSpeed(assaultSpeed);
                     break;
                 case Sosig.SosigOrder.Idle:
-                    physicalObject.physicalSosigScript.CommandIdle(idleToPoint, idleDominantDir);
+                    physicalSosig.physicalSosig.CommandIdle(idleToPoint, idleDominantDir);
                     break;
                 case Sosig.SosigOrder.PathTo:
-                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
-                    physicalObject.physicalSosigScript.m_pathToPoint = pathToPoint;
-                    physicalObject.physicalSosigScript.m_pathToLookDir = pathToLookDir;
+                    physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
+                    physicalSosig.physicalSosig.m_pathToPoint = pathToPoint;
+                    physicalSosig.physicalSosig.m_pathToLookDir = pathToLookDir;
                     break;
                 default:
-                    physicalObject.physicalSosigScript.SetCurrentOrder(currentOrder);
+                    physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
                     break;
             }
-            physicalObject.physicalSosigScript.FallbackOrder = fallbackOrder;
+            physicalSosig.physicalSosig.FallbackOrder = fallbackOrder;
 
             // Setup inventory
             // Make sure sosig hands and inventory are initialized first
-            physicalObject.physicalSosigScript.InitHands();
-            physicalObject.physicalSosigScript.Inventory.Init();
-            TrackedItemData[] arrToUse = ThreadManager.host ? Server.items : Client.items;
+            physicalSosig.physicalSosig.InitHands();
+            physicalSosig.physicalSosig.Inventory.Init();
+            TrackedObjectData[] arrToUse = ThreadManager.host ? Server.objects : Client.objects;
             ++SosigPickUpPatch.skip;
             ++SosigPlaceObjectInPatch.skip;
             for (int i=0; i < inventory.Length; ++i)
             {
                 if (inventory[i] != -1)
                 {
-                    if (arrToUse[inventory[i]] == null)
+                    TrackedItemData asTrackedItem = arrToUse[inventory[i]] as TrackedItemData;
+                    if (asTrackedItem == null)
                     {
                         Mod.LogError("Sosig instantiation: inventory[" + i + "] = "+ inventory[i] + " is missing item data!");
                     }
-                    else if(arrToUse[inventory[i]].physicalItem == null)
+                    else if(asTrackedItem.physicalItem == null)
                     {
-                        arrToUse[inventory[i]].toPutInSosigInventory = new int[] { trackedID, i };
+                        asTrackedItem.toPutInSosigInventory = new int[] { trackedID, i };
                     }
                     else
                     {
                         if (i == 0)
                         {
-                            physicalObject.physicalSosigScript.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)arrToUse[inventory[i]].physicalItem.physicalObject).W);
+                            physicalSosig.physicalSosig.Hand_Primary.PickUp(((SosigWeaponPlayerInterface)asTrackedItem.physicalItem.physicalItem).W);
                         }
                         else if (i == 1)
                         {
-                            physicalObject.physicalSosigScript.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)arrToUse[inventory[i]].physicalItem.physicalObject).W);
+                            physicalSosig.physicalSosig.Hand_Secondary.PickUp(((SosigWeaponPlayerInterface)asTrackedItem.physicalItem.physicalItem).W);
                         }
                         else
                         {
-                            physicalObject.physicalSosigScript.Inventory.Slots[i - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)arrToUse[inventory[i]].physicalItem.physicalObject).W);
+                            physicalSosig.physicalSosig.Inventory.Slots[i - 2].PlaceObjectIn(((SosigWeaponPlayerInterface)asTrackedItem.physicalItem.physicalItem).W);
                         }
                     }
                 }
@@ -201,30 +765,28 @@ namespace H3MP.Tracking
             ProcessData();
 
             // Initially set itself
-            Update(this);
+            UpdateFromData(this);
         }
 
-        // MOD: This will be called at the end of instantiation so mods can use it to process the data array
-        //      Example here is data about the TNH context
         private void ProcessData()
         {
             if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
             {
                 if (data[0] == 1) // TNH_HoldPoint is in spawn enemy group
                 {
-                    GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_activeSosigs.Add(physicalObject.physicalSosigScript);
+                    GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_activeSosigs.Add(physicalSosig.physicalSosig);
                 }
                 else if (data[1] == 1) // TNH_SupplyPoint is in Spawn Take Enemy Group
                 {
-                    GM.TNH_Manager.SupplyPoints[BitConverter.ToInt16(data, 2)].m_activeSosigs.Add(physicalObject.physicalSosigScript);
+                    GM.TNH_Manager.SupplyPoints[BitConverter.ToInt16(data, 2)].m_activeSosigs.Add(physicalSosig.physicalSosig);
                 }
                 else if (data[4] == 1 || data[5] == 1) // TNH_Manager is in generate patrol
                 {
-                    physicalObject.physicalSosigScript.SetAssaultSpeed(Sosig.SosigMoveSpeed.Walking);
+                    physicalSosig.physicalSosig.SetAssaultSpeed(Sosig.SosigMoveSpeed.Walking);
                     int patrolIndex = BitConverter.ToInt16(data, 6);
                     if (latestSosigPatrolSquad.Key == patrolIndex)
                     {
-                        latestSosigPatrolSquad.Value.Squad.Add(physicalObject.physicalSosigScript);
+                        latestSosigPatrolSquad.Value.Squad.Add(physicalSosig.physicalSosig);
                     }
                     else
                     {
@@ -238,7 +800,7 @@ namespace H3MP.Tracking
                                                                                       BitConverter.ToSingle(data, firstIndex + 4),
                                                                                       BitConverter.ToSingle(data, firstIndex + 8)));
                         }
-                        latestSosigPatrolSquad.Value.Squad.Add(physicalObject.physicalSosigScript);
+                        latestSosigPatrolSquad.Value.Squad.Add(physicalSosig.physicalSosig);
                         GM.TNH_Manager.m_patrolSquads.Add(latestSosigPatrolSquad.Value);
                     }
                 }
@@ -258,11 +820,11 @@ namespace H3MP.Tracking
                             yield return IM.OD[wearables[i][j]].GetGameObjectAsync();
                             ++Mod.skipAllInstantiates;
                             if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at equipwearbles, setting to 1"); Mod.skipAllInstantiates = 1; }
-                            GameObject outfitItemObject = GameObject.Instantiate(IM.OD[wearables[i][j]].GetGameObject(), physicalObject.physicalSosigScript.Links[i].transform.position, physicalObject.physicalSosigScript.Links[i].transform.rotation, physicalObject.physicalSosigScript.Links[i].transform);
+                            GameObject outfitItemObject = GameObject.Instantiate(IM.OD[wearables[i][j]].GetGameObject(), physicalSosig.physicalSosig.Links[i].transform.position, physicalSosig.physicalSosig.Links[i].transform.rotation, physicalSosig.physicalSosig.Links[i].transform);
                             --Mod.skipAllInstantiates;
                             SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
                             ++SosigLinkActionPatch.skipRegisterWearable;
-                            wearableScript.RegisterWearable(physicalObject.physicalSosigScript.Links[i]);
+                            wearableScript.RegisterWearable(physicalSosig.physicalSosig.Links[i]);
                             --SosigLinkActionPatch.skipRegisterWearable;
                         }
                         else
@@ -280,21 +842,21 @@ namespace H3MP.Tracking
             if (IM.OD.ContainsKey(ID))
             {
                 yield return IM.OD[ID].GetGameObjectAsync();
-                if(physicalObject == null || physicalObject.physicalSosigScript.Links[linkIndex] == null)
+                if(physicalSosig == null || physicalSosig.physicalSosig.Links[linkIndex] == null)
                 {
                     // Sosig or sosig link could have been destroyed between iterations
                     yield break;
                 }
                 ++Mod.skipAllInstantiates;
                 if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at equipwearable, setting to 1"); Mod.skipAllInstantiates = 1; }
-                GameObject outfitItemObject = GameObject.Instantiate(IM.OD[ID].GetGameObject(), physicalObject.physicalSosigScript.Links[linkIndex].transform.position, physicalObject.physicalSosigScript.Links[linkIndex].transform.rotation, physicalObject.physicalSosigScript.Links[linkIndex].transform);
+                GameObject outfitItemObject = GameObject.Instantiate(IM.OD[ID].GetGameObject(), physicalSosig.physicalSosig.Links[linkIndex].transform.position, physicalSosig.physicalSosig.Links[linkIndex].transform.rotation, physicalSosig.physicalSosig.Links[linkIndex].transform);
                 --Mod.skipAllInstantiates;
                 SosigWearable wearableScript = outfitItemObject.GetComponent<SosigWearable>();
                 if (skip)
                 {
                     ++SosigLinkActionPatch.skipRegisterWearable;
                 }
-                wearableScript.RegisterWearable(physicalObject.physicalSosigScript.Links[linkIndex]);
+                wearableScript.RegisterWearable(physicalSosig.physicalSosig.Links[linkIndex]);
                 if (skip)
                 {
                     --SosigLinkActionPatch.skipRegisterWearable;
@@ -307,110 +869,76 @@ namespace H3MP.Tracking
             yield break;
         }
 
-        public void Update(TrackedSosigData updatedItem, bool full = false)
+        public override void UpdateFromData(TrackedObjectData updatedObject)
         {
+            base.UpdateFromData(updatedObject);
+
+            TrackedSosigData updatedSosig = updatedObject as TrackedSosigData;
+
             // Set data
-            order = updatedItem.order;
             previousPos = position;
             previousRot = rotation;
-            position = updatedItem.position;
+            position = updatedSosig.position;
             velocity = previousPos == null ? Vector3.zero : position - previousPos;
-            rotation = updatedItem.rotation;
+            rotation = updatedSosig.rotation;
             previousAmmoStores = ammoStores;
-            ammoStores = updatedItem.ammoStores;
-            previousActive = active;
-            active = updatedItem.active;
+            ammoStores = updatedSosig.ammoStores;
             previousMustard = mustard;
-            mustard = updatedItem.mustard;
+            mustard = updatedSosig.mustard;
             previousLinkIntegrity = linkIntegrity;
-            linkIntegrity = updatedItem.linkIntegrity;
+            linkIntegrity = updatedSosig.linkIntegrity;
             previousBodyPose = bodyPose;
-            bodyPose = updatedItem.bodyPose;
-            fallbackOrder = updatedItem.fallbackOrder;
+            bodyPose = updatedSosig.bodyPose;
+            fallbackOrder = updatedSosig.fallbackOrder;
             previousOrder = currentOrder;
-            currentOrder = updatedItem.currentOrder;
+            currentOrder = updatedSosig.currentOrder;
 
             // Set physically
-            if (physicalObject != null)
+            if (physicalSosig != null)
             {
-                physicalObject.physicalSosigScript.FallbackOrder = fallbackOrder;
-                physicalObject.physicalSosigScript.Mustard = mustard;
+                physicalSosig.physicalSosig.FallbackOrder = fallbackOrder;
+                physicalSosig.physicalSosig.Mustard = mustard;
                 //physicalObject.physicalSosigScript.CoreRB.position = position;
                 //physicalObject.physicalSosigScript.CoreRB.rotation = rotation;
-                physicalObject.physicalSosigScript.SetBodyPose(bodyPose);
-                physicalObject.physicalSosigScript.Inventory.m_ammoStores = ammoStores;
-                for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
+                physicalSosig.physicalSosig.SetBodyPose(bodyPose);
+                physicalSosig.physicalSosig.Inventory.m_ammoStores = ammoStores;
+                for (int i = 0; i < physicalSosig.physicalSosig.Links.Count; ++i)
                 {
-                    if (physicalObject.physicalSosigScript.Links[i] != null)
+                    if (physicalSosig.physicalSosig.Links[i] != null)
                     {
                         if (previousLinkIntegrity[i] != linkIntegrity[i])
                         {
-                            physicalObject.physicalSosigScript.Links[i].m_integrity = linkIntegrity[i];
-                            physicalObject.physicalSosigScript.UpdateRendererOnLink(i);
+                            physicalSosig.physicalSosig.Links[i].m_integrity = linkIntegrity[i];
+                            physicalSosig.physicalSosig.UpdateRendererOnLink(i);
                         }
                     }
-                }
-
-                if (active)
-                {
-                    if (!physicalObject.gameObject.activeSelf)
-                    {
-                        physicalObject.gameObject.SetActive(true);
-                    }
-                }
-                else
-                {
-                    if (physicalObject.gameObject.activeSelf)
-                    {
-                        physicalObject.gameObject.SetActive(false);
-                    }
-                }
-            }
-
-            if (full)
-            {
-                linkData = updatedItem.linkData;
-                linkIntegrity = updatedItem.linkIntegrity;
-                wearables = updatedItem.wearables;
-                IFFChart = updatedItem.IFFChart;
-
-                if (physicalObject != null)
-                {
-                    SosigConfigurePatch.skipConfigure = true;
-                    physicalObject.physicalSosigScript.Configure(configTemplate);
-
-                    ++SosigIFFPatch.skip;
-                    physicalObject.physicalSosigScript.SetIFF(IFF);
-                    --SosigIFFPatch.skip;
-
-                    AnvilManager.Run(EquipWearables());
-
-                    physicalObject.physicalSosigScript.Priority.IFFChart = IFFChart;
                 }
             }
         }
 
-        public bool Update(bool full = false)
+        public override bool Update(bool full = false)
         {
-            if(physicalObject == null)
+            bool updated = base.Update(full);
+
+            if (physicalSosig == null)
             {
                 return false;
             }
 
             previousPos = position;
             previousRot = rotation;
-            position = physicalObject.physicalSosigScript.CoreRB == null ? previousPos : physicalObject.physicalSosigScript.CoreRB.position;
+            position = physicalSosig.physicalSosig.CoreRB == null ? previousPos : physicalSosig.physicalSosig.CoreRB.position;
             velocity = previousPos == null ? Vector3.zero : position - previousPos;
-            rotation = physicalObject.physicalSosigScript.CoreRB == null ? previousRot : physicalObject.physicalSosigScript.CoreRB.rotation;
+            rotation = physicalSosig.physicalSosig.CoreRB == null ? previousRot : physicalSosig.physicalSosig.CoreRB.rotation;
             previousBodyPose = bodyPose;
-            bodyPose = physicalObject.physicalSosigScript.BodyPose;
-            ammoStores = physicalObject.physicalSosigScript.Inventory.m_ammoStores;
+            bodyPose = physicalSosig.physicalSosig.BodyPose;
+            ammoStores = physicalSosig.physicalSosig.Inventory.m_ammoStores;
             if (ammoStores != null && previousAmmoStores == null)
             {
                 previousAmmoStores = new int[ammoStores.Length];
             }
             bool ammoStoresModified = false;
-            for(int i=0; i < ammoStores.Length; ++i)
+            for (int i = 0; i < ammoStores.Length; ++i)
             {
                 if (ammoStores[i] != previousAmmoStores[i])
                 {
@@ -420,26 +948,26 @@ namespace H3MP.Tracking
             }
             previousAmmoStores = ammoStores;
             previousMustard = mustard;
-            mustard = physicalObject.physicalSosigScript.Mustard;
+            mustard = physicalSosig.physicalSosig.Mustard;
             previousLinkIntegrity = linkIntegrity;
-            if(linkIntegrity == null || linkIntegrity.Length < physicalObject.physicalSosigScript.Links.Count)
+            if (linkIntegrity == null || linkIntegrity.Length < physicalSosig.physicalSosig.Links.Count)
             {
-                linkIntegrity = new float[physicalObject.physicalSosigScript.Links.Count];
-                previousLinkIntegrity = new float[physicalObject.physicalSosigScript.Links.Count];
+                linkIntegrity = new float[physicalSosig.physicalSosig.Links.Count];
+                previousLinkIntegrity = new float[physicalSosig.physicalSosig.Links.Count];
             }
             bool modifiedLinkIntegrity = false;
-            for(int i=0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
+            for (int i = 0; i < physicalSosig.physicalSosig.Links.Count; ++i)
             {
-                linkIntegrity[i] = physicalObject.physicalSosigScript.Links[i].m_integrity;
-                if(linkIntegrity[i] != previousLinkIntegrity[i])
+                linkIntegrity[i] = physicalSosig.physicalSosig.Links[i].m_integrity;
+                if (linkIntegrity[i] != previousLinkIntegrity[i])
                 {
                     modifiedLinkIntegrity = true;
                 }
             }
-            fallbackOrder = physicalObject.physicalSosigScript.FallbackOrder;
+            fallbackOrder = physicalSosig.physicalSosig.FallbackOrder;
             previousOrder = currentOrder;
-            currentOrder = physicalObject.physicalSosigScript.CurrentOrder;
-            if(previousOrder != currentOrder)
+            currentOrder = physicalSosig.physicalSosig.CurrentOrder;
+            if (previousOrder != currentOrder)
             {
                 if (ThreadManager.host)
                 {
@@ -449,7 +977,7 @@ namespace H3MP.Tracking
                         ServerSend.SosigSetCurrentOrder(this, currentOrder);
                     }
                 }
-                else if(trackedID != -1)
+                else if (trackedID != -1)
                 {
                     ClientSend.SosigSetCurrentOrder(this, currentOrder);
                 }
@@ -466,178 +994,24 @@ namespace H3MP.Tracking
                 }
             }
 
-            previousActive = active;
-            active = physicalObject.gameObject.activeInHierarchy;
-
-            if (full)
-            {
-                configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
-                configTemplate.AppliesDamageResistToIntegrityLoss = physicalObject.physicalSosigScript.AppliesDamageResistToIntegrityLoss;
-                configTemplate.DoesDropWeaponsOnBallistic = physicalObject.physicalSosigScript.DoesDropWeaponsOnBallistic;
-                configTemplate.TotalMustard = physicalObject.physicalSosigScript.m_maxMustard;
-                configTemplate.BleedDamageMult = physicalObject.physicalSosigScript.BleedDamageMult;
-                configTemplate.BleedRateMultiplier = physicalObject.physicalSosigScript.BleedRateMult;
-                configTemplate.BleedVFXIntensity = physicalObject.physicalSosigScript.BleedVFXIntensity;
-                configTemplate.SearchExtentsModifier = physicalObject.physicalSosigScript.SearchExtentsModifier;
-                configTemplate.ShudderThreshold = physicalObject.physicalSosigScript.ShudderThreshold;
-                configTemplate.ConfusionThreshold = physicalObject.physicalSosigScript.ConfusionThreshold;
-                configTemplate.ConfusionMultiplier = physicalObject.physicalSosigScript.ConfusionMultiplier;
-                configTemplate.ConfusionTimeMax = physicalObject.physicalSosigScript.m_maxConfusedTime;
-                configTemplate.StunThreshold = physicalObject.physicalSosigScript.StunThreshold;
-                configTemplate.StunMultiplier = physicalObject.physicalSosigScript.StunMultiplier;
-                configTemplate.StunTimeMax = physicalObject.physicalSosigScript.m_maxStunTime;
-                configTemplate.HasABrain = physicalObject.physicalSosigScript.HasABrain;
-                configTemplate.DoesDropWeaponsOnBallistic = physicalObject.physicalSosigScript.DoesDropWeaponsOnBallistic;
-                configTemplate.RegistersPassiveThreats = physicalObject.physicalSosigScript.RegistersPassiveThreats;
-                configTemplate.CanBeKnockedOut = physicalObject.physicalSosigScript.CanBeKnockedOut;
-                configTemplate.MaxUnconsciousTime = physicalObject.physicalSosigScript.m_maxUnconsciousTime;
-                configTemplate.AssaultPointOverridesSkirmishPointWhenFurtherThan = physicalObject.physicalSosigScript.m_assaultPointOverridesSkirmishPointWhenFurtherThan;
-                configTemplate.ViewDistance = physicalObject.physicalSosigScript.MaxSightRange;
-                configTemplate.HearingDistance = physicalObject.physicalSosigScript.MaxHearingRange;
-                configTemplate.MaxFOV = physicalObject.physicalSosigScript.MaxFOV;
-                configTemplate.StateSightRangeMults = physicalObject.physicalSosigScript.StateSightRangeMults;
-                configTemplate.StateHearingRangeMults = physicalObject.physicalSosigScript.StateHearingRangeMults;
-                configTemplate.StateFOVMults = physicalObject.physicalSosigScript.StateFOVMults;
-                configTemplate.CanPickup_Ranged = physicalObject.physicalSosigScript.CanPickup_Ranged;
-                configTemplate.CanPickup_Melee = physicalObject.physicalSosigScript.CanPickup_Melee;
-                configTemplate.CanPickup_Other = physicalObject.physicalSosigScript.CanPickup_Other;
-                configTemplate.DoesJointBreakKill_Head = physicalObject.physicalSosigScript.m_doesJointBreakKill_Head;
-                configTemplate.DoesJointBreakKill_Upper = physicalObject.physicalSosigScript.m_doesJointBreakKill_Upper;
-                configTemplate.DoesJointBreakKill_Lower = physicalObject.physicalSosigScript.m_doesJointBreakKill_Lower;
-                configTemplate.DoesSeverKill_Head = physicalObject.physicalSosigScript.m_doesSeverKill_Head;
-                configTemplate.DoesSeverKill_Upper = physicalObject.physicalSosigScript.m_doesSeverKill_Upper;
-                configTemplate.DoesSeverKill_Lower = physicalObject.physicalSosigScript.m_doesSeverKill_Lower;
-                configTemplate.DoesExplodeKill_Head = physicalObject.physicalSosigScript.m_doesExplodeKill_Head;
-                configTemplate.DoesExplodeKill_Upper = physicalObject.physicalSosigScript.m_doesExplodeKill_Upper;
-                configTemplate.DoesExplodeKill_Lower = physicalObject.physicalSosigScript.m_doesExplodeKill_Lower;
-                configTemplate.CrawlSpeed = physicalObject.physicalSosigScript.Speed_Crawl;
-                configTemplate.SneakSpeed = physicalObject.physicalSosigScript.Speed_Sneak;
-                configTemplate.WalkSpeed = physicalObject.physicalSosigScript.Speed_Walk;
-                configTemplate.RunSpeed = physicalObject.physicalSosigScript.Speed_Run;
-                configTemplate.TurnSpeed = physicalObject.physicalSosigScript.Speed_Turning;
-                configTemplate.MovementRotMagnitude = physicalObject.physicalSosigScript.MovementRotMagnitude;
-                configTemplate.DamMult_Projectile = physicalObject.physicalSosigScript.DamMult_Projectile;
-                configTemplate.DamMult_Explosive = physicalObject.physicalSosigScript.DamMult_Explosive;
-                configTemplate.DamMult_Melee = physicalObject.physicalSosigScript.DamMult_Melee;
-                configTemplate.DamMult_Piercing = physicalObject.physicalSosigScript.DamMult_Piercing;
-                configTemplate.DamMult_Blunt = physicalObject.physicalSosigScript.DamMult_Blunt;
-                configTemplate.DamMult_Cutting = physicalObject.physicalSosigScript.DamMult_Cutting;
-                configTemplate.DamMult_Thermal = physicalObject.physicalSosigScript.DamMult_Thermal;
-                configTemplate.DamMult_Chilling = physicalObject.physicalSosigScript.DamMult_Chilling;
-                configTemplate.DamMult_EMP = physicalObject.physicalSosigScript.DamMult_EMP;
-                configTemplate.CanBeSurpressed = physicalObject.physicalSosigScript.CanBeSuppresed;
-                configTemplate.SuppressionMult = physicalObject.physicalSosigScript.SuppressionMult;
-                configTemplate.CanBeGrabbed = physicalObject.physicalSosigScript.CanBeGrabbed;
-                configTemplate.CanBeSevered = physicalObject.physicalSosigScript.CanBeSevered;
-                configTemplate.CanBeStabbed = physicalObject.physicalSosigScript.CanBeStabbed;
-                configTemplate.MaxJointLimit = physicalObject.physicalSosigScript.m_maxJointLimit;
-                configTemplate.OverrideSpeech = physicalObject.physicalSosigScript.Speech;
-                configTemplate.LinkDamageMultipliers = new List<float>();
-                configTemplate.LinkStaggerMultipliers = new List<float>();
-                configTemplate.StartingLinkIntegrity = new List<Vector2>();
-                configTemplate.StartingChanceBrokenJoint = new List<float>();
-                for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
-                {
-                    configTemplate.LinkDamageMultipliers.Add(physicalObject.physicalSosigScript.Links[i].DamMult);
-                    configTemplate.LinkStaggerMultipliers.Add(physicalObject.physicalSosigScript.Links[i].StaggerMagnitude);
-                    configTemplate.StartingLinkIntegrity.Add(new Vector2(physicalObject.physicalSosigScript.Links[i].m_integrity, physicalObject.physicalSosigScript.Links[i].m_integrity));
-                    configTemplate.StartingChanceBrokenJoint.Add(physicalObject.physicalSosigScript.Links[i].m_isJointBroken ? 1 : 0);
-                }
-                if (physicalObject.physicalSosigScript.Priority != null)
-                {
-                    configTemplate.TargetCapacity = physicalObject.physicalSosigScript.Priority.m_eventCapacity;
-                    configTemplate.TargetTrackingTime = physicalObject.physicalSosigScript.Priority.m_maxTrackingTime;
-                    configTemplate.NoFreshTargetTime = physicalObject.physicalSosigScript.Priority.m_timeToNoFreshTarget;
-                }
-                IFF = (byte)physicalObject.physicalSosigScript.GetIFF();
-                linkData = new float[physicalObject.physicalSosigScript.Links.Count][];
-                linkIntegrity = new float[linkData.Length];
-                for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
-                {
-                    linkData[i] = new float[5];
-                    linkData[i][0] = physicalObject.physicalSosigScript.Links[i].StaggerMagnitude;
-                    linkData[i][1] = physicalObject.physicalSosigScript.Links[i].DamMult;
-                    linkData[i][2] = physicalObject.physicalSosigScript.Links[i].DamMultAVG;
-                    linkData[i][3] = physicalObject.physicalSosigScript.Links[i].CollisionBluntDamageMultiplier;
-                    if (physicalObject.physicalSosigScript.Links[i] == null)
-                    {
-                        linkData[i][4] = 0;
-                    }
-                    else
-                    {
-                        linkData[i][4] = linkIntegrity[i];
-                    }
-                }
-                wearables = new List<List<string>>();
-                for (int i = 0; i < physicalObject.physicalSosigScript.Links.Count; ++i)
-                {
-                    wearables.Add(new List<string>());
-                    for (int j = 0; j < physicalObject.physicalSosigScript.Links[i].m_wearables.Count; ++j)
-                    {
-                        wearables[i].Add(physicalObject.physicalSosigScript.Links[i].m_wearables[j].name);
-                        if (wearables[i][j].EndsWith("(Clone)"))
-                        {
-                            wearables[i][j] = wearables[i][j].Substring(0, wearables[i][j].Length - 7);
-                        }
-                        if (Mod.sosigWearableMap.ContainsKey(wearables[i][j]))
-                        {
-                            wearables[i][j] = Mod.sosigWearableMap[wearables[i][j]];
-                        }
-                        else
-                        {
-                            Mod.LogError("SosigWearable: " + wearables[i][j] + " not found in map");
-                        }
-                    }
-                }
-                IFFChart = physicalObject.physicalSosigScript.Priority.IFFChart;
-            }
-
-            return ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();
+            return updated || ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();
         }
 
-        public bool NeedsUpdate()
+        public override bool NeedsUpdate()
         {
-            return !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousActive != active || previousMustard != mustard;
+            return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousMustard != mustard;
         }
 
-        public void OnTrackedIDReceived()
+        public override void OnTrackedIDReceived()
         {
+            base.OnTrackedIDReceived();
+
             if (TrackedSosig.unknownTNHKills.ContainsKey(localWaitingIndex))
             {
                 ClientSend.TNHSosigKill(TrackedSosig.unknownTNHKills[localWaitingIndex], trackedID);
 
                 // Remove from local
                 TrackedSosig.unknownTNHKills.Remove(localWaitingIndex);
-            }
-            if (TrackedSosig.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
-            {
-                ClientSend.DestroySosig(trackedID);
-
-                // Note that if we receive a tracked ID that was previously unknown, we must be a client
-                Client.sosigs[trackedID] = null;
-
-                // Remove from sosigsByInstanceByScene
-                GameManager.sosigsByInstanceByScene[scene][instance].Remove(trackedID);
-
-                // Remove from local
-                RemoveFromLocal();
-            }
-            if (localTrackedID != -1 && TrackedSosig.unknownControlTrackedIDs.ContainsKey(localWaitingIndex))
-            {
-                int newController = TrackedSosig.unknownControlTrackedIDs[localWaitingIndex];
-
-                ClientSend.GiveSosigControl(trackedID, newController, null);
-
-                // Also change controller locally
-                controller = newController;
-
-                TrackedSosig.unknownControlTrackedIDs.Remove(localWaitingIndex);
-
-                // Remove from local
-                if (GameManager.ID != controller)
-                {
-                    RemoveFromLocal();
-                }
             }
             if (localTrackedID != -1 && TrackedSosig.unknownItemInteract.ContainsKey(localWaitingIndex))
             {
@@ -650,7 +1024,7 @@ namespace H3MP.Tracking
                         case 0:
                             if (upper[i].Value.Key.trackedID != -1)
                             {
-                                ClientSend.SosigPickUpItem(physicalObject, upper[i].Value.Key.trackedID, upper[i].Value.Value == 0);
+                                ClientSend.SosigPickUpItem(physicalSosig, upper[i].Value.Key.trackedID, upper[i].Value.Value == 0);
                                 inventory[upper[i].Value.Value] = upper[i].Value.Key.trackedID;
                             }
                             // else, item does not yet have tracked ID, this interaction will be sent when it receives it
@@ -720,13 +1094,11 @@ namespace H3MP.Tracking
             }
         }
 
-        public void RemoveFromLocal()
+        public override void RemoveFromLocal()
         {
             // Manage unknown lists
             if (trackedID == -1)
             {
-                TrackedSosig.unknownControlTrackedIDs.Remove(localWaitingIndex);
-                TrackedSosig.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
                 TrackedSosig.unknownItemInteract.Remove(localWaitingIndex);
                 TrackedSosig.unknownSetIFFs.Remove(localWaitingIndex);
                 TrackedSosig.unknownSetOriginalIFFs.Remove(localWaitingIndex);
@@ -736,21 +1108,8 @@ namespace H3MP.Tracking
                 TrackedSosig.unknownCurrentOrder.Remove(localWaitingIndex);
                 TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
             }
-
-            if (localTrackedID > -1 && localTrackedID < GameManager.sosigs.Count)
-            {
-                // Remove from actual local sosigs list and update the localTrackedID of the sosig we are moving
-                GameManager.sosigs[localTrackedID] = GameManager.sosigs[GameManager.sosigs.Count - 1];
-                GameManager.sosigs[localTrackedID].localTrackedID = localTrackedID;
-                GameManager.sosigs.RemoveAt(GameManager.sosigs.Count - 1);
-                localTrackedID = -1;
-            }
-            else
-            {
-                Mod.LogWarning("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
-            }
         }
-
+        
         public void TakeInventoryControl()
         {
             Mod.LogInfo("Taking sosig " + trackedID + " control");
@@ -759,15 +1118,15 @@ namespace H3MP.Tracking
                 Mod.LogInfo("\tChecking inventory "+i);
                 if (inventory[i] != -1)
                 {
-                    TrackedItemData[] arrToUse = ThreadManager.host ? Server.items : Client.items;
-                    Mod.LogInfo("\t\tGot ID: " + inventory[i]+", arr to use null?: "+ (arrToUse[inventory[i]] == null)+", controller: "+ arrToUse[inventory[i]].controller);
+                    TrackedObjectData[] arrToUse = ThreadManager.host ? Server.objects : Client.objects;
+
                     if (arrToUse[inventory[i]] != null && arrToUse[inventory[i]].controller != GameManager.ID)
                     {
-                        Mod.LogInfo("\t\t\tTaking control if item "+ inventory[i]);
-                        TrackedItemData.TakeControlRecursive(arrToUse[inventory[i]]);
-                        if (arrToUse[inventory[i]].physicalItem != null)
+                        TrackedItemData trackedItem = arrToUse[inventory[i]] as TrackedItemData;
+                        trackedItem.TakeControlRecursive();
+                        if (trackedItem.physicalItem != null)
                         {
-                            Mod.SetKinematicRecursive(arrToUse[inventory[i]].physicalItem.transform, false);
+                            Mod.SetKinematicRecursive(trackedItem.physicalItem.transform, false);
                         }
                     }
                 }
@@ -783,26 +1142,26 @@ namespace H3MP.Tracking
             {
                 TakeInventoryControl();
 
-                if (physical != null)
+                if (physicalSosig != null)
                 {
                     if (GM.CurrentAIManager != null)
                     {
-                        GM.CurrentAIManager.RegisterAIEntity((physical.physical as Sosig).E);
+                        GM.CurrentAIManager.RegisterAIEntity(physicalSosig.physicalSosig.E);
                     }
-                    (physical.physical as Sosig).CoreRB.isKinematic = false;
+                    physicalSosig.physicalSosig.CoreRB.isKinematic = false;
                 }
             }
             else if (controller == GameManager.ID) // Lose control
             {
-                if (physical != null)
+                if (physicalSosig != null)
                 {
-                    physical.EnsureUncontrolled();
+                    physicalSosig.EnsureUncontrolled();
 
                     if (GM.CurrentAIManager != null)
                     {
-                        GM.CurrentAIManager.DeRegisterAIEntity((physical.physical as Sosig).E);
+                        GM.CurrentAIManager.DeRegisterAIEntity(physicalSosig.physicalSosig.E);
                     }
-                    (physical.physical as Sosig).CoreRB.isKinematic = true;
+                    physicalSosig.physicalSosig.CoreRB.isKinematic = true;
                 }
             }
         }

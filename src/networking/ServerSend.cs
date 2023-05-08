@@ -2439,13 +2439,13 @@ namespace H3MP.Networking
             using (Packet packet = new Packet((int)ServerPackets.sosigDamageData))
             {
                 packet.Write(trackedSosig.data.trackedID);
-                packet.Write(trackedSosig.physicalSosigScript.IsStunned);
-                packet.Write(trackedSosig.physicalSosigScript.m_stunTimeLeft);
-                packet.Write((byte)trackedSosig.physicalSosigScript.BodyState);
-                packet.Write(trackedSosig.physicalSosigScript.m_isOnOffMeshLink);
-                packet.Write(trackedSosig.physicalSosigScript.Agent.autoTraverseOffMeshLink);
-                packet.Write(trackedSosig.physicalSosigScript.Agent.enabled);
-                List<CharacterJoint> joints = trackedSosig.physicalSosigScript.m_joints;
+                packet.Write(trackedSosig.physicalSosig.IsStunned);
+                packet.Write(trackedSosig.physicalSosig.m_stunTimeLeft);
+                packet.Write((byte)trackedSosig.physicalSosig.BodyState);
+                packet.Write(trackedSosig.physicalSosig.m_isOnOffMeshLink);
+                packet.Write(trackedSosig.physicalSosig.Agent.autoTraverseOffMeshLink);
+                packet.Write(trackedSosig.physicalSosig.Agent.enabled);
+                List<CharacterJoint> joints = trackedSosig.physicalSosig.m_joints;
                 packet.Write((byte)joints.Count);
                 for (int i = 0; i < joints.Count; ++i)
                 {
@@ -2466,23 +2466,23 @@ namespace H3MP.Networking
                         packet.Write(joints[i].swing2Limit.limit);
                     }
                 }
-                packet.Write(trackedSosig.physicalSosigScript.m_isCountingDownToStagger);
-                packet.Write(trackedSosig.physicalSosigScript.m_staggerAmountToApply);
-                packet.Write(trackedSosig.physicalSosigScript.m_recoveringFromBallisticState);
-                packet.Write(trackedSosig.physicalSosigScript.m_recoveryFromBallisticLerp);
-                packet.Write(trackedSosig.physicalSosigScript.m_tickDownToWrithe);
-                packet.Write(trackedSosig.physicalSosigScript.m_recoveryFromBallisticTick);
-                packet.Write((byte)trackedSosig.physicalSosigScript.GetDiedFromIFF());
-                packet.Write((byte)trackedSosig.physicalSosigScript.GetDiedFromClass());
-                packet.Write(trackedSosig.physicalSosigScript.IsBlinded);
-                packet.Write(trackedSosig.physicalSosigScript.m_blindTime);
-                packet.Write(trackedSosig.physicalSosigScript.IsFrozen);
-                packet.Write(trackedSosig.physicalSosigScript.m_debuffTime_Freeze);
-                packet.Write(trackedSosig.physicalSosigScript.GetDiedFromHeadShot());
-                packet.Write(trackedSosig.physicalSosigScript.m_timeSinceLastDamage);
-                packet.Write(trackedSosig.physicalSosigScript.IsConfused);
-                packet.Write(trackedSosig.physicalSosigScript.m_confusedTime);
-                packet.Write(trackedSosig.physicalSosigScript.m_storedShudder);
+                packet.Write(trackedSosig.physicalSosig.m_isCountingDownToStagger);
+                packet.Write(trackedSosig.physicalSosig.m_staggerAmountToApply);
+                packet.Write(trackedSosig.physicalSosig.m_recoveringFromBallisticState);
+                packet.Write(trackedSosig.physicalSosig.m_recoveryFromBallisticLerp);
+                packet.Write(trackedSosig.physicalSosig.m_tickDownToWrithe);
+                packet.Write(trackedSosig.physicalSosig.m_recoveryFromBallisticTick);
+                packet.Write((byte)trackedSosig.physicalSosig.GetDiedFromIFF());
+                packet.Write((byte)trackedSosig.physicalSosig.GetDiedFromClass());
+                packet.Write(trackedSosig.physicalSosig.IsBlinded);
+                packet.Write(trackedSosig.physicalSosig.m_blindTime);
+                packet.Write(trackedSosig.physicalSosig.IsFrozen);
+                packet.Write(trackedSosig.physicalSosig.m_debuffTime_Freeze);
+                packet.Write(trackedSosig.physicalSosig.GetDiedFromHeadShot());
+                packet.Write(trackedSosig.physicalSosig.m_timeSinceLastDamage);
+                packet.Write(trackedSosig.physicalSosig.IsConfused);
+                packet.Write(trackedSosig.physicalSosig.m_confusedTime);
+                packet.Write(trackedSosig.physicalSosig.m_storedShudder);
 
                 SosigLinkDamageData(packet);
             }

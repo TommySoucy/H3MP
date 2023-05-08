@@ -490,9 +490,9 @@ namespace H3MP.Networking
                         {
                             if (GM.CurrentAIManager != null)
                             {
-                                GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                                GM.CurrentAIManager.RegisterAIEntity(trackedSosig.physicalObject.physicalSosig.E);
                             }
-                            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = false;
+                            trackedSosig.physicalObject.physicalSosig.CoreRB.isKinematic = false;
                         }
 
                     }
@@ -504,9 +504,9 @@ namespace H3MP.Networking
                         {
                             if (GM.CurrentAIManager != null)
                             {
-                                GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosigScript.E);
+                                GM.CurrentAIManager.DeRegisterAIEntity(trackedSosig.physicalObject.physicalSosig.E);
                             }
-                            trackedSosig.physicalObject.physicalSosigScript.CoreRB.isKinematic = true;
+                            trackedSosig.physicalObject.physicalSosig.CoreRB.isKinematic = true;
                         }
                     }
 

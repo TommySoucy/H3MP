@@ -74,14 +74,11 @@ namespace H3MP.Tracking
                                                                                     90,91,92,93,94,95,96,97,98,99};
 
 
-        private void Awake()
+        public override void Awake()
         {
             InitItemType();
 
-            if(updateFunc != null && data != null)
-            {
-                updateFunc();
-            }
+            base.Awake();
         }
 
         // MOD: This will check which type this item is so we can keep track of its data more efficiently
@@ -9882,6 +9879,7 @@ namespace H3MP.Tracking
                 return;
             }
 
+            GameManager.trackedItemByItem.Remove(physicalItem);
             if (physicalItem is SosigWeaponPlayerInterface)
             {
                 GameManager.trackedItemBySosigWeapon.Remove((physicalItem as SosigWeaponPlayerInterface).W);
@@ -9893,7 +9891,7 @@ namespace H3MP.Tracking
             base.OnDestroy();
         }
 
-        public override void EnsureUncontrolled()
+        public void EnsureUncontrolled()
         {
             if (physicalItem.m_hand != null)
             {

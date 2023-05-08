@@ -27,7 +27,7 @@ namespace H3MP.Tracking
         public bool skipFullDestroy;
         public bool dontGiveControl;
 
-        private void Awake()
+        public virtual void Awake()
         {
             if (data != null)
             {
@@ -51,13 +51,6 @@ namespace H3MP.Tracking
                     ClientSend.TrackedObject(data);
                 }
             }
-        }
-
-        // MOD: When a client takes control of an object that is under our control, we will need to make sure that we are not 
-        //      in control of the object anymore.
-        public virtual void EnsureUncontrolled()
-        {
-
         }
 
         private void OnTransformParentChanged()
@@ -331,6 +324,7 @@ namespace H3MP.Tracking
                         Client.objects[data.trackedID] = null;
                     }
 
+                    // TODO: Customization make this propagate to sub types so we can remove them from their own lists?
                     GameManager.objectsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
                 }
             }
