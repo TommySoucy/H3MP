@@ -647,10 +647,12 @@ namespace H3MP.Tracking
             GameObject sosigInstance = GameObject.Instantiate(sosigPrefab, position, rotation);
             --Mod.skipAllInstantiates;
             physicalSosig = sosigInstance.AddComponent<TrackedSosig>();
+            physical = physicalSosig;
+            physicalSosig.physicalSosig = sosigInstance.GetComponent<Sosig>();
+            physical.physical = physicalSosig.physicalSosig;
             awaitingInstantiation = false;
             physicalSosig.data = this;
 
-            physicalSosig.physicalSosig = sosigInstance.GetComponent<Sosig>();
             SosigConfigurePatch.skipConfigure = true;
             physicalSosig.physicalSosig.Configure(configTemplate);
 

@@ -88,7 +88,7 @@ namespace H3MP.Tracking
             trackedItem.data = data;
             trackedItem.itemData = data;
             data.physicalItem = trackedItem;
-            data.physical = data.physicalItem;
+            data.physical = trackedItem;
             data.physicalItem.physicalItem = root.GetComponent<FVRPhysicalObject>();
             data.physical.physical = data.physicalItem.physicalItem;
 

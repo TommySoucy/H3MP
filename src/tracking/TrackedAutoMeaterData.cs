@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Networking;
+using H3MP.Patches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,11 +10,8 @@ namespace H3MP.Tracking
 {
     public class TrackedAutoMeaterData : TrackedObjectData
     {
-        public bool latestUpdateSent = false; // Whether the latest update of this data was sent
-        public byte order; // The index of this AutoMeater's data packet used to ensure we process this data in the correct order
+        public TrackedAutoMeater physicalAutoMeater;
 
-        public int trackedID = -1;
-        public int controller;
         public byte ID; // 0: SMG, 1: Flak, 2: FlameThrower, 3: MachineGun, 4: Supression, 5: MF Blue, 6: MF Red
         public Vector3 previousPos;
         public Quaternion previousRot;
@@ -27,24 +25,131 @@ namespace H3MP.Tracking
         public Quaternion upDownMotorRotation;
         public float previousUpDownJointTargetPos;
         public float upDownJointTargetPos;
-        public TrackedAutoMeater physicalObject;
-        public int localTrackedID;
-        public uint localWaitingIndex = uint.MaxValue;
-        public int initTracker;
-        public bool previousActive;
-        public bool active;
         public byte previousIFF;
         public byte IFF;
-        public bool removeFromListOnDestroy = true;
-        public string scene;
-        public int instance;
         public byte[] data;
-        public bool sceneInit;
-        public bool awaitingInstantiation;
 
         public Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone> hitZones = new Dictionary<AutoMeater.AMHitZoneType, AutoMeaterHitZone>();
 
-        public IEnumerator Instantiate()
+        public TrackedAutoMeaterData()
+        {
+
+        }
+
+        public TrackedAutoMeaterData(Packet packet) : base(packet)
+        {
+            // Full
+            ID = packet.ReadByte();
+            int dataLen = packet.ReadInt();
+            if (dataLen > 0)
+            {
+                data = packet.ReadBytes(dataLen);
+            }
+
+            // Update
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+            IFF = packet.ReadByte();
+            sideToSideRotation = packet.ReadQuaternion();
+            hingeTargetPos = packet.ReadFloat();
+            upDownMotorRotation = packet.ReadQuaternion();
+            upDownJointTargetPos = packet.ReadFloat();
+        }
+
+        public static bool IfOfType(Transform t)
+        {
+            return t.GetComponent<AutoMeater>() != null;
+        }
+
+        public static TrackedAutoMeater MakeTracked(Transform root, TrackedObjectData parent)
+        {
+            TrackedAutoMeater trackedAutoMeater = root.gameObject.AddComponent<TrackedAutoMeater>();
+            TrackedAutoMeaterData data = new TrackedAutoMeaterData();
+            trackedAutoMeater.data = data;
+            trackedAutoMeater.autoMeaterData = data;
+            data.physicalAutoMeater = trackedAutoMeater;
+            data.physical = trackedAutoMeater;
+            AutoMeater autoMeaterScript = root.GetComponent<AutoMeater>(); ;
+            data.physicalAutoMeater.physicalAutoMeater = autoMeaterScript;
+            data.physical.physical = autoMeaterScript;
+
+            GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
+            GameManager.trackedObjectByObject.Add(autoMeaterScript, trackedAutoMeater);
+
+            data.position = autoMeaterScript.RB.position;
+            data.rotation = autoMeaterScript.RB.rotation;
+            data.IFF = (byte)autoMeaterScript.E.IFFCode;
+            if (autoMeaterScript.name.Contains("SMG"))
+            {
+                data.ID = 0;
+            }
+            else if (autoMeaterScript.name.Contains("Flak"))
+            {
+                data.ID = 1;
+            }
+            else if (autoMeaterScript.name.Contains("Flamethrower"))
+            {
+                data.ID = 2;
+            }
+            else if (autoMeaterScript.name.Contains("Machinegun") || autoMeaterScript.name.Contains("MachineGun"))
+            {
+                data.ID = 3;
+            }
+            else if (autoMeaterScript.name.Contains("Suppresion") || autoMeaterScript.name.Contains("Suppression"))
+            {
+                data.ID = 4;
+            }
+            else if (autoMeaterScript.name.Contains("Blue"))
+            {
+                data.ID = 5;
+            }
+            else if (autoMeaterScript.name.Contains("Red"))
+            {
+                data.ID = 6;
+            }
+            else
+            {
+                Mod.LogWarning("Unsupported AutoMeater type tracked");
+                data.ID = 7;
+            }
+            data.sideToSideRotation = autoMeaterScript.SideToSideTransform.localRotation;
+            data.hingeTargetPos = autoMeaterScript.SideToSideHinge.spring.targetPosition;
+            data.upDownMotorRotation = autoMeaterScript.UpDownTransform.localRotation;
+            data.upDownJointTargetPos = autoMeaterScript.UpDownHinge.spring.targetPosition;
+
+            // Get hitzones
+            AutoMeaterHitZone[] hitZoneArr = trackedAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
+            foreach (AutoMeaterHitZone hitZone in hitZoneArr)
+            {
+                data.hitZones.Add(hitZone.Type, hitZone);
+            }
+
+            data.CollectExternalData();
+
+            // Add to local list
+            data.localTrackedID = GameManager.objects.Count;
+            GameManager.objects.Add(data);
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedAutoMeater.awoken)
+            {
+                trackedAutoMeater.data.Update(true);
+            }
+
+            return trackedAutoMeater;
+        }
+
+        private void CollectExternalData()
+        {
+            data = new byte[4];
+
+            // Write TNH context
+            data[0] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)1;
+            data[1] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)1;
+            BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(data, 2);
+        }
+
+        public override IEnumerator Instantiate()
         {
             Mod.LogInfo("Instantiating AutoMeater " + trackedID, false);
             string itemID = AutoMeaterIDToItemID(ID);
@@ -66,13 +171,15 @@ namespace H3MP.Tracking
             if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at automeater instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
             GameObject autoMeaterInstance = GameObject.Instantiate(autoMeaterPrefab, position, rotation);
             --Mod.skipAllInstantiates;
-            physicalObject = autoMeaterInstance.AddComponent<TrackedAutoMeater>();
+            physicalAutoMeater = autoMeaterInstance.AddComponent<TrackedAutoMeater>();
+            physical = physicalAutoMeater;
+            physicalAutoMeater.physicalAutoMeater = autoMeaterInstance.GetComponent<AutoMeater>();
+            physical.physical = physicalAutoMeater.physicalAutoMeater;
             awaitingInstantiation = false;
-            physicalObject.data = this;
+            physical.data = this;
 
-            physicalObject.physicalAutoMeaterScript = autoMeaterInstance.GetComponent<AutoMeater>();
-
-            GameManager.trackedAutoMeaterByAutoMeater.Add(physicalObject.physicalAutoMeaterScript, physicalObject);
+            GameManager.trackedAutoMeaterByAutoMeater.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);
+            GameManager.trackedObjectByObject.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);
 
             // Deregister the AI from the manager if we are not in control
             // Also set RB as kinematic
@@ -80,16 +187,16 @@ namespace H3MP.Tracking
             {
                 if (GM.CurrentAIManager != null)
                 {
-                    GM.CurrentAIManager.DeRegisterAIEntity(physicalObject.physicalAutoMeaterScript.E);
+                    GM.CurrentAIManager.DeRegisterAIEntity(physicalAutoMeater.physicalAutoMeater.E);
                 }
-                physicalObject.physicalAutoMeaterScript.RB.isKinematic = true;
+                physicalAutoMeater.physicalAutoMeater.RB.isKinematic = true;
             }
 
             // Initially set IFF
-            physicalObject.physicalAutoMeaterScript.E.IFFCode = IFF;
+            physicalAutoMeater.physicalAutoMeater.E.IFFCode = IFF;
 
             // Get hitzones
-            AutoMeaterHitZone[] hitZoneArr = physicalObject.GetComponentsInChildren<AutoMeaterHitZone>();
+            AutoMeaterHitZone[] hitZoneArr = physicalAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
             foreach(AutoMeaterHitZone hitZone in hitZoneArr)
             {
                 hitZones.Add(hitZone.Type, hitZone);
@@ -98,22 +205,20 @@ namespace H3MP.Tracking
             ProcessData();
 
             // Initially set itself
-            Update(this);
+            UpdateFromData(this);
         }
 
-        // MOD: This will be called at the end of instantiation so mods can use it to process the data array
-        //      Example here is data about the TNH context
         private void ProcessData()
         {
             if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
             {
                 if (data[0] == 1) // TNH_HoldPoint is in spawn turrets
                 {
-                    GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_activeTurrets.Add(physicalObject.physicalAutoMeaterScript);
+                    GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_activeTurrets.Add(physicalAutoMeater.physicalAutoMeater);
                 }
                 else if (data[1] == 1) // TNH_SupplyPoint is in Spawn Take Enemy Group
                 {
-                    GM.TNH_Manager.SupplyPoints[BitConverter.ToInt16(data, 2)].m_activeTurrets.Add(physicalObject.physicalAutoMeaterScript);
+                    GM.TNH_Manager.SupplyPoints[BitConverter.ToInt16(data, 2)].m_activeTurrets.Add(physicalAutoMeater.physicalAutoMeater);
                 }
             }
         }
@@ -142,151 +247,80 @@ namespace H3MP.Tracking
             }
         }
 
-        public void Update(TrackedAutoMeaterData updatedItem)
+        public override void UpdateFromData(TrackedObjectData updatedObject)
         {
+            base.UpdateFromData(updatedObject);
+
+            TrackedAutoMeaterData updatedAutoMeater = updatedObject as TrackedAutoMeaterData;
+
             // Set data
-            order = updatedItem.order;
             previousPos = position;
             previousRot = rotation;
-            position = updatedItem.position;
-            rotation = updatedItem.rotation;
-            previousActive = active;
-            active = updatedItem.active;
+            position = updatedAutoMeater.position;
+            rotation = updatedAutoMeater.rotation;
             previousIFF = IFF;
-            IFF = updatedItem.IFF;
+            IFF = updatedAutoMeater.IFF;
             previousSideToSideRotation = sideToSideRotation;
-            sideToSideRotation = updatedItem.sideToSideRotation;
+            sideToSideRotation = updatedAutoMeater.sideToSideRotation;
             previousHingeTargetPos = hingeTargetPos;
-            hingeTargetPos = updatedItem.hingeTargetPos;
+            hingeTargetPos = updatedAutoMeater.hingeTargetPos;
             previousUpDownMotorRotation = upDownMotorRotation;
-            upDownMotorRotation = updatedItem.upDownMotorRotation;
+            upDownMotorRotation = updatedAutoMeater.upDownMotorRotation;
             previousUpDownJointTargetPos = upDownJointTargetPos;
-            upDownJointTargetPos = updatedItem.upDownJointTargetPos;
+            upDownJointTargetPos = updatedAutoMeater.upDownJointTargetPos;
 
             // Set physically
-            if (physicalObject != null)
+            if (physicalAutoMeater != null)
             {
-                physicalObject.physicalAutoMeaterScript.RB.position = position;
-                physicalObject.physicalAutoMeaterScript.RB.rotation = rotation;
-                physicalObject.physicalAutoMeaterScript.E.IFFCode = IFF;
-                physicalObject.physicalAutoMeaterScript.SideToSideTransform.localRotation = sideToSideRotation;
-                HingeJoint hingeJoint = physicalObject.physicalAutoMeaterScript.SideToSideHinge;
+                physicalAutoMeater.physicalAutoMeater.RB.position = position;
+                physicalAutoMeater.physicalAutoMeater.RB.rotation = rotation;
+                physicalAutoMeater.physicalAutoMeater.E.IFFCode = IFF;
+                physicalAutoMeater.physicalAutoMeater.SideToSideTransform.localRotation = sideToSideRotation;
+                HingeJoint hingeJoint = physicalAutoMeater.physicalAutoMeater.SideToSideHinge;
                 JointSpring spring = hingeJoint.spring;
                 spring.targetPosition = hingeTargetPos;
                 hingeJoint.spring = spring;
-                physicalObject.physicalAutoMeaterScript.UpDownTransform.localRotation = upDownMotorRotation;
-                HingeJoint upDownHingeJoint = physicalObject.physicalAutoMeaterScript.UpDownHinge;
+                physicalAutoMeater.physicalAutoMeater.UpDownTransform.localRotation = upDownMotorRotation;
+                HingeJoint upDownHingeJoint = physicalAutoMeater.physicalAutoMeater.UpDownHinge;
                 spring = upDownHingeJoint.spring;
                 spring.targetPosition = upDownJointTargetPos;
                 upDownHingeJoint.spring = spring;
-
-                if (active)
-                {
-                    if (!physicalObject.gameObject.activeSelf)
-                    {
-                        physicalObject.gameObject.SetActive(true);
-                    }
-                }
-                else
-                {
-                    if (physicalObject.gameObject.activeSelf)
-                    {
-                        physicalObject.gameObject.SetActive(false);
-                    }
-                }
             }
         }
 
-        public bool Update(bool full = false)
+        public override bool Update(bool full = false)
         {
-            if(physicalObject == null)
+            base.Update(full);
+
+            if (physicalAutoMeater == null)
             {
                 return false;
             }
 
             previousPos = position;
             previousRot = rotation;
-            position = physicalObject.physicalAutoMeaterScript.RB.position;
-            rotation = physicalObject.physicalAutoMeaterScript.RB.rotation;
+            position = physicalAutoMeater.physicalAutoMeater.RB.position;
+            rotation = physicalAutoMeater.physicalAutoMeater.RB.rotation;
 
-            previousActive = active;
-            active = physicalObject.gameObject.activeInHierarchy;
             previousIFF = IFF;
-            IFF = (byte)physicalObject.physicalAutoMeaterScript.E.IFFCode;
+            IFF = (byte)physicalAutoMeater.physicalAutoMeater.E.IFFCode;
 
             previousSideToSideRotation = sideToSideRotation;
             previousHingeTargetPos = hingeTargetPos;
             previousUpDownMotorRotation = upDownMotorRotation;
             previousUpDownJointTargetPos = upDownJointTargetPos;
-            sideToSideRotation = physicalObject.physicalAutoMeaterScript.SideToSideTransform.localRotation;
-            hingeTargetPos = physicalObject.physicalAutoMeaterScript.SideToSideHinge.spring.targetPosition;
-            upDownMotorRotation = physicalObject.physicalAutoMeaterScript.UpDownTransform.localRotation;
-            upDownJointTargetPos = physicalObject.physicalAutoMeaterScript.UpDownHinge.spring.targetPosition;
+            sideToSideRotation = physicalAutoMeater.physicalAutoMeater.SideToSideTransform.localRotation;
+            hingeTargetPos = physicalAutoMeater.physicalAutoMeater.SideToSideHinge.spring.targetPosition;
+            upDownMotorRotation = physicalAutoMeater.physicalAutoMeater.UpDownTransform.localRotation;
+            upDownJointTargetPos = physicalAutoMeater.physicalAutoMeater.UpDownHinge.spring.targetPosition;
 
             return NeedsUpdate();
         }
 
-        public bool NeedsUpdate()
+        public override bool NeedsUpdate()
         {
-            return !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousActive != active || !previousSideToSideRotation.Equals(sideToSideRotation) ||
+            return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !previousSideToSideRotation.Equals(sideToSideRotation) ||
                    !previousUpDownMotorRotation.Equals(upDownMotorRotation) || previousHingeTargetPos != hingeTargetPos || previousUpDownJointTargetPos != upDownJointTargetPos;
-        }
-
-        public void OnTrackedIDReceived()
-        {
-            if (TrackedAutoMeater.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
-            {
-                ClientSend.DestroyAutoMeater(trackedID);
-
-                // Note that if we receive a tracked ID that was previously unknown, we must be a client
-                Client.autoMeaters[trackedID] = null;
-
-                // Remove from autoMeatersByInstanceByScene
-                GameManager.autoMeatersByInstanceByScene[scene][instance].Remove(trackedID);
-
-                // Remove from local
-                RemoveFromLocal();
-            }
-            if (localTrackedID != -1 && TrackedAutoMeater.unknownControlTrackedIDs.ContainsKey(localWaitingIndex))
-            {
-                int newController = TrackedAutoMeater.unknownControlTrackedIDs[localWaitingIndex];
-
-                ClientSend.GiveAutoMeaterControl(trackedID, newController, null);
-
-                // Also change controller locally
-                controller = newController;
-
-                TrackedAutoMeater.unknownControlTrackedIDs.Remove(localWaitingIndex);
-
-                // Remove from local
-                if (GameManager.ID != controller)
-                {
-                    RemoveFromLocal();
-                }
-            }
-        }
-
-        public void RemoveFromLocal()
-        {
-            // Manage unknown lists
-            if (trackedID == -1)
-            {
-                TrackedAutoMeater.unknownControlTrackedIDs.Remove(localWaitingIndex);
-                TrackedAutoMeater.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
-            }
-
-            if (localTrackedID > -1 && localTrackedID < GameManager.autoMeaters.Count)
-            {
-                // Remove from actual local items list and update the localTrackedID of the autoMeater we are moving
-                GameManager.autoMeaters[localTrackedID] = GameManager.autoMeaters[GameManager.autoMeaters.Count - 1];
-                GameManager.autoMeaters[localTrackedID].localTrackedID = localTrackedID;
-                GameManager.autoMeaters.RemoveAt(GameManager.autoMeaters.Count - 1);
-                localTrackedID = -1;
-            }
-            else
-            {
-                Mod.LogWarning("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
-            }
         }
 
         public override void OnControlChanged(int newController)
@@ -296,26 +330,26 @@ namespace H3MP.Tracking
             // Note that this only gets called when the new controller is different from the old one
             if (newController == GameManager.ID) // Gain control
             {
-                if (physical != null)
+                if (physicalAutoMeater != null)
                 {
                     if (GM.CurrentAIManager != null)
                     {
-                        GM.CurrentAIManager.RegisterAIEntity((physical.physical as AutoMeater).E);
+                        GM.CurrentAIManager.RegisterAIEntity(physicalAutoMeater.physicalAutoMeater.E);
                     }
-                    (physical.physical as AutoMeater).RB.isKinematic = false;
+                    physicalAutoMeater.physicalAutoMeater.RB.isKinematic = false;
                 }
             }
             else if (controller == GameManager.ID) // Lose control
             {
                 if (physical != null)
                 {
-                    physical.EnsureUncontrolled();
+                    physicalAutoMeater.EnsureUncontrolled();
 
                     if (GM.CurrentAIManager != null)
                     {
-                        GM.CurrentAIManager.DeRegisterAIEntity((physical.physical as AutoMeater).E);
+                        GM.CurrentAIManager.DeRegisterAIEntity(physicalAutoMeater.physicalAutoMeater.E);
                     }
-                    (physical.physical as AutoMeater).RB.isKinematic = true;
+                    physicalAutoMeater.physicalAutoMeater.RB.isKinematic = true;
                 }
             }
         }

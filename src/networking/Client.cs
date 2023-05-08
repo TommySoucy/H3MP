@@ -562,9 +562,9 @@ namespace H3MP.Networking
             }
 
             // Adjust items size to acommodate if necessary
-            if (items.Length <= trackedObject.trackedID)
+            if (objects.Length <= trackedObject.trackedID)
             {
-                IncreaseItemsSize(trackedObject.trackedID);
+                IncreaseObjectsSize(trackedObject.trackedID);
             }
 
             if (trackedObject.controller == GameManager.ID) // We control this object
@@ -693,7 +693,7 @@ namespace H3MP.Networking
                 if (trackedObject.parent != -1 && trackedObject.initTracker != GameManager.ID)
                 {
                     // Note that this should never be null, we should always receive the parent data before receiving the children's
-                    TrackedObjectData parentData = items[trackedObject.parent];
+                    TrackedObjectData parentData = objects[trackedObject.parent];
 
                     if (parentData.children == null)
                     {

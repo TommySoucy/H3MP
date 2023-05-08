@@ -681,68 +681,6 @@ namespace H3MP
             return (TrackedObject)trackedObjectType.InvokeMember("MakeTracked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, null, new object[] { root, parent });
         }
 
-        public static void SyncTrackedAutoMeaters(bool init = false, bool inControl = false)
-        {
-            // When we sync our current scene, if we are alone, we sync and take control of all AutoMeaters
-            Scene scene = SceneManager.GetActiveScene();
-            GameObject[] roots = scene.GetRootGameObjects();
-            foreach (GameObject root in roots)
-            {
-                SyncTrackedAutoMeaters(root.transform, init ? inControl : controlOverride, GameManager.scene);
-            }
-        }
-
-        public static void SyncTrackedAutoMeaters(Transform root, bool controlEverything, string scene)
-        {
-            AutoMeater autoMeaterScript = root.GetComponent<AutoMeater>();
-            if (autoMeaterScript != null)
-            {
-                TrackedAutoMeater trackedAutoMeater = root.GetComponent<TrackedAutoMeater>();
-                if (trackedAutoMeater == null)
-                {
-                    if (controlEverything)
-                    {
-                        trackedAutoMeater = MakeAutoMeaterTracked(autoMeaterScript);
-                        if (trackedAutoMeater.awoken)
-                        {
-                            if (ThreadManager.host)
-                            {
-                                // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
-                                Server.AddTrackedAutoMeater(trackedAutoMeater.data, 0);
-                            }
-                            else
-                            {
-                                // Tell the server we need to add this AutoMeater to global tracked AutoMeaters
-                                trackedAutoMeater.data.localWaitingIndex = Client.localAutoMeaterCounter++;
-                                Client.waitingLocalAutoMeaters.Add(trackedAutoMeater.data.localWaitingIndex, trackedAutoMeater.data);
-                                ClientSend.TrackedAutoMeater(trackedAutoMeater.data);
-                            }
-                        }
-                        else
-                        {
-                            trackedAutoMeater.sendOnAwake = true;
-                        }
-                    }
-                    else // AutoMeater will not be controlled by us but is an AutoMeater that should be tracked by system, so destroy it
-                    {
-                        Destroy(root.gameObject);
-                    }
-                }
-                else
-                {
-                    // It already has tracked AutoMeater on it, this is possible of we received new AutoMeater from server before we sync
-                    return;
-                }
-            }
-            else
-            {
-                foreach (Transform child in root)
-                {
-                    SyncTrackedAutoMeaters(child, controlEverything, scene);
-                }
-            }
-        }
-
         private static TrackedAutoMeater MakeAutoMeaterTracked(AutoMeater autoMeaterScript)
         {
             TrackedAutoMeater trackedAutoMeater = autoMeaterScript.gameObject.AddComponent<TrackedAutoMeater>();
