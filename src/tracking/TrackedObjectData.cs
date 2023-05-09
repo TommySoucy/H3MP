@@ -239,6 +239,11 @@ namespace H3MP.Tracking
             return true;
         }
 
+        public virtual bool IsControlled()
+        {
+            return false;
+        }
+
         public virtual void OnControlChanged(int newController)
         {
             latestUpdateSent = false;

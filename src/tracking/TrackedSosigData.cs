@@ -195,6 +195,21 @@ namespace H3MP.Tracking
             return false;
         }
 
+        public override bool IsControlled()
+        {
+            if (physicalSosig.physicalSosig != null && physicalSosig.physicalSosig.Links != null)
+            {
+                for(int i=0; i< physicalSosig.physicalSosig.Links.Count; ++i)
+                {
+                    if(physicalSosig.physicalSosig.Links[i] != null && physicalSosig.physicalSosig.Links[i].O.m_hand != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         private static TrackedSosig MakeTracked(Transform root, TrackedObjectData parent)
         {
             TrackedSosig trackedSosig = root.gameObject.AddComponent<TrackedSosig>();

@@ -220,28 +220,27 @@ namespace H3MP
             TrackedItem.trackedItemRefObjects = new GameObject[100];
             TrackedItem.trackedItemReferences = new TrackedItem[100];
             TrackedItem.availableTrackedItemRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
-                                                                                10,11,12,13,14,15,16,17,18,19,
-                                                                                20,21,22,23,24,25,26,27,28,29,
-                                                                                30,31,32,33,34,35,36,37,38,39,
-                                                                                40,41,42,43,44,45,46,47,48,49,
-                                                                                50,51,52,53,54,55,56,57,58,59,
-                                                                                60,61,62,63,64,65,66,67,68,69,
-                                                                                70,71,72,73,74,75,76,77,78,79,
-                                                                                80,81,82,83,84,85,86,87,88,89,
-                                                                                90,91,92,93,94,95,96,97,98,99};
+                                                                            10,11,12,13,14,15,16,17,18,19,
+                                                                            20,21,22,23,24,25,26,27,28,29,
+                                                                            30,31,32,33,34,35,36,37,38,39,
+                                                                            40,41,42,43,44,45,46,47,48,49,
+                                                                            50,51,52,53,54,55,56,57,58,59,
+                                                                            60,61,62,63,64,65,66,67,68,69,
+                                                                            70,71,72,73,74,75,76,77,78,79,
+                                                                            80,81,82,83,84,85,86,87,88,89,
+                                                                            90,91,92,93,94,95,96,97,98,99};
 
-            TrackedItem.unknownTrackedIDs.Clear();
-            TrackedItem.unknownParentWaitList.Clear();
-            TrackedItem.unknownControlTrackedIDs.Clear();
-            TrackedItem.unknownDestroyTrackedIDs.Clear();
-            TrackedItem.unknownParentTrackedIDs.Clear();
+            TrackedObject.unknownTrackedIDs.Clear();
+            TrackedObject.unknownParentWaitList.Clear();
+            TrackedObject.unknownControlTrackedIDs.Clear();
+            TrackedObject.unknownDestroyTrackedIDs.Clear();
+            TrackedObject.unknownParentTrackedIDs.Clear();
+
             TrackedItem.unknownCrateHolding.Clear();
             TrackedItem.unknownSosigInventoryItems.Clear();
             TrackedItem.unknownSosigInventoryObjects.Clear();
 
             TrackedSosig.unknownBodyStates.Clear();
-            TrackedSosig.unknownControlTrackedIDs.Clear();
-            TrackedSosig.unknownDestroyTrackedIDs.Clear();
             TrackedSosig.unknownIFFChart.Clear();
             TrackedSosig.unknownItemInteract.Clear();
             TrackedSosig.unknownSetIFFs.Clear();
@@ -250,11 +249,6 @@ namespace H3MP
             TrackedSosig.unknownCurrentOrder.Clear();
             TrackedSosig.unknownConfiguration.Clear();
 
-            TrackedAutoMeater.unknownControlTrackedIDs.Clear();
-            TrackedAutoMeater.unknownDestroyTrackedIDs.Clear();
-
-            TrackedEncryption.unknownControlTrackedIDs.Clear();
-            TrackedEncryption.unknownDestroyTrackedIDs.Clear();
             TrackedEncryption.unknownDisableSubTarg.Clear();
             TrackedEncryption.unknownInit.Clear();
             TrackedEncryption.unknownResetGrowth.Clear();
@@ -298,8 +292,6 @@ namespace H3MP
             {
                 UpdatePlayerHidden(player);
             }
-
-            ProcessAdditionalPlayerData(ID, additionalData);
         }
 
         public static void UpdatePlayerScene(int playerID, string sceneName)
@@ -681,226 +673,6 @@ namespace H3MP
             return (TrackedObject)trackedObjectType.InvokeMember("MakeTracked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, null, new object[] { root, parent });
         }
 
-        private static TrackedAutoMeater MakeAutoMeaterTracked(AutoMeater autoMeaterScript)
-        {
-            TrackedAutoMeater trackedAutoMeater = autoMeaterScript.gameObject.AddComponent<TrackedAutoMeater>();
-            TrackedAutoMeaterData data = new TrackedAutoMeaterData();
-            trackedAutoMeater.data = data;
-            data.physicalObject = trackedAutoMeater;
-            trackedAutoMeater.physicalAutoMeaterScript = autoMeaterScript;
-            GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
-
-            data.position = autoMeaterScript.RB.position;
-            data.rotation = autoMeaterScript.RB.rotation;
-            data.active = trackedAutoMeater.gameObject.activeInHierarchy;
-            data.IFF = (byte)autoMeaterScript.E.IFFCode;
-            if (autoMeaterScript.name.Contains("SMG"))
-            {
-                data.ID = 0;
-            }
-            else if (autoMeaterScript.name.Contains("Flak"))
-            {
-                data.ID = 1;
-            }
-            else if (autoMeaterScript.name.Contains("Flamethrower"))
-            {
-                data.ID = 2;
-            }
-            else if (autoMeaterScript.name.Contains("Machinegun") || autoMeaterScript.name.Contains("MachineGun"))
-            {
-                data.ID = 3;
-            }
-            else if (autoMeaterScript.name.Contains("Suppresion") || autoMeaterScript.name.Contains("Suppression"))
-            {
-                data.ID = 4;
-            }
-            else if (autoMeaterScript.name.Contains("Blue"))
-            {
-                data.ID = 5;
-            }
-            else if (autoMeaterScript.name.Contains("Red"))
-            {
-                data.ID = 6;
-            }
-            else
-            {
-                Mod.LogWarning("Unsupported AutoMeater type tracked");
-                data.ID = 7;
-            }
-            data.sideToSideRotation = autoMeaterScript.SideToSideTransform.localRotation;
-            data.hingeTargetPos = autoMeaterScript.SideToSideHinge.spring.targetPosition;
-            data.upDownMotorRotation = autoMeaterScript.UpDownTransform.localRotation;
-            data.upDownJointTargetPos = autoMeaterScript.UpDownHinge.spring.targetPosition;
-
-            // Get hitzones
-            AutoMeaterHitZone[] hitZoneArr = trackedAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
-            foreach (AutoMeaterHitZone hitZone in hitZoneArr)
-            {
-                data.hitZones.Add(hitZone.Type, hitZone);
-            }
-
-            CollectExternalData(data);
-
-            // Add to local list
-            data.localTrackedID = autoMeaters.Count;
-            data.controller = ID;
-            data.initTracker = ID;
-            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
-            data.instance = instance;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
-            autoMeaters.Add(data);
-
-            // Call an init update because the one in awake won't be called because data was not set yet
-            if (trackedAutoMeater.awoken)
-            {
-                trackedAutoMeater.data.Update(true);
-            }
-
-            return trackedAutoMeater;
-        }
-
-        // MOD: This will be called upon tracking a new autoMeater
-        //      From here you will be able to set specific data on the autoMeater
-        //      For more info and example, take a look at CollectExternalData(TrackedSosigData)
-        private static void CollectExternalData(TrackedAutoMeaterData trackedAutoMeaterData)
-        {
-            trackedAutoMeaterData.data = new byte[4];
-
-            // Write TNH context
-            trackedAutoMeaterData.data[0] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)1;
-            trackedAutoMeaterData.data[1] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)1;
-            BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(trackedAutoMeaterData.data, 2);
-        }
-
-        public static void SyncTrackedEncryptions(bool init = false, bool inControl = false)
-        {
-            // When we sync our current scene, if we are alone, we sync and take control of everything
-            // If we are not alone, we take control only of what we are currently interacting with
-            // while all other encryptions get destroyed. We will receive any encryption that the players inside this scene are controlling
-            Scene scene = SceneManager.GetActiveScene();
-            GameObject[] roots = scene.GetRootGameObjects();
-            foreach (GameObject root in roots)
-            {
-                SyncTrackedEncryptions(root.transform, init ? inControl : controlOverride, GameManager.scene);
-            }
-        }
-
-        public static void SyncTrackedEncryptions(Transform root, bool controlEverything, string scene)
-        {
-            TNH_EncryptionTarget encryption = root.GetComponent<TNH_EncryptionTarget>();
-            if (encryption != null)
-            {
-                TrackedEncryption currentTrackedEncryption = root.GetComponent<TrackedEncryption>();
-                if (currentTrackedEncryption == null)
-                {
-                    if (controlEverything)
-                    {
-                        TrackedEncryption trackedEncryption = MakeEncryptionTracked(encryption);
-                        if (trackedEncryption.awoken)
-                        {
-                            if (ThreadManager.host)
-                            {
-                                // This will also send a packet with the Encryption to be added in the client's global item list
-                                Server.AddTrackedEncryption(trackedEncryption.data, 0);
-                            }
-                            else
-                            {
-                                // Tell the server we need to add this Encryption to global tracked Encryptions
-                                trackedEncryption.data.localWaitingIndex = Client.localEncryptionCounter++;
-                                Client.waitingLocalEncryptions.Add(trackedEncryption.data.localWaitingIndex, trackedEncryption.data);
-                                ClientSend.TrackedEncryption(trackedEncryption.data);
-                            }
-                        }
-                        else
-                        {
-                            trackedEncryption.sendOnAwake = true;
-                        }
-                    }
-                    else // Item will not be controlled by us but is an Encryption that should be tracked by system, so destroy it
-                    {
-                        Destroy(root.gameObject);
-                    }
-                }
-                else
-                {
-                    // It already has tracked item on it, this is possible of we received new item from server before we sync
-                    return;
-                }
-            }
-            else
-            {
-                foreach (Transform child in root)
-                {
-                    SyncTrackedEncryptions(child, controlEverything, scene);
-                }
-            }
-        }
-
-        private static TrackedEncryption MakeEncryptionTracked(TNH_EncryptionTarget encryption)
-        {
-            TrackedEncryption trackedEncryption = encryption.gameObject.AddComponent<TrackedEncryption>();
-            TrackedEncryptionData data = new TrackedEncryptionData();
-            trackedEncryption.data = data;
-            data.physicalObject = trackedEncryption;
-            data.physicalObject.physicalEncryptionScript = encryption;
-
-            data.type = encryption.Type;
-            data.position = trackedEncryption.transform.position;
-            data.rotation = trackedEncryption.transform.rotation;
-            data.active = trackedEncryption.gameObject.activeInHierarchy;
-
-            data.tendrilsActive = new bool[data.physicalObject.physicalEncryptionScript.Tendrils.Count];
-            data.growthPoints = new Vector3[data.physicalObject.physicalEncryptionScript.GrowthPoints.Count];
-            data.subTargsPos = new Vector3[data.physicalObject.physicalEncryptionScript.SubTargs.Count];
-            data.subTargsActive = new bool[data.physicalObject.physicalEncryptionScript.SubTargs.Count];
-            data.tendrilFloats = new float[data.physicalObject.physicalEncryptionScript.TendrilFloats.Count];
-            data.tendrilsRot = new Quaternion[data.physicalObject.physicalEncryptionScript.Tendrils.Count];
-            data.tendrilsScale = new Vector3[data.physicalObject.physicalEncryptionScript.Tendrils.Count];
-            if (data.physicalObject.physicalEncryptionScript.UsesRegenerativeSubTarg)
-            {
-                for (int i = 0; i < data.physicalObject.physicalEncryptionScript.Tendrils.Count; ++i)
-                {
-                    if (data.physicalObject.physicalEncryptionScript.Tendrils[i].activeSelf)
-                    {
-                        data.tendrilsActive[i] = true;
-                        data.growthPoints[i] = data.physicalObject.physicalEncryptionScript.GrowthPoints[i];
-                        data.subTargsPos[i] = data.physicalObject.physicalEncryptionScript.SubTargs[i].transform.position;
-                        data.subTargsActive[i] = data.physicalObject.physicalEncryptionScript.SubTargs[i];
-                        data.tendrilFloats[i] = data.physicalObject.physicalEncryptionScript.TendrilFloats[i];
-                        data.tendrilsRot[i] = data.physicalObject.physicalEncryptionScript.Tendrils[i].transform.rotation;
-                        data.tendrilsScale[i] = data.physicalObject.physicalEncryptionScript.Tendrils[i].transform.localScale;
-                    }
-                }
-            }
-            else if (data.physicalObject.physicalEncryptionScript.UsesRecursiveSubTarg)
-            {
-                for (int i = 0; i < data.physicalObject.physicalEncryptionScript.SubTargs.Count; ++i)
-                {
-                    if (data.physicalObject.physicalEncryptionScript.SubTargs[i] != null && data.physicalObject.physicalEncryptionScript.SubTargs[i].activeSelf)
-                    {
-                        data.subTargsActive[i] = data.physicalObject.physicalEncryptionScript.SubTargs[i].activeSelf;
-                    }
-                }
-            }
-
-            // Add to local list
-            data.localTrackedID = encryptions.Count;
-            data.controller = ID;
-            data.initTracker = ID;
-            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
-            data.instance = instance;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || inPostSceneLoadTrack;
-            encryptions.Add(data);
-
-            // Call an init update because the one in awake won't be called because data was not set yet
-            if (trackedEncryption.awoken)
-            {
-                trackedEncryption.data.Update(true);
-            }
-
-            return trackedEncryption;
-        }
-
         public static TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin,
                                                          int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
                                                          int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
@@ -1126,61 +898,53 @@ namespace H3MP
                 // Item we control: Destroy, giveControlOfDestroyed = true will ensure item's control is passed on if necessary
                 // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these to new instance
                 ++giveControlOfDestroyed;
-                TrackedItemData[] itemArrToUse = null;
-                TrackedSosigData[] sosigArrToUse = null;
-                TrackedAutoMeaterData[] autoMeaterArrToUse = null;
-                TrackedEncryptionData[] encryptionArrToUse = null;
+
+                TrackedObjectData[] arrToUse = null;
                 if (ThreadManager.host)
                 {
-                    itemArrToUse = Server.items;
-                    sosigArrToUse = Server.sosigs;
-                    autoMeaterArrToUse = Server.autoMeaters;
-                    encryptionArrToUse = Server.encryptions;
+                    arrToUse = Server.objects;
                 }
                 else
                 {
-                    itemArrToUse = Client.items;
-                    sosigArrToUse = Client.sosigs;
-                    autoMeaterArrToUse = Client.autoMeaters;
-                    encryptionArrToUse = Client.encryptions;
+                    arrToUse = Client.objects;
                 }
-                List<TrackedItemData> filteredItems = new List<TrackedItemData>();
-                for (int i = itemArrToUse.Length - 1; i >= 0; --i)
+                List<TrackedObjectData> filteredObjects = new List<TrackedObjectData>();
+                for (int i = arrToUse.Length - 1; i >= 0; --i)
                 {
-                    if (itemArrToUse[i] != null && itemArrToUse[i].physicalItem != null)
+                    if (arrToUse[i] != null && arrToUse[i].physical != null)
                     {
-                        filteredItems.Add(itemArrToUse[i]);
+                        filteredObjects.Add(arrToUse[i]);
                     }
                 }
-                for (int i = 0; i < filteredItems.Count; ++i)
+                for (int i = 0; i < filteredObjects.Count; ++i)
                 {
-                    if (IsControlled(filteredItems[i].physicalItem.physicalObject))
+                    if (filteredObjects[i].IsControlled())
                     {
                         // Send destruction without removing from global list
                         // We just don't want the other clients to have the item on their side anymore if they had it
                         if (ThreadManager.host)
                         {
-                            ServerSend.DestroyItem(i, false);
+                            ServerSend.DestroyObject(i, false);
                         }
                         else
                         {
-                            ClientSend.DestroyItem(i, false);
+                            ClientSend.DestroyObject(i, false);
                         }
                     }
                     else // Not being interacted with, just destroy on our side and give control
                     {
                         if (bringItems)
                         {
-                            GameObject go = filteredItems[i].physicalItem.gameObject;
-                            bool hadNoParent = filteredItems[i].physicalItem.data.parent == -1;
+                            GameObject go = filteredObjects[i].physical.gameObject;
+                            bool hadNoParent = filteredObjects[i].parent == -1;
 
                             // Destroy just the tracked script because we want to make a copy for ourselves
-                            DestroyImmediate(filteredItems[i].physicalItem);
+                            DestroyImmediate(filteredObjects[i].physical);
 
                             // Only sync the top parent of items. The children will also get retracked as children
                             if (hadNoParent)
                             {
-                                SyncTrackedItems(go.transform, true, null, GameManager.scene);
+                                SyncTrackedObjects(go.transform, true, null, scene);
                             }
                         }
                         else // Destroy entire object
@@ -1188,129 +952,11 @@ namespace H3MP
                             // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
                             // like we do now if we didn't do immediate because OnDestroy() gets called later
                             // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                            DestroyImmediate(filteredItems[i].physicalItem.gameObject);
+                            DestroyImmediate(filteredObjects[i].physical.gameObject);
                         }
                     }
                 }
 
-                List<TrackedSosigData> filteredSosigs = new List<TrackedSosigData>();
-                for (int i = sosigArrToUse.Length - 1; i >= 0; --i)
-                {
-                    if (sosigArrToUse[i] != null && sosigArrToUse[i].physicalObject != null)
-                    {
-                        filteredSosigs.Add(sosigArrToUse[i]);
-                    }
-                }
-                for (int i = 0; i < filteredSosigs.Count; ++i)
-                {
-                    if (IsControlled(filteredSosigs[i].physicalObject.physicalSosig))
-                    {
-                        // Send destruction without removing from global list
-                        // We just don't want the other clients to have the sosig on their side anymore if they had it
-                        if (ThreadManager.host)
-                        {
-                            ServerSend.DestroySosig(i, false);
-                        }
-                        else
-                        {
-                            ClientSend.DestroySosig(i, false);
-                        }
-                    }
-                    else // Not being interacted with, just destroy on our side and give control
-                    {
-                        if (bringItems)
-                        {
-                            GameObject go = filteredSosigs[i].physicalObject.gameObject;
-
-                            // Destroy just the tracked script because we want to make a copy for ourselves
-                            DestroyImmediate(filteredSosigs[i].physicalObject);
-
-                            // Retrack sosig
-                            SyncTrackedSosigs(go.transform, true, GameManager.scene);
-                        }
-                        else // Destroy entire object
-                        {
-                            // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
-                            // like we do now if we didn't do immediate because OnDestroy() gets called later
-                            // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                            DestroyImmediate(filteredSosigs[i].physicalObject.gameObject);
-                        }
-                    }
-                }
-
-                List<TrackedAutoMeaterData> filteredAutoMeaters = new List<TrackedAutoMeaterData>();
-                for (int i = autoMeaterArrToUse.Length - 1; i >= 0; --i)
-                {
-                    if (autoMeaterArrToUse[i] != null && autoMeaterArrToUse[i].physicalObject != null)
-                    {
-                        filteredAutoMeaters.Add(autoMeaterArrToUse[i]);
-                    }
-                }
-                for (int i = 0; i < filteredAutoMeaters.Count; ++i)
-                {
-                    if (IsControlled(filteredAutoMeaters[i].physicalObject.physicalAutoMeaterScript))
-                    {
-                        // Send destruction without removing from global list
-                        // We just don't want the other clients to have the sosig on their side anymore if they had it
-                        if (ThreadManager.host)
-                        {
-                            ServerSend.DestroyAutoMeater(i, false);
-                        }
-                        else
-                        {
-                            ClientSend.DestroyAutoMeater(i, false);
-                        }
-                    }
-                    else // Not being interacted with, just destroy on our side and give control
-                    {
-                        if (bringItems)
-                        {
-                            GameObject go = filteredAutoMeaters[i].physicalObject.gameObject;
-
-                            // Destroy just the tracked script because we want to make a copy for ourselves
-                            DestroyImmediate(filteredAutoMeaters[i].physicalObject);
-
-                            // Retrack sosig
-                            SyncTrackedAutoMeaters(go.transform, true, GameManager.scene);
-                        }
-                        else // Destroy entire object
-                        {
-                            // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
-                            // like we do now if we didn't do immediate because OnDestroy() gets called later
-                            // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                            DestroyImmediate(filteredAutoMeaters[i].physicalObject.gameObject);
-                        }
-                    }
-                }
-
-                List<TrackedEncryptionData> filteredEncryptions = new List<TrackedEncryptionData>();
-                for (int i = encryptionArrToUse.Length - 1; i >= 0; --i)
-                {
-                    if (encryptionArrToUse[i] != null && encryptionArrToUse[i].physicalObject != null)
-                    {
-                        filteredEncryptions.Add(encryptionArrToUse[i]);
-                    }
-                }
-                for (int i = 0; i < filteredEncryptions.Count; ++i)
-                {
-                    if (bringItems)
-                    {
-                        GameObject go = filteredEncryptions[i].physicalObject.gameObject;
-
-                        // Destroy just the tracked script because we want to make a copy for ourselves
-                        DestroyImmediate(filteredEncryptions[i].physicalObject);
-
-                        // Retrack sosig
-                        SyncTrackedEncryptions(go.transform, true, GameManager.scene);
-                    }
-                    else // Destroy entire object
-                    {
-                        // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
-                        // like we do now if we didn't do immediate because OnDestroy() gets called later
-                        // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                        DestroyImmediate(filteredEncryptions[i].physicalObject.gameObject);
-                    }
-                }
                 --giveControlOfDestroyed;
             }
 
@@ -1379,22 +1025,6 @@ namespace H3MP
             WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
         }
 
-        // MOD: When player state data gets sent between clients, the sender will call this
-        //      to let mods write any custom data they want to the packet
-        //      This is data you want to have communicated with the other clients about yourself (ex.: scores, health, etc.)
-        //      To ensure compatibility with other mods you should extend the array as necessary and identify your part of the array with a specific 
-        //      code to find it in the array the first time, then keep that index in your mod to always find it in O(1) time later
-        public static void WriteAdditionalPlayerState(byte[] data)
-        {
-
-        }
-
-        // MOD: This is where your mod would read the byte[] of additional player data
-        public static void ProcessAdditionalPlayerData(int playerID, byte[] data)
-        {
-
-        }
-
         public static bool GetTrackedObjectType(Transform t, out Type trackedObjectType)
         {
             foreach(KeyValuePair<string, Type> entry in Mod.trackedObjectTypes)
@@ -1420,29 +1050,6 @@ namespace H3MP
             }
 
             return false;
-        }
-
-        // MOD: This will be called to check if the given sosig is controlled by this client
-        //      This currently checks if any link of the sosig is controlled
-        //      A mod can postfix this to change the return value if it wants to have control of sosigs based on other criteria
-        public static bool IsControlled(Sosig sosig)
-        {
-            foreach(SosigLink link in sosig.Links)
-            {
-                if(link != null && link.O != null && IsControlled(link.O))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // MOD: This will be called to check if the given AutoMeater is controlled by this client
-        //      This currently checks if any link of the AutoMeater is controlled
-        //      A mod can postfix this to change the return value if it wants to have control of AutoMeaters based on other criteria
-        public static bool IsControlled(AutoMeater autoMeater)
-        {
-            return autoMeater.PO.m_hand != null;
         }
 
         public static void OnSceneLoadedVR(bool loading)
@@ -1699,10 +1306,6 @@ namespace H3MP
             }
         }
 
-        // MOD: This will get called when a client disconnects from the server
-        //      A mod should postfix this to give control of whatever elements it has that are tracked through H3MP that are under this client's control
-        //      This will also get called when a TNH controller gives up control to redistribute control of sosigs/automeaters/encryptions
-        //      to the new controller. overrideController will be set to the new controller, and all will be false, specifying not to distribute item control
         public static void DistributeAllControl(int clientID, int overrideController = -1, bool all = true)
         {
             // Get best potential host

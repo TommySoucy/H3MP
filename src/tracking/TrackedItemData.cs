@@ -519,7 +519,7 @@ namespace H3MP.Tracking
             return false;
         }
 
-        public bool IsControlled()
+        public override bool IsControlled()
         {
             return physicalItem.physicalItem.m_hand != null || physicalItem.physicalItem.QuickbeltSlot != null;
         }

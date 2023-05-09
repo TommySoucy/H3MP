@@ -66,6 +66,11 @@ namespace H3MP.Tracking
             return root.GetComponent<AutoMeater>().PO.m_hand != null;
         }
 
+        public override bool IsControlled()
+        {
+            return physicalAutoMeater.physicalAutoMeater.PO.m_hand != null;
+        }
+
         public static TrackedAutoMeater MakeTracked(Transform root, TrackedObjectData parent)
         {
             TrackedAutoMeater trackedAutoMeater = root.gameObject.AddComponent<TrackedAutoMeater>();
