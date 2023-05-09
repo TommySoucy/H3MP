@@ -504,10 +504,15 @@ namespace H3MP.Tracking
             return updated || UpdateData() || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation);
         }
 
+        public override bool NeedsUpdate()
+        {
+            return base.NeedsUpdate() || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
+        }
+
         public static bool IsControlled(Transform root)
         {
             FVRPhysicalObject physObj = root.GetComponent<FVRPhysicalObject>();
-            if(physObj != null)
+            if (physObj != null)
             {
                 return physObj.m_hand != null || physObj.QuickbeltSlot != null;
             }
@@ -517,11 +522,6 @@ namespace H3MP.Tracking
         public bool IsControlled()
         {
             return physicalItem.physicalItem.m_hand != null || physicalItem.physicalItem.QuickbeltSlot != null;
-        }
-
-        public override bool NeedsUpdate()
-        {
-            return base.NeedsUpdate() || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !DataEqual();
         }
 
         private bool DataEqual()

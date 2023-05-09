@@ -1399,6 +1399,7 @@ namespace H3MP
         {
             foreach(KeyValuePair<string, Type> entry in Mod.trackedObjectTypes)
             {
+                // TODO: Make sure this considers the correct one even if types overlap, so if there is a modded type taht could also be a tracked item for example, we want to take the modded one
                 if ((bool)entry.Value.InvokeMember("IsOfType", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, null, new object[] { t }))
                 {
                     trackedObjectType = entry.Value;

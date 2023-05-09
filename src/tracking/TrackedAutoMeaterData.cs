@@ -61,6 +61,11 @@ namespace H3MP.Tracking
             return t.GetComponent<AutoMeater>() != null;
         }
 
+        public static bool IsControlled(Transform root)
+        {
+            return root.GetComponent<AutoMeater>().PO.m_hand != null;
+        }
+
         public static TrackedAutoMeater MakeTracked(Transform root, TrackedObjectData parent)
         {
             TrackedAutoMeater trackedAutoMeater = root.gameObject.AddComponent<TrackedAutoMeater>();
@@ -352,6 +357,32 @@ namespace H3MP.Tracking
                     physicalAutoMeater.physicalAutoMeater.RB.isKinematic = true;
                 }
             }
+        }
+
+        public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
+        {
+            base.WriteToPacket(packet, incrementOrder, full);
+
+            if (full)
+            {
+                if (data == null || data.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(data.Length);
+                    packet.Write(data);
+                }
+            }
+
+            packet.Write(position);
+            packet.Write(rotation);
+            packet.Write(IFF);
+            packet.Write(sideToSideRotation);
+            packet.Write(hingeTargetPos);
+            packet.Write(upDownMotorRotation);
+            packet.Write(upDownJointTargetPos);
         }
     }
 }

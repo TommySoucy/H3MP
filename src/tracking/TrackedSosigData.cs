@@ -186,7 +186,7 @@ namespace H3MP.Tracking
             {
                 for(int i=0; i<sosig.Links.Count; ++i)
                 {
-                    if(sosig.Links[i].O.m_hand != null)
+                    if(sosig.Links[i] != null && sosig.Links[i].O.m_hand != null)
                     {
                         return true;
                     }
