@@ -4,7 +4,6 @@ using H3MP.Patches;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP.Tracking
 {
@@ -9900,6 +9899,20 @@ namespace H3MP.Tracking
             if (physicalItem.QuickbeltSlot != null)
             {
                 physicalItem.ClearQuickbeltState();
+            }
+        }
+
+        public override void BeginInteraction(FVRViveHand hand)
+        {
+            if (data.controller != GameManager.ID)
+            {
+                // Take control
+
+                // Send to all clients
+                data.TakeControlRecursive();
+
+                // Update locally
+                Mod.SetKinematicRecursive(physical.transform, false);
             }
         }
     }

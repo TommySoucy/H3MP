@@ -222,8 +222,12 @@ namespace H3MP.Tracking
             data.physicalSosig.physicalSosig = sosigScript;
             data.physical.physical = sosigScript;
 
-            GameManager.trackedSosigBySosig.Add(data.physicalSosig.physicalSosig, trackedSosig);
-            GameManager.trackedObjectByObject.Add(data.physicalSosig.physicalSosig, trackedSosig);
+            GameManager.trackedSosigBySosig.Add(sosigScript, trackedSosig);
+            GameManager.trackedObjectByObject.Add(sosigScript, trackedSosig);
+            for(int i=0; i < sosigScript.Links.Count; ++i)
+            {
+                GameManager.trackedObjectByInteractive.Add(sosigScript.Links[i].O, trackedSosig);
+            }
 
             data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
             data.configTemplate.AppliesDamageResistToIntegrityLoss = sosigScript.AppliesDamageResistToIntegrityLoss;
@@ -671,8 +675,13 @@ namespace H3MP.Tracking
             SosigConfigurePatch.skipConfigure = true;
             physicalSosig.physicalSosig.Configure(configTemplate);
 
+            // TODO: We seem to be adding to these list but never removing?
             GameManager.trackedSosigBySosig.Add(physicalSosig.physicalSosig, physicalSosig);
             GameManager.trackedObjectByObject.Add(physicalSosig.physicalSosig, physicalSosig);
+            for (int i = 0; i < physicalSosig.physicalSosig.Links.Count; ++i)
+            {
+                GameManager.trackedObjectByInteractive.Add(physicalSosig.physicalSosig.Links[i].O, physicalSosig);
+            }
 
             AnvilManager.Run(EquipWearables());
 

@@ -85,6 +85,7 @@ namespace H3MP.Tracking
 
             GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
             GameManager.trackedObjectByObject.Add(autoMeaterScript, trackedAutoMeater);
+            GameManager.trackedObjectByInteractive.Add(autoMeaterScript.PO, trackedAutoMeater);
 
             data.position = autoMeaterScript.RB.position;
             data.rotation = autoMeaterScript.RB.rotation;
@@ -190,6 +191,7 @@ namespace H3MP.Tracking
 
             GameManager.trackedAutoMeaterByAutoMeater.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);
             GameManager.trackedObjectByObject.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);
+            GameManager.trackedObjectByInteractive.Add(physicalAutoMeater.physicalAutoMeater.PO, physicalAutoMeater);
 
             // Deregister the AI from the manager if we are not in control
             // Also set RB as kinematic

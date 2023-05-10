@@ -114,104 +114,12 @@ namespace H3MP.Patches
                     if (Mod.TNHSpectating)
                     {
                         ___m_currentInteractable.ForceBreakInteraction();
+                        return;
                     }
 
-                    // TODO: Future: Maybe track every tracked object with an FVRInteractiveObject in a TrackedObjectByInteractiveObject dict
-                    //               So we can then access any tracked object genericly through that instead of trying to GetComponent for each type
-                    //               Then make sure TrackedObject has a virtual BeginInteraction() that we would call from here
-
-                    // Just started interacting with this item
-                    TrackedItem trackedItem = ___m_currentInteractable.GetComponent<TrackedItem>();
-                    if (___m_currentInteractable is FVRPhysicalObject && trackedItem != null)
+                    if(GameManager.trackedObjectByInteractive.TryGetValue(___m_currentInteractable, out TrackedObject trackedObject))
                     {
-                        if (ThreadManager.host)
-                        {
-                            if (trackedItem.data.controller != 0)
-                            {
-                                // Take control
-
-                                // Send to all clients
-                                TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                                // Update locally
-                                Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            }
-                        }
-                        else
-                        {
-                            if (trackedItem.data.controller != Client.singleton.ID)
-                            {
-                                // Take control
-
-                                // Send to all clients
-                                TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                                // Update locally
-                                Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                            }
-                        }
-                    }
-                    else // Although SosigLinks are FVRPhysicalObjects, they don't have an objectWrapper, so they won't be tracked items
-                    {
-                        SosigLink sosigLink = ___m_currentInteractable.GetComponent<SosigLink>();
-                        if (sosigLink != null)
-                        {
-                            // We just grabbed a sosig
-                            TrackedSosig trackedSosig = sosigLink.S.GetComponent<TrackedSosig>();
-                            if (trackedSosig != null && trackedSosig.data.trackedID != -1 && trackedSosig.data.localTrackedID == -1)
-                            {
-                                if (ThreadManager.host)
-                                {
-                                    ServerSend.GiveSosigControl(trackedSosig.data.trackedID, 0, null);
-
-                                    // Update locally
-                                    trackedSosig.data.controller = 0;
-                                    trackedSosig.data.localTrackedID = GameManager.sosigs.Count;
-                                    GameManager.sosigs.Add(trackedSosig.data);
-                                }
-                                else
-                                {
-                                    ClientSend.GiveSosigControl(trackedSosig.data.trackedID, Client.singleton.ID, null);
-
-                                    // Update locally
-                                    trackedSosig.data.controller = Client.singleton.ID;
-                                    trackedSosig.data.localTrackedID = GameManager.sosigs.Count;
-                                    GameManager.sosigs.Add(trackedSosig.data);
-                                }
-
-                                trackedSosig.data.TakeInventoryControl();
-                            }
-                        }
-                        else // Although AutoMeater turrets have FVRPhysicalObjects, they don't have an objectWrapper, so they won't be tracked items
-                        {
-                            AutoMeater autoMeater = ___m_currentInteractable.GetComponent<AutoMeater>();
-                            if (autoMeater != null)
-                            {
-                                // We just grabbed an AutoMeater
-                                TrackedAutoMeater trackedAutoMeater = autoMeater.GetComponent<TrackedAutoMeater>();
-                                if (trackedAutoMeater != null && trackedAutoMeater.data.trackedID != -1 && trackedAutoMeater.data.localTrackedID == -1)
-                                {
-                                    if (ThreadManager.host)
-                                    {
-                                        ServerSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, 0, null);
-
-                                        // Update locally
-                                        trackedAutoMeater.data.controller = 0;
-                                        trackedAutoMeater.data.localTrackedID = GameManager.autoMeaters.Count;
-                                        GameManager.autoMeaters.Add(trackedAutoMeater.data);
-                                    }
-                                    else
-                                    {
-                                        ClientSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, Client.singleton.ID, null);
-
-                                        // Update locally
-                                        trackedAutoMeater.data.controller = Client.singleton.ID;
-                                        trackedAutoMeater.data.localTrackedID = GameManager.autoMeaters.Count;
-                                        GameManager.autoMeaters.Add(trackedAutoMeater.data);
-                                    }
-                                }
-                            }
-                        }
+                        trackedObject.BeginInteraction(__instance);
                     }
                 }
             }
@@ -223,56 +131,9 @@ namespace H3MP.Patches
                     //               So we can then access any tracked object genericly through that instead of trying to GetComponent for each type
                     //               Then make sure TrackedObject has a virtual EndInteraction() that we would call from here
 
-                    SosigLink sosigLink = preObject.GetComponent<SosigLink>();
-                    if (sosigLink != null)
+                    if (GameManager.trackedObjectByInteractive.TryGetValue(___m_currentInteractable, out TrackedObject trackedObject))
                     {
-                        // We just dropped a sosig
-                        TrackedSosig trackedSosig = sosigLink.S.GetComponent<TrackedSosig>();
-                        if (trackedSosig != null && trackedSosig.data.trackedID != -1)
-                        {
-                            // Need to make sure that we give control of the sosig back to the controller of a the current TNH instance if there is one
-                            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != GameManager.ID)
-                            {
-                                if (ThreadManager.host)
-                                {
-                                    ServerSend.GiveSosigControl(trackedSosig.data.trackedID, Mod.currentTNHInstance.controller, null);
-                                }
-                                else
-                                {
-                                    ClientSend.GiveSosigControl(trackedSosig.data.trackedID, Mod.currentTNHInstance.controller, null);
-                                }
-
-                                // Update locally
-                                trackedSosig.data.RemoveFromLocal();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        AutoMeater autoMeater = preObject.GetComponent<AutoMeater>();
-                        if (autoMeater != null)
-                        {
-                            // We just dropped an AutoMeater
-                            TrackedAutoMeater trackedAutoMeater = autoMeater.GetComponent<TrackedAutoMeater>();
-                            if (trackedAutoMeater != null && trackedAutoMeater.data.trackedID != -1)
-                            {
-                                // Need to make sure that we give control of the automeater back to the controller of a the current TNH instance if there is one
-                                if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != GameManager.ID)
-                                {
-                                    if (ThreadManager.host)
-                                    {
-                                        ServerSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, Mod.currentTNHInstance.controller, null);
-                                    }
-                                    else
-                                    {
-                                        ClientSend.GiveAutoMeaterControl(trackedAutoMeater.data.trackedID, Mod.currentTNHInstance.controller, null);
-                                    }
-
-                                    // Update locally
-                                    trackedAutoMeater.data.RemoveFromLocal();
-                                }
-                            }
-                        }
+                        trackedObject.EndInteraction(__instance);
                     }
                 }
             }

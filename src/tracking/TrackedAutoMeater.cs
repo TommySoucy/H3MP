@@ -34,5 +34,43 @@ namespace H3MP.Tracking
                 physicalAutoMeater.PO.ForceBreakInteraction();
             }
         }
+
+        public override void BeginInteraction(FVRViveHand hand)
+        {
+            if (data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.GiveObjectControl(data.trackedID, GameManager.ID, null);
+                }
+                else
+                {
+                    ClientSend.GiveObjectControl(data.trackedID, GameManager.ID, null);
+                }
+
+                data.controller = GameManager.ID;
+                data.localTrackedID = GameManager.objects.Count;
+                GameManager.objects.Add(data);
+            }
+        }
+
+        public override void EndInteraction(FVRViveHand hand)
+        {
+            // Need to make sure that we give control of the sosig back to the controller of a the current TNH instance if there is one
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.GiveObjectControl(data.trackedID, Mod.currentTNHInstance.controller, null);
+                }
+                else
+                {
+                    ClientSend.GiveObjectControl(data.trackedID, Mod.currentTNHInstance.controller, null);
+                }
+
+                // Update locally
+                data.RemoveFromLocal();
+            }
+        }
     }
 }

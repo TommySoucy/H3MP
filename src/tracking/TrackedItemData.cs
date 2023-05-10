@@ -98,6 +98,7 @@ namespace H3MP.Tracking
                 GameManager.trackedItemBySosigWeapon.Add((data.physicalItem.physicalItem as SosigWeaponPlayerInterface).W, trackedItem);
             }
             GameManager.trackedObjectByObject.Add(data.physicalItem.physicalItem, trackedItem);
+            GameManager.trackedObjectByInteractive.Add(data.physicalItem.physicalItem, trackedItem);
 
             if (parent != null)
             {
@@ -275,6 +276,7 @@ namespace H3MP.Tracking
                 {
                     GameManager.trackedObjectByObject.Add(physicalItem.physicalItem, physicalItem);
                 }
+                GameManager.trackedObjectByInteractive.Add(physicalItem.physicalItem, physicalItem);
 
                 // See Note in GameManager.SyncTrackedObjects
                 // Unfortunately this doesn't necessarily help us in this case considering we need the parent to have been instantiated

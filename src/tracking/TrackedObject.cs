@@ -340,5 +340,9 @@ namespace H3MP.Tracking
                 }
             }
         }
+
+        public virtual void BeginInteraction(FVRViveHand hand) { }
+
+        public virtual void EndInteraction(FVRViveHand hand) { }
     }
 }
