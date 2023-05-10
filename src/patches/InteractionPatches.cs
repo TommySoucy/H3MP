@@ -162,32 +162,13 @@ namespace H3MP.Patches
                 TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
                 if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
                 {
-                    if (ThreadManager.host)
-                    {
-                        if (trackedItem.data.controller != 0)
-                        {
-                            // Take control
+                    // Take control
 
-                            // Send to all clients
-                            TrackedItemData.TakeControlRecursive(trackedItem.data);
+                    // Send to all clients
+                    trackedItem.data.TakeControlRecursive();
 
-                            // Update locally
-                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        }
-                    }
-                    else
-                    {
-                        if (trackedItem.data.controller != Client.singleton.ID)
-                        {
-                            // Take control
-
-                            // Send to server and all other clients
-                            TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                            // Update locally
-                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        }
-                    }
+                    // Update locally
+                    Mod.SetKinematicRecursive(trackedItem.physical.transform, false);
                 }
             }
         }
@@ -210,49 +191,28 @@ namespace H3MP.Patches
             if (trackedItem != null && trackedSosig != null)
             {
                 bool primaryHand = __instance == __instance.S.Hand_Primary;
-                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " picked up item " + trackedItem.data.prefabID + " at " + trackedItem.data.trackedID + " in hand primary?: " + primaryHand);
+
+                trackedItem.BeginInteraction(null);
 
                 if (ThreadManager.host)
                 {
-                    if (trackedItem.data.controller != 0)
-                    {
-                        // Take control
-
-                        // Send to all clients
-                        TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                        // Update locally
-                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                    }
-
-                    trackedSosig.data.inventory[primaryHand ? 0 : 1] = trackedItem.data.trackedID;
+                    trackedSosig.sosigData.inventory[primaryHand ? 0 : 1] = trackedItem.data.trackedID;
 
                     ServerSend.SosigPickUpItem(trackedSosig.data.trackedID, trackedItem.data.trackedID, primaryHand);
                 }
                 else
                 {
-                    if (trackedItem.data.controller != Client.singleton.ID)
-                    {
-                        // Take control
-
-                        // Send to server and all other clients
-                        TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                        // Update locally
-                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                    }
-
                     // If we don't have item tracked ID
                     //  Add to unknownSosigInventoryItems indicating that once this item ha tracked ID we should add it to given sosig's logical inventory 
                     if (trackedItem.data.trackedID == -1)
                     {
                         if (TrackedItem.unknownSosigInventoryItems.TryGetValue(trackedItem.data.localWaitingIndex, out KeyValuePair<TrackedSosigData, int> entry))
                         {
-                            TrackedItem.unknownSosigInventoryItems[trackedItem.data.localWaitingIndex] = new KeyValuePair<TrackedSosigData, int>(trackedSosig.data, primaryHand ? 0 : 1);
+                            TrackedItem.unknownSosigInventoryItems[trackedItem.data.localWaitingIndex] = new KeyValuePair<TrackedSosigData, int>(trackedSosig.sosigData, primaryHand ? 0 : 1);
                         }
                         else
                         {
-                            TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<TrackedSosigData, int>(trackedSosig.data, primaryHand ? 0 : 1));
+                            TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<TrackedSosigData, int>(trackedSosig.sosigData, primaryHand ? 0 : 1));
                         }
                     }
 
@@ -262,18 +222,18 @@ namespace H3MP.Patches
                     {
                         if (TrackedSosig.unknownItemInteract.ContainsKey(trackedSosig.data.localWaitingIndex))
                         {
-                            TrackedSosig.unknownItemInteract[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<TrackedItemData, int>>(0, new KeyValuePair<TrackedItemData, int>(trackedItem.data, primaryHand ? 0 : 1)));
+                            TrackedSosig.unknownItemInteract[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<TrackedItemData, int>>(0, new KeyValuePair<TrackedItemData, int>(trackedItem.itemData, primaryHand ? 0 : 1)));
                         }
                         else
                         {
-                            TrackedSosig.unknownItemInteract.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<TrackedItemData, int>>>() { new KeyValuePair<int, KeyValuePair<TrackedItemData, int>>(0, new KeyValuePair<TrackedItemData, int>(trackedItem.data, primaryHand ? 0 : 1)) });
+                            TrackedSosig.unknownItemInteract.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<TrackedItemData, int>>>() { new KeyValuePair<int, KeyValuePair<TrackedItemData, int>>(0, new KeyValuePair<TrackedItemData, int>(trackedItem.itemData, primaryHand ? 0 : 1)) });
                         }
                     }
 
                     // If we have Item and Sosig tracked ID, send order
                     if (trackedItem.data.trackedID != -1 && trackedSosig.data.trackedID != -1)
                     {
-                        trackedSosig.data.inventory[primaryHand ? 0 : 1] = trackedItem.data.trackedID;
+                        trackedSosig.sosigData.inventory[primaryHand ? 0 : 1] = trackedItem.data.trackedID;
                         ClientSend.SosigPickUpItem(trackedSosig, trackedItem.data.trackedID, primaryHand);
                     }
                 }
@@ -302,7 +262,7 @@ namespace H3MP.Patches
             if (trackedSosig != null)
             {
                 int handIndex = __instance == __instance.S.Hand_Primary ? 0 : 1;
-                trackedSosig.data.inventory[handIndex] = -1;
+                trackedSosig.sosigData.inventory[handIndex] = -1;
                 Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " dropped item in hand: " + handIndex);
 
                 if (ThreadManager.host)
@@ -384,49 +344,28 @@ namespace H3MP.Patches
                         break;
                     }
                 }
-                Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " placed item " + trackedItem.data.prefabID + " at " + trackedItem.data.trackedID + " in slot: " + slotIndex);
+
+                trackedItem.BeginInteraction(null);
 
                 if (ThreadManager.host)
                 {
-                    if (trackedItem.data.controller != 0)
-                    {
-                        // Take control
-
-                        // Send to all clients
-                        TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                        // Update locally
-                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                    }
-
-                    trackedSosig.data.inventory[slotIndex + 2] = trackedItem.data.trackedID;
+                    trackedSosig.sosigData.inventory[slotIndex + 2] = trackedItem.data.trackedID;
 
                     ServerSend.SosigPlaceItemIn(trackedSosig.data.trackedID, slotIndex, trackedItem.data.trackedID);
                 }
                 else
                 {
-                    if (trackedItem.data.controller != Client.singleton.ID)
-                    {
-                        // Take control
-
-                        // Send to server and all other clients
-                        TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                        // Update locally
-                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                    }
-
                     // If we don't have item tracked ID
                     //  Add to unknownSosigInventoryItems indicating that once this item has tracked ID we should add it to given sosig's logical inventory 
                     if (trackedItem.data.trackedID == -1)
                     {
                         if (TrackedItem.unknownSosigInventoryItems.TryGetValue(trackedItem.data.localWaitingIndex, out KeyValuePair<TrackedSosigData, int> entry))
                         {
-                            TrackedItem.unknownSosigInventoryItems[trackedItem.data.localWaitingIndex] = new KeyValuePair<TrackedSosigData, int>(trackedSosig.data, slotIndex);
+                            TrackedItem.unknownSosigInventoryItems[trackedItem.data.localWaitingIndex] = new KeyValuePair<TrackedSosigData, int>(trackedSosig.sosigData, slotIndex);
                         }
                         else
                         {
-                            TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<TrackedSosigData, int>(trackedSosig.data, slotIndex));
+                            TrackedItem.unknownSosigInventoryItems.Add(trackedItem.data.localWaitingIndex, new KeyValuePair<TrackedSosigData, int>(trackedSosig.sosigData, slotIndex));
                         }
                     }
 
@@ -436,18 +375,18 @@ namespace H3MP.Patches
                     {
                         if (TrackedSosig.unknownItemInteract.ContainsKey(trackedSosig.data.localWaitingIndex))
                         {
-                            TrackedSosig.unknownItemInteract[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<TrackedItemData, int>>(1, new KeyValuePair<TrackedItemData, int>(trackedItem.data, slotIndex)));
+                            TrackedSosig.unknownItemInteract[trackedSosig.data.localWaitingIndex].Add(new KeyValuePair<int, KeyValuePair<TrackedItemData, int>>(1, new KeyValuePair<TrackedItemData, int>(trackedItem.itemData, slotIndex)));
                         }
                         else
                         {
-                            TrackedSosig.unknownItemInteract.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<TrackedItemData, int>>>() { new KeyValuePair<int, KeyValuePair<TrackedItemData, int>>(1, new KeyValuePair<TrackedItemData, int>(trackedItem.data, slotIndex)) });
+                            TrackedSosig.unknownItemInteract.Add(trackedSosig.data.localWaitingIndex, new List<KeyValuePair<int, KeyValuePair<TrackedItemData, int>>>() { new KeyValuePair<int, KeyValuePair<TrackedItemData, int>>(1, new KeyValuePair<TrackedItemData, int>(trackedItem.itemData, slotIndex)) });
                         }
                     }
 
                     // If we have Item and Sosig tracked ID, send order
                     if (trackedItem.data.trackedID != -1 && trackedSosig.data.trackedID != -1)
                     {
-                        trackedSosig.data.inventory[slotIndex + 2] = trackedItem.data.trackedID;
+                        trackedSosig.sosigData.inventory[slotIndex + 2] = trackedItem.data.trackedID;
                         ClientSend.SosigPlaceItemIn(trackedSosig.data.trackedID, slotIndex, trackedItem.data.trackedID);
                     }
                 }
@@ -485,7 +424,7 @@ namespace H3MP.Patches
                     }
                 }
                 Mod.LogInfo("Sosig " + trackedSosig.data.trackedID + " drop item in slot: " + slotIndex);
-                trackedSosig.data.inventory[slotIndex + 2] = -1;
+                trackedSosig.sosigData.inventory[slotIndex + 2] = -1;
 
                 if (ThreadManager.host)
                 {
@@ -542,7 +481,7 @@ namespace H3MP.Patches
     // Patches FVRViveHand BeginFlick to take control of the object and CastToFindHover to consider uncontrolled items
     class GrabbityPatch
     {
-        static bool FlickPrefix(FVRPhysicalObject o)
+        static bool FlickPrefix(FVRViveHand __instance, FVRPhysicalObject o)
         {
             if (Mod.managerObject == null)
             {
@@ -558,16 +497,7 @@ namespace H3MP.Patches
             TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(o, out TrackedItem currentItem) ? currentItem : o.GetComponent<TrackedItem>();
             if (trackedItem != null)
             {
-                if (trackedItem.data.controller != GameManager.ID)
-                {
-                    // Take control
-
-                    // Send to all clients
-                    TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                    // Update locally
-                    Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                }
+                trackedItem.BeginInteraction(__instance);
             }
 
             return true;
@@ -589,7 +519,7 @@ namespace H3MP.Patches
                     TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(component, out trackedItem) ? trackedItem : component.GetComponent<TrackedItem>();
                     // If tracked and not under our control, check our own conditions, otherwise treat as normal
                     if (trackedItem != null && trackedItem.data.controller != GameManager.ID &&
-                        !trackedItem.data.underActiveControl && component.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                        !trackedItem.itemData.underActiveControl && component.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
                     {
                         __instance.SetGrabbityHovered(component);
                         flag = true;
@@ -609,7 +539,7 @@ namespace H3MP.Patches
                     TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(component2, out trackedItem) ? trackedItem : component2.GetComponent<TrackedItem>();
                     // If tracked and not under our control, check our own conditions, otherwise treat as normal
                     if (trackedItem != null && trackedItem.data.controller != GameManager.ID &&
-                        !trackedItem.data.underActiveControl && component2.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                        !trackedItem.itemData.underActiveControl && component2.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
                     {
                         __instance.SetGrabbityHovered(component2);
                         flag = true;
@@ -629,7 +559,7 @@ namespace H3MP.Patches
                     TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(component3, out trackedItem) ? trackedItem : component3.GetComponent<TrackedItem>();
                     // If tracked and not under our control, check our own conditions, otherwise treat as normal
                     if (trackedItem != null && trackedItem.data.controller != GameManager.ID &&
-                        !trackedItem.data.underActiveControl && component3.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
+                        !trackedItem.itemData.underActiveControl && component3.IsDistantGrabbable() && !Physics.Linecast(__instance.PointingTransform.position, __instance.PointingTransform.position + __instance.PointingTransform.forward * ___m_grabbity_hit.distance, __instance.LM_Grabbity_Block, QueryTriggerInteraction.Ignore))
                     {
                         __instance.SetGrabbityHovered(component3);
                         flag = true;
@@ -678,32 +608,7 @@ namespace H3MP.Patches
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(___m_obj, out TrackedItem currentItem) ? currentItem : ___m_obj.GetComponent<TrackedItem>();
                 if (trackedItem != null)
                 {
-                    if (ThreadManager.host)
-                    {
-                        if (trackedItem.data.controller != 0)
-                        {
-                            // Take control
-
-                            // Send to all clients
-                            TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                            // Update locally
-                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        }
-                    }
-                    else
-                    {
-                        if (trackedItem.data.controller != Client.singleton.ID)
-                        {
-                            // Take control
-
-                            // Send to all clients
-                            TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                            // Update locally
-                            Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                        }
-                    }
+                    trackedItem.BeginInteraction(null);
                 }
             }
         }
@@ -741,32 +646,7 @@ namespace H3MP.Patches
             TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(physObj, out TrackedItem currentItem) ? currentItem : physObj.GetComponent<TrackedItem>();
             if (trackedItem != null)
             {
-                if (ThreadManager.host)
-                {
-                    if (trackedItem.data.controller != 0)
-                    {
-                        // Take control
-
-                        // Send to all clients
-                        TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                        // Update locally
-                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                    }
-                }
-                else
-                {
-                    if (trackedItem.data.controller != Client.singleton.ID)
-                    {
-                        // Take control
-
-                        // Send to all clients
-                        TrackedItemData.TakeControlRecursive(trackedItem.data);
-
-                        // Update locally
-                        Mod.SetKinematicRecursive(trackedItem.physicalObject.transform, false);
-                    }
-                }
+                trackedItem.BeginInteraction(null);
             }
         }
     }
