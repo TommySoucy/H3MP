@@ -306,7 +306,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void DestroyObject(int clientID, Packet packet)
+        public static void DestroyObject(Packet packet)
         {
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();

@@ -333,13 +333,14 @@ namespace H3MP.Networking
         {
             packetHandlers = new PacketHandler[]
             {
-                null,
                 ClientHandle.Welcome,
                 ClientHandle.SpawnPlayer,
                 ClientHandle.PlayerState,
                 ClientHandle.PlayerScene,
                 ClientHandle.AddNonSyncScene,
                 ClientHandle.ShatterableCrateSetHoldingHealth,
+                ClientHandle.GiveObjectControl,
+                ClientHandle.ObjectParent,
                 ClientHandle.ConnectSync,
                 ClientHandle.WeaponFire,
                 ClientHandle.PlayerDamage,
@@ -491,6 +492,7 @@ namespace H3MP.Networking
                 ClientHandle.TrackedObject,
                 ClientHandle.TrackedObjects,
                 ClientHandle.ObjectUpdate,
+                ClientHandle.DestroyObject,
             };
 
             // All vanilla scenes can be synced by default
