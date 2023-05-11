@@ -441,16 +441,26 @@ namespace H3MP.Tracking
             return null;
         }
 
-        public override void UpdateFromData(TrackedObjectData updatedObject)
+        public override void UpdateFromData(TrackedObjectData updatedObject, bool full = false)
         {
-            base.UpdateFromData(updatedObject);
+            base.UpdateFromData(updatedObject, full);
 
             TrackedItemData updatedItem = updatedObject as TrackedItemData;
+
+            if (full)
+            {
+                itemID = updatedItem.itemID;
+                identifyingData = updatedItem.identifyingData;
+                additionalData = updatedItem.additionalData;
+            }
+
             previousPos = position;
             previousRot = rotation;
             position = updatedItem.position;
             velocity = previousPos == null ? Vector3.zero : position - previousPos;
             rotation = updatedItem.rotation;
+            previousActiveControl = underActiveControl;
+            underActiveControl = updatedItem.underActiveControl;
             if (physical != null)
             {
                 if (!TrackedItem.interpolated)
@@ -467,12 +477,67 @@ namespace H3MP.Tracking
                         physical.transform.localRotation = updatedItem.rotation;
                     }
                 }
-
-                previousActiveControl = underActiveControl;
-                underActiveControl = updatedItem.underActiveControl;
             }
 
             UpdateData(updatedItem.data);
+        }
+
+        public override void UpdateFromPacket(Packet packet, bool full = false)
+        {
+            base.UpdateFromPacket(packet, full);
+
+            if (full)
+            {
+                itemID = packet.ReadString();
+                int identifyingDataCount = packet.ReadInt();
+                if(identifyingDataCount > 0)
+                {
+                    identifyingData = packet.ReadBytes(identifyingDataCount);
+                }
+                else
+                {
+                    identifyingData = null;
+                }
+                int additionalDataCount = packet.ReadInt();
+                if (additionalDataCount > 0)
+                {
+                    additionalData = packet.ReadBytes(additionalDataCount);
+                }
+                else
+                {
+                    additionalData = null;
+                }
+            }
+
+            previousPos = position;
+            previousRot = rotation;
+            position = packet.ReadVector3();
+            velocity = previousPos == null ? Vector3.zero : position - previousPos;
+            rotation = packet.ReadQuaternion();
+            int dataCount = packet.ReadInt();
+            byte[] newData = packet.ReadBytes(dataCount);
+            previousActiveControl = underActiveControl;
+            underActiveControl = packet.ReadBool();
+
+            if (physical != null)
+            {
+                if (!TrackedItem.interpolated)
+                {
+                    if (parent == -1)
+                    {
+                        physical.transform.position = position;
+                        physical.transform.rotation = rotation;
+                    }
+                    else
+                    {
+                        // If parented, the position and rotation are relative, so set it now after parenting
+                        physical.transform.localPosition = position;
+                        physical.transform.localRotation = rotation;
+                    }
+                }
+            }
+
+            UpdateData(newData);
         }
 
         public override bool Update(bool full = false)
@@ -754,7 +819,6 @@ namespace H3MP.Tracking
                     packet.Write(identifyingData.Length);
                     packet.Write(identifyingData);
                 }
-                packet.Write(parent);
                 if (additionalData == null || additionalData.Length == 0)
                 {
                     packet.Write(0);

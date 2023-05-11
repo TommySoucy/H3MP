@@ -254,16 +254,118 @@ namespace H3MP.Tracking
             UpdateFromData(this);
         }
 
-        public override void UpdateFromData(TrackedObjectData updatedObject)
+        public override void UpdateFromData(TrackedObjectData updatedObject, bool full = false)
         {
-            base.UpdateFromData(updatedObject);
+            base.UpdateFromData(updatedObject, full);
 
             TrackedEncryptionData updatedEncryption = updatedObject as TrackedEncryptionData;
+
+            if (full)
+            {
+                type = updatedEncryption.type;
+                tendrilsActive = updatedEncryption.tendrilsActive;
+                growthPoints = updatedEncryption.growthPoints;
+                subTargsPos = updatedEncryption.subTargsPos;
+                subTargsActive = updatedEncryption.subTargsActive;
+                tendrilFloats = updatedEncryption.tendrilFloats;
+                tendrilsRot = updatedEncryption.tendrilsRot;
+                tendrilsScale = updatedEncryption.tendrilsScale;
+            }
 
             previousPos = position;
             previousRot = rotation;
             position = updatedEncryption.position;
             rotation = updatedEncryption.rotation;
+
+            if (physicalEncryption != null)
+            {
+                if (physicalEncryption.physicalEncryption.RB != null)
+                {
+                    physicalEncryption.physicalEncryption.RB.position = position;
+                    physicalEncryption.physicalEncryption.RB.rotation = rotation;
+                }
+                else
+                {
+                    physicalEncryption.physicalEncryption.transform.position = position;
+                    physicalEncryption.physicalEncryption.transform.rotation = rotation;
+                }
+            }
+        }
+
+        public override void UpdateFromPacket(Packet packet, bool full = false)
+        {
+            base.UpdateFromPacket(packet, full);
+
+            if (full)
+            {
+                type = (TNH_EncryptionType)packet.ReadByte();
+                int length = packet.ReadInt();
+                if (length > 0)
+                {
+                    tendrilsActive = new bool[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        tendrilsActive[i] = packet.ReadBool();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    growthPoints = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        growthPoints[i] = packet.ReadVector3();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    subTargsPos = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        subTargsPos[i] = packet.ReadVector3();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    subTargsActive = new bool[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        subTargsActive[i] = packet.ReadBool();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    tendrilFloats = new float[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        tendrilFloats[i] = packet.ReadFloat();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    tendrilsRot = new Quaternion[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        tendrilsRot[i] = packet.ReadQuaternion();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    tendrilsScale = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        tendrilsScale[i] = packet.ReadVector3();
+                    }
+                }
+            }
+
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
 
             if (physicalEncryption != null)
             {

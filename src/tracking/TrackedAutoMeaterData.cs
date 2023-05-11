@@ -259,11 +259,17 @@ namespace H3MP.Tracking
             }
         }
 
-        public override void UpdateFromData(TrackedObjectData updatedObject)
+        public override void UpdateFromData(TrackedObjectData updatedObject, bool full = false)
         {
-            base.UpdateFromData(updatedObject);
+            base.UpdateFromData(updatedObject, full);
 
             TrackedAutoMeaterData updatedAutoMeater = updatedObject as TrackedAutoMeaterData;
+
+            if (full)
+            {
+                ID = updatedAutoMeater.ID;
+                data = updatedAutoMeater.data;
+            }
 
             // Set data
             previousPos = position;
@@ -280,6 +286,52 @@ namespace H3MP.Tracking
             upDownMotorRotation = updatedAutoMeater.upDownMotorRotation;
             previousUpDownJointTargetPos = upDownJointTargetPos;
             upDownJointTargetPos = updatedAutoMeater.upDownJointTargetPos;
+
+            // Set physically
+            if (physicalAutoMeater != null)
+            {
+                physicalAutoMeater.physicalAutoMeater.RB.position = position;
+                physicalAutoMeater.physicalAutoMeater.RB.rotation = rotation;
+                physicalAutoMeater.physicalAutoMeater.E.IFFCode = IFF;
+                physicalAutoMeater.physicalAutoMeater.SideToSideTransform.localRotation = sideToSideRotation;
+                HingeJoint hingeJoint = physicalAutoMeater.physicalAutoMeater.SideToSideHinge;
+                JointSpring spring = hingeJoint.spring;
+                spring.targetPosition = hingeTargetPos;
+                hingeJoint.spring = spring;
+                physicalAutoMeater.physicalAutoMeater.UpDownTransform.localRotation = upDownMotorRotation;
+                HingeJoint upDownHingeJoint = physicalAutoMeater.physicalAutoMeater.UpDownHinge;
+                spring = upDownHingeJoint.spring;
+                spring.targetPosition = upDownJointTargetPos;
+                upDownHingeJoint.spring = spring;
+            }
+        }
+
+        // TODO: Review: If full updates are ever actually used, should they? Or should be ever only use ObjectUpdate packets
+        public override void UpdateFromPacket(Packet packet, bool full = false)
+        {
+            base.UpdateFromPacket(packet, full);
+
+            if (full)
+            {
+                ID = packet.ReadByte();
+                int dataLen = packet.ReadInt();
+                if (dataLen > 0)
+                {
+                    data = packet.ReadBytes(dataLen);
+                }
+                else
+                {
+                    data = null;
+                }
+            }
+
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+            IFF = packet.ReadByte();
+            sideToSideRotation = packet.ReadQuaternion();
+            hingeTargetPos = packet.ReadFloat();
+            upDownMotorRotation = packet.ReadQuaternion();
+            upDownJointTargetPos = packet.ReadFloat();
 
             // Set physically
             if (physicalAutoMeater != null)

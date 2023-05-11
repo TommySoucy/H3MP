@@ -2364,9 +2364,8 @@ namespace H3MP.Networking
             bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
             {
-                TrackedItemData trackedItem = packet.ReadTrackedItem(true);
                 TrackedItemData actualTrackedItem = Server.items[trackedItem.trackedID];
-                GameManager.UpdateTrackedItem(trackedItem, true);
+                actualTrackedItem.UpdateFromPacket(packet, true);
 
                 // Although we only request up to date objects from our scene/instance, it might have changed since we made the request
                 // So here we check it again

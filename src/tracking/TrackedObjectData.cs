@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
@@ -119,7 +120,7 @@ namespace H3MP.Tracking
         }
 
         // Processes an update packet
-        public static void Update(Packet packet)
+        public static void Update(Packet packet, bool full = false)
         {
             byte order = packet.ReadByte();
             int trackedID = packet.ReadInt();
@@ -156,16 +157,29 @@ namespace H3MP.Tracking
                 // AND we don't want to take this update if this is a packet that was sent before the previous update
                 // Since the order is kept as a single byte, it will overflow every 256 packets of this object
                 // Here we consider the update out of order if it is within 128 iterations before the latest
-                if (trackedObjectData.controller != GameManager.ID && (order > trackedObjectData.order || trackedObjectData.order - order > 128))
+                if (trackedObjectData.controller != GameManager.ID && (full || (order > trackedObjectData.order || trackedObjectData.order - order > 128)))
                 {
-                    trackedObjectData.UpdateFromPacket(packet);
+                    trackedObjectData.UpdateFromPacket(packet, full);
                 }
             }
         }
 
         // Updates the object using given data
-        public virtual void UpdateFromData(TrackedObjectData updatedObject)
+        public virtual void UpdateFromData(TrackedObjectData updatedObject, bool full = false)
         {
+            if (full)
+            {
+                typeIdentifier = updatedObject.typeIdentifier;
+                controller = updatedObject.controller;
+                parent = updatedObject.parent;
+                localTrackedID = updatedObject.localTrackedID;
+                scene = updatedObject.scene;
+                instance = updatedObject.instance;
+                sceneInit = updatedObject.sceneInit;
+                localWaitingIndex = updatedObject.localWaitingIndex;
+                initTracker = updatedObject.initTracker;
+            }
+
             order = updatedObject.order;
             if (physical != null)
             {
@@ -189,8 +203,21 @@ namespace H3MP.Tracking
         }
 
         // Updates the object using given update packet
-        public virtual void UpdateFromPacket(Packet packet)
+        public virtual void UpdateFromPacket(Packet packet, bool full = false)
         {
+            if (full)
+            {
+                typeIdentifier = packet.ReadString();
+                controller = packet.ReadInt();
+                parent = packet.ReadInt();
+                localTrackedID = packet.ReadInt();
+                scene = packet.ReadString();
+                instance = packet.ReadInt();
+                sceneInit = packet.ReadBool();
+                localWaitingIndex = packet.ReadUInt();
+                initTracker = packet.ReadInt();
+            }
+
             if (physical != null)
             {
                 previousActive = active;
