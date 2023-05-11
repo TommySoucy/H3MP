@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace H3MP.Networking
 {
+    todo: // Reorder enums and make sure it maches the handlers
     /// <summary>Sent from server to client.</summary>
     public enum ServerPackets
     {

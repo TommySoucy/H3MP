@@ -641,5 +641,20 @@ namespace H3MP.Tracking
         }
 
         public virtual void ParentChanged() { }
+
+        public virtual void RemoveFromLists()
+        {
+            if (ThreadManager.host)
+            {
+                Server.objects[trackedID] = null;
+                Server.availableObjectIndices.Add(trackedID);
+            }
+            else
+            {
+                Client.objects[trackedID] = null;
+            }
+
+            GameManager.objectsByInstanceByScene[scene][instance].Remove(trackedID);
+        }
     }
 }

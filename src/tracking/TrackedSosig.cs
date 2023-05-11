@@ -87,6 +87,17 @@ namespace H3MP.Tracking
             base.OnDestroy();
         }
 
+        public override void SecondaryDestroy()
+        {
+            foreach (SosigLink link in physicalSosig.Links)
+            {
+                if (link != null)
+                {
+                    GameObject.Destroy(link.gameObject);
+                }
+            }
+        }
+
         public override void BeginInteraction(FVRViveHand hand)
         {
             if (data.controller != GameManager.ID)

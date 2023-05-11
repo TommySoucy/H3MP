@@ -341,8 +341,12 @@ namespace H3MP.Tracking
             }
         }
 
+        public virtual void SecondaryDestroy() { }
+
         public virtual void BeginInteraction(FVRViveHand hand) { }
 
         public virtual void EndInteraction(FVRViveHand hand) { }
+
+        public virtual void EnsureUncontrolled() { }
     }
 }

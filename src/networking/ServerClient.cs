@@ -338,20 +338,20 @@ namespace H3MP.Networking
         public void SendRelevantTrackedObjects(int fromClient = -1)
         {
             Mod.LogInfo("Sending relevant object to " + ID + " from " + fromClient+" in "+ player.scene+"/"+ player.instance);
-            // Items
-            if (GameManager.itemsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> itemInstances) &&
-                itemInstances.TryGetValue(player.instance, out List<int> items))
+
+            if (GameManager.objectsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> objectInstances) &&
+                objectInstances.TryGetValue(player.instance, out List<int> objects))
             {
-                for(int i=0; i < items.Count; ++i)
+                for(int i=0; i < objects.Count; ++i)
                 {
-                    TrackedItemData trackedItemData = Server.items[items[i]];
-                    if(trackedItemData != null && (fromClient == -1 || trackedItemData.controller == fromClient))
+                    TrackedObjectData trackedObjectData = Server.objects[objects[i]];
+                    if(trackedObjectData != null && (fromClient == -1 || trackedObjectData.controller == fromClient))
                     {
                         // If this is ours
-                        if(trackedItemData.controller == 0)
+                        if(trackedObjectData.controller == 0)
                         {
                             // Check if should send
-                            if(GameManager.sceneLoading && trackedItemData.scene.Equals(GameManager.scene))
+                            if(GameManager.sceneLoading && trackedObjectData.scene.Equals(GameManager.scene))
                             {
                                 // We don't want to send an object that is ours from the scene we are currently loading away from
                                 // So just continue to next object
@@ -359,94 +359,9 @@ namespace H3MP.Networking
                             }
 
                             // If sending, make sure it init otherwise we might be missing data
-                            trackedItemData.Update();
+                            trackedObjectData.Update();
                         }
-                        ServerSend.TrackedItemSpecific(trackedItemData, ID);
-                    }
-                }
-            }
-
-            // Sosigs
-            if (GameManager.sosigsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> sosigInstances) &&
-                sosigInstances.TryGetValue(player.instance, out List<int> sosigs))
-            {
-                Mod.LogInfo("\tHas sosig");
-                for (int i=0; i < sosigs.Count; ++i)
-                {
-                    TrackedSosigData trackedSosigData = Server.sosigs[sosigs[i]];
-                    if(trackedSosigData != null && (fromClient == -1 || trackedSosigData.controller == fromClient))
-                    {
-                        // If this is ours
-                        if(trackedSosigData.controller == 0)
-                        {
-                            // Check if should send
-                            if (GameManager.sceneLoading && trackedSosigData.scene.Equals(GameManager.scene))
-                            {
-                                // We don't want to send an object that is ours from the scene we are currently loading away from
-                                // So just continue to next object
-                                continue;
-                            }
-
-                            // If sending, make sure it init otherwise we might be missing data
-                            trackedSosigData.Update();
-                        }
-                        ServerSend.TrackedSosigSpecific(trackedSosigData, ID);
-                    }
-                }
-            }
-
-            // AutoMeaters
-            if (GameManager.autoMeatersByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> autoMeaterInstances) &&
-                autoMeaterInstances.TryGetValue(player.instance, out List<int> autoMeaters))
-            {
-                for(int i=0; i < autoMeaters.Count; ++i)
-                {
-                    TrackedAutoMeaterData trackedAutoMeaterData = Server.autoMeaters[autoMeaters[i]];
-                    if(trackedAutoMeaterData != null && (fromClient == -1 || trackedAutoMeaterData.controller == fromClient))
-                    {
-                        // If this is ours
-                        if(trackedAutoMeaterData.controller == 0)
-                        {
-                            // Check if should send
-                            if (GameManager.sceneLoading && trackedAutoMeaterData.scene.Equals(GameManager.scene))
-                            {
-                                // We don't want to send an object that is ours from the scene we are currently loading away from
-                                // So just continue to next object
-                                continue;
-                            }
-
-                            // If sending, make sure it init otherwise we might be missing data
-                            trackedAutoMeaterData.Update();
-                        }
-                        ServerSend.TrackedAutoMeaterSpecific(trackedAutoMeaterData, ID);
-                    }
-                }
-            }
-
-            // Encryptions
-            if (GameManager.encryptionsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> encryptionInstances) &&
-                encryptionInstances.TryGetValue(player.instance, out List<int> encryptions))
-            {
-                for(int i=0; i < encryptions.Count; ++i)
-                {
-                    TrackedEncryptionData trackedEncryptionData = Server.encryptions[encryptions[i]];
-                    if(trackedEncryptionData != null && (fromClient == -1 || trackedEncryptionData.controller == fromClient))
-                    {
-                        // If this is ours
-                        if(trackedEncryptionData.controller == 0)
-                        {
-                            // Check if should send
-                            if (GameManager.sceneLoading && trackedEncryptionData.scene.Equals(GameManager.scene))
-                            {
-                                // We don't want to send an object that is ours from the scene we are currently loading away from
-                                // So just continue to next object
-                                continue;
-                            }
-
-                            // If sending, make sure it init otherwise we might be missing data
-                            trackedEncryptionData.Update();
-                        }
-                        ServerSend.TrackedEncryptionSpecific(trackedEncryptionData, ID);
+                        ServerSend.TrackedObjectSpecific(trackedObjectData, ID);
                     }
                 }
             }

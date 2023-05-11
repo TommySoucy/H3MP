@@ -9890,7 +9890,7 @@ namespace H3MP.Tracking
             base.OnDestroy();
         }
 
-        public void EnsureUncontrolled()
+        public override void EnsureUncontrolled()
         {
             if (physicalItem.m_hand != null)
             {
