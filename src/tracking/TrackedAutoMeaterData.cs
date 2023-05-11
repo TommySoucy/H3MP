@@ -83,6 +83,8 @@ namespace H3MP.Tracking
             data.physicalAutoMeater.physicalAutoMeater = autoMeaterScript;
             data.physical.physical = autoMeaterScript;
 
+            data.typeIdentifier = "TrackedAutoMeaterData";
+
             GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
             GameManager.trackedObjectByObject.Add(autoMeaterScript, trackedAutoMeater);
             GameManager.trackedObjectByInteractive.Add(autoMeaterScript.PO, trackedAutoMeater);

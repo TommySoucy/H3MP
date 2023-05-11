@@ -222,6 +222,8 @@ namespace H3MP.Tracking
             data.physicalSosig.physicalSosig = sosigScript;
             data.physical.physical = sosigScript;
 
+            data.typeIdentifier = "TrackedSosigData";
+
             GameManager.trackedSosigBySosig.Add(sosigScript, trackedSosig);
             GameManager.trackedObjectByObject.Add(sosigScript, trackedSosig);
             for(int i=0; i < sosigScript.Links.Count; ++i)

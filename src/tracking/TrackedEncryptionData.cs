@@ -118,6 +118,8 @@ namespace H3MP.Tracking
             data.physicalEncryption.physicalEncryption = root.GetComponent<TNH_EncryptionTarget>();
             data.physical.physical = data.physicalEncryption.physicalEncryption;
 
+            data.typeIdentifier = "TrackedEncryptionData";
+
             GameManager.trackedEncryptionByEncryption.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
             GameManager.trackedObjectByObject.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
 

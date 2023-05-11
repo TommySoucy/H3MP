@@ -92,6 +92,8 @@ namespace H3MP.Tracking
             data.physicalItem.physicalItem = root.GetComponent<FVRPhysicalObject>();
             data.physical.physical = data.physicalItem.physicalItem;
 
+            data.typeIdentifier = "TrackedItemData";
+
             GameManager.trackedItemByItem.Add(data.physicalItem.physicalItem, trackedItem);
             if (data.physicalItem.physicalItem is SosigWeaponPlayerInterface)
             {
