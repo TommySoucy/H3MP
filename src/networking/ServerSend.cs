@@ -451,91 +451,11 @@ namespace H3MP.Networking
             }
         }
 
-        public static void TrackedItem(TrackedItemData trackedItem, List<int> toClients)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.trackedItem))
-            {
-                packet.Write(trackedItem, false, true);
-
-                SendTCPData(toClients, packet);
-            }
-        }
-
-        public static void TrackedSosig(TrackedSosigData trackedSosig, List<int> toClients)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.trackedSosig))
-            {
-                packet.Write(trackedSosig, false, true);
-
-                SendTCPData(toClients, packet);
-            }
-        }
-
-        public static void TrackedAutoMeater(TrackedAutoMeaterData trackedAutoMeater, List<int> toClients)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.trackedAutoMeater))
-            {
-                packet.Write(trackedAutoMeater, false, true);
-
-                SendTCPData(toClients, packet);
-            }
-        }
-
-        public static void TrackedEncryption(TrackedEncryptionData trackedEncryption, List<int> toClients)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.trackedEncryption))
-            {
-                packet.Write(trackedEncryption, false, true);
-
-                SendTCPData(toClients, packet);
-            }
-        }
-
         public static void TrackedObjectSpecific(TrackedObjectData trackedObject, int toClientID)
         {
             using (Packet packet = new Packet((int)ServerPackets.trackedObject))
             {
                 trackedObject.WriteToPacket(packet, false, true);
-
-                SendTCPData(toClientID, packet);
-            }
-        }
-
-        public static void TrackedItemSpecific(TrackedItemData trackedItem, int toClientID)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.trackedItem))
-            {
-                packet.Write(trackedItem, false, true);
-
-                SendTCPData(toClientID, packet);
-            }
-        }
-
-        public static void TrackedSosigSpecific(TrackedSosigData trackedSosig, int toClientID)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.trackedSosig))
-            {
-                packet.Write(trackedSosig, false, true);
-
-                SendTCPData(toClientID, packet);
-            }
-        }
-
-        public static void TrackedAutoMeaterSpecific(TrackedAutoMeaterData trackedAutoMeater, int toClientID)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.trackedAutoMeater))
-            {
-                packet.Write(trackedAutoMeater, false, true);
-
-                SendTCPData(toClientID, packet);
-            }
-        }
-
-        public static void TrackedEncryptionSpecific(TrackedEncryptionData trackedEncryption, int toClientID)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.trackedEncryption))
-            {
-                packet.Write(trackedEncryption, false, true);
 
                 SendTCPData(toClientID, packet);
             }

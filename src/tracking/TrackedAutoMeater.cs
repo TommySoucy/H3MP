@@ -27,7 +27,7 @@ namespace H3MP.Tracking
             base.OnDestroy();
         }
 
-        public void EnsureUncontrolled()
+        public override void EnsureUncontrolled()
         {
             if (physicalAutoMeater.PO != null && physicalAutoMeater.PO.m_hand != null)
             {

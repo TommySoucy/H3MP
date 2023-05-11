@@ -172,7 +172,7 @@ namespace H3MP.Patches
             {
                 track = false;
 
-                GameManager.SyncTrackedItems(__result.transform, true, null, GameManager.scene);
+                GameManager.SyncTrackedObjects(__result.transform, true, null, GameManager.scene);
             }
         }
     }
@@ -212,10 +212,7 @@ namespace H3MP.Patches
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
-                GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, GameManager.scene);
-                GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, GameManager.scene);
-                GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, GameManager.scene);
-                GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, GameManager.scene);
+                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null, GameManager.scene);
             }
         }
     }
@@ -250,7 +247,7 @@ namespace H3MP.Patches
                     TrackedItem trackedItem = parent.GetComponent<TrackedItem>();
                     if (trackedItem != null)
                     {
-                        parentData = trackedItem.data;
+                        parentData = trackedItem.itemData;
                         break;
                     }
                     currentParent = currentParent.parent;
@@ -292,10 +289,7 @@ namespace H3MP.Patches
             if (track)
             {
                 track = false;
-                GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, GameManager.scene);
-                GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, GameManager.scene);
-                GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, GameManager.scene);
-                GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, GameManager.scene);
+                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, parentData, GameManager.scene);
             }
         }
     }
@@ -334,10 +328,7 @@ namespace H3MP.Patches
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
-                GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, GameManager.scene);
-                GameManager.SyncTrackedItems((__result as GameObject).transform, true, null, GameManager.scene);
-                GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, GameManager.scene);
-                GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, GameManager.scene);
+                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null, GameManager.scene);
             }
         }
     }
@@ -372,7 +363,7 @@ namespace H3MP.Patches
                     TrackedItem trackedItem = parent.GetComponent<TrackedItem>();
                     if (trackedItem != null)
                     {
-                        parentData = trackedItem.data;
+                        parentData = trackedItem.itemData;
                         break;
                     }
                     currentParent = currentParent.parent;
@@ -415,10 +406,7 @@ namespace H3MP.Patches
             if (track)
             {
                 track = false;
-                GameManager.SyncTrackedSosigs((__result as GameObject).transform, true, GameManager.scene);
-                GameManager.SyncTrackedItems((__result as GameObject).transform, true, parentData, GameManager.scene);
-                GameManager.SyncTrackedAutoMeaters((__result as GameObject).transform, true, GameManager.scene);
-                GameManager.SyncTrackedEncryptions((__result as GameObject).transform, true, GameManager.scene);
+                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, parentData, GameManager.scene);
             }
         }
     }
@@ -626,7 +614,7 @@ namespace H3MP.Patches
             }
 
             // Try syncing
-            GameManager.SyncTrackedItems(__instance.transform, true, null, GameManager.scene);
+            GameManager.SyncTrackedObjects(__instance.transform, true, null, GameManager.scene);
         }
     }
 

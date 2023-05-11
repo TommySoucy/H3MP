@@ -76,7 +76,6 @@ namespace H3MP.Networking
                 packet.Write(health);
                 packet.Write(maxHealth);
                 byte[] additionalData = GameManager.playerStateAddtionalDataSize == -1 ? null : new byte[GameManager.playerStateAddtionalDataSize];
-                GameManager.WriteAdditionalPlayerState(additionalData);
                 if(additionalData != null && additionalData.Length > 0)
                 {
                     GameManager.playerStateAddtionalDataSize = additionalData.Length;
@@ -996,7 +995,7 @@ namespace H3MP.Networking
             using (Packet packet = new Packet((int)ClientPackets.encryptionDamageData))
             {
                 packet.Write(trackedEncryption.data.trackedID);
-                packet.Write(trackedEncryption.physicalEncryptionScript.m_numHitsLeft);
+                packet.Write(trackedEncryption.physicalEncryption.m_numHitsLeft);
 
                 SendTCPData(packet);
             }
