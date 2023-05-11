@@ -186,7 +186,7 @@ namespace H3MP.Networking
 #endif
                                 try
                                 {
-                                    if (singleton.ID >= 0 || packetID == 1)
+                                    if (singleton.ID >= 0 || (ServerPackets)packetID == ServerPackets.welcome)
                                     {
                                         packetHandlers[packetID](packet);
                                     }
