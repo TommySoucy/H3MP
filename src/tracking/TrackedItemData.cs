@@ -63,7 +63,7 @@ namespace H3MP.Tracking
             underActiveControl = packet.ReadBool();
         }
 
-        public static bool IfOfType(Transform t)
+        public static bool IsOfType(Transform t)
         {
             FVRPhysicalObject physicalObject = t.GetComponent<FVRPhysicalObject>();
             if (physicalObject != null)

@@ -571,13 +571,13 @@ namespace H3MP
         {
             if(type.BaseType != null)
             {
-                if (type.BaseType.Name.Equals("TrackedObjectData"))
+                if (type.IsSubclassOf(typeof(TrackedObjectData)))
                 {
                     MethodInfo isOfTypeMethod = type.GetMethod("IsOfType", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                     MethodInfo makeTrackedMethod = type.GetMethod("MakeTracked", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
                     if (isOfTypeMethod != null && isOfTypeMethod.ReturnType == typeof(bool) && isOfTypeMethod.GetParameters()[0].ParameterType == typeof(Transform) &&
-                        makeTrackedMethod != null && makeTrackedMethod.ReturnType == typeof(TrackedObject) && makeTrackedMethod.GetParameters()[0].ParameterType == typeof(Transform) && makeTrackedMethod.GetParameters()[1].ParameterType == typeof(TrackedObjectData))
+                        makeTrackedMethod != null && makeTrackedMethod.ReturnType.IsSubclassOf(typeof(TrackedObject)) && makeTrackedMethod.GetParameters()[0].ParameterType == typeof(Transform) && makeTrackedMethod.GetParameters()[1].ParameterType == typeof(TrackedObjectData))
                     {
                         return true;
                     }
@@ -588,10 +588,6 @@ namespace H3MP
                             "\tstatic TrackedObject MakeTracked(Transform, TrackedObjectData)\n" +
                             "\tThis type will not be tracked.");
                     }
-                }
-                else
-                {
-                    return IsTypeTrackedObject(type.BaseType);
                 }
             }
 

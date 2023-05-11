@@ -671,7 +671,7 @@ namespace H3MP
 
         private static TrackedObject MakeObjectTracked(Transform root, TrackedObjectData parent, Type trackedObjectType)
         {
-            return (TrackedObject)trackedObjectType.InvokeMember("MakeTracked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, null, new object[] { root, parent });
+            return (TrackedObject)trackedObjectType.GetMethod("MakeTracked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).Invoke(null, new object[] { root, parent });
         }
 
         public static TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin,
@@ -1030,8 +1030,9 @@ namespace H3MP
         {
             foreach(KeyValuePair<string, Type> entry in Mod.trackedObjectTypes)
             {
+                MethodInfo isOfTypeMethod = entry.Value.GetMethod("IsOfType", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
                 // TODO: Make sure this considers the correct one even if types overlap, so if there is a modded type taht could also be a tracked item for example, we want to take the modded one
-                if ((bool)entry.Value.InvokeMember("IsOfType", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, null, new object[] { t }))
+                if ((bool)isOfTypeMethod.Invoke(null, new object[] { t }))
                 {
                     trackedObjectType = entry.Value;
                     return true;

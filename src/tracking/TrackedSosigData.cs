@@ -174,7 +174,7 @@ namespace H3MP.Tracking
             currentOrder = (Sosig.SosigOrder)packet.ReadByte();
         }
 
-        public static bool IfOfType(Transform t)
+        public static bool IsOfType(Transform t)
         {
             return t.GetComponent<Sosig>() != null;
         }

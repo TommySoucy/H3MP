@@ -56,7 +56,7 @@ namespace H3MP.Tracking
             upDownJointTargetPos = packet.ReadFloat();
         }
 
-        public static bool IfOfType(Transform t)
+        public static bool IsOfType(Transform t)
         {
             return t.GetComponent<AutoMeater>() != null;
         }
