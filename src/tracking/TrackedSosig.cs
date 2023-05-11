@@ -48,7 +48,7 @@ namespace H3MP.Tracking
             }
         }
 
-        public void EnsureUncontrolled()
+        public override void EnsureUncontrolled()
         {
             for (int i = 0; i < physicalSosig.Links.Count; ++i)
             {
