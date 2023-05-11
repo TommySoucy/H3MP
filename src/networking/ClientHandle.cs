@@ -342,155 +342,14 @@ namespace H3MP.Networking
             }
         }
 
-        public static void DestroyItem(Packet packet)
-        {
-            int trackedID = packet.ReadInt();
-            bool removeFromList = packet.ReadBool();
-
-            TrackedItemData trackedItem = Client.items[trackedID];
-
-            if (trackedItem != null)
-            {
-                trackedItem.awaitingInstantiation = false;
-
-                bool destroyed = false;
-                if (trackedItem.physicalItem != null)
-                {
-                    trackedItem.removeFromListOnDestroy = removeFromList;
-                    trackedItem.physicalItem.sendDestroy = false;
-                    trackedItem.physicalItem.dontGiveControl = true;
-                    GameObject.Destroy(trackedItem.physicalItem.gameObject);
-                    destroyed = true;
-                }
-
-                if (!destroyed && trackedItem.controller == Client.singleton.ID)
-                {
-                    trackedItem.RemoveFromLocal();
-                }
-
-                if (!destroyed && removeFromList)
-                {
-                    Client.items[trackedID] = null;
-                    GameManager.itemsByInstanceByScene[trackedItem.scene][trackedItem.instance].Remove(trackedID);
-                }
-            }
-        }
-
-        public static void DestroySosig(Packet packet)
-        {
-            int trackedID = packet.ReadInt();
-            bool removeFromList = packet.ReadBool();
-
-            Mod.LogInfo("Received order to destroy Sosig: " + trackedID);
-            TrackedSosigData trackedSosig = Client.sosigs[trackedID];
-
-            if (trackedSosig != null)
-            {
-                trackedSosig.awaitingInstantiation = false;
-                bool destroyed = false;
-                if (trackedSosig.physicalObject != null)
-                {
-                    trackedSosig.removeFromListOnDestroy = removeFromList;
-                    trackedSosig.physicalObject.sendDestroy = false;
-                    foreach (SosigLink link in trackedSosig.physicalObject.physicalSosig.Links)
-                    {
-                        if (link != null)
-                        {
-                            GameObject.Destroy(link.gameObject);
-                        }
-                    }
-                    trackedSosig.physicalObject.dontGiveControl = true;
-                    GameObject.Destroy(trackedSosig.physicalObject.gameObject);
-                    destroyed = true;
-                }
-
-                if (!destroyed && trackedSosig.controller == Client.singleton.ID)
-                {
-                    trackedSosig.RemoveFromLocal();
-                }
-
-                if (!destroyed && removeFromList)
-                {
-                    Client.sosigs[trackedID] = null;
-                    GameManager.sosigsByInstanceByScene[trackedSosig.scene][trackedSosig.instance].Remove(trackedID);
-                }
-            }
-        }
-
-        public static void DestroyAutoMeater(Packet packet)
-        {
-            int trackedID = packet.ReadInt();
-            bool removeFromList = packet.ReadBool();
-
-            TrackedAutoMeaterData trackedAutoMeater = Client.autoMeaters[trackedID];
-
-            if (trackedAutoMeater != null)
-            {
-                trackedAutoMeater.awaitingInstantiation = false;
-                bool destroyed = false;
-                if (trackedAutoMeater.physicalObject != null)
-                {
-                    trackedAutoMeater.removeFromListOnDestroy = removeFromList;
-                    trackedAutoMeater.physicalObject.sendDestroy = false;
-                    trackedAutoMeater.physicalObject.dontGiveControl = true;
-                    GameObject.Destroy(trackedAutoMeater.physicalObject.gameObject);
-                    destroyed = true;
-                }
-
-                if (!destroyed && trackedAutoMeater.controller == Client.singleton.ID)
-                {
-                    trackedAutoMeater.RemoveFromLocal();
-                }
-
-                if (!destroyed && removeFromList)
-                {
-                    Client.autoMeaters[trackedID] = null;
-                    GameManager.autoMeatersByInstanceByScene[trackedAutoMeater.scene][trackedAutoMeater.instance].Remove(trackedID);
-                }
-            }
-        }
-
-        public static void DestroyEncryption(Packet packet)
-        {
-            int trackedID = packet.ReadInt();
-            bool removeFromList = packet.ReadBool();
-
-            TrackedEncryptionData trackedEncryption = Client.encryptions[trackedID];
-
-            if (trackedEncryption != null)
-            {
-                trackedEncryption.awaitingInstantiation = false;
-                bool destroyed = false;
-                if (trackedEncryption.physicalObject != null)
-                {
-                    trackedEncryption.removeFromListOnDestroy = removeFromList;
-                    trackedEncryption.physicalObject.sendDestroy = false;
-                    trackedEncryption.physicalObject.dontGiveControl = true;
-                    GameObject.Destroy(trackedEncryption.physicalObject.gameObject);
-                    destroyed = true;
-                }
-
-                if (!destroyed && trackedEncryption.controller == Client.singleton.ID)
-                {
-                    trackedEncryption.RemoveFromLocal();
-                }
-
-                if (!destroyed && removeFromList)
-                {
-                    Client.encryptions[trackedID] = null;
-                    GameManager.encryptionsByInstanceByScene[trackedEncryption.scene][trackedEncryption.instance].Remove(trackedID);
-                }
-            }
-        }
-
-        public static void ItemParent(Packet packet)
+        public static void ObjectParent(Packet packet)
         {
             int trackedID = packet.ReadInt();
             int newParentID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null)
+            if (Client.objects[trackedID] != null)
             {
-                Client.items[trackedID].SetParent(newParentID);
+                Client.objects[trackedID].SetParent(newParentID);
             }
         }
 
@@ -498,7 +357,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -515,9 +375,9 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                Client.items[trackedID].physicalItem.setFirearmUpdateOverride(roundType, roundClass, chamberIndex);
+                trackedItem.physicalItem.setFirearmUpdateOverride(roundType, roundClass, chamberIndex);
                 ++ProjectileFirePatch.skipBlast;
-                Client.items[trackedID].physicalItem.fireFunc(chamberIndex);
+                trackedItem.physicalItem.fireFunc(chamberIndex);
                 --ProjectileFirePatch.skipBlast;
             }
         }
@@ -527,11 +387,12 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
 
             // Update locally
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 // Override
-                FlintlockBarrel asBarrel = Client.items[trackedID].physicalItem.dataObject as FlintlockBarrel;
-                FlintlockWeapon asFlintlockWeapon = Client.items[trackedID].physicalItem.physicalObject as FlintlockWeapon;
+                FlintlockBarrel asBarrel = trackedItem.physicalItem.dataObject as FlintlockBarrel;
+                FlintlockWeapon asFlintlockWeapon = trackedItem.physicalItem.physicalItem as FlintlockWeapon;
                 int loadedElementCount = packet.ReadByte();
                 asBarrel.LoadedElements = new List<FlintlockBarrel.LoadedElement>();
                 for (int i = 0; i < loadedElementCount; ++i)
@@ -568,11 +429,12 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
 
             // Update locally
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 // Override
-                FlintlockBarrel asBarrel = Client.items[trackedID].physicalItem.dataObject as FlintlockBarrel;
-                FlintlockWeapon asFlintlockWeapon = Client.items[trackedID].physicalItem.physicalObject as FlintlockWeapon;
+                FlintlockBarrel asBarrel = trackedItem.physicalItem.dataObject as FlintlockBarrel;
+                FlintlockWeapon asFlintlockWeapon = trackedItem.physicalItem.physicalItem as FlintlockWeapon;
                 int loadedElementCount = packet.ReadByte();
                 asBarrel.LoadedElements = new List<FlintlockBarrel.LoadedElement>();
                 for (int i = 0; i < loadedElementCount; ++i)
@@ -608,7 +470,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -625,7 +488,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                BreakActionWeapon asBAW = Client.items[trackedID].physicalItem.physicalObject as BreakActionWeapon;
+                BreakActionWeapon asBAW = trackedItem.physicalItem.physicalItem as BreakActionWeapon;
                 if (asBAW != null)
                 {
                     FireArmRoundType prevRoundType = asBAW.Barrels[barrelIndex].Chamber.RoundType;
@@ -640,7 +503,7 @@ namespace H3MP.Networking
                 }
                 else
                 {
-                    Mod.LogError("Received order to fire break action weapon at " + trackedID + " but the item is not a BreakActionWeapon. It is actually: "+(Client.items[trackedID].physicalItem.physicalObject.GetType()));
+                    Mod.LogError("Received order to fire break action weapon at " + trackedID + " but the item is not a BreakActionWeapon. It is actually: "+(trackedItem.physicalItem.physicalItem.GetType()));
                 }
             }
         }
@@ -649,7 +512,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -666,7 +530,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                Derringer asDerringer = Client.items[trackedID].physicalItem.physicalObject as Derringer;
+                Derringer asDerringer = trackedItem.physicalItem.physicalItem as Derringer;
                 FireArmRoundType prevRoundType = asDerringer.Barrels[barrelIndex].Chamber.RoundType;
                 asDerringer.Barrels[barrelIndex].Chamber.RoundType = roundType;
                 ++ChamberPatch.chamberSkip;
@@ -684,7 +548,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -701,7 +566,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                RevolvingShotgun asRS = Client.items[trackedID].physicalItem.physicalObject as RevolvingShotgun;
+                RevolvingShotgun asRS = trackedItem.physicalItem.physicalItem as RevolvingShotgun;
                 asRS.CurChamber = curChamber;
                 FireArmRoundType prevRoundType = asRS.Chambers[curChamber].RoundType;
                 asRS.Chambers[curChamber].RoundType = roundType;
@@ -719,7 +584,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -736,7 +602,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                Revolver asRevolver = Client.items[trackedID].physicalItem.physicalObject as Revolver;
+                Revolver asRevolver = trackedItem.physicalItem.physicalItem as Revolver;
                 bool changedOffset = false;
                 int oldOffset = 0;
                 if (asRevolver.ChamberOffset != 0)
@@ -766,7 +632,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -783,7 +650,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                SingleActionRevolver asRevolver = Client.items[trackedID].physicalItem.physicalObject as SingleActionRevolver;
+                SingleActionRevolver asRevolver = trackedItem.physicalItem.physicalItem as SingleActionRevolver;
                 asRevolver.CurChamber = curChamber;
                 FireArmRoundType prevRoundType = asRevolver.Cylinder.Chambers[curChamber].RoundType;
                 asRevolver.Cylinder.Chambers[curChamber].RoundType = roundType;
@@ -801,7 +668,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireStingerLauncherPatch.targetPos = packet.ReadVector3();
                 FireStingerLauncherPatch.position = packet.ReadVector3();
@@ -810,7 +678,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++FireStingerLauncherPatch.skip;
-                StingerLauncher asStingerLauncher = Client.items[trackedID].physicalItem.physicalObject as StingerLauncher;
+                StingerLauncher asStingerLauncher = trackedItem.physicalItem.physicalItem as StingerLauncher;
                 asStingerLauncher.m_hasMissile = true;
                 ++ProjectileFirePatch.skipBlast;
                 asStingerLauncher.Fire();
@@ -823,7 +691,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -840,7 +709,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                GrappleGun asGG = Client.items[trackedID].physicalItem.physicalObject as GrappleGun;
+                GrappleGun asGG = trackedItem.physicalItem.physicalItem as GrappleGun;
                 asGG.m_curChamber = curChamber;
                 FireArmRoundType prevRoundType = asGG.Chambers[curChamber].RoundType;
                 asGG.Chambers[curChamber].RoundType = roundType;
@@ -856,7 +725,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 float cookedAmount = packet.ReadFloat();
                 FireHCBPatch.position = packet.ReadVector3();
@@ -865,7 +735,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++FireHCBPatch.releaseSledSkip;
-                HCB asHCB = Client.items[trackedID].physicalItem.physicalObject as HCB;
+                HCB asHCB = trackedItem.physicalItem.physicalItem as HCB;
                 asHCB.m_cookedAmount = cookedAmount;
                 if (!asHCB.Chamber.IsFull)
                 {
@@ -883,7 +753,8 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
 
             // Update locally
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -900,7 +771,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                LeverActionFirearm asLAF = Client.items[trackedID].physicalItem.dataObject as LeverActionFirearm;
+                LeverActionFirearm asLAF = trackedItem.physicalItem.dataObject as LeverActionFirearm;
                 if (hammer1)
                 {
                     FireArmRoundType prevRoundType = asLAF.Chamber.RoundType;
@@ -963,7 +834,8 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             float recoilMult = packet.ReadFloat();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireSosigWeaponPatch.positions = new List<Vector3>();
                 FireSosigWeaponPatch.directions = new List<Vector3>();
@@ -977,13 +849,13 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                SosigWeaponPlayerInterface asInterface = Client.items[trackedID].physicalItem.dataObject as SosigWeaponPlayerInterface;
+                SosigWeaponPlayerInterface asInterface = trackedItem.physicalItem.dataObject as SosigWeaponPlayerInterface;
                 if (asInterface.W.m_shotsLeft <= 0)
                 {
                     asInterface.W.m_shotsLeft = 1;
                 }
                 asInterface.W.MechaState = SosigWeapon.SosigWeaponMechaState.ReadyToFire;
-                Client.items[trackedID].physicalItem.sosigWeaponfireFunc(recoilMult);
+                trackedItem.physicalItem.sosigWeaponfireFunc(recoilMult);
             }
         }
 
@@ -991,7 +863,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 int chamberIndex = packet.ReadInt();
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
@@ -1008,7 +881,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                LAPD2019 asLAPD2019 = Client.items[trackedID].physicalItem.physicalObject as LAPD2019;
+                LAPD2019 asLAPD2019 = trackedItem.physicalItem.physicalItem as LAPD2019;
                 asLAPD2019.CurChamber = chamberIndex;
                 FireArmRoundType prevRoundType = asLAPD2019.Chambers[asLAPD2019.CurChamber].RoundType;
                 asLAPD2019.Chambers[asLAPD2019.CurChamber].RoundType = roundType;
@@ -1017,7 +890,7 @@ namespace H3MP.Networking
                 --ChamberPatch.chamberSkip;
                 asLAPD2019.Chambers[asLAPD2019.CurChamber].RoundType = prevRoundType;
                 ++ProjectileFirePatch.skipBlast;
-                ((LAPD2019)Client.items[trackedID].physicalItem.physicalObject).Fire();
+                ((LAPD2019)trackedItem.physicalItem.physicalItem).Fire();
                 --ProjectileFirePatch.skipBlast;
             }
         }
@@ -1026,7 +899,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireMinigunPatch.positions = new List<Vector3>();
                 FireMinigunPatch.directions = new List<Vector3>();
@@ -1040,7 +914,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                ((LAPD2019)Client.items[trackedID].physicalItem.physicalObject).Fire();
+                ((LAPD2019)trackedItem.physicalItem.physicalItem).Fire();
             }
         }
         
@@ -1048,7 +922,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -1065,9 +940,9 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                Client.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundType, roundClass);
+                trackedItem.physicalItem.attachableFirearmChamberRoundFunc(roundType, roundClass);
                 ++ProjectileFirePatch.skipBlast;
-                Client.items[trackedID].physicalItem.attachableFirearmFireFunc(firedFromInterface);
+                trackedItem.physicalItem.attachableFirearmFireFunc(firedFromInterface);
                 --ProjectileFirePatch.skipBlast;
             }
         }
@@ -1076,7 +951,8 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
                 FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
@@ -1092,9 +968,9 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++Mod.skipNextFires;
-                Client.items[trackedID].physicalItem.attachableFirearmChamberRoundFunc(roundType, roundClass);
+                trackedItem.physicalItem.attachableFirearmChamberRoundFunc(roundType, roundClass);
                 ++ProjectileFirePatch.skipBlast;
-                Client.items[trackedID].physicalItem.attachableFirearmFireFunc(false);
+                trackedItem.physicalItem.attachableFirearmFireFunc(false);
                 --ProjectileFirePatch.skipBlast;
             }
         }
@@ -1105,10 +981,11 @@ namespace H3MP.Networking
             int batteryTrackedID = packet.ReadInt();
 
             // Update locally
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null && Client.items[batteryTrackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null && Client.objects[batteryTrackedID].physical != null)
             {
                 ++LAPD2019ActionPatch.loadBatterySkip;
-                ((LAPD2019)Client.items[trackedID].physicalItem.physicalObject).LoadBattery((LAPD2019Battery)Client.items[batteryTrackedID].physicalItem.physicalObject);
+                ((LAPD2019)trackedItem.physicalItem.physicalItem).LoadBattery((LAPD2019Battery)Client.objects[batteryTrackedID].physical.physical);
                 --LAPD2019ActionPatch.loadBatterySkip;
             }
         }
@@ -1118,10 +995,11 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
 
             // Update locally
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 ++LAPD2019ActionPatch.extractBatterySkip;
-                ((LAPD2019)Client.items[trackedID].physicalItem.physicalObject).ExtractBattery(null);
+                ((LAPD2019)trackedItem.physicalItem.physicalItem).ExtractBattery(null);
                 --LAPD2019ActionPatch.extractBatterySkip;
             }
         }
@@ -1130,10 +1008,11 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 ++SosigWeaponShatterPatch.skip;
-                (Client.items[trackedID].physicalItem.physicalObject as SosigWeaponPlayerInterface).W.Shatter();
+                (trackedItem.physicalItem.physicalItem as SosigWeaponPlayerInterface).W.Shatter();
                 --SosigWeaponShatterPatch.skip;
             }
         }
@@ -1144,7 +1023,8 @@ namespace H3MP.Networking
             Vector3 angles = packet.ReadVector3();
 
             // Update locally
-            if (Client.items[trackedID] != null && Client.autoMeaters[trackedID].physicalObject != null)
+            TrackedAutoMeaterData trackedAutoMeater = Client.objects[trackedID] as TrackedAutoMeaterData;
+            if (trackedAutoMeater != null && trackedAutoMeater.physicalAutoMeater != null)
             {
                 // Set the muzzle angles to use
                 AutoMeaterFirearmFireShotPatch.muzzleAngles = angles;
@@ -1152,7 +1032,7 @@ namespace H3MP.Networking
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++AutoMeaterFirearmFireShotPatch.skip;
-                Client.autoMeaters[trackedID].physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].FireShot();
+                trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.FireControl.Firearms[0].FireShot();
                 --AutoMeaterFirearmFireShotPatch.skip;
             }
         }
@@ -1169,10 +1049,11 @@ namespace H3MP.Networking
         public static void UberShatterableShatter(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
                 ++UberShatterableShatterPatch.skip;
-                Client.items[trackedID].physicalItem.GetComponent<UberShatterable>().Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
+                trackedItem.physicalItem.GetComponent<UberShatterable>().Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
                 --UberShatterableShatterPatch.skip;
             }
         }
@@ -1183,31 +1064,31 @@ namespace H3MP.Networking
             int itemTrackedID = packet.ReadInt();
             bool primaryHand = packet.ReadBool();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if(trackedSosig != null)
             {
                 trackedSosig.inventory[primaryHand ? 0 : 1] = itemTrackedID;
 
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
-                    if (Client.items[itemTrackedID] == null)
+                    if (Client.objects[itemTrackedID] == null)
                     {
                         Mod.LogError("SosigPickUpItem: item at "+itemTrackedID+" is missing item data!");
                     }
-                    else if (Client.items[itemTrackedID].physicalItem == null)
+                    else if (Client.objects[itemTrackedID].physical == null)
                     {
-                        Client.items[itemTrackedID].toPutInSosigInventory = new int[] { sosigTrackedID, primaryHand ? 0 : 1 };
+                        (Client.objects[itemTrackedID] as TrackedItemData).toPutInSosigInventory = new int[] { sosigTrackedID, primaryHand ? 0 : 1 };
                     }
                     else
                     {
                         ++SosigPickUpPatch.skip;
                         if (primaryHand)
                         {
-                            trackedSosig.physicalObject.physicalSosig.Hand_Primary.PickUp(Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                            trackedSosig.physicalSosig.physicalSosig.Hand_Primary.PickUp(Client.objects[itemTrackedID].physical.GetComponent<SosigWeapon>());
                         }
                         else
                         {
-                            trackedSosig.physicalObject.physicalSosig.Hand_Secondary.PickUp(Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                            trackedSosig.physicalSosig.physicalSosig.Hand_Secondary.PickUp(Client.objects[itemTrackedID].physical.GetComponent<SosigWeapon>());
                         }
                         --SosigPickUpPatch.skip;
                     }
@@ -1221,25 +1102,25 @@ namespace H3MP.Networking
             int itemTrackedID = packet.ReadInt();
             int slotIndex = packet.ReadInt();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if(trackedSosig != null)
             {
                 trackedSosig.inventory[slotIndex + 2] = itemTrackedID;
 
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
-                    if (Client.items[itemTrackedID] == null)
+                    if (Client.objects[itemTrackedID] == null)
                     {
                         Mod.LogError("SosigPickUpItem: item at " + itemTrackedID + " is missing item data!");
                     }
-                    else if (Client.items[itemTrackedID].physicalItem == null)
+                    else if (Client.objects[itemTrackedID].physical == null)
                     {
-                        Client.items[itemTrackedID].toPutInSosigInventory = new int[] { sosigTrackedID, slotIndex + 2 };
+                        (Client.objects[itemTrackedID] as TrackedItemData).toPutInSosigInventory = new int[] { sosigTrackedID, slotIndex + 2 };
                     }
                     else
                     {
                         ++SosigPlaceObjectInPatch.skip;
-                        trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].PlaceObjectIn(Client.items[itemTrackedID].physicalItem.GetComponent<SosigWeapon>());
+                        trackedSosig.physicalSosig.physicalSosig.Inventory.Slots[slotIndex].PlaceObjectIn(Client.objects[itemTrackedID].physical.GetComponent<SosigWeapon>());
                         --SosigPlaceObjectInPatch.skip;
                     }
                 }
@@ -1251,15 +1132,15 @@ namespace H3MP.Networking
             int sosigTrackedID = packet.ReadInt();
             int slotIndex = packet.ReadInt();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if(trackedSosig != null)
             {
                 trackedSosig.inventory[slotIndex + 2] = -1;
 
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     ++SosigSlotDetachPatch.skip;
-                    trackedSosig.physicalObject.physicalSosig.Inventory.Slots[slotIndex].DetachHeldObject();
+                    trackedSosig.physicalSosig.physicalSosig.Inventory.Slots[slotIndex].DetachHeldObject();
                     --SosigSlotDetachPatch.skip;
                 }
             }
@@ -1270,21 +1151,21 @@ namespace H3MP.Networking
             int sosigTrackedID = packet.ReadInt();
             bool primaryHand = packet.ReadBool();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if(trackedSosig != null)
             {
                 trackedSosig.inventory[primaryHand ? 0 : 1] = -1;
 
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     ++SosigHandDropPatch.skip;
                     if (primaryHand)
                     {
-                        trackedSosig.physicalObject.physicalSosig.Hand_Primary.DropHeldObject();
+                        trackedSosig.physicalSosig.physicalSosig.Hand_Primary.DropHeldObject();
                     }
                     else
                     {
-                        trackedSosig.physicalObject.physicalSosig.Hand_Secondary.DropHeldObject();
+                        trackedSosig.physicalSosig.physicalSosig.Hand_Secondary.DropHeldObject();
                     }
                     --SosigHandDropPatch.skip;
                 }
@@ -1296,15 +1177,15 @@ namespace H3MP.Networking
             int sosigTrackedID = packet.ReadInt();
             SosigConfigTemplate config = packet.ReadSosigConfig();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
                 trackedSosig.configTemplate = config;
 
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     SosigConfigurePatch.skipConfigure = true;
-                    trackedSosig.physicalObject.physicalSosig.Configure(config);
+                    trackedSosig.physicalSosig.physicalSosig.Configure(config);
                 }
             }
         }
@@ -1315,15 +1196,15 @@ namespace H3MP.Networking
             byte linkIndex = packet.ReadByte();
             string wearableID = packet.ReadString();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
                 if(trackedSosig.wearables == null)
                 {
                     trackedSosig.wearables = new List<List<string>>();
-                    if(trackedSosig.physicalObject != null)
+                    if(trackedSosig.physicalSosig != null)
                     {
-                        foreach(SosigLink link in trackedSosig.physicalObject.physicalSosig.Links)
+                        foreach(SosigLink link in trackedSosig.physicalSosig.physicalSosig.Links)
                         {
                             trackedSosig.wearables.Add(new List<string>());
                         }
@@ -1338,7 +1219,7 @@ namespace H3MP.Networking
                 }
                 trackedSosig.wearables[linkIndex].Add(wearableID);
 
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     AnvilManager.Run(trackedSosig.EquipWearable(linkIndex, wearableID, true));
                 }
@@ -1351,22 +1232,22 @@ namespace H3MP.Networking
             byte linkIndex = packet.ReadByte();
             string wearableID = packet.ReadString();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
                 if (trackedSosig.wearables != null)
                 {
-                    if (trackedSosig.physicalObject != null)
+                    if (trackedSosig.physicalSosig != null)
                     {
                         for (int i = 0; i < trackedSosig.wearables[linkIndex].Count; ++i)
                         {
                             if (trackedSosig.wearables[linkIndex][i].Equals(wearableID))
                             {
                                 trackedSosig.wearables[linkIndex].RemoveAt(i);
-                                if (trackedSosig.physicalObject != null)
+                                if (trackedSosig.physicalSosig != null)
                                 {
                                     ++SosigLinkActionPatch.skipDeRegisterWearable;
-                                    trackedSosig.physicalObject.physicalSosig.Links[linkIndex].DeRegisterWearable(trackedSosig.physicalObject.physicalSosig.Links[linkIndex].m_wearables[i]);
+                                    trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].DeRegisterWearable(trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].m_wearables[i]);
                                     --SosigLinkActionPatch.skipDeRegisterWearable;
                                 }
                                 break;
@@ -1386,14 +1267,14 @@ namespace H3MP.Networking
             int sosigTrackedID = packet.ReadInt();
             byte IFF = packet.ReadByte();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
                 trackedSosig.IFF = IFF;
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     ++SosigIFFPatch.skip;
-                    trackedSosig.physicalObject.physicalSosig.SetIFF(IFF);
+                    trackedSosig.physicalSosig.physicalSosig.SetIFF(IFF);
                     --SosigIFFPatch.skip;
                 }
             }
@@ -1404,14 +1285,14 @@ namespace H3MP.Networking
             int sosigTrackedID = packet.ReadInt();
             byte IFF = packet.ReadByte();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
                 trackedSosig.IFF = IFF;
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     ++SosigIFFPatch.skip;
-                    trackedSosig.physicalObject.physicalSosig.SetOriginalIFFTeam(IFF);
+                    trackedSosig.physicalSosig.physicalSosig.SetOriginalIFFTeam(IFF);
                     --SosigIFFPatch.skip;
                 }
             }
@@ -1423,17 +1304,17 @@ namespace H3MP.Networking
             byte linkIndex = packet.ReadByte();
             Damage damage = packet.ReadDamage();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
                 if (trackedSosig.controller == Client.singleton.ID)
                 {
-                    if (trackedSosig.physicalObject != null &&
-                        trackedSosig.physicalObject.physicalSosig.Links[linkIndex] != null &&
-                        !trackedSosig.physicalObject.physicalSosig.Links[linkIndex].IsExploded)
+                    if (trackedSosig.physicalSosig != null &&
+                        trackedSosig.physicalSosig.physicalSosig.Links[linkIndex] != null &&
+                        !trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].IsExploded)
                     {
                         ++SosigLinkDamagePatch.skip;
-                        trackedSosig.physicalObject.physicalSosig.Links[linkIndex].Damage(damage);
+                        trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].Damage(damage);
                         --SosigLinkDamagePatch.skip;
                     }
                 }
@@ -1455,15 +1336,15 @@ namespace H3MP.Networking
             int autoMeaterTrackedID = packet.ReadInt();
             Damage damage = packet.ReadDamage();
 
-            TrackedAutoMeaterData trackedAutoMeater = Client.autoMeaters[autoMeaterTrackedID];
+            TrackedAutoMeaterData trackedAutoMeater = Client.objects[autoMeaterTrackedID] as TrackedAutoMeaterData;
             if (trackedAutoMeater != null)
             {
                 if (trackedAutoMeater.controller == Client.singleton.ID)
                 {
-                    if (trackedAutoMeater.physicalObject != null)
+                    if (trackedAutoMeater.physicalAutoMeater != null)
                     {
                         ++AutoMeaterDamagePatch.skip;
-                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Damage(damage);
+                        trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.Damage(damage);
                         --AutoMeaterDamagePatch.skip;
                     }
                 }
@@ -1484,12 +1365,12 @@ namespace H3MP.Networking
             byte type = packet.ReadByte();
             Damage damage = packet.ReadDamage();
 
-            TrackedAutoMeaterData trackedAutoMeater = Client.autoMeaters[autoMeaterTrackedID];
+            TrackedAutoMeaterData trackedAutoMeater = Client.objects[autoMeaterTrackedID] as TrackedAutoMeaterData;
             if (trackedAutoMeater != null)
             {
                 if (trackedAutoMeater.controller == Client.singleton.ID)
                 {
-                    if (trackedAutoMeater.physicalObject != null)
+                    if (trackedAutoMeater.physicalAutoMeater != null)
                     {
                         ++AutoMeaterHitZoneDamagePatch.skip;
                         trackedAutoMeater.hitZones[(AutoMeater.AMHitZoneType)type].Damage(damage);
@@ -1509,18 +1390,18 @@ namespace H3MP.Networking
 
         public static void EncryptionDamage(Packet packet)
         {
-            int autoMeaterTrackedID = packet.ReadInt();
+            int encryptionTrackedID = packet.ReadInt();
             Damage damage = packet.ReadDamage();
 
-            TrackedEncryptionData trackedEncryption = Client.encryptions[autoMeaterTrackedID];
+            TrackedEncryptionData trackedEncryption = Client.objects[encryptionTrackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
             {
                 if (trackedEncryption.controller == Client.singleton.ID)
                 {
-                    if (trackedEncryption.physicalObject != null)
+                    if (trackedEncryption.physicalEncryption != null)
                     {
                         ++EncryptionDamagePatch.skip;
-                        trackedEncryption.physicalObject.physicalEncryptionScript.Damage(damage);
+                        trackedEncryption.physicalEncryption.physicalEncryption.Damage(damage);
                         --EncryptionDamagePatch.skip;
                     }
                 }
@@ -1541,15 +1422,15 @@ namespace H3MP.Networking
             int index = packet.ReadInt();
             Damage damage = packet.ReadDamage();
 
-            TrackedEncryptionData trackedEncryption = Client.encryptions[encryptionTrackedID];
+            TrackedEncryptionData trackedEncryption = Client.objects[encryptionTrackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
             {
                 if (trackedEncryption.controller == GameManager.ID)
                 {
-                    if (trackedEncryption.physicalObject != null)
+                    if (trackedEncryption.physicalEncryption != null)
                     {
                         ++EncryptionSubDamagePatch.skip;
-                        trackedEncryption.physicalObject.physicalEncryptionScript.SubTargs[index].GetComponent<TNH_EncryptionTarget_SubTarget>().Damage(damage);
+                        trackedEncryption.physicalEncryption.physicalEncryption.SubTargs[index].GetComponent<TNH_EncryptionTarget_SubTarget>().Damage(damage);
                         --EncryptionSubDamagePatch.skip;
                     }
                 }
@@ -1561,7 +1442,7 @@ namespace H3MP.Networking
             int sosigWeaponTrackedID = packet.ReadInt();
             Damage damage = packet.ReadDamage();
 
-            TrackedItemData trackedItem = Client.items[sosigWeaponTrackedID];
+            TrackedItemData trackedItem = Client.objects[sosigWeaponTrackedID] as TrackedItemData;
             if (trackedItem != null)
             {
                 if (trackedItem.controller == GameManager.ID)
@@ -1569,7 +1450,7 @@ namespace H3MP.Networking
                     if (trackedItem.physicalItem != null)
                     {
                         ++SosigWeaponDamagePatch.skip;
-                        (trackedItem.physicalItem.physicalObject as SosigWeaponPlayerInterface).W.Damage(damage);
+                        (trackedItem.physicalItem.physicalItem as SosigWeaponPlayerInterface).W.Damage(damage);
                         --SosigWeaponDamagePatch.skip;
                     }
                 }
@@ -1580,14 +1461,14 @@ namespace H3MP.Networking
         {
             int RMLTrackedID = packet.ReadInt();
 
-            TrackedItemData trackedItem = Client.items[RMLTrackedID];
+            TrackedItemData trackedItem = Client.objects[RMLTrackedID] as TrackedItemData;
             if (trackedItem != null)
             {
                 if (trackedItem.controller == GameManager.ID)
                 {
                     if (trackedItem.physicalItem != null)
                     {
-                        RemoteMissile remoteMissile = (Client.items[RMLTrackedID].physicalItem.physicalObject as RemoteMissileLauncher).m_missile;
+                        RemoteMissile remoteMissile = (trackedItem.physicalItem.physicalItem as RemoteMissileLauncher).m_missile;
                         if (remoteMissile != null)
                         {
                             ++RemoteMissileDamagePatch.skip;
@@ -1603,7 +1484,7 @@ namespace H3MP.Networking
         {
             int SLTrackedID = packet.ReadInt();
 
-            TrackedItemData trackedItem = Client.items[SLTrackedID];
+            TrackedItemData trackedItem = Client.objects[SLTrackedID] as TrackedItemData;
             if (trackedItem != null)
             {
                 if (trackedItem.controller == GameManager.ID)
@@ -1626,7 +1507,7 @@ namespace H3MP.Networking
         {
             int sosigTrackedID = packet.ReadInt();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
                 byte linkIndex = packet.ReadByte();
@@ -1635,12 +1516,12 @@ namespace H3MP.Networking
 
                 if (trackedSosig.controller == Client.singleton.ID)
                 {
-                    if (trackedSosig.physicalObject != null &&
-                        trackedSosig.physicalObject.physicalSosig.Links[linkIndex] != null &&
-                        !trackedSosig.physicalObject.physicalSosig.Links[linkIndex].IsExploded)
+                    if (trackedSosig.physicalSosig != null &&
+                        trackedSosig.physicalSosig.physicalSosig.Links[linkIndex] != null &&
+                        !trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].IsExploded)
                     {
                         ++SosigWearableDamagePatch.skip;
-                        trackedSosig.physicalObject.physicalSosig.Links[linkIndex].m_wearables[wearableIndex].Damage(damage);
+                        trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].m_wearables[wearableIndex].Damage(damage);
                         --SosigWearableDamagePatch.skip;
                     }
                 }
@@ -1661,13 +1542,13 @@ namespace H3MP.Networking
             int sosigTrackedID = packet.ReadInt();
             Sosig.SosigBodyState bodyState = (Sosig.SosigBodyState)packet.ReadByte();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     ++SosigActionPatch.sosigSetBodyStateSkip;
-                    trackedSosig.physicalObject.physicalSosig.SetBodyState(bodyState);
+                    trackedSosig.physicalSosig.physicalSosig.SetBodyState(bodyState);
                     --SosigActionPatch.sosigSetBodyStateSkip;
                 }
             }
@@ -1677,12 +1558,12 @@ namespace H3MP.Networking
         {
             int sosigTrackedID = packet.ReadInt();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
-                if (trackedSosig.controller != Client.singleton.ID && trackedSosig.physicalObject != null)
+                if (trackedSosig.controller != Client.singleton.ID && trackedSosig.physicalSosig != null)
                 {
-                    Sosig physicalSosig = trackedSosig.physicalObject.physicalSosig;
+                    Sosig physicalSosig = trackedSosig.physicalSosig.physicalSosig;
                     physicalSosig.m_isStunned = packet.ReadBool();
                     physicalSosig.m_stunTimeLeft = packet.ReadFloat();
                     physicalSosig.BodyState = (Sosig.SosigBodyState)packet.ReadByte();
@@ -1734,12 +1615,12 @@ namespace H3MP.Networking
         {
             int encryptionTrackedID = packet.ReadInt();
 
-            TrackedEncryptionData trackedEncryption = Client.encryptions[encryptionTrackedID];
+            TrackedEncryptionData trackedEncryption = Client.objects[encryptionTrackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
             {
-                if (trackedEncryption.controller != Client.singleton.ID && trackedEncryption.physicalObject != null)
+                if (trackedEncryption.controller != Client.singleton.ID && trackedEncryption.physicalEncryption != null)
                 {
-                    trackedEncryption.physicalObject.physicalEncryptionScript.m_numHitsLeft = packet.ReadInt();
+                    trackedEncryption.physicalEncryption.physicalEncryption.m_numHitsLeft = packet.ReadInt();
                 }
             }
         }
@@ -1748,10 +1629,10 @@ namespace H3MP.Networking
         {
             int autoMeaterTrackedID = packet.ReadInt();
 
-            TrackedAutoMeaterData trackedAutoMeater = Client.autoMeaters[autoMeaterTrackedID];
+            TrackedAutoMeaterData trackedAutoMeater = Client.objects[autoMeaterTrackedID] as TrackedAutoMeaterData;
             if (trackedAutoMeater != null)
             {
-                if (trackedAutoMeater.controller != Client.singleton.ID && trackedAutoMeater.physicalObject != null)
+                if (trackedAutoMeater.controller != Client.singleton.ID && trackedAutoMeater.physicalAutoMeater != null)
                 {
                     AutoMeaterHitZone hitZone = trackedAutoMeater.hitZones[(AutoMeater.AMHitZoneType)packet.ReadByte()];
                     hitZone.ArmorThreshold = packet.ReadFloat();
@@ -1768,14 +1649,14 @@ namespace H3MP.Networking
         {
             int sosigTrackedID = packet.ReadInt();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     byte linkIndex = packet.ReadByte();
                     ++SosigLinkActionPatch.skipLinkExplodes;
-                    trackedSosig.physicalObject.physicalSosig.Links[linkIndex].LinkExplodes((Damage.DamageClass)packet.ReadByte());
+                    trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].LinkExplodes((Damage.DamageClass)packet.ReadByte());
                     --SosigLinkActionPatch.skipLinkExplodes;
                 }
             }
@@ -1785,15 +1666,15 @@ namespace H3MP.Networking
         {
             int sosigTrackedID = packet.ReadInt();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     byte damClass = packet.ReadByte();
                     byte deathType = packet.ReadByte();
                     ++SosigActionPatch.sosigDiesSkip;
-                    trackedSosig.physicalObject.physicalSosig.SosigDies((Damage.DamageClass)damClass, (Sosig.SosigDeathType)deathType);
+                    trackedSosig.physicalSosig.physicalSosig.SosigDies((Damage.DamageClass)damClass, (Sosig.SosigDeathType)deathType);
                     --SosigActionPatch.sosigDiesSkip;
                 }
             }
@@ -1803,13 +1684,13 @@ namespace H3MP.Networking
         {
             int sosigTrackedID = packet.ReadInt();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
-                if (trackedSosig.physicalObject != null)
+                if (trackedSosig.physicalSosig != null)
                 {
                     ++SosigActionPatch.sosigClearSkip;
-                    trackedSosig.physicalObject.physicalSosig.ClearSosig();
+                    trackedSosig.physicalSosig.physicalSosig.ClearSosig();
                     --SosigActionPatch.sosigClearSkip;
                 }
             }
@@ -1824,12 +1705,13 @@ namespace H3MP.Networking
             Vector2 pitch = packet.ReadVector2();
             float delay = packet.ReadFloat();
 
-            if (Client.sosigs[sosigTrackedID] != null && Client.sosigs[sosigTrackedID].physicalObject != null)
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
+            if (trackedSosig != null && trackedSosig.physicalSosig != null)
             {
                 // Ensure we have reference to sosig footsteps audio event
                 if (Mod.sosigFootstepAudioEvent == null)
                 {
-                    Mod.sosigFootstepAudioEvent = Client.sosigs[sosigTrackedID].physicalObject.physicalSosigScript.AudEvent_FootSteps;
+                    Mod.sosigFootstepAudioEvent = trackedSosig.physicalSosig.physicalSosig.AudEvent_FootSteps;
                 }
 
                 // Play sound
@@ -1842,28 +1724,28 @@ namespace H3MP.Networking
             int sosigTrackedID = packet.ReadInt();
             Sosig.SosigOrder currentOrder = (Sosig.SosigOrder)packet.ReadByte();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
+            if (trackedSosig != null && trackedSosig.physicalSosig != null)
             {
                 switch (currentOrder)
                 {
                     case Sosig.SosigOrder.GuardPoint:
-                        trackedSosig.physicalObject.physicalSosig.Speak_State(trackedSosig.physicalObject.physicalSosig.Speech.OnWander);
+                        trackedSosig.physicalSosig.physicalSosig.Speak_State(trackedSosig.physicalSosig.physicalSosig.Speech.OnWander);
                         break;
                     case Sosig.SosigOrder.Investigate:
-                        trackedSosig.physicalObject.physicalSosig.Speak_State(trackedSosig.physicalObject.physicalSosig.Speech.OnInvestigate);
+                        trackedSosig.physicalSosig.physicalSosig.Speak_State(trackedSosig.physicalSosig.physicalSosig.Speech.OnInvestigate);
                         break;
                     case Sosig.SosigOrder.SearchForEquipment:
-                        trackedSosig.physicalObject.physicalSosig.Speak_State(trackedSosig.physicalObject.physicalSosig.Speech.OnSearchingForGuns);
+                        trackedSosig.physicalSosig.physicalSosig.Speak_State(trackedSosig.physicalSosig.physicalSosig.Speech.OnSearchingForGuns);
                         break;
                     case Sosig.SosigOrder.TakeCover:
-                        trackedSosig.physicalObject.physicalSosig.Speak_State(trackedSosig.physicalObject.physicalSosig.Speech.OnTakingCover);
+                        trackedSosig.physicalSosig.physicalSosig.Speak_State(trackedSosig.physicalSosig.physicalSosig.Speech.OnTakingCover);
                         break;
                     case Sosig.SosigOrder.Wander:
-                        trackedSosig.physicalObject.physicalSosig.Speak_State(trackedSosig.physicalObject.physicalSosig.Speech.OnWander);
+                        trackedSosig.physicalSosig.physicalSosig.Speak_State(trackedSosig.physicalSosig.physicalSosig.Speech.OnWander);
                         break;
                     case Sosig.SosigOrder.Assault:
-                        trackedSosig.physicalObject.physicalSosig.Speak_State(trackedSosig.physicalObject.physicalSosig.Speech.OnAssault);
+                        trackedSosig.physicalSosig.physicalSosig.Speak_State(trackedSosig.physicalSosig.physicalSosig.Speech.OnAssault);
                         break;
                 }
             }
@@ -1873,7 +1755,7 @@ namespace H3MP.Networking
         {
             int sosigTrackedID = packet.ReadInt();
             Sosig.SosigOrder currentOrder = (Sosig.SosigOrder)packet.ReadByte();
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null)
             {
                 trackedSosig.currentOrder = currentOrder;
@@ -1883,12 +1765,12 @@ namespace H3MP.Networking
                         trackedSosig.guardPoint = packet.ReadVector3();
                         trackedSosig.guardDir = packet.ReadVector3();
                         trackedSosig.hardGuard = packet.ReadBool();
-                        if (trackedSosig.physicalObject != null)
+                        if (trackedSosig.physicalSosig != null)
                         {
                             ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.CommandGuardPoint(trackedSosig.guardPoint, trackedSosig.hardGuard);
+                            trackedSosig.physicalSosig.physicalSosig.CommandGuardPoint(trackedSosig.guardPoint, trackedSosig.hardGuard);
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.m_guardDominantDirection = trackedSosig.guardDir;
+                            trackedSosig.physicalSosig.physicalSosig.m_guardDominantDirection = trackedSosig.guardDir;
                         }
                         break;
                     case Sosig.SosigOrder.Skirmish:
@@ -1896,79 +1778,79 @@ namespace H3MP.Networking
                         trackedSosig.pathToPoint = packet.ReadVector3();
                         trackedSosig.assaultPoint = packet.ReadVector3();
                         trackedSosig.faceTowards = packet.ReadVector3();
-                        if (trackedSosig.physicalObject != null)
+                        if (trackedSosig.physicalSosig != null)
                         {
                             ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.SetCurrentOrder(currentOrder);
+                            trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.m_skirmishPoint = trackedSosig.skirmishPoint;
-                            trackedSosig.physicalObject.physicalSosig.m_pathToPoint = trackedSosig.pathToPoint;
-                            trackedSosig.physicalObject.physicalSosig.m_assaultPoint = trackedSosig.assaultPoint;
-                            trackedSosig.physicalObject.physicalSosig.m_faceTowards = trackedSosig.faceTowards;
+                            trackedSosig.physicalSosig.physicalSosig.m_skirmishPoint = trackedSosig.skirmishPoint;
+                            trackedSosig.physicalSosig.physicalSosig.m_pathToPoint = trackedSosig.pathToPoint;
+                            trackedSosig.physicalSosig.physicalSosig.m_assaultPoint = trackedSosig.assaultPoint;
+                            trackedSosig.physicalSosig.physicalSosig.m_faceTowards = trackedSosig.faceTowards;
                         }
                         break;
                     case Sosig.SosigOrder.Investigate:
                         trackedSosig.guardPoint = packet.ReadVector3();
                         trackedSosig.hardGuard = packet.ReadBool();
                         trackedSosig.faceTowards = packet.ReadVector3();
-                        if (trackedSosig.physicalObject != null)
+                        if (trackedSosig.physicalSosig != null)
                         {
                             ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.SetCurrentOrder(currentOrder);
+                            trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.UpdateGuardPoint(trackedSosig.guardPoint);
-                            trackedSosig.physicalObject.physicalSosig.m_hardGuard = trackedSosig.hardGuard;
-                            trackedSosig.physicalObject.physicalSosig.m_faceTowards = trackedSosig.faceTowards;
+                            trackedSosig.physicalSosig.physicalSosig.UpdateGuardPoint(trackedSosig.guardPoint);
+                            trackedSosig.physicalSosig.physicalSosig.m_hardGuard = trackedSosig.hardGuard;
+                            trackedSosig.physicalSosig.physicalSosig.m_faceTowards = trackedSosig.faceTowards;
                         }
                         break;
                     case Sosig.SosigOrder.SearchForEquipment:
                     case Sosig.SosigOrder.Wander:
                         trackedSosig.wanderPoint = packet.ReadVector3();
-                        if (trackedSosig.physicalObject != null)
+                        if (trackedSosig.physicalSosig != null)
                         {
                             ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.SetCurrentOrder(currentOrder);
+                            trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.m_wanderPoint = trackedSosig.wanderPoint;
+                            trackedSosig.physicalSosig.physicalSosig.m_wanderPoint = trackedSosig.wanderPoint;
                         }
                         break;
                     case Sosig.SosigOrder.Assault:
                         trackedSosig.assaultPoint = packet.ReadVector3();
                         trackedSosig.assaultSpeed = (Sosig.SosigMoveSpeed)packet.ReadByte();
                         trackedSosig.faceTowards = packet.ReadVector3();
-                        if (trackedSosig.physicalObject != null)
+                        if (trackedSosig.physicalSosig != null)
                         {
                             ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.CommandAssaultPoint(trackedSosig.assaultPoint);
+                            trackedSosig.physicalSosig.physicalSosig.CommandAssaultPoint(trackedSosig.assaultPoint);
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.m_faceTowards = trackedSosig.faceTowards;
-                            trackedSosig.physicalObject.physicalSosig.SetAssaultSpeed(trackedSosig.assaultSpeed);
+                            trackedSosig.physicalSosig.physicalSosig.m_faceTowards = trackedSosig.faceTowards;
+                            trackedSosig.physicalSosig.physicalSosig.SetAssaultSpeed(trackedSosig.assaultSpeed);
                         }
                         break;
                     case Sosig.SosigOrder.Idle:
                         trackedSosig.idleToPoint = packet.ReadVector3();
                         trackedSosig.idleDominantDir = packet.ReadVector3();
-                        if (trackedSosig.physicalObject != null)
+                        if (trackedSosig.physicalSosig != null)
                         {
                             ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.CommandIdle(trackedSosig.idleToPoint, trackedSosig.idleDominantDir);
+                            trackedSosig.physicalSosig.physicalSosig.CommandIdle(trackedSosig.idleToPoint, trackedSosig.idleDominantDir);
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
                         }
                         break;
                     case Sosig.SosigOrder.PathTo:
                         trackedSosig.pathToPoint = packet.ReadVector3();
                         trackedSosig.pathToLookDir = packet.ReadVector3();
-                        if (trackedSosig.physicalObject != null)
+                        if (trackedSosig.physicalSosig != null)
                         {
                             ++SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.SetCurrentOrder(currentOrder);
+                            trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
                             --SosigActionPatch.sosigSetCurrentOrderSkip;
-                            trackedSosig.physicalObject.physicalSosig.m_pathToPoint = trackedSosig.pathToPoint;
-                            trackedSosig.physicalObject.physicalSosig.m_pathToLookDir = trackedSosig.pathToLookDir;
+                            trackedSosig.physicalSosig.physicalSosig.m_pathToPoint = trackedSosig.pathToPoint;
+                            trackedSosig.physicalSosig.physicalSosig.m_pathToLookDir = trackedSosig.pathToLookDir;
                         }
                         break;
                     default:
-                        trackedSosig.physicalObject.physicalSosig.SetCurrentOrder(currentOrder);
+                        trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
                         break;
                 }
             }
@@ -1979,11 +1861,11 @@ namespace H3MP.Networking
             int sosigTrackedID = packet.ReadInt();
             byte iff = packet.ReadByte();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
+            if (trackedSosig != null && trackedSosig.physicalSosig != null)
             {
                 ++SosigActionPatch.sosigVaporizeSkip;
-                trackedSosig.physicalObject.physicalSosig.Vaporize(trackedSosig.physicalObject.physicalSosig.DamageFX_Vaporize, iff);
+                trackedSosig.physicalSosig.physicalSosig.Vaporize(trackedSosig.physicalSosig.physicalSosig.DamageFX_Vaporize, iff);
                 --SosigActionPatch.sosigVaporizeSkip;
             }
         }
@@ -1995,11 +1877,11 @@ namespace H3MP.Networking
             bool isStart = packet.ReadBool();
             byte damClass = packet.ReadByte();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
+            if (trackedSosig != null && trackedSosig.physicalSosig != null)
             {
                 ++SosigLinkActionPatch.sosigLinkBreakSkip;
-                trackedSosig.physicalObject.physicalSosig.Links[linkIndex].BreakJoint(isStart, (Damage.DamageClass)damClass);
+                trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].BreakJoint(isStart, (Damage.DamageClass)damClass);
                 --SosigLinkActionPatch.sosigLinkBreakSkip;
             }
         }
@@ -2011,11 +1893,11 @@ namespace H3MP.Networking
             byte damClass = packet.ReadByte();
             bool isPullApart = packet.ReadBool();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
+            if (trackedSosig != null && trackedSosig.physicalSosig != null)
             {
                 ++SosigLinkActionPatch.sosigLinkSeverSkip;
-                trackedSosig.physicalObject.physicalSosig.Links[linkIndex].SeverJoint((Damage.DamageClass)damClass, isPullApart);
+                trackedSosig.physicalSosig.physicalSosig.Links[linkIndex].SeverJoint((Damage.DamageClass)damClass, isPullApart);
                 --SosigLinkActionPatch.sosigLinkSeverSkip;
             }
         }
@@ -2024,18 +1906,18 @@ namespace H3MP.Networking
         {
             int sosigTrackedID = packet.ReadInt();
 
-            TrackedSosigData trackedSosig = Client.sosigs[sosigTrackedID];
-            if (trackedSosig != null && trackedSosig.physicalObject != null)
+            TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
+            if (trackedSosig != null && trackedSosig.physicalSosig != null)
             {
                 Vector3 point = packet.ReadVector3();
                 Vector3 normal = packet.ReadVector3();
                 Vector3 edgeNormal = packet.ReadVector3();
                 float scale = packet.ReadFloat();
                 byte linkIndex = packet.ReadByte();
-                if (trackedSosig.physicalObject.physicalSosig.Links[linkIndex] != null)
+                if (trackedSosig.physicalSosig.physicalSosig.Links[linkIndex] != null)
                 {
                     ++SosigActionPatch.sosigRequestHitDecalSkip;
-                    trackedSosig.physicalObject.physicalSosig.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalObject.physicalSosig.Links[linkIndex]);
+                    trackedSosig.physicalSosig.physicalSosig.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalSosig.physicalSosig.Links[linkIndex]);
                     --SosigActionPatch.sosigRequestHitDecalSkip;
                 }
             }
@@ -2427,10 +2309,11 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             byte state = packet.ReadByte();
 
-            if (Client.autoMeaters[trackedID] != null && Client.autoMeaters[trackedID].physicalObject != null)
+            TrackedAutoMeaterData trackedAutoMeater = Client.objects[trackedID] as TrackedAutoMeaterData;
+            if (trackedAutoMeater != null && trackedAutoMeater.physicalAutoMeater != null)
             {
                 ++AutoMeaterSetStatePatch.skip;
-                Client.autoMeaters[trackedID].physicalObject.physicalAutoMeaterScript.SetState((AutoMeater.AutoMeaterState)state);
+                trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.SetState((AutoMeater.AutoMeaterState)state);
                 --AutoMeaterSetStatePatch.skip;
             }
         }
@@ -2440,21 +2323,21 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             bool active = packet.ReadBool();
 
-            TrackedAutoMeaterData trackedAutoMeater = Client.autoMeaters[trackedID];
-            if (trackedAutoMeater != null && trackedAutoMeater.physicalObject != null)
+            TrackedAutoMeaterData trackedAutoMeater = Client.objects[trackedID] as TrackedAutoMeaterData;
+            if (trackedAutoMeater != null && trackedAutoMeater.physicalAutoMeater != null)
             {
                 if (active)
                 {
-                    for (int i = 0; i < trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades.Count; i++)
+                    for (int i = 0; i < trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.Blades.Count; i++)
                     {
-                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades[i].Reactivate();
+                        trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.Blades[i].Reactivate();
                     }
                 }
                 else
                 {
-                    for (int i = 0; i < trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades.Count; i++)
+                    for (int i = 0; i < trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.Blades.Count; i++)
                     {
-                        trackedAutoMeater.physicalObject.physicalAutoMeaterScript.Blades[i].ShutDown();
+                        trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.Blades[i].ShutDown();
                     }
                 }
             }
@@ -2467,13 +2350,12 @@ namespace H3MP.Networking
             bool fireAtWill = packet.ReadBool();
             float dist = packet.ReadFloat();
 
-            Mod.LogInfo("Received auto meater firea ta will order, trackedID: " + trackedID + ", firearmIndex: " + firearmIndex+", automeaters length: "+ Client.autoMeaters, false);
-            TrackedAutoMeaterData trackedAutoMeater = Client.autoMeaters[trackedID];
-            if (trackedAutoMeater != null && trackedAutoMeater.physicalObject != null)
+            TrackedAutoMeaterData trackedAutoMeater = Client.objects[trackedID] as TrackedAutoMeaterData;
+            if (trackedAutoMeater != null && trackedAutoMeater.physicalAutoMeater != null)
             {
-                Mod.LogInfo("\tFirearms count: "+ trackedAutoMeater.physicalObject.physicalAutoMeaterScript.FireControl.Firearms.Count, false);
+                Mod.LogInfo("\tFirearms count: "+ trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.FireControl.Firearms.Count, false);
                 ++AutoMeaterFirearmFireAtWillPatch.skip;
-                trackedAutoMeater.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[firearmIndex].SetFireAtWill(fireAtWill, dist);
+                trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.FireControl.Firearms[firearmIndex].SetFireAtWill(fireAtWill, dist);
                 --AutoMeaterFirearmFireAtWillPatch.skip;
             }
         }
@@ -2485,11 +2367,11 @@ namespace H3MP.Networking
 
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHInstance.manager != null)
             {
-                TrackedSosigData trackedSosig = Client.sosigs[trackedID];
-                if (trackedSosig != null && trackedSosig.physicalObject != null)
+                TrackedSosigData trackedSosig = Client.objects[trackedID] as TrackedSosigData;
+                if (trackedSosig != null && trackedSosig.physicalSosig != null)
                 {
                     ++TNH_ManagerPatch.sosigKillSkip;
-                    Mod.currentTNHInstance.manager.OnSosigKill(trackedSosig.physicalObject.physicalSosig);
+                    Mod.currentTNHInstance.manager.OnSosigKill(trackedSosig.physicalSosig.physicalSosig);
                     --TNH_ManagerPatch.sosigKillSkip;
                 }
             }
@@ -2570,14 +2452,15 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
-                Client.items[trackedID].identifyingData[1] = 1;
+                trackedItem.identifyingData[1] = 1;
 
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
                     ++TNH_ShatterableCrateSetHoldingHealthPatch.skip;
-                    Client.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingHealth(GM.TNH_Manager);
+                    trackedItem.physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingHealth(GM.TNH_Manager);
                     --TNH_ShatterableCrateSetHoldingHealthPatch.skip;
                 }
             }
@@ -2587,14 +2470,15 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
-                Client.items[trackedID].identifyingData[2] = 1;
+                trackedItem.identifyingData[2] = 1;
 
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
                     ++TNH_ShatterableCrateSetHoldingTokenPatch.skip;
-                    Client.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingToken(GM.TNH_Manager);
+                    trackedItem.physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingToken(GM.TNH_Manager);
                     --TNH_ShatterableCrateSetHoldingTokenPatch.skip;
                 }
             }
@@ -2604,14 +2488,15 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
-                if (Client.items[trackedID].controller == GameManager.ID)
+                if (trackedItem.controller == GameManager.ID)
                 {
-                    if (Client.items[trackedID].physicalItem != null)
+                    if (trackedItem.physicalItem != null)
                     {
                         ++TNH_ShatterableCrateDamagePatch.skip;
-                        Client.items[trackedID].physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
+                        trackedItem.physicalItem.GetComponent<TNH_ShatterableCrate>().Damage(packet.ReadDamage());
                         --TNH_ShatterableCrateDamagePatch.skip;
                     }
                 }
@@ -2626,9 +2511,10 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].physicalItem != null)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.physicalItem != null)
             {
-                TNH_ShatterableCrate crateScript = Client.items[trackedID].physicalItem.GetComponentInChildren<TNH_ShatterableCrate>();
+                TNH_ShatterableCrate crateScript = trackedItem.physicalItem.GetComponentInChildren<TNH_ShatterableCrate>();
                 if (crateScript == null)
                 {
                     Mod.LogError("Received order to destroy shatterable crate for which we have physObj but it has not crate script!");
@@ -2757,14 +2643,15 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             int index = packet.ReadInt();
 
-            if (Client.encryptions[trackedID] != null)
+            TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryption != null)
             {
-                Client.encryptions[trackedID].subTargsActive[index] = true;
+                trackedEncryption.subTargsActive[index] = true;
 
-                if (Client.encryptions[trackedID].physicalObject != null)
+                if (trackedEncryption.physicalEncryption != null)
                 {
-                    Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(true);
-                    ++Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.m_numSubTargsLeft;
+                    trackedEncryption.physicalEncryption.physicalEncryption.SubTargs[index].SetActive(true);
+                    ++trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft;
                 }
             }
         }
@@ -2775,22 +2662,23 @@ namespace H3MP.Networking
             int index = packet.ReadInt();
             Vector3 point = packet.ReadVector3();
 
-            if (Client.encryptions[trackedID] != null)
+            TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryption != null)
             {
-                Client.encryptions[trackedID].tendrilsActive[index] = true;
-                Client.encryptions[trackedID].growthPoints[index] = point;
-                Client.encryptions[trackedID].subTargsPos[index] = point;
-                Client.encryptions[trackedID].subTargsActive[index] = true;
-                Client.encryptions[trackedID].tendrilFloats[index] = 1f;
+                trackedEncryption.tendrilsActive[index] = true;
+                trackedEncryption.growthPoints[index] = point;
+                trackedEncryption.subTargsPos[index] = point;
+                trackedEncryption.subTargsActive[index] = true;
+                trackedEncryption.tendrilFloats[index] = 1f;
 
-                if (Client.encryptions[trackedID].physicalObject != null)
+                if (trackedEncryption.physicalEncryption != null)
                 {
-                    Vector3 forward = point - Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
-                    Client.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
-                    Client.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+                    Vector3 forward = point - trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[index].transform.position;
+                    trackedEncryption.tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    trackedEncryption.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
                     ++EncryptionSpawnGrowthPatch.skip;
-                    Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SpawnGrowth(index, point);
+                    trackedEncryption.physicalEncryption.physicalEncryption.SpawnGrowth(index, point);
                     --EncryptionSpawnGrowthPatch.skip;
                 }
             }
@@ -2812,25 +2700,26 @@ namespace H3MP.Networking
                 points.Add(packet.ReadVector3());
             }
 
-            if (Client.encryptions[trackedID] != null)
+            TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryption != null)
             {
                 if (pointCount > 0)
                 {
                     for (int i = 0; i < indexCount; ++i)
                     {
-                        Client.encryptions[trackedID].tendrilsActive[indices[i]] = true;
-                        Client.encryptions[trackedID].growthPoints[indices[i]] = points[i];
-                        Client.encryptions[trackedID].subTargsPos[indices[i]] = points[i];
-                        Client.encryptions[trackedID].subTargsActive[indices[i]] = true;
-                        Client.encryptions[trackedID].tendrilFloats[indices[i]] = 1f;
+                        trackedEncryption.tendrilsActive[indices[i]] = true;
+                        trackedEncryption.growthPoints[indices[i]] = points[i];
+                        trackedEncryption.subTargsPos[indices[i]] = points[i];
+                        trackedEncryption.subTargsActive[indices[i]] = true;
+                        trackedEncryption.tendrilFloats[indices[i]] = 1f;
                     }
 
-                    if (Client.encryptions[trackedID].physicalObject != null)
+                    if (trackedEncryption.physicalEncryption != null)
                     {
                         ++EncryptionSpawnGrowthPatch.skip;
                         for (int i = 0; i < indexCount; ++i)
                         {
-                            Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SpawnGrowth(indices[i], points[i]);
+                            trackedEncryption.physicalEncryption.physicalEncryption.SpawnGrowth(indices[i], points[i]);
                         }
                         --EncryptionSpawnGrowthPatch.skip;
                     }
@@ -2839,19 +2728,19 @@ namespace H3MP.Networking
                 {
                     for (int i = 0; i < indexCount; ++i)
                     {
-                        Client.encryptions[trackedID].subTargsActive[indices[i]] = true;
+                        trackedEncryption.subTargsActive[indices[i]] = true;
                     }
 
-                    if (Client.encryptions[trackedID].physicalObject != null)
+                    if (trackedEncryption.physicalEncryption != null)
                     {
                         ++EncryptionSpawnGrowthPatch.skip;
                         for (int i = 0; i < indexCount; ++i)
                         {
-                            Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[indices[i]].SetActive(true);
+                            trackedEncryption.physicalEncryption.physicalEncryption.SubTargs[indices[i]].SetActive(true);
                         }
                         --EncryptionSpawnGrowthPatch.skip;
 
-                        Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.m_numSubTargsLeft = indexCount;
+                        trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft = indexCount;
                     }
                 }
             }
@@ -2863,18 +2752,19 @@ namespace H3MP.Networking
             int index = packet.ReadInt();
             Vector3 point = packet.ReadVector3();
 
-            if (Client.encryptions[trackedID] != null)
+            TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryption != null)
             {
-                Client.encryptions[trackedID].growthPoints[index] = point;
-                Client.encryptions[trackedID].tendrilFloats[index] = 0;
-                if (Client.encryptions[trackedID].physicalObject != null)
+                trackedEncryption.growthPoints[index] = point;
+                trackedEncryption.tendrilFloats[index] = 0;
+                if (trackedEncryption.physicalEncryption != null)
                 {
-                    Vector3 forward = point - Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.Tendrils[index].transform.position;
-                    Client.encryptions[trackedID].tendrilsRot[index] = Quaternion.LookRotation(forward);
-                    Client.encryptions[trackedID].tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+                    Vector3 forward = point - trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[index].transform.position;
+                    trackedEncryption.tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    trackedEncryption.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
                     ++EncryptionResetGrowthPatch.skip;
-                    Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.ResetGrowth(index, point);
+                    trackedEncryption.physicalEncryption.physicalEncryption.ResetGrowth(index, point);
                     --EncryptionResetGrowthPatch.skip;
                 }
             }
@@ -2885,14 +2775,15 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             int index = packet.ReadInt();
 
-            if (Client.encryptions[trackedID] != null)
+            TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryption != null)
             {
-                Client.encryptions[trackedID].subTargsActive[index] = false;
+                trackedEncryption.subTargsActive[index] = false;
 
-                if (Client.encryptions[trackedID].physicalObject != null)
+                if (trackedEncryption.physicalEncryption != null)
                 {
-                    Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.SubTargs[index].SetActive(false);
-                    --Client.encryptions[trackedID].physicalObject.physicalEncryptionScript.m_numSubTargsLeft;
+                    trackedEncryption.physicalEncryption.physicalEncryption.SubTargs[index].SetActive(false);
+                    --trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft;
                 }
             }
         }
@@ -3060,13 +2951,15 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
             int chart = packet.ReadInt();
-            if (Client.sosigs[trackedID] != null)
+
+            TrackedSosigData trackedSosig = Client.objects[trackedID] as TrackedSosigData;
+            if (trackedSosig != null)
             {
                 // Update local
-                Client.sosigs[trackedID].IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(chart);
-                if (Client.sosigs[trackedID].physicalObject != null)
+                trackedSosig.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(chart);
+                if (trackedSosig.physicalSosig != null)
                 {
-                    Client.sosigs[trackedID].physicalObject.physicalSosigScript.Priority.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(chart);
+                    trackedSosig.physicalSosig.physicalSosig.Priority.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(chart);
                 }
             }
         }
@@ -3074,12 +2967,14 @@ namespace H3MP.Networking
         public static void RemoteMissileDetonate(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    RemoteMissile remoteMissile = (Client.items[trackedID].physicalItem.physicalObject as RemoteMissileLauncher).m_missile;
+                    RemoteMissile remoteMissile = (trackedItem.physicalItem.physicalItem as RemoteMissileLauncher).m_missile;
                     if (remoteMissile != null)
                     {
                         RemoteMissileDetonatePatch.overriden = true;
@@ -3093,12 +2988,14 @@ namespace H3MP.Networking
         public static void StingerMissileExplode(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    StingerMissile missile = Client.items[trackedID].physicalItem.stingerMissile;
+                    StingerMissile missile = trackedItem.physicalItem.stingerMissile;
                     if (missile != null)
                     {
                         StingerMissileExplodePatch.overriden = true;
@@ -3112,12 +3009,14 @@ namespace H3MP.Networking
         public static void PinnedGrenadeExplode(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    PinnedGrenade grenade = Client.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
+                    PinnedGrenade grenade = trackedItem.physicalItem.physicalItem as PinnedGrenade;
                     if (grenade != null)
                     {
                         PinnedGrenadePatch.ExplodePinnedGrenade(grenade, packet.ReadVector3());
@@ -3129,12 +3028,14 @@ namespace H3MP.Networking
         public static void PinnedGrenadePullPin(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    PinnedGrenade grenade = Client.items[trackedID].physicalItem.physicalObject as PinnedGrenade;
+                    PinnedGrenade grenade = trackedItem.physicalItem.physicalItem as PinnedGrenade;
                     if (grenade != null)
                     {
                         for (int i = 0; i < grenade.m_rings.Count; ++i)
@@ -3160,12 +3061,14 @@ namespace H3MP.Networking
         public static void FVRGrenadeExplode(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    FVRGrenade grenade = Client.items[trackedID].physicalItem.physicalObject as FVRGrenade;
+                    FVRGrenade grenade = trackedItem.physicalItem.physicalItem as FVRGrenade;
                     if (grenade != null)
                     {
                         FVRGrenadePatch.ExplodeGrenade(grenade, packet.ReadVector3());
@@ -3177,12 +3080,14 @@ namespace H3MP.Networking
         public static void BangSnapSplode(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    BangSnap bangSnap = Client.items[trackedID].physicalItem.physicalObject as BangSnap;
+                    BangSnap bangSnap = trackedItem.physicalItem.physicalItem as BangSnap;
                     if (bangSnap != null)
                     {
                         bangSnap.transform.position = packet.ReadVector3();
@@ -3197,12 +3102,14 @@ namespace H3MP.Networking
         public static void C4Detonate(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    C4 c4 = Client.items[trackedID].physicalItem.physicalObject as C4;
+                    C4 c4 = trackedItem.physicalItem.physicalItem as C4;
                     if (c4 != null)
                     {
                         c4.transform.position = packet.ReadVector3();
@@ -3217,12 +3124,14 @@ namespace H3MP.Networking
         public static void ClaymoreMineDetonate(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    ClaymoreMine cm = Client.items[trackedID].physicalItem.physicalObject as ClaymoreMine;
+                    ClaymoreMine cm = trackedItem.physicalItem.physicalItem as ClaymoreMine;
                     if (cm != null)
                     {
                         cm.transform.position = packet.ReadVector3();
@@ -3237,12 +3146,14 @@ namespace H3MP.Networking
         public static void SLAMDetonate(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Client.items[trackedID] != null)
+
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
                 // Update local
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    SLAM slam = Client.items[trackedID].physicalItem.physicalObject as SLAM;
+                    SLAM slam = trackedItem.physicalItem.physicalItem as SLAM;
                     if (slam != null)
                     {
                         slam.transform.position = packet.ReadVector3();
@@ -3549,11 +3460,11 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            TrackedItemData itemData = Client.items[trackedID];
-            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalObject is FVRFusedThrowable)
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
+            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalItem is FVRFusedThrowable)
             {
                 ++FusePatch.igniteSkip;
-                (itemData.physicalItem.physicalObject as FVRFusedThrowable).Fuse.Ignite(0);
+                (itemData.physicalItem.physicalItem as FVRFusedThrowable).Fuse.Ignite(0);
                 --FusePatch.igniteSkip;
             }
         }
@@ -3562,10 +3473,10 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            TrackedItemData itemData = Client.items[trackedID];
-            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalObject is FVRFusedThrowable)
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
+            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalItem is FVRFusedThrowable)
             {
-                (itemData.physicalItem.physicalObject as FVRFusedThrowable).Fuse.Boom();
+                (itemData.physicalItem.physicalItem as FVRFusedThrowable).Fuse.Boom();
             }
         }
 
@@ -3574,10 +3485,10 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             bool ignited = packet.ReadBool();
 
-            TrackedItemData itemData = Client.items[trackedID];
-            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalObject is Molotov)
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
+            if (itemData != null && itemData.physicalItem != null && itemData.physicalItem.physicalItem is Molotov)
             {
-                Molotov asMolotov = itemData.physicalItem.physicalObject as Molotov;
+                Molotov asMolotov = itemData.physicalItem.physicalItem as Molotov;
                 if (ignited && !asMolotov.Igniteable.IsOnFire())
                 {
                     asMolotov.RemoteIgnite();
@@ -3593,7 +3504,7 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             Damage damage = packet.ReadDamage();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 if (itemData.controller == Client.singleton.ID)
@@ -3601,7 +3512,7 @@ namespace H3MP.Networking
                     if (itemData.physicalItem != null)
                     {
                         ++MolotovPatch.damageSkip;
-                        (itemData.physicalItem.physicalObject as Molotov).Damage(damage);
+                        (itemData.physicalItem.physicalItem as Molotov).Damage(damage);
                         --MolotovPatch.damageSkip;
                     }
                 }
@@ -3621,7 +3532,7 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 if (itemData.controller == GameManager.ID)
@@ -3629,7 +3540,7 @@ namespace H3MP.Networking
                     if (itemData.physicalItem != null)
                     {
                         ++MagazinePatch.addRoundSkip;
-                        (itemData.physicalItem.physicalObject as FVRFireArmMagazine).AddRound(roundClass, true, true);
+                        (itemData.physicalItem.physicalItem as FVRFireArmMagazine).AddRound(roundClass, true, true);
                         --MagazinePatch.addRoundSkip;
                     }
                 }
@@ -3641,7 +3552,7 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 if (itemData.controller == GameManager.ID)
@@ -3649,7 +3560,7 @@ namespace H3MP.Networking
                     if (itemData.physicalItem != null)
                     {
                         ++ClipPatch.addRoundSkip;
-                        (itemData.physicalItem.physicalObject as FVRFireArmClip).AddRound(roundClass, true, true);
+                        (itemData.physicalItem.physicalItem as FVRFireArmClip).AddRound(roundClass, true, true);
                         --ClipPatch.addRoundSkip;
                     }
                 }
@@ -3662,7 +3573,7 @@ namespace H3MP.Networking
             FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
             int chamberIndex = packet.ReadByte();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 if (itemData.controller == GameManager.ID)
@@ -3670,7 +3581,7 @@ namespace H3MP.Networking
                     if (itemData.physicalItem != null)
                     {
                         ++SpeedloaderChamberPatch.loadSkip;
-                        (itemData.physicalItem.physicalObject as Speedloader).Chambers[chamberIndex].Load(roundClass, true);
+                        (itemData.physicalItem.physicalItem as Speedloader).Chambers[chamberIndex].Load(roundClass, true);
                         --SpeedloaderChamberPatch.loadSkip;
                     }
                 }
@@ -3683,7 +3594,7 @@ namespace H3MP.Networking
             FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
             FireArmRoundType roundType = (FireArmRoundType)packet.ReadShort();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 if (itemData.controller == GameManager.ID)
@@ -3692,7 +3603,7 @@ namespace H3MP.Networking
                     {
                         FVRFireArmRound round = AM.GetRoundSelfPrefab(roundType, roundClass).GetGameObject().GetComponent<FVRFireArmRound>();
                         ++RemoteGunPatch.chamberSkip;
-                        (itemData.physicalItem.physicalObject as RemoteGun).ChamberCartridge(round);
+                        (itemData.physicalItem.physicalItem as RemoteGun).ChamberCartridge(round);
                         --RemoteGunPatch.chamberSkip;
                     }
                 }
@@ -3705,7 +3616,7 @@ namespace H3MP.Networking
             FireArmRoundClass roundClass = (FireArmRoundClass)packet.ReadShort();
             int chamberIndex = packet.ReadByte();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 if (itemData.controller == GameManager.ID)
@@ -3724,8 +3635,8 @@ namespace H3MP.Networking
             int FATrackedID = packet.ReadInt();
             short slot = packet.ReadShort();
 
-            TrackedItemData magItemData = Client.items[trackedID];
-            TrackedItemData FAItemData = Client.items[FATrackedID];
+            TrackedItemData magItemData = Client.objects[trackedID] as TrackedItemData;
+            TrackedItemData FAItemData = Client.objects[FATrackedID] as TrackedItemData;
             if (magItemData != null && FAItemData != null)
             {
                 if (FAItemData.controller == GameManager.ID)
@@ -3735,13 +3646,13 @@ namespace H3MP.Networking
                         if (slot == -1)
                         {
                             ++MagazinePatch.loadSkip;
-                            (magItemData.physicalItem.physicalObject as FVRFireArmMagazine).Load(FAItemData.physicalItem.physicalObject as FVRFireArm);
+                            (magItemData.physicalItem.physicalItem as FVRFireArmMagazine).Load(FAItemData.physicalItem.physicalItem as FVRFireArm);
                             --MagazinePatch.loadSkip;
                         }
                         else
                         {
                             ++MagazinePatch.loadSkip;
-                            (magItemData.physicalItem.physicalObject as FVRFireArmMagazine).LoadIntoSecondary(FAItemData.physicalItem.physicalObject as FVRFireArm, slot);
+                            (magItemData.physicalItem.physicalItem as FVRFireArmMagazine).LoadIntoSecondary(FAItemData.physicalItem.physicalItem as FVRFireArm, slot);
                             --MagazinePatch.loadSkip;
                         }
                     }
@@ -3754,8 +3665,8 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             int FATrackedID = packet.ReadInt();
 
-            TrackedItemData magItemData = Client.items[trackedID];
-            TrackedItemData FAItemData = Client.items[FATrackedID];
+            TrackedItemData magItemData = Client.objects[trackedID] as TrackedItemData;
+            TrackedItemData FAItemData = Client.objects[FATrackedID] as TrackedItemData;
             if (magItemData != null && FAItemData != null)
             {
                 if (FAItemData.controller == GameManager.ID)
@@ -3763,7 +3674,7 @@ namespace H3MP.Networking
                     if (FAItemData.physicalItem != null && magItemData.physicalItem != null)
                     {
                         ++MagazinePatch.loadSkip;
-                        (magItemData.physicalItem.physicalObject as FVRFireArmMagazine).Load(FAItemData.physicalItem.dataObject as AttachableFirearm);
+                        (magItemData.physicalItem.physicalItem as FVRFireArmMagazine).Load(FAItemData.physicalItem.dataObject as AttachableFirearm);
                         --MagazinePatch.loadSkip;
                     }
                 }
@@ -3775,8 +3686,8 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             int FATrackedID = packet.ReadInt();
 
-            TrackedItemData clipItemData = Client.items[trackedID];
-            TrackedItemData FAItemData = Client.items[FATrackedID];
+            TrackedItemData clipItemData = Client.objects[trackedID] as TrackedItemData;
+            TrackedItemData FAItemData = Client.objects[FATrackedID] as TrackedItemData;
             if (clipItemData != null && FAItemData != null)
             {
                 if (FAItemData.controller == GameManager.ID)
@@ -3784,7 +3695,7 @@ namespace H3MP.Networking
                     if (FAItemData.physicalItem != null && clipItemData.physicalItem != null)
                     {
                         ++ClipPatch.loadSkip;
-                        (clipItemData.physicalItem.physicalObject as FVRFireArmClip).Load(FAItemData.physicalItem.physicalObject as FVRFireArm);
+                        (clipItemData.physicalItem.physicalItem as FVRFireArmClip).Load(FAItemData.physicalItem.physicalItem as FVRFireArm);
                         --ClipPatch.loadSkip;
                     }
                 }
@@ -3795,7 +3706,7 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 int chamberCount = packet.ReadByte();
@@ -3809,7 +3720,7 @@ namespace H3MP.Networking
                 {
                     if (itemData.physicalItem != null)
                     {
-                        Revolver revolver = itemData.physicalItem.physicalObject as Revolver;
+                        Revolver revolver = itemData.physicalItem.physicalItem as Revolver;
                         ++ChamberPatch.chamberSkip;
                         for (int i = 0; i < revolver.Chambers.Length; ++i)
                         {
@@ -3828,7 +3739,7 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 int chamberCount = packet.ReadByte();
@@ -3842,7 +3753,7 @@ namespace H3MP.Networking
                 {
                     if (itemData.physicalItem != null)
                     {
-                        RevolvingShotgun revShotgun = itemData.physicalItem.physicalObject as RevolvingShotgun;
+                        RevolvingShotgun revShotgun = itemData.physicalItem.physicalItem as RevolvingShotgun;
 
                         if (revShotgun.CylinderLoaded)
                         {
@@ -3876,7 +3787,7 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 int chamberCount = packet.ReadByte();
@@ -3890,7 +3801,7 @@ namespace H3MP.Networking
                 {
                     if (itemData.physicalItem != null)
                     {
-                        GrappleGun grappleGun = itemData.physicalItem.physicalObject as GrappleGun;
+                        GrappleGun grappleGun = itemData.physicalItem.physicalItem as GrappleGun;
 
                         if (grappleGun.IsMagLoaded)
                         {
@@ -3923,7 +3834,7 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 byte type = packet.ReadByte();
@@ -3933,7 +3844,7 @@ namespace H3MP.Networking
                 {
                     if (itemData.physicalItem != null)
                     {
-                        CarlGustafLatch latch = (itemData.physicalItem.physicalObject as CarlGustaf).TailLatch;
+                        CarlGustafLatch latch = (itemData.physicalItem.physicalItem as CarlGustaf).TailLatch;
                         if (type == 1)
                         {
                             latch = latch.RestrictingLatch;
@@ -3969,7 +3880,7 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            TrackedItemData itemData = Client.items[trackedID];
+            TrackedItemData itemData = Client.objects[trackedID] as TrackedItemData;
             if (itemData != null)
             {
                 byte state = packet.ReadByte();
@@ -3978,7 +3889,7 @@ namespace H3MP.Networking
                 {
                     if (itemData.physicalItem != null)
                     {
-                        CarlGustaf asCG = itemData.physicalItem.physicalObject as CarlGustaf;
+                        CarlGustaf asCG = itemData.physicalItem.physicalItem as CarlGustaf;
 
                         ++CarlGustafShellInsertEjectPatch.skip;
                         if (state == 0) // In
@@ -4023,13 +3934,14 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             byte[] data = packet.ReadBytes(packet.ReadShort());
 
-            if (Client.items[trackedID] != null && Client.items[trackedID].controller != GameManager.ID)
+            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null && trackedItem.controller != GameManager.ID)
             {
-                Client.items[trackedID].additionalData = data;
+                trackedItem.additionalData = data;
 
-                if (Client.items[trackedID].physicalItem != null)
+                if (trackedItem.physicalItem != null)
                 {
-                    GrappleThrowable asGrappleThrowable = Client.items[trackedID].physicalItem.physicalObject as GrappleThrowable;
+                    GrappleThrowable asGrappleThrowable = trackedItem.physicalItem.physicalItem as GrappleThrowable;
                     asGrappleThrowable.RootRigidbody.isKinematic = true;
                     asGrappleThrowable.m_isRopeFree = true;
                     asGrappleThrowable.BundledRope.SetActive(false);
@@ -4046,11 +3958,11 @@ namespace H3MP.Networking
                     asGrappleThrowable.finalRopePoints.Clear();
                     asGrappleThrowable.FakeRopeLength.SetActive(false);
 
-                    int count = Client.items[trackedID].additionalData[1];
-                    Vector3 currentRopePoint = new Vector3(BitConverter.ToSingle(Client.items[trackedID].additionalData, 2), BitConverter.ToSingle(Client.items[trackedID].additionalData, 6), BitConverter.ToSingle(Client.items[trackedID].additionalData, 10));
+                    int count = trackedItem.additionalData[1];
+                    Vector3 currentRopePoint = new Vector3(BitConverter.ToSingle(trackedItem.additionalData, 2), BitConverter.ToSingle(trackedItem.additionalData, 6), BitConverter.ToSingle(trackedItem.additionalData, 10));
                     for (int i = 1; i < count; ++i)
                     {
-                        Vector3 newPoint = new Vector3(BitConverter.ToSingle(Client.items[trackedID].additionalData, i * 12 + 2), BitConverter.ToSingle(Client.items[trackedID].additionalData, i * 12 + 6), BitConverter.ToSingle(Client.items[trackedID].additionalData, i * 12 + 10));
+                        Vector3 newPoint = new Vector3(BitConverter.ToSingle(trackedItem.additionalData, i * 12 + 2), BitConverter.ToSingle(trackedItem.additionalData, i * 12 + 6), BitConverter.ToSingle(trackedItem.additionalData, i * 12 + 10));
                         Vector3 vector = newPoint - currentRopePoint;
 
                         GameObject gameObject = UnityEngine.Object.Instantiate(asGrappleThrowable.RopeLengthPrefab, newPoint, Quaternion.LookRotation(-vector, Vector3.up));
