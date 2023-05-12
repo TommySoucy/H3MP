@@ -189,6 +189,7 @@ namespace H3MP.Tracking
             physicalAutoMeater.physicalAutoMeater = autoMeaterInstance.GetComponent<AutoMeater>();
             physical.physical = physicalAutoMeater.physicalAutoMeater;
             awaitingInstantiation = false;
+            physicalAutoMeater.autoMeaterData = this;
             physical.data = this;
 
             GameManager.trackedAutoMeaterByAutoMeater.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);

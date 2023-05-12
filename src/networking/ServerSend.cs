@@ -351,7 +351,17 @@ namespace H3MP.Networking
                                             {
                                                 trackedObject.latestUpdateSent = false;
 
+                                                // Keep length before we write backet
+                                                int preLength = packet.buffer.Count;
+                                                packet.Write((ushort)0); // Place holder
+
                                                 trackedObject.WriteToPacket(packet, true, false);
+
+                                                // Replace placeholder with length of object data
+                                                byte[] actualLength = BitConverter.GetBytes((ushort)(packet.buffer.Count - preLength - 2));
+                                                packet.buffer[preLength] = actualLength[0];
+                                                packet.buffer[preLength + 1] = actualLength[1];
+                                                Mod.LogInfo("\t\t\t"+packet.buffer.Count+" bytes");
 
                                                 ++count;
 
@@ -372,7 +382,17 @@ namespace H3MP.Networking
                                         {
                                             trackedObject.latestUpdateSent = false;
 
+                                            // Keep length before we write backet
+                                            int preLength = packet.buffer.Count;
+                                            packet.Write((ushort)0); // Place holder
+
                                             trackedObject.WriteToPacket(packet, false, false);
+
+                                            // Replace placeholder with length of object data
+                                            byte[] actualLength = BitConverter.GetBytes((ushort)(packet.buffer.Count - preLength - 2));
+                                            packet.buffer[preLength] = actualLength[0];
+                                            packet.buffer[preLength + 1] = actualLength[1];
+                                            Mod.LogInfo("\t\t\t" + packet.buffer.Count + " bytes");
 
                                             ++count;
 

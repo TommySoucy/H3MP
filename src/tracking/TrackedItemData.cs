@@ -253,6 +253,7 @@ namespace H3MP.Tracking
                 physicalItem = itemObject.AddComponent<TrackedItem>();
                 physical = physicalItem;
                 awaitingInstantiation = false;
+                physicalItem.itemData = this;
                 physical.data = this;
                 physicalItem.physicalItem = itemObject.GetComponent<FVRPhysicalObject>();
                 physical.physical = physicalItem.physicalItem;

@@ -487,6 +487,8 @@ namespace H3MP.Tracking
 
         public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
         {
+            base.WriteToPacket(packet, incrementOrder, full);
+
             if (full)
             {
                 if (linkData == null || linkData.Length == 0)
@@ -672,6 +674,7 @@ namespace H3MP.Tracking
             physicalSosig.physicalSosig = sosigInstance.GetComponent<Sosig>();
             physical.physical = physicalSosig.physicalSosig;
             awaitingInstantiation = false;
+            physicalSosig.sosigData = this;
             physicalSosig.data = this;
 
             SosigConfigurePatch.skipConfigure = true;

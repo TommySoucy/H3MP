@@ -258,18 +258,23 @@ namespace H3MP.Networking
             ServerSend.AddNonSyncScene(clientID, scene);
         }
 
+        public static void TrackedObject(int clientID, Packet packet)
+        {
+            Server.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypes[packet.ReadString()], packet), clientID);
+        }
+
         public static void TrackedObjects(int clientID, Packet packet)
         {
             int count = packet.ReadShort();
             for(int i=0; i < count; ++i)
             {
-                TrackedObjectData.Update(packet);
+                TrackedObjectData.Update(packet, true);
             }
         }
 
         public static void ObjectUpdate(int clientID, Packet packet)
         {
-            TrackedObjectData.Update(packet);
+            TrackedObjectData.Update(packet, false);
 
             // Send to all other clients
             ServerSend.ObjectUpdate(packet, clientID);
@@ -465,11 +470,6 @@ namespace H3MP.Networking
             }
 
             ServerSend.DestroyObject(trackedID, removeFromList, clientID);
-        }
-
-        public static void TrackedObject(int clientID, Packet packet)
-        {
-            Server.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypes[packet.ReadString()], packet), clientID);
         }
 
         public static void ObjectParent(int clientID, Packet packet)

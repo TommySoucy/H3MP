@@ -67,7 +67,6 @@ namespace H3MP.Tracking
         public TrackedObjectData(Packet packet)
         {
             // Full
-            typeIdentifier = packet.ReadString();
             controller = packet.ReadInt();
             parent = packet.ReadInt();
             localTrackedID = packet.ReadInt();
@@ -120,30 +119,29 @@ namespace H3MP.Tracking
         }
 
         // Processes an update packet
-        public static void Update(Packet packet, bool full = false)
+        public static void Update(Packet packet, bool includesLength = true, bool full = false)
         {
+            ushort length =  includesLength ? packet.ReadUShort() : (ushort)0;
             byte order = packet.ReadByte();
             int trackedID = packet.ReadInt();
 
             if (trackedID == -1)
             {
+                if (includesLength)
+                {
+                    packet.readPos += (length - 5); // -5 because we read a byte and an int above
+                }
                 return;
             }
 
             TrackedObjectData trackedObjectData = null;
             if (ThreadManager.host)
             {
-                if (trackedID < Server.objects.Length)
-                {
-                    trackedObjectData = Server.objects[trackedID];
-                }
+                trackedObjectData = Server.objects[trackedID];
             }
             else
             {
-                if (trackedID < Client.objects.Length)
-                {
-                    trackedObjectData = Client.objects[trackedID];
-                }
+                trackedObjectData = Client.objects[trackedID];
             }
 
             // TODO: Review: Should we keep the up to date data for later if we dont have the tracked object yet?
@@ -160,7 +158,14 @@ namespace H3MP.Tracking
                 if (trackedObjectData.controller != GameManager.ID && (full || (order > trackedObjectData.order || trackedObjectData.order - order > 128)))
                 {
                     trackedObjectData.UpdateFromPacket(packet, full);
+                    return;
                 }
+            }
+
+            if (includesLength)
+            {
+                // If we make it here, it is because we did update from packet
+                packet.readPos += (length - 5); // -5 because we read a byte and an int above
             }
         }
 
@@ -218,10 +223,11 @@ namespace H3MP.Tracking
                 initTracker = packet.ReadInt();
             }
 
+            previousActive = active;
+            active = packet.ReadBool();
+
             if (physical != null)
             {
-                previousActive = active;
-                active = packet.ReadBool();
                 if (active)
                 {
                     if (!physical.gameObject.activeSelf)

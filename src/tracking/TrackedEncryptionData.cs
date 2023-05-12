@@ -208,6 +208,7 @@ namespace H3MP.Tracking
             physicalEncryption.physicalEncryption = physicalEncryptionScript;
             physical.physical = physicalEncryptionScript;
             awaitingInstantiation = false;
+            physicalEncryption.encryptionData = this;
             physical.data = this;
 
             GameManager.trackedEncryptionByEncryption.Add(physicalEncryption.physicalEncryption, physicalEncryption);
@@ -412,6 +413,103 @@ namespace H3MP.Tracking
         public override bool NeedsUpdate()
         {
             return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+        }
+
+        public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
+        {
+            base.WriteToPacket(packet, incrementOrder, full);
+
+            if (full)
+            {
+                packet.Write((byte)type);
+                if (tendrilsActive == null || tendrilsActive.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(tendrilsActive.Length);
+                    for (int i = 0; i < tendrilsActive.Length; ++i)
+                    {
+                        packet.Write(tendrilsActive[i]);
+                    }
+                }
+                if (growthPoints == null || growthPoints.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(growthPoints.Length);
+                    for (int i = 0; i < growthPoints.Length; ++i)
+                    {
+                        packet.Write(growthPoints[i]);
+                    }
+                }
+                if (subTargsPos == null || subTargsPos.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(subTargsPos.Length);
+                    for (int i = 0; i < subTargsPos.Length; ++i)
+                    {
+                        packet.Write(subTargsPos[i]);
+                    }
+                }
+                if (subTargsActive == null || subTargsActive.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(subTargsActive.Length);
+                    for (int i = 0; i < subTargsActive.Length; ++i)
+                    {
+                        packet.Write(subTargsActive[i]);
+                    }
+                }
+                if (tendrilFloats == null || tendrilFloats.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(tendrilFloats.Length);
+                    for (int i = 0; i < tendrilFloats.Length; ++i)
+                    {
+                        packet.Write(tendrilFloats[i]);
+                    }
+                }
+                if (tendrilsRot == null || tendrilsRot.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(tendrilsRot.Length);
+                    for (int i = 0; i < tendrilsRot.Length; ++i)
+                    {
+                        packet.Write(tendrilsRot[i]);
+                    }
+                }
+                if (tendrilsScale == null || tendrilsScale.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(tendrilsScale.Length);
+                    for (int i = 0; i < tendrilsScale.Length; ++i)
+                    {
+                        packet.Write(tendrilsScale[i]);
+                    }
+                }
+            }
+
+            packet.Write(position);
+            packet.Write(rotation);
         }
 
         public static string EncryptionTypeToID(TNH_EncryptionType type)

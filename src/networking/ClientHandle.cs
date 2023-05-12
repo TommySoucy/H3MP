@@ -140,13 +140,13 @@ namespace H3MP.Networking
             int count = packet.ReadShort();
             for (int i = 0; i < count; ++i)
             {
-                TrackedObjectData.Update(packet);
+                TrackedObjectData.Update(packet, true);
             }
         }
 
         public static void ObjectUpdate(Packet packet)
         {
-            TrackedObjectData.Update(packet);
+            TrackedObjectData.Update(packet, false);
         }
 
         public static void TrackedObject(Packet packet)
