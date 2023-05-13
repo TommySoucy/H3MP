@@ -450,6 +450,7 @@ namespace H3MP.Networking
                 ServerHandle.PinnedGrenadePullPin,
                 ServerHandle.MagazineAddRound,
                 ServerHandle.ClipAddRound,
+                ServerHandle.RegisterCustomPacketType,
             };
 
             objects = new TrackedObjectData[100];
@@ -470,6 +471,49 @@ namespace H3MP.Networking
             loadingClientsWaitingFrom.Clear();
 
             Mod.LogInfo("Initialized server", false);
+        }
+
+        public static void RegisterCustomPacketType(string handlerID, int clientID = 0)
+        {
+            int index = -1;
+
+            if (Mod.registeredCustomPacketIDs.TryGetValue(handlerID, out index))
+            {
+                Mod.LogWarning("Client " + clientID + " requested for " + handlerID + " custom packet handler to be registered but this ID already exists.");
+            }
+            else // We don't yet have this handlerID, add it
+            {
+                // Get next available handler ID
+                for (int i = 0; i < Mod.customPacketHandlers.Length; ++i)
+                {
+                    if (Mod.customPacketHandlers[i] == null)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                // If couldn't find one, need to add more space to handlers array
+                if (index == -1)
+                {
+                    index = Mod.customPacketHandlers.Length;
+                    Mod.CustomPacketHandler[] temp = Mod.customPacketHandlers;
+                    Mod.customPacketHandlers = new Mod.CustomPacketHandler[index + 10];
+                    for (int i = 0; i < temp.Length; ++i)
+                    {
+                        Mod.customPacketHandlers[i] = temp[i];
+                    }
+                }
+
+                // Store for potential later use
+                Mod.registeredCustomPacketIDs.Add(handlerID, index);
+
+                // Send event so a mod can add their handler at the index
+                Mod.CustomPacketHandlerReceivedInvoke(handlerID, index);
+            }
+
+            // Send back/relay to others
+            ServerSend.RegisterCustomPacketType(handlerID, index);
         }
     }
 }

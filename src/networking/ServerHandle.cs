@@ -4317,5 +4317,10 @@ namespace H3MP.Networking
                 ServerSend.GrappleAttached(trackedID, data, clientID);
             }
         }
+
+        public static void RegisterCustomPacketType(int clientID, Packet packet)
+        {
+            Server.RegisterCustomPacketType(packet.ReadString(), clientID);
+        }
     }
 }

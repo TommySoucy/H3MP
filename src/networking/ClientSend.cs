@@ -8,8 +8,21 @@ namespace H3MP.Networking
 {
     internal class ClientSend
     {
-        private static void SendTCPData(Packet packet, bool overrideWelcome = false)
+        private static void ConvertToCustomID(Packet packet)
         {
+            byte[] convertedID = BitConverter.GetBytes(BitConverter.ToInt32(new byte[] { packet.buffer[0], packet.buffer[1], packet.buffer[2], packet.buffer[3] }, 0) * -1 - 2);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = convertedID[i];
+            }
+        }
+
+        private static void SendTCPData(Packet packet, bool custom = false)
+        {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -20,8 +33,12 @@ namespace H3MP.Networking
             Client.singleton.tcp.SendData(packet);
         }
 
-        private static void SendUDPData(Packet packet)
+        private static void SendUDPData(Packet packet, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -2362,6 +2379,16 @@ namespace H3MP.Networking
                 packet.Write(trackedID);
                 packet.Write((short)data.Length);
                 packet.Write(data);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void RegisterCustomPacketType(string ID)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.registerCustomPacketType))
+            {
+                packet.Write(ID);
 
                 SendTCPData(packet);
             }

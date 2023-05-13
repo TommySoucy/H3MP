@@ -170,7 +170,8 @@ namespace H3MP.Networking
         trackedObject = 156,
         trackedObjects = 157,
         objectUpdate = 158,
-        destroyObject = 159
+        destroyObject = 159,
+        registerCustomPacketType = 160
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -329,7 +330,8 @@ namespace H3MP.Networking
         molotovDamage = 151,
         pinnedGrenadePullPin = 152,
         magazineAddRound = 153,
-        clipAddRound = 154
+        clipAddRound = 154,
+        registerCustomPacketType = 155
     }
 
     public class Packet : IDisposable

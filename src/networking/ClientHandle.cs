@@ -37,6 +37,14 @@ namespace H3MP.Networking
                     newDict.Add(currentInstance, new KeyValuePair<float, int>(original, index));
                 }
             }
+            int registeredCustomPacketIDCount = packet.ReadInt();
+            for(int i=0; i < registeredCustomPacketIDCount; ++i)
+            {
+                string cutomPacketHandlerID = packet.ReadString();
+                int cutomPacketIndex = packet.ReadInt();
+                Mod.registeredCustomPacketIDs.Add(cutomPacketHandlerID, cutomPacketIndex);
+                Mod.CustomPacketHandlerReceivedInvoke(cutomPacketHandlerID, cutomPacketIndex);
+            }
 
             WristMenuSection.UpdateMaxHealth(GameManager.scene, GameManager.instance, -2, -1);
 
@@ -3983,6 +3991,37 @@ namespace H3MP.Networking
                         currentRopePoint = newPoint;
                     }
                 }
+            }
+        }
+
+        public static void RegisterCustomPacketType(Packet packet)
+        {
+            string handlerID = packet.ReadString();
+            int index = packet.ReadInt();
+
+            if (Mod.registeredCustomPacketIDs.TryGetValue(handlerID, out int actualIndex))
+            {
+                Mod.LogError("Server sent for " + handlerID + " custom packet handler to be registered at "+ index + " but this ID already exists at "+ actualIndex + ".");
+            }
+            else // We don't yet have this handlerID, add it
+            {
+                // Check if index fits, if not make array large enough
+                if (index >= Mod.customPacketHandlers.Length)
+                { 
+                    int newLength = index - index % 10 + 10;
+                    Mod.CustomPacketHandler[] temp = Mod.customPacketHandlers;
+                    Mod.customPacketHandlers = new Mod.CustomPacketHandler[newLength];
+                    for (int i = 0; i < temp.Length; ++i)
+                    {
+                        Mod.customPacketHandlers[i] = temp[i];
+                    }
+                }
+
+                // Store for potential later use
+                Mod.registeredCustomPacketIDs.Add(handlerID, index);
+
+                // Send event so a mod can add their handler at the index
+                Mod.CustomPacketHandlerReceivedInvoke(handlerID, index);
             }
         }
     }

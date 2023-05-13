@@ -1,14 +1,7 @@
-﻿using FFmpeg.AutoGen;
-using FistVR;
-using H3MP.Networking;
-using H3MP.Patches;
+﻿using H3MP.Networking;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using UnityEngine;
 
 namespace H3MP.Tracking
 {
@@ -82,11 +75,6 @@ namespace H3MP.Tracking
         }
 
         public abstract IEnumerator Instantiate();
-
-        public void InstantiatedObject()
-        {
-
-        }
 
         public virtual void WriteToPacket(Packet packet, bool incrementOrder, bool full)
         {

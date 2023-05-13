@@ -12,6 +12,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR;
+using static H3MP.Mod;
 
 namespace H3MP
 {
@@ -110,6 +111,13 @@ namespace H3MP
         public static bool spectatorHost;
         public static Dictionary<Type, List<Type>> trackedObjectTypes;
         public static Dictionary<string, Type> trackedObjectTypesByName;
+        public delegate void CustomPacketHandler(int clientID, Packet packet);
+        public static CustomPacketHandler[] customPacketHandlers = new CustomPacketHandler[10];
+        public static Dictionary<string, int> registeredCustomPacketIDs = new Dictionary<string, int>();
+        public delegate void CustomPacketHandlerReceivedDelegate(string ID, int index);
+        public static event CustomPacketHandlerReceivedDelegate CustomPacketHandlerReceived;
+        public delegate void GenericCustomPacketReceivedDelegate(int clientID, string ID, Packet packet);
+        public static event GenericCustomPacketReceivedDelegate GenericCustomPacketReceived;
 
         // Debug
         public static bool debug;
@@ -135,6 +143,8 @@ namespace H3MP
             currentTNHInstance = null;
             currentlyPlayingTNH = false;
             spectatorHost = false;
+            customPacketHandlers = new CustomPacketHandler[10];
+            registeredCustomPacketIDs.Clear();
 
             Destroy(Mod.managerObject);
         }
@@ -309,6 +319,16 @@ namespace H3MP
             return null;
         }
 #endif
+
+        public static void CustomPacketHandlerReceivedInvoke(string handlerID, int index)
+        {
+            CustomPacketHandlerReceived(handlerID, index);
+        }
+
+        public static void GenericCustomPacketReceivedInvoke(int clientID, string ID, Packet packet)
+        {
+            GenericCustomPacketReceived(clientID, ID, packet);
+        }
 
         private void SpawnDummyPlayer()
         {

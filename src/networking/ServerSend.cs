@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Tracking;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,8 +9,21 @@ namespace H3MP.Networking
 {
     internal class ServerSend
     {
-        private static void SendTCPData(int toClient, Packet packet)
+        private static void ConvertToCustomID(Packet packet)
         {
+            byte[] convertedID = BitConverter.GetBytes(BitConverter.ToInt32(new byte[] { packet.buffer[0], packet.buffer[1], packet.buffer[2], packet.buffer[3] }, 0) * -1 - 2);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = convertedID[i];
+            }
+        }
+
+        private static void SendTCPData(int toClient, Packet packet, bool custom = false)
+        {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -20,8 +34,12 @@ namespace H3MP.Networking
             Server.clients[toClient].tcp.SendData(packet);
         }
 
-        private static void SendTCPData(List<int> toClients, Packet packet, int exclude = -1)
+        private static void SendTCPData(List<int> toClients, Packet packet, int exclude = -1, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -38,8 +56,12 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendUDPData(List<int> toClients, Packet packet, int exclude = -1)
+        private static void SendUDPData(List<int> toClients, Packet packet, int exclude = -1, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -56,8 +78,12 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPDataToAll(Packet packet)
+        private static void SendTCPDataToAll(Packet packet, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -71,8 +97,12 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendUDPDataToAll(Packet packet)
+        private static void SendUDPDataToAll(Packet packet, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -86,8 +116,12 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendUDPDataToClients(Packet packet, List<int> clientIDs)
+        private static void SendUDPDataToClients(Packet packet, List<int> clientIDs, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -101,8 +135,12 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPDataToClients(Packet packet, List<int> clientIDs, int excluding = -1)
+        private static void SendTCPDataToClients(Packet packet, List<int> clientIDs, int excluding = -1, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -119,8 +157,12 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPDataToAll(int exceptClient, Packet packet)
+        private static void SendTCPDataToAll(int exceptClient, Packet packet, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -137,8 +179,12 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendUDPDataToAll(int exceptClient, Packet packet)
+        private static void SendUDPDataToAll(int exceptClient, Packet packet, bool custom = false)
         {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -176,6 +222,12 @@ namespace H3MP.Networking
                         packet.Write(instanceEntry.Value.Key);
                         packet.Write(instanceEntry.Value.Value);
                     }
+                }
+                packet.Write(Mod.registeredCustomPacketIDs.Count);
+                foreach(KeyValuePair<string, int> entry in Mod.registeredCustomPacketIDs)
+                {
+                    packet.Write(entry.Key);
+                    packet.Write(entry.Value);
                 }
 
                 SendTCPData(toClient, packet);
@@ -3991,6 +4043,17 @@ namespace H3MP.Networking
                 {
                     SendTCPDataToAll(clientID, packet);
                 }
+            }
+        }
+
+        public static void RegisterCustomPacketType(string handlerID, int index)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.registerCustomPacketType))
+            {
+                packet.Write(handlerID);
+                packet.Write(index);
+
+                SendTCPDataToAll(packet);
             }
         }
     }

@@ -178,17 +178,48 @@ namespace H3MP.Networking
                             using (Packet packet = new Packet(packetBytes))
                             {
                                 int packetID = packet.ReadInt();
-#if DEBUG
-                                if (Input.GetKey(KeyCode.PageDown))
-                                {
-                                    Mod.LogInfo("\tHandling TCP packet: " + packetID);
-                                }
-#endif
+
                                 try
                                 {
                                     if (singleton.ID >= 0 || (ServerPackets)packetID == ServerPackets.welcome)
                                     {
-                                        packetHandlers[packetID](packet);
+                                        if (packetID < 0)
+                                        {
+                                            if (packetID == -1)
+                                            {
+                                                Mod.GenericCustomPacketReceivedInvoke(0, packet.ReadString(), packet);
+                                            }
+                                            else // packetID <= -2
+                                            {
+                                                int index = packetID * -1 - 2;
+                                                if (Mod.customPacketHandlers[index] != null)
+                                                {
+#if DEBUG
+                                                    if (Input.GetKey(KeyCode.PageDown))
+                                                    {
+                                                        Mod.LogInfo("\tHandling custom TCP packet: " + packetID);
+                                                    }
+#endif
+                                                    Mod.customPacketHandlers[index](0, packet);
+                                                }
+#if DEBUG
+                                                else
+                                                {
+                                                    Mod.LogError("\tClient received invalid custom TCP packet ID: " + packetID);
+                                                }
+#endif
+                                            }
+                                        }
+                                        else
+                                        {
+#if DEBUG
+                                            if (Input.GetKey(KeyCode.PageDown))
+                                            {
+                                                Mod.LogInfo("\tHandling TCP packet: " + packetID);
+                                            }
+#endif
+                                            packetHandlers[packetID](packet);
+                                        }
                                     }
                                 }
                                 catch(IndexOutOfRangeException ex)
@@ -308,13 +339,43 @@ namespace H3MP.Networking
                         using (Packet packet = new Packet(data))
                         {
                             int packetID = packet.ReadInt();
-#if DEBUG
-                            if (Input.GetKey(KeyCode.PageDown))
+                            if (packetID < 0)
                             {
-                                Mod.LogInfo("\tHandling UDP packet: " + packetID);
-                            }
+                                if (packetID == -1)
+                                {
+                                    Mod.GenericCustomPacketReceivedInvoke(0, packet.ReadString(), packet);
+                                }
+                                else // packetID <= -2
+                                {
+                                    int index = packetID * -1 - 2;
+                                    if (Mod.customPacketHandlers[index] != null)
+                                    {
+#if DEBUG
+                                        if (Input.GetKey(KeyCode.PageDown))
+                                        {
+                                            Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+                                        }
 #endif
-                            packetHandlers[packetID](packet);
+                                        Mod.customPacketHandlers[index](0, packet);
+                                    }
+#if DEBUG
+                                    else
+                                    {
+                                        Mod.LogError("\tClient received invalid custom UDP packet ID: " + packetID);
+                                    }
+#endif
+                                }
+                            }
+                            else
+                            {
+#if DEBUG
+                                if (Input.GetKey(KeyCode.PageDown))
+                                {
+                                    Mod.LogInfo("\tHandling UDP packet: " + packetID);
+                                }
+#endif
+                                packetHandlers[packetID](packet);
+                            }
                         }
                     }
                 });
@@ -493,6 +554,7 @@ namespace H3MP.Networking
                 ClientHandle.TrackedObjects,
                 ClientHandle.ObjectUpdate,
                 ClientHandle.DestroyObject,
+                ClientHandle.RegisterCustomPacketType,
             };
 
             // All vanilla scenes can be synced by default

@@ -136,13 +136,44 @@ namespace H3MP.Networking
                             using (Packet packet = new Packet(packetBytes))
                             {
                                 int packetID = packet.ReadInt();
-#if DEBUG
-                                if (Input.GetKey(KeyCode.PageDown))
+
+                                if(packetID < 0)
                                 {
-                                    Mod.LogInfo("\tHandling TCP packet: " + packetID);
-                                }
+                                    if(packetID == -1)
+                                    {
+                                        Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
+                                    }
+                                    else // packetID <= -2
+                                    {
+                                        int index = packetID * -1 - 2;
+                                        if (Mod.customPacketHandlers[index] != null)
+                                        {
+#if DEBUG
+                                            if (Input.GetKey(KeyCode.PageDown))
+                                            {
+                                                Mod.LogInfo("\tHandling custom TCP packet: " + packetID);
+                                            }
 #endif
-                                Server.packetHandlers[packetID](ID, packet);
+                                            Mod.customPacketHandlers[index](ID, packet);
+                                        }
+#if DEBUG
+                                        else
+                                        {
+                                            Mod.LogError("\tServer received invalid custom TCP packet ID: " + packetID+" from client "+ID);
+                                        }
+#endif
+                                    }
+                                }
+                                else
+                                {
+#if DEBUG
+                                    if (Input.GetKey(KeyCode.PageDown))
+                                    {
+                                        Mod.LogInfo("\tHandling TCP packet: " + packetID);
+                                    }
+#endif
+                                    Server.packetHandlers[packetID](ID, packet);
+                                }
                             }
                         }
                     });
@@ -210,13 +241,44 @@ namespace H3MP.Networking
                         using (Packet packet = new Packet(packetBytes))
                         {
                             int packetID = packet.ReadInt();
-#if DEBUG
-                            if (Input.GetKey(KeyCode.PageDown))
+
+                            if (packetID < 0)
                             {
-                                Mod.LogInfo("\tHandling UDP packet: " + packetID);
-                            }
+                                if (packetID == -1)
+                                {
+                                    TODO: //Generic custom
+                                }
+                                else // packetID <= -2
+                                {
+                                    int index = packetID * -1 - 2;
+                                    if (Mod.customPacketHandlers[index] != null)
+                                    {
+#if DEBUG
+                                        if (Input.GetKey(KeyCode.PageDown))
+                                        {
+                                            Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+                                        }
 #endif
-                            Server.packetHandlers[packetID](ID, packet);
+                                        Mod.customPacketHandlers[index](ID, packet);
+                                    }
+#if DEBUG
+                                    else
+                                    {
+                                        Mod.LogError("\tServer received invalid custom UDP packet ID: " + packetID + " from client " + ID);
+                                    }
+#endif
+                                }
+                            }
+                            else
+                            {
+#if DEBUG
+                                if (Input.GetKey(KeyCode.PageDown))
+                                {
+                                    Mod.LogInfo("\tHandling UDP packet: " + packetID);
+                                }
+#endif
+                                Server.packetHandlers[packetID](ID, packet);
+                            }
                         }
                     }
                 });
