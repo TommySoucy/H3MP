@@ -5,7 +5,6 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -1028,19 +1027,67 @@ namespace H3MP
 
         public static bool GetTrackedObjectType(Transform t, out Type trackedObjectType)
         {
-            foreach(KeyValuePair<string, Type> entry in Mod.trackedObjectTypes)
+            List<Type> trackedObjectTypes = new List<Type>();
+            foreach (KeyValuePair<Type, List<Type>> entry in Mod.trackedObjectTypes)
             {
-                MethodInfo isOfTypeMethod = entry.Value.GetMethod("IsOfType", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                // TODO: Make sure this considers the correct one even if types overlap, so if there is a modded type taht could also be a tracked item for example, we want to take the modded one
-                if ((bool)isOfTypeMethod.Invoke(null, new object[] { t }))
+                // Going from last to first in list will go through most specific subtype to most generic
+                for (int i = entry.Value.Count - 1; i >= 0; --i)
                 {
-                    trackedObjectType = entry.Value;
-                    return true;
+                    MethodInfo isOfTypeMethod = entry.Value[i].GetMethod("IsOfType", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                    if ((bool)isOfTypeMethod.Invoke(null, new object[] { t }))
+                    {
+                        trackedObjectTypes.Add(entry.Value[i]);
+                        break;
+                    }
                 }
             }
 
-            trackedObjectType = null;
-            return false;
+            if(trackedObjectTypes.Count == 0)
+            {
+                trackedObjectType = null;
+                return false;
+            }
+            else if(trackedObjectTypes.Count == 1)
+            {
+                trackedObjectType = trackedObjectTypes[0];
+                return true;
+            }
+            else // More than one tracked type without the same supertype matches, must choose one
+            {
+                Type firstType = trackedObjectTypes[0];
+                for (int i=0; i < trackedObjectTypes.Count; ++i)
+                {
+                    MethodInfo typeOverrideMethod = trackedObjectTypes[i].GetMethod("GetTypeOverrides", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                    if (typeOverrideMethod != null)
+                    {
+                        Type[] overriddenTypes = typeOverrideMethod.Invoke(null, null) as Type[];
+                        if(overriddenTypes != null)
+                        {
+                            for(int j=0; j < overriddenTypes.Length; ++i)
+                            {
+                                trackedObjectTypes.Remove(overriddenTypes[i]);
+                            }
+                        }
+                    }
+                }
+
+                if (trackedObjectTypes.Count == 0)
+                {
+                    Mod.LogWarning(t.name + " had conflicting possible tracked types overriding each other. Tracked as: "+firstType.Name);
+                    trackedObjectType = firstType;
+                }
+                else if (trackedObjectTypes.Count == 1)
+                {
+                    trackedObjectType = trackedObjectTypes[0];
+                }
+                else
+                {
+                    Mod.LogWarning(t.name + " had conflicting possible tracked types missing override. Tracked as: "+ trackedObjectTypes[1].Name);
+                    trackedObjectType = trackedObjectTypes[0];
+                }
+
+                return true;
+            }
         }
 
         public static bool IsControlled(Transform root, Type trackedObjectType)

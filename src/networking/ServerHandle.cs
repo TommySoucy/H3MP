@@ -260,7 +260,7 @@ namespace H3MP.Networking
 
         public static void TrackedObject(int clientID, Packet packet)
         {
-            Server.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypes[packet.ReadString()], packet), clientID);
+            Server.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypesByName[packet.ReadString()], packet), clientID);
         }
 
         public static void TrackedObjects(int clientID, Packet packet)

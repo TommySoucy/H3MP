@@ -151,7 +151,7 @@ namespace H3MP.Networking
 
         public static void TrackedObject(Packet packet)
         {
-            Client.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypes[packet.ReadString()], packet));
+            Client.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypesByName[packet.ReadString()], packet));
         }
 
         public static void AddNonSyncScene(Packet packet)

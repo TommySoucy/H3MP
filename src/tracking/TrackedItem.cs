@@ -46,7 +46,7 @@ namespace H3MP.Tracking
         public UpdateAttachmentInterface attachmentInterfaceUpdateFunc; // Update the attachment's attachment interface
         public UpdateAttachmentInterfaceWithGiven attachmentInterfaceUpdateGivenFunc; // Update the attachment's attachment interface
         public GetChamberIndex getChamberIndex; // Get the index of the given chamber on the item
-        public ChamberRound chamberRound; // Set round of chamber at gicen index of this item
+        public ChamberRound chamberRound; // Set round of chamber at given index of this item
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public UnityEngine.Object dataObject;
         public int attachmentInterfaceDataSize;

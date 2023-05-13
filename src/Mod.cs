@@ -108,7 +108,8 @@ namespace H3MP
         public static SceneLoader currentTNHSceneLoader;
         public static GameObject TNHStartEquipButton;
         public static bool spectatorHost;
-        public static Dictionary<string, Type> trackedObjectTypes;
+        public static Dictionary<Type, List<Type>> trackedObjectTypes;
+        public static Dictionary<string, Type> trackedObjectTypesByName;
 
         // Debug
         public static bool debug;
@@ -549,7 +550,12 @@ namespace H3MP
 
         private void GetTrackedObjectTypes()
         {
-            trackedObjectTypes = new Dictionary<string, Type>();
+            // The idea here is that when we check which tracked type a certain object corresponds to
+            // we want to check tracked types taht are as specific as possible first
+            // So we need to store them in such a way that they can be sorted in order of most to least specific
+            // just so we can check them in order
+            trackedObjectTypes = new Dictionary<Type, List<Type>>();
+            trackedObjectTypesByName = new Dictionary<string, Type>();
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             for (int i = 0; i < assemblies.Length; ++i)
             {
@@ -558,15 +564,59 @@ namespace H3MP
                 {
                     if (IsTypeTrackedObject(types[j]))
                     {
-                        trackedObjectTypes.Add(types[j].Name, types[j]);
+                        AddTrackedType(types[j]);
                     }
                 }
             }
         }
 
-        // MOD: TrackedObjectData inheriting classes must implement static bool IsOfType(Transform) and
-        //                                                          static TrackedObject MakeTracked(Transform, TrackedObjectData) methods 
-        //                                                              Which must set the typeIdentifier
+        public void AddTrackedType(Type type)
+        {
+            // Add to dict of all tracked types
+            trackedObjectTypesByName.Add(type.Name, type);
+
+            // Note: Key of entry is the most general subtype of TrackedObjectData
+
+            // Just add if no other type yet
+            if (trackedObjectTypes.Count == 0)
+            {
+                trackedObjectTypes.Add(type, new List<Type>() { type });
+                return;
+            }
+
+            // Check if sub/supertype of any preexisting entry
+            foreach (KeyValuePair<Type, List<Type>> entry in trackedObjectTypes)
+            {
+                if (type.IsSubclassOf(entry.Key))
+                {
+                    // It is subtype of preexisting entry, must add to list of types in order
+                    // We want to insert after the last type it is subtype of
+                    int currentLastIndex = 0;
+                    for(int i=1; i < entry.Value.Count; ++i) // Note: we start at 1 because 0 is key and if we are here it is because we are subtype of key
+                    {
+                        if (type.IsSubclassOf(entry.Value[i]))
+                        {
+                            currentLastIndex = i;
+                        }
+                    }
+                    entry.Value.Insert(currentLastIndex + 1, type);
+                    return;
+                }
+                else if (entry.Key.IsSubclassOf(type))
+                {
+                    // It is supertype of preexisting entry, must remove current entry and
+                    // insert type at start of list since it is the most generic type
+                    entry.Value.Insert(0, type);
+                    trackedObjectTypes.Add(type, entry.Value);
+                    trackedObjectTypes.Remove(entry.Key);
+                    return;
+                }
+            }
+
+            // If got all the way here, it is because it didn't match any preexisting entry, just add
+            trackedObjectTypes.Add(type, new List<Type>() { type });
+        }
+
         private bool IsTypeTrackedObject(Type type)
         {
             if(type.BaseType != null)
