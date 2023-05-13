@@ -246,7 +246,7 @@ namespace H3MP.Networking
                             {
                                 if (packetID == -1)
                                 {
-                                    TODO: //Generic custom
+                                    Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
                                 }
                                 else // packetID <= -2
                                 {
