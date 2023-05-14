@@ -12,7 +12,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR;
-using static H3MP.Mod;
 
 namespace H3MP
 {

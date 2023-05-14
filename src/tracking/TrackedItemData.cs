@@ -4,7 +4,6 @@ using H3MP.Patches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace H3MP.Tracking

@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP.Tracking
 {

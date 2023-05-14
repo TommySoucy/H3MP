@@ -1,5 +1,4 @@
 ﻿using FistVR;
-using H3MP.Patches;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;

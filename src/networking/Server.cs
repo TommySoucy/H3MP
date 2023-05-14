@@ -3,8 +3,6 @@ using System;
 using System.Net.Sockets;
 using System.Net;
 using System.Collections.Generic;
-using FistVR;
-using H3MP.Patches;
 using H3MP.Tracking;
 
 namespace H3MP.Networking
