@@ -17,7 +17,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPData(Packet packet, bool custom = false)
+        public static void SendTCPData(Packet packet, bool custom = false)
         {
             if (custom)
             {
@@ -33,7 +33,7 @@ namespace H3MP.Networking
             Client.singleton.tcp.SendData(packet);
         }
 
-        private static void SendUDPData(Packet packet, bool custom = false)
+        public static void SendUDPData(Packet packet, bool custom = false)
         {
             if (custom)
             {

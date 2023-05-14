@@ -17,7 +17,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPData(int toClient, Packet packet, bool custom = false)
+        public static void SendTCPData(int toClient, Packet packet, bool custom = false)
         {
             if (custom)
             {
@@ -33,7 +33,7 @@ namespace H3MP.Networking
             Server.clients[toClient].tcp.SendData(packet);
         }
 
-        private static void SendTCPData(List<int> toClients, Packet packet, int exclude = -1, bool custom = false)
+        public static void SendTCPData(List<int> toClients, Packet packet, int exclude = -1, bool custom = false)
         {
             if (custom)
             {
@@ -55,7 +55,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendUDPData(List<int> toClients, Packet packet, int exclude = -1, bool custom = false)
+        public static void SendUDPData(List<int> toClients, Packet packet, int exclude = -1, bool custom = false)
         {
             if (custom)
             {
@@ -77,7 +77,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPDataToAll(Packet packet, bool custom = false)
+        public static void SendTCPDataToAll(Packet packet, bool custom = false)
         {
             if (custom)
             {
@@ -96,7 +96,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendUDPDataToAll(Packet packet, bool custom = false)
+        public static void SendUDPDataToAll(Packet packet, bool custom = false)
         {
             if (custom)
             {
@@ -115,7 +115,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendUDPDataToClients(Packet packet, List<int> clientIDs, bool custom = false)
+        public static void SendUDPDataToClients(Packet packet, List<int> clientIDs, bool custom = false)
         {
             if (custom)
             {
@@ -134,7 +134,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPDataToClients(Packet packet, List<int> clientIDs, int excluding = -1, bool custom = false)
+        public static void SendTCPDataToClients(Packet packet, List<int> clientIDs, int excluding = -1, bool custom = false)
         {
             if (custom)
             {
@@ -156,7 +156,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendTCPDataToAll(int exceptClient, Packet packet, bool custom = false)
+        public static void SendTCPDataToAll(int exceptClient, Packet packet, bool custom = false)
         {
             if (custom)
             {
@@ -178,7 +178,7 @@ namespace H3MP.Networking
             }
         }
 
-        private static void SendUDPDataToAll(int exceptClient, Packet packet, bool custom = false)
+        public static void SendUDPDataToAll(int exceptClient, Packet packet, bool custom = false)
         {
             if (custom)
             {
