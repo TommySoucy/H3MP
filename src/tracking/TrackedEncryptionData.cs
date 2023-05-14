@@ -605,6 +605,8 @@ namespace H3MP.Tracking
 
         public override void RemoveFromLocal()
         {
+            base.RemoveFromLocal();
+
             // Manage unknown lists
             if (trackedID == -1)
             {

@@ -758,20 +758,11 @@ namespace H3MP.Tracking
 
         public override void RemoveFromLocal()
         {
+            base.RemoveFromLocal();
+
             // Manage unknown lists
             if (trackedID == -1)
             {
-                if (TrackedItem.unknownTrackedIDs.TryGetValue(localWaitingIndex, out KeyValuePair<uint, bool> entry))
-                {
-                    if (!entry.Value && TrackedItem.unknownParentWaitList.TryGetValue(entry.Key, out List<uint> waitlist))
-                    {
-                        waitlist.Remove(localWaitingIndex);
-                    }
-                }
-                TrackedItem.unknownTrackedIDs.Remove(localWaitingIndex);
-                TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
-                TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
-                TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
                 TrackedItem.unknownCrateHolding.Remove(localWaitingIndex);
                 TrackedItem.unknownSosigInventoryItems.Remove(localWaitingIndex);
                 if (physical != null && physical.physical is SosigWeaponPlayerInterface)
@@ -779,8 +770,6 @@ namespace H3MP.Tracking
                     TrackedItem.unknownSosigInventoryObjects.Remove((physical.physical as SosigWeaponPlayerInterface).W);
                 }
             }
-
-            base.RemoveFromLocal();
         }
 
         public override void OnControlChanged(int newController)

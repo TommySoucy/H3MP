@@ -314,18 +314,7 @@ namespace H3MP.Tracking
                 // Remove from globals lists if we want
                 if (data.removeFromListOnDestroy)
                 {
-                    if (ThreadManager.host)
-                    {
-                        Server.objects[data.trackedID] = null;
-                        Server.availableObjectIndices.Add(data.trackedID);
-                    }
-                    else
-                    {
-                        Client.objects[data.trackedID] = null;
-                    }
-
-                    // TODO: Customization make this propagate to sub types so we can remove them from their own lists?
-                    GameManager.objectsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
+                    data.RemoveFromLists();
                 }
             }
             else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag

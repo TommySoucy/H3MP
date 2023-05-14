@@ -423,6 +423,21 @@ namespace H3MP.Tracking
 
         public virtual void RemoveFromLocal()
         {
+            if (trackedID == -1)
+            {
+                if (TrackedItem.unknownTrackedIDs.TryGetValue(localWaitingIndex, out KeyValuePair<uint, bool> entry))
+                {
+                    if (!entry.Value && TrackedItem.unknownParentWaitList.TryGetValue(entry.Key, out List<uint> waitlist))
+                    {
+                        waitlist.Remove(localWaitingIndex);
+                    }
+                }
+                TrackedItem.unknownTrackedIDs.Remove(localWaitingIndex);
+                TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
+                TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
+                TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+            }
+
             if (localTrackedID > -1 && localTrackedID < GameManager.objects.Count)
             {
                 // Remove from actual local objects list and update the localTrackedID of the item we are moving
