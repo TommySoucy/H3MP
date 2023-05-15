@@ -232,7 +232,7 @@ namespace H3MP.Networking
                 parentData.children.Add(trackedObject);
             }
 
-            // Instantiate item if it is in the current scene and not controlled by us
+            // Instantiate object if it is in the current scene and not controlled by us
             if (clientID != 0 && trackedObject.IsIdentifiable())
             {
                 // Here, we don't want to instantiate if this is a scene we are in the process of loading
@@ -471,7 +471,7 @@ namespace H3MP.Networking
             Mod.LogInfo("Initialized server", false);
         }
 
-        public static void RegisterCustomPacketType(string handlerID, int clientID = 0)
+        public static int RegisterCustomPacketType(string handlerID, int clientID = 0)
         {
             int index = -1;
 
@@ -512,6 +512,8 @@ namespace H3MP.Networking
 
             // Send back/relay to others
             ServerSend.RegisterCustomPacketType(handlerID, index);
+
+            return index;
         }
     }
 }

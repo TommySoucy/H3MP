@@ -636,7 +636,7 @@ namespace H3MP
             trackedObjectTypes.Add(type, new List<Type>() { type });
         }
 
-        private bool IsTypeTrackedObject(Type type)
+        public bool IsTypeTrackedObject(Type type)
         {
             if(type.BaseType != null)
             {

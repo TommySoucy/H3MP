@@ -1082,7 +1082,7 @@ namespace H3MP
                 }
                 else
                 {
-                    Mod.LogWarning(t.name + " had conflicting possible tracked types missing override. Tracked as: "+ trackedObjectTypes[1].Name);
+                    Mod.LogWarning(t.name + " had conflicting possible tracked types missing override. Tracked as: "+ trackedObjectTypes[0].Name);
                     trackedObjectType = trackedObjectTypes[0];
                 }
 
