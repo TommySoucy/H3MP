@@ -401,7 +401,6 @@ namespace H3MP.Networking
                                                 byte[] actualLength = BitConverter.GetBytes((ushort)(packet.buffer.Count - preLength - 2));
                                                 packet.buffer[preLength] = actualLength[0];
                                                 packet.buffer[preLength + 1] = actualLength[1];
-                                                Mod.LogInfo("\t\t\t"+packet.buffer.Count+" bytes");
 
                                                 ++count;
 
@@ -432,7 +431,6 @@ namespace H3MP.Networking
                                             byte[] actualLength = BitConverter.GetBytes((ushort)(packet.buffer.Count - preLength - 2));
                                             packet.buffer[preLength] = actualLength[0];
                                             packet.buffer[preLength + 1] = actualLength[1];
-                                            Mod.LogInfo("\t\t\t" + packet.buffer.Count + " bytes");
 
                                             ++count;
 
