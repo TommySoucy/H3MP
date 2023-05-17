@@ -398,6 +398,7 @@ namespace H3MP.Networking
                 ServerHandle.EncryptionDisableSubtarg,
                 ServerHandle.EncryptionSubDamage,
                 ServerHandle.ShatterableCrateDestroy,
+                ServerHandle.RegisterCustomPacketType,
                 ServerHandle.DoneLoadingScene,
                 ServerHandle.DoneSendingUpToDateObjects,
                 ServerHandle.SosigWeaponFire,
@@ -453,7 +454,6 @@ namespace H3MP.Networking
                 ServerHandle.PinnedGrenadePullPin,
                 ServerHandle.MagazineAddRound,
                 ServerHandle.ClipAddRound,
-                ServerHandle.RegisterCustomPacketType,
             };
 
             objects = new TrackedObjectData[100];

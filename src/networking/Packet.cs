@@ -275,6 +275,7 @@ namespace H3MP.Networking
         encryptionDisableSubtarg = 96,
         encryptionSubDamage = 97,
         shatterableCrateDestroy = 98,
+        registerCustomPacketType = 99,
         DoneLoadingScene = 100,
         DoneSendingUpdaToDateObjects = 101,
         sosigWeaponFire = 102,
@@ -330,7 +331,6 @@ namespace H3MP.Networking
         pinnedGrenadePullPin = 152,
         magazineAddRound = 153,
         clipAddRound = 154,
-        registerCustomPacketType = 155
     }
 
     public class Packet : IDisposable
