@@ -3502,17 +3502,6 @@ namespace H3MP.Networking
             }
         }
 
-        public static void InitConnectionData(int toClient, byte[] data)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.initConnectionData))
-            {
-                packet.Write(data.Length);
-                packet.Write(data);
-
-                SendTCPData(toClient, packet);
-            }
-        }
-
         public static void SpectatorHost(int clientID, bool spectatorHost)
         {
             using (Packet packet = new Packet((int)ServerPackets.spectatorHost))

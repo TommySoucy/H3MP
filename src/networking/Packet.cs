@@ -128,7 +128,7 @@ namespace H3MP.Networking
         FVRGrenadeExplode = 115,
         clientDisconnect = 116,
         serverClosed = 117,
-        initConnectionData = 118,
+        initConnectionData = 118, //UNUSED
         bangSnapSplode = 119,
         C4Detonate = 120,
         claymoreMineDetonate = 121,

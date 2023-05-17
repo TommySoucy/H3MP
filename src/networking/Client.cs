@@ -512,7 +512,7 @@ namespace H3MP.Networking
                 ClientHandle.FVRGrenadeExplode,
                 ClientHandle.ClientDisconnect,
                 ClientHandle.ServerClosed,
-                ClientHandle.InitConnectionData,
+                null, // UNUSED
                 ClientHandle.BangSnapSplode,
                 ClientHandle.C4Detonate,
                 ClientHandle.ClaymoreMineDetonate,

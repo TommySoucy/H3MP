@@ -82,6 +82,10 @@ namespace H3MP
         //public GameObject localPlayerPrefab;
         public GameObject playerPrefab;
 
+        // MOD: Event to let mods override player visibility
+        public delegate void OnUpdatePlayerHiddenDelegate(PlayerManager player, ref bool visible);
+        public static event OnUpdatePlayerHiddenDelegate OnUpdatePlayerHidden;
+
         private void Awake()
         {
             singleton = this;
@@ -418,6 +422,8 @@ namespace H3MP
                     }
                 }
             }
+
+            OnUpdatePlayerHidden(player, ref visible);
 
             // If have not found a reason for player to be hidden, set as visible
             player.SetVisible(visible);

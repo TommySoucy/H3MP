@@ -381,20 +381,6 @@ namespace H3MP.Networking
 
             // Also send TNH instances
             ServerSend.InitTNHInstances(ID);
-
-            // Send custom connection data
-            byte[] initData = null;
-            SendInitConnectionData(ID, initData);
-        }
-
-        // MOD: This will get called when the server sends all the data a newly connected client connect needs
-        //      A mod that wants to send its own initial data to process can prefix this to modify data before it gets sent
-        private void SendInitConnectionData(int ID, byte[] data)
-        {
-            if (data != null)
-            {
-                ServerSend.InitConnectionData(ID, data);
-            }
         }
 
         public void SendRelevantTrackedObjects(int fromClient = -1)
