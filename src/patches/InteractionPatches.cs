@@ -131,7 +131,7 @@ namespace H3MP.Patches
                     //               So we can then access any tracked object genericly through that instead of trying to GetComponent for each type
                     //               Then make sure TrackedObject has a virtual EndInteraction() that we would call from here
 
-                    if (GameManager.trackedObjectByInteractive.TryGetValue(___m_currentInteractable, out TrackedObject trackedObject))
+                    if (GameManager.trackedObjectByInteractive.TryGetValue(preObject, out TrackedObject trackedObject))
                     {
                         trackedObject.EndInteraction(__instance);
                     }
