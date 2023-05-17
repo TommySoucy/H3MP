@@ -14,7 +14,7 @@ namespace H3MP.Networking
         spawnPlayer = 1,
         playerState = 2,
         playerScene = 3,
-        addNonSyncScene = 4,
+        addNonSyncScene = 4, //UNUSED
         shatterableCrateSetHoldingHealth = 5,
         giveObjectControl = 6,
         objectParent = 7,
@@ -180,7 +180,7 @@ namespace H3MP.Networking
         welcomeReceived = 1,
         playerState = 2,
         playerScene = 3,
-        addNonSyncScene = 4,
+        addNonSyncScene = 4, //UNUSED
         destroyObject = 5,
         objectUpdate = 6,
         shatterableCrateSetHoldingHealth = 7,

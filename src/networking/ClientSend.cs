@@ -174,17 +174,6 @@ namespace H3MP.Networking
             }
         }
 
-        // MOD: This is what a mod that adds a scene it doesn't wants to sync would call to prevent syncing inside it
-        public static void AddNonSyncScene(string sceneName)
-        {
-            using(Packet packet = new Packet((int)ClientPackets.addNonSyncScene))
-            {
-                packet.Write(sceneName);
-
-                SendTCPData(packet);
-            }
-        }
-
         public static void TrackedObjects()
         {
             int index = 0;

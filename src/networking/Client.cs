@@ -46,6 +46,10 @@ namespace H3MP.Networking
         public static uint localObjectCounter = 0;
         public static Dictionary<uint, TrackedObjectData> waitingLocalObjects = new Dictionary<uint, TrackedObjectData>();
 
+        // Customization: Event to let mods know when the client disconnects
+        public delegate void OnDisconnectDelegate();
+        public static event OnDisconnectDelegate OnDisconnect;
+
         private void Awake()
         {
             singleton = this;
@@ -398,7 +402,7 @@ namespace H3MP.Networking
                 ClientHandle.SpawnPlayer,
                 ClientHandle.PlayerState,
                 ClientHandle.PlayerScene,
-                ClientHandle.AddNonSyncScene,
+                null,
                 ClientHandle.ShatterableCrateSetHoldingHealth,
                 ClientHandle.GiveObjectControl,
                 ClientHandle.ObjectParent,
@@ -824,13 +828,11 @@ namespace H3MP.Networking
                 ID = -1;
                 GameManager.Reset();
                 SpecificDisconnect();
+                OnDisconnect();
                 Mod.Reset();
             }
         }
 
-        // MOD: This will be called after disconnection to reset specific fields
-        //      For example, here we deal with current TNH data
-        //      If your mod has some H3MP dependent data that you want to get rid of when you disconnect from a server, do it here
         private void SpecificDisconnect()
         {
             if (Mod.currentlyPlayingTNH) // TNH_Manager was set to null and we are currently playing

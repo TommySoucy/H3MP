@@ -298,7 +298,7 @@ namespace H3MP.Networking
                 ServerHandle.WelcomeReceived,
                 ServerHandle.PlayerState,
                 ServerHandle.PlayerScene,
-                ServerHandle.AddNonSyncScene,
+                null,
                 ServerHandle.DestroyObject,
                 ServerHandle.ObjectUpdate,
                 ServerHandle.ShatterableCrateSetHoldingHealth,

@@ -126,6 +126,14 @@ namespace H3MP
         public delegate void OnSetupPlayerPrefabDelegate(GameObject playerPrefab);
         public static event OnSetupPlayerPrefabDelegate OnSetupPlayerPrefab;
 
+        // Customization: Event to let mods override the best potential object host
+        public delegate void OnGetBestPotentialObjectHostDelegate(int currentController, bool forUs, bool hasWhiteList , List<int> whiteList, string sceneOverride, int instanceOverride, ref int bestPotentialObjectHost);
+        public static event OnGetBestPotentialObjectHostDelegate OnGetBestPotentialObjectHost;
+
+        // Customization: Event to let mods know we are getting rid of a certain player
+        public delegate void OnRemovePlayerFromSpecificListsDelegate(PlayerManager player);
+        public static event OnRemovePlayerFromSpecificListsDelegate OnRemovePlayerFromSpecificLists;
+
         // Debug
         public static bool debug;
         public static Vector3 TNHSpawnPoint;
@@ -569,7 +577,6 @@ namespace H3MP
             startEquipButton.MaxPointingRange = 1;
         }
 
-        // MOD: If you need to add anything to the player prefab, this is what you should patch to do it
         public void SetupPlayerPrefab()
         {
             playerPrefab.AddComponent<PlayerManager>();
@@ -1246,13 +1253,18 @@ namespace H3MP
             }
         }
 
-        // MOD: This method will be used to find the ID of which player to give control of this object to
-        //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
         public static int GetBestPotentialObjectHost(int currentController, bool forUs = true, bool hasWhiteList = false, List<int> whiteList = null, string sceneOverride = null, int instanceOverride = -1)
         {
             if(hasWhiteList && whiteList == null)
             {
                 whiteList = new List<int>();
+            }
+
+            int bestPotentialObjectHost = -1;
+            OnGetBestPotentialObjectHost(currentController, forUs, hasWhiteList, whiteList, sceneOverride, instanceOverride, ref bestPotentialObjectHost);
+            if(bestPotentialObjectHost != -1)
+            {
+                return bestPotentialObjectHost;
             }
 
             if (forUs)
@@ -1453,9 +1465,6 @@ namespace H3MP
             GameManager.players.Remove(playerID);
         }
 
-        // MOD: Will be called by RemovePlayerFromLists before the player finally gets destroyed
-        //      This is where you would manage the player being removed from the network if you're keeping a reference of them anywhere
-        //      Example here is TNH instances
         public static void RemovePlayerFromSpecificLists(PlayerManager player)
         {
             if (GameManager.TNHInstances.TryGetValue(player.instance, out TNHInstance currentInstance))
@@ -1499,6 +1508,8 @@ namespace H3MP
                     currentInstance.dead.Remove(player.ID);
                 }
             }
+
+            OnRemovePlayerFromSpecificLists(player);
         }
 
         public static void LogInfo(string message, bool debug = true)

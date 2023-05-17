@@ -248,16 +248,6 @@ namespace H3MP.Networking
             ServerSend.AddInstance(GameManager.AddNewInstance());
         }
 
-        public static void AddNonSyncScene(int clientID, Packet packet)
-        {
-            string scene = packet.ReadString();
-
-            GameManager.nonSynchronizedScenes.Add(scene, clientID);
-
-            // Send to all other clients
-            ServerSend.AddNonSyncScene(clientID, scene);
-        }
-
         public static void TrackedObject(int clientID, Packet packet)
         {
             Server.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypesByName[packet.ReadString()], packet), clientID);

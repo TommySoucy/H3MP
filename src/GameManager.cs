@@ -34,7 +34,6 @@ namespace H3MP
         public static Dictionary<int, PlayerManager> players = new Dictionary<int, PlayerManager>();
         public static List<int> spectatorHosts = new List<int>(); // List of all spectator hosts, not necessarily available 
         public static List<TrackedObjectData> objects = new List<TrackedObjectData>(); // Tracked objects under control of this gameManager
-        public static Dictionary<string, int> nonSynchronizedScenes = new Dictionary<string, int>(); // Dict of scenes that can be synced
         public static Dictionary<MonoBehaviour, TrackedObject> trackedObjectByObject = new Dictionary<MonoBehaviour, TrackedObject>();
         public static Dictionary<FVRInteractiveObject, TrackedObject> trackedObjectByInteractive = new Dictionary<FVRInteractiveObject, TrackedObject>();
         public static Dictionary<FVRPhysicalObject, TrackedItem> trackedItemByItem = new Dictionary<FVRPhysicalObject, TrackedItem>();
@@ -47,6 +46,9 @@ namespace H3MP
         public static List<int> playersAtLoadStart;
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> objectsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
+
+        // Customization: Lets a mod prevent synchronization in specific scenes
+        public static Dictionary<string, byte> nonSynchronizedScenes = new Dictionary<string, byte>();
 
         public static int giveControlOfDestroyed;
         public static bool controlOverride;
@@ -171,7 +173,7 @@ namespace H3MP
             UpdatePlayerHidden(playerManager);
 
             // Make sure to count the player if in the same scene/instance
-            if (!GameManager.nonSynchronizedScenes.ContainsKey(scene) && scene.Equals(GameManager.scene) && instance == GameManager.instance)
+            if (!nonSynchronizedScenes.ContainsKey(scene) && scene.Equals(GameManager.scene) && instance == GameManager.instance)
             {
                 ++playersPresent;
 
@@ -323,7 +325,7 @@ namespace H3MP
                 playersByInstanceByScene.Remove(player.scene);
             }
 
-            if (player.scene.Equals(GameManager.scene) && !GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && instance == player.instance)
+            if (player.scene.Equals(GameManager.scene) && !nonSynchronizedScenes.ContainsKey(player.scene) && instance == player.instance)
             {
                 --playersPresent;
             }
@@ -366,7 +368,7 @@ namespace H3MP
 
             UpdatePlayerHidden(player);
 
-            if (sceneName.Equals(GameManager.scene) && !GameManager.nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
+            if (sceneName.Equals(GameManager.scene) && !nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
             {
                 ++playersPresent;
             }
@@ -500,7 +502,7 @@ namespace H3MP
             //    playersByInstanceByScene.Remove(player.scene);
             //}
 
-            if (player.scene.Equals(GameManager.scene) && !GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && GameManager.instance == player.instance)
+            if (player.scene.Equals(GameManager.scene) && !nonSynchronizedScenes.ContainsKey(player.scene) && GameManager.instance == player.instance)
             {
                 --playersPresent;
             }
@@ -533,7 +535,7 @@ namespace H3MP
 
             UpdatePlayerHidden(player);
 
-            if (player.scene.Equals(GameManager.scene) && !GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && GameManager.instance == player.instance)
+            if (player.scene.Equals(GameManager.scene) && !nonSynchronizedScenes.ContainsKey(player.scene) && GameManager.instance == player.instance)
             {
                 ++playersPresent;
             }

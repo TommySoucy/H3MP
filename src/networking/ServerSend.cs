@@ -361,17 +361,6 @@ namespace H3MP.Networking
             }
         }
 
-        public static void AddNonSyncScene(int ID, string sceneName)
-        {
-            using (Packet packet = new Packet((int)ServerPackets.addNonSyncScene))
-            {
-                packet.Write(ID);
-                packet.Write(sceneName);
-
-                SendTCPDataToAll(ID, packet);
-            }
-        }
-
         public static void TrackedObjects()
         {
             foreach(KeyValuePair<string, Dictionary<int, List<int>>> outer in GameManager.objectsByInstanceByScene)
