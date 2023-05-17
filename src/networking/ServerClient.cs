@@ -443,7 +443,10 @@ namespace H3MP.Networking
             Mod.RemovePlayerFromLists(ID);
             GameManager.DistributeAllControl(ID);
             SpecificDisconnect();
-            OnClientDisconnect();
+            if (OnClientDisconnect != null)
+            {
+                OnClientDisconnect();
+            }
             ServerSend.ClientDisconnect(ID);
 
             player = null;

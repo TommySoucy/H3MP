@@ -88,7 +88,10 @@ namespace H3MP.Tracking
             FVRPhysicalObject physObj = GetComponent<FVRPhysicalObject>();
 
             bool found = false;
-            OnInitItemType(this, physObj, ref found);
+            if (OnInitItemType != null)
+            {
+                OnInitItemType(this, physObj, ref found);
+            }
             if (found)
             {
                 return;

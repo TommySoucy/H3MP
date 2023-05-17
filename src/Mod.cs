@@ -337,12 +337,18 @@ namespace H3MP
 
         public static void CustomPacketHandlerReceivedInvoke(string handlerID, int index)
         {
-            CustomPacketHandlerReceived(handlerID, index);
+            if (CustomPacketHandlerReceived != null)
+            {
+                CustomPacketHandlerReceived(handlerID, index);
+            }
         }
 
         public static void GenericCustomPacketReceivedInvoke(int clientID, string ID, Packet packet)
         {
-            GenericCustomPacketReceived(clientID, ID, packet);
+            if (GenericCustomPacketReceived != null)
+            {
+                GenericCustomPacketReceived(clientID, ID, packet);
+            }
         }
 
         private void SpawnDummyPlayer()
@@ -581,7 +587,10 @@ namespace H3MP
         {
             playerPrefab.AddComponent<PlayerManager>();
 
-            OnSetupPlayerPrefab(playerPrefab);
+            if(OnSetupPlayerPrefab != null)
+            {
+                OnSetupPlayerPrefab(playerPrefab);
+            }
         }
 
         private void GetTrackedObjectTypes()
@@ -1261,7 +1270,10 @@ namespace H3MP
             }
 
             int bestPotentialObjectHost = -1;
-            OnGetBestPotentialObjectHost(currentController, forUs, hasWhiteList, whiteList, sceneOverride, instanceOverride, ref bestPotentialObjectHost);
+            if (OnGetBestPotentialObjectHost != null)
+            {
+                OnGetBestPotentialObjectHost(currentController, forUs, hasWhiteList, whiteList, sceneOverride, instanceOverride, ref bestPotentialObjectHost);
+            }
             if(bestPotentialObjectHost != -1)
             {
                 return bestPotentialObjectHost;
@@ -1509,7 +1521,10 @@ namespace H3MP
                 }
             }
 
-            OnRemovePlayerFromSpecificLists(player);
+            if (OnRemovePlayerFromSpecificLists != null)
+            {
+                OnRemovePlayerFromSpecificLists(player);
+            }
         }
 
         public static void LogInfo(string message, bool debug = true)

@@ -828,7 +828,10 @@ namespace H3MP.Networking
                 ID = -1;
                 GameManager.Reset();
                 SpecificDisconnect();
-                OnDisconnect();
+                if (OnDisconnect != null)
+                {
+                    OnDisconnect();
+                }
                 Mod.Reset();
             }
         }

@@ -77,7 +77,10 @@ namespace H3MP.Networking
             GameManager.Reset();
             Mod.Reset();
             SpecificClose();
-            OnServerClose();
+            if (OnServerClose != null)
+            {
+                OnServerClose();
+            }
         }
 
         private static void SpecificClose()
