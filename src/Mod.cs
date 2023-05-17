@@ -113,10 +113,18 @@ namespace H3MP
         public delegate void CustomPacketHandler(int clientID, Packet packet);
         public static CustomPacketHandler[] customPacketHandlers = new CustomPacketHandler[10];
         public static Dictionary<string, int> registeredCustomPacketIDs = new Dictionary<string, int>();
+
+        // Customization: Event to let mods process registered custom packets
         public delegate void CustomPacketHandlerReceivedDelegate(string ID, int index);
         public static event CustomPacketHandlerReceivedDelegate CustomPacketHandlerReceived;
+
+        // Customization: Event to let mods process generic/unregistered custom packets
         public delegate void GenericCustomPacketReceivedDelegate(int clientID, string ID, Packet packet);
         public static event GenericCustomPacketReceivedDelegate GenericCustomPacketReceived;
+
+        // Customization: Event to let mods modify the H3MP remote player prefab when we get the asset
+        public delegate void OnSetupPlayerPrefabDelegate(GameObject playerPrefab);
+        public static event OnSetupPlayerPrefabDelegate OnSetupPlayerPrefab;
 
         // Debug
         public static bool debug;
@@ -565,6 +573,8 @@ namespace H3MP
         public void SetupPlayerPrefab()
         {
             playerPrefab.AddComponent<PlayerManager>();
+
+            OnSetupPlayerPrefab(playerPrefab);
         }
 
         private void GetTrackedObjectTypes()

@@ -1335,8 +1335,6 @@ namespace H3MP
             }
         }
 
-        // MOD: If you want to process damage differently, you can patch this
-        //      Meatov uses this to apply damage to specific limbs for example
         public static void ProcessPlayerDamage(PlayerHitbox.Part part, Damage damage)
         {
             bool processDamage = true;
