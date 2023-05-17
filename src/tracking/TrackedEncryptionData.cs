@@ -29,7 +29,7 @@ namespace H3MP.Tracking
 
         }
 
-        public TrackedEncryptionData(Packet packet) : base(packet)
+        public TrackedEncryptionData(Packet packet, string typeID) : base(packet, typeID)
         {
             type = (TNH_EncryptionType)packet.ReadByte();
             int length = packet.ReadInt();

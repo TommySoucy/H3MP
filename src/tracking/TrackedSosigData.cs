@@ -55,7 +55,7 @@ namespace H3MP.Tracking
 
         }
 
-        public TrackedSosigData(Packet packet) : base(packet)
+        public TrackedSosigData(Packet packet, string typeID) : base(packet, typeID)
         {
             // Full
             byte sosigLinkDataLength = packet.ReadByte();

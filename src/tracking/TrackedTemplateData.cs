@@ -36,7 +36,7 @@ namespace H3MP.Tracking
         /// This is what H3MP will use to instantiate the object data received from another client.
         /// </summary>
         /// <param name="packet">The packet containing all the data required to instantiate an tracked object of this type</param>
-        public TrackedTemplateData(Packet packet) : base(packet)
+        public TrackedTemplateData(Packet packet, string typeID) : base(packet, typeID)
         {
             /// Here, you should read any data you had written to full packet and set corresponding variables.
             /// Refer to other existing tracked types for specific examples.

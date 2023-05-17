@@ -36,7 +36,7 @@ namespace H3MP.Tracking
 
         }
 
-        public TrackedItemData(Packet packet) : base(packet)
+        public TrackedItemData(Packet packet, string typeID) : base(packet, typeID)
         {
             // Full
             itemID = packet.ReadString();

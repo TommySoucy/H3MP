@@ -36,7 +36,7 @@ namespace H3MP.Tracking
 
         }
 
-        public TrackedAutoMeaterData(Packet packet) : base(packet)
+        public TrackedAutoMeaterData(Packet packet, string typeID) : base(packet, typeID)
         {
             // Full
             ID = packet.ReadByte();

@@ -57,10 +57,10 @@ namespace H3MP.Tracking
 
         }
 
-        public TrackedObjectData(Packet packet)
+        public TrackedObjectData(Packet packet, string typeID)
         {
             // Full
-            typeIdentifier = packet.ReadString();
+            typeIdentifier = typeID;
             controller = packet.ReadInt();
             parent = packet.ReadInt();
             localTrackedID = packet.ReadInt();
