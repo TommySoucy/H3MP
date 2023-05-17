@@ -363,7 +363,6 @@ namespace H3MP.Tracking
             }
         }
 
-        // MOD: This will be called at the end of instantiation so mods can use it to process the additionalData array
         private void ProcessAdditionalData()
         {
             TNH_ShatterableCrate crate = physical.GetComponent<TNH_ShatterableCrate>();

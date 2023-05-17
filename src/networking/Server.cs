@@ -25,6 +25,10 @@ namespace H3MP.Networking
         public static TcpListener tcpListener;
         public static UdpClient udpListener;
 
+        // Customization: Event to let mods know when the server closes
+        public delegate void OnServerCloseDelegate();
+        public static event OnServerCloseDelegate OnServerClose;
+
         public static void Start(ushort _maxClientCount, ushort _port)
         {
             maxClientCount = _maxClientCount;
@@ -73,11 +77,9 @@ namespace H3MP.Networking
             GameManager.Reset();
             Mod.Reset();
             SpecificClose();
+            OnServerClose();
         }
 
-        // MOD: This will be called after disconnection to reset specific fields
-        //      For example, here we deal with current TNH data
-        //      If your mod has some H3MP dependent data that you want to get rid of when you close a server, do it here
         private static void SpecificClose()
         {
             Mod.currentTNHInstance = null;

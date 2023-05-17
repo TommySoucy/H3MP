@@ -72,6 +72,9 @@ namespace H3MP.Tracking
                                                                                     80,81,82,83,84,85,86,87,88,89,
                                                                                     90,91,92,93,94,95,96,97,98,99};
 
+        // Customization: Event to let mods override the item type
+        public delegate void OnInitItemTypeDelegate(TrackedItem trackedItem, FVRPhysicalObject physObj, ref bool found);
+        public static event OnInitItemTypeDelegate OnInitItemType;
 
         public override void Awake()
         {
@@ -80,12 +83,16 @@ namespace H3MP.Tracking
             base.Awake();
         }
 
-        // MOD: This will check which type this item is so we can keep track of its data more efficiently
-        //      A mod with a custom item type which has custom data should postfix this to check if this item is of custom type
-        //      to keep a ref to the object itself and set delegate update functions
         private void InitItemType()
         {
             FVRPhysicalObject physObj = GetComponent<FVRPhysicalObject>();
+
+            bool found = false;
+            OnInitItemType(this, physObj, ref found);
+            if (found)
+            {
+                return;
+            }
 
             // For each relevant type for which we may want to store additional data, we set a specific update function and the object ref
             // NOTE: We want to handle a subtype before its parent type (ex.: sblpCell before FVRFireArmMagazine) 

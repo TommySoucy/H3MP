@@ -20,6 +20,10 @@ namespace H3MP.Networking
         public bool connected;
         public long ping;
 
+        // Customization: Event to let mods know when the client disconnects
+        public delegate void OnClientDisconnectDelegate();
+        public event OnClientDisconnectDelegate OnClientDisconnect;
+
         public ServerClient(int ID)
         {
             this.ID = ID;
@@ -439,14 +443,12 @@ namespace H3MP.Networking
             Mod.RemovePlayerFromLists(ID);
             GameManager.DistributeAllControl(ID);
             SpecificDisconnect();
+            OnClientDisconnect();
             ServerSend.ClientDisconnect(ID);
 
             player = null;
         }
 
-        // MOD: This will be called after disconnection to reset specific fields
-        //      For example, here we deal with current TNH data
-        //      If your mod has some H3MP dependent data that you want to get rid of when you disconnect from a server, do it here
         private void SpecificDisconnect()
         {
             if (GameManager.TNHInstances.TryGetValue(player.instance, out TNHInstance TNHInstance) && TNHInstance.currentlyPlaying.Contains(ID)) // TNH_Manager was set to null and we are currently playing
