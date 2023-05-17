@@ -82,9 +82,13 @@ namespace H3MP
         //public GameObject localPlayerPrefab;
         public GameObject playerPrefab;
 
-        // MOD: Event to let mods override player visibility
+        // Customization: Event to let mods override player visibility
         public delegate void OnUpdatePlayerHiddenDelegate(PlayerManager player, ref bool visible);
         public static event OnUpdatePlayerHiddenDelegate OnUpdatePlayerHidden;
+
+        // Customization: Event to let mods override player damage
+        public delegate void OnPlayerDamageDelegate(PlayerHitbox.Part part, Damage damage, ref bool processDamage);
+        public static event OnPlayerDamageDelegate OnPlayerDamage;
 
         private void Awake()
         {
@@ -368,9 +372,6 @@ namespace H3MP
             }
         }
 
-        // MOD: This will be called to set a player as hidden based on certain criteria
-        //      Currently sets a player as hidden if they are in the same TNH game as us and are dead for example
-        //      A mod could prefix this to base it on other criteria, mainly for other game modes
         public static bool UpdatePlayerHidden(PlayerManager player)
         {
             bool visible = true;
@@ -1338,26 +1339,32 @@ namespace H3MP
         //      Meatov uses this to apply damage to specific limbs for example
         public static void ProcessPlayerDamage(PlayerHitbox.Part part, Damage damage)
         {
-            if (part == PlayerHitbox.Part.Head)
+            bool processDamage = true;
+            OnPlayerDamage(part, damage, ref processDamage);
+
+            if (processDamage)
             {
-                if (UnityEngine.Random.value < 0.5f)
+                if (part == PlayerHitbox.Part.Head)
                 {
-                    GM.CurrentPlayerBody.Hitboxes[0].Damage(damage);
+                    if (UnityEngine.Random.value < 0.5f)
+                    {
+                        GM.CurrentPlayerBody.Hitboxes[0].Damage(damage);
+                    }
+                    else
+                    {
+                        GM.CurrentPlayerBody.Hitboxes[1].Damage(damage);
+                    }
+                }
+                else if (part == PlayerHitbox.Part.Torso)
+                {
+                    GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
                 }
                 else
                 {
-                    GM.CurrentPlayerBody.Hitboxes[1].Damage(damage);
+                    damage.Dam_TotalEnergetic *= 0.15f;
+                    damage.Dam_TotalKinetic *= 0.15f;
+                    GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
                 }
-            }
-            else if (part == PlayerHitbox.Part.Torso)
-            {
-                GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
-            }
-            else
-            {
-                damage.Dam_TotalEnergetic *= 0.15f;
-                damage.Dam_TotalKinetic *= 0.15f;
-                GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
             }
         }
 
