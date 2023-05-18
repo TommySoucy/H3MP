@@ -408,7 +408,7 @@ namespace H3MP.Tracking
             }
             else if (controller == GameManager.ID) // Lose control
             {
-                if (physical != null)
+                if (physicalAutoMeater != null)
                 {
                     physicalAutoMeater.EnsureUncontrolled();
 

@@ -1346,7 +1346,10 @@ namespace H3MP.Tracking
             // Note that this only gets called when the new controller is different from the old one
             if (newController == GameManager.ID) // Gain control
             {
-                TakeInventoryControl();
+                if (inventory != null)
+                {
+                    TakeInventoryControl();
+                }
 
                 if (physicalSosig != null)
                 {

@@ -448,6 +448,9 @@ namespace H3MP.Tracking
         /// Called by H3MP when the controller of the tracked object changes
         /// This is to be used if you needto do something specific to the tracked object when gaining/losing control
         /// See other tracked types' implementation for examples
+        /// Note: This will get called when instantiating a new TrackedObjectData with packet constructor if we are the init tracker
+        ///       So when you receive an tracked object back from server after having tracked it, this may get called without
+        ///       all data being initialized yet. See TrackedSosigData implementation, where we need to check if inventory exists
         /// </summary>
         /// <param name="newController">The cliend ID of the new controller</param>
         public override void OnControlChanged(int newController)
