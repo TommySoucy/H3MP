@@ -204,6 +204,8 @@ namespace H3MP.Tracking
                 return;
             }
 
+            GameManager.trackedObjectByObject.Remove(physical);
+
             // Have a flag in case we don't actually want to remove it from local after processing
             // In case we can't detroy gobally because we are still waiting for a tracked ID for example
             bool removeFromLocal = true;

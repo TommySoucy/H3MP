@@ -57,7 +57,7 @@ namespace H3MP.Tracking
 
         }
 
-        public TrackedObjectData(Packet packet, string typeID)
+        public TrackedObjectData(Packet packet, string typeID, int trackedID)
         {
             // Full
             typeIdentifier = typeID;
@@ -71,7 +71,7 @@ namespace H3MP.Tracking
             initTracker = packet.ReadInt();
 
             // Update
-            trackedID = packet.ReadInt();
+            this.trackedID = trackedID;
             active = packet.ReadBool();
         }
 
@@ -81,6 +81,7 @@ namespace H3MP.Tracking
         {
             if (full)
             {
+                packet.Write(trackedID);
                 packet.Write(typeIdentifier);
                 packet.Write(controller);
                 packet.Write(parent);
@@ -101,9 +102,9 @@ namespace H3MP.Tracking
                 {
                     packet.Write(order);
                 }
+                packet.Write(trackedID);
             }
 
-            packet.Write(trackedID);
             packet.Write(active);
         }
 

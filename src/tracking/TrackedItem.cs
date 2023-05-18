@@ -9893,6 +9893,7 @@ namespace H3MP.Tracking
             {
                 GameManager.trackedItemBySosigWeapon.Remove((physicalItem as SosigWeaponPlayerInterface).W);
             }
+            GameManager.trackedObjectByInteractive.Remove(physicalItem);
 
             // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
             EnsureUncontrolled();

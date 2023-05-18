@@ -20,6 +20,7 @@ namespace H3MP.Tracking
 
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
             GameManager.trackedAutoMeaterByAutoMeater.Remove(physicalAutoMeater);
+            GameManager.trackedObjectByInteractive.Remove(physicalAutoMeater.PO);
 
             // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
             EnsureUncontrolled();

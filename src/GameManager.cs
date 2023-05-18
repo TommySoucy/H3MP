@@ -193,6 +193,8 @@ namespace H3MP
             }
             players.Clear();
             spectatorHosts.Clear();
+            trackedObjectByObject.Clear();
+            trackedObjectByInteractive.Clear();
             trackedItemByItem.Clear();
             trackedSosigBySosig.Clear();
             trackedItemBySosigWeapon.Clear();

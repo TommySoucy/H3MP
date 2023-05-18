@@ -250,8 +250,12 @@ namespace H3MP.Networking
 
         public static void TrackedObject(int clientID, Packet packet)
         {
+            int trackedID = packet.ReadInt();
             string typeID = packet.ReadString();
-            Server.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypesByName[typeID], packet, typeID), clientID);
+            if (Mod.trackedObjectTypesByName.TryGetValue(typeID, out Type trackedObjectType))
+            {
+                Server.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypesByName[typeID], packet, typeID, trackedID), clientID);
+            }
         }
 
         public static void TrackedObjects(int clientID, Packet packet)
@@ -2059,7 +2063,7 @@ namespace H3MP.Networking
         
         public static void UpToDateObjects(int clientID, Packet packet)
         {
-            // Reconstruct passed trackedItems from packet
+            // Reconstruct passed trackedObjects from packet
             int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
             for (int i = 0; i < count; ++i)
