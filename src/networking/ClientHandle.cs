@@ -2209,17 +2209,21 @@ namespace H3MP.Networking
             int instance = packet.ReadInt();
             int newController = packet.ReadInt();
 
+            Mod.LogInfo("Handling TNH controller " + newController + " for instance " + instance);
             // The instance may not exist anymore if we were the last one in there and we left between
             // server sending us order to set TNH controller and receiving it
-            if(GameManager.TNHInstances.TryGetValue(instance, out TNHInstance i))
+            if (GameManager.TNHInstances.TryGetValue(instance, out TNHInstance i))
             {
+                Mod.LogInfo("\tGot instance");
                 i.controller = newController;
 
                 if(i.manager != null)
                 {
+                    Mod.LogInfo("\tGot Manager");
                     // We are in control, the instance is not init yet but the TNH_Manager attempted to
                     if (newController == GameManager.ID && i.phase == TNH_Phase.StartUp && Mod.currentTNHInstance.manager.m_hasInit)
                     {
+                        Mod.LogInfo("\t\tIniting");
                         // Init
                         i.manager.SetPhase(TNH_Phase.Take);
                     }

@@ -2494,6 +2494,7 @@ namespace H3MP.Networking
         {
             using (Packet packet = new Packet((int)ServerPackets.setTNHController))
             {
+                Mod.LogInfo("Server sending TNH controller " + newController + " for instance " + instance);
                 packet.Write(instance);
                 packet.Write(newController);
 

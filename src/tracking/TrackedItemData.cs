@@ -151,8 +151,8 @@ namespace H3MP.Tracking
                     BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(additionalData, 1);
                 }
 
-                identifyingData[3] = crate.m_isHoldingHealth ? (byte)1 : (byte)0;
-                identifyingData[4] = crate.m_isHoldingToken ? (byte)1 : (byte)0;
+                additionalData[3] = crate.m_isHoldingHealth ? (byte)1 : (byte)0;
+                additionalData[4] = crate.m_isHoldingToken ? (byte)1 : (byte)0;
             }
             else if (physicalItem.physicalItem is GrappleThrowable)
             {

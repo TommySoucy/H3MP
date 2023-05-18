@@ -350,13 +350,17 @@ namespace H3MP.Patches
     {
         static void Postfix()
         {
+            Mod.LogInfo("SetTNHManagerPatch postfix");
             // Also manage currently playing in the TNH instance
             if (Mod.managerObject != null)
             {
+                Mod.LogInfo("\tConnected");
                 if (Mod.currentTNHInstance != null)
                 {
+                    Mod.LogInfo("\t\tIn MP TNH instance");
                     if (GM.TNH_Manager != null)
                     {
+                        Mod.LogInfo("\t\t\tGM.TNH_Manager set");
                         // Keep our own reference
                         Mod.currentTNHInstance.manager = GM.TNH_Manager;
 
@@ -371,12 +375,14 @@ namespace H3MP.Patches
                     }
                     else if (Mod.currentlyPlayingTNH) // TNH_Manager was set to null and we are currently playing
                     {
+                        Mod.LogInfo("\t\t\tGM.TNH_Manager unset");
                         Mod.currentlyPlayingTNH = false;
                         Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, GameManager.ID, ThreadManager.host);
                     }
                 }
                 else // We just set TNH_Manager but we are not in a TNH instance
                 {
+                    Mod.LogInfo("\t\tNot in MP TNH instance");
                     if (GM.TNH_Manager == null)
                     {
                         if (GameManager.instance != 0)
