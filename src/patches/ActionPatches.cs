@@ -3737,15 +3737,36 @@ namespace H3MP.Patches
                         else
                         {
                             Mod.LogError("SosigWearable: " + knownWearableID + " not found in map");
+                            return;
                         }
                     }
-                    if (ThreadManager.host)
+                    if (trackedSosig.data.trackedID == -1)
                     {
-                        ServerSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        if(TrackedSosig.unknownWearable.TryGetValue(trackedSosig.data.localWaitingIndex, out Dictionary<string,int> dict))
+                        {
+                            if(dict.TryGetValue(knownWearableID, out int entryLinkIndex))
+                            {
+                                Mod.LogError("Wearable "+ knownWearableID+" to be registered as "+linkIndex+" already unknown registered on link "+ entryLinkIndex + " on sosig as local waiting index: "+ trackedSosig.data.localWaitingIndex);
+                            }
+                            else
+                            {
+                                dict.Add(knownWearableID, linkIndex);
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<string, int> newDict = new Dictionary<string, int>();
+                            newDict.Add(knownWearableID, linkIndex);
+                            TrackedSosig.unknownWearable.Add(trackedSosig.data.localWaitingIndex, newDict);
+                        }
                     }
                     else
                     {
-                        if (trackedSosig.data.trackedID != -1)
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        }
+                        else
                         {
                             ClientSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
                         }

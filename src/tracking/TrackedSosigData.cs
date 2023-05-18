@@ -1296,6 +1296,15 @@ namespace H3MP.Tracking
 
                 TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
             }
+            if(localTrackedID != -1 && TrackedSosig.unknownWearable.TryGetValue(localWaitingIndex, out Dictionary<string,int> wearableEntries))
+            {
+                foreach(KeyValuePair<string,int> entry in wearableEntries)
+                {
+                    ClientSend.SosigLinkRegisterWearable(trackedID, entry.Value, entry.Key);
+                }
+
+                TrackedSosig.unknownWearable.Remove(localWaitingIndex);
+            }
         }
 
         public override void RemoveFromLocal()
