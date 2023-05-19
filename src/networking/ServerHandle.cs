@@ -2756,7 +2756,7 @@ namespace H3MP.Networking
 
             if (Server.objects[trackedID] != null)
             {
-                (Server.objects[trackedID] as TrackedItemData).identifyingData[1] = 1;
+                (Server.objects[trackedID] as TrackedItemData).additionalData[3] = 1;
 
                 if (Server.objects[trackedID].physical != null)
                 {
@@ -2775,7 +2775,7 @@ namespace H3MP.Networking
 
             if (Server.objects[trackedID] != null)
             {
-                (Server.objects[trackedID] as TrackedItemData).identifyingData[2] = 1;
+                (Server.objects[trackedID] as TrackedItemData).additionalData[4] = 1;
 
                 if (Server.objects[trackedID].physical != null)
                 {

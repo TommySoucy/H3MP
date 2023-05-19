@@ -57,6 +57,35 @@ namespace H3MP.Tracking
 
         public TrackedSosigData(Packet packet, string typeID, int trackedID) : base(packet, typeID, trackedID)
         {
+            // Update
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+            mustard = packet.ReadFloat();
+            byte ammoStoreLength = packet.ReadByte();
+            if (ammoStoreLength > 0)
+            {
+                ammoStores = new int[ammoStoreLength];
+                for (int i = 0; i < ammoStoreLength; ++i)
+                {
+                    ammoStores[i] = packet.ReadInt();
+                }
+            }
+            bodyPose = (Sosig.SosigBodyPose)packet.ReadByte();
+            byte sosigLinkIntegrityLength = packet.ReadByte();
+            if (sosigLinkIntegrityLength > 0)
+            {
+                if (linkIntegrity == null)
+                {
+                    linkIntegrity = new float[sosigLinkIntegrityLength];
+                }
+                for (int i = 0; i < sosigLinkIntegrityLength; ++i)
+                {
+                    linkIntegrity[i] = packet.ReadFloat();
+                }
+            }
+            fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
+            currentOrder = (Sosig.SosigOrder)packet.ReadByte();
+
             // Full
             byte sosigLinkDataLength = packet.ReadByte();
             if (sosigLinkDataLength > 0)
@@ -142,35 +171,6 @@ namespace H3MP.Tracking
             {
                 inventory[i] = packet.ReadInt();
             }
-
-            // Update
-            position = packet.ReadVector3();
-            rotation = packet.ReadQuaternion();
-            mustard = packet.ReadFloat();
-            byte ammoStoreLength = packet.ReadByte();
-            if (ammoStoreLength > 0)
-            {
-                ammoStores = new int[ammoStoreLength];
-                for (int i = 0; i < ammoStoreLength; ++i)
-                {
-                    ammoStores[i] = packet.ReadInt();
-                }
-            }
-            bodyPose = (Sosig.SosigBodyPose)packet.ReadByte();
-            byte sosigLinkIntegrityLength = packet.ReadByte();
-            if (sosigLinkIntegrityLength > 0)
-            {
-                if (linkIntegrity == null)
-                {
-                    linkIntegrity = new float[sosigLinkIntegrityLength];
-                }
-                for (int i = 0; i < sosigLinkIntegrityLength; ++i)
-                {
-                    linkIntegrity[i] = packet.ReadFloat();
-                }
-            }
-            fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
-            currentOrder = (Sosig.SosigOrder)packet.ReadByte();
         }
 
         public static bool IsOfType(Transform t)
@@ -222,6 +222,12 @@ namespace H3MP.Tracking
             data.physical.physical = sosigScript;
 
             data.typeIdentifier = "TrackedSosigData";
+            data.active = trackedSosig.gameObject.activeInHierarchy;
+            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
+            data.instance = GameManager.instance;
+            data.controller = GameManager.ID;
+            data.initTracker = GameManager.ID;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
 
             GameManager.trackedSosigBySosig.Add(sosigScript, trackedSosig);
             GameManager.trackedObjectByObject.Add(sosigScript, trackedSosig);
@@ -312,7 +318,6 @@ namespace H3MP.Tracking
             data.position = sosigScript.CoreRB.position;
             data.velocity = sosigScript.CoreRB.velocity;
             data.rotation = sosigScript.CoreRB.rotation;
-            data.active = trackedSosig.gameObject.activeInHierarchy;
             data.linkData = new float[sosigScript.Links.Count][];
             data.linkIntegrity = new float[data.linkData.Length];
             for (int i = 0; i < sosigScript.Links.Count; ++i)
@@ -435,17 +440,12 @@ namespace H3MP.Tracking
                     }
                 }
             }
-            data.controller = GameManager.ID;
-            data.initTracker = GameManager.ID;
             data.mustard = sosigScript.Mustard;
             data.bodyPose = sosigScript.BodyPose;
             data.currentOrder = sosigScript.CurrentOrder;
             data.fallbackOrder = sosigScript.FallbackOrder;
             data.IFF = (byte)sosigScript.GetIFF();
             data.IFFChart = sosigScript.Priority.IFFChart;
-            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
-            data.instance = GameManager.instance;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
 
             // Brain
             // GuardPoint
@@ -487,6 +487,37 @@ namespace H3MP.Tracking
         public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
         {
             base.WriteToPacket(packet, incrementOrder, full);
+
+            packet.Write(position);
+            packet.Write(rotation);
+            packet.Write(mustard);
+            if (ammoStores != null && ammoStores.Length > 0)
+            {
+                packet.Write((byte)ammoStores.Length);
+                for (int i = 0; i < ammoStores.Length; ++i)
+                {
+                    packet.Write(ammoStores[i]);
+                }
+            }
+            else
+            {
+                packet.Write((byte)0);
+            }
+            packet.Write((byte)bodyPose);
+            if (linkIntegrity == null || linkIntegrity.Length == 0)
+            {
+                packet.Write((byte)0);
+            }
+            else
+            {
+                packet.Write((byte)linkIntegrity.Length);
+                for (int i = 0; i < linkIntegrity.Length; ++i)
+                {
+                    packet.Write(linkIntegrity[i]);
+                }
+            }
+            packet.Write((byte)fallbackOrder);
+            packet.Write((byte)currentOrder);
 
             if (full)
             {
@@ -582,37 +613,6 @@ namespace H3MP.Tracking
                     }
                 }
             }
-
-            packet.Write(position);
-            packet.Write(rotation);
-            packet.Write(mustard);
-            if (ammoStores != null && ammoStores.Length > 0)
-            {
-                packet.Write((byte)ammoStores.Length);
-                for (int i = 0; i < ammoStores.Length; ++i)
-                {
-                    packet.Write(ammoStores[i]);
-                }
-            }
-            else
-            {
-                packet.Write((byte)0);
-            }
-            packet.Write((byte)bodyPose);
-            if (linkIntegrity == null || linkIntegrity.Length == 0)
-            {
-                packet.Write((byte)0);
-            }
-            else
-            {
-                packet.Write((byte)linkIntegrity.Length);
-                for (int i = 0; i < linkIntegrity.Length; ++i)
-                {
-                    packet.Write(linkIntegrity[i]);
-                }
-            }
-            packet.Write((byte)fallbackOrder);
-            packet.Write((byte)currentOrder);
         }
 
         private void CollectExternalData()
@@ -973,6 +973,42 @@ namespace H3MP.Tracking
         {
             base.UpdateFromPacket(packet, full);
 
+            previousPos = position;
+            previousRot = rotation;
+            position = packet.ReadVector3();
+            velocity = previousPos == null ? Vector3.zero : position - previousPos;
+            rotation = packet.ReadQuaternion();
+            previousMustard = mustard;
+            mustard = packet.ReadFloat();
+            previousAmmoStores = ammoStores;
+            byte ammoStoreLength = packet.ReadByte();
+            if (ammoStoreLength > 0)
+            {
+                ammoStores = new int[ammoStoreLength];
+                for (int i = 0; i < ammoStoreLength; ++i)
+                {
+                    ammoStores[i] = packet.ReadInt();
+                }
+            }
+            previousBodyPose = bodyPose;
+            bodyPose = (Sosig.SosigBodyPose)packet.ReadByte();
+            byte sosigLinkIntegrityLength = packet.ReadByte();
+            previousLinkIntegrity = linkIntegrity;
+            if (sosigLinkIntegrityLength > 0)
+            {
+                if (linkIntegrity == null)
+                {
+                    linkIntegrity = new float[sosigLinkIntegrityLength];
+                }
+                for (int i = 0; i < sosigLinkIntegrityLength; ++i)
+                {
+                    linkIntegrity[i] = packet.ReadFloat();
+                }
+            }
+            fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
+            previousOrder = currentOrder;
+            currentOrder = (Sosig.SosigOrder)packet.ReadByte();
+
             if (full)
             {
                 byte sosigLinkDataLength = packet.ReadByte();
@@ -1060,42 +1096,6 @@ namespace H3MP.Tracking
                     inventory[i] = packet.ReadInt();
                 }
             }
-
-            previousPos = position;
-            previousRot = rotation;
-            position = packet.ReadVector3();
-            velocity = previousPos == null ? Vector3.zero : position - previousPos;
-            rotation = packet.ReadQuaternion();
-            previousMustard = mustard;
-            mustard = packet.ReadFloat();
-            previousAmmoStores = ammoStores;
-            byte ammoStoreLength = packet.ReadByte();
-            if (ammoStoreLength > 0)
-            {
-                ammoStores = new int[ammoStoreLength];
-                for (int i = 0; i < ammoStoreLength; ++i)
-                {
-                    ammoStores[i] = packet.ReadInt();
-                }
-            }
-            previousBodyPose = bodyPose;
-            bodyPose = (Sosig.SosigBodyPose)packet.ReadByte();
-            byte sosigLinkIntegrityLength = packet.ReadByte();
-            previousLinkIntegrity = linkIntegrity;
-            if (sosigLinkIntegrityLength > 0)
-            {
-                if (linkIntegrity == null)
-                {
-                    linkIntegrity = new float[sosigLinkIntegrityLength];
-                }
-                for (int i = 0; i < sosigLinkIntegrityLength; ++i)
-                {
-                    linkIntegrity[i] = packet.ReadFloat();
-                }
-            }
-            fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
-            previousOrder = currentOrder;
-            currentOrder = (Sosig.SosigOrder)packet.ReadByte();
 
             // Set physically
             if (physicalSosig != null)

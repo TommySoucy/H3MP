@@ -38,6 +38,16 @@ namespace H3MP.Tracking
 
         public TrackedItemData(Packet packet, string typeID, int trackedID) : base(packet, typeID, trackedID)
         {
+            // Update
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+            int dataLength = packet.ReadInt();
+            if (dataLength > 0)
+            {
+                data = packet.ReadBytes(dataLength);
+            }
+            underActiveControl = packet.ReadBool();
+
             // Full
             itemID = packet.ReadString();
             int identifyingDataLength = packet.ReadInt();
@@ -50,16 +60,6 @@ namespace H3MP.Tracking
             {
                 additionalData = packet.ReadBytes(additionalDataLen);
             }
-
-            // Update
-            position = packet.ReadVector3();
-            rotation = packet.ReadQuaternion();
-            int dataLength = packet.ReadInt();
-            if (dataLength > 0)
-            {
-                data = packet.ReadBytes(dataLength);
-            }
-            underActiveControl = packet.ReadBool();
         }
 
         public static bool IsOfType(Transform t)
@@ -92,6 +92,12 @@ namespace H3MP.Tracking
             data.physical.physical = data.physicalItem.physicalItem;
 
             data.typeIdentifier = "TrackedItemData";
+            data.active = trackedItem.gameObject.activeInHierarchy;
+            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
+            data.instance = GameManager.instance;
+            data.controller = GameManager.ID;
+            data.initTracker = GameManager.ID;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
 
             GameManager.trackedItemByItem.Add(data.physicalItem.physicalItem, trackedItem);
             if (data.physicalItem.physicalItem is SosigWeaponPlayerInterface)
@@ -114,14 +120,7 @@ namespace H3MP.Tracking
             data.SetItemIdentifyingInfo();
             data.position = trackedItem.transform.position;
             data.rotation = trackedItem.transform.rotation;
-            data.active = trackedItem.gameObject.activeInHierarchy;
             data.underActiveControl = data.IsControlled();
-
-            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
-            data.instance = GameManager.instance;
-            data.controller = GameManager.ID;
-            data.initTracker = GameManager.ID;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
 
             data.CollectExternalData();
 
@@ -487,6 +486,16 @@ namespace H3MP.Tracking
         {
             base.UpdateFromPacket(packet, full);
 
+            previousPos = position;
+            previousRot = rotation;
+            position = packet.ReadVector3();
+            velocity = previousPos == null ? Vector3.zero : position - previousPos;
+            rotation = packet.ReadQuaternion();
+            int dataCount = packet.ReadInt();
+            byte[] newData = packet.ReadBytes(dataCount);
+            previousActiveControl = underActiveControl;
+            underActiveControl = packet.ReadBool();
+
             if (full)
             {
                 itemID = packet.ReadString();
@@ -509,16 +518,6 @@ namespace H3MP.Tracking
                     additionalData = null;
                 }
             }
-
-            previousPos = position;
-            previousRot = rotation;
-            position = packet.ReadVector3();
-            velocity = previousPos == null ? Vector3.zero : position - previousPos;
-            rotation = packet.ReadQuaternion();
-            int dataCount = packet.ReadInt();
-            byte[] newData = packet.ReadBytes(dataCount);
-            previousActiveControl = underActiveControl;
-            underActiveControl = packet.ReadBool();
 
             if (physical != null)
             {
@@ -810,6 +809,19 @@ namespace H3MP.Tracking
         {
             base.WriteToPacket(packet, incrementOrder, full);
 
+            packet.Write(position);
+            packet.Write(rotation);
+            if (data == null || data.Length == 0)
+            {
+                packet.Write(0);
+            }
+            else
+            {
+                packet.Write(data.Length);
+                packet.Write(data);
+            }
+            packet.Write(underActiveControl);
+
             if (full)
             {
                 packet.Write(itemID);
@@ -832,19 +844,6 @@ namespace H3MP.Tracking
                     packet.Write(additionalData);
                 }
             }
-
-            packet.Write(position);
-            packet.Write(rotation);
-            if (data == null || data.Length == 0)
-            {
-                packet.Write(0);
-            }
-            else
-            {
-                packet.Write(data.Length);
-                packet.Write(data);
-            }
-            packet.Write(underActiveControl);
         }
 
         public override void ParentChanged()

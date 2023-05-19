@@ -2464,7 +2464,7 @@ namespace H3MP.Networking
             TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
             if (trackedItem != null)
             {
-                trackedItem.identifyingData[1] = 1;
+                trackedItem.additionalData[3] = 1;
 
                 if (trackedItem.physicalItem != null)
                 {
@@ -2482,7 +2482,7 @@ namespace H3MP.Networking
             TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
             if (trackedItem != null)
             {
-                trackedItem.identifyingData[2] = 1;
+                trackedItem.additionalData[4] = 1;
 
                 if (trackedItem.physicalItem != null)
                 {

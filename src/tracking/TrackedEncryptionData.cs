@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Networking;
+using H3MP.Patches;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -31,6 +32,9 @@ namespace H3MP.Tracking
 
         public TrackedEncryptionData(Packet packet, string typeID, int trackedID) : base(packet, typeID, trackedID)
         {
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+
             type = (TNH_EncryptionType)packet.ReadByte();
             int length = packet.ReadInt();
             if (length > 0)
@@ -95,9 +99,6 @@ namespace H3MP.Tracking
                     tendrilsScale[i] = packet.ReadVector3();
                 }
             }
-
-            position = packet.ReadVector3();
-            rotation = packet.ReadQuaternion();
         }
 
         public static bool IsOfType(Transform t)
@@ -117,6 +118,12 @@ namespace H3MP.Tracking
             data.physical.physical = data.physicalEncryption.physicalEncryption;
 
             data.typeIdentifier = "TrackedEncryptionData";
+            data.active = trackedEncryption.gameObject.activeInHierarchy;
+            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
+            data.instance = GameManager.instance;
+            data.controller = GameManager.ID;
+            data.initTracker = GameManager.ID;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
 
             GameManager.trackedEncryptionByEncryption.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
             GameManager.trackedObjectByObject.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
@@ -297,6 +304,9 @@ namespace H3MP.Tracking
         {
             base.UpdateFromPacket(packet, full);
 
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+
             if (full)
             {
                 type = (TNH_EncryptionType)packet.ReadByte();
@@ -365,9 +375,6 @@ namespace H3MP.Tracking
                 }
             }
 
-            position = packet.ReadVector3();
-            rotation = packet.ReadQuaternion();
-
             if (physicalEncryption != null)
             {
                 if (physicalEncryption.physicalEncryption.RB != null)
@@ -416,6 +423,9 @@ namespace H3MP.Tracking
         public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
         {
             base.WriteToPacket(packet, incrementOrder, full);
+
+            packet.Write(position);
+            packet.Write(rotation);
 
             if (full)
             {
@@ -505,9 +515,6 @@ namespace H3MP.Tracking
                     }
                 }
             }
-
-            packet.Write(position);
-            packet.Write(rotation);
         }
 
         public static string EncryptionTypeToID(TNH_EncryptionType type)

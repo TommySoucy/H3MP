@@ -38,14 +38,6 @@ namespace H3MP.Tracking
 
         public TrackedAutoMeaterData(Packet packet, string typeID, int trackedID) : base(packet, typeID, trackedID)
         {
-            // Full
-            ID = packet.ReadByte();
-            int dataLen = packet.ReadInt();
-            if (dataLen > 0)
-            {
-                data = packet.ReadBytes(dataLen);
-            }
-
             // Update
             position = packet.ReadVector3();
             rotation = packet.ReadQuaternion();
@@ -54,6 +46,14 @@ namespace H3MP.Tracking
             hingeTargetPos = packet.ReadFloat();
             upDownMotorRotation = packet.ReadQuaternion();
             upDownJointTargetPos = packet.ReadFloat();
+
+            // Full
+            ID = packet.ReadByte();
+            int dataLen = packet.ReadInt();
+            if (dataLen > 0)
+            {
+                data = packet.ReadBytes(dataLen);
+            }
         }
 
         public static bool IsOfType(Transform t)
@@ -84,6 +84,12 @@ namespace H3MP.Tracking
             data.physical.physical = autoMeaterScript;
 
             data.typeIdentifier = "TrackedAutoMeaterData";
+            data.active = trackedAutoMeater.gameObject.activeInHierarchy;
+            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
+            data.instance = GameManager.instance;
+            data.controller = GameManager.ID;
+            data.initTracker = GameManager.ID;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
 
             GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
             GameManager.trackedObjectByObject.Add(autoMeaterScript, trackedAutoMeater);
@@ -314,6 +320,14 @@ namespace H3MP.Tracking
         {
             base.UpdateFromPacket(packet, full);
 
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+            IFF = packet.ReadByte();
+            sideToSideRotation = packet.ReadQuaternion();
+            hingeTargetPos = packet.ReadFloat();
+            upDownMotorRotation = packet.ReadQuaternion();
+            upDownJointTargetPos = packet.ReadFloat();
+
             if (full)
             {
                 ID = packet.ReadByte();
@@ -327,14 +341,6 @@ namespace H3MP.Tracking
                     data = null;
                 }
             }
-
-            position = packet.ReadVector3();
-            rotation = packet.ReadQuaternion();
-            IFF = packet.ReadByte();
-            sideToSideRotation = packet.ReadQuaternion();
-            hingeTargetPos = packet.ReadFloat();
-            upDownMotorRotation = packet.ReadQuaternion();
-            upDownJointTargetPos = packet.ReadFloat();
 
             // Set physically
             if (physicalAutoMeater != null)
@@ -431,6 +437,14 @@ namespace H3MP.Tracking
         {
             base.WriteToPacket(packet, incrementOrder, full);
 
+            packet.Write(position);
+            packet.Write(rotation);
+            packet.Write(IFF);
+            packet.Write(sideToSideRotation);
+            packet.Write(hingeTargetPos);
+            packet.Write(upDownMotorRotation);
+            packet.Write(upDownJointTargetPos);
+
             if (full)
             {
                 if (data == null || data.Length == 0)
@@ -443,14 +457,6 @@ namespace H3MP.Tracking
                     packet.Write(data);
                 }
             }
-
-            packet.Write(position);
-            packet.Write(rotation);
-            packet.Write(IFF);
-            packet.Write(sideToSideRotation);
-            packet.Write(hingeTargetPos);
-            packet.Write(upDownMotorRotation);
-            packet.Write(upDownJointTargetPos);
         }
 
         public override void RemoveFromLocal()
