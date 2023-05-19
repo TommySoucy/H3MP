@@ -5,49 +5,12 @@ using UnityEngine;
 
 namespace H3MP.Tracking
 {
-    public class TrackedAutoMeater : MonoBehaviour
+    public class TrackedAutoMeater : TrackedObject
     {
-        public AutoMeater physicalAutoMeaterScript;
-        public TrackedAutoMeaterData data;
-        public bool awoken;
-        public bool sendOnAwake;
+        public AutoMeater physicalAutoMeater;
+        public TrackedAutoMeaterData autoMeaterData;
 
-        // Unknown tracked ID queues
-        public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
-        public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
-
-        public bool sendDestroy = true; // To prevent feeback loops
-        public bool skipDestroyProcessing;
-        public bool skipFullDestroy;
-        public bool dontGiveControl;
-
-        private void Awake()
-        {
-            if (data != null)
-            {
-                data.Update(true);
-            }
-
-            awoken = true;
-            if (sendOnAwake)
-            {
-                Mod.LogInfo(gameObject.name + " awoken");
-                if (ThreadManager.host)
-                {
-                    // This will also send a packet with the AutoMeater to be added in the client's global AutoMeater list
-                    Server.AddTrackedAutoMeater(data, 0);
-                }
-                else
-                {
-                    // Tell the server we need to add this item to global tracked AutoMeaters
-                    data.localWaitingIndex = Client.localAutoMeaterCounter++;
-                    Client.waitingLocalAutoMeaters.Add(data.localWaitingIndex, data);
-                    ClientSend.TrackedAutoMeater(data);
-                }
-            }
-        }
-
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
@@ -56,141 +19,58 @@ namespace H3MP.Tracking
             }
 
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
-            GameManager.trackedAutoMeaterByAutoMeater.Remove(physicalAutoMeaterScript);
+            GameManager.trackedAutoMeaterByAutoMeater.Remove(physicalAutoMeater);
+            GameManager.trackedObjectByInteractive.Remove(physicalAutoMeater.PO);
 
             // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
-            GameManager.EnsureUncontrolled(physicalAutoMeaterScript.PO);
+            EnsureUncontrolled();
 
-            // Have a flag in case we don't actually want to remove it from local after processing
-            // In case we can't detroy gobally because we are still waiting for a tracked ID for example
-            bool removeFromLocal = true;
-
-            // Check if we want to process sending, giving control, etc.
-            // We might want to skip just this part if the object was refused by the server
-            if (!skipDestroyProcessing)
-            {
-                // Check if we want to give control of any destroyed objects
-                // This would be the case while we change scene, objects will be destroyed but if there are other clients
-                // in our previous scene/instance, we don't want to destroy the object globally, we want to give control of it to one of them
-                // We might receive an order to destroy an object while we have giveControlOfDestroyed > 0, if so dontGiveControl flag 
-                // explicitly says to destroy
-                if (GameManager.giveControlOfDestroyed == 0 || dontGiveControl)
-                {
-                    DestroyGlobally(ref removeFromLocal);
-                }
-                else // We want to give control of this object instead of destroying it globally
-                {
-                    if (data.controller == GameManager.ID)
-                    {
-                        // Find best potential host
-                        int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, GameManager.playersAtLoadStart);
-                        if (otherPlayer == -1)
-                        {
-                            // No other best potential host, destroy globally
-                            DestroyGlobally(ref removeFromLocal);
-                        }
-                        else // We have a potential new host to give control to
-                        {
-                            // Check if can give control
-                            if (data.trackedID > -1)
-                            {
-                                // Give control with us as debounce because we know we are no longer eligible to control this object
-                                if (ThreadManager.host)
-                                {
-                                    ServerSend.GiveAutoMeaterControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
-                                }
-                                else
-                                {
-                                    ClientSend.GiveAutoMeaterControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
-                                }
-
-                                // Also change controller locally
-                                data.controller = otherPlayer;
-                            }
-                            else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag
-                            {
-                                // Tell destruction we want to keep this in local for later
-                                removeFromLocal = false;
-
-                                // Keep the control change in unknown so we can send it to others if we get a tracked ID
-                                if (unknownControlTrackedIDs.TryGetValue(data.localWaitingIndex, out int val))
-                                {
-                                    if (val != otherPlayer)
-                                    {
-                                        unknownControlTrackedIDs[data.localWaitingIndex] = otherPlayer;
-                                    }
-                                }
-                                else
-                                {
-                                    unknownControlTrackedIDs.Add(data.localWaitingIndex, otherPlayer);
-                                }
-                            }
-                        }
-                    }
-                    // else, we don't control this object, it will simply be destroyed physically on our side
-                }
-            }
-
-            // If we control this item, remove it from local lists
-            // Which has to be done no matter what OnDestroy because we will not have a physicalObject to control after
-            // We have either destroyed it or given control of it above
-            if (data.localTrackedID != -1 && removeFromLocal)
-            {
-                data.RemoveFromLocal();
-            }
-
-            // Reset relevant flags
-            data.removeFromListOnDestroy = true;
-            sendDestroy = true;
-            skipDestroyProcessing = false;
+            base.OnDestroy();
         }
 
-        private void DestroyGlobally(ref bool removeFromLocal)
+        public override void EnsureUncontrolled()
         {
-            // Check if can destroy globally
-            if (data.trackedID > -1)
+            if (physicalAutoMeater.PO != null && physicalAutoMeater.PO.m_hand != null)
             {
-                // Check if want to send destruction
-                // Used to prevent feedback loops
-                if (sendDestroy)
-                {
-                    // Send destruction
-                    if (ThreadManager.host)
-                    {
-                        ServerSend.DestroyAutoMeater(data.trackedID, data.removeFromListOnDestroy);
-                    }
-                    else
-                    {
-                        ClientSend.DestroyAutoMeater(data.trackedID, data.removeFromListOnDestroy);
-                    }
-                }
-
-                // Remove from globals lists if we want
-                if (data.removeFromListOnDestroy)
-                {
-                    if (ThreadManager.host)
-                    {
-                        Server.autoMeaters[data.trackedID] = null;
-                        Server.availableAutoMeaterIndices.Add(data.trackedID);
-                    }
-                    else
-                    {
-                        Client.autoMeaters[data.trackedID] = null;
-                    }
-
-                    GameManager.autoMeatersByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
-                }
+                physicalAutoMeater.PO.ForceBreakInteraction();
             }
-            else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag
-            {
-                // Tell destruction we want to keep this in local for later
-                removeFromLocal = false;
+        }
 
-                // Keep the destruction in unknown so we can send it to others if we get a tracked ID
-                if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
+        public override void BeginInteraction(FVRViveHand hand)
+        {
+            if (data.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
                 {
-                    unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
+                    ServerSend.GiveObjectControl(data.trackedID, GameManager.ID, null);
                 }
+                else
+                {
+                    ClientSend.GiveObjectControl(data.trackedID, GameManager.ID, null);
+                }
+
+                data.controller = GameManager.ID;
+                data.localTrackedID = GameManager.objects.Count;
+                GameManager.objects.Add(data);
+            }
+        }
+
+        public override void EndInteraction(FVRViveHand hand)
+        {
+            // Need to make sure that we give control of the sosig back to the controller of a the current TNH instance if there is one
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.GiveObjectControl(data.trackedID, Mod.currentTNHInstance.controller, null);
+                }
+                else
+                {
+                    ClientSend.GiveObjectControl(data.trackedID, Mod.currentTNHInstance.controller, null);
+                }
+
+                // Update locally
+                data.RemoveFromLocal();
             }
         }
     }

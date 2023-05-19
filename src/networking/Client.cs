@@ -41,19 +41,14 @@ namespace H3MP.Networking
         private delegate void PacketHandler(Packet packet);
         private static PacketHandler[] packetHandlers;
         public static Dictionary<string, int> synchronizedScenes;
-        public static TrackedItemData[] items; // All tracked items, regardless of whos control they are under
-        public static TrackedSosigData[] sosigs; // All tracked Sosigs, regardless of whos control they are under
-        public static TrackedAutoMeaterData[] autoMeaters; // All tracked AutoMeaters, regardless of whos control they are under
-        public static TrackedEncryptionData[] encryptions; // All tracked TNH_EncryptionTarget, regardless of whos control they are under
+        public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under
 
-        public static uint localItemCounter = 0;
-        public static Dictionary<uint, TrackedItemData> waitingLocalItems = new Dictionary<uint, TrackedItemData>();
-        public static uint localSosigCounter = 0;
-        public static Dictionary<uint, TrackedSosigData> waitingLocalSosigs = new Dictionary<uint, TrackedSosigData>();
-        public static uint localAutoMeaterCounter = 0;
-        public static Dictionary<uint, TrackedAutoMeaterData> waitingLocalAutoMeaters = new Dictionary<uint, TrackedAutoMeaterData>();
-        public static uint localEncryptionCounter = 0;
-        public static Dictionary<uint, TrackedEncryptionData> waitingLocalEncryptions = new Dictionary<uint, TrackedEncryptionData>();
+        public static uint localObjectCounter = 0;
+        public static Dictionary<uint, TrackedObjectData> waitingLocalObjects = new Dictionary<uint, TrackedObjectData>();
+
+        // Customization: Event to let mods know when the client disconnects
+        public delegate void OnDisconnectDelegate();
+        public static event OnDisconnectDelegate OnDisconnect;
 
         private void Awake()
         {
@@ -187,17 +182,48 @@ namespace H3MP.Networking
                             using (Packet packet = new Packet(packetBytes))
                             {
                                 int packetID = packet.ReadInt();
-#if DEBUG
-                                if (Input.GetKey(KeyCode.PageDown))
-                                {
-                                    Mod.LogInfo("\tHandling TCP packet: " + packetID);
-                                }
-#endif
+
                                 try
                                 {
-                                    if (singleton.ID >= 0 || packetID == 1)
+                                    if (singleton.ID >= 0 || (ServerPackets)packetID == ServerPackets.welcome)
                                     {
-                                        packetHandlers[packetID](packet);
+                                        if (packetID < 0)
+                                        {
+                                            if (packetID == -1)
+                                            {
+                                                Mod.GenericCustomPacketReceivedInvoke(0, packet.ReadString(), packet);
+                                            }
+                                            else // packetID <= -2
+                                            {
+                                                int index = packetID * -1 - 2;
+                                                if (Mod.customPacketHandlers[index] != null)
+                                                {
+#if DEBUG
+                                                    if (Input.GetKey(KeyCode.PageDown))
+                                                    {
+                                                        Mod.LogInfo("\tHandling custom TCP packet: " + packetID);
+                                                    }
+#endif
+                                                    Mod.customPacketHandlers[index](0, packet);
+                                                }
+#if DEBUG
+                                                else
+                                                {
+                                                    Mod.LogError("\tClient received invalid custom TCP packet ID: " + packetID);
+                                                }
+#endif
+                                            }
+                                        }
+                                        else
+                                        {
+#if DEBUG
+                                            if (Input.GetKey(KeyCode.PageDown))
+                                            {
+                                                Mod.LogInfo("\tHandling TCP packet: " + packetID);
+                                            }
+#endif
+                                            packetHandlers[packetID](packet);
+                                        }
                                     }
                                 }
                                 catch(IndexOutOfRangeException ex)
@@ -317,13 +343,43 @@ namespace H3MP.Networking
                         using (Packet packet = new Packet(data))
                         {
                             int packetID = packet.ReadInt();
-#if DEBUG
-                            if (Input.GetKey(KeyCode.PageDown))
+                            if (packetID < 0)
                             {
-                                Mod.LogInfo("\tHandling UDP packet: " + packetID);
-                            }
+                                if (packetID == -1)
+                                {
+                                    Mod.GenericCustomPacketReceivedInvoke(0, packet.ReadString(), packet);
+                                }
+                                else // packetID <= -2
+                                {
+                                    int index = packetID * -1 - 2;
+                                    if (Mod.customPacketHandlers[index] != null)
+                                    {
+#if DEBUG
+                                        if (Input.GetKey(KeyCode.PageDown))
+                                        {
+                                            Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+                                        }
 #endif
-                            packetHandlers[packetID](packet);
+                                        Mod.customPacketHandlers[index](0, packet);
+                                    }
+#if DEBUG
+                                    else
+                                    {
+                                        Mod.LogError("\tClient received invalid custom UDP packet ID: " + packetID);
+                                    }
+#endif
+                                }
+                            }
+                            else
+                            {
+#if DEBUG
+                                if (Input.GetKey(KeyCode.PageDown))
+                                {
+                                    Mod.LogInfo("\tHandling UDP packet: " + packetID);
+                                }
+#endif
+                                packetHandlers[packetID](packet);
+                            }
                         }
                     }
                 });
@@ -342,25 +398,17 @@ namespace H3MP.Networking
         {
             packetHandlers = new PacketHandler[]
             {
-                null,
                 ClientHandle.Welcome,
                 ClientHandle.SpawnPlayer,
                 ClientHandle.PlayerState,
                 ClientHandle.PlayerScene,
-                ClientHandle.AddNonSyncScene,
-                ClientHandle.TrackedItems,
-                ClientHandle.TrackedItem,
+                null,
                 ClientHandle.ShatterableCrateSetHoldingHealth,
-                ClientHandle.GiveControl,
-                ClientHandle.DestroyItem,
-                ClientHandle.ItemParent,
+                ClientHandle.GiveObjectControl,
+                ClientHandle.ObjectParent,
                 ClientHandle.ConnectSync,
                 ClientHandle.WeaponFire,
                 ClientHandle.PlayerDamage,
-                ClientHandle.TrackedSosig,
-                ClientHandle.TrackedSosigs,
-                ClientHandle.GiveSosigControl,
-                ClientHandle.DestroySosig,
                 ClientHandle.SosigPickUpItem,
                 ClientHandle.SosigPlaceItemIn,
                 ClientHandle.SosigDropSlot,
@@ -407,10 +455,6 @@ namespace H3MP.Networking
                 ClientHandle.TNHPlayerDied,
                 ClientHandle.TNHAddTokens,
                 ClientHandle.TNHSetLevel,
-                ClientHandle.TrackedAutoMeater,
-                ClientHandle.TrackedAutoMeaters,
-                ClientHandle.DestroyAutoMeater,
-                ClientHandle.GiveAutoMeaterControl,
                 ClientHandle.AutoMeaterSetState,
                 ClientHandle.AutoMeaterSetBladesActive,
                 ClientHandle.AutoMeaterDamage,
@@ -426,10 +470,6 @@ namespace H3MP.Networking
                 ClientHandle.TNHHoldPointFailOut,
                 ClientHandle.TNHSetPhaseComplete,
                 ClientHandle.TNHSetPhase,
-                ClientHandle.TrackedEncryptions,
-                ClientHandle.TrackedEncryption,
-                ClientHandle.GiveEncryptionControl,
-                ClientHandle.DestroyEncryption,
                 ClientHandle.EncryptionDamage,
                 ClientHandle.EncryptionDamageData,
                 ClientHandle.EncryptionRespawnSubTarg,
@@ -476,7 +516,7 @@ namespace H3MP.Networking
                 ClientHandle.FVRGrenadeExplode,
                 ClientHandle.ClientDisconnect,
                 ClientHandle.ServerClosed,
-                ClientHandle.InitConnectionData,
+                null, // UNUSED
                 ClientHandle.BangSnapSplode,
                 ClientHandle.C4Detonate,
                 ClientHandle.ClaymoreMineDetonate,
@@ -511,10 +551,14 @@ namespace H3MP.Networking
                 ClientHandle.GrappleGunLoad,
                 ClientHandle.CarlGustafLatchSate,
                 ClientHandle.CarlGustafShellSlideSate,
-                ClientHandle.ItemUpdate,
                 ClientHandle.TNHHostStartHold,
                 ClientHandle.IntegratedFirearmFire,
                 ClientHandle.GrappleAttached,
+                ClientHandle.TrackedObject,
+                ClientHandle.TrackedObjects,
+                ClientHandle.ObjectUpdate,
+                ClientHandle.DestroyObject,
+                ClientHandle.RegisterCustomPacketType,
             };
 
             // All vanilla scenes can be synced by default
@@ -525,595 +569,112 @@ namespace H3MP.Networking
                 synchronizedScenes.Add(System.IO.Path.GetFileNameWithoutExtension(UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i)), 0);
             }
 
-            items = new TrackedItemData[100];
+            objects = new TrackedObjectData[100];
 
-            sosigs = new TrackedSosigData[100];
-
-            autoMeaters = new TrackedAutoMeaterData[100];
-
-            encryptions = new TrackedEncryptionData[100];
-
-            localItemCounter = 0;
-            waitingLocalItems.Clear();
-            localSosigCounter = 0;
-            waitingLocalSosigs.Clear();
-            localAutoMeaterCounter = 0;
-            waitingLocalAutoMeaters.Clear();
-            localEncryptionCounter = 0;
-            waitingLocalEncryptions.Clear();
+            localObjectCounter = 0;
+            waitingLocalObjects.Clear();
 
             Mod.LogInfo("Initialized client", false);
         }
 
-        public static void AddTrackedItem(TrackedItemData trackedItem)
+        public static void AddTrackedObject(TrackedObjectData trackedObject)
         {
-            TrackedItemData actualTrackedItem = null;
+            TrackedObjectData actualTrackedObject = null;
             // If this is a scene init object the server rejected
-            if (trackedItem.trackedID == -2)
+            if (trackedObject.trackedID == -2)
             {
-                actualTrackedItem = waitingLocalItems[trackedItem.localWaitingIndex];
-                if (actualTrackedItem.physicalItem != null)
+                actualTrackedObject = waitingLocalObjects[trackedObject.localWaitingIndex];
+                if (actualTrackedObject.physical != null)
                 {
-                    // Get rid of the item
-                    actualTrackedItem.physicalItem.skipDestroyProcessing = true;
-                    actualTrackedItem.trackedID = -2;
-                    actualTrackedItem.physicalItem.sendDestroy = false;
-                    Destroy(actualTrackedItem.physicalItem.gameObject);
+                    // Get rid of the object
+                    actualTrackedObject.physical.skipDestroyProcessing = true;
+                    actualTrackedObject.trackedID = -2;
+                    actualTrackedObject.physical.sendDestroy = false;
+                    Destroy(actualTrackedObject.physical.gameObject);
                 }
                 return;
             }
 
             // Adjust items size to acommodate if necessary
-            if (items.Length <= trackedItem.trackedID)
+            if (objects.Length <= trackedObject.trackedID)
             {
-                IncreaseItemsSize(trackedItem.trackedID);
+                IncreaseObjectsSize(trackedObject.trackedID);
             }
 
-            //Problem: When joining TNH game that has already been init, but we are instance host, we are given TNH control and control of sosigs
-            // Once we arrive in the scene, we are sent relevant sosigs, the ones we are already in control of
-            // If the sosig has a local waiting index that we are not waiting for, instantiate the sosig if we have its data
-            // If the local waiting index matches one of ours, it could be one we have initially tracked or one from snother player that just happened to match on of ours
-            //  If one we have initially tracked, get the ID and process as normal
-            //  If one from someone else instantiate if we have the data since we are not in control
-            if (trackedItem.controller == Client.singleton.ID)
+            if (trackedObject.controller == GameManager.ID) // We control this object
             {
-                if (waitingLocalItems.TryGetValue(trackedItem.localWaitingIndex, out actualTrackedItem))
+                // Check if we were waiting for this object's data
+                bool notLocalWaiting = true;
+                if (waitingLocalObjects.TryGetValue(trackedObject.localWaitingIndex, out actualTrackedObject) && trackedObject.initTracker == GameManager.ID)
                 {
-                    // Check if we were init tracker because we might have a different item with the same local waiting index in our side
-                    if (trackedItem.initTracker == GameManager.ID)
+                    // Get our object
+                    waitingLocalObjects.Remove(trackedObject.localWaitingIndex);
+
+                    // Set its new tracked ID
+                    actualTrackedObject.trackedID = trackedObject.trackedID;
+
+                    // Add the object to client global list
+                    objects[actualTrackedObject.trackedID] = actualTrackedObject;
+
+                    // Add to object tracking list
+                    if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))
                     {
-                        // Get our item
-                        waitingLocalItems.Remove(trackedItem.localWaitingIndex);
-
-                        // Set its new tracked ID
-                        actualTrackedItem.trackedID = trackedItem.trackedID;
-
-                        // Add the item to client global list
-                        items[actualTrackedItem.trackedID] = actualTrackedItem;
-
-                        // Add to item tracking list
-                        if (GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
+                        if (relevantInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                         {
-                            if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
-                            {
-                                itemList.Add(trackedItem.trackedID);
-                            }
-                            else
-                            {
-                                relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                            }
+                            objectList.Add(trackedObject.trackedID);
                         }
                         else
                         {
-                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                            newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                            GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
-                        }
-
-                        actualTrackedItem.OnTrackedIDReceived();
-                    }
-                    else
-                    {
-                        TrackedItemData actual = items[trackedItem.trackedID];
-                        if (actual == null)
-                        {
-                            items[trackedItem.trackedID] = trackedItem;
-                            actual = trackedItem;
-
-                            // Add to item tracking list
-                            if (GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
-                            {
-                                if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
-                                {
-                                    itemList.Add(trackedItem.trackedID);
-                                }
-                                else
-                                {
-                                    relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                                }
-                            }
-                            else
-                            {
-                                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                                newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                                GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
-                            }
-
-                            // Add local list
-                            trackedItem.localTrackedID = GameManager.items.Count;
-                            GameManager.items.Add(trackedItem);
-                        }
-
-                        if (actual.physicalItem == null && !actual.awaitingInstantiation &&
-                            !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
-                        {
-                            actual.awaitingInstantiation = true;
-                            AnvilManager.Run(actual.Instantiate());
-                        }
-                    }
-                }
-                else
-                {
-                    TrackedItemData actual = items[trackedItem.trackedID];
-                    if (actual == null)
-                    {
-                        items[trackedItem.trackedID] = trackedItem;
-                        actual = trackedItem;
-
-                        // Add to item tracking list
-                        if (GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
-                        {
-                            if (relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
-                            {
-                                itemList.Add(trackedItem.trackedID);
-                            }
-                            else
-                            {
-                                relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                            }
-                        }
-                        else
-                        {
-                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                            newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                            GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
-                        }
-
-                        // Add local list
-                        trackedItem.localTrackedID = GameManager.items.Count;
-                        GameManager.items.Add(trackedItem);
-                    }
-
-                    if (actual.physicalItem == null && !actual.awaitingInstantiation &&
-                        !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
-                    {
-                        actual.awaitingInstantiation = true;
-                        AnvilManager.Run(actual.Instantiate());
-                    }
-                }
-            }
-            else
-            {
-                // We might already have the object
-                if (items[trackedItem.trackedID] != null)
-                {
-                    actualTrackedItem = items[trackedItem.trackedID];
-                    if (!actualTrackedItem.itemID.Equals(trackedItem.itemID))
-                    {
-                        if (actualTrackedItem.physicalItem != null)
-                        {
-                            actualTrackedItem.physicalItem.sendDestroy = false;
-                            DestroyImmediate(actualTrackedItem.physicalItem.gameObject);
-                        }
-                        actualTrackedItem.awaitingInstantiation = false;
-                    }
-                    else
-                    {
-                        // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
-                        // receive it from relevant objects
-                        if (actualTrackedItem.physicalItem == null && !actualTrackedItem.awaitingInstantiation &&
-                            actualTrackedItem.scene.Equals(GameManager.scene) &&
-                            actualTrackedItem.instance == GameManager.instance)
-                        {
-                            actualTrackedItem.awaitingInstantiation = true;
-                            AnvilManager.Run(actualTrackedItem.Instantiate());
-                        }
-                        return;
-                    }
-                }
-
-                trackedItem.localTrackedID = -1;
-
-                // Add the item to client global list
-                items[trackedItem.trackedID] = trackedItem;
-
-                // Add to item tracking list
-                if (GameManager.itemsByInstanceByScene.TryGetValue(trackedItem.scene, out Dictionary<int, List<int>> relevantInstances))
-                {
-                    if(relevantInstances.TryGetValue(trackedItem.instance, out List<int> itemList))
-                    {
-                        itemList.Add(trackedItem.trackedID);
-                    }
-                    else
-                    {
-                        relevantInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                    }
-                }
-                else
-                {
-                    Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                    newInstances.Add(trackedItem.instance, new List<int>() { trackedItem.trackedID });
-                    GameManager.itemsByInstanceByScene.Add(trackedItem.scene, newInstances);
-                }
-
-                // Add to parent children if has parent and we are not initTracker (It isn't already in the list)
-                if (trackedItem.parent != -1 && trackedItem.initTracker != GameManager.ID)
-                {
-                    // Note that this should never be null, we should always receive the parent data before receiving the children's
-                    TrackedItemData parentData = items[trackedItem.parent];
-
-                    if (parentData.children == null)
-                    {
-                        parentData.children = new List<TrackedItemData>();
-                    }
-
-                    trackedItem.childIndex = parentData.children.Count;
-                    parentData.children.Add(trackedItem);
-                }
-
-                // Instantiate item if it is identiafiable and in the current scene/instance
-                if (!trackedItem.awaitingInstantiation && 
-                    GameManager.IsItemIdentifiable(trackedItem) &&
-                    trackedItem.scene.Equals(GameManager.scene) &&
-                    trackedItem.instance == GameManager.instance)
-                {
-                    trackedItem.awaitingInstantiation = true;
-                    AnvilManager.Run(trackedItem.Instantiate());
-                }
-            }
-        }
-
-        public static void AddTrackedSosig(TrackedSosigData trackedSosig)
-        {
-            Mod.LogInfo("Received full sosig with trackedID: "+trackedSosig.trackedID, false);
-            TrackedSosigData actualTrackedSosig = null;
-            // If this is a scene init object the server rejected
-            if (trackedSosig.trackedID == -2)
-            {
-                actualTrackedSosig = waitingLocalSosigs[trackedSosig.localWaitingIndex];
-                if (actualTrackedSosig.physicalObject != null)
-                {
-                    // Get rid of the object
-                    actualTrackedSosig.physicalObject.skipDestroyProcessing = true;
-                    actualTrackedSosig.trackedID = -2;
-                    actualTrackedSosig.physicalObject.sendDestroy = false;
-                    Destroy(actualTrackedSosig.physicalObject.gameObject);
-                }
-                return;
-            }
-
-            // Adjust sosigs size to acommodate if necessary
-            if (sosigs.Length <= trackedSosig.trackedID)
-            {
-                IncreaseSosigsSize(trackedSosig.trackedID);
-            }
-
-            if (trackedSosig.controller == Client.singleton.ID)
-            {
-                Mod.LogInfo("\tWe are controller, tracked id: "+ trackedSosig.trackedID+", have actual?: "+(sosigs[trackedSosig.trackedID] != null), false);
-                if (waitingLocalSosigs.TryGetValue(trackedSosig.localWaitingIndex, out actualTrackedSosig))
-                {
-                    if (trackedSosig.initTracker == GameManager.ID)
-                    {
-                        // Get our sosig
-                        waitingLocalSosigs.Remove(trackedSosig.localWaitingIndex);
-
-                        // Set its new tracked ID
-                        actualTrackedSosig.trackedID = trackedSosig.trackedID;
-
-                        // Add the sosig to client global list
-                        sosigs[trackedSosig.trackedID] = actualTrackedSosig;
-
-                        // Add to sosig tracking list
-                        if (GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> relevantInstances))
-                        {
-                            if (relevantInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
-                            {
-                                sosigList.Add(trackedSosig.trackedID);
-                            }
-                            else
-                            {
-                                relevantInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
-                            }
-                        }
-                        else
-                        {
-                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                            newInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
-                            GameManager.sosigsByInstanceByScene.Add(trackedSosig.scene, newInstances);
-                        }
-
-                        // Send queued up orders
-                        actualTrackedSosig.OnTrackedIDReceived();
-
-                        // Only send latest data if not destroyed
-                        if (sosigs[trackedSosig.trackedID] != null)
-                        {
-                            sosigs[trackedSosig.trackedID].Update(true);
-
-                            // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
-                            ClientSend.TrackedSosig(sosigs[trackedSosig.trackedID]);
-                        }
-                    }
-                    else
-                    {
-                        TrackedSosigData actual = sosigs[trackedSosig.trackedID];
-                        if (actual == null)
-                        {
-                            sosigs[trackedSosig.trackedID] = trackedSosig;
-                            actual = trackedSosig;
-
-                            // Add to sosig tracking list
-                            if (GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> relevantInstances))
-                            {
-                                if (relevantInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
-                                {
-                                    sosigList.Add(trackedSosig.trackedID);
-                                }
-                                else
-                                {
-                                    relevantInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
-                                }
-                            }
-                            else
-                            {
-                                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                                newInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
-                                GameManager.sosigsByInstanceByScene.Add(trackedSosig.scene, newInstances);
-                            }
-
-                            trackedSosig.localTrackedID = GameManager.sosigs.Count;
-                            GameManager.sosigs.Add(trackedSosig);
-                        }
-
-                        if (actual.physicalObject == null && !actual.awaitingInstantiation &&
-                            !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
-                        {
-                            actual.awaitingInstantiation = true;
-                            AnvilManager.Run(actual.Instantiate());
-                        }
-                    }
-                }
-                else
-                {
-                    TrackedSosigData actual = sosigs[trackedSosig.trackedID];
-                    if (actual == null)
-                    {
-                        sosigs[trackedSosig.trackedID] = trackedSosig;
-                        actual = trackedSosig;
-
-                        // Add to sosig tracking list
-                        if (GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> relevantInstances))
-                        {
-                            if (relevantInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
-                            {
-                                sosigList.Add(trackedSosig.trackedID);
-                            }
-                            else
-                            {
-                                relevantInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
-                            }
-                        }
-                        else
-                        {
-                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                            newInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
-                            GameManager.sosigsByInstanceByScene.Add(trackedSosig.scene, newInstances);
-                        }
-
-                        trackedSosig.localTrackedID = GameManager.sosigs.Count;
-                        GameManager.sosigs.Add(trackedSosig);
-                    }
-
-                    if (actual.physicalObject == null && !actual.awaitingInstantiation &&
-                        !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
-                    {
-                        actual.awaitingInstantiation = true;
-                        AnvilManager.Run(actual.Instantiate());
-                    }
-                }
-            }
-            else
-            {
-                Mod.LogInfo("\tWe are not controller, tracked id: " + trackedSosig.trackedID + ", have actual?: " + (sosigs[trackedSosig.trackedID] != null), false);
-                if (sosigs[trackedSosig.trackedID] == null)
-                {
-                    trackedSosig.localTrackedID = -1;
-
-                    // Add the sosig to client global list
-                    sosigs[trackedSosig.trackedID] = trackedSosig;
-
-                    // Add to sosig tracking list
-                    if (GameManager.sosigsByInstanceByScene.TryGetValue(trackedSosig.scene, out Dictionary<int, List<int>> relevantInstances))
-                    {
-                        if (relevantInstances.TryGetValue(trackedSosig.instance, out List<int> sosigList))
-                        {
-                            sosigList.Add(trackedSosig.trackedID);
-                        }
-                        else
-                        {
-                            relevantInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
+                            relevantInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
                         }
                     }
                     else
                     {
                         Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                        newInstances.Add(trackedSosig.instance, new List<int>() { trackedSosig.trackedID });
-                        GameManager.sosigsByInstanceByScene.Add(trackedSosig.scene, newInstances);
+                        newInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                        GameManager.objectsByInstanceByScene.Add(trackedObject.scene, newInstances);
                     }
 
-                    // Instantiate sosig if it is in the current scene
-                    if (!trackedSosig.awaitingInstantiation &&
-                        trackedSosig.scene.Equals(GameManager.scene) &&
-                        trackedSosig.instance == GameManager.instance)
-                    {
-                        trackedSosig.awaitingInstantiation = true;
-                        AnvilManager.Run(trackedSosig.Instantiate());
-                    }
+                    actualTrackedObject.OnTrackedIDReceived();
+
+                    notLocalWaiting = false;
                 }
-                else // This is an initial update sosig data
+
+                if (notLocalWaiting) // We were not waiting for this data, process by trackedID instead
                 {
-                    TrackedSosigData trackedSosigData = sosigs[trackedSosig.trackedID];
-
-                    trackedSosigData.Update(trackedSosig, true);
-
-                    // Instantiate sosig if it is in the current scene if not instantiated already
-                    // This could be the case if joining a scene with sosigs we already have the data for
-                    if (trackedSosigData.physicalObject == null && !trackedSosigData.awaitingInstantiation)
-                    {
-                        if (trackedSosig.scene.Equals(GameManager.scene) &&
-                            trackedSosig.instance == GameManager.instance)
-                        {
-                            trackedSosigData.awaitingInstantiation = true;
-                            AnvilManager.Run(trackedSosigData.Instantiate());
-                        }
-                    }
-                }
-            }
-        }
-
-        public static void AddTrackedAutoMeater(TrackedAutoMeaterData trackedAutoMeater)
-        {
-            TrackedAutoMeaterData actualTrackedAutoMeater = null;
-            // If this is a scene init object the server rejected
-            if (trackedAutoMeater.trackedID == -2)
-            {
-                actualTrackedAutoMeater = waitingLocalAutoMeaters[trackedAutoMeater.localWaitingIndex];
-                if (actualTrackedAutoMeater.physicalObject != null)
-                {
-                    // Get rid of the object
-                    actualTrackedAutoMeater.physicalObject.skipDestroyProcessing = true;
-                    actualTrackedAutoMeater.trackedID = -2;
-                    actualTrackedAutoMeater.physicalObject.sendDestroy = false;
-                    Destroy(actualTrackedAutoMeater.physicalObject.gameObject);
-                }
-                return;
-            }
-
-            // Adjust AutoMeaters size to acommodate if necessary
-            if (autoMeaters.Length <= trackedAutoMeater.trackedID)
-            {
-                IncreaseAutoMeatersSize(trackedAutoMeater.trackedID);
-            }
-
-            if (trackedAutoMeater.controller == Client.singleton.ID)
-            {
-                if (waitingLocalAutoMeaters.TryGetValue(trackedAutoMeater.localWaitingIndex, out actualTrackedAutoMeater))
-                {
-                    if (trackedAutoMeater.initTracker == GameManager.ID)
-                    {
-                        // Get our autoMeater.
-                        waitingLocalAutoMeaters.Remove(trackedAutoMeater.localWaitingIndex);
-
-                        // Set its tracked ID
-                        actualTrackedAutoMeater.trackedID = trackedAutoMeater.trackedID;
-
-                        // Add the AutoMeater to client global list
-                        autoMeaters[trackedAutoMeater.trackedID] = actualTrackedAutoMeater;
-
-                        // Add to autoMeater tracking list
-                        if (GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> relevantInstances))
-                        {
-                            if (relevantInstances.TryGetValue(trackedAutoMeater.instance, out List<int> sosigList))
-                            {
-                                sosigList.Add(trackedAutoMeater.trackedID);
-                            }
-                            else
-                            {
-                                relevantInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
-                            }
-                        }
-                        else
-                        {
-                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                            newInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
-                            GameManager.autoMeatersByInstanceByScene.Add(trackedAutoMeater.scene, newInstances);
-                        }
-
-                        // Send queued up orders
-                        actualTrackedAutoMeater.OnTrackedIDReceived();
-                    }
-                    else
-                    {
-                        TrackedAutoMeaterData actual = autoMeaters[trackedAutoMeater.trackedID];
-                        if (actual == null)
-                        {
-                            autoMeaters[trackedAutoMeater.trackedID] = trackedAutoMeater;
-                            actual = trackedAutoMeater;
-
-                            // Add to autoMeater tracking list
-                            if (GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> relevantInstances))
-                            {
-                                if (relevantInstances.TryGetValue(trackedAutoMeater.instance, out List<int> sosigList))
-                                {
-                                    sosigList.Add(trackedAutoMeater.trackedID);
-                                }
-                                else
-                                {
-                                    relevantInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
-                                }
-                            }
-                            else
-                            {
-                                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                                newInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
-                                GameManager.autoMeatersByInstanceByScene.Add(trackedAutoMeater.scene, newInstances);
-                            }
-
-                            trackedAutoMeater.localTrackedID = GameManager.autoMeaters.Count;
-                            GameManager.autoMeaters.Add(trackedAutoMeater);
-                        }
-
-                        if (actual.physicalObject == null && !actual.awaitingInstantiation &&
-                            !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
-                        {
-                            actual.awaitingInstantiation = true;
-                            AnvilManager.Run(actual.Instantiate());
-                        }
-                    }
-                }
-                else
-                {
-                    TrackedAutoMeaterData actual = autoMeaters[trackedAutoMeater.trackedID];
+                    // Check if already have object data
+                    TrackedObjectData actual = objects[trackedObject.trackedID];
                     if (actual == null)
                     {
-                        autoMeaters[trackedAutoMeater.trackedID] = trackedAutoMeater;
-                        actual = trackedAutoMeater;
+                        // Dont have object data yet, set it
+                        objects[trackedObject.trackedID] = trackedObject;
+                        actual = trackedObject;
 
-                        // Add to autoMeater tracking list
-                        if (GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> relevantInstances))
+                        // Add to object tracking list
+                        if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))
                         {
-                            if (relevantInstances.TryGetValue(trackedAutoMeater.instance, out List<int> sosigList))
+                            if (relevantInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                             {
-                                sosigList.Add(trackedAutoMeater.trackedID);
+                                objectList.Add(trackedObject.trackedID);
                             }
                             else
                             {
-                                relevantInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
+                                relevantInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
                             }
                         }
                         else
                         {
                             Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                            newInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
-                            GameManager.autoMeatersByInstanceByScene.Add(trackedAutoMeater.scene, newInstances);
+                            newInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                            GameManager.objectsByInstanceByScene.Add(trackedObject.scene, newInstances);
                         }
 
-                        trackedAutoMeater.localTrackedID = GameManager.autoMeaters.Count;
-                        GameManager.autoMeaters.Add(trackedAutoMeater);
+                        // Add local list
+                        trackedObject.localTrackedID = GameManager.objects.Count;
+                        GameManager.objects.Add(trackedObject);
                     }
 
-                    if (actual.physicalObject == null && !actual.awaitingInstantiation &&
+                    if (actual.physical == null && !actual.awaitingInstantiation &&
                         !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
                     {
                         actual.awaitingInstantiation = true;
@@ -1121,323 +682,86 @@ namespace H3MP.Networking
                     }
                 }
             }
-            else
+            else // We are not controller
             {
                 // We might already have the object
-                if (autoMeaters[trackedAutoMeater.trackedID] != null)
+                if (objects[trackedObject.trackedID] != null)
                 {
-                    actualTrackedAutoMeater = autoMeaters[trackedAutoMeater.trackedID];
-                    // If we got sent this when it initialy got tracked, we would still need to instantiate it when we 
-                    // receive it from relevant objects
-                    if (actualTrackedAutoMeater.physicalObject == null && !actualTrackedAutoMeater.awaitingInstantiation &&
-                        actualTrackedAutoMeater.scene.Equals(GameManager.scene) &&
-                        actualTrackedAutoMeater.instance == GameManager.instance)
+                    // We could have received this data again from relevant objects, if so, need to instantiate
+                    actualTrackedObject = objects[trackedObject.trackedID];
+                    if (actualTrackedObject.physical == null && !actualTrackedObject.awaitingInstantiation &&
+                        actualTrackedObject.scene.Equals(GameManager.scene) &&
+                        actualTrackedObject.instance == GameManager.instance)
                     {
-                        actualTrackedAutoMeater.awaitingInstantiation = true;
-                        AnvilManager.Run(actualTrackedAutoMeater.Instantiate());
+                        actualTrackedObject.awaitingInstantiation = true;
+                        AnvilManager.Run(actualTrackedObject.Instantiate());
                     }
                     return;
                 }
 
-                trackedAutoMeater.localTrackedID = -1;
+                trackedObject.localTrackedID = -1;
 
-                // Add the AutoMeater to client global list
-                autoMeaters[trackedAutoMeater.trackedID] = trackedAutoMeater;
+                // Add the object to client global list
+                objects[trackedObject.trackedID] = trackedObject;
 
-                // Add to autoMeater tracking list
-                if (GameManager.autoMeatersByInstanceByScene.TryGetValue(trackedAutoMeater.scene, out Dictionary<int, List<int>> relevantInstances))
+                // Add to object tracking list
+                if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))
                 {
-                    if (relevantInstances.TryGetValue(trackedAutoMeater.instance, out List<int> sosigList))
+                    if(relevantInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                     {
-                        sosigList.Add(trackedAutoMeater.trackedID);
+                        objectList.Add(trackedObject.trackedID);
                     }
                     else
                     {
-                        relevantInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
+                        relevantInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
                     }
                 }
                 else
                 {
                     Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                    newInstances.Add(trackedAutoMeater.instance, new List<int>() { trackedAutoMeater.trackedID });
-                    GameManager.autoMeatersByInstanceByScene.Add(trackedAutoMeater.scene, newInstances);
+                    newInstances.Add(trackedObject.instance, new List<int>() { trackedObject.trackedID });
+                    GameManager.objectsByInstanceByScene.Add(trackedObject.scene, newInstances);
                 }
 
-                // Instantiate AutoMeater if it is in the current scene
-                if (!trackedAutoMeater.awaitingInstantiation &&
-                    trackedAutoMeater.scene.Equals(GameManager.scene) &&
-                    trackedAutoMeater.instance == GameManager.instance)
+                // Add to parent children if has parent and we are not initTracker (It isn't already in the list)
+                if (trackedObject.parent != -1 && trackedObject.initTracker != GameManager.ID)
                 {
-                    trackedAutoMeater.awaitingInstantiation = true;
-                    AnvilManager.Run(trackedAutoMeater.Instantiate());
+                    // Note that this should never be null, we should always receive the parent data before receiving the children's
+                    TrackedObjectData parentData = objects[trackedObject.parent];
+
+                    if (parentData.children == null)
+                    {
+                        parentData.children = new List<TrackedObjectData>();
+                    }
+
+                    trackedObject.childIndex = parentData.children.Count;
+                    parentData.children.Add(trackedObject);
+                }
+
+                // Instantiate object if it is identiafiable and in the current scene/instance
+                if (!trackedObject.awaitingInstantiation &&
+                    trackedObject.IsIdentifiable() &&
+                    trackedObject.scene.Equals(GameManager.scene) &&
+                    trackedObject.instance == GameManager.instance)
+                {
+                    trackedObject.awaitingInstantiation = true;
+                    AnvilManager.Run(trackedObject.Instantiate());
                 }
             }
         }
 
-        public static void AddTrackedEncryption(TrackedEncryptionData trackedEncryption)
+        private static void IncreaseObjectsSize(int minimum)
         {
-            TrackedEncryptionData actualTrackedEncryption = null;
-            // If this is a scene init object the server rejected
-            if (trackedEncryption.trackedID == -2)
-            {
-                actualTrackedEncryption = waitingLocalEncryptions[trackedEncryption.localWaitingIndex];
-                if (actualTrackedEncryption.physicalObject != null)
-                {
-                    // Get rid of the object
-                    actualTrackedEncryption.physicalObject.skipDestroyProcessing = true;
-                    actualTrackedEncryption.trackedID = -2;
-                    actualTrackedEncryption.physicalObject.sendDestroy = false;
-                    Destroy(actualTrackedEncryption.physicalObject.gameObject);
-                }
-                return;
-            }
-
-            // Adjust Encryptions size to acommodate if necessary
-            if (encryptions.Length <= trackedEncryption.trackedID)
-            {
-                IncreaseEncryptionsSize(trackedEncryption.trackedID);
-            }
-
-            if (trackedEncryption.controller == Client.singleton.ID)
-            {
-                if (waitingLocalEncryptions.TryGetValue(trackedEncryption.localWaitingIndex, out actualTrackedEncryption))
-                {
-                    if (trackedEncryption.initTracker == GameManager.ID)
-                    {
-                        // Get our encryption.
-                        waitingLocalEncryptions.Remove(trackedEncryption.localWaitingIndex);
-
-                        // Set tis tracked ID
-                        actualTrackedEncryption.trackedID = trackedEncryption.trackedID;
-
-                        // Add the Encryption to client global list
-                        encryptions[trackedEncryption.trackedID] = actualTrackedEncryption;
-
-                        // Add to encryption tracking list
-                        if (GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> relevantInstances))
-                        {
-                            if (relevantInstances.TryGetValue(trackedEncryption.instance, out List<int> sosigList))
-                            {
-                                sosigList.Add(trackedEncryption.trackedID);
-                            }
-                            else
-                            {
-                                relevantInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
-                            }
-                        }
-                        else
-                        {
-                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                            newInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
-                            GameManager.encryptionsByInstanceByScene.Add(trackedEncryption.scene, newInstances);
-                        }
-
-                        // Send queued up orders
-                        actualTrackedEncryption.OnTrackedIDReceived();
-
-                        // Only send latest data if not destroyed
-                        if (encryptions[trackedEncryption.trackedID] != null)
-                        {
-                            encryptions[trackedEncryption.trackedID].Update(true);
-
-                            // Send the latest full data to server again in case anything happened while we were waiting for tracked ID
-                            ClientSend.TrackedEncryption(encryptions[trackedEncryption.trackedID]);
-                        }
-                    }
-                    else
-                    {
-                        TrackedEncryptionData actual = encryptions[trackedEncryption.trackedID];
-                        if (actual == null)
-                        {
-                            encryptions[trackedEncryption.trackedID] = trackedEncryption;
-                            actual = trackedEncryption;
-
-                            // Add to encryption tracking list
-                            if (GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> relevantInstances))
-                            {
-                                if (relevantInstances.TryGetValue(trackedEncryption.instance, out List<int> sosigList))
-                                {
-                                    sosigList.Add(trackedEncryption.trackedID);
-                                }
-                                else
-                                {
-                                    relevantInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
-                                }
-                            }
-                            else
-                            {
-                                Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                                newInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
-                                GameManager.encryptionsByInstanceByScene.Add(trackedEncryption.scene, newInstances);
-                            }
-
-                            trackedEncryption.localTrackedID = GameManager.encryptions.Count;
-                            GameManager.encryptions.Add(trackedEncryption);
-                        }
-
-                        if (actual.physicalObject == null && !actual.awaitingInstantiation &&
-                            !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
-                        {
-                            actual.awaitingInstantiation = true;
-                            AnvilManager.Run(actual.Instantiate());
-                        }
-                    }
-                }
-                else
-                {
-                    TrackedEncryptionData actual = encryptions[trackedEncryption.trackedID];
-                    if (actual == null)
-                    {
-                        encryptions[trackedEncryption.trackedID] = trackedEncryption;
-                        actual = trackedEncryption;
-
-                        // Add to encryption tracking list
-                        if (GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> relevantInstances))
-                        {
-                            if (relevantInstances.TryGetValue(trackedEncryption.instance, out List<int> sosigList))
-                            {
-                                sosigList.Add(trackedEncryption.trackedID);
-                            }
-                            else
-                            {
-                                relevantInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
-                            }
-                        }
-                        else
-                        {
-                            Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                            newInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
-                            GameManager.encryptionsByInstanceByScene.Add(trackedEncryption.scene, newInstances);
-                        }
-
-                        trackedEncryption.localTrackedID = GameManager.encryptions.Count;
-                        GameManager.encryptions.Add(trackedEncryption);
-                    }
-
-                    if (actual.physicalObject == null && !actual.awaitingInstantiation &&
-                        !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
-                    {
-                        actual.awaitingInstantiation = true;
-                        AnvilManager.Run(actual.Instantiate());
-                    }
-                }
-            }
-            else
-            {
-                if (encryptions[trackedEncryption.trackedID] == null)
-                {
-                    trackedEncryption.localTrackedID = -1;
-
-                    // Add the Encryption to client global list
-                    encryptions[trackedEncryption.trackedID] = trackedEncryption;
-
-                    // Add to encryption tracking list
-                    if (GameManager.encryptionsByInstanceByScene.TryGetValue(trackedEncryption.scene, out Dictionary<int, List<int>> relevantInstances))
-                    {
-                        if (relevantInstances.TryGetValue(trackedEncryption.instance, out List<int> sosigList))
-                        {
-                            sosigList.Add(trackedEncryption.trackedID);
-                        }
-                        else
-                        {
-                            relevantInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
-                        }
-                    }
-                    else
-                    {
-                        Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
-                        newInstances.Add(trackedEncryption.instance, new List<int>() { trackedEncryption.trackedID });
-                        GameManager.encryptionsByInstanceByScene.Add(trackedEncryption.scene, newInstances);
-                    }
-
-                    // Instantiate Encryption if it is in the current scene
-                    if (!trackedEncryption.awaitingInstantiation &&
-                        trackedEncryption.scene.Equals(GameManager.scene) && 
-                        trackedEncryption.instance == GameManager.instance)
-                    {
-                        trackedEncryption.awaitingInstantiation = true;
-                        AnvilManager.Run(trackedEncryption.Instantiate());
-                    }
-                }
-                else // This is an initial update encryption data
-                {
-                    TrackedEncryptionData trackedEncryptionData = encryptions[trackedEncryption.trackedID];
-
-                    trackedEncryptionData.Update(trackedEncryption, true);
-
-                    // Instantiate Encryption if it is in the current scene if not instantiated already
-                    // This could be the case if joining a scene with encryptions we already have the data for
-                    if (trackedEncryptionData.physicalObject == null)
-                    {
-                        if (!trackedEncryptionData.awaitingInstantiation && 
-                            trackedEncryption.scene.Equals(GameManager.scene) &&
-                            trackedEncryption.instance == GameManager.instance)
-                        {
-                            trackedEncryptionData.awaitingInstantiation = true;
-                            AnvilManager.Run(trackedEncryptionData.Instantiate());
-                        }
-                    }
-                }
-            }
-        }
-
-        private static void IncreaseItemsSize(int minimum)
-        {
-            int minCapacity = items.Length;
+            int minCapacity = objects.Length;
             while(minCapacity <= minimum)
             {
                 minCapacity += 100;
             }
-            TrackedItemData[] tempItems = items;
-            items = new TrackedItemData[minCapacity];
-            for (int i = 0; i < tempItems.Length; ++i)
+            TrackedObjectData[] tempObjects = objects;
+            objects = new TrackedObjectData[minCapacity];
+            for (int i = 0; i < tempObjects.Length; ++i)
             {
-                items[i] = tempItems[i];
-            }
-        }
-
-        private static void IncreaseSosigsSize(int minimum)
-        {
-            int minCapacity = sosigs.Length;
-            while(minCapacity <= minimum)
-            {
-                minCapacity += 100;
-            }
-            TrackedSosigData[] tempSosigs = sosigs;
-            sosigs = new TrackedSosigData[minCapacity];
-            for (int i = 0; i < tempSosigs.Length; ++i)
-            {
-                sosigs[i] = tempSosigs[i];
-            }
-        }
-
-        private static void IncreaseAutoMeatersSize(int minimum)
-        {
-            int minCapacity = autoMeaters.Length;
-            while(minCapacity <= minimum)
-            {
-                minCapacity += 100;
-            }
-            TrackedAutoMeaterData[] tempAutoMeaters = autoMeaters;
-            autoMeaters = new TrackedAutoMeaterData[minCapacity];
-            for (int i = 0; i < tempAutoMeaters.Length; ++i)
-            {
-                autoMeaters[i] = tempAutoMeaters[i];
-            }
-        }
-
-        private static void IncreaseEncryptionsSize(int minimum)
-        {
-            int minCapacity = encryptions.Length;
-            while(minCapacity <= minimum)
-            {
-                minCapacity += 100;
-            }
-            TrackedEncryptionData[] tempEncryptions = encryptions;
-            encryptions = new TrackedEncryptionData[minCapacity];
-            for (int i = 0; i < tempEncryptions.Length; ++i)
-            {
-                encryptions[i] = tempEncryptions[i];
+                objects[i] = tempObjects[i];
             }
         }
 
@@ -1504,13 +828,14 @@ namespace H3MP.Networking
                 ID = -1;
                 GameManager.Reset();
                 SpecificDisconnect();
+                if (OnDisconnect != null)
+                {
+                    OnDisconnect();
+                }
                 Mod.Reset();
             }
         }
 
-        // MOD: This will be called after disconnection to reset specific fields
-        //      For example, here we deal with current TNH data
-        //      If your mod has some H3MP dependent data that you want to get rid of when you disconnect from a server, do it here
         private void SpecificDisconnect()
         {
             if (Mod.currentlyPlayingTNH) // TNH_Manager was set to null and we are currently playing

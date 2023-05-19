@@ -2,7 +2,7 @@
 
 namespace H3MP.Networking
 {
-    internal class Player
+    public class Player
     {
         public int ID;
         public string username;

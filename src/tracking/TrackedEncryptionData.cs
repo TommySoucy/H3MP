@@ -1,30 +1,21 @@
 ﻿using FistVR;
 using H3MP.Networking;
-using System;
+using H3MP.Patches;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace H3MP.Tracking
 {
-    public class TrackedEncryptionData
+    public class TrackedEncryptionData : TrackedObjectData
     {
-        public bool latestUpdateSent = false; // Whether the latest update of this data was sent
-        public byte order; // The index of this Encryption's data packet used to ensure we process this data in the correct order
+        public TrackedEncryption physicalEncryption;
 
-        public int trackedID = -1;
-        public int controller;
         public TNH_EncryptionType type;
         public Vector3 previousPos;
         public Quaternion previousRot;
         public Vector3 position;
         public Quaternion rotation;
-        public TrackedEncryption physicalObject;
-        public int localTrackedID;
-        public uint localWaitingIndex = uint.MaxValue;
-        public int initTracker;
-        public bool previousActive;
-        public bool active;
 
         public bool[] tendrilsActive;
         public Vector3[] growthPoints;
@@ -33,13 +24,162 @@ namespace H3MP.Tracking
         public float[] tendrilFloats;
         public Quaternion[] tendrilsRot;
         public Vector3[] tendrilsScale;
-        public bool removeFromListOnDestroy = true;
-        public string scene;
-        public int instance;
-        public bool sceneInit;
-        public bool awaitingInstantiation;
 
-        public IEnumerator Instantiate()
+        public TrackedEncryptionData()
+        {
+
+        }
+
+        public TrackedEncryptionData(Packet packet, string typeID, int trackedID) : base(packet, typeID, trackedID)
+        {
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+
+            type = (TNH_EncryptionType)packet.ReadByte();
+            int length = packet.ReadInt();
+            if (length > 0)
+            {
+                tendrilsActive = new bool[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    tendrilsActive[i] = packet.ReadBool();
+                }
+            }
+            length = packet.ReadInt();
+            if (length > 0)
+            {
+                growthPoints = new Vector3[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    growthPoints[i] = packet.ReadVector3();
+                }
+            }
+            length = packet.ReadInt();
+            if (length > 0)
+            {
+                subTargsPos = new Vector3[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    subTargsPos[i] = packet.ReadVector3();
+                }
+            }
+            length = packet.ReadInt();
+            if (length > 0)
+            {
+                subTargsActive = new bool[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    subTargsActive[i] = packet.ReadBool();
+                }
+            }
+            length = packet.ReadInt();
+            if (length > 0)
+            {
+                tendrilFloats = new float[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    tendrilFloats[i] = packet.ReadFloat();
+                }
+            }
+            length = packet.ReadInt();
+            if (length > 0)
+            {
+                tendrilsRot = new Quaternion[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    tendrilsRot[i] = packet.ReadQuaternion();
+                }
+            }
+            length = packet.ReadInt();
+            if (length > 0)
+            {
+                tendrilsScale = new Vector3[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    tendrilsScale[i] = packet.ReadVector3();
+                }
+            }
+        }
+
+        public static bool IsOfType(Transform t)
+        {
+            return t.GetComponent<TNH_EncryptionTarget>() != null;
+        }
+
+        public static TrackedEncryption MakeTracked(Transform root, TrackedObjectData parent)
+        {
+            TrackedEncryption trackedEncryption = root.gameObject.AddComponent<TrackedEncryption>();
+            TrackedEncryptionData data = new TrackedEncryptionData();
+            trackedEncryption.data = data;
+            trackedEncryption.encryptionData = data;
+            data.physicalEncryption = trackedEncryption;
+            data.physical = trackedEncryption;
+            data.physicalEncryption.physicalEncryption = root.GetComponent<TNH_EncryptionTarget>();
+            data.physical.physical = data.physicalEncryption.physicalEncryption;
+
+            data.typeIdentifier = "TrackedEncryptionData";
+            data.active = trackedEncryption.gameObject.activeInHierarchy;
+            data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
+            data.instance = GameManager.instance;
+            data.controller = GameManager.ID;
+            data.initTracker = GameManager.ID;
+            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
+
+            GameManager.trackedEncryptionByEncryption.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
+            GameManager.trackedObjectByObject.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
+
+            data.type = data.physicalEncryption.physicalEncryption.Type;
+            data.position = trackedEncryption.transform.position;
+            data.rotation = trackedEncryption.transform.rotation;
+
+            data.tendrilsActive = new bool[data.physicalEncryption.physicalEncryption.Tendrils.Count];
+            data.growthPoints = new Vector3[data.physicalEncryption.physicalEncryption.GrowthPoints.Count];
+            data.subTargsPos = new Vector3[data.physicalEncryption.physicalEncryption.SubTargs.Count];
+            data.subTargsActive = new bool[data.physicalEncryption.physicalEncryption.SubTargs.Count];
+            data.tendrilFloats = new float[data.physicalEncryption.physicalEncryption.TendrilFloats.Count];
+            data.tendrilsRot = new Quaternion[data.physicalEncryption.physicalEncryption.Tendrils.Count];
+            data.tendrilsScale = new Vector3[data.physicalEncryption.physicalEncryption.Tendrils.Count];
+            if (data.physicalEncryption.physicalEncryption.UsesRegenerativeSubTarg)
+            {
+                for (int i = 0; i < data.physicalEncryption.physicalEncryption.Tendrils.Count; ++i)
+                {
+                    if (data.physicalEncryption.physicalEncryption.Tendrils[i].activeSelf)
+                    {
+                        data.tendrilsActive[i] = true;
+                        data.growthPoints[i] = data.physicalEncryption.physicalEncryption.GrowthPoints[i];
+                        data.subTargsPos[i] = data.physicalEncryption.physicalEncryption.SubTargs[i].transform.position;
+                        data.subTargsActive[i] = data.physicalEncryption.physicalEncryption.SubTargs[i];
+                        data.tendrilFloats[i] = data.physicalEncryption.physicalEncryption.TendrilFloats[i];
+                        data.tendrilsRot[i] = data.physicalEncryption.physicalEncryption.Tendrils[i].transform.rotation;
+                        data.tendrilsScale[i] = data.physicalEncryption.physicalEncryption.Tendrils[i].transform.localScale;
+                    }
+                }
+            }
+            else if (data.physicalEncryption.physicalEncryption.UsesRecursiveSubTarg)
+            {
+                for (int i = 0; i < data.physicalEncryption.physicalEncryption.SubTargs.Count; ++i)
+                {
+                    if (data.physicalEncryption.physicalEncryption.SubTargs[i] != null && data.physicalEncryption.physicalEncryption.SubTargs[i].activeSelf)
+                    {
+                        data.subTargsActive[i] = data.physicalEncryption.physicalEncryption.SubTargs[i].activeSelf;
+                    }
+                }
+            }
+
+            // Add to local list
+            data.localTrackedID = GameManager.objects.Count;
+            GameManager.objects.Add(data);
+
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedEncryption.awoken)
+            {
+                trackedEncryption.data.Update(true);
+            }
+
+            return trackedEncryption;
+        }
+
+        public override IEnumerator Instantiate()
         {
             GameObject prefab = null;
             if (GM.TNH_Manager == null)
@@ -67,192 +207,314 @@ namespace H3MP.Tracking
             if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at encryption instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
             GameObject encryptionInstance = GameObject.Instantiate(prefab, position, rotation);
             --Mod.skipAllInstantiates;
-            physicalObject = encryptionInstance.AddComponent<TrackedEncryption>();
+            physicalEncryption = encryptionInstance.AddComponent<TrackedEncryption>();
+            physical = physicalEncryption;
+            TNH_EncryptionTarget physicalEncryptionScript = encryptionInstance.GetComponent<TNH_EncryptionTarget>();
+            physicalEncryption.physicalEncryption = physicalEncryptionScript;
+            physical.physical = physicalEncryptionScript;
             awaitingInstantiation = false;
-            physicalObject.data = this;
+            physicalEncryption.encryptionData = this;
+            physical.data = this;
 
-            physicalObject.physicalEncryptionScript = encryptionInstance.GetComponent<TNH_EncryptionTarget>();
-
-            GameManager.trackedEncryptionByEncryption.Add(physicalObject.physicalEncryptionScript, physicalObject);
+            GameManager.trackedEncryptionByEncryption.Add(physicalEncryption.physicalEncryption, physicalEncryption);
+            GameManager.trackedObjectByObject.Add(physicalEncryption.physicalEncryption, physicalEncryption);
 
             // Register to hold
             if (GM.TNH_Manager != null)
             {
-                physicalObject.physicalEncryptionScript.SetHoldPoint(GM.TNH_Manager.m_curHoldPoint);
-                GM.TNH_Manager.m_curHoldPoint.RegisterNewTarget(physicalObject.physicalEncryptionScript);
+                physicalEncryption.physicalEncryption.SetHoldPoint(GM.TNH_Manager.m_curHoldPoint);
+                GM.TNH_Manager.m_curHoldPoint.RegisterNewTarget(physicalEncryption.physicalEncryption);
             }
 
             // Init growths
-            physicalObject.physicalEncryptionScript.m_numSubTargsLeft = 0;
-            if (physicalObject.physicalEncryptionScript.UsesRegenerativeSubTarg)
+            physicalEncryption.physicalEncryption.m_numSubTargsLeft = 0;
+            if (physicalEncryption.physicalEncryption.UsesRegenerativeSubTarg)
             {
                 for (int i = 0; i < tendrilsActive.Length; ++i)
                 {
                     if (tendrilsActive[i])
                     {
-                        physicalObject.physicalEncryptionScript.Tendrils[i].SetActive(true);
-                        physicalObject.physicalEncryptionScript.GrowthPoints[i] = growthPoints[i];
-                        physicalObject.physicalEncryptionScript.SubTargs[i].transform.position = subTargsPos[i];
-                        physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
-                        physicalObject.physicalEncryptionScript.TendrilFloats[i] = 1f;
-                        physicalObject.physicalEncryptionScript.Tendrils[i].transform.rotation = tendrilsRot[i];
-                        physicalObject.physicalEncryptionScript.Tendrils[i].transform.localScale = tendrilsScale[i];
-                        physicalObject.physicalEncryptionScript.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
-                        ++physicalObject.physicalEncryptionScript.m_numSubTargsLeft;
+                        physicalEncryption.physicalEncryption.Tendrils[i].SetActive(true);
+                        physicalEncryption.physicalEncryption.GrowthPoints[i] = growthPoints[i];
+                        physicalEncryption.physicalEncryption.SubTargs[i].transform.position = subTargsPos[i];
+                        physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
+                        physicalEncryption.physicalEncryption.TendrilFloats[i] = 1f;
+                        physicalEncryption.physicalEncryption.Tendrils[i].transform.rotation = tendrilsRot[i];
+                        physicalEncryption.physicalEncryption.Tendrils[i].transform.localScale = tendrilsScale[i];
+                        physicalEncryption.physicalEncryption.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
+                        ++physicalEncryption.physicalEncryption.m_numSubTargsLeft;
                     }
                 }
             }
-            else if (physicalObject.physicalEncryptionScript.UsesRecursiveSubTarg)
+            else if (physicalEncryption.physicalEncryption.UsesRecursiveSubTarg)
             {
                 for (int i = 0; i < subTargsActive.Length; ++i)
                 {
                     if (subTargsActive[i])
                     {
-                        physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
-                        ++physicalObject.physicalEncryptionScript.m_numSubTargsLeft;
+                        physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
+                        ++physicalEncryption.physicalEncryption.m_numSubTargsLeft;
                     }
                 }
             }
 
             // Initially set itself
-            Update(this);
+            UpdateFromData(this);
         }
 
-        public void Update(TrackedEncryptionData updatedItem, bool full = false)
+        public override void UpdateFromData(TrackedObjectData updatedObject, bool full = false)
         {
-            // Set data
-            order = updatedItem.order;
+            base.UpdateFromData(updatedObject, full);
+
+            TrackedEncryptionData updatedEncryption = updatedObject as TrackedEncryptionData;
+
+            if (full)
+            {
+                type = updatedEncryption.type;
+                tendrilsActive = updatedEncryption.tendrilsActive;
+                growthPoints = updatedEncryption.growthPoints;
+                subTargsPos = updatedEncryption.subTargsPos;
+                subTargsActive = updatedEncryption.subTargsActive;
+                tendrilFloats = updatedEncryption.tendrilFloats;
+                tendrilsRot = updatedEncryption.tendrilsRot;
+                tendrilsScale = updatedEncryption.tendrilsScale;
+            }
+
             previousPos = position;
             previousRot = rotation;
-            position = updatedItem.position;
-            rotation = updatedItem.rotation;
-            previousActive = active;
-            active = updatedItem.active;
+            position = updatedEncryption.position;
+            rotation = updatedEncryption.rotation;
 
-            // Set physically
-            if (physicalObject != null)
+            if (physicalEncryption != null)
             {
-                if (physicalObject.physicalEncryptionScript.RB != null)
+                if (physicalEncryption.physicalEncryption.RB != null)
                 {
-                    physicalObject.physicalEncryptionScript.RB.position = position;
-                    physicalObject.physicalEncryptionScript.RB.rotation = rotation;
+                    physicalEncryption.physicalEncryption.RB.position = position;
+                    physicalEncryption.physicalEncryption.RB.rotation = rotation;
                 }
                 else
                 {
-                    physicalObject.physicalEncryptionScript.transform.position = position;
-                    physicalObject.physicalEncryptionScript.transform.rotation = rotation;
-                }
-
-                if (active)
-                {
-                    if (!physicalObject.gameObject.activeSelf)
-                    {
-                        physicalObject.gameObject.SetActive(true);
-                    }
-                }
-                else
-                {
-                    if (physicalObject.gameObject.activeSelf)
-                    {
-                        physicalObject.gameObject.SetActive(false);
-                    }
-                }
-
-                if (full)
-                {
-                    physicalObject.physicalEncryptionScript.m_numSubTargsLeft = 0;
-                    if (physicalObject.physicalEncryptionScript.UsesRegenerativeSubTarg)
-                    {
-                        for (int i = 0; i < tendrilsActive.Length; ++i)
-                        {
-                            if (tendrilsActive[i])
-                            {
-                                physicalObject.physicalEncryptionScript.Tendrils[i].SetActive(true);
-                                physicalObject.physicalEncryptionScript.GrowthPoints[i] = growthPoints[i];
-                                physicalObject.physicalEncryptionScript.SubTargs[i].transform.position = subTargsPos[i];
-                                physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
-                                physicalObject.physicalEncryptionScript.TendrilFloats[i] = 1f;
-                                physicalObject.physicalEncryptionScript.Tendrils[i].transform.rotation = tendrilsRot[i];
-                                physicalObject.physicalEncryptionScript.Tendrils[i].transform.localScale = tendrilsScale[i];
-                                physicalObject.physicalEncryptionScript.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
-                                ++physicalObject.physicalEncryptionScript.m_numSubTargsLeft;
-                            }
-                        }
-                    }
-                    else if (physicalObject.physicalEncryptionScript.UsesRecursiveSubTarg)
-                    {
-                        for (int i = 0; i < subTargsActive.Length; ++i)
-                        {
-                            if (subTargsActive[i])
-                            {
-                                physicalObject.physicalEncryptionScript.SubTargs[i].SetActive(true);
-                                ++physicalObject.physicalEncryptionScript.m_numSubTargsLeft;
-                            }
-                        }
-                    }
+                    physicalEncryption.physicalEncryption.transform.position = position;
+                    physicalEncryption.physicalEncryption.transform.rotation = rotation;
                 }
             }
         }
 
-        public bool Update(bool full = false)
+        public override void UpdateFromPacket(Packet packet, bool full = false)
         {
-            if (physicalObject == null)
+            base.UpdateFromPacket(packet, full);
+
+            position = packet.ReadVector3();
+            rotation = packet.ReadQuaternion();
+
+            if (full)
+            {
+                type = (TNH_EncryptionType)packet.ReadByte();
+                int length = packet.ReadInt();
+                if (length > 0)
+                {
+                    tendrilsActive = new bool[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        tendrilsActive[i] = packet.ReadBool();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    growthPoints = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        growthPoints[i] = packet.ReadVector3();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    subTargsPos = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        subTargsPos[i] = packet.ReadVector3();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    subTargsActive = new bool[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        subTargsActive[i] = packet.ReadBool();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    tendrilFloats = new float[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        tendrilFloats[i] = packet.ReadFloat();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    tendrilsRot = new Quaternion[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        tendrilsRot[i] = packet.ReadQuaternion();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    tendrilsScale = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        tendrilsScale[i] = packet.ReadVector3();
+                    }
+                }
+            }
+
+            if (physicalEncryption != null)
+            {
+                if (physicalEncryption.physicalEncryption.RB != null)
+                {
+                    physicalEncryption.physicalEncryption.RB.position = position;
+                    physicalEncryption.physicalEncryption.RB.rotation = rotation;
+                }
+                else
+                {
+                    physicalEncryption.physicalEncryption.transform.position = position;
+                    physicalEncryption.physicalEncryption.transform.rotation = rotation;
+                }
+            }
+        }
+
+        public override bool Update(bool full = false)
+        {
+            base.Update(full);
+
+            if (physical == null)
             {
                 return false;
             }
 
             previousPos = position;
             previousRot = rotation;
-            if (physicalObject.physicalEncryptionScript.RB != null)
+            if (physicalEncryption.physicalEncryption.RB != null)
             {
-                position = physicalObject.physicalEncryptionScript.RB.position;
-                rotation = physicalObject.physicalEncryptionScript.RB.rotation;
+                position = physicalEncryption.physicalEncryption.RB.position;
+                rotation = physicalEncryption.physicalEncryption.RB.rotation;
             }
             else
             {
-                position = physicalObject.physicalEncryptionScript.transform.position;
-                rotation = physicalObject.physicalEncryptionScript.transform.rotation;
-            }
-
-            previousActive = active;
-            active = physicalObject.gameObject.activeInHierarchy;
-
-            if (full)
-            {
-                if (physicalObject.physicalEncryptionScript.UsesRegenerativeSubTarg)
-                {
-                    for (int i = 0; i < physicalObject.physicalEncryptionScript.Tendrils.Count; ++i)
-                    {
-                        if (physicalObject.physicalEncryptionScript.Tendrils[i].activeSelf)
-                        {
-                            tendrilsActive[i] = true;
-                            growthPoints[i] = physicalObject.physicalEncryptionScript.GrowthPoints[i];
-                            subTargsPos[i] = physicalObject.physicalEncryptionScript.SubTargs[i].transform.position;
-                            subTargsActive[i] = physicalObject.physicalEncryptionScript.SubTargs[i];
-                            tendrilFloats[i] = physicalObject.physicalEncryptionScript.TendrilFloats[i];
-                            tendrilsRot[i] = physicalObject.physicalEncryptionScript.Tendrils[i].transform.rotation;
-                            tendrilsScale[i] = physicalObject.physicalEncryptionScript.Tendrils[i].transform.localScale;
-                        }
-                    }
-                }
-                else if (physicalObject.physicalEncryptionScript.UsesRecursiveSubTarg)
-                {
-                    for (int i = 0; i < physicalObject.physicalEncryptionScript.SubTargs.Count; ++i)
-                    {
-                        if (physicalObject.physicalEncryptionScript.SubTargs[i] != null && physicalObject.physicalEncryptionScript.SubTargs[i].activeSelf)
-                        {
-                            subTargsActive[i] = physicalObject.physicalEncryptionScript.SubTargs[i].activeSelf;
-                        }
-                    }
-                }
+                position = physicalEncryption.physicalEncryption.transform.position;
+                rotation = physicalEncryption.physicalEncryption.transform.rotation;
             }
 
             return NeedsUpdate();
         }
 
-        public bool NeedsUpdate()
+        public override bool NeedsUpdate()
         {
-            return !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousActive != active;
+            return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+        }
+
+        public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
+        {
+            base.WriteToPacket(packet, incrementOrder, full);
+
+            packet.Write(position);
+            packet.Write(rotation);
+
+            if (full)
+            {
+                packet.Write((byte)type);
+                if (tendrilsActive == null || tendrilsActive.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(tendrilsActive.Length);
+                    for (int i = 0; i < tendrilsActive.Length; ++i)
+                    {
+                        packet.Write(tendrilsActive[i]);
+                    }
+                }
+                if (growthPoints == null || growthPoints.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(growthPoints.Length);
+                    for (int i = 0; i < growthPoints.Length; ++i)
+                    {
+                        packet.Write(growthPoints[i]);
+                    }
+                }
+                if (subTargsPos == null || subTargsPos.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(subTargsPos.Length);
+                    for (int i = 0; i < subTargsPos.Length; ++i)
+                    {
+                        packet.Write(subTargsPos[i]);
+                    }
+                }
+                if (subTargsActive == null || subTargsActive.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(subTargsActive.Length);
+                    for (int i = 0; i < subTargsActive.Length; ++i)
+                    {
+                        packet.Write(subTargsActive[i]);
+                    }
+                }
+                if (tendrilFloats == null || tendrilFloats.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(tendrilFloats.Length);
+                    for (int i = 0; i < tendrilFloats.Length; ++i)
+                    {
+                        packet.Write(tendrilFloats[i]);
+                    }
+                }
+                if (tendrilsRot == null || tendrilsRot.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(tendrilsRot.Length);
+                    for (int i = 0; i < tendrilsRot.Length; ++i)
+                    {
+                        packet.Write(tendrilsRot[i]);
+                    }
+                }
+                if (tendrilsScale == null || tendrilsScale.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(tendrilsScale.Length);
+                    for (int i = 0; i < tendrilsScale.Length; ++i)
+                    {
+                        packet.Write(tendrilsScale[i]);
+                    }
+                }
+            }
         }
 
         public static string EncryptionTypeToID(TNH_EncryptionType type)
@@ -287,38 +549,10 @@ namespace H3MP.Tracking
             }
         }
 
-        public void OnTrackedIDReceived()
+        public override void OnTrackedIDReceived()
         {
-            if (TrackedEncryption.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
-            {
-                ClientSend.DestroyEncryption(trackedID);
+            base.OnTrackedIDReceived();
 
-                // Note that if we receive a tracked ID that was previously unknown, we must be a client
-                Client.encryptions[trackedID] = null;
-
-                // Remove from encryptionsByInstanceByScene
-                GameManager.encryptionsByInstanceByScene[scene][instance].Remove(trackedID);
-
-                // Remove from local
-                RemoveFromLocal();
-            }
-            if (localTrackedID != -1 && TrackedEncryption.unknownControlTrackedIDs.ContainsKey(localWaitingIndex))
-            {
-                int newController = TrackedEncryption.unknownControlTrackedIDs[localWaitingIndex];
-
-                ClientSend.GiveEncryptionControl(trackedID, newController, null);
-
-                // Also change controller locally
-                controller = newController;
-
-                TrackedEncryption.unknownControlTrackedIDs.Remove(localWaitingIndex);
-
-                // Remove from local
-                if (GameManager.ID != controller)
-                {
-                    RemoveFromLocal();
-                }
-            }
             if (localTrackedID != -1 && TrackedEncryption.unknownInit.ContainsKey(localWaitingIndex))
             {
                 List<int> indices = TrackedEncryption.unknownInit[localWaitingIndex].Key;
@@ -374,31 +608,24 @@ namespace H3MP.Tracking
             }
         }
 
-        public void RemoveFromLocal()
+        public override void RemoveFromLocal()
         {
+            base.RemoveFromLocal();
+
             // Manage unknown lists
             if (trackedID == -1)
             {
-                TrackedEncryption.unknownControlTrackedIDs.Remove(localWaitingIndex);
-                TrackedEncryption.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
                 TrackedEncryption.unknownInit.Remove(localWaitingIndex);
                 TrackedEncryption.unknownSpawnGrowth.Remove(localWaitingIndex);
                 TrackedEncryption.unknownResetGrowth.Remove(localWaitingIndex);
                 TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
                 TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
-            }
 
-            if (localTrackedID > -1 && localTrackedID < GameManager.encryptions.Count)
-            {
-                // Remove from actual local encryptions list and update the localTrackedID of the encryption we are moving
-                GameManager.encryptions[localTrackedID] = GameManager.encryptions[GameManager.encryptions.Count - 1];
-                GameManager.encryptions[localTrackedID].localTrackedID = localTrackedID;
-                GameManager.encryptions.RemoveAt(GameManager.encryptions.Count - 1);
-                localTrackedID = -1;
-            }
-            else
-            {
-                Mod.LogWarning("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
+                // If not tracked, make sure we remove from tracked lists in case object was unawoken
+                if (physicalEncryption != null && physicalEncryption.physicalEncryption != null)
+                {
+                    GameManager.trackedEncryptionByEncryption.Remove(physicalEncryption.physicalEncryption);
+                }
             }
         }
     }

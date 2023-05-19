@@ -7,21 +7,15 @@ using UnityEngine;
 
 namespace H3MP.Tracking
 {
-    public class TrackedItem : MonoBehaviour
+    public class TrackedItem : TrackedObject
     {
+        public TrackedItemData itemData;
+        public FVRPhysicalObject physicalItem; 
+
         public static float interpolationSpeed = 12f;
         public static bool interpolated = true;
 
-        public TrackedItemData data;
-        public bool awoken;
-        public bool sendOnAwake;
-
         // Unknown tracked ID queues
-        public static Dictionary<uint, KeyValuePair<uint, bool>> unknownTrackedIDs = new Dictionary<uint, KeyValuePair<uint, bool>>();
-        public static Dictionary<uint, List<uint>> unknownParentWaitList = new Dictionary<uint, List<uint>>();
-        public static Dictionary<uint, List<int>> unknownParentTrackedIDs = new Dictionary<uint, List<int>>();
-        public static Dictionary<uint, int> unknownControlTrackedIDs = new Dictionary<uint, int>();
-        public static List<uint> unknownDestroyTrackedIDs = new List<uint>();
         public static Dictionary<uint, byte> unknownCrateHolding = new Dictionary<uint, byte>();
         public static Dictionary<SosigWeapon, KeyValuePair<TrackedSosigData, int>> unknownSosigInventoryObjects = new Dictionary<SosigWeapon, KeyValuePair<TrackedSosigData, int>>();
         public static Dictionary<uint, KeyValuePair<TrackedSosigData, int>> unknownSosigInventoryItems = new Dictionary<uint, KeyValuePair<TrackedSosigData, int>>();
@@ -52,10 +46,9 @@ namespace H3MP.Tracking
         public UpdateAttachmentInterface attachmentInterfaceUpdateFunc; // Update the attachment's attachment interface
         public UpdateAttachmentInterfaceWithGiven attachmentInterfaceUpdateGivenFunc; // Update the attachment's attachment interface
         public GetChamberIndex getChamberIndex; // Get the index of the given chamber on the item
-        public ChamberRound chamberRound; // Set round of chamber at gicen index of this item
+        public ChamberRound chamberRound; // Set round of chamber at given index of this item
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public UnityEngine.Object dataObject;
-        public FVRPhysicalObject physicalObject;
         public int attachmentInterfaceDataSize;
         private bool positionSet;
         private bool rotationSet;
@@ -79,45 +72,30 @@ namespace H3MP.Tracking
                                                                                     80,81,82,83,84,85,86,87,88,89,
                                                                                     90,91,92,93,94,95,96,97,98,99};
 
-        public bool sendDestroy = true; // To prevent feeback loops
-        public bool skipDestroyProcessing;
-        public bool skipFullDestroy;
-        public bool dontGiveControl;
+        // Customization: Event to let mods override the item type
+        public delegate void OnInitItemTypeDelegate(TrackedItem trackedItem, FVRPhysicalObject physObj, ref bool found);
+        public static event OnInitItemTypeDelegate OnInitItemType;
 
-        private void Awake()
+        public override void Awake()
         {
             InitItemType();
 
-            if(updateFunc != null && data != null)
-            {
-                updateFunc();
-            }
-
-            awoken = true;
-            if (sendOnAwake)
-            {
-                Mod.LogInfo(gameObject.name + " awoken");
-                if (ThreadManager.host)
-                {
-                    // This will also send a packet with the item to be added in the client's global item list
-                    Server.AddTrackedItem(data, 0);
-                }
-                else
-                {
-                    // Tell the server we need to add this item to global tracked items
-                    data.localWaitingIndex = Client.localItemCounter++;
-                    Client.waitingLocalItems.Add(data.localWaitingIndex, data);
-                    ClientSend.TrackedItem(data);
-                }
-            }
+            base.Awake();
         }
 
-        // MOD: This will check which type this item is so we can keep track of its data more efficiently
-        //      A mod with a custom item type which has custom data should postfix this to check if this item is of custom type
-        //      to keep a ref to the object itself and set delegate update functions
         private void InitItemType()
         {
             FVRPhysicalObject physObj = GetComponent<FVRPhysicalObject>();
+
+            bool found = false;
+            if (OnInitItemType != null)
+            {
+                OnInitItemType(this, physObj, ref found);
+            }
+            if (found)
+            {
+                return;
+            }
 
             // For each relevant type for which we may want to store additional data, we set a specific update function and the object ref
             // NOTE: We want to handle a subtype before its parent type (ex.: sblpCell before FVRFireArmMagazine) 
@@ -778,9 +756,9 @@ namespace H3MP.Tracking
 
             int necessarySize = asFA.GetChambers().Count * 4;
 
-            if (data.data == null || data.data.Length < necessarySize)
+            if (itemData.data == null || itemData.data.Length < necessarySize)
             {
-                data.data = new byte[necessarySize];
+                itemData.data = new byte[necessarySize];
                 modified = true;
             }
 
@@ -792,22 +770,22 @@ namespace H3MP.Tracking
             for (int i = 0; i < asFA.GetChambers().Count; ++i)
             {
                 int firstIndex = i * 4;
-                preval0 = data.data[firstIndex];
-                preval1 = data.data[firstIndex + 1];
-                preval2 = data.data[firstIndex + 2];
-                preval3 = data.data[firstIndex + 3];
+                preval0 = itemData.data[firstIndex];
+                preval1 = itemData.data[firstIndex + 1];
+                preval2 = itemData.data[firstIndex + 2];
+                preval3 = itemData.data[firstIndex + 3];
 
                 if (asFA.GetChambers()[i].GetRound() == null || asFA.GetChambers()[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asFA.GetChambers()[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
-                    BitConverter.GetBytes((short)asFA.GetChambers()[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)asFA.GetChambers()[i].GetRound().RoundType).CopyTo(itemData.data, firstIndex);
+                    BitConverter.GetBytes((short)asFA.GetChambers()[i].GetRound().RoundClass).CopyTo(itemData.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+                modified |= (preval0 != itemData.data[firstIndex] || preval1 != itemData.data[firstIndex + 1] || preval2 != itemData.data[firstIndex + 2] || preval3 != itemData.data[firstIndex + 3]);
             }
 
             return modified;
@@ -866,7 +844,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -933,23 +911,23 @@ namespace H3MP.Tracking
             bool modified = false;
             sblpCell asCell = dataObject as sblpCell;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[9];
+                itemData.data = new byte[9];
                 modified = true;
             }
 
             // Write loaded into firearm
-            byte preval0 = data.data[0];
-            data.data[0] = asCell.FireArm != null ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[0];
+            byte preval0 = itemData.data[0];
+            itemData.data[0] = asCell.FireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[0];
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
             // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
-            preval0 = data.data[1];
+            preval0 = itemData.data[1];
             if (asCell.FireArm == null)
             {
-                data.data[1] = (byte)255;
+                itemData.data[1] = (byte)255;
             }
             else
             {
@@ -959,28 +937,28 @@ namespace H3MP.Tracking
                     if (asCell.FireArm.SecondaryMagazineSlots[i].Magazine == asCell)
                     {
                         found = true;
-                        data.data[1] = (byte)i;
+                        itemData.data[1] = (byte)i;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[1] = (byte)255;
+                    itemData.data[1] = (byte)255;
                 }
             }
-            modified |= preval0 != data.data[1];
+            modified |= preval0 != itemData.data[1];
 
             // Write loaded into AttachableFirearm
-            preval0 = data.data[2];
-            data.data[2] = asCell.AttachableFireArm != null ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[2];
+            preval0 = itemData.data[2];
+            itemData.data[2] = asCell.AttachableFireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[2];
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
             // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
-            preval0 = data.data[3];
+            preval0 = itemData.data[3];
             if (asCell.AttachableFireArm == null)
             {
-                data.data[3] = (byte)255;
+                itemData.data[3] = (byte)255;
             }
             else
             {
@@ -989,29 +967,29 @@ namespace H3MP.Tracking
                 {
                     if (asCell.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asCell)
                     {
-                        data.data[3] = (byte)i;
+                        itemData.data[3] = (byte)i;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[3] = (byte)255;
+                    itemData.data[3] = (byte)255;
                 }
             }
-            modified |= preval0 != data.data[3];
+            modified |= preval0 != itemData.data[3];
 
             // Write fuel amount left
-            preval0 = data.data[4];
-            byte preval1 = data.data[5];
-            byte preval2 = data.data[6];
-            byte preval3 = data.data[7];
-            BitConverter.GetBytes(asCell.FuelAmountLeft).CopyTo(data.data, 4);
-            modified |= (preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6] || preval3 != data.data[7]);
+            preval0 = itemData.data[4];
+            byte preval1 = itemData.data[5];
+            byte preval2 = itemData.data[6];
+            byte preval3 = itemData.data[7];
+            BitConverter.GetBytes(asCell.FuelAmountLeft).CopyTo(itemData.data, 4);
+            modified |= (preval0 != itemData.data[4] || preval1 != itemData.data[5] || preval2 != itemData.data[6] || preval3 != itemData.data[7]);
 
             // Write PL
-            preval0 = data.data[8];
-            data.data[8] = (byte)asCell.PL;
-            modified |= preval0 != data.data[8];
+            preval0 = itemData.data[8];
+            itemData.data[8] = (byte)asCell.PL;
+            modified |= preval0 != itemData.data[8];
 
             return modified;
         }
@@ -1021,7 +999,7 @@ namespace H3MP.Tracking
             bool modified = false;
             sblpCell asCell = dataObject as sblpCell;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
             }
@@ -1034,11 +1012,11 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.items[data.parent];
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.items[data.parent];
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is FVRFireArm)
@@ -1139,11 +1117,11 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.items[data.parent];
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.items[data.parent];
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is AttachableFirearmPhysicalObject)
@@ -1290,7 +1268,7 @@ namespace H3MP.Tracking
 
             modified |= preLevel != asCell.PL;
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1300,18 +1278,18 @@ namespace H3MP.Tracking
             sblp asLG = dataObject as sblp;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[3];
+                itemData.data = new byte[3];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write m_isShotEngaged
-            data.data[0] = asLG.m_isShotEngaged ? (byte)1 : (byte)0;
+            itemData.data[0] = asLG.m_isShotEngaged ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             return modified;
         }
@@ -1321,7 +1299,7 @@ namespace H3MP.Tracking
             bool modified = false;
             sblp asLG = dataObject as sblp;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -1350,7 +1328,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1360,33 +1338,33 @@ namespace H3MP.Tracking
             Airgun asAG = dataObject as Airgun;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[3];
+                itemData.data = new byte[3];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write hammer state
-            data.data[0] = asAG.IsHammerCocked ? (byte)1 : (byte)0;
+            itemData.data[0] = asAG.IsHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
-            byte preval0 = data.data[2];
+            preval = itemData.data[1];
+            byte preval0 = itemData.data[2];
 
             // Write chambered round class
             if (asAG.Chamber.GetRound() == null || asAG.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 1);
             }
             else
             {
-                BitConverter.GetBytes((short)asAG.Chamber.GetRound().RoundClass).CopyTo(data.data, 1);
+                BitConverter.GetBytes((short)asAG.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 1);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+            modified |= (preval != itemData.data[1] || preval0 != itemData.data[2]);
 
             return modified;
         }
@@ -1396,7 +1374,7 @@ namespace H3MP.Tracking
             bool modified = false;
             Airgun asAG = dataObject as Airgun;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -1449,7 +1427,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1484,18 +1462,18 @@ namespace H3MP.Tracking
             SLAM asSLAM = (SLAM)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[1];
+                itemData.data = new byte[1];
                 modified = true;
             }
 
             // Write armed
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
-            data.data[0] = (byte)asSLAM.Mode;
+            itemData.data[0] = (byte)asSLAM.Mode;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             return modified;
         }
@@ -1505,7 +1483,7 @@ namespace H3MP.Tracking
             bool modified = false;
             SLAM asSLAM = (SLAM)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -1514,7 +1492,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set mode
                     asSLAM.SetMode((SLAM.SLAMMode)newData[0]);
@@ -1522,7 +1500,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1532,25 +1510,25 @@ namespace H3MP.Tracking
             ClaymoreMine asCM = (ClaymoreMine)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[2];
+                itemData.data = new byte[2];
                 modified = true;
             }
 
             // Write armed
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
-            data.data[0] = asCM.m_isArmed ? (byte)1 : (byte)0;
+            itemData.data[0] = asCM.m_isArmed ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             // Write planted
-            preval = data.data[1];
+            preval = itemData.data[1];
 
-            data.data[1] = asCM.m_isPlanted ? (byte)1 : (byte)0;
+            itemData.data[1] = asCM.m_isPlanted ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
             return modified;
         }
@@ -1560,7 +1538,7 @@ namespace H3MP.Tracking
             bool modified = false;
             ClaymoreMine asCM = (ClaymoreMine)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -1572,13 +1550,13 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set armed
                     asCM.m_isArmed = newData[0] == 1;
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                if (itemData.data[1] != newData[1])
                 {
                     // Set planted
                     asCM.m_isPlanted = newData[1] == 1;
@@ -1586,7 +1564,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1596,18 +1574,18 @@ namespace H3MP.Tracking
             C4 asC4 = (C4)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[1];
+                itemData.data = new byte[1];
                 modified = true;
             }
 
             // Write armed
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
-            data.data[0] = asC4.m_isArmed ? (byte)1 : (byte)0;
+            itemData.data[0] = asC4.m_isArmed ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             return modified;
         }
@@ -1617,7 +1595,7 @@ namespace H3MP.Tracking
             bool modified = false;
             C4 asC4 = (C4)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -1626,7 +1604,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set armed
                     asC4.SetArmed(newData[0] == 1);
@@ -1634,7 +1612,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1644,31 +1622,31 @@ namespace H3MP.Tracking
             FVRGrenade asGrenade = (FVRGrenade)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asGrenade.Uses2ndPin ? 3 : 2];
+                itemData.data = new byte[asGrenade.Uses2ndPin ? 3 : 2];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
-            data.data[0] = asGrenade.m_isLeverReleased ? (byte)1 : (byte)0;
+            itemData.data[0] = asGrenade.m_isLeverReleased ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
-            data.data[1] = asGrenade.Pin.m_hasBeenPulled ? (byte)1 : (byte)0;
+            itemData.data[1] = asGrenade.Pin.m_hasBeenPulled ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
             if (asGrenade.Uses2ndPin)
             {
-                preval = data.data[2];
+                preval = itemData.data[2];
 
-                data.data[2] = asGrenade.Pin2.m_hasBeenPulled ? (byte)1 : (byte)0;
+                itemData.data[2] = asGrenade.Pin2.m_hasBeenPulled ? (byte)1 : (byte)0;
 
-                modified |= preval != data.data[2];
+                modified |= preval != itemData.data[2];
             }
 
             return modified;
@@ -1679,7 +1657,7 @@ namespace H3MP.Tracking
             bool modified = false;
             FVRGrenade asGrenade = (FVRGrenade)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -1778,7 +1756,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1789,27 +1767,27 @@ namespace H3MP.Tracking
             bool modified = false;
 
             int neededSize = asPG.m_rings.Count + 1;
-            if (data.data == null || data.data.Length != neededSize)
+            if (itemData.data == null || itemData.data.Length != neededSize)
             {
-                data.data = new byte[neededSize];
+                itemData.data = new byte[neededSize];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
-            data.data[0] = asPG.IsLeverReleased() ? (byte)1 : (byte)0;
+            itemData.data[0] = asPG.IsLeverReleased() ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             if (asPG.m_rings != null)
             {
                 for (int i = 0; i < asPG.m_rings.Count; ++i)
                 {
-                    preval = data.data[i + 1];
+                    preval = itemData.data[i + 1];
 
-                    data.data[i + 1] = asPG.m_rings[i].HasPinDetached() ? (byte)1 : (byte)0;
+                    itemData.data[i + 1] = asPG.m_rings[i].HasPinDetached() ? (byte)1 : (byte)0;
 
-                    modified |= preval != data.data[i + 1];
+                    modified |= preval != itemData.data[i + 1];
                 }
             }
 
@@ -1821,7 +1799,7 @@ namespace H3MP.Tracking
             bool modified = false;
             PinnedGrenade asPG = (PinnedGrenade)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -1875,7 +1853,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1885,17 +1863,17 @@ namespace H3MP.Tracking
             Molotov asMolotov = (Molotov)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[1];
+                itemData.data = new byte[1];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
-            data.data[0] = asMolotov.Igniteable.IsOnFire() ? (byte)1 : (byte)0;
+            itemData.data[0] = asMolotov.Igniteable.IsOnFire() ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             return modified;
         }
@@ -1905,7 +1883,7 @@ namespace H3MP.Tracking
             bool modified = false;
             Molotov asMolotov = (Molotov)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -1925,7 +1903,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -1935,29 +1913,29 @@ namespace H3MP.Tracking
             MF2_RL asMF2_RL = (MF2_RL)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[4];
+                itemData.data = new byte[4];
                 modified = true;
             }
 
-            byte preval = data.data[0];
-            byte preval0 = data.data[1];
-            byte preval1 = data.data[2];
-            byte preval2 = data.data[3];
+            byte preval = itemData.data[0];
+            byte preval0 = itemData.data[1];
+            byte preval1 = itemData.data[2];
+            byte preval2 = itemData.data[3];
 
             // Write chambered round class
             if (asMF2_RL.Chamber.GetRound() == null || asMF2_RL.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asMF2_RL.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
-                BitConverter.GetBytes((short)asMF2_RL.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asMF2_RL.Chamber.GetRound().RoundType).CopyTo(itemData.data, 0);
+                BitConverter.GetBytes((short)asMF2_RL.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 2);
             }
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1] || preval1 != data.data[2] || preval2 != data.data[3]);
+            modified |= (preval != itemData.data[0] || preval0 != itemData.data[1] || preval1 != itemData.data[2] || preval2 != itemData.data[3]);
 
             return modified;
         }
@@ -2005,7 +1983,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -2033,18 +2011,18 @@ namespace H3MP.Tracking
             StingerLauncher asSL = dataObject as StingerLauncher;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[1];
+                itemData.data = new byte[1];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
+            byte preval0 = itemData.data[0];
 
             // Write has missile
-            data.data[0] = asSL.m_hasMissile ? (byte)1 : (byte)0;
+            itemData.data[0] = asSL.m_hasMissile ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[0];
+            modified |= preval0 != itemData.data[0];
 
             return modified;
         }
@@ -2054,7 +2032,7 @@ namespace H3MP.Tracking
             bool modified = false;
             StingerLauncher asSL = dataObject as StingerLauncher;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -2063,7 +2041,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set has missile
                     asSL.m_hasMissile = newData[0] == 1;
@@ -2071,7 +2049,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -2083,25 +2061,25 @@ namespace H3MP.Tracking
 
             int necessarySize = asRevolver.Cylinder.NumChambers * 4 + 2;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asRevolver.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
+                itemData.data = new byte[asRevolver.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
+            byte preval0 = itemData.data[0];
 
             // Write cur chamber
-            data.data[0] = (byte)asRevolver.CurChamber;
+            itemData.data[0] = (byte)asRevolver.CurChamber;
 
-            modified |= preval0 != data.data[0];
+            modified |= preval0 != itemData.data[0];
 
-            preval0 = data.data[1];
+            preval0 = itemData.data[1];
 
             // Write hammer cocked
-            data.data[1] = asRevolver.m_isHammerCocked ? (byte)1 : (byte)0;
+            itemData.data[1] = asRevolver.m_isHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[1];
+            modified |= preval0 != itemData.data[1];
 
             // Write chambered rounds
             byte preval1;
@@ -2110,44 +2088,44 @@ namespace H3MP.Tracking
             for (int i = 0; i < asRevolver.Cylinder.Chambers.Length; ++i)
             {
                 int firstIndex = i * 4 + 2;
-                preval0 = data.data[firstIndex];
-                preval1 = data.data[firstIndex + 1];
-                preval2 = data.data[firstIndex + 2];
-                preval3 = data.data[firstIndex + 3];
+                preval0 = itemData.data[firstIndex];
+                preval1 = itemData.data[firstIndex + 1];
+                preval2 = itemData.data[firstIndex + 2];
+                preval3 = itemData.data[firstIndex + 3];
 
                 if (asRevolver.Cylinder.Chambers[i].GetRound() == null || asRevolver.Cylinder.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asRevolver.Cylinder.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
-                    BitConverter.GetBytes((short)asRevolver.Cylinder.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)asRevolver.Cylinder.Chambers[i].GetRound().RoundType).CopyTo(itemData.data, firstIndex);
+                    BitConverter.GetBytes((short)asRevolver.Cylinder.Chambers[i].GetRound().RoundClass).CopyTo(itemData.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+                modified |= (preval0 != itemData.data[firstIndex] || preval1 != itemData.data[firstIndex + 1] || preval2 != itemData.data[firstIndex + 2] || preval3 != itemData.data[firstIndex + 3]);
             }
 
             if (asRevolver.GetIntegratedAttachableFirearm() != null)
             {
-                preval0 = data.data[necessarySize];
-                preval1 = data.data[necessarySize + 1];
-                preval2 = data.data[necessarySize + 2];
-                preval3 = data.data[necessarySize + 3];
+                preval0 = itemData.data[necessarySize];
+                preval1 = itemData.data[necessarySize + 1];
+                preval2 = itemData.data[necessarySize + 2];
+                preval3 = itemData.data[necessarySize + 3];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, necessarySize + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, necessarySize + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, necessarySize);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, necessarySize + 2);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, necessarySize);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, necessarySize + 2);
                 }
 
-                modified |= (preval0 != data.data[necessarySize] || preval1 != data.data[necessarySize + 1] || preval2 != data.data[necessarySize + 2] || preval3 != data.data[necessarySize + 3]);
+                modified |= (preval0 != itemData.data[necessarySize] || preval1 != itemData.data[necessarySize + 1] || preval2 != itemData.data[necessarySize + 2] || preval3 != itemData.data[necessarySize + 3]);
             }
 
             return modified;
@@ -2158,7 +2136,7 @@ namespace H3MP.Tracking
             bool modified = false;
             SingleActionRevolver asRevolver = dataObject as SingleActionRevolver;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -2170,13 +2148,13 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set cur chamber
                     asRevolver.CurChamber = newData[0];
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                if (itemData.data[1] != newData[1])
                 {
                     // Set hammer cocked
                     asRevolver.m_isHammerCocked = newData[1] == 1;
@@ -2268,7 +2246,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -2320,36 +2298,36 @@ namespace H3MP.Tracking
             SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[5];
+                itemData.data = new byte[5];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write mode
-            data.data[0] = (byte)(int)asSimpleLauncher.Mode;
+            itemData.data[0] = (byte)(int)asSimpleLauncher.Mode;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
-            byte preval0 = data.data[2];
-            byte preval1 = data.data[3];
-            byte preval2 = data.data[4];
+            preval = itemData.data[1];
+            byte preval0 = itemData.data[2];
+            byte preval1 = itemData.data[3];
+            byte preval2 = itemData.data[4];
 
             // Write chambered round class
             if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
-                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundType).CopyTo(itemData.data, 1);
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2] || preval1 != data.data[3] || preval2 != data.data[4]);
+            modified |= (preval != itemData.data[1] || preval0 != itemData.data[2] || preval1 != itemData.data[3] || preval2 != itemData.data[4]);
 
             return modified;
         }
@@ -2359,7 +2337,7 @@ namespace H3MP.Tracking
             bool modified = false;
             SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -2373,7 +2351,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set mode
                     asSimpleLauncher.Mode = (SimpleLauncher2.fMode)newData[0];
@@ -2424,7 +2402,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -2462,29 +2440,29 @@ namespace H3MP.Tracking
             SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[4];
+                itemData.data = new byte[4];
                 modified = true;
             }
 
-            byte preval = data.data[0];
-            byte preval0 = data.data[1];
-            byte preval1 = data.data[2];
-            byte preval2 = data.data[3];
+            byte preval = itemData.data[0];
+            byte preval0 = itemData.data[1];
+            byte preval1 = itemData.data[2];
+            byte preval2 = itemData.data[3];
 
             // Write chambered round class
             if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
-                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundType).CopyTo(itemData.data, 0);
+                BitConverter.GetBytes((short)asSimpleLauncher.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 2);
             }
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1] || preval1 != data.data[2] || preval2 != data.data[3]);
+            modified |= (preval != itemData.data[0] || preval0 != itemData.data[1] || preval1 != itemData.data[2] || preval2 != itemData.data[3]);
 
             return modified;
         }
@@ -2532,7 +2510,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -2560,36 +2538,36 @@ namespace H3MP.Tracking
             RPG7 asRPG7 = (RPG7)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[5];
+                itemData.data = new byte[5];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write hammer state
-            data.data[0] = asRPG7.m_isHammerCocked ? (byte)1 : (byte)0;
+            itemData.data[0] = asRPG7.m_isHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
-            byte preval0 = data.data[2];
-            byte preval1 = data.data[3];
-            byte preval2 = data.data[4];
+            preval = itemData.data[1];
+            byte preval0 = itemData.data[2];
+            byte preval1 = itemData.data[3];
+            byte preval2 = itemData.data[4];
 
             // Write chambered round class
             if (asRPG7.Chamber.GetRound() == null || asRPG7.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asRPG7.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
-                BitConverter.GetBytes((short)asRPG7.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asRPG7.Chamber.GetRound().RoundType).CopyTo(itemData.data, 1);
+                BitConverter.GetBytes((short)asRPG7.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2] || preval1 != data.data[3] || preval2 != data.data[4]);
+            modified |= (preval != itemData.data[1] || preval0 != itemData.data[2] || preval1 != itemData.data[3] || preval2 != itemData.data[4]);
 
             return modified;
         }
@@ -2599,7 +2577,7 @@ namespace H3MP.Tracking
             bool modified = false;
             RPG7 asRPG7 = (RPG7)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -2608,7 +2586,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set hammer state
                     asRPG7.m_isHammerCocked = newData[0] == 1;
@@ -2654,7 +2632,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -2683,36 +2661,36 @@ namespace H3MP.Tracking
             RollingBlock asRB = (RollingBlock)dataObject;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[5];
+                itemData.data = new byte[5];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write block state
-            data.data[0] = (byte)asRB.m_state;
+            itemData.data[0] = (byte)asRB.m_state;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
-            byte preval0 = data.data[2];
-            byte preval1 = data.data[3];
-            byte preval2 = data.data[4];
+            preval = itemData.data[1];
+            byte preval0 = itemData.data[2];
+            byte preval1 = itemData.data[3];
+            byte preval2 = itemData.data[4];
 
             // Write chambered round class
             if (asRB.Chamber.GetRound() == null || asRB.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asRB.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
-                BitConverter.GetBytes((short)asRB.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asRB.Chamber.GetRound().RoundType).CopyTo(itemData.data, 1);
+                BitConverter.GetBytes((short)asRB.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2] || preval != data.data[3] || preval0 != data.data[4]);
+            modified |= (preval != itemData.data[1] || preval0 != itemData.data[2] || preval != itemData.data[3] || preval0 != itemData.data[4]);
 
             return modified;
         }
@@ -2722,7 +2700,7 @@ namespace H3MP.Tracking
             bool modified = false;
             RollingBlock asRB = (RollingBlock)dataObject;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -2731,7 +2709,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set block state
                     asRB.m_state = (RollingBlock.RollingBlockState)newData[0];
@@ -2777,7 +2755,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -2806,29 +2784,29 @@ namespace H3MP.Tracking
             RGM40 asRGM40 = dataObject as RGM40;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[4];
+                itemData.data = new byte[4];
                 modified = true;
             }
 
-            byte preval = data.data[0];
-            byte preval0 = data.data[1];
-            byte preval1 = data.data[2];
-            byte preval2 = data.data[3];
+            byte preval = itemData.data[0];
+            byte preval0 = itemData.data[1];
+            byte preval1 = itemData.data[2];
+            byte preval2 = itemData.data[3];
 
             // Write chambered round class
             if (asRGM40.Chamber.GetRound() == null || asRGM40.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asRGM40.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
-                BitConverter.GetBytes((short)asRGM40.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asRGM40.Chamber.GetRound().RoundType).CopyTo(itemData.data, 0);
+                BitConverter.GetBytes((short)asRGM40.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 2);
             }
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1] || preval1 != data.data[2] || preval2 != data.data[3]);
+            modified |= (preval != itemData.data[0] || preval0 != itemData.data[1] || preval1 != itemData.data[2] || preval2 != itemData.data[3]);
 
             return modified;
         }
@@ -2876,7 +2854,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -2906,71 +2884,71 @@ namespace H3MP.Tracking
             RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asRML.m_missile == null ? 3 : 35];
+                itemData.data = new byte[asRML.m_missile == null ? 3 : 35];
                 modified = true;
             }
             else
             {
                 if (asRML.m_missile == null)
                 {
-                    if (data.data.Length == 35)
+                    if (itemData.data.Length == 35)
                     {
-                        data.data = new byte[3];
+                        itemData.data = new byte[3];
                         modified = true;
                     }
                 }
                 else
                 {
-                    if (data.data.Length == 3)
+                    if (itemData.data.Length == 3)
                     {
-                        data.data = new byte[35];
+                        itemData.data = new byte[35];
                         modified = true;
                     }
                 }
             }
 
-            byte preval0 = data.data[0];
+            byte preval0 = itemData.data[0];
 
             // Write poweredUp
-            data.data[0] = asRML.IsPoweredUp ? (byte)1 : (byte)0;
+            itemData.data[0] = asRML.IsPoweredUp ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[0];
+            modified |= preval0 != itemData.data[0];
 
-            preval0 = data.data[1];
+            preval0 = itemData.data[1];
 
             // Write chamber full
-            data.data[1] = asRML.Chamber.IsFull ? (byte)1 : (byte)0;
+            itemData.data[1] = asRML.Chamber.IsFull ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[1];
+            modified |= preval0 != itemData.data[1];
 
-            preval0 = data.data[2];
+            preval0 = itemData.data[2];
 
             // Write has missile
-            data.data[2] = asRML.m_missile == null ? (byte)0 : (byte)1;
+            itemData.data[2] = asRML.m_missile == null ? (byte)0 : (byte)1;
 
-            modified |= preval0 != data.data[2];
+            modified |= preval0 != itemData.data[2];
 
             if (asRML.m_missile != null)
             {
                 modified = true;
 
                 // Write missile pos
-                BitConverter.GetBytes(asRML.m_missile.transform.position.x).CopyTo(data.data, 3);
-                BitConverter.GetBytes(asRML.m_missile.transform.position.y).CopyTo(data.data, 7);
-                BitConverter.GetBytes(asRML.m_missile.transform.position.z).CopyTo(data.data, 11);
+                BitConverter.GetBytes(asRML.m_missile.transform.position.x).CopyTo(itemData.data, 3);
+                BitConverter.GetBytes(asRML.m_missile.transform.position.y).CopyTo(itemData.data, 7);
+                BitConverter.GetBytes(asRML.m_missile.transform.position.z).CopyTo(itemData.data, 11);
 
                 // Write missile rot
-                BitConverter.GetBytes(asRML.m_missile.transform.rotation.eulerAngles.x).CopyTo(data.data, 15);
-                BitConverter.GetBytes(asRML.m_missile.transform.rotation.eulerAngles.y).CopyTo(data.data, 19);
-                BitConverter.GetBytes(asRML.m_missile.transform.rotation.eulerAngles.z).CopyTo(data.data, 23);
+                BitConverter.GetBytes(asRML.m_missile.transform.rotation.eulerAngles.x).CopyTo(itemData.data, 15);
+                BitConverter.GetBytes(asRML.m_missile.transform.rotation.eulerAngles.y).CopyTo(itemData.data, 19);
+                BitConverter.GetBytes(asRML.m_missile.transform.rotation.eulerAngles.z).CopyTo(itemData.data, 23);
 
                 // Write target speed
-                BitConverter.GetBytes(asRML.m_missile.speed).CopyTo(data.data, 27);
+                BitConverter.GetBytes(asRML.m_missile.speed).CopyTo(itemData.data, 27);
 
                 // Write speed
-                BitConverter.GetBytes(asRML.m_missile.tarSpeed).CopyTo(data.data, 31);
+                BitConverter.GetBytes(asRML.m_missile.tarSpeed).CopyTo(itemData.data, 31);
             }
 
             return modified;
@@ -3030,7 +3008,7 @@ namespace H3MP.Tracking
                 //}
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -3059,28 +3037,28 @@ namespace H3MP.Tracking
             PotatoGun asPG = dataObject as PotatoGun;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[5];
+                itemData.data = new byte[5];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
-            byte preval1 = data.data[1];
-            byte preval2 = data.data[2];
-            byte preval3 = data.data[3];
+            byte preval0 = itemData.data[0];
+            byte preval1 = itemData.data[1];
+            byte preval2 = itemData.data[2];
+            byte preval3 = itemData.data[3];
 
             // Write m_chamberGas
-            BitConverter.GetBytes(asPG.m_chamberGas).CopyTo(data.data, 0);
+            BitConverter.GetBytes(asPG.m_chamberGas).CopyTo(itemData.data, 0);
 
-            modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3]);
 
-            preval0 = data.data[4];
+            preval0 = itemData.data[4];
 
             // Write chamber full
-            data.data[4] = asPG.Chamber.IsFull ? (byte)1 : (byte)0;
+            itemData.data[4] = asPG.Chamber.IsFull ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[4];
+            modified |= preval0 != itemData.data[4];
 
             return modified;
         }
@@ -3090,7 +3068,7 @@ namespace H3MP.Tracking
             bool modified = false;
             PotatoGun asPG = dataObject as PotatoGun;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -3099,7 +3077,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0] ||data.data[1] != newData[1] ||data.data[2] != newData[2] ||data.data[3] != newData[3])
+                if (itemData.data[0] != newData[0] ||itemData.data[1] != newData[1] ||itemData.data[2] != newData[2] ||itemData.data[3] != newData[3])
                 {
                     // Set m_chamberGas
                     asPG.m_chamberGas = BitConverter.ToSingle(newData, 0);
@@ -3128,7 +3106,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -3157,31 +3135,31 @@ namespace H3MP.Tracking
             Minigun asMinigun = dataObject as Minigun;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[8];
+                itemData.data = new byte[8];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
-            byte preval1 = data.data[1];
-            byte preval2 = data.data[2];
-            byte preval3 = data.data[3];
+            byte preval0 = itemData.data[0];
+            byte preval1 = itemData.data[1];
+            byte preval2 = itemData.data[2];
+            byte preval3 = itemData.data[3];
 
             // Write heat
-            BitConverter.GetBytes(asMinigun.m_heat).CopyTo(data.data, 0);
+            BitConverter.GetBytes(asMinigun.m_heat).CopyTo(itemData.data, 0);
 
-            modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3]);
 
-            preval0 = data.data[4];
-            preval1 = data.data[5];
-            preval2 = data.data[6];
-            preval3 = data.data[7];
+            preval0 = itemData.data[4];
+            preval1 = itemData.data[5];
+            preval2 = itemData.data[6];
+            preval3 = itemData.data[7];
 
             // Write heat
-            BitConverter.GetBytes(asMinigun.m_motorRate).CopyTo(data.data, 4);
+            BitConverter.GetBytes(asMinigun.m_motorRate).CopyTo(itemData.data, 4);
 
-            modified |= (preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6] || preval3 != data.data[7]);
+            modified |= (preval0 != itemData.data[4] || preval1 != itemData.data[5] || preval2 != itemData.data[6] || preval3 != itemData.data[7]);
 
             return modified;
         }
@@ -3191,7 +3169,7 @@ namespace H3MP.Tracking
             bool modified = false;
             Minigun asMinigun = dataObject as Minigun;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -3203,13 +3181,13 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0] ||data.data[1] != newData[1] ||data.data[2] != newData[2] ||data.data[3] != newData[3])
+                if (itemData.data[0] != newData[0] ||itemData.data[1] != newData[1] ||itemData.data[2] != newData[2] ||itemData.data[3] != newData[3])
                 {
                     // Set heat
                     asMinigun.m_heat = BitConverter.ToSingle(newData, 0);
                     modified = true;
                 }
-                if (data.data[4] != newData[4] || data.data[5] != newData[5] || data.data[6] != newData[6] || data.data[7] != newData[7])
+                if (itemData.data[4] != newData[4] || itemData.data[5] != newData[5] || itemData.data[6] != newData[6] || itemData.data[7] != newData[7])
                 {
                     // Set motorrate
                     asMinigun.m_motorRate = BitConverter.ToSingle(newData, 4);
@@ -3217,7 +3195,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -3227,39 +3205,39 @@ namespace H3MP.Tracking
             M72 asM72 = dataObject as M72;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[4];
+                itemData.data = new byte[4];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write safety
-            data.data[0] = asM72.m_isSafetyEngaged ? (byte)1 : (byte)0;
+            itemData.data[0] = asM72.m_isSafetyEngaged ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write m_isCapOpen
-            data.data[1] = asM72.CanTubeBeGrabbed()? (byte)1 : (byte)0;
+            itemData.data[1] = asM72.CanTubeBeGrabbed()? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
+            preval = itemData.data[2];
 
             // Write tube state
-            data.data[2] = (byte)asM72.TState;
+            itemData.data[2] = (byte)asM72.TState;
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
-            preval = data.data[3];
+            preval = itemData.data[3];
 
             // Write chamber full
-            data.data[3] = asM72.Chamber.IsFull ? (byte)1 : (byte)0;
+            itemData.data[3] = asM72.Chamber.IsFull ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[3];
+            modified |= preval != itemData.data[3];
 
             return modified;
         }
@@ -3269,7 +3247,7 @@ namespace H3MP.Tracking
             bool modified = false;
             M72 asM72 = dataObject as M72;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -3349,7 +3327,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -3378,64 +3356,64 @@ namespace H3MP.Tracking
             OpenBoltReceiver asOBR = dataObject as OpenBoltReceiver;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asOBR.GetIntegratedAttachableFirearm() == null ? 6 : 10];
+                itemData.data = new byte[asOBR.GetIntegratedAttachableFirearm() == null ? 6 : 10];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)asOBR.FireSelectorModeIndex;
+            itemData.data[0] = (byte)asOBR.FireSelectorModeIndex;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write camBurst
-            data.data[1] = (byte)asOBR.m_CamBurst;
+            itemData.data[1] = (byte)asOBR.m_CamBurst;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
-            byte preval0 = data.data[3];
-            byte preval1 = data.data[4];
-            byte preval2 = data.data[5];
+            preval = itemData.data[2];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
 
             // Write chambered round class
             if (asOBR.Chamber.GetRound() == null || asOBR.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asOBR.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
-                BitConverter.GetBytes((short)asOBR.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asOBR.Chamber.GetRound().RoundType).CopyTo(itemData.data, 2);
+                BitConverter.GetBytes((short)asOBR.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+            modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
 
             if (asOBR.GetIntegratedAttachableFirearm() != null)
             {
-                preval = data.data[6];
-                preval0 = data.data[7];
-                preval1 = data.data[8];
-                preval2 = data.data[9];
+                preval = itemData.data[6];
+                preval0 = itemData.data[7];
+                preval1 = itemData.data[8];
+                preval2 = itemData.data[9];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 8);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 8);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 6);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 8);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, 6);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, 8);
                 }
 
-                modified |= (preval != data.data[6] || preval0 != data.data[7] || preval1 != data.data[8] || preval2 != data.data[9]);
+                modified |= (preval != itemData.data[6] || preval0 != itemData.data[7] || preval1 != itemData.data[8] || preval2 != itemData.data[9]);
             }
 
             return modified;
@@ -3446,7 +3424,7 @@ namespace H3MP.Tracking
             bool modified = false;
             OpenBoltReceiver asOBR = dataObject as OpenBoltReceiver;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -3458,13 +3436,13 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set fire select mode
                     asOBR.m_fireSelectorMode = newData[0];
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                if (itemData.data[1] != newData[1])
                 {
                     // Set camBurst
                     asOBR.m_CamBurst = newData[1];
@@ -3552,7 +3530,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -3609,43 +3587,43 @@ namespace H3MP.Tracking
             HCB asHCB = dataObject as HCB;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[6];
+                itemData.data = new byte[6];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
+            byte preval0 = itemData.data[0];
 
             // Write m_sledState
-            data.data[0] = (byte)asHCB.m_sledState;
+            itemData.data[0] = (byte)asHCB.m_sledState;
 
-            modified |= preval0 != data.data[0];
+            modified |= preval0 != itemData.data[0];
 
-            preval0 = data.data[1];
+            preval0 = itemData.data[1];
 
             // Write chamber accessible
-            data.data[1] = asHCB.Chamber.IsAccessible ? (byte)1 : (byte)0;
+            itemData.data[1] = asHCB.Chamber.IsAccessible ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[1];
+            modified |= preval0 != itemData.data[1];
 
             // Write chambered rounds
-            preval0 = data.data[2];
-            byte preval1 = data.data[3];
-            byte preval2 = data.data[4];
-            byte preval3 = data.data[5];
+            preval0 = itemData.data[2];
+            byte preval1 = itemData.data[3];
+            byte preval2 = itemData.data[4];
+            byte preval3 = itemData.data[5];
 
             if (asHCB.Chamber.GetRound() == null || asHCB.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asHCB.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
-                BitConverter.GetBytes((short)asHCB.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asHCB.Chamber.GetRound().RoundType).CopyTo(itemData.data, 2);
+                BitConverter.GetBytes((short)asHCB.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 4);
             }
 
-            modified |= (preval0 != data.data[2] || preval1 != data.data[3] || preval2 != data.data[4] || preval3 != data.data[5]);
+            modified |= (preval0 != itemData.data[2] || preval1 != itemData.data[3] || preval2 != itemData.data[4] || preval3 != itemData.data[5]);
 
             return modified;
         }
@@ -3655,7 +3633,7 @@ namespace H3MP.Tracking
             bool modified = false;
             HCB asHCB = dataObject as HCB;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -3667,13 +3645,13 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set m_sledState
                     asHCB.m_sledState = (HCB.SledState)newData[0];
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                if (itemData.data[1] != newData[1])
                 {
                     // Set chamber accessible
                     asHCB.Chamber.IsAccessible = newData[1] == 1;
@@ -3719,7 +3697,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -3731,25 +3709,25 @@ namespace H3MP.Tracking
 
             int necessarySize = asGG.Chambers.Length * 4 + 2;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[necessarySize];
+                itemData.data = new byte[necessarySize];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
+            byte preval0 = itemData.data[0];
 
             // Write cur chamber
-            data.data[0] = (byte)asGG.m_curChamber;
+            itemData.data[0] = (byte)asGG.m_curChamber;
 
-            modified |= preval0 != data.data[0];
+            modified |= preval0 != itemData.data[0];
 
-            preval0 = data.data[1];
+            preval0 = itemData.data[1];
 
             // Write mag loaded
-            data.data[1] = asGG.IsMagLoaded ? (byte)1 : (byte)0;
+            itemData.data[1] = asGG.IsMagLoaded ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[1];
+            modified |= preval0 != itemData.data[1];
 
             // Write chambered rounds
             byte preval1;
@@ -3758,22 +3736,22 @@ namespace H3MP.Tracking
             for (int i = 0; i < asGG.Chambers.Length; ++i)
             {
                 int firstIndex = i * 4 + 2;
-                preval0 = data.data[firstIndex];
-                preval1 = data.data[firstIndex + 1];
-                preval2 = data.data[firstIndex + 2];
-                preval3 = data.data[firstIndex + 3];
+                preval0 = itemData.data[firstIndex];
+                preval1 = itemData.data[firstIndex + 1];
+                preval2 = itemData.data[firstIndex + 2];
+                preval3 = itemData.data[firstIndex + 3];
 
                 if (asGG.Chambers[i].GetRound() == null || asGG.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asGG.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
-                    BitConverter.GetBytes((short)asGG.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)asGG.Chambers[i].GetRound().RoundType).CopyTo(itemData.data, firstIndex);
+                    BitConverter.GetBytes((short)asGG.Chambers[i].GetRound().RoundClass).CopyTo(itemData.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+                modified |= (preval0 != itemData.data[firstIndex] || preval1 != itemData.data[firstIndex + 1] || preval2 != itemData.data[firstIndex + 2] || preval3 != itemData.data[firstIndex + 3]);
             }
 
             return modified;
@@ -3784,7 +3762,7 @@ namespace H3MP.Tracking
             bool modified = false;
             GrappleGun asGG = dataObject as GrappleGun;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -3810,7 +3788,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set cur chamber
                     asGG.m_curChamber = newData[0];
@@ -3878,7 +3856,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -3910,42 +3888,42 @@ namespace H3MP.Tracking
             
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[7];
+                itemData.data = new byte[7];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write battery switch state
-            data.data[0] = asGBeamer.m_isBatterySwitchedOn ? (byte)1 : (byte)0;
+            itemData.data[0] = asGBeamer.m_isBatterySwitchedOn ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write capacitor switch state
-            data.data[1] = asGBeamer.m_isCapacitorSwitchedOn ? (byte)1 : (byte)0;
+            itemData.data[1] = asGBeamer.m_isCapacitorSwitchedOn ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
+            preval = itemData.data[2];
 
             // Write motor switch state
-            data.data[2] = asGBeamer.m_isMotorSwitchedOn ? (byte)1 : (byte)0;
+            itemData.data[2] = asGBeamer.m_isMotorSwitchedOn ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
-            byte preval0 = data.data[3];
-            byte preval1 = data.data[4];
-            byte preval2 = data.data[5];
-            byte preval3 = data.data[6];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
+            byte preval3 = itemData.data[6];
 
             // Write cap charge
-            BitConverter.GetBytes(asGBeamer.m_capacitorCharge).CopyTo(data.data, 3);
+            BitConverter.GetBytes(asGBeamer.m_capacitorCharge).CopyTo(itemData.data, 3);
 
-            modified |= (preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5] || preval3 != data.data[6]);
+            modified |= (preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5] || preval3 != itemData.data[6]);
 
             return modified;
         }
@@ -3986,54 +3964,54 @@ namespace H3MP.Tracking
                 modified = true;
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
 
         private bool UpdateFlintlockWeapon()
         {
-            FlintlockWeapon asFLW = physicalObject as FlintlockWeapon;
+            FlintlockWeapon asFLW = physicalItem as FlintlockWeapon;
             
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[6];
+                itemData.data = new byte[6];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write hammer state
-            data.data[0] = (byte)asFLW.HammerState;
+            itemData.data[0] = (byte)asFLW.HammerState;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write has flint
-            data.data[1] = asFLW.HasFlint() ? (byte)1 : (byte)0;
+            itemData.data[1] = asFLW.HasFlint() ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
+            preval = itemData.data[2];
 
             // Write flint state
-            data.data[2] = (byte)asFLW.FState;
+            itemData.data[2] = (byte)asFLW.FState;
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
-            byte preval0 = data.data[3];
-            byte preval1 = data.data[4];
-            byte preval2 = data.data[5];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
 
             // Write flint uses
-            data.data[3] = (byte)(int)asFLW.m_flintUses.x;
-            data.data[4] = (byte)(int)asFLW.m_flintUses.y;
-            data.data[5] = (byte)(int)asFLW.m_flintUses.z;
+            itemData.data[3] = (byte)(int)asFLW.m_flintUses.x;
+            itemData.data[4] = (byte)(int)asFLW.m_flintUses.y;
+            itemData.data[5] = (byte)(int)asFLW.m_flintUses.z;
 
-            modified |= (preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+            modified |= (preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
 
             return modified;
         }
@@ -4041,7 +4019,7 @@ namespace H3MP.Tracking
         private bool UpdateGivenFlintlockWeapon(byte[] newData)
         {
             bool modified = false;
-            FlintlockWeapon asFLW = physicalObject as FlintlockWeapon;
+            FlintlockWeapon asFLW = physicalItem as FlintlockWeapon;
 
             // Set hammer state
             FlintlockWeapon.HState preVal = asFLW.HammerState;
@@ -4075,7 +4053,7 @@ namespace H3MP.Tracking
 
             modified |= !preUses.Equals(uses);
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -4085,34 +4063,34 @@ namespace H3MP.Tracking
             Flaregun asFG = dataObject as Flaregun;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[5];
+                itemData.data = new byte[5];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write hammer state
-            data.data[0] = asFG.m_isHammerCocked ? (byte)1: (byte)0;
+            itemData.data[0] = asFG.m_isHammerCocked ? (byte)1: (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
-            byte preval0 = data.data[2];
+            preval = itemData.data[1];
+            byte preval0 = itemData.data[2];
 
             // Write chambered round class
             if (asFG.Chamber.GetRound() == null || asFG.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asFG.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
-                BitConverter.GetBytes((short)asFG.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asFG.Chamber.GetRound().RoundType).CopyTo(itemData.data, 1);
+                BitConverter.GetBytes((short)asFG.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2]);
+            modified |= (preval != itemData.data[1] || preval0 != itemData.data[2]);
 
             return modified;
         }
@@ -4167,7 +4145,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -4195,18 +4173,18 @@ namespace H3MP.Tracking
             FlameThrower asFT = dataObject as FlameThrower;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[1];
+                itemData.data = new byte[1];
                 modified = true;
             }
 
             // Write firing
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
-            data.data[0] = asFT.m_isFiring ? (byte)1 : (byte)0;
+            itemData.data[0] = asFT.m_isFiring ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             return modified;
         }
@@ -4250,7 +4228,7 @@ namespace H3MP.Tracking
                 modified = true;
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -4260,57 +4238,57 @@ namespace H3MP.Tracking
             CarlGustaf asCG = dataObject as CarlGustaf;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[8];
+                itemData.data = new byte[8];
                 modified = true;
             }
 
             // Write chamber round
-            byte preval0 = data.data[0];
-            byte preval1 = data.data[1];
-            byte preval2 = data.data[2];
-            byte preval3 = data.data[3];
+            byte preval0 = itemData.data[0];
+            byte preval1 = itemData.data[1];
+            byte preval2 = itemData.data[2];
+            byte preval3 = itemData.data[3];
 
             if (asCG.Chamber.GetRound() == null || asCG.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asCG.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
-                BitConverter.GetBytes((short)asCG.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asCG.Chamber.GetRound().RoundType).CopyTo(itemData.data, 0);
+                BitConverter.GetBytes((short)asCG.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 2);
             }
 
-            modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3]);
 
             // Write charge handle state
-            preval0 = data.data[4];
+            preval0 = itemData.data[4];
 
-            data.data[4] = (byte)asCG.CHState;
+            itemData.data[4] = (byte)asCG.CHState;
 
-            modified |= preval0 != data.data[4];
+            modified |= preval0 != itemData.data[4];
 
             // Write lid latch state
-            preval0 = data.data[5];
+            preval0 = itemData.data[5];
 
-            data.data[5] = (byte)asCG.TailLatch.LState;
+            itemData.data[5] = (byte)asCG.TailLatch.LState;
 
-            modified |= preval0 != data.data[5];
+            modified |= preval0 != itemData.data[5];
 
             // Write shell slide state
-            preval0 = data.data[6];
+            preval0 = itemData.data[6];
 
-            data.data[6] = (byte)asCG.ShellInsertEject.CSState;
+            itemData.data[6] = (byte)asCG.ShellInsertEject.CSState;
 
-            modified |= preval0 != data.data[6];
+            modified |= preval0 != itemData.data[6];
 
             // Write lock latch state
-            preval0 = data.data[7];
+            preval0 = itemData.data[7];
 
-            data.data[7] = (byte)asCG.TailLatch.RestrictingLatch.LState;
+            itemData.data[7] = (byte)asCG.TailLatch.RestrictingLatch.LState;
 
-            modified |= preval0 != data.data[7];
+            modified |= preval0 != itemData.data[7];
 
             return modified;
         }
@@ -4482,7 +4460,7 @@ namespace H3MP.Tracking
                 asCG.TailLatch.RestrictingLatch.LState = CarlGustafLatch.CGLatchState.Open;
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -4519,85 +4497,85 @@ namespace H3MP.Tracking
             LeverActionFirearm asLAF = dataObject as LeverActionFirearm;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asLAF.GetIntegratedAttachableFirearm() == null ? 10 : 14];
+                itemData.data = new byte[asLAF.GetIntegratedAttachableFirearm() == null ? 10 : 14];
                 modified = true;
             }
 
             // Write chamber round
-            byte preval0 = data.data[0];
-            byte preval1 = data.data[1];
-            byte preval2 = data.data[2];
-            byte preval3 = data.data[3];
+            byte preval0 = itemData.data[0];
+            byte preval1 = itemData.data[1];
+            byte preval2 = itemData.data[2];
+            byte preval3 = itemData.data[3];
 
             if (asLAF.Chamber.GetRound() == null || asLAF.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
             else
             {
-                BitConverter.GetBytes((short)asLAF.Chamber.GetRound().RoundType).CopyTo(data.data, 0);
-                BitConverter.GetBytes((short)asLAF.Chamber.GetRound().RoundClass).CopyTo(data.data, 2);
+                BitConverter.GetBytes((short)asLAF.Chamber.GetRound().RoundType).CopyTo(itemData.data, 0);
+                BitConverter.GetBytes((short)asLAF.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 2);
             }
 
-            modified |= (preval0 != data.data[0] || preval1 != data.data[1] || preval2 != data.data[2] || preval3 != data.data[3]);
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3]);
 
             // Write hammer state
-            preval0 = data.data[4];
+            preval0 = itemData.data[4];
 
-            data.data[4] = asLAF.IsHammerCocked ? (byte)1 : (byte)0;
+            itemData.data[4] = asLAF.IsHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[4];
+            modified |= preval0 != itemData.data[4];
 
             if (asLAF.UsesSecondChamber)
             {
                 // Write chamber2 round
-                preval0 = data.data[5];
-                preval1 = data.data[6];
-                preval2 = data.data[7];
-                preval3 = data.data[8];
+                preval0 = itemData.data[5];
+                preval1 = itemData.data[6];
+                preval2 = itemData.data[7];
+                preval3 = itemData.data[8];
 
                 if (asLAF.Chamber2.GetRound() == null || asLAF.Chamber2.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 7);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 7);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(data.data, 5);
-                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(data.data, 7);
+                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(itemData.data, 5);
+                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(itemData.data, 7);
                 }
 
-                modified |= (preval0 != data.data[5] || preval1 != data.data[6] || preval2 != data.data[7] || preval3 != data.data[8]);
+                modified |= (preval0 != itemData.data[5] || preval1 != itemData.data[6] || preval2 != itemData.data[7] || preval3 != itemData.data[8]);
 
                 // Write hammer2 state
-                preval0 = data.data[9];
+                preval0 = itemData.data[9];
 
-                data.data[9] = asLAF.m_isHammerCocked2 ? (byte)1 : (byte)0;
+                itemData.data[9] = asLAF.m_isHammerCocked2 ? (byte)1 : (byte)0;
 
-                modified |= preval0 != data.data[9];
+                modified |= preval0 != itemData.data[9];
             }
 
             if (asLAF.GetIntegratedAttachableFirearm() != null)
             {
-                preval0 = data.data[10];
-                preval1 = data.data[11];
-                preval2 = data.data[12];
-                preval3 = data.data[13];
+                preval0 = itemData.data[10];
+                preval1 = itemData.data[11];
+                preval2 = itemData.data[12];
+                preval3 = itemData.data[13];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 12);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 12);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 10);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 12);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, 10);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, 12);
                 }
 
-                modified |= (preval0 != data.data[10] || preval1 != data.data[11] || preval2 != data.data[12] || preval3 != data.data[13]);
+                modified |= (preval0 != itemData.data[10] || preval1 != itemData.data[11] || preval2 != itemData.data[12] || preval3 != itemData.data[13]);
             }
 
             return modified;
@@ -4735,7 +4713,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -4796,18 +4774,18 @@ namespace H3MP.Tracking
 
             int necessarySize = asDerringer.Barrels.Count * 4 + 1;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[necessarySize];
+                itemData.data = new byte[necessarySize];
                 modified = true;
             }
 
             // Write hammer state
-            byte preval0 = data.data[0];
+            byte preval0 = itemData.data[0];
 
-            data.data[0] = asDerringer.IsExternalHammerCocked() ? (byte)1 : (byte)0;
+            itemData.data[0] = asDerringer.IsExternalHammerCocked() ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[0];
+            modified |= preval0 != itemData.data[0];
 
             // Write chambered rounds
             byte preval1;
@@ -4817,22 +4795,22 @@ namespace H3MP.Tracking
             {
                 // Write chambered round
                 int firstIndex = i * 4 + 1;
-                preval0 = data.data[firstIndex];
-                preval1 = data.data[firstIndex + 1];
-                preval2 = data.data[firstIndex + 2];
-                preval3 = data.data[firstIndex + 3];
+                preval0 = itemData.data[firstIndex];
+                preval1 = itemData.data[firstIndex + 1];
+                preval2 = itemData.data[firstIndex + 2];
+                preval3 = itemData.data[firstIndex + 3];
 
                 if (asDerringer.Barrels[i].Chamber.GetRound() == null || asDerringer.Barrels[i].Chamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asDerringer.Barrels[i].Chamber.GetRound().RoundType).CopyTo(data.data, firstIndex);
-                    BitConverter.GetBytes((short)asDerringer.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)asDerringer.Barrels[i].Chamber.GetRound().RoundType).CopyTo(itemData.data, firstIndex);
+                    BitConverter.GetBytes((short)asDerringer.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(itemData.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+                modified |= (preval0 != itemData.data[firstIndex] || preval1 != itemData.data[firstIndex + 1] || preval2 != itemData.data[firstIndex + 2] || preval3 != itemData.data[firstIndex + 3]);
             }
 
             return modified;
@@ -4843,7 +4821,7 @@ namespace H3MP.Tracking
             bool modified = false;
             Derringer asDerringer = dataObject as Derringer;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -4914,7 +4892,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -4947,9 +4925,9 @@ namespace H3MP.Tracking
 
             int necessarySize = asBreakActionWeapon.Barrels.Length * 5;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asBreakActionWeapon.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
+                itemData.data = new byte[asBreakActionWeapon.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
                 modified = true;
             }
 
@@ -4962,51 +4940,51 @@ namespace H3MP.Tracking
             {
                 // Write chambered round
                 int firstIndex = i * 5;
-                preval0 = data.data[firstIndex];
-                preval1 = data.data[firstIndex + 1];
-                preval2 = data.data[firstIndex + 2];
-                preval3 = data.data[firstIndex + 3];
+                preval0 = itemData.data[firstIndex];
+                preval1 = itemData.data[firstIndex + 1];
+                preval2 = itemData.data[firstIndex + 2];
+                preval3 = itemData.data[firstIndex + 3];
 
                 if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null || asBreakActionWeapon.Barrels[i].Chamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundType).CopyTo(data.data, firstIndex);
-                    BitConverter.GetBytes((short)asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundType).CopyTo(itemData.data, firstIndex);
+                    BitConverter.GetBytes((short)asBreakActionWeapon.Barrels[i].Chamber.GetRound().RoundClass).CopyTo(itemData.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+                modified |= (preval0 != itemData.data[firstIndex] || preval1 != itemData.data[firstIndex + 1] || preval2 != itemData.data[firstIndex + 2] || preval3 != itemData.data[firstIndex + 3]);
 
                 // Write hammer state
-                preval0 = data.data[firstIndex + 4];
+                preval0 = itemData.data[firstIndex + 4];
 
-                data.data[firstIndex + 4] = asBreakActionWeapon.Barrels[i].m_isHammerCocked ? (byte)1 : (byte)0;
+                itemData.data[firstIndex + 4] = asBreakActionWeapon.Barrels[i].m_isHammerCocked ? (byte)1 : (byte)0;
 
-                modified |= preval0 != data.data[firstIndex + 4];
+                modified |= preval0 != itemData.data[firstIndex + 4];
             }
 
             if (asBreakActionWeapon.GetIntegratedAttachableFirearm() != null)
             {
-                preval0 = data.data[necessarySize];
-                preval1 = data.data[necessarySize + 1];
-                preval2 = data.data[necessarySize + 2];
-                preval3 = data.data[necessarySize + 3];
+                preval0 = itemData.data[necessarySize];
+                preval1 = itemData.data[necessarySize + 1];
+                preval2 = itemData.data[necessarySize + 2];
+                preval3 = itemData.data[necessarySize + 3];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, necessarySize + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, necessarySize + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, necessarySize);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, necessarySize + 2);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, necessarySize);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, necessarySize + 2);
                 }
 
-                modified |= (preval0 != data.data[necessarySize] || preval1 != data.data[necessarySize + 1] || preval2 != data.data[necessarySize + 2] || preval3 != data.data[necessarySize + 3]);
+                modified |= (preval0 != itemData.data[necessarySize] || preval1 != itemData.data[necessarySize + 1] || preval2 != itemData.data[necessarySize + 2] || preval3 != itemData.data[necessarySize + 3]);
             }
 
             return modified;
@@ -5103,7 +5081,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -5155,64 +5133,64 @@ namespace H3MP.Tracking
             BAP asBAP = dataObject as BAP;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asBAP.GetIntegratedAttachableFirearm() == null ? 6 : 10];
+                itemData.data = new byte[asBAP.GetIntegratedAttachableFirearm() == null ? 6 : 10];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)asBAP.m_fireSelectorMode;
+            itemData.data[0] = (byte)asBAP.m_fireSelectorMode;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write hammer state
-            data.data[1] = asBAP.m_isHammerCocked ? (byte)1 : (byte)0;
+            itemData.data[1] = asBAP.m_isHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
-            byte preval0 = data.data[3];
-            byte preval1 = data.data[4];
-            byte preval2 = data.data[5];
+            preval = itemData.data[2];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
 
             // Write chambered round class
             if (asBAP.Chamber.GetRound() == null || asBAP.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asBAP.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
-                BitConverter.GetBytes((short)asBAP.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asBAP.Chamber.GetRound().RoundType).CopyTo(itemData.data, 2);
+                BitConverter.GetBytes((short)asBAP.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+            modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
 
             if (asBAP.GetIntegratedAttachableFirearm() != null)
             {
-                preval = data.data[6];
-                preval0 = data.data[7];
-                preval1 = data.data[8];
-                preval2 = data.data[9];
+                preval = itemData.data[6];
+                preval0 = itemData.data[7];
+                preval1 = itemData.data[8];
+                preval2 = itemData.data[9];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 8);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 8);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 6);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 8);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, 6);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, 8);
                 }
 
-                modified |= (preval != data.data[6] || preval0 != data.data[7] || preval1 != data.data[8] || preval2 != data.data[9]);
+                modified |= (preval != itemData.data[6] || preval0 != itemData.data[7] || preval1 != itemData.data[8] || preval2 != itemData.data[9]);
             }
 
             return modified;
@@ -5223,7 +5201,7 @@ namespace H3MP.Tracking
             bool modified = false;
             BAP asBAP = dataObject as BAP;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -5232,7 +5210,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set fire select mode
                     asBAP.m_fireSelectorMode = newData[0];
@@ -5338,7 +5316,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -5397,25 +5375,25 @@ namespace H3MP.Tracking
 
             int necessarySize = asRS.Chambers.Length * 4 + 2;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asRS.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
+                itemData.data = new byte[asRS.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
+            byte preval0 = itemData.data[0];
 
             // Write cur chamber
-            data.data[0] = (byte)asRS.CurChamber;
+            itemData.data[0] = (byte)asRS.CurChamber;
 
-            modified |= preval0 != data.data[0];
+            modified |= preval0 != itemData.data[0];
 
-            preval0 = data.data[1];
+            preval0 = itemData.data[1];
 
             // Write cylLoaded
-            data.data[1] = asRS.CylinderLoaded ? (byte)1 : (byte)0;
+            itemData.data[1] = asRS.CylinderLoaded ? (byte)1 : (byte)0;
 
-            modified |= preval0 != data.data[1];
+            modified |= preval0 != itemData.data[1];
 
             // Write chambered rounds
             byte preval1;
@@ -5424,44 +5402,44 @@ namespace H3MP.Tracking
             for (int i = 0; i < asRS.Chambers.Length; ++i)
             {
                 int firstIndex = i * 4 + 2;
-                preval0 = data.data[firstIndex];
-                preval1 = data.data[firstIndex + 1];
-                preval2 = data.data[firstIndex + 2];
-                preval3 = data.data[firstIndex + 3];
+                preval0 = itemData.data[firstIndex];
+                preval1 = itemData.data[firstIndex + 1];
+                preval2 = itemData.data[firstIndex + 2];
+                preval3 = itemData.data[firstIndex + 3];
 
                 if (asRS.Chambers[i].GetRound() == null || asRS.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asRS.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
-                    BitConverter.GetBytes((short)asRS.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)asRS.Chambers[i].GetRound().RoundType).CopyTo(itemData.data, firstIndex);
+                    BitConverter.GetBytes((short)asRS.Chambers[i].GetRound().RoundClass).CopyTo(itemData.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+                modified |= (preval0 != itemData.data[firstIndex] || preval1 != itemData.data[firstIndex + 1] || preval2 != itemData.data[firstIndex + 2] || preval3 != itemData.data[firstIndex + 3]);
             }
 
             if (asRS.GetIntegratedAttachableFirearm() != null)
             {
-                preval0 = data.data[necessarySize];
-                preval1 = data.data[necessarySize + 1];
-                preval2 = data.data[necessarySize + 2];
-                preval3 = data.data[necessarySize + 3];
+                preval0 = itemData.data[necessarySize];
+                preval1 = itemData.data[necessarySize + 1];
+                preval2 = itemData.data[necessarySize + 2];
+                preval3 = itemData.data[necessarySize + 3];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, necessarySize + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, necessarySize + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, necessarySize);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, necessarySize + 2);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, necessarySize);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, necessarySize + 2);
                 }
 
-                modified |= (preval0 != data.data[necessarySize] || preval1 != data.data[necessarySize + 1] || preval2 != data.data[necessarySize + 2] || preval3 != data.data[necessarySize + 3]);
+                modified |= (preval0 != itemData.data[necessarySize] || preval1 != itemData.data[necessarySize + 1] || preval2 != itemData.data[necessarySize + 2] || preval3 != itemData.data[necessarySize + 3]);
             }
 
             return modified;
@@ -5472,7 +5450,7 @@ namespace H3MP.Tracking
             bool modified = false;
             RevolvingShotgun asRS = dataObject as RevolvingShotgun;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -5501,7 +5479,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set cur chamber
                     asRS.CurChamber = newData[0];
@@ -5614,7 +5592,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -5668,18 +5646,18 @@ namespace H3MP.Tracking
 
             int necessarySize = asRevolver.Cylinder.numChambers * 4 + 1;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asRevolver.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
+                itemData.data = new byte[asRevolver.GetIntegratedAttachableFirearm() == null ? necessarySize : necessarySize + 4];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
+            byte preval0 = itemData.data[0];
 
             // Write cur chamber
-            data.data[0] = (byte)asRevolver.CurChamber;
+            itemData.data[0] = (byte)asRevolver.CurChamber;
 
-            modified |= preval0 != data.data[0];
+            modified |= preval0 != itemData.data[0];
 
             // Write chambered rounds
             byte preval1;
@@ -5688,44 +5666,44 @@ namespace H3MP.Tracking
             for (int i = 0; i < asRevolver.Chambers.Length; ++i)
             {
                 int firstIndex = i * 4 + 1;
-                preval0 = data.data[firstIndex];
-                preval1 = data.data[firstIndex + 1];
-                preval2 = data.data[firstIndex + 2];
-                preval3 = data.data[firstIndex + 3];
+                preval0 = itemData.data[firstIndex];
+                preval1 = itemData.data[firstIndex + 1];
+                preval2 = itemData.data[firstIndex + 2];
+                preval3 = itemData.data[firstIndex + 3];
 
                 if (asRevolver.Chambers[i].GetRound() == null || asRevolver.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asRevolver.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
-                    BitConverter.GetBytes((short)asRevolver.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)asRevolver.Chambers[i].GetRound().RoundType).CopyTo(itemData.data, firstIndex);
+                    BitConverter.GetBytes((short)asRevolver.Chambers[i].GetRound().RoundClass).CopyTo(itemData.data, firstIndex + 2);
                 }
 
-                modified |= (preval0 != data.data[firstIndex] || preval1 != data.data[firstIndex + 1] || preval2 != data.data[firstIndex + 2] || preval3 != data.data[firstIndex + 3]);
+                modified |= (preval0 != itemData.data[firstIndex] || preval1 != itemData.data[firstIndex + 1] || preval2 != itemData.data[firstIndex + 2] || preval3 != itemData.data[firstIndex + 3]);
             }
 
             if (asRevolver.GetIntegratedAttachableFirearm() != null)
             {
-                preval0 = data.data[necessarySize];
-                preval1 = data.data[necessarySize + 1];
-                preval2 = data.data[necessarySize + 2];
-                preval3 = data.data[necessarySize + 3];
+                preval0 = itemData.data[necessarySize];
+                preval1 = itemData.data[necessarySize + 1];
+                preval2 = itemData.data[necessarySize + 2];
+                preval3 = itemData.data[necessarySize + 3];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, necessarySize + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, necessarySize + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, necessarySize);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, necessarySize + 2);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, necessarySize);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, necessarySize + 2);
                 }
 
-                modified |= (preval0 != data.data[necessarySize] || preval1 != data.data[necessarySize + 1] || preval2 != data.data[necessarySize + 2] || preval3 != data.data[necessarySize + 3]);
+                modified |= (preval0 != itemData.data[necessarySize] || preval1 != itemData.data[necessarySize + 1] || preval2 != itemData.data[necessarySize + 2] || preval3 != itemData.data[necessarySize + 3]);
             }
 
             return modified;
@@ -5736,7 +5714,7 @@ namespace H3MP.Tracking
             bool modified = false;
             Revolver asRevolver = dataObject as Revolver;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -5745,7 +5723,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set cur chamber
                     asRevolver.CurChamber = newData[0];
@@ -5837,7 +5815,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -5889,18 +5867,18 @@ namespace H3MP.Tracking
             M203 asM203 = dataObject as M203;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[5];
+                itemData.data = new byte[5];
                 modified = true;
             }
 
-            byte preIndex = data.data[0];
+            byte preIndex = itemData.data[0];
 
             // Write attached mount index
             if (asM203.Attachment.curMount == null)
             {
-                data.data[0] = 255;
+                itemData.data[0] = 255;
             }
             else
             {
@@ -5910,42 +5888,42 @@ namespace H3MP.Tracking
                 {
                     if (asM203.Attachment.curMount.MyObject.AttachmentMounts[i] == asM203.Attachment.curMount)
                     {
-                        data.data[0] = (byte)i;
+                        itemData.data[0] = (byte)i;
                         found = true;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[0] = 255;
+                    itemData.data[0] = 255;
                 }
             }
-            modified |= preIndex != data.data[0];
+            modified |= preIndex != itemData.data[0];
 
-            byte preval = data.data[1];
-            byte preval0 = data.data[2];
-            byte preval1 = data.data[3];
-            byte preval2 = data.data[4];
+            byte preval = itemData.data[1];
+            byte preval0 = itemData.data[2];
+            byte preval1 = itemData.data[3];
+            byte preval2 = itemData.data[4];
 
             // Write chambered round class
             if (asM203.Chamber.GetRound() == null || asM203.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
             else
             {
-                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundType).CopyTo(data.data, 1);
-                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundClass).CopyTo(data.data, 3);
+                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundType).CopyTo(itemData.data, 1);
+                BitConverter.GetBytes((short)asM203.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 3);
             }
 
-            modified |= (preval != data.data[1] || preval0 != data.data[2] || preval1 != data.data[3] || preval2 != data.data[4]);
+            modified |= (preval != itemData.data[1] || preval0 != itemData.data[2] || preval1 != itemData.data[3] || preval2 != itemData.data[4]);
 
             return modified;
         }
 
         private bool UpdateGivenM203(byte[] newData)
         {
-            bool modified = data.data == null;
+            bool modified = itemData.data == null;
             M203 asM203 = dataObject as M203;
 
             byte preMountIndex = currentMountIndex;
@@ -5974,19 +5952,19 @@ namespace H3MP.Tracking
                 TrackedItemData parentTrackedItemData = null;
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.items[data.parent];
+                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.items[data.parent];
+                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                     }
                 }
 
@@ -6047,7 +6025,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -6099,18 +6077,18 @@ namespace H3MP.Tracking
             GP25 asGP25 = dataObject as GP25;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[6];
+                itemData.data = new byte[6];
                 modified = true;
             }
 
-            byte preIndex = data.data[0];
+            byte preIndex = itemData.data[0];
 
             // Write attached mount index
             if (asGP25.Attachment.curMount == null)
             {
-                data.data[0] = 255;
+                itemData.data[0] = 255;
             }
             else
             {
@@ -6120,42 +6098,42 @@ namespace H3MP.Tracking
                 {
                     if (asGP25.Attachment.curMount.MyObject.AttachmentMounts[i] == asGP25.Attachment.curMount)
                     {
-                        data.data[0] = (byte)i;
+                        itemData.data[0] = (byte)i;
                         found = true;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[0] = 255;
+                    itemData.data[0] = 255;
                 }
             }
-            modified |= preIndex != data.data[0];
+            modified |= preIndex != itemData.data[0];
 
-            byte preval = data.data[1];
+            byte preval = itemData.data[1];
 
             // Write safety
-            data.data[1] = (byte)(asGP25.m_safetyEngaged ? 1:0);
+            itemData.data[1] = (byte)(asGP25.m_safetyEngaged ? 1:0);
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
-            byte preval0 = data.data[3];
-            byte preval1 = data.data[4];
-            byte preval2 = data.data[5];
+            preval = itemData.data[2];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
 
             // Write chambered round class
             if (asGP25.Chamber.GetRound() == null || asGP25.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
-                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundType).CopyTo(itemData.data, 2);
+                BitConverter.GetBytes((short)asGP25.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+            modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
 
             return modified;
         }
@@ -6191,19 +6169,19 @@ namespace H3MP.Tracking
                 TrackedItemData parentTrackedItemData = null;
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.items[data.parent];
+                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.items[data.parent];
+                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                     }
                 }
 
@@ -6226,7 +6204,7 @@ namespace H3MP.Tracking
             }
             modified |= preMountIndex != currentMountIndex;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -6235,7 +6213,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[1] != newData[1])
+                if (itemData.data[1] != newData[1])
                 {
                     // Set safety
                     asGP25.m_safetyEngaged = newData[1] == 1;
@@ -6281,7 +6259,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -6333,18 +6311,18 @@ namespace H3MP.Tracking
             AttachableTubeFed asATF = dataObject as AttachableTubeFed;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[9];
+                itemData.data = new byte[9];
                 modified = true;
             }
 
-            byte preIndex = data.data[0];
+            byte preIndex = itemData.data[0];
 
             // Write attached mount index
             if (asATF.Attachment.curMount == null)
             {
-                data.data[0] = 255;
+                itemData.data[0] = 255;
             }
             else
             {
@@ -6354,65 +6332,65 @@ namespace H3MP.Tracking
                 {
                     if (asATF.Attachment.curMount.MyObject.AttachmentMounts[i] == asATF.Attachment.curMount)
                     {
-                        data.data[0] = (byte)i;
+                        itemData.data[0] = (byte)i;
                         found = true;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[0] = 255;
+                    itemData.data[0] = 255;
                 }
             }
-            modified |= preIndex != data.data[0];
+            modified |= preIndex != itemData.data[0];
 
-            byte preval = data.data[1];
+            byte preval = itemData.data[1];
 
             // Write fire mode index
-            data.data[1] = asATF.IsSafetyEngaged ? (byte)1 : (byte)0;
+            itemData.data[1] = asATF.IsSafetyEngaged ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
+            preval = itemData.data[2];
 
             // Write hammer state
-            data.data[2] = BitConverter.GetBytes(asATF.IsHammerCocked)[0];
+            itemData.data[2] = BitConverter.GetBytes(asATF.IsHammerCocked)[0];
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
-            preval = data.data[3];
-            byte preval0 = data.data[4];
-            byte preval1 = data.data[5];
-            byte preval2 = data.data[6];
+            preval = itemData.data[3];
+            byte preval0 = itemData.data[4];
+            byte preval1 = itemData.data[5];
+            byte preval2 = itemData.data[6];
 
             // Write chambered round class
             if (asATF.Chamber.GetRound() == null || asATF.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 5);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 5);
             }
             else
             {
-                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundType).CopyTo(data.data, 3);
-                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundClass).CopyTo(data.data, 5);
+                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundType).CopyTo(itemData.data, 3);
+                BitConverter.GetBytes((short)asATF.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 5);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6]);
+            modified |= (preval != itemData.data[3] || preval0 != itemData.data[4] || preval1 != itemData.data[5] || preval2 != itemData.data[6]);
 
-            preval = data.data[7];
+            preval = itemData.data[7];
 
             // Write bolt handle pos
-            data.data[7] = (byte)asATF.Bolt.CurPos;
+            itemData.data[7] = (byte)asATF.Bolt.CurPos;
 
-            modified |= preval != data.data[7];
+            modified |= preval != itemData.data[7];
 
             if (asATF.HasHandle)
             {
-                preval = data.data[8];
+                preval = itemData.data[8];
 
                 // Write bolt handle pos
-                data.data[8] = (byte)asATF.Handle.CurPos;
+                itemData.data[8] = (byte)asATF.Handle.CurPos;
 
-                modified |= preval != data.data[8];
+                modified |= preval != itemData.data[8];
             }
 
             return modified;
@@ -6449,19 +6427,19 @@ namespace H3MP.Tracking
                 TrackedItemData parentTrackedItemData = null;
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.items[data.parent];
+                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.items[data.parent];
+                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                     }
                 }
 
@@ -6484,7 +6462,7 @@ namespace H3MP.Tracking
             }
             modified |= preMountIndex != currentMountIndex;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -6513,13 +6491,13 @@ namespace H3MP.Tracking
                     asATF.ToggleSafety();
                     modified = true;
                 }
-                if (data.data[7] != newData[7])
+                if (itemData.data[7] != newData[7])
                 {
                     // Set bolt pos
                     asATF.Bolt.LastPos = asATF.Bolt.CurPos;
                     asATF.Bolt.CurPos = (AttachableTubeFedBolt.BoltPos)newData[7];
                 }
-                if (asATF.HasHandle && data.data[8] != newData[8])
+                if (asATF.HasHandle && itemData.data[8] != newData[8])
                 {
                     // Set handle pos
                     asATF.Handle.LastPos = asATF.Handle.CurPos;
@@ -6583,7 +6561,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -6635,18 +6613,18 @@ namespace H3MP.Tracking
             AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[8];
+                itemData.data = new byte[8];
                 modified = true;
             }
 
-            byte preIndex = data.data[0];
+            byte preIndex = itemData.data[0];
 
             // Write attached mount index
             if (asACBW.Attachment.curMount == null)
             {
-                data.data[0] = 255;
+                itemData.data[0] = 255;
             }
             else
             {
@@ -6656,56 +6634,56 @@ namespace H3MP.Tracking
                 {
                     if (asACBW.Attachment.curMount.MyObject.AttachmentMounts[i] == asACBW.Attachment.curMount)
                     {
-                        data.data[0] = (byte)i;
+                        itemData.data[0] = (byte)i;
                         found = true;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[0] = 255;
+                    itemData.data[0] = 255;
                 }
             }
-            modified |= preIndex != data.data[0];
+            modified |= preIndex != itemData.data[0];
 
-            byte preval = data.data[1];
+            byte preval = itemData.data[1];
 
             // Write fire mode index
-            data.data[1] = (byte)asACBW.FireSelectorModeIndex;
+            itemData.data[1] = (byte)asACBW.FireSelectorModeIndex;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
+            preval = itemData.data[2];
 
             // Write camBurst
-            data.data[2] = (byte)asACBW.m_CamBurst;
+            itemData.data[2] = (byte)asACBW.m_CamBurst;
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
-            preval = data.data[3];
+            preval = itemData.data[3];
 
             // Write hammer state
-            data.data[3] = asACBW.IsHammerCocked ? (byte)1 : (byte)0;
+            itemData.data[3] = asACBW.IsHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[3];
+            modified |= preval != itemData.data[3];
 
-            preval = data.data[4];
-            byte preval0 = data.data[5];
-            byte preval1 = data.data[6];
-            byte preval2 = data.data[7];
+            preval = itemData.data[4];
+            byte preval0 = itemData.data[5];
+            byte preval1 = itemData.data[6];
+            byte preval2 = itemData.data[7];
 
             // Write chambered round class
             if (asACBW.Chamber.GetRound() == null || asACBW.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 6);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 6);
             }
             else
             {
-                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundType).CopyTo(data.data, 4);
-                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 6);
+                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundType).CopyTo(itemData.data, 4);
+                BitConverter.GetBytes((short)asACBW.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 6);
             }
 
-            modified |= (preval != data.data[4] || preval0 != data.data[5] || preval1 != data.data[5] || preval2 != data.data[6]);
+            modified |= (preval != itemData.data[4] || preval0 != itemData.data[5] || preval1 != itemData.data[5] || preval2 != itemData.data[6]);
 
             return modified;
         }
@@ -6741,19 +6719,19 @@ namespace H3MP.Tracking
                 TrackedItemData parentTrackedItemData = null;
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.items[data.parent];
+                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.items[data.parent];
+                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                     }
                 }
 
@@ -6776,7 +6754,7 @@ namespace H3MP.Tracking
             }
             modified |= preMountIndex != currentMountIndex;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -6788,13 +6766,13 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set fire select mode
                     asACBW.m_fireSelectorMode = newData[1];
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                if (itemData.data[1] != newData[1])
                 {
                     // Set camBurst
                     asACBW.m_CamBurst = newData[2];
@@ -6858,7 +6836,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -6910,18 +6888,18 @@ namespace H3MP.Tracking
             AttachableBreakActions asABA = dataObject as AttachableBreakActions;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[6];
+                itemData.data = new byte[6];
                 modified = true;
             }
 
-            byte preIndex = data.data[0];
+            byte preIndex = itemData.data[0];
 
             // Write attached mount index
             if (asABA.Attachment.curMount == null)
             {
-                data.data[0] = 255;
+                itemData.data[0] = 255;
             }
             else
             {
@@ -6931,42 +6909,42 @@ namespace H3MP.Tracking
                 {
                     if (asABA.Attachment.curMount.MyObject.AttachmentMounts[i] == asABA.Attachment.curMount)
                     {
-                        data.data[0] = (byte)i;
+                        itemData.data[0] = (byte)i;
                         found = true;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[0] = 255;
+                    itemData.data[0] = 255;
                 }
             }
-            modified |= preIndex != data.data[0];
+            modified |= preIndex != itemData.data[0];
 
-            byte preval = data.data[1];
+            byte preval = itemData.data[1];
 
             // Write breachOpen
-            data.data[1] = asABA.m_isBreachOpen ? (byte)1 : (byte)0;
+            itemData.data[1] = asABA.m_isBreachOpen ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
-            byte preval0 = data.data[3];
-            byte preval1 = data.data[4];
-            byte preval2 = data.data[5];
+            preval = itemData.data[2];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
 
             // Write chambered round class
             if (asABA.Chamber.GetRound() == null || asABA.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
-                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundType).CopyTo(itemData.data, 2);
+                BitConverter.GetBytes((short)asABA.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+            modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
 
             return modified;
         }
@@ -7002,19 +6980,19 @@ namespace H3MP.Tracking
                 TrackedItemData parentTrackedItemData = null;
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.items[data.parent];
+                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.items[data.parent];
+                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                     }
                 }
 
@@ -7084,7 +7062,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -7146,16 +7124,16 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.items[data.parent];
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.items[data.parent];
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[currentMountIndex];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[currentMountIndex];
                     }
 
                     // If not yet physically mounted to anything, can right away mount to the proper mount
@@ -7194,21 +7172,21 @@ namespace H3MP.Tracking
             LAPD2019Battery asLAPD2019Battery = dataObject as LAPD2019Battery;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[4];
+                itemData.data = new byte[4];
                 modified = true;
             }
 
-            byte preval = data.data[0];
-            byte preval0 = data.data[1];
-            byte preval1 = data.data[2];
-            byte preval2 = data.data[3];
+            byte preval = itemData.data[0];
+            byte preval0 = itemData.data[1];
+            byte preval1 = itemData.data[2];
+            byte preval2 = itemData.data[3];
 
             // Write energy
-            BitConverter.GetBytes(asLAPD2019Battery.GetEnergy()).CopyTo(data.data, 0);
+            BitConverter.GetBytes(asLAPD2019Battery.GetEnergy()).CopyTo(itemData.data, 0);
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1] || preval1 != data.data[2] || preval2 != data.data[3]);
+            modified |= (preval != itemData.data[0] || preval0 != itemData.data[1] || preval1 != itemData.data[2] || preval2 != itemData.data[3]);
 
             return modified;
         }
@@ -7218,7 +7196,7 @@ namespace H3MP.Tracking
             bool modified = false;
             LAPD2019Battery asLAPD2019Battery = dataObject as LAPD2019Battery;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -7227,7 +7205,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[11] != newData[11] || data.data[12] != newData[12] || data.data[13] != newData[13] || data.data[14] != newData[14])
+                if (itemData.data[11] != newData[11] || itemData.data[12] != newData[12] || itemData.data[13] != newData[13] || itemData.data[14] != newData[14])
                 {
                     // Set energy
                     asLAPD2019Battery.SetEnergy(BitConverter.ToSingle(newData, 0));
@@ -7235,7 +7213,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -7245,18 +7223,18 @@ namespace H3MP.Tracking
             LAPD2019 asLAPD2019 = dataObject as LAPD2019;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[26];
+                itemData.data = new byte[26];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write curChamber
-            data.data[0] = (byte)asLAPD2019.CurChamber;
+            itemData.data[0] = (byte)asLAPD2019.CurChamber;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             byte preval0;
             byte preval1;
@@ -7266,39 +7244,39 @@ namespace H3MP.Tracking
             for(int i=0; i < 5; ++i)
             {
                 int firstIndex = i * 4 + 1;
-                preval = data.data[firstIndex];
-                preval0 = data.data[firstIndex + 1];
-                preval1 = data.data[firstIndex + 2];
-                preval2 = data.data[firstIndex + 3];
+                preval = itemData.data[firstIndex];
+                preval0 = itemData.data[firstIndex + 1];
+                preval1 = itemData.data[firstIndex + 2];
+                preval2 = itemData.data[firstIndex + 3];
                 if (asLAPD2019.Chambers[i].GetRound() == null || asLAPD2019.Chambers[i].GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asLAPD2019.Chambers[i].GetRound().RoundType).CopyTo(data.data, firstIndex);
-                    BitConverter.GetBytes((short)asLAPD2019.Chambers[i].GetRound().RoundClass).CopyTo(data.data, firstIndex + 2);
+                    BitConverter.GetBytes((short)asLAPD2019.Chambers[i].GetRound().RoundType).CopyTo(itemData.data, firstIndex);
+                    BitConverter.GetBytes((short)asLAPD2019.Chambers[i].GetRound().RoundClass).CopyTo(itemData.data, firstIndex + 2);
                 }
 
-                modified |= (preval != data.data[firstIndex] || preval0 != data.data[firstIndex + 1] || preval1 != data.data[firstIndex + 2] || preval2 != data.data[firstIndex + 3]);
+                modified |= (preval != itemData.data[firstIndex] || preval0 != itemData.data[firstIndex + 1] || preval1 != itemData.data[firstIndex + 2] || preval2 != itemData.data[firstIndex + 3]);
             }
 
-            preval = data.data[21];
-            preval0 = data.data[22];
-            preval1 = data.data[23];
-            preval2 = data.data[24];
+            preval = itemData.data[21];
+            preval0 = itemData.data[22];
+            preval1 = itemData.data[23];
+            preval2 = itemData.data[24];
 
             // Write capacitor charge
-            BitConverter.GetBytes(asLAPD2019.m_capacitorCharge).CopyTo(data.data, 21);
+            BitConverter.GetBytes(asLAPD2019.m_capacitorCharge).CopyTo(itemData.data, 21);
 
-            modified |= (preval != data.data[21] || preval0 != data.data[22] || preval1 != data.data[23] || preval2 != data.data[24]);
+            modified |= (preval != itemData.data[21] || preval0 != itemData.data[22] || preval1 != itemData.data[23] || preval2 != itemData.data[24]);
 
-            preval = data.data[25];
+            preval = itemData.data[25];
 
             // Write capacitor charged
-            data.data[25] = asLAPD2019.m_isCapacitorCharged ? (byte)1 : (byte)0;
+            itemData.data[25] = asLAPD2019.m_isCapacitorCharged ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[25];
+            modified |= preval != itemData.data[25];
 
             return modified;
         }
@@ -7308,7 +7286,7 @@ namespace H3MP.Tracking
             bool modified = false;
             LAPD2019 asLAPD2019 = dataObject as LAPD2019;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -7323,19 +7301,19 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set curChamber
                     asLAPD2019.CurChamber = newData[0];
                     modified = true;
                 }
-                if (data.data[21] != newData[21] || data.data[22] != newData[22] || data.data[23] != newData[23] || data.data[24] != newData[24])
+                if (itemData.data[21] != newData[21] || itemData.data[22] != newData[22] || itemData.data[23] != newData[23] || itemData.data[24] != newData[24])
                 {
                     // Set capacitor charge
                     asLAPD2019.m_capacitorCharge = BitConverter.ToSingle(newData, 21);
                     modified = true;
                 }
-                if (data.data[25] != newData[25])
+                if (itemData.data[25] != newData[25])
                 {
                     // Set capacitor charged
                     asLAPD2019.m_isCapacitorCharged = newData[25] == 1;
@@ -7384,7 +7362,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -7415,26 +7393,26 @@ namespace H3MP.Tracking
             SosigWeaponPlayerInterface asInterface = dataObject as SosigWeaponPlayerInterface;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[3];
+                itemData.data = new byte[3];
                 modified = true;
             }
 
-            byte preval = data.data[0];
-            byte preval0 = data.data[1];
+            byte preval = itemData.data[0];
+            byte preval0 = itemData.data[1];
 
             // Write shots left
-            BitConverter.GetBytes((short)asInterface.W.m_shotsLeft).CopyTo(data.data, 0);
+            BitConverter.GetBytes((short)asInterface.W.m_shotsLeft).CopyTo(itemData.data, 0);
 
-            modified |= (preval != data.data[0] || preval0 != data.data[1]);
+            modified |= (preval != itemData.data[0] || preval0 != itemData.data[1]);
 
-            preval = data.data[2];
+            preval = itemData.data[2];
 
             // Write MechaState
-            data.data[2] = (byte)asInterface.W.MechaState;
+            itemData.data[2] = (byte)asInterface.W.MechaState;
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
             return modified;
         }
@@ -7444,7 +7422,7 @@ namespace H3MP.Tracking
             bool modified = false;
             SosigWeaponPlayerInterface asInterface = dataObject as SosigWeaponPlayerInterface;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -7456,13 +7434,13 @@ namespace H3MP.Tracking
             }
             else 
             {
-                if (data.data[0] != newData[0] || data.data[1] != newData[1])
+                if (itemData.data[0] != newData[0] || itemData.data[1] != newData[1])
                 {
                     // Set shots left
                     asInterface.W.m_shotsLeft = BitConverter.ToInt16(newData, 0);
                     modified = true;
                 }
-                if (data.data[2] != newData[2])
+                if (itemData.data[2] != newData[2])
                 {
                     // Set MechaState
                     asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
@@ -7470,7 +7448,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -7480,32 +7458,32 @@ namespace H3MP.Tracking
             GrappleThrowable asGrappleThrowable = dataObject as GrappleThrowable;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[3];
+                itemData.data = new byte[3];
                 modified = true;
             }
 
             // Write rope free
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
-            data.data[0] = asGrappleThrowable.IsRopeFree ? (byte)1 : (byte)0;
+            itemData.data[0] = asGrappleThrowable.IsRopeFree ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
             // Write has been thrown
-            preval = data.data[1];
+            preval = itemData.data[1];
 
-            data.data[1] = asGrappleThrowable.m_hasBeenThrown ? (byte)1 : (byte)0;
+            itemData.data[1] = asGrappleThrowable.m_hasBeenThrown ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
             // Write has landed
-            preval = data.data[2];
+            preval = itemData.data[2];
 
-            data.data[2] = asGrappleThrowable.m_hasLanded ? (byte)1 : (byte)0;
+            itemData.data[2] = asGrappleThrowable.m_hasLanded ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
             return modified;
         }
@@ -7515,7 +7493,7 @@ namespace H3MP.Tracking
             bool modified = false;
             GrappleThrowable asGrappleThrowable = dataObject as GrappleThrowable;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 // Set rope free
                 if (newData[0] == 0)
@@ -7551,7 +7529,7 @@ namespace H3MP.Tracking
             else
             {
                 // Set rope free
-                if (asGrappleThrowable.IsRopeFree && data.data[0] == 0)
+                if (asGrappleThrowable.IsRopeFree && itemData.data[0] == 0)
                 {
                     asGrappleThrowable.m_isRopeFree = false;
                     asGrappleThrowable.BundledRope.SetActive(true);
@@ -7560,7 +7538,7 @@ namespace H3MP.Tracking
                     asGrappleThrowable.FakeKnot.SetActive(false);
                     modified = true;
                 }
-                else if (!asGrappleThrowable.IsRopeFree && data.data[0] == 1)
+                else if (!asGrappleThrowable.IsRopeFree && itemData.data[0] == 1)
                 {
                     asGrappleThrowable.FreeRope();
                     asGrappleThrowable.FakeRopeLength.SetActive(true);
@@ -7589,7 +7567,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -7599,71 +7577,71 @@ namespace H3MP.Tracking
             ClosedBoltWeapon asCBW = dataObject as ClosedBoltWeapon;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asCBW.GetIntegratedAttachableFirearm() == null ? 7 : 11];
+                itemData.data = new byte[asCBW.GetIntegratedAttachableFirearm() == null ? 7 : 11];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)asCBW.FireSelectorModeIndex;
+            itemData.data[0] = (byte)asCBW.FireSelectorModeIndex;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write camBurst
-            data.data[1] = (byte)asCBW.m_CamBurst;
+            itemData.data[1] = (byte)asCBW.m_CamBurst;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
+            preval = itemData.data[2];
 
             // Write hammer state
-            data.data[2] = asCBW.IsHammerCocked ? (byte)1 : (byte)0;
+            itemData.data[2] = asCBW.IsHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
-            preval = data.data[3];
-            byte preval0 = data.data[4];
-            byte preval1 = data.data[5];
-            byte preval2 = data.data[6];
+            preval = itemData.data[3];
+            byte preval0 = itemData.data[4];
+            byte preval1 = itemData.data[5];
+            byte preval2 = itemData.data[6];
 
             // Write chambered round class
             if(asCBW.Chamber.GetRound() == null || asCBW.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 5);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 5);
             }
             else
             {
-                BitConverter.GetBytes((short)asCBW.Chamber.GetRound().RoundType).CopyTo(data.data, 3);
-                BitConverter.GetBytes((short)asCBW.Chamber.GetRound().RoundClass).CopyTo(data.data, 5);
+                BitConverter.GetBytes((short)asCBW.Chamber.GetRound().RoundType).CopyTo(itemData.data, 3);
+                BitConverter.GetBytes((short)asCBW.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 5);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6]);
+            modified |= (preval != itemData.data[3] || preval0 != itemData.data[4] || preval1 != itemData.data[5] || preval2 != itemData.data[6]);
 
             if (asCBW.GetIntegratedAttachableFirearm() != null)
             {
-                preval = data.data[7];
-                preval0 = data.data[8];
-                preval1 = data.data[9];
-                preval2 = data.data[10];
+                preval = itemData.data[7];
+                preval0 = itemData.data[8];
+                preval1 = itemData.data[9];
+                preval2 = itemData.data[10];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 9);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 9);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 7);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 9);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, 7);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, 9);
                 }
 
-                modified |= (preval != data.data[7] || preval0 != data.data[8] || preval1 != data.data[9] || preval2 != data.data[10]);
+                modified |= (preval != itemData.data[7] || preval0 != itemData.data[8] || preval1 != itemData.data[9] || preval2 != itemData.data[10]);
             }
 
             return modified;
@@ -7674,7 +7652,7 @@ namespace H3MP.Tracking
             bool modified = false;
             ClosedBoltWeapon asCBW = dataObject as ClosedBoltWeapon;
 
-            if(data.data == null)
+            if(itemData.data == null)
             {
                 modified = true;
 
@@ -7686,13 +7664,13 @@ namespace H3MP.Tracking
             }
             else 
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set fire select mode
                     asCBW.m_fireSelectorMode = newData[0];
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                if (itemData.data[1] != newData[1])
                 {
                     // Set camBurst
                     asCBW.m_CamBurst = newData[1];
@@ -7798,7 +7776,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -7855,71 +7833,71 @@ namespace H3MP.Tracking
             Handgun asHandgun = dataObject as Handgun;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asHandgun.GetIntegratedAttachableFirearm() == null ? 7 : 11];
+                itemData.data = new byte[asHandgun.GetIntegratedAttachableFirearm() == null ? 7 : 11];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)asHandgun.FireSelectorModeIndex;
+            itemData.data[0] = (byte)asHandgun.FireSelectorModeIndex;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write camBurst
-            data.data[1] = (byte)asHandgun.m_CamBurst;
+            itemData.data[1] = (byte)asHandgun.m_CamBurst;
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
+            preval = itemData.data[2];
 
             // Write hammer state
-            data.data[2] = asHandgun.m_isHammerCocked ? (byte)1 : (byte)0;
+            itemData.data[2] = asHandgun.m_isHammerCocked ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[2];
+            modified |= preval != itemData.data[2];
 
-            preval = data.data[3];
-            byte preval0 = data.data[4];
-            byte preval1 = data.data[5];
-            byte preval2 = data.data[6];
+            preval = itemData.data[3];
+            byte preval0 = itemData.data[4];
+            byte preval1 = itemData.data[5];
+            byte preval2 = itemData.data[6];
 
             // Write chambered round class
             if (asHandgun.Chamber.GetRound() == null || asHandgun.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 5);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 5);
             }
             else
             {
-                BitConverter.GetBytes((short)asHandgun.Chamber.GetRound().RoundType).CopyTo(data.data, 3);
-                BitConverter.GetBytes((short)asHandgun.Chamber.GetRound().RoundClass).CopyTo(data.data, 5);
+                BitConverter.GetBytes((short)asHandgun.Chamber.GetRound().RoundType).CopyTo(itemData.data, 3);
+                BitConverter.GetBytes((short)asHandgun.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 5);
             }
 
-            modified |= (preval != data.data[3] || preval0 != data.data[4] || preval1 != data.data[5] || preval2 != data.data[6]);
+            modified |= (preval != itemData.data[3] || preval0 != itemData.data[4] || preval1 != itemData.data[5] || preval2 != itemData.data[6]);
 
             if (asHandgun.GetIntegratedAttachableFirearm() != null)
             {
-                preval = data.data[7];
-                preval0 = data.data[8];
-                preval1 = data.data[9];
-                preval2 = data.data[10];
+                preval = itemData.data[7];
+                preval0 = itemData.data[8];
+                preval1 = itemData.data[9];
+                preval2 = itemData.data[10];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 9);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 9);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 7);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 9);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, 7);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, 9);
                 }
 
-                modified |= (preval != data.data[7] || preval0 != data.data[8] || preval1 != data.data[9] || preval2 != data.data[10]);
+                modified |= (preval != itemData.data[7] || preval0 != itemData.data[8] || preval1 != itemData.data[9] || preval2 != itemData.data[10]);
             }
 
             return modified;
@@ -7930,7 +7908,7 @@ namespace H3MP.Tracking
             bool modified = false;
             Handgun asHandgun = dataObject as Handgun;
 
-            if(data.data == null)
+            if(itemData.data == null)
             {
                 modified = true;
 
@@ -7942,13 +7920,13 @@ namespace H3MP.Tracking
             }
             else 
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set fire select mode
                     asHandgun.m_fireSelectorMode = newData[0];
                     modified = true;
                 }
-                if (data.data[1] != newData[1])
+                if (itemData.data[1] != newData[1])
                 {
                     // Set camBurst
                     asHandgun.m_CamBurst = newData[1];
@@ -8056,7 +8034,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -8113,81 +8091,81 @@ namespace H3MP.Tracking
             TubeFedShotgun asTFS = dataObject as TubeFedShotgun;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asTFS.GetIntegratedAttachableFirearm() == null ? 8 : 12];
+                itemData.data = new byte[asTFS.GetIntegratedAttachableFirearm() == null ? 8 : 12];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write fire mode index
-            data.data[0] = asTFS.IsSafetyEngaged ? (byte)1 : (byte)0;
+            itemData.data[0] = asTFS.IsSafetyEngaged ? (byte)1 : (byte)0;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write hammer state
-            data.data[1] = BitConverter.GetBytes(asTFS.IsHammerCocked)[0];
+            itemData.data[1] = BitConverter.GetBytes(asTFS.IsHammerCocked)[0];
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
-            byte preval0 = data.data[3];
-            byte preval1 = data.data[4];
-            byte preval2 = data.data[5];
+            preval = itemData.data[2];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
 
             // Write chambered round class
             if(asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
-                BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundType).CopyTo(itemData.data, 2);
+                BitConverter.GetBytes((short)asTFS.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+            modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
 
-            preval = data.data[6];
+            preval = itemData.data[6];
 
             // Write bolt handle pos
-            data.data[6] = (byte)asTFS.Bolt.CurPos;
+            itemData.data[6] = (byte)asTFS.Bolt.CurPos;
 
-            modified |= preval != data.data[6];
+            modified |= preval != itemData.data[6];
 
             if (asTFS.HasHandle)
             {
-                preval = data.data[7];
+                preval = itemData.data[7];
 
                 // Write bolt handle pos
-                data.data[7] = (byte)asTFS.Handle.CurPos;
+                itemData.data[7] = (byte)asTFS.Handle.CurPos;
 
-                modified |= preval != data.data[7];
+                modified |= preval != itemData.data[7];
             }
 
             if (asTFS.GetIntegratedAttachableFirearm() != null)
             {
-                preval = data.data[8];
-                preval0 = data.data[9];
-                preval1 = data.data[10];
-                preval2 = data.data[11];
+                preval = itemData.data[8];
+                preval0 = itemData.data[9];
+                preval1 = itemData.data[10];
+                preval2 = itemData.data[11];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 10);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 10);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 8);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 10);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, 8);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, 10);
                 }
 
-                modified |= (preval != data.data[8] || preval0 != data.data[9] || preval1 != data.data[10] || preval2 != data.data[11]);
+                modified |= (preval != itemData.data[8] || preval0 != itemData.data[9] || preval1 != itemData.data[10] || preval2 != itemData.data[11]);
             }
 
             return modified;
@@ -8198,7 +8176,7 @@ namespace H3MP.Tracking
             bool modified = false;
             TubeFedShotgun asTFS = dataObject as TubeFedShotgun;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -8227,13 +8205,13 @@ namespace H3MP.Tracking
                     asTFS.ToggleSafety();
                     modified = true;
                 }
-                if (data.data[6] != newData[6])
+                if (itemData.data[6] != newData[6])
                 {
                     // Set bolt pos
                     asTFS.Bolt.LastPos = asTFS.Bolt.CurPos;
                     asTFS.Bolt.CurPos = (TubeFedShotgunBolt.BoltPos)newData[6];
                 }
-                if (asTFS.HasHandle && data.data[7] != newData[7])
+                if (asTFS.HasHandle && itemData.data[7] != newData[7])
                 {
                     // Set handle pos
                     asTFS.Handle.LastPos = asTFS.Handle.CurPos;
@@ -8339,7 +8317,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -8396,78 +8374,78 @@ namespace H3MP.Tracking
             BoltActionRifle asBAR = dataObject as BoltActionRifle;
             bool modified = false;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[asBAR.GetIntegratedAttachableFirearm() == null ? 8 : 12];
+                itemData.data = new byte[asBAR.GetIntegratedAttachableFirearm() == null ? 8 : 12];
                 modified = true;
             }
 
-            byte preval = data.data[0];
+            byte preval = itemData.data[0];
 
             // Write fire mode index
-            data.data[0] = (byte)asBAR.m_fireSelectorMode;
+            itemData.data[0] = (byte)asBAR.m_fireSelectorMode;
 
-            modified |= preval != data.data[0];
+            modified |= preval != itemData.data[0];
 
-            preval = data.data[1];
+            preval = itemData.data[1];
 
             // Write hammer state
-            data.data[1] = BitConverter.GetBytes(asBAR.IsHammerCocked)[0];
+            itemData.data[1] = BitConverter.GetBytes(asBAR.IsHammerCocked)[0];
 
-            modified |= preval != data.data[1];
+            modified |= preval != itemData.data[1];
 
-            preval = data.data[2];
-            byte preval0 = data.data[3];
-            byte preval1 = data.data[4];
-            byte preval2 = data.data[5];
+            preval = itemData.data[2];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
 
             // Write chambered round class
             if(asBAR.Chamber.GetRound() == null || asBAR.Chamber.GetRound().IsSpent)
             {
-                BitConverter.GetBytes((short)-1).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
             else
             {
-                BitConverter.GetBytes((short)asBAR.Chamber.GetRound().RoundType).CopyTo(data.data, 2);
-                BitConverter.GetBytes((short)asBAR.Chamber.GetRound().RoundClass).CopyTo(data.data, 4);
+                BitConverter.GetBytes((short)asBAR.Chamber.GetRound().RoundType).CopyTo(itemData.data, 2);
+                BitConverter.GetBytes((short)asBAR.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 4);
             }
 
-            modified |= (preval != data.data[2] || preval0 != data.data[3] || preval1 != data.data[4] || preval2 != data.data[5]);
+            modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
 
-            preval = data.data[6];
+            preval = itemData.data[6];
 
             // Write bolt handle state
-            data.data[6] = (byte)asBAR.CurBoltHandleState;
+            itemData.data[6] = (byte)asBAR.CurBoltHandleState;
 
-            modified |= preval != data.data[6];
+            modified |= preval != itemData.data[6];
 
-            preval = data.data[7];
+            preval = itemData.data[7];
 
             // Write bolt handle rot
-            data.data[7] = (byte)asBAR.BoltHandle.HandleRot;
+            itemData.data[7] = (byte)asBAR.BoltHandle.HandleRot;
 
-            modified |= preval != data.data[7];
+            modified |= preval != itemData.data[7];
 
             if (asBAR.GetIntegratedAttachableFirearm() != null)
             {
-                preval = data.data[8];
-                preval0 = data.data[9];
-                preval1 = data.data[10];
-                preval2 = data.data[11];
+                preval = itemData.data[8];
+                preval0 = itemData.data[9];
+                preval1 = itemData.data[10];
+                preval2 = itemData.data[11];
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, 10);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 10);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(data.data, 8);
-                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(data.data, 10);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundType).CopyTo(itemData.data, 8);
+                    BitConverter.GetBytes((short)integratedChamber.GetRound().RoundClass).CopyTo(itemData.data, 10);
                 }
 
-                modified |= (preval != data.data[8] || preval0 != data.data[9] || preval1 != data.data[10] || preval2 != data.data[11]);
+                modified |= (preval != itemData.data[8] || preval0 != itemData.data[9] || preval1 != itemData.data[10] || preval2 != itemData.data[11]);
             }
 
             return modified;
@@ -8478,7 +8456,7 @@ namespace H3MP.Tracking
             bool modified = false;
             BoltActionRifle asBAR = dataObject as BoltActionRifle;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -8495,19 +8473,19 @@ namespace H3MP.Tracking
             }
             else 
             {
-                if (data.data[0] != newData[0])
+                if (itemData.data[0] != newData[0])
                 {
                     // Set fire select mode
                     asBAR.m_fireSelectorMode = newData[0];
                     modified = true;
                 }
-                if (data.data[6] != newData[6])
+                if (itemData.data[6] != newData[6])
                 {
                     // Set bolt handle state
                     asBAR.LastBoltHandleState = asBAR.CurBoltHandleState;
                     asBAR.CurBoltHandleState = (BoltActionRifle_Handle.BoltActionHandleState)newData[6];
                 }
-                if (data.data[7] != newData[7])
+                if (itemData.data[7] != newData[7])
                 {
                     // Set bolt handle rot
                     asBAR.BoltHandle.LastHandleRot = asBAR.BoltHandle.HandleRot;
@@ -8613,7 +8591,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -8670,18 +8648,18 @@ namespace H3MP.Tracking
             bool modified = false;
             Suppressor asAttachment = dataObject as Suppressor;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[5];
+                itemData.data = new byte[5];
                 modified = true;
             }
 
-            byte preIndex = data.data[0];
+            byte preIndex = itemData.data[0];
 
             // Write attached mount index
             if (asAttachment.curMount == null)
             {
-                data.data[0] = 255;
+                itemData.data[0] = 255;
             }
             else
             {
@@ -8691,26 +8669,26 @@ namespace H3MP.Tracking
                 {
                     if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
                     {
-                        data.data[0] = (byte)i;
+                        itemData.data[0] = (byte)i;
                         found = true;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[0] = 255;
+                    itemData.data[0] = 255;
                 }
             }
 
             byte[] preVals = new byte[4];
-            preVals[0] = data.data[1];
-            preVals[1] = data.data[2];
-            preVals[2] = data.data[3];
-            preVals[3] = data.data[4];
-            BitConverter.GetBytes(asAttachment.CatchRot).CopyTo(data.data, 1);
-            modified |= (preVals[0] != data.data[1] || preVals[1] != data.data[2] || preVals[2] != data.data[3] || preVals[3] != data.data[4]);
+            preVals[0] = itemData.data[1];
+            preVals[1] = itemData.data[2];
+            preVals[2] = itemData.data[3];
+            preVals[3] = itemData.data[4];
+            BitConverter.GetBytes(asAttachment.CatchRot).CopyTo(itemData.data, 1);
+            modified |= (preVals[0] != itemData.data[1] || preVals[1] != itemData.data[2] || preVals[2] != itemData.data[3] || preVals[3] != itemData.data[4]);
 
-            return modified || (preIndex != data.data[0]);
+            return modified || (preIndex != itemData.data[0]);
         }
 
         private bool UpdateGivenSuppressor(byte[] newData)
@@ -8718,10 +8696,10 @@ namespace H3MP.Tracking
             bool modified = false;
             Suppressor asAttachment = dataObject as Suppressor;
 
-            if (data.data == null || data.data.Length != newData.Length)
+            if (itemData.data == null || itemData.data.Length != newData.Length)
             {
-                data.data = new byte[5];
-                data.data[0] = 255;
+                itemData.data = new byte[5];
+                itemData.data[0] = 255;
                 currentMountIndex = 255;
                 modified = true;
             }
@@ -8751,19 +8729,19 @@ namespace H3MP.Tracking
                 TrackedItemData parentTrackedItemData = null;
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.items[data.parent];
+                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.items[data.parent];
+                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                     }
                 }
 
@@ -8809,7 +8787,7 @@ namespace H3MP.Tracking
                 modified = true;
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified || (preMountIndex != currentMountIndex);
         }
@@ -8819,9 +8797,9 @@ namespace H3MP.Tracking
             bool modified = false;
             FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
 
-            if (data.data == null)
+            if (itemData.data == null)
             {
-                data.data = new byte[1 + attachmentInterfaceDataSize];
+                itemData.data = new byte[1 + attachmentInterfaceDataSize];
                 modified = true;
             }
 
@@ -8830,7 +8808,7 @@ namespace H3MP.Tracking
             // Write attached mount index
             if (asAttachment.curMount == null)
             {
-                data.data[0] = 255;
+                itemData.data[0] = 255;
                 currentMountIndex = 255;
             }
             else
@@ -8841,15 +8819,15 @@ namespace H3MP.Tracking
                 {
                     if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
                     {
-                        data.data[0] = (byte)i;
-                        currentMountIndex = data.data[0];
+                        itemData.data[0] = (byte)i;
+                        currentMountIndex = itemData.data[0];
                         found = true;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[0] = 255;
+                    itemData.data[0] = 255;
                     currentMountIndex = 255;
                 }
             }
@@ -8868,10 +8846,10 @@ namespace H3MP.Tracking
             bool modified = false;
             FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
 
-            if (data.data == null || data.data.Length != newData.Length)
+            if (itemData.data == null || itemData.data.Length != newData.Length)
             {
-                data.data = new byte[1 + attachmentInterfaceDataSize];
-                data.data[0] = 255;
+                itemData.data = new byte[1 + attachmentInterfaceDataSize];
+                itemData.data[0] = 255;
                 currentMountIndex = 255;
                 modified = true;
             }
@@ -8901,19 +8879,19 @@ namespace H3MP.Tracking
                 TrackedItemData parentTrackedItemData = null;
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.items[data.parent];
+                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.items[data.parent];
+                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
                     // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts.Count > newData[0])
+                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[newData[0]];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                     }
                 }
 
@@ -8953,7 +8931,7 @@ namespace H3MP.Tracking
                 attachmentInterfaceUpdateGivenFunc(asAttachment, newData, ref modified);
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified || (preMountIndex != currentMountIndex);
         }
@@ -8970,7 +8948,7 @@ namespace H3MP.Tracking
         {
             FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
 
-            if (data.data[0] != 255) // We want to be attached to a mount
+            if (itemData.data[0] != 255) // We want to be attached to a mount
             {
                 if (data.parent != -1) // We have parent
                 {
@@ -8981,16 +8959,16 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.items[data.parent];
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.items[data.parent];
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalObject.AttachmentMounts[currentMountIndex];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[currentMountIndex];
                     }
 
                     // If not yet physically mounted to anything, can right away mount to the proper mount
@@ -9029,9 +9007,9 @@ namespace H3MP.Tracking
             AttachableBipodInterface asInterface = att.AttachmentInterface as AttachableBipodInterface;
 
             // Write expanded
-            byte preval = data.data[1];
-            data.data[1] = asInterface.Bipod.m_isBipodExpanded ? (byte)1 : (byte)0;
-            modified |= preval != data.data[1];
+            byte preval = itemData.data[1];
+            itemData.data[1] = asInterface.Bipod.m_isBipodExpanded ? (byte)1 : (byte)0;
+            modified |= preval != itemData.data[1];
         }
 
         private void UpdateGivenAttachableBipod(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9051,10 +9029,10 @@ namespace H3MP.Tracking
             FlagPoseSwitcher asInterface = att.AttachmentInterface as FlagPoseSwitcher;
 
             // Write index
-            byte preval0 = data.data[1];
-            byte preval1 = data.data[2];
-            BitConverter.GetBytes((short)asInterface.m_index).CopyTo(data.data, 1);
-            modified |= (preval0 != data.data[1] || preval1 != data.data[2]);
+            byte preval0 = itemData.data[1];
+            byte preval1 = itemData.data[2];
+            BitConverter.GetBytes((short)asInterface.m_index).CopyTo(itemData.data, 1);
+            modified |= (preval0 != itemData.data[1] || preval1 != itemData.data[2]);
         }
 
         private void UpdateGivenFlagPoseSwitcher(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9077,9 +9055,9 @@ namespace H3MP.Tracking
             FlipSight asInterface = att.AttachmentInterface as FlipSight;
 
             // Write up
-            byte preval0 = data.data[1];
-            data.data[1] = asInterface.IsUp ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[1];
+            byte preval0 = itemData.data[1];
+            itemData.data[1] = asInterface.IsUp ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[1];
         }
 
         private void UpdateGivenFlipSight(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9099,9 +9077,9 @@ namespace H3MP.Tracking
             FlipSightY asInterface = att.AttachmentInterface as FlipSightY;
 
             // Write up
-            byte preval0 = data.data[1];
-            data.data[1] = asInterface.IsUp ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[1];
+            byte preval0 = itemData.data[1];
+            itemData.data[1] = asInterface.IsUp ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[1];
         }
 
         private void UpdateGivenFlipSightY(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9121,9 +9099,9 @@ namespace H3MP.Tracking
             LAM asInterface = att.AttachmentInterface as LAM;
 
             // Write state
-            byte preval0 = data.data[1];
-            data.data[1] = (byte)asInterface.LState;
-            modified |= preval0 != data.data[1];
+            byte preval0 = itemData.data[1];
+            itemData.data[1] = (byte)asInterface.LState;
+            modified |= preval0 != itemData.data[1];
         }
 
         private void UpdateGivenLAM(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9179,9 +9157,9 @@ namespace H3MP.Tracking
             LaserPointer asInterface = att.AttachmentInterface as LaserPointer;
 
             // Write on
-            byte preval0 = data.data[1];
-            data.data[1] = asInterface.BeamHitPoint.activeSelf ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[1];
+            byte preval0 = itemData.data[1];
+            itemData.data[1] = asInterface.BeamHitPoint.activeSelf ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[1];
         }
 
         private void UpdateGivenLaserPointer(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9201,9 +9179,9 @@ namespace H3MP.Tracking
             TacticalFlashlight asInterface = att.AttachmentInterface as TacticalFlashlight;
 
             // Write on
-            byte preval0 = data.data[1];
-            data.data[1] = asInterface.LightParts.activeSelf ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[1];
+            byte preval0 = itemData.data[1];
+            itemData.data[1] = asInterface.LightParts.activeSelf ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[1];
         }
 
         private void UpdateGivenTacticalFlashlight(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9225,42 +9203,42 @@ namespace H3MP.Tracking
 
             int necessarySize = asMag.m_capacity * 2 + 10;
 
-            if(data.data == null || data.data.Length < necessarySize)
+            if(itemData.data == null || itemData.data.Length < necessarySize)
             {
-                data.data = new byte[necessarySize];
+                itemData.data = new byte[necessarySize];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
-            byte preval1 = data.data[1];
+            byte preval0 = itemData.data[0];
+            byte preval1 = itemData.data[1];
 
             // Write count of loaded rounds
-            BitConverter.GetBytes((short)asMag.m_numRounds).CopyTo(data.data, 0);
+            BitConverter.GetBytes((short)asMag.m_numRounds).CopyTo(itemData.data, 0);
 
-            modified |= (preval0 != data.data[0] || preval1 != data.data[1]);
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1]);
 
             // Write loaded round classes
             for (int i=0; i < asMag.m_numRounds; ++i)
             {
-                preval0 = data.data[i * 2 + 2];
-                preval1 = data.data[i * 2 + 3];
+                preval0 = itemData.data[i * 2 + 2];
+                preval1 = itemData.data[i * 2 + 3];
 
-                BitConverter.GetBytes((short)asMag.LoadedRounds[i].LR_Class).CopyTo(data.data, i * 2 + 2);
+                BitConverter.GetBytes((short)asMag.LoadedRounds[i].LR_Class).CopyTo(itemData.data, i * 2 + 2);
 
-                modified |= (preval0 != data.data[i * 2 + 2] || preval1 != data.data[i * 2 + 3]);
+                modified |= (preval0 != itemData.data[i * 2 + 2] || preval1 != itemData.data[i * 2 + 3]);
             }
 
             // Write loaded into firearm
-            preval0 = data.data[necessarySize - 8];
-            data.data[necessarySize - 8] = asMag.FireArm != null ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[necessarySize - 8];
+            preval0 = itemData.data[necessarySize - 8];
+            itemData.data[necessarySize - 8] = asMag.FireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[necessarySize - 8];
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
             // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
-            preval0 = data.data[necessarySize - 7];
+            preval0 = itemData.data[necessarySize - 7];
             if (asMag.FireArm == null)
             {
-                data.data[necessarySize - 7] = (byte)255;
+                itemData.data[necessarySize - 7] = (byte)255;
             }
             else
             {
@@ -9270,28 +9248,28 @@ namespace H3MP.Tracking
                     if (asMag.FireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                     {
                         found = true;
-                        data.data[necessarySize - 7] = (byte)i;
+                        itemData.data[necessarySize - 7] = (byte)i;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[necessarySize - 7] = (byte)255;
+                    itemData.data[necessarySize - 7] = (byte)255;
                 }
             }
-            modified |= preval0 != data.data[necessarySize - 7];
+            modified |= preval0 != itemData.data[necessarySize - 7];
 
             // Write loaded into AttachableFirearm
-            preval0 = data.data[necessarySize - 6];
-            data.data[necessarySize - 6] = asMag.AttachableFireArm != null ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[necessarySize - 6];
+            preval0 = itemData.data[necessarySize - 6];
+            itemData.data[necessarySize - 6] = asMag.AttachableFireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[necessarySize - 6];
 
             // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
             // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
-            preval0 = data.data[necessarySize - 5];
+            preval0 = itemData.data[necessarySize - 5];
             if (asMag.AttachableFireArm == null)
             {
-                data.data[necessarySize - 5] = (byte)255;
+                itemData.data[necessarySize - 5] = (byte)255;
             }
             else
             {
@@ -9300,24 +9278,24 @@ namespace H3MP.Tracking
                 {
                     if (asMag.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                     {
-                        data.data[necessarySize - 5] = (byte)i;
+                        itemData.data[necessarySize - 5] = (byte)i;
                         break;
                     }
                 }
                 if (!found)
                 {
-                    data.data[necessarySize - 5] = (byte)255;
+                    itemData.data[necessarySize - 5] = (byte)255;
                 }
             }
-            modified |= preval0 != data.data[necessarySize - 5];
+            modified |= preval0 != itemData.data[necessarySize - 5];
 
             // Write fuel amount left
-            preval0 = data.data[necessarySize - 4];
-            preval1 = data.data[necessarySize - 3];
-            byte preval2 = data.data[necessarySize - 2];
-            byte preval3 = data.data[necessarySize - 1];
-            BitConverter.GetBytes(asMag.FuelAmountLeft).CopyTo(data.data, necessarySize - 4);
-            modified |= (preval0 != data.data[necessarySize - 4] || preval1 != data.data[necessarySize - 3] || preval2 != data.data[necessarySize - 2] || preval3 != data.data[necessarySize - 1]);
+            preval0 = itemData.data[necessarySize - 4];
+            preval1 = itemData.data[necessarySize - 3];
+            byte preval2 = itemData.data[necessarySize - 2];
+            byte preval3 = itemData.data[necessarySize - 1];
+            BitConverter.GetBytes(asMag.FuelAmountLeft).CopyTo(itemData.data, necessarySize - 4);
+            modified |= (preval0 != itemData.data[necessarySize - 4] || preval1 != itemData.data[necessarySize - 3] || preval2 != itemData.data[necessarySize - 2] || preval3 != itemData.data[necessarySize - 1]);
 
             return modified;
         }
@@ -9327,7 +9305,7 @@ namespace H3MP.Tracking
             bool modified = false;
             FVRFireArmMagazine asMag = dataObject as FVRFireArmMagazine;
 
-            if (data.data == null || data.data.Length != newData.Length)
+            if (itemData.data == null || itemData.data.Length != newData.Length)
             {
                 modified = true;
             }
@@ -9369,11 +9347,11 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.items[data.parent];
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.items[data.parent];
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is FVRFireArm)
@@ -9474,11 +9452,11 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.items[data.parent];
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.items[data.parent];
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is AttachableFirearmPhysicalObject)
@@ -9619,7 +9597,7 @@ namespace H3MP.Tracking
 
             modified |= preAmount != asMag.FuelAmountLeft;
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -9631,35 +9609,35 @@ namespace H3MP.Tracking
 
             int necessarySize = asClip.m_capacity * 2 + 3;
 
-            if (data.data == null || data.data.Length < necessarySize)
+            if (itemData.data == null || itemData.data.Length < necessarySize)
             {
-                data.data = new byte[necessarySize];
+                itemData.data = new byte[necessarySize];
                 modified = true;
             }
 
-            byte preval0 = data.data[0];
-            byte preval1 = data.data[1];
+            byte preval0 = itemData.data[0];
+            byte preval1 = itemData.data[1];
 
             // Write count of loaded rounds
-            BitConverter.GetBytes((short)asClip.m_numRounds).CopyTo(data.data, 0);
+            BitConverter.GetBytes((short)asClip.m_numRounds).CopyTo(itemData.data, 0);
 
-            modified |= (preval0 != data.data[0] || preval1 != data.data[1]);
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1]);
 
             // Write loaded round classes
             for (int i = 0; i < asClip.m_numRounds; ++i)
             {
-                preval0 = data.data[i * 2 + 2];
-                preval1 = data.data[i * 2 + 3];
+                preval0 = itemData.data[i * 2 + 2];
+                preval1 = itemData.data[i * 2 + 3];
 
-                BitConverter.GetBytes((short)asClip.LoadedRounds[i].LR_Class).CopyTo(data.data, i * 2 + 2);
+                BitConverter.GetBytes((short)asClip.LoadedRounds[i].LR_Class).CopyTo(itemData.data, i * 2 + 2);
 
-                modified |= (preval0 != data.data[i * 2 + 2] || preval1 != data.data[i * 2 + 3]);
+                modified |= (preval0 != itemData.data[i * 2 + 2] || preval1 != itemData.data[i * 2 + 3]);
             }
 
             // Write loaded into firearm
-            preval0 = data.data[necessarySize - 1];
-            data.data[necessarySize - 1] = asClip.FireArm != null ? (byte)1 : (byte)0;
-            modified |= preval0 != data.data[necessarySize - 1];
+            preval0 = itemData.data[necessarySize - 1];
+            itemData.data[necessarySize - 1] = asClip.FireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[necessarySize - 1];
 
             return modified;
         }
@@ -9669,7 +9647,7 @@ namespace H3MP.Tracking
             bool modified = false;
             FVRFireArmClip asClip = dataObject as FVRFireArmClip;
 
-            if (data.data == null || data.data.Length != newData.Length)
+            if (itemData.data == null || itemData.data.Length != newData.Length)
             {
                 modified = true;
             }
@@ -9711,11 +9689,11 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.items[data.parent];
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.items[data.parent];
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is FVRFireArm)
@@ -9751,7 +9729,7 @@ namespace H3MP.Tracking
                 modified = true;
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
@@ -9763,9 +9741,9 @@ namespace H3MP.Tracking
 
             int necessarySize = asSpeedloader.Chambers.Count * 2;
 
-            if (data.data == null || data.data.Length < necessarySize)
+            if (itemData.data == null || itemData.data.Length < necessarySize)
             {
-                data.data = new byte[necessarySize];
+                itemData.data = new byte[necessarySize];
                 modified = true;
             }
 
@@ -9775,19 +9753,19 @@ namespace H3MP.Tracking
             // Write loaded round classes (-1 for none)
             for (int i = 0; i < asSpeedloader.Chambers.Count; ++i)
             {
-                preval0 = data.data[i * 2];
-                preval1 = data.data[i * 2 + 1];
+                preval0 = itemData.data[i * 2];
+                preval1 = itemData.data[i * 2 + 1];
 
                 if (asSpeedloader.Chambers[i].IsLoaded && !asSpeedloader.Chambers[i].IsSpent)
                 {
-                    BitConverter.GetBytes((short)asSpeedloader.Chambers[i].LoadedClass).CopyTo(data.data, i * 2);
+                    BitConverter.GetBytes((short)asSpeedloader.Chambers[i].LoadedClass).CopyTo(itemData.data, i * 2);
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)-1).CopyTo(data.data, i * 2);
+                    BitConverter.GetBytes((short)-1).CopyTo(itemData.data, i * 2);
                 }
 
-                modified |= (preval0 != data.data[i * 2] || preval1 != data.data[i * 2 + 1]);
+                modified |= (preval0 != itemData.data[i * 2] || preval1 != itemData.data[i * 2 + 1]);
             }
 
             return modified;
@@ -9798,7 +9776,7 @@ namespace H3MP.Tracking
             bool modified = false;
             Speedloader asSpeedloader = dataObject as Speedloader;
 
-            if (data.data == null || data.data.Length != newData.Length)
+            if (itemData.data == null || itemData.data.Length != newData.Length)
             {
                 modified = true;
             }
@@ -9821,15 +9799,15 @@ namespace H3MP.Tracking
                 }
             }
 
-            data.data = newData;
+            itemData.data = newData;
 
             return modified;
         }
         #endregion
 
-        private void FixedUpdate()
+        public virtual void FixedUpdate()
         {
-            if (interpolated && physicalObject != null && data.controller != GameManager.ID && data.position != null && data.rotation != null)
+            if (interpolated && physicalItem != null && data.controller != GameManager.ID && itemData.position != null && itemData.rotation != null)
             {
                 // TODO: Improvement: Should consider is it really necessary to process position of parented items as local?
                 //                    Should we just use position no matter what?
@@ -9837,29 +9815,29 @@ namespace H3MP.Tracking
                 //                    local pos for parented items so that we only send an update when its local pos has changed
                 //                    but instead of sending the local pos we send the world pos, so that here, we don't need to make the parented check
                 //                    and also risk fucking up because our parentage may not be consistent with controller yet.
-                if (Vector3.Distance(data.parent == -1 ? physicalObject.transform.position : physicalObject.transform.localPosition, data.position) > 0.001f)
+                if (Vector3.Distance(data.parent == -1 ? physicalItem.transform.position : physicalItem.transform.localPosition, itemData.position) > 0.001f)
                 {
                     positionSet = false;
-                    if (data.previousPos != null && data.velocity.magnitude < 1f)
+                    if (itemData.previousPos != null && itemData.velocity.magnitude < 1f)
                     {
                         if (data.parent == -1)
                         {
-                            physicalObject.transform.position = Vector3.Lerp(physicalObject.transform.position, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                            physicalItem.transform.position = Vector3.Lerp(physicalItem.transform.position, itemData.position + itemData.velocity, interpolationSpeed * Time.deltaTime);
                         }
                         else
                         {
-                            physicalObject.transform.localPosition = Vector3.Lerp(physicalObject.transform.localPosition, data.position + data.velocity, interpolationSpeed * Time.deltaTime);
+                            physicalItem.transform.localPosition = Vector3.Lerp(physicalItem.transform.localPosition, itemData.position + itemData.velocity, interpolationSpeed * Time.deltaTime);
                         }
                     }
                     else
                     {
                         if (data.parent == -1)
                         {
-                            physicalObject.transform.position = data.position;
+                            physicalItem.transform.position = itemData.position;
                         }
                         else
                         {
-                            physicalObject.transform.localPosition = data.position;
+                            physicalItem.transform.localPosition = itemData.position;
                         }
                     }
                 }
@@ -9867,42 +9845,42 @@ namespace H3MP.Tracking
                 {
                     if (data.parent == -1)
                     {
-                        physicalObject.transform.position = data.position;
+                        physicalItem.transform.position = itemData.position;
                     }
                     else
                     {
-                        physicalObject.transform.localPosition = data.position;
+                        physicalItem.transform.localPosition = itemData.position;
                     }
                     positionSet = true;
                 }
-                if (Quaternion.Angle(data.parent == -1 ? physicalObject.transform.rotation : physicalObject.transform.localRotation, data.rotation) > 0.1f)
+                if (Quaternion.Angle(data.parent == -1 ? physicalItem.transform.rotation : physicalItem.transform.localRotation, itemData.rotation) > 0.1f)
                 {
                     rotationSet = false;
                     if (data.parent == -1)
                     {
-                        physicalObject.transform.rotation = Quaternion.Lerp(physicalObject.transform.rotation, data.rotation, interpolationSpeed * Time.deltaTime);
+                        physicalItem.transform.rotation = Quaternion.Lerp(physicalItem.transform.rotation, itemData.rotation, interpolationSpeed * Time.deltaTime);
                     }
                     else
                     {
-                        physicalObject.transform.localRotation = Quaternion.Lerp(physicalObject.transform.localRotation, data.rotation, interpolationSpeed * Time.deltaTime);
+                        physicalItem.transform.localRotation = Quaternion.Lerp(physicalItem.transform.localRotation, itemData.rotation, interpolationSpeed * Time.deltaTime);
                     }
                 }
                 else if (!rotationSet)
                 {
                     if (data.parent == -1)
                     {
-                        physicalObject.transform.rotation = data.rotation;
+                        physicalItem.transform.rotation = itemData.rotation;
                     }
                     else
                     {
-                        physicalObject.transform.localRotation = data.rotation;
+                        physicalItem.transform.localRotation = itemData.rotation;
                     }
                     rotationSet = true;
                 }
             }
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
@@ -9910,293 +9888,42 @@ namespace H3MP.Tracking
                 return;
             }
 
-            // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
-            GameManager.trackedItemByItem.Remove(physicalObject);
-            if (physicalObject is SosigWeaponPlayerInterface)
+            GameManager.trackedItemByItem.Remove(physicalItem);
+            if (physicalItem is SosigWeaponPlayerInterface)
             {
-                GameManager.trackedItemBySosigWeapon.Remove((physicalObject as SosigWeaponPlayerInterface).W);
+                GameManager.trackedItemBySosigWeapon.Remove((physicalItem as SosigWeaponPlayerInterface).W);
             }
+            GameManager.trackedObjectByInteractive.Remove(physicalItem);
 
             // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
-            GameManager.EnsureUncontrolled(physicalObject);
+            EnsureUncontrolled();
 
-            // Have a flag in case we don't actually want to remove it from local after processing
-            // In case we can't detroy gobally because we are still waiting for a tracked ID for example
-            bool removeFromLocal = true;
-
-            // Check if we want to process sending, giving control, etc.
-            // We might want to skip just this part if the object was refused by the server
-            if (!skipDestroyProcessing)
-            {
-                // Check if we want to give control of any destroyed objects
-                // This would be the case while we change scene, objects will be destroyed but if there are other clients
-                // in our previous scene/instance, we don't want to destroy the object globally, we want to give control of it to one of them
-                // We might receive an order to destroy an object while we have giveControlOfDestroyed > 0, if so dontGiveControl flag 
-                // explicitly says to destroy
-                if (GameManager.giveControlOfDestroyed == 0 || dontGiveControl)
-                {
-                    DestroyGlobally(ref removeFromLocal);
-                }
-                else // We want to give control of this object instead of destroying it globally
-                {
-                    if (data.controller == GameManager.ID)
-                    {
-                        // Find best potential host
-                        int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, GameManager.playersAtLoadStart);
-                        if (otherPlayer == -1)
-                        {
-                            // No other best potential host, destroy globally
-                            DestroyGlobally(ref removeFromLocal);
-                        }
-                        else // We have a potential new host to give control to
-                        {
-                            // Check if can give control
-                            if (data.trackedID > -1)
-                            {
-                                // Give control with us as debounce because we know we are no longer eligible to control this object
-                                if (ThreadManager.host)
-                                {
-                                    ServerSend.GiveControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
-                                }
-                                else
-                                {
-                                    ClientSend.GiveControl(data.trackedID, otherPlayer, new List<int>() { GameManager.ID });
-                                }
-
-                                // Also change controller locally
-                                data.SetController(otherPlayer);
-                            }
-                            else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag
-                            {
-                                // Tell destruction we want to keep this in local for later
-                                removeFromLocal = false;
-
-                                // Keep the control change in unknown so we can send it to others if we get a tracked ID
-                                if (unknownControlTrackedIDs.TryGetValue(data.localWaitingIndex, out int val))
-                                {
-                                    if(val != otherPlayer)
-                                    {
-                                        unknownControlTrackedIDs[data.localWaitingIndex] = otherPlayer;
-                                    }
-                                }
-                                else
-                                {
-                                    unknownControlTrackedIDs.Add(data.localWaitingIndex, otherPlayer);
-                                }
-                            }
-                        }
-                    }
-                    // else, we don't control this object, it will simply be destroyed physically on our side
-                }
-            }
-
-            // If we control this item, remove it from local lists
-            // Which has to be done no matter what OnDestroy because we will not have a physicalObject to control after
-            // We have either destroyed it or given control of it above
-            if (data.localTrackedID != -1 && removeFromLocal)
-            {
-                data.RemoveFromLocal();
-            }
-
-            // Reset relevant flags
-            data.removeFromListOnDestroy = true;
-            sendDestroy = true;
-            skipDestroyProcessing = false;
+            base.OnDestroy();
         }
 
-        private void DestroyGlobally(ref bool removeFromLocal)
+        public override void EnsureUncontrolled()
         {
-            // Check if can destroy globally
-            if (data.trackedID > -1)
+            if (physicalItem.m_hand != null)
             {
-                // Check if want to send destruction
-                // Used to prevent feedback loops
-                if (sendDestroy)
-                {
-                    // Send destruction
-                    if (ThreadManager.host)
-                    {
-                        ServerSend.DestroyItem(data.trackedID, data.removeFromListOnDestroy);
-                    }
-                    else
-                    {
-                        ClientSend.DestroyItem(data.trackedID, data.removeFromListOnDestroy);
-                    }
-                }
-
-                // Remove from globals lists if we want
-                if (data.removeFromListOnDestroy)
-                {
-                    if (ThreadManager.host)
-                    {
-                        Server.items[data.trackedID] = null;
-                        Server.availableItemIndices.Add(data.trackedID);
-                    }
-                    else
-                    {
-                        Client.items[data.trackedID] = null;
-                    }
-
-                    GameManager.itemsByInstanceByScene[data.scene][data.instance].Remove(data.trackedID);
-                }
+                physicalItem.ForceBreakInteraction();
             }
-            else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag
+            if (physicalItem.QuickbeltSlot != null)
             {
-                // Tell destruction we want to keep this in local for later
-                removeFromLocal = false;
-
-                // Keep the destruction in unknown so we can send it to others if we get a tracked ID
-                if (!unknownDestroyTrackedIDs.Contains(data.localWaitingIndex))
-                {
-                    unknownDestroyTrackedIDs.Add(data.localWaitingIndex);
-                }
+                physicalItem.ClearQuickbeltState();
             }
         }
 
-        private void OnTransformParentChanged()
+        public override void BeginInteraction(FVRViveHand hand)
         {
-            if (data.ignoreParentChanged > 0)
+            if (data.controller != GameManager.ID)
             {
-                return;
-            }
+                // Take control
 
-            Transform currentParent = transform.parent;
-            TrackedItem parentTrackedItem = null;
-            while (currentParent != null)
-            {
-                parentTrackedItem = currentParent.GetComponent<TrackedItem>();
-                if (parentTrackedItem != null)
-                {
-                    break;
-                }
-                currentParent = currentParent.parent;
-            }
-            if (parentTrackedItem != null)
-            {
-                // Handle case of unknown tracked IDs
-                //      If ours is not yet known, put our waiting index in a wait dict with value as parent's LOCAL tracked ID if it is under our control
-                //      and the actual tracked ID if not, when we receive the tracked ID we set the parent
-                //          Note that if the parent is under our control, we need to store the local tracked ID because we might not have its tracked ID yet either
-                //          If it is not under our control then we have guarantee that is has a tracked ID
-                //      If the parent's tracked ID is not yet known, put it in a wait dict where key is the local tracked ID of the parent,
-                //      and the value is a list of all children that must be attached to this parent once we know the parent's tracked ID
-                //          Note that if we do not know the parent's tracked ID, it is because it is under our control
-                bool haveParentID = parentTrackedItem.data.trackedID > -1;
-                if (data.trackedID == -1)
-                {
-                    KeyValuePair<uint, bool> parentIDPair = new KeyValuePair<uint, bool>(haveParentID ? (uint)parentTrackedItem.data.trackedID : parentTrackedItem.data.localWaitingIndex, haveParentID);
-                    if (unknownTrackedIDs.ContainsKey(data.localWaitingIndex))
-                    {
-                        unknownTrackedIDs[data.localWaitingIndex] = parentIDPair;
-                    }
-                    else
-                    {
-                        unknownTrackedIDs.Add(data.localWaitingIndex, parentIDPair);
-                    }
-                    if (!haveParentID)
-                    {
-                        if (unknownParentWaitList.TryGetValue(parentTrackedItem.data.localWaitingIndex, out List<uint> waitList))
-                        {
-                            waitList.Add(data.localWaitingIndex);
-                        }
-                        else
-                        {
-                            unknownParentWaitList.Add(parentTrackedItem.data.localWaitingIndex, new List<uint>() { data.localWaitingIndex });
-                        }
-                    }
-                }
-                else
-                {
-                    if (haveParentID)
-                    {
-                        if (parentTrackedItem.data.trackedID != data.parent)
-                        {
-                            if (data.controller == GameManager.ID)
-                            {
-                                Mod.LogInfo(name + " has new parent: " + parentTrackedItem.data.itemID + ", sending");
-                                // We have a parent trackedItem and it is new
-                                // Update other clients
-                                if (ThreadManager.host)
-                                {
-                                    ServerSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
-                                }
-                                else
-                                {
-                                    ClientSend.ItemParent(data.trackedID, parentTrackedItem.data.trackedID);
-                                }
+                // Send to all clients
+                data.TakeControlRecursive();
 
-                                // Do the following after sending itemParent order in case updateParentFunc is not set for the item and is therefore dependent on 
-                                // an update to attach itself to the parent properly
-                                // Call an update on the item so we can send latest data considering the new parent
-                                data.Update();
-
-                                // Send latest data through TCP to make sure others mount the item properly
-                                if (ThreadManager.host)
-                                {
-                                    ServerSend.ItemUpdate(data);
-                                }
-                                else
-                                {
-                                    ClientSend.ItemUpdate(data);
-                                }
-                            }
-
-                            // Update local
-                            data.SetParent(parentTrackedItem.data, false);
-                        }
-                    }
-                    else
-                    {
-                        if (data.controller == GameManager.ID)
-                        {
-                            if (unknownParentTrackedIDs.ContainsKey(parentTrackedItem.data.localWaitingIndex))
-                            {
-                                unknownParentTrackedIDs[parentTrackedItem.data.localWaitingIndex].Add(data.trackedID);
-                            }
-                            else
-                            {
-                                unknownParentTrackedIDs.Add(parentTrackedItem.data.localWaitingIndex, new List<int>() { data.trackedID });
-                            }
-                        }
-                    }
-                }
-            }
-            else if (data.parent != -1)
-            {
-                if (data.trackedID == -1)
-                {
-                    if (data.controller == GameManager.ID)
-                    {
-                        if (unknownTrackedIDs.TryGetValue(data.localWaitingIndex, out KeyValuePair<uint, bool> entry))
-                        {
-                            if (!entry.Value && unknownParentWaitList.TryGetValue(entry.Key, out List<uint> waitlist))
-                            {
-                                waitlist.Remove(data.localWaitingIndex);
-                            }
-                        }
-                        unknownTrackedIDs.Remove(data.localWaitingIndex);
-                    }
-                }
-                else
-                {
-                    if (data.controller == GameManager.ID)
-                    {
-                        Mod.LogInfo(name + " was unparented, sending to others");
-                        // We were detached from current parent
-                        // Update other clients
-                        if (ThreadManager.host)
-                        {
-                            ServerSend.ItemParent(data.trackedID, -1);
-                        }
-                        else
-                        {
-                            ClientSend.ItemParent(data.trackedID, -1);
-                        }
-                    }
-
-                    // Update locally
-                    data.SetParent(null, false);
-                }
+                // Update locally
+                Mod.SetKinematicRecursive(physical.transform, false);
             }
         }
     }

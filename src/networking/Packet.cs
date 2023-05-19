@@ -1,5 +1,4 @@
 ﻿using FistVR;
-using H3MP.Patches;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -11,202 +10,189 @@ namespace H3MP.Networking
     /// <summary>Sent from server to client.</summary>
     public enum ServerPackets
     {
-        welcome = 1,
-        spawnPlayer = 2,
-        playerState = 3,
-        playerScene = 4,
-        addNonSyncScene = 5,
-        trackedItems = 6,
-        trackedItem = 7,
-        shatterableCrateSetHoldingHealth = 8,
-        giveControl = 9,
-        destroyItem = 10,
-        itemParent = 11,
-        connectSync = 12,
-        weaponFire = 13,
-        playerDamage = 14,
-        trackedSosig = 15,
-        trackedSosigs = 16,
-        giveSosigControl = 17,
-        destroySosig = 18,
-        sosigPickUpItem = 19,
-        sosigPlaceItemIn = 20,
-        sosigDropSlot = 21,
-        sosigHandDrop = 22,
-        sosigConfigure = 23,
-        sosigLinkRegisterWearable = 24,
-        sosigLinkDeRegisterWearable = 25,
-        sosigSetIFF = 26,
-        sosigSetOriginalIFF = 27,
-        sosigLinkDamage = 28,
-        sosigDamageData = 29,
-        sosigWearableDamage = 30,
-        sosigLinkExplodes = 31,
-        sosigDies = 32,
-        sosigClear = 33,
-        sosigSetBodyState = 34,
-        playSosigFootStepSound = 35,
-        sosigSpeakState = 36,
-        sosigSetCurrentOrder = 37,
-        sosigVaporize = 38,
-        sosigRequestHitDecal = 39,
-        sosigLinkBreak = 40,
-        sosigLinkSever = 41,
-        updateRequest = 42,
-        playerInstance = 43,
-        addTNHInstance = 44,
-        addTNHCurrentlyPlaying = 45,
-        removeTNHCurrentlyPlaying = 46,
-        setTNHProgression = 47,
-        setTNHEquipment = 48,
-        setTNHHealthMode = 49,
-        setTNHTargetMode = 50,
-        setTNHAIDifficulty = 51,
-        setTNHRadarMode = 52,
-        setTNHItemSpawnerMode = 53,
-        setTNHBackpackMode = 54,
-        setTNHHealthMult = 55,
-        setTNHSosigGunReload = 56,
-        setTNHSeed = 57,
-        setTNHLevelID = 58,
-        addInstance = 59,
-        setTNHController = 60,
-        spectatorHost = 61,
-        TNHPlayerDied = 62,
-        TNHAddTokens = 63,
-        TNHSetLevel = 64,
-        trackedAutoMeater = 65,
-        trackedAutoMeaters = 66,
-        destroyAutoMeater = 67,
-        giveAutoMeaterControl = 68,
-        autoMeaterSetState = 69,
-        autoMeaterSetBladesActive = 70,
-        autoMeaterDamage = 71,
-        autoMeaterFireShot = 72,
-        autoMeaterFirearmFireAtWill = 73,
-        autoMeaterHitZoneDamage = 74,
-        autoMeaterHitZoneDamageData = 75,
-        TNHSosigKill = 76,
-        TNHHoldPointSystemNode = 77,
-        TNHHoldBeginChallenge = 78,
-        TNHSetPhaseTake = 79,
-        TNHHoldCompletePhase = 80,
-        TNHHoldPointFailOut = 81,
-        TNHSetPhaseComplete = 82,
-        TNHSetPhase = 83,
-        trackedEncryptions = 84,
-        trackedEncryption = 85,
-        giveEncryptionControl = 86,
-        destroyEncryption = 87,
-        encryptionDamage = 88,
-        encryptionDamageData = 89,
-        encryptionRespawnSubTarg = 90,
-        encryptionSpawnGrowth = 91,
-        encryptionInit = 92,
-        encryptionResetGrowth = 93,
-        encryptionDisableSubtarg = 94,
-        encryptionSubDamage = 95,
-        shatterableCrateDamage = 96,
-        shatterableCrateDestroy = 97,
-        initTNHInstances = 98,
-        sosigWeaponFire = 99,
-        sosigWeaponShatter = 100,
-        sosigWeaponDamage = 101,
-        LAPD2019Fire = 102,
-        LAPD2019LoadBattery = 103,
-        LAPD2019ExtractBattery = 104,
-        minigunFire = 105,
-        attachableFirearmFire = 106,
-        breakActionWeaponFire = 107,
-        playerIFF = 108,
-        uberShatterableShatter = 109,
-        TNHHoldPointBeginAnalyzing = 110,
-        TNHHoldPointRaiseBarriers = 111,
-        TNHHoldIdentifyEncryption = 112,
-        TNHHoldPointBeginPhase = 113,
-        TNHHoldPointCompleteHold = 114,
-        sosigPriorityIFFChart = 115,
-        leverActionFirearmFire = 116,
-        revolvingShotgunFire = 117,
-        derringerFire = 118,
-        flintlockWeaponBurnOffOuter = 119,
-        flintlockWeaponFire = 120,
-        grappleGunFire = 121,
-        HCBReleaseSled = 122,
-        remoteMissileDetonate = 123,
-        remoteMissileDamage = 124,
-        revolverFire = 125,
-        singleActionRevolverFire = 126,
-        stingerLauncherFire = 127,
-        stingerMissileDamage = 128,
-        stingerMissileExplode = 129,
-        pinnedGrenadeExplode = 130,
-        FVRGrenadeExplode = 131,
-        clientDisconnect = 132,
-        serverClosed = 133,
-        initConnectionData = 134,
-        bangSnapSplode = 135,
-        C4Detonate = 136,
-        claymoreMineDetonate = 137,
-        SLAMDetonate = 138,
-        ping = 139,
-        TNHSetPhaseHold = 140,
-        shatterableCrateSetHoldingToken = 141,
-        resetTNH = 142,
-        reviveTNHPlayer = 143,
-        playerColor = 144,
-        colorByIFF = 145,
-        nameplateMode = 146,
-        radarMode = 147,
-        radarColor = 148,
-        TNHInitializer = 149,
-        maxHealth = 150,
-        fuseIgnite = 151,
-        fuseBoom = 152,
-        molotovShatter = 153,
-        molotovDamage = 154,
-        pinnedGrenadePullPin = 155,
-        magazineAddRound = 156,
-        clipAddRound = 157,
-        speedloaderChamberLoad = 158,
-        remoteGunChamber = 159,
-        chamberRound = 160,
-        magazineLoad = 161,
-        magazineLoadAttachable = 162,
-        clipLoad = 163,
-        revolverCylinderLoad = 164,
-        revolvingShotgunLoad = 165,
-        grappleGunLoad = 166,
-        carlGustafLatchSate = 167,
-        carlGustafShellSlideSate = 168,
-        itemUpdate = 169,
-        TNHHostStartHold = 170,
-        integratedFirearmFire = 171,
-        grappleAttached = 172,
-        sosigUpdate = 173,
-        autoMeaterUpdate = 174,
-        encryptionUpdate = 175
+        welcome = 0,
+        spawnPlayer = 1,
+        playerState = 2,
+        playerScene = 3,
+        addNonSyncScene = 4, //UNUSED
+        shatterableCrateSetHoldingHealth = 5,
+        giveObjectControl = 6,
+        objectParent = 7,
+        connectSync = 8,
+        weaponFire = 9,
+        playerDamage = 10,
+        sosigPickUpItem = 11,
+        sosigPlaceItemIn = 12,
+        sosigDropSlot = 13,
+        sosigHandDrop = 14,
+        sosigConfigure = 15,
+        sosigLinkRegisterWearable = 16,
+        sosigLinkDeRegisterWearable = 17,
+        sosigSetIFF = 18,
+        sosigSetOriginalIFF = 19,
+        sosigLinkDamage = 20,
+        sosigDamageData = 21,
+        sosigWearableDamage = 22,
+        sosigLinkExplodes = 23,
+        sosigDies = 24,
+        sosigClear = 25,
+        sosigSetBodyState = 26,
+        playSosigFootStepSound = 27,
+        sosigSpeakState = 28,
+        sosigSetCurrentOrder = 29,
+        sosigVaporize = 30,
+        sosigRequestHitDecal = 31,
+        sosigLinkBreak = 32,
+        sosigLinkSever = 33,
+        updateRequest = 34,
+        playerInstance = 35,
+        addTNHInstance = 36,
+        addTNHCurrentlyPlaying = 37,
+        removeTNHCurrentlyPlaying = 38,
+        setTNHProgression = 39,
+        setTNHEquipment = 40,
+        setTNHHealthMode = 41,
+        setTNHTargetMode = 42,
+        setTNHAIDifficulty = 43,
+        setTNHRadarMode = 44,
+        setTNHItemSpawnerMode = 45,
+        setTNHBackpackMode = 46,
+        setTNHHealthMult = 47,
+        setTNHSosigGunReload = 48,
+        setTNHSeed = 49,
+        setTNHLevelID = 50,
+        addInstance = 51,
+        setTNHController = 52,
+        spectatorHost = 53,
+        TNHPlayerDied = 54,
+        TNHAddTokens = 55,
+        TNHSetLevel = 56,
+        autoMeaterSetState = 57,
+        autoMeaterSetBladesActive = 58,
+        autoMeaterDamage = 59,
+        autoMeaterFireShot = 60,
+        autoMeaterFirearmFireAtWill = 61,
+        autoMeaterHitZoneDamage = 62,
+        autoMeaterHitZoneDamageData = 63,
+        TNHSosigKill = 64,
+        TNHHoldPointSystemNode = 65,
+        TNHHoldBeginChallenge = 66,
+        TNHSetPhaseTake = 67,
+        TNHHoldCompletePhase = 68,
+        TNHHoldPointFailOut = 69,
+        TNHSetPhaseComplete = 70,
+        TNHSetPhase = 71,
+        encryptionDamage = 72,
+        encryptionDamageData = 73,
+        encryptionRespawnSubTarg = 74,
+        encryptionSpawnGrowth = 75,
+        encryptionInit = 76,
+        encryptionResetGrowth = 77,
+        encryptionDisableSubtarg = 78,
+        encryptionSubDamage = 79,
+        shatterableCrateDamage = 80,
+        shatterableCrateDestroy = 81,
+        initTNHInstances = 82,
+        sosigWeaponFire = 83,
+        sosigWeaponShatter = 84,
+        sosigWeaponDamage = 85,
+        LAPD2019Fire = 86,
+        LAPD2019LoadBattery = 87,
+        LAPD2019ExtractBattery = 88,
+        minigunFire = 89,
+        attachableFirearmFire = 90,
+        breakActionWeaponFire = 91,
+        playerIFF = 92,
+        uberShatterableShatter = 93,
+        TNHHoldPointBeginAnalyzing = 94,
+        TNHHoldPointRaiseBarriers = 95,
+        TNHHoldIdentifyEncryption = 96,
+        TNHHoldPointBeginPhase = 97,
+        TNHHoldPointCompleteHold = 98,
+        sosigPriorityIFFChart = 99,
+        leverActionFirearmFire = 100,
+        revolvingShotgunFire = 101,
+        derringerFire = 102,
+        flintlockWeaponBurnOffOuter = 103,
+        flintlockWeaponFire = 104,
+        grappleGunFire = 105,
+        HCBReleaseSled = 106,
+        remoteMissileDetonate = 107,
+        remoteMissileDamage = 108,
+        revolverFire = 109,
+        singleActionRevolverFire = 110,
+        stingerLauncherFire = 111,
+        stingerMissileDamage = 112,
+        stingerMissileExplode = 113,
+        pinnedGrenadeExplode = 114,
+        FVRGrenadeExplode = 115,
+        clientDisconnect = 116,
+        serverClosed = 117,
+        initConnectionData = 118, //UNUSED
+        bangSnapSplode = 119,
+        C4Detonate = 120,
+        claymoreMineDetonate = 121,
+        SLAMDetonate = 122,
+        ping = 123,
+        TNHSetPhaseHold = 124,
+        shatterableCrateSetHoldingToken = 125,
+        resetTNH = 126,
+        reviveTNHPlayer = 127,
+        playerColor = 128,
+        colorByIFF = 129,
+        nameplateMode = 130,
+        radarMode = 131,
+        radarColor = 132,
+        TNHInitializer = 133,
+        maxHealth = 134,
+        fuseIgnite = 135,
+        fuseBoom = 136,
+        molotovShatter = 137,
+        molotovDamage = 138,
+        pinnedGrenadePullPin = 139,
+        magazineAddRound = 140,
+        clipAddRound = 141,
+        speedloaderChamberLoad = 142,
+        remoteGunChamber = 143,
+        chamberRound = 144,
+        magazineLoad = 145,
+        magazineLoadAttachable = 146,
+        clipLoad = 147,
+        revolverCylinderLoad = 148,
+        revolvingShotgunLoad = 149,
+        grappleGunLoad = 150,
+        carlGustafLatchSate = 151,
+        carlGustafShellSlideSate = 152,
+        TNHHostStartHold = 153,
+        integratedFirearmFire = 154,
+        grappleAttached = 155,
+        trackedObject = 156,
+        trackedObjects = 157,
+        objectUpdate = 158,
+        destroyObject = 159,
+        registerCustomPacketType = 160
     }
 
     /// <summary>Sent from client to server.</summary>
     public enum ClientPackets
     {
+        grappleAttached = 0,
         welcomeReceived = 1,
         playerState = 2,
         playerScene = 3,
-        addNonSyncScene = 4,
-        trackedItems = 5,
-        trackedItem = 6,
+        addNonSyncScene = 4, //UNUSED
+        destroyObject = 5,
+        objectUpdate = 6,
         shatterableCrateSetHoldingHealth = 7,
-        giveControl = 8,
-        destroyItem = 9,
-        itemParent = 10,
+        giveObjectControl = 8,
+        trackedObjects = 9,
+        objectParent = 10,
         weaponFire = 11,
         playerDamage = 12,
-        trackedSosig = 13,
-        trackedSosigs = 14,
-        giveSosigControl = 15,
-        destroySosig = 16,
+        remoteGunChamber = 13,
+        chamberRound = 14,
+        integratedFirearmFire = 15,
+        trackedObject = 16,
         sosigPickupItem = 17,
         sosigPlaceItemIn = 18,
         sosigDropSlot = 19,
@@ -230,8 +216,8 @@ namespace H3MP.Networking
         sosigRequestHitDecal = 37,
         sosigLinkBreak = 38,
         sosigLinkSever = 39,
-        updateItemRequest = 40,
-        updateSosigRequest = 41,
+        updateObjectRequest = 40,
+        speedloaderChamberLoad = 41,
         playerInstance = 42,
         addTNHInstance = 43,
         addTNHCurrentlyPlaying = 44,
@@ -254,11 +240,11 @@ namespace H3MP.Networking
         TNHPlayerDied = 61,
         TNHAddTokens = 62,
         TNHSetLevel = 63,
-        trackedAutoMeater = 64,
-        trackedAutoMeaters = 65,
-        destroyAutoMeater = 66,
-        giveAutoMeaterControl = 67,
-        updateAutoMeatersRequest = 68,
+        revolvingShotgunLoad = 64,
+        grappleGunLoad = 65,
+        carlGustafLatchSate = 66,
+        carlGustafShellSlideSate = 67,
+        TNHHostStartHold = 68,
         autoMeaterSetState = 69,
         autoMeaterSetBladesActive = 70,
         autoMeaterDamage = 71,
@@ -276,10 +262,10 @@ namespace H3MP.Networking
         TNHHoldPointFailOut = 83,
         TNHSetPhaseComplete = 84,
         TNHSetPhase = 85,
-        trackedEncryptions = 86,
-        trackedEncryption = 87,
-        giveEncryptionControl = 88,
-        destroyEncryption = 89,
+        magazineLoad = 86,
+        magazineLoadAttachable = 87,
+        clipLoad = 88,
+        revolverCylinderLoad = 89,
         encryptionDamage = 90,
         encryptionDamageData = 91,
         encryptionRespawnSubTarg = 92,
@@ -289,7 +275,7 @@ namespace H3MP.Networking
         encryptionDisableSubtarg = 96,
         encryptionSubDamage = 97,
         shatterableCrateDestroy = 98,
-        updateEncryptionsRequest = 99,
+        registerCustomPacketType = 99,
         DoneLoadingScene = 100,
         DoneSendingUpdaToDateObjects = 101,
         sosigWeaponFire = 102,
@@ -345,24 +331,6 @@ namespace H3MP.Networking
         pinnedGrenadePullPin = 152,
         magazineAddRound = 153,
         clipAddRound = 154,
-        speedloaderChamberLoad = 155,
-        remoteGunChamber = 156,
-        chamberRound = 157,
-        magazineLoad = 158,
-        magazineLoadAttachable = 159,
-        clipLoad = 160,
-        revolverCylinderLoad = 161,
-        revolvingShotgunLoad = 162,
-        grappleGunLoad = 163,
-        carlGustafLatchSate = 164,
-        carlGustafShellSlideSate = 165,
-        itemUpdate = 166,
-        TNHHostStartHold = 167,
-        integratedFirearmFire = 168,
-        grappleAttached = 169,
-        sosigUpdate = 170,
-        autoMeaterUpdate = 171,
-        encryptionUpdate = 172
     }
 
     public class Packet : IDisposable
@@ -475,6 +443,12 @@ namespace H3MP.Networking
         {
             buffer.AddRange(BitConverter.GetBytes(_value));
         }
+        /// <summary>Adds a ushort to the packet.</summary>
+        /// <param name="_value">The ushort to add.</param>
+        public void Write(ushort _value)
+        {
+            buffer.AddRange(BitConverter.GetBytes(_value));
+        }
         /// <summary>Adds an int to the packet.</summary>
         /// <param name="_value">The int to add.</param>
         public void Write(int _value)
@@ -542,69 +516,6 @@ namespace H3MP.Networking
             Write(_value.z);
             Write(_value.w);
         }
-        /// <summary>Adds a TrackedItemData to the packet.</summary>
-        /// <param name="_value">The TrackedItemData to add.</param>
-        public void Write(TrackedItemData trackedItem, bool incrementOrder, bool full)
-        {
-            Write(trackedItem.trackedID);
-            Write(trackedItem.position);
-            Write(trackedItem.rotation);
-            if(trackedItem.data == null || trackedItem.data.Length == 0)
-            {
-                Write(0);
-            }
-            else
-            {
-                Write(trackedItem.data.Length);
-                Write(trackedItem.data);
-            }
-            Write(trackedItem.active);
-            Write(trackedItem.underActiveControl);
-
-            // TODO: Optimization: Make which data we send dependent on what updated, cause we shouldn't send the entire data array if there was no update in it
-
-            if (full)
-            {
-                Write(trackedItem.itemID);
-                if(trackedItem.identifyingData == null || trackedItem.identifyingData.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedItem.identifyingData.Length);
-                    Write(trackedItem.identifyingData);
-                }
-                Write(trackedItem.controller);
-                Write(trackedItem.parent);
-                Write(trackedItem.localTrackedID);
-                Write(trackedItem.scene);
-                Write(trackedItem.instance);
-                Write(trackedItem.sceneInit);
-                if (trackedItem.additionalData == null || trackedItem.additionalData.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedItem.additionalData.Length);
-                    Write(trackedItem.additionalData);
-                }
-                Write(trackedItem.localWaitingIndex);
-                Write(trackedItem.initTracker);
-            }
-            else
-            {
-                if (incrementOrder)
-                {
-                    Write(trackedItem.order++);
-                }
-                else
-                {
-                    Write(trackedItem.order);
-                }
-            }
-        }
         /// <summary>Adds a Damage to the packet.</summary>
         /// <param name="_value">The Damage to add.</param>
         public void Write(Damage damage)
@@ -627,321 +538,6 @@ namespace H3MP.Networking
             Write(damage.edgeNormal);
             Write(damage.damageSize);
             Write((byte)damage.Class);
-        }
-        /// <summary>Adds a TrackedSosigData to the packet.</summary>
-        /// <param name="trackedSosig">The TrackedSosigData to add.</param>
-        /// <param name="full">Whether to include all necessary data to instantiate this sosig.</param>
-        public void Write(TrackedSosigData trackedSosig, bool incrementOrder, bool full)
-        {
-            Write(trackedSosig.trackedID);
-            Write(trackedSosig.position);
-            Write(trackedSosig.rotation); 
-            Write(trackedSosig.active);
-            Write(trackedSosig.mustard);
-            if(trackedSosig.ammoStores != null && trackedSosig.ammoStores.Length > 0)
-            {
-                Write((byte)trackedSosig.ammoStores.Length);
-                for(int i=0; i < trackedSosig.ammoStores.Length; ++i)
-                {
-                    Write(trackedSosig.ammoStores[i]);
-                }
-            }
-            else
-            {
-                Write((byte)0);
-            }
-            Write((byte)trackedSosig.bodyPose);
-            if (trackedSosig.linkIntegrity == null || trackedSosig.linkIntegrity.Length == 0)
-            {
-                Write((byte)0);
-            }
-            else
-            {
-                Write((byte)trackedSosig.linkIntegrity.Length);
-                for (int i = 0; i < trackedSosig.linkIntegrity.Length; ++i)
-                {
-                    Write(trackedSosig.linkIntegrity[i]);
-                }
-            }
-            Write((byte)trackedSosig.fallbackOrder);
-            Write((byte)trackedSosig.currentOrder);
-
-            if (full)
-            {
-                if (trackedSosig.linkData == null || trackedSosig.linkData.Length == 0)
-                {
-                    Write((byte)0);
-                }
-                else
-                {
-                    Write((byte)trackedSosig.linkData.Length);
-                    for (int i = 0; i < trackedSosig.linkData.Length; ++i)
-                    {
-                        for (int k = 0; k < 5; ++k)
-                        {
-                            Write(trackedSosig.linkData[i][k]);
-                        }
-                    }
-                }
-                Write((byte)trackedSosig.IFF);
-                Write(trackedSosig.configTemplate);
-                Write(trackedSosig.controller);
-                Write(trackedSosig.localTrackedID);
-                Write((byte)trackedSosig.wearables.Count);
-                for (int i=0; i < trackedSosig.wearables.Count; ++i)
-                {
-                    if (trackedSosig.wearables[i] == null || trackedSosig.wearables[i].Count == 0)
-                    {
-                        Write((byte)0);
-                    }
-                    else
-                    {
-                        Write((byte)trackedSosig.wearables[i].Count);
-                        for (int j = 0; j < trackedSosig.wearables[i].Count; ++j)
-                        {
-                            Write(trackedSosig.wearables[i][j]);
-                        }
-                    }
-                }
-                Write(SosigTargetPrioritySystemPatch.BoolArrToInt(trackedSosig.IFFChart));
-                Write(trackedSosig.scene);
-                Write(trackedSosig.instance);
-                Write(trackedSosig.sceneInit);
-                if (trackedSosig.data == null || trackedSosig.data.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedSosig.data.Length);
-                    Write(trackedSosig.data);
-                }
-                Write(trackedSosig.localWaitingIndex);
-                Write(trackedSosig.initTracker);
-                switch (trackedSosig.currentOrder)
-                {
-                    case Sosig.SosigOrder.GuardPoint:
-                        Write(trackedSosig.guardPoint);
-                        Write(trackedSosig.guardDir);
-                        Write(trackedSosig.hardGuard);
-                        break;
-                    case Sosig.SosigOrder.Skirmish:
-                        Write(trackedSosig.skirmishPoint);
-                        Write(trackedSosig.pathToPoint);
-                        Write(trackedSosig.assaultPoint);
-                        Write(trackedSosig.faceTowards);
-                        break;
-                    case Sosig.SosigOrder.Investigate:
-                        Write(trackedSosig.guardPoint);
-                        Write(trackedSosig.hardGuard);
-                        Write(trackedSosig.faceTowards);
-                        break;
-                    case Sosig.SosigOrder.SearchForEquipment:
-                    case Sosig.SosigOrder.Wander:
-                        Write(trackedSosig.wanderPoint);
-                        break;
-                    case Sosig.SosigOrder.Assault:
-                        Write(trackedSosig.assaultPoint);
-                        Write((byte)trackedSosig.assaultSpeed);
-                        Write(trackedSosig.faceTowards);
-                        break;
-                    case Sosig.SosigOrder.Idle:
-                        Write(trackedSosig.idleToPoint);
-                        Write(trackedSosig.idleDominantDir);
-                        break;
-                    case Sosig.SosigOrder.PathTo:
-                        Write(trackedSosig.pathToPoint);
-                        Write(trackedSosig.pathToLookDir);
-                        break;
-                }
-                if(trackedSosig.inventory == null)
-                {
-                    Write((byte)0);
-                }
-                else
-                {
-                    Write((byte)trackedSosig.inventory.Length);
-                    for (int i = 0; i < trackedSosig.inventory.Length; ++i)
-                    {
-                        Write(trackedSosig.inventory[i]);
-                    }
-                }
-            }
-            else
-            {
-                if (incrementOrder)
-                {
-                    Write(trackedSosig.order++);
-                }
-                else
-                {
-                    Write(trackedSosig.order);
-                }
-            }
-        }
-        /// <summary>Adds a TrackedAutoMeaterData to the packet.</summary>
-        /// <param name="trackedAutoMeater">The TrackedAutoMeaterData to add.</param>
-        /// <param name="full">Whether to include all necessary data to instantiate this AutoMeater.</param>
-        public void Write(TrackedAutoMeaterData trackedAutoMeater, bool incrementOrder, bool full)
-        {
-            Write(trackedAutoMeater.trackedID);
-            Write(trackedAutoMeater.position);
-            Write(trackedAutoMeater.rotation);
-            Write(trackedAutoMeater.active);
-            Write(trackedAutoMeater.IFF);
-            Write(trackedAutoMeater.sideToSideRotation);
-            Write(trackedAutoMeater.hingeTargetPos);
-            Write(trackedAutoMeater.upDownMotorRotation);
-            Write(trackedAutoMeater.upDownJointTargetPos);
-
-            if (full)
-            {
-                Write(trackedAutoMeater.ID);
-                Write(trackedAutoMeater.controller);
-                Write(trackedAutoMeater.localTrackedID);
-                Write(trackedAutoMeater.scene);
-                Write(trackedAutoMeater.instance);
-                Write(trackedAutoMeater.sceneInit);
-                if (trackedAutoMeater.data == null || trackedAutoMeater.data.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedAutoMeater.data.Length);
-                    Write(trackedAutoMeater.data);
-                }
-                Write(trackedAutoMeater.localWaitingIndex);
-                Write(trackedAutoMeater.initTracker);
-            }
-            else
-            {
-                if (incrementOrder)
-                {
-                    Write(trackedAutoMeater.order++);
-                }
-                else
-                {
-                    Write(trackedAutoMeater.order);
-                }
-            }
-        }
-        /// <summary>Adds a TrackedEncryptionData to the packet.</summary>
-        /// <param name="trackedEncryption">The TrackedEncryptionData to add.</param>
-        /// <param name="full">Whether to include all necessary data to instantiate this Encryption.</param>
-        public void Write(TrackedEncryptionData trackedEncryption, bool incrementOrder, bool full)
-        {
-            Write(trackedEncryption.trackedID);
-            Write(trackedEncryption.position);
-            Write(trackedEncryption.rotation);
-            Write(trackedEncryption.active);
-
-            if (full)
-            {
-                Write((byte)trackedEncryption.type);
-                Write(trackedEncryption.controller);
-                Write(trackedEncryption.localTrackedID);
-                if(trackedEncryption.tendrilsActive == null || trackedEncryption.tendrilsActive.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedEncryption.tendrilsActive.Length);
-                    for(int i=0; i < trackedEncryption.tendrilsActive.Length; ++i)
-                    {
-                        Write(trackedEncryption.tendrilsActive[i]);
-                    }
-                }
-                if(trackedEncryption.growthPoints == null || trackedEncryption.growthPoints.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedEncryption.growthPoints.Length);
-                    for(int i=0; i < trackedEncryption.growthPoints.Length; ++i)
-                    {
-                        Write(trackedEncryption.growthPoints[i]);
-                    }
-                }
-                if(trackedEncryption.subTargsPos == null || trackedEncryption.subTargsPos.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedEncryption.subTargsPos.Length);
-                    for(int i=0; i < trackedEncryption.subTargsPos.Length; ++i)
-                    {
-                        Write(trackedEncryption.subTargsPos[i]);
-                    }
-                }
-                if(trackedEncryption.subTargsActive == null || trackedEncryption.subTargsActive.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedEncryption.subTargsActive.Length);
-                    for(int i=0; i < trackedEncryption.subTargsActive.Length; ++i)
-                    {
-                        Write(trackedEncryption.subTargsActive[i]);
-                    }
-                }
-                if(trackedEncryption.tendrilFloats == null || trackedEncryption.tendrilFloats.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedEncryption.tendrilFloats.Length);
-                    for(int i=0; i < trackedEncryption.tendrilFloats.Length; ++i)
-                    {
-                        Write(trackedEncryption.tendrilFloats[i]);
-                    }
-                }
-                if(trackedEncryption.tendrilsRot == null || trackedEncryption.tendrilsRot.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedEncryption.tendrilsRot.Length);
-                    for(int i=0; i < trackedEncryption.tendrilsRot.Length; ++i)
-                    {
-                        Write(trackedEncryption.tendrilsRot[i]);
-                    }
-                }
-                if(trackedEncryption.tendrilsScale == null || trackedEncryption.tendrilsScale.Length == 0)
-                {
-                    Write(0);
-                }
-                else
-                {
-                    Write(trackedEncryption.tendrilsScale.Length);
-                    for(int i=0; i < trackedEncryption.tendrilsScale.Length; ++i)
-                    {
-                        Write(trackedEncryption.tendrilsScale[i]);
-                    }
-                }
-                Write(trackedEncryption.scene);
-                Write(trackedEncryption.instance);
-                Write(trackedEncryption.sceneInit);
-                Write(trackedEncryption.localWaitingIndex);
-                Write(trackedEncryption.initTracker);
-            }
-            else
-            {
-                if (incrementOrder)
-                {
-                    Write(trackedEncryption.order++);
-                }
-                else
-                {
-                    Write(trackedEncryption.order);
-                }
-            }
         }
         /// <summary>Adds a SosigConfigTemplate to the packet.</summary>
         /// <param name="config">The SosigConfigTemplate to add.</param>
@@ -1255,6 +851,27 @@ namespace H3MP.Networking
             }
         }
 
+        /// <summary>Reads an ushort from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public ushort ReadUShort(bool _moveReadPos = true)
+        {
+            if (buffer.Count > readPos)
+            {
+                // If there are unread bytes
+                ushort _value = BitConverter.ToUInt16(readableBuffer, readPos); // Convert the bytes to an ushort
+                if (_moveReadPos)
+                {
+                    // If _moveReadPos is true
+                    readPos += 2; // Increase readPos by 2
+                }
+                return _value; // Return the ushort
+            }
+            else
+            {
+                throw new Exception("Could not read value of type 'ushort'!");
+            }
+        }
+
         /// <summary>Reads an int from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
         public int ReadInt(bool _moveReadPos = true)
@@ -1423,190 +1040,6 @@ namespace H3MP.Networking
             return new Quaternion(ReadFloat(_moveReadPos), ReadFloat(_moveReadPos), ReadFloat(_moveReadPos), ReadFloat(_moveReadPos));
         }
 
-        /// <summary>Reads a TrackedItemData from the packet.</summary>
-        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public TrackedItemData ReadTrackedItem(bool full = false, bool _moveReadPos = true)
-        {
-            TrackedItemData trackedItem = new TrackedItemData();
-            trackedItem.trackedID = ReadInt();
-            trackedItem.position = ReadVector3();
-            trackedItem.rotation = ReadQuaternion();
-            int dataLength = ReadInt();
-            if (dataLength > 0)
-            {
-                trackedItem.data = ReadBytes(dataLength);
-            }
-            trackedItem.active = ReadBool();
-            trackedItem.underActiveControl = ReadBool();
-
-            if (full)
-            {
-                trackedItem.itemID = ReadString();
-                int identifyingDataLength = ReadInt();
-                if(identifyingDataLength > 0)
-                {
-                    trackedItem.identifyingData = ReadBytes(identifyingDataLength);
-                }
-                trackedItem.controller = ReadInt();
-                trackedItem.parent = ReadInt();
-                trackedItem.localTrackedID = ReadInt();
-                trackedItem.scene = ReadString();
-                trackedItem.instance = ReadInt();
-                trackedItem.sceneInit = ReadBool();
-                int additionalDataLen = ReadInt();
-                if (additionalDataLen > 0)
-                {
-                    trackedItem.additionalData = ReadBytes(additionalDataLen);
-                }
-                trackedItem.localWaitingIndex = ReadUInt();
-                trackedItem.initTracker = ReadInt();
-            }
-            else
-            {
-                trackedItem.order = ReadByte();
-            }
-
-            return trackedItem;
-        }
-
-        /// <summary>Reads a TrackedSosigData from the packet.</summary>
-        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public TrackedSosigData ReadTrackedSosig(bool full = false, bool _moveReadPos = true)
-        {
-            TrackedSosigData trackedSosig = new TrackedSosigData();
-
-            trackedSosig.trackedID = ReadInt();
-            trackedSosig.position = ReadVector3();
-            trackedSosig.rotation = ReadQuaternion();
-            trackedSosig.active = ReadBool();
-            trackedSosig.mustard = ReadFloat();
-            byte ammoStoreLength = ReadByte();
-            if(ammoStoreLength > 0)
-            {
-                trackedSosig.ammoStores = new int[ammoStoreLength];
-                for(int i=0; i < ammoStoreLength; ++i)
-                {
-                    trackedSosig.ammoStores[i] = ReadInt();
-                }
-            }
-            trackedSosig.bodyPose = (Sosig.SosigBodyPose)ReadByte();
-            byte sosigLinkIntegrityLength = ReadByte();
-            if (sosigLinkIntegrityLength > 0)
-            {
-                if (trackedSosig.linkIntegrity == null)
-                {
-                    trackedSosig.linkIntegrity = new float[sosigLinkIntegrityLength];
-                }
-                for (int i = 0; i < sosigLinkIntegrityLength; ++i)
-                {
-                    trackedSosig.linkIntegrity[i] = ReadFloat();
-                }
-            }
-            trackedSosig.fallbackOrder = (Sosig.SosigOrder)ReadByte();
-            trackedSosig.currentOrder = (Sosig.SosigOrder)ReadByte();
-
-            if (full)
-            {
-                byte sosigLinkDataLength = ReadByte();
-                if (sosigLinkDataLength > 0)
-                {
-                    if (trackedSosig.linkData == null)
-                    {
-                        trackedSosig.linkData = new float[sosigLinkDataLength][];
-                    }
-                    for (int i = 0; i < sosigLinkDataLength; ++i)
-                    {
-                        if (trackedSosig.linkData[i] == null || trackedSosig.linkData[i].Length != 5)
-                        {
-                            trackedSosig.linkData[i] = new float[5];
-                        }
-
-                        for (int j = 0; j < 5; ++j)
-                        {
-                            trackedSosig.linkData[i][j] = ReadFloat();
-                        }
-                    }
-                }
-                trackedSosig.IFF = ReadByte();
-                trackedSosig.configTemplate = ReadSosigConfig();
-                trackedSosig.controller = ReadInt();
-                trackedSosig.localTrackedID = ReadInt();
-                byte linkCount = ReadByte();
-                trackedSosig.wearables = new List<List<string>>();
-                for(int i=0; i < linkCount; ++i)
-                {
-                    trackedSosig.wearables.Add(new List<string>());
-                    byte wearableCount = ReadByte();
-                    if (wearableCount > 0)
-                    {
-                        for(int j = 0; j < wearableCount; ++j)
-                        {
-                            trackedSosig.wearables[i].Add(ReadString());
-                        }
-                    }
-                }
-                trackedSosig.IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(ReadInt());
-                trackedSosig.scene = ReadString();
-                trackedSosig.instance = ReadInt();
-                trackedSosig.sceneInit = ReadBool();
-                int dataLen = ReadInt();
-                if (dataLen > 0)
-                {
-                    trackedSosig.data = ReadBytes(dataLen);
-                }
-                trackedSosig.localWaitingIndex = ReadUInt();
-                trackedSosig.initTracker = ReadInt();
-                switch (trackedSosig.currentOrder) 
-                {
-                    case Sosig.SosigOrder.GuardPoint:
-                        trackedSosig.guardPoint = ReadVector3();
-                        trackedSosig.guardDir = ReadVector3();
-                        trackedSosig.hardGuard = ReadBool();
-                        break;
-                    case Sosig.SosigOrder.Skirmish:
-                        trackedSosig.skirmishPoint = ReadVector3();
-                        trackedSosig.pathToPoint = ReadVector3();
-                        trackedSosig.assaultPoint = ReadVector3();
-                        trackedSosig.faceTowards = ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.Investigate:
-                        trackedSosig.guardPoint = ReadVector3();
-                        trackedSosig.hardGuard = ReadBool();
-                        trackedSosig.faceTowards = ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.SearchForEquipment:
-                    case Sosig.SosigOrder.Wander:
-                        trackedSosig.wanderPoint = ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.Assault:
-                        trackedSosig.assaultPoint = ReadVector3();
-                        trackedSosig.assaultSpeed = (Sosig.SosigMoveSpeed)ReadByte();
-                        trackedSosig.faceTowards = ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.Idle:
-                        trackedSosig.idleToPoint = ReadVector3();
-                        trackedSosig.idleDominantDir = ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.PathTo:
-                        trackedSosig.pathToPoint = ReadVector3();
-                        trackedSosig.pathToLookDir = ReadVector3();
-                        break;
-                }
-                byte inventoryLength = ReadByte();
-                trackedSosig.inventory = new int[inventoryLength];
-                for(int i=0; i < inventoryLength; ++i)
-                {
-                    trackedSosig.inventory[i] = ReadInt();
-                }
-            }
-            else
-            {
-                trackedSosig.order = ReadByte();
-            }
-
-            return trackedSosig;
-        }
-
         /// <summary>Reads a SosigConfigTemplate from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
         public SosigConfigTemplate ReadSosigConfig(bool full = false, bool _moveReadPos = true)
@@ -1712,139 +1145,6 @@ namespace H3MP.Networking
             config.NoFreshTargetTime = ReadFloat();
 
             return config;
-        }
-
-        /// <summary>Reads a TrackedAutoMeaterData from the packet.</summary>
-        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public TrackedAutoMeaterData ReadTrackedAutoMeater(bool full = false, bool _moveReadPos = true)
-        {
-            TrackedAutoMeaterData trackedAutoMeater = new TrackedAutoMeaterData();
-
-            trackedAutoMeater.trackedID = ReadInt();
-            trackedAutoMeater.position = ReadVector3();
-            trackedAutoMeater.rotation = ReadQuaternion();
-            trackedAutoMeater.active = ReadBool();
-            trackedAutoMeater.IFF = ReadByte();
-            trackedAutoMeater.sideToSideRotation = ReadQuaternion();
-            trackedAutoMeater.hingeTargetPos = ReadFloat();
-            trackedAutoMeater.upDownMotorRotation = ReadQuaternion();
-            trackedAutoMeater.upDownJointTargetPos = ReadFloat();
-
-            if (full)
-            {
-                trackedAutoMeater.ID = ReadByte();
-                trackedAutoMeater.controller = ReadInt();
-                trackedAutoMeater.localTrackedID = ReadInt();
-                trackedAutoMeater.scene = ReadString();
-                trackedAutoMeater.instance = ReadInt();
-                trackedAutoMeater.sceneInit = ReadBool();
-                int dataLen = ReadInt();
-                if (dataLen > 0)
-                {
-                    trackedAutoMeater.data = ReadBytes(dataLen);
-                }
-                trackedAutoMeater.localWaitingIndex = ReadUInt();
-                trackedAutoMeater.initTracker = ReadInt();
-            }
-            else
-            {
-                trackedAutoMeater.order = ReadByte();
-            }
-
-            return trackedAutoMeater;
-        }
-
-        /// <summary>Reads a TrackedEncryptionData from the packet.</summary>
-        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public TrackedEncryptionData ReadTrackedEncryption(bool full = false, bool _moveReadPos = true)
-        {
-            TrackedEncryptionData trackedEncryption = new TrackedEncryptionData();
-
-            trackedEncryption.trackedID = ReadInt();
-            trackedEncryption.position = ReadVector3();
-            trackedEncryption.rotation = ReadQuaternion();
-            trackedEncryption.active = ReadBool();
-
-            if (full)
-            {
-                trackedEncryption.type = (TNH_EncryptionType)ReadByte();
-                trackedEncryption.controller = ReadInt();
-                trackedEncryption.localTrackedID = ReadInt();
-                int length = ReadInt();
-                if(length > 0)
-                {
-                    trackedEncryption.tendrilsActive = new bool[length];
-                    for(int i=0; i < length; ++i)
-                    {
-                        trackedEncryption.tendrilsActive[i] = ReadBool();
-                    }
-                }
-                length = ReadInt();
-                if (length > 0)
-                {
-                    trackedEncryption.growthPoints = new Vector3[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        trackedEncryption.growthPoints[i] = ReadVector3();
-                    }
-                }
-                length = ReadInt();
-                if (length > 0)
-                {
-                    trackedEncryption.subTargsPos = new Vector3[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        trackedEncryption.subTargsPos[i] = ReadVector3();
-                    }
-                }
-                length = ReadInt();
-                if (length > 0)
-                {
-                    trackedEncryption.subTargsActive = new bool[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        trackedEncryption.subTargsActive[i] = ReadBool();
-                    }
-                }
-                length = ReadInt();
-                if (length > 0)
-                {
-                    trackedEncryption.tendrilFloats = new float[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        trackedEncryption.tendrilFloats[i] = ReadFloat();
-                    }
-                }
-                length = ReadInt();
-                if (length > 0)
-                {
-                    trackedEncryption.tendrilsRot = new Quaternion[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        trackedEncryption.tendrilsRot[i] = ReadQuaternion();
-                    }
-                }
-                length = ReadInt();
-                if (length > 0)
-                {
-                    trackedEncryption.tendrilsScale = new Vector3[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        trackedEncryption.tendrilsScale[i] = ReadVector3();
-                    }
-                }
-                trackedEncryption.scene = ReadString();
-                trackedEncryption.instance = ReadInt();
-                trackedEncryption.sceneInit = ReadBool();
-                trackedEncryption.localWaitingIndex = ReadUInt();
-                trackedEncryption.initTracker = ReadInt();
-            }
-            else
-            {
-                trackedEncryption.order = ReadByte();
-            }
-
-            return trackedEncryption;
         }
 
         /// <summary>Reads a Damage from the packet.</summary>

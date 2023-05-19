@@ -63,6 +63,8 @@
     <Compile Include="src\tracking\TrackedEncryptionData.cs" />
     <Compile Include="src\tracking\TrackedItem.cs" />
     <Compile Include="src\tracking\TrackedItemData.cs" />
+    <Compile Include="src\tracking\TrackedObject.cs" />
+    <Compile Include="src\tracking\TrackedObjectData.cs" />
     <Compile Include="src\tracking\TrackedSosig.cs" />
     <Compile Include="src\tracking\TrackedSosigData.cs" />
     <Compile Include="src\scripts\WristMenuSection.cs" />
@@ -76,6 +78,8 @@
     <Compile Include="src\patches\InteractionPatches.cs" />
     <Compile Include="src\patches\PatchController.cs" />
     <Compile Include="src\patches\TNHPatches.cs" />
+    <None Include="src\tracking\TrackedTemplate.cs" />
+    <None Include="src\tracking\TrackedTemplateData.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.10.1.0, Culture=neutral, processorArchitecture=MSIL">

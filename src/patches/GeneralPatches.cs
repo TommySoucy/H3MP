@@ -139,7 +139,7 @@ namespace H3MP.Patches
 
         static bool Prefix(ref Rigidbody __instance, bool value)
         {
-            if (Mod.managerObject == null || skip > 0)
+            if (Mod.managerObject == null || skip > 0 || __instance == null)
             {
                 return true;
             }
@@ -338,21 +338,24 @@ namespace H3MP.Patches
                     }
                 }
 
-                // Make sure Sosig AIEntities are registered
-                for (int i = 0; i < GameManager.sosigs.Count; ++i)
+                // Make sure AIEntities are registered
+                for (int i = 0; i < GameManager.objects.Count; ++i)
                 {
-                    if (GameManager.sosigs[i].physicalObject != null && !GM.CurrentAIManager.m_knownEntities.Contains(GameManager.sosigs[i].physicalObject.physicalSosigScript.E))
+                    if (GameManager.objects[i] is TrackedSosigData)
                     {
-                        GM.CurrentAIManager.RegisterAIEntity(GameManager.sosigs[i].physicalObject.physicalSosigScript.E);
+                        AIEntity e = (GameManager.objects[i] as TrackedSosigData).physicalSosig.physicalSosig.E;
+                        if (GameManager.objects[i].physical != null && !GM.CurrentAIManager.m_knownEntities.Contains(e))
+                        {
+                            GM.CurrentAIManager.RegisterAIEntity(e);
+                        }
                     }
-                }
-
-                // Make sure AutoMeater AIEntities are registered
-                for (int i = 0; i < GameManager.autoMeaters.Count; ++i)
-                {
-                    if (GameManager.autoMeaters[i].physicalObject != null && !GM.CurrentAIManager.m_knownEntities.Contains(GameManager.autoMeaters[i].physicalObject.physicalAutoMeaterScript.E))
+                    else if(GameManager.objects[i] is TrackedAutoMeaterData)
                     {
-                        GM.CurrentAIManager.RegisterAIEntity(GameManager.autoMeaters[i].physicalObject.physicalAutoMeaterScript.E);
+                        AIEntity e = (GameManager.objects[i] as TrackedAutoMeaterData).physicalAutoMeater.physicalAutoMeater.E;
+                        if (GameManager.objects[i].physical != null && !GM.CurrentAIManager.m_knownEntities.Contains(e))
+                        {
+                            GM.CurrentAIManager.RegisterAIEntity(e);
+                        }
                     }
                 }
             }
@@ -383,7 +386,7 @@ namespace H3MP.Patches
             for (int i = array.Length - 1; i >= 0; i--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array[i], out TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array[i].IsHeld && array[i].QuickbeltSlot == null && array[i].FireArm == null && array[i].m_numRounds == 0 && !array[i].IsIntegrated)
                 {
                     UnityEngine.Object.Destroy(array[i].gameObject);
@@ -393,7 +396,7 @@ namespace H3MP.Patches
             for (int j = array2.Length - 1; j >= 0; j--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array2[j], out TrackedItem currentTrackedItem) ? currentTrackedItem : array2[j].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array2[j].IsHeld && array2[j].QuickbeltSlot == null && array2[j].RootRigidbody != null)
                 {
                     UnityEngine.Object.Destroy(array2[j].gameObject);
@@ -403,7 +406,7 @@ namespace H3MP.Patches
             for (int k = array3.Length - 1; k >= 0; k--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array3[k], out TrackedItem currentTrackedItem) ? currentTrackedItem : array3[k].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array3[k].IsHeld && array3[k].QuickbeltSlot == null && array3[k].FireArm == null && array3[k].m_numRounds == 0)
                 {
                     UnityEngine.Object.Destroy(array3[k].gameObject);
@@ -413,7 +416,7 @@ namespace H3MP.Patches
             for (int l = array4.Length - 1; l >= 0; l--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array4[l], out TrackedItem currentTrackedItem) ? currentTrackedItem : array4[l].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array4[l].IsHeld && array4[l].QuickbeltSlot == null)
                 {
                     UnityEngine.Object.Destroy(array4[l].gameObject);
@@ -443,7 +446,7 @@ namespace H3MP.Patches
             for (int i = array.Length - 1; i >= 0; i--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array[i], out TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array[i].IsHeld && array[i].QuickbeltSlot == null && array[i].FireArm == null && !array[i].IsIntegrated)
                 {
                     UnityEngine.Object.Destroy(array[i].gameObject);
@@ -453,7 +456,7 @@ namespace H3MP.Patches
             for (int j = array2.Length - 1; j >= 0; j--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array2[j], out TrackedItem currentTrackedItem) ? currentTrackedItem : array2[j].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array2[j].IsHeld && array2[j].QuickbeltSlot == null && array2[j].RootRigidbody != null)
                 {
                     UnityEngine.Object.Destroy(array2[j].gameObject);
@@ -463,7 +466,7 @@ namespace H3MP.Patches
             for (int k = array3.Length - 1; k >= 0; k--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array3[k], out TrackedItem currentTrackedItem) ? currentTrackedItem : array3[k].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array3[k].IsHeld && array3[k].QuickbeltSlot == null && array3[k].FireArm == null)
                 {
                     UnityEngine.Object.Destroy(array3[k].gameObject);
@@ -473,7 +476,7 @@ namespace H3MP.Patches
             for (int l = array4.Length - 1; l >= 0; l--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array4[l], out TrackedItem currentTrackedItem) ? currentTrackedItem : array4[l].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array4[l].IsHeld && array4[l].QuickbeltSlot == null)
                 {
                     UnityEngine.Object.Destroy(array4[l].gameObject);
@@ -502,7 +505,7 @@ namespace H3MP.Patches
             for (int i = array.Length - 1; i >= 0; i--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array[i], out TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array[i].IsHeld && array[i].QuickbeltSlot == null)
                 {
                     UnityEngine.Object.Destroy(array[i].gameObject);
@@ -512,7 +515,7 @@ namespace H3MP.Patches
             for (int j = array2.Length - 1; j >= 0; j--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemBySosigWeapon.TryGetValue(array2[j], out TrackedItem currentTrackedItem) ? currentTrackedItem : array2[j].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array2[j].O.IsHeld && array2[j].O.QuickbeltSlot == null && !array2[j].IsHeldByBot && !array2[j].IsInBotInventory)
                 {
                     UnityEngine.Object.Destroy(array2[j].gameObject);
@@ -522,7 +525,7 @@ namespace H3MP.Patches
             for (int k = array3.Length - 1; k >= 0; k--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array3[k], out TrackedItem currentTrackedItem) ? currentTrackedItem : array3[k].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array3[k].IsHeld && array3[k].QuickbeltSlot == null)
                 {
                     UnityEngine.Object.Destroy(array3[k].gameObject);
@@ -532,7 +535,7 @@ namespace H3MP.Patches
             for (int l = array4.Length - 1; l >= 0; l--)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array4[l], out TrackedItem currentTrackedItem) ? currentTrackedItem : array4[l].GetComponent<TrackedItem>();
-                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                     !array4[l].IsHeld && array4[l].QuickbeltSlot == null && array4[l].curMount == null)
                 {
                     UnityEngine.Object.Destroy(array4[l].gameObject);
@@ -557,7 +560,7 @@ namespace H3MP.Patches
                 {
                     FVRPhysicalObject fvrphysicalObject = array[i];
                     TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(array[i], out TrackedItem currentTrackedItem) ? currentTrackedItem : array[i].GetComponent<TrackedItem>();
-                    if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.data.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
+                    if (((ThreadManager.host && (trackedItem == null || trackedItem.data.controller == GameManager.ID || !trackedItem.itemData.underActiveControl)) || (trackedItem == null || trackedItem.data.controller == GameManager.ID)) &&
                         !(fvrphysicalObject == null) && fvrphysicalObject.gameObject.activeSelf && !fvrphysicalObject.IsHeld && !(fvrphysicalObject.QuickbeltSlot != null) && !(fvrphysicalObject.ObjectWrapper == null) && !(fvrphysicalObject.gameObject.transform.parent != null) && (fvrphysicalObject.GetIsSaveLoadable() || !ClearNonSaveLoadable) && IM.HasSpawnedID(fvrphysicalObject.ObjectWrapper.SpawnedFromId))
                     {
                         UnityEngine.Object.Destroy(fvrphysicalObject.GameObject);

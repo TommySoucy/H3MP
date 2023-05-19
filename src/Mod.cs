@@ -2,9 +2,11 @@
 using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
+using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -34,7 +36,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.5.6";
+        public const string pluginVersion = "1.6.0";
 
         // Assets
         public static JObject config;
@@ -106,6 +108,31 @@ namespace H3MP
         public static SceneLoader currentTNHSceneLoader;
         public static GameObject TNHStartEquipButton;
         public static bool spectatorHost;
+        public static Dictionary<Type, List<Type>> trackedObjectTypes;
+        public static Dictionary<string, Type> trackedObjectTypesByName;
+        public delegate void CustomPacketHandler(int clientID, Packet packet);
+        public static CustomPacketHandler[] customPacketHandlers = new CustomPacketHandler[10];
+        public static Dictionary<string, int> registeredCustomPacketIDs = new Dictionary<string, int>();
+
+        // Customization: Event to let mods process registered custom packets
+        public delegate void CustomPacketHandlerReceivedDelegate(string ID, int index);
+        public static event CustomPacketHandlerReceivedDelegate CustomPacketHandlerReceived;
+
+        // Customization: Event to let mods process generic/unregistered custom packets
+        public delegate void GenericCustomPacketReceivedDelegate(int clientID, string ID, Packet packet);
+        public static event GenericCustomPacketReceivedDelegate GenericCustomPacketReceived;
+
+        // Customization: Event to let mods modify the H3MP remote player prefab when we get the asset
+        public delegate void OnSetupPlayerPrefabDelegate(GameObject playerPrefab);
+        public static event OnSetupPlayerPrefabDelegate OnSetupPlayerPrefab;
+
+        // Customization: Event to let mods override the best potential object host
+        public delegate void OnGetBestPotentialObjectHostDelegate(int currentController, bool forUs, bool hasWhiteList , List<int> whiteList, string sceneOverride, int instanceOverride, ref int bestPotentialObjectHost);
+        public static event OnGetBestPotentialObjectHostDelegate OnGetBestPotentialObjectHost;
+
+        // Customization: Event to let mods know we are getting rid of a certain player
+        public delegate void OnRemovePlayerFromSpecificListsDelegate(PlayerManager player);
+        public static event OnRemovePlayerFromSpecificListsDelegate OnRemovePlayerFromSpecificLists;
 
         // Debug
         public static bool debug;
@@ -131,6 +158,8 @@ namespace H3MP
             currentTNHInstance = null;
             currentlyPlayingTNH = false;
             spectatorHost = false;
+            customPacketHandlers = new CustomPacketHandler[10];
+            registeredCustomPacketIDs.Clear();
 
             Destroy(Mod.managerObject);
         }
@@ -305,6 +334,22 @@ namespace H3MP
             return null;
         }
 #endif
+
+        public static void CustomPacketHandlerReceivedInvoke(string handlerID, int index)
+        {
+            if (CustomPacketHandlerReceived != null)
+            {
+                CustomPacketHandlerReceived(handlerID, index);
+            }
+        }
+
+        public static void GenericCustomPacketReceivedInvoke(int clientID, string ID, Packet packet)
+        {
+            if (GenericCustomPacketReceived != null)
+            {
+                GenericCustomPacketReceived(clientID, ID, packet);
+            }
+        }
 
         private void SpawnDummyPlayer()
         {
@@ -538,10 +583,110 @@ namespace H3MP
             startEquipButton.MaxPointingRange = 1;
         }
 
-        // MOD: If you need to add anything to the player prefab, this is what you should patch to do it
         public void SetupPlayerPrefab()
         {
             playerPrefab.AddComponent<PlayerManager>();
+
+            if(OnSetupPlayerPrefab != null)
+            {
+                OnSetupPlayerPrefab(playerPrefab);
+            }
+        }
+
+        private void GetTrackedObjectTypes()
+        {
+            // The idea here is that when we check which tracked type a certain object corresponds to
+            // we want to check tracked types taht are as specific as possible first
+            // So we need to store them in such a way that they can be sorted in order of most to least specific
+            // just so we can check them in order
+            trackedObjectTypes = new Dictionary<Type, List<Type>>();
+            trackedObjectTypesByName = new Dictionary<string, Type>();
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; ++i)
+            {
+                Type[] types = assemblies[i].GetTypes();
+                for (int j = 0; j < types.Length; ++j) 
+                {
+                    if (IsTypeTrackedObject(types[j]))
+                    {
+                        AddTrackedType(types[j]);
+                    }
+                }
+            }
+        }
+
+        public void AddTrackedType(Type type)
+        {
+            // Add to dict of all tracked types
+            trackedObjectTypesByName.Add(type.Name, type);
+
+            // Note: Key of entry is the most general subtype of TrackedObjectData
+
+            // Just add if no other type yet
+            if (trackedObjectTypes.Count == 0)
+            {
+                trackedObjectTypes.Add(type, new List<Type>() { type });
+                return;
+            }
+
+            // Check if sub/supertype of any preexisting entry
+            foreach (KeyValuePair<Type, List<Type>> entry in trackedObjectTypes)
+            {
+                if (type.IsSubclassOf(entry.Key))
+                {
+                    // It is subtype of preexisting entry, must add to list of types in order
+                    // We want to insert after the last type it is subtype of
+                    int currentLastIndex = 0;
+                    for(int i=1; i < entry.Value.Count; ++i) // Note: we start at 1 because 0 is key and if we are here it is because we are subtype of key
+                    {
+                        if (type.IsSubclassOf(entry.Value[i]))
+                        {
+                            currentLastIndex = i;
+                        }
+                    }
+                    entry.Value.Insert(currentLastIndex + 1, type);
+                    return;
+                }
+                else if (entry.Key.IsSubclassOf(type))
+                {
+                    // It is supertype of preexisting entry, must remove current entry and
+                    // insert type at start of list since it is the most generic type
+                    entry.Value.Insert(0, type);
+                    trackedObjectTypes.Add(type, entry.Value);
+                    trackedObjectTypes.Remove(entry.Key);
+                    return;
+                }
+            }
+
+            // If got all the way here, it is because it didn't match any preexisting entry, just add
+            trackedObjectTypes.Add(type, new List<Type>() { type });
+        }
+
+        public bool IsTypeTrackedObject(Type type)
+        {
+            if(type.BaseType != null)
+            {
+                if (type.IsSubclassOf(typeof(TrackedObjectData)))
+                {
+                    MethodInfo isOfTypeMethod = type.GetMethod("IsOfType", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                    MethodInfo makeTrackedMethod = type.GetMethod("MakeTracked", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+                    if (isOfTypeMethod != null && isOfTypeMethod.ReturnType == typeof(bool) && isOfTypeMethod.GetParameters()[0].ParameterType == typeof(Transform) &&
+                        makeTrackedMethod != null && makeTrackedMethod.ReturnType.IsSubclassOf(typeof(TrackedObject)) && makeTrackedMethod.GetParameters()[0].ParameterType == typeof(Transform) && makeTrackedMethod.GetParameters()[1].ParameterType == typeof(TrackedObjectData))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        Mod.LogError("TrackedObjectData inheriting type \""+ type.Name+ "\" is missing implementation for one of the following methods:\n" +
+                            "\tstatic bool IsOfType(Transform)\n" +
+                            "\tstatic TrackedObject MakeTracked(Transform, TrackedObjectData)\n" +
+                            "\tThis type will not be tracked.");
+                    }
+                }
+            }
+
+            return false;
         }
 
         private void Init()
@@ -551,6 +696,8 @@ namespace H3MP
             H3MPPath = Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(typeof(Mod)).Location);
             H3MPPath.Replace('\\', '/');
             Mod.LogInfo("H3MP path found: "+ H3MPPath, false);
+
+            GetTrackedObjectTypes();
 
             PatchController.DoPatching();
 
@@ -1115,13 +1262,21 @@ namespace H3MP
             }
         }
 
-        // MOD: This method will be used to find the ID of which player to give control of this object to
-        //      Mods should patch this if they have a different method of finding the next host, like TNH here for example
         public static int GetBestPotentialObjectHost(int currentController, bool forUs = true, bool hasWhiteList = false, List<int> whiteList = null, string sceneOverride = null, int instanceOverride = -1)
         {
             if(hasWhiteList && whiteList == null)
             {
                 whiteList = new List<int>();
+            }
+
+            int bestPotentialObjectHost = -1;
+            if (OnGetBestPotentialObjectHost != null)
+            {
+                OnGetBestPotentialObjectHost(currentController, forUs, hasWhiteList, whiteList, sceneOverride, instanceOverride, ref bestPotentialObjectHost);
+            }
+            if(bestPotentialObjectHost != -1)
+            {
+                return bestPotentialObjectHost;
             }
 
             if (forUs)
@@ -1322,9 +1477,6 @@ namespace H3MP
             GameManager.players.Remove(playerID);
         }
 
-        // MOD: Will be called by RemovePlayerFromLists before the player finally gets destroyed
-        //      This is where you would manage the player being removed from the network if you're keeping a reference of them anywhere
-        //      Example here is TNH instances
         public static void RemovePlayerFromSpecificLists(PlayerManager player)
         {
             if (GameManager.TNHInstances.TryGetValue(player.instance, out TNHInstance currentInstance))
@@ -1367,6 +1519,11 @@ namespace H3MP
                     currentInstance.played.Remove(player.ID);
                     currentInstance.dead.Remove(player.ID);
                 }
+            }
+
+            if (OnRemovePlayerFromSpecificLists != null)
+            {
+                OnRemovePlayerFromSpecificLists(player);
             }
         }
 

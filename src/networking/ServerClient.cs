@@ -20,6 +20,10 @@ namespace H3MP.Networking
         public bool connected;
         public long ping;
 
+        // Customization: Event to let mods know when the client disconnects
+        public delegate void OnClientDisconnectDelegate();
+        public event OnClientDisconnectDelegate OnClientDisconnect;
+
         public ServerClient(int ID)
         {
             this.ID = ID;
@@ -136,13 +140,44 @@ namespace H3MP.Networking
                             using (Packet packet = new Packet(packetBytes))
                             {
                                 int packetID = packet.ReadInt();
-#if DEBUG
-                                if (Input.GetKey(KeyCode.PageDown))
+
+                                if(packetID < 0)
                                 {
-                                    Mod.LogInfo("\tHandling TCP packet: " + packetID);
-                                }
+                                    if(packetID == -1)
+                                    {
+                                        Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
+                                    }
+                                    else // packetID <= -2
+                                    {
+                                        int index = packetID * -1 - 2;
+                                        if (Mod.customPacketHandlers[index] != null)
+                                        {
+#if DEBUG
+                                            if (Input.GetKey(KeyCode.PageDown))
+                                            {
+                                                Mod.LogInfo("\tHandling custom TCP packet: " + packetID);
+                                            }
 #endif
-                                Server.packetHandlers[packetID](ID, packet);
+                                            Mod.customPacketHandlers[index](ID, packet);
+                                        }
+#if DEBUG
+                                        else
+                                        {
+                                            Mod.LogError("\tServer received invalid custom TCP packet ID: " + packetID+" from client "+ID);
+                                        }
+#endif
+                                    }
+                                }
+                                else
+                                {
+#if DEBUG
+                                    if (Input.GetKey(KeyCode.PageDown))
+                                    {
+                                        Mod.LogInfo("\tHandling TCP packet: " + packetID);
+                                    }
+#endif
+                                    Server.packetHandlers[packetID](ID, packet);
+                                }
                             }
                         }
                     });
@@ -210,13 +245,44 @@ namespace H3MP.Networking
                         using (Packet packet = new Packet(packetBytes))
                         {
                             int packetID = packet.ReadInt();
-#if DEBUG
-                            if (Input.GetKey(KeyCode.PageDown))
+
+                            if (packetID < 0)
                             {
-                                Mod.LogInfo("\tHandling UDP packet: " + packetID);
-                            }
+                                if (packetID == -1)
+                                {
+                                    Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
+                                }
+                                else // packetID <= -2
+                                {
+                                    int index = packetID * -1 - 2;
+                                    if (Mod.customPacketHandlers[index] != null)
+                                    {
+#if DEBUG
+                                        if (Input.GetKey(KeyCode.PageDown))
+                                        {
+                                            Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+                                        }
 #endif
-                            Server.packetHandlers[packetID](ID, packet);
+                                        Mod.customPacketHandlers[index](ID, packet);
+                                    }
+#if DEBUG
+                                    else
+                                    {
+                                        Mod.LogError("\tServer received invalid custom UDP packet ID: " + packetID + " from client " + ID);
+                                    }
+#endif
+                                }
+                            }
+                            else
+                            {
+#if DEBUG
+                                if (Input.GetKey(KeyCode.PageDown))
+                                {
+                                    Mod.LogInfo("\tHandling UDP packet: " + packetID);
+                                }
+#endif
+                                Server.packetHandlers[packetID](ID, packet);
+                            }
                         }
                     }
                 });
@@ -319,39 +385,25 @@ namespace H3MP.Networking
 
             // Also send TNH instances
             ServerSend.InitTNHInstances(ID);
-
-            // Send custom connection data
-            byte[] initData = null;
-            SendInitConnectionData(ID, initData);
-        }
-
-        // MOD: This will get called when the server sends all the data a newly connected client connect needs
-        //      A mod that wants to send its own initial data to process can prefix this to modify data before it gets sent
-        private void SendInitConnectionData(int ID, byte[] data)
-        {
-            if (data != null)
-            {
-                ServerSend.InitConnectionData(ID, data);
-            }
         }
 
         public void SendRelevantTrackedObjects(int fromClient = -1)
         {
             Mod.LogInfo("Sending relevant object to " + ID + " from " + fromClient+" in "+ player.scene+"/"+ player.instance);
-            // Items
-            if (GameManager.itemsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> itemInstances) &&
-                itemInstances.TryGetValue(player.instance, out List<int> items))
+
+            if (GameManager.objectsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> objectInstances) &&
+                objectInstances.TryGetValue(player.instance, out List<int> objects))
             {
-                for(int i=0; i < items.Count; ++i)
+                for(int i=0; i < objects.Count; ++i)
                 {
-                    TrackedItemData trackedItemData = Server.items[items[i]];
-                    if(trackedItemData != null && (fromClient == -1 || trackedItemData.controller == fromClient))
+                    TrackedObjectData trackedObjectData = Server.objects[objects[i]];
+                    if(trackedObjectData != null && (fromClient == -1 || trackedObjectData.controller == fromClient))
                     {
                         // If this is ours
-                        if(trackedItemData.controller == 0)
+                        if(trackedObjectData.controller == 0)
                         {
                             // Check if should send
-                            if(GameManager.sceneLoading && trackedItemData.scene.Equals(GameManager.scene))
+                            if(GameManager.sceneLoading && trackedObjectData.scene.Equals(GameManager.scene))
                             {
                                 // We don't want to send an object that is ours from the scene we are currently loading away from
                                 // So just continue to next object
@@ -359,94 +411,9 @@ namespace H3MP.Networking
                             }
 
                             // If sending, make sure it init otherwise we might be missing data
-                            trackedItemData.Update();
+                            trackedObjectData.Update();
                         }
-                        ServerSend.TrackedItemSpecific(trackedItemData, ID);
-                    }
-                }
-            }
-
-            // Sosigs
-            if (GameManager.sosigsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> sosigInstances) &&
-                sosigInstances.TryGetValue(player.instance, out List<int> sosigs))
-            {
-                Mod.LogInfo("\tHas sosig");
-                for (int i=0; i < sosigs.Count; ++i)
-                {
-                    TrackedSosigData trackedSosigData = Server.sosigs[sosigs[i]];
-                    if(trackedSosigData != null && (fromClient == -1 || trackedSosigData.controller == fromClient))
-                    {
-                        // If this is ours
-                        if(trackedSosigData.controller == 0)
-                        {
-                            // Check if should send
-                            if (GameManager.sceneLoading && trackedSosigData.scene.Equals(GameManager.scene))
-                            {
-                                // We don't want to send an object that is ours from the scene we are currently loading away from
-                                // So just continue to next object
-                                continue;
-                            }
-
-                            // If sending, make sure it init otherwise we might be missing data
-                            trackedSosigData.Update();
-                        }
-                        ServerSend.TrackedSosigSpecific(trackedSosigData, ID);
-                    }
-                }
-            }
-
-            // AutoMeaters
-            if (GameManager.autoMeatersByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> autoMeaterInstances) &&
-                autoMeaterInstances.TryGetValue(player.instance, out List<int> autoMeaters))
-            {
-                for(int i=0; i < autoMeaters.Count; ++i)
-                {
-                    TrackedAutoMeaterData trackedAutoMeaterData = Server.autoMeaters[autoMeaters[i]];
-                    if(trackedAutoMeaterData != null && (fromClient == -1 || trackedAutoMeaterData.controller == fromClient))
-                    {
-                        // If this is ours
-                        if(trackedAutoMeaterData.controller == 0)
-                        {
-                            // Check if should send
-                            if (GameManager.sceneLoading && trackedAutoMeaterData.scene.Equals(GameManager.scene))
-                            {
-                                // We don't want to send an object that is ours from the scene we are currently loading away from
-                                // So just continue to next object
-                                continue;
-                            }
-
-                            // If sending, make sure it init otherwise we might be missing data
-                            trackedAutoMeaterData.Update();
-                        }
-                        ServerSend.TrackedAutoMeaterSpecific(trackedAutoMeaterData, ID);
-                    }
-                }
-            }
-
-            // Encryptions
-            if (GameManager.encryptionsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> encryptionInstances) &&
-                encryptionInstances.TryGetValue(player.instance, out List<int> encryptions))
-            {
-                for(int i=0; i < encryptions.Count; ++i)
-                {
-                    TrackedEncryptionData trackedEncryptionData = Server.encryptions[encryptions[i]];
-                    if(trackedEncryptionData != null && (fromClient == -1 || trackedEncryptionData.controller == fromClient))
-                    {
-                        // If this is ours
-                        if(trackedEncryptionData.controller == 0)
-                        {
-                            // Check if should send
-                            if (GameManager.sceneLoading && trackedEncryptionData.scene.Equals(GameManager.scene))
-                            {
-                                // We don't want to send an object that is ours from the scene we are currently loading away from
-                                // So just continue to next object
-                                continue;
-                            }
-
-                            // If sending, make sure it init otherwise we might be missing data
-                            trackedEncryptionData.Update();
-                        }
-                        ServerSend.TrackedEncryptionSpecific(trackedEncryptionData, ID);
+                        ServerSend.TrackedObjectSpecific(trackedObjectData, ID);
                     }
                 }
             }
@@ -476,14 +443,15 @@ namespace H3MP.Networking
             Mod.RemovePlayerFromLists(ID);
             GameManager.DistributeAllControl(ID);
             SpecificDisconnect();
+            if (OnClientDisconnect != null)
+            {
+                OnClientDisconnect();
+            }
             ServerSend.ClientDisconnect(ID);
 
             player = null;
         }
 
-        // MOD: This will be called after disconnection to reset specific fields
-        //      For example, here we deal with current TNH data
-        //      If your mod has some H3MP dependent data that you want to get rid of when you disconnect from a server, do it here
         private void SpecificDisconnect()
         {
             if (GameManager.TNHInstances.TryGetValue(player.instance, out TNHInstance TNHInstance) && TNHInstance.currentlyPlaying.Contains(ID)) // TNH_Manager was set to null and we are currently playing

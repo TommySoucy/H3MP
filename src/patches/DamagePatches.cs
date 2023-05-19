@@ -1917,7 +1917,7 @@ namespace H3MP.Patches
                         {
                             if (__instance.S.Links[i] == __instance)
                             {
-                                ServerSend.SosigLinkDamage(trackedSosig.data, i, d);
+                                ServerSend.SosigLinkDamage(trackedSosig.sosigData, i, d);
                                 break;
                             }
                         }
@@ -2007,7 +2007,7 @@ namespace H3MP.Patches
                                 {
                                     if (__instance.L.m_wearables[j] == __instance)
                                     {
-                                        ServerSend.SosigWearableDamage(trackedSosig.data, i, j, d);
+                                        ServerSend.SosigWearableDamage(trackedSosig.sosigData, i, j, d);
                                         return false;
                                     }
                                 }
@@ -2276,7 +2276,7 @@ namespace H3MP.Patches
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to precess it and return the result
-                        ServerSend.AutoMeaterDamage(trackedAutoMeater.data, d);
+                        ServerSend.AutoMeaterDamage(trackedAutoMeater.autoMeaterData, d);
                         return false;
                     }
                 }
@@ -2346,7 +2346,7 @@ namespace H3MP.Patches
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to precess it and return the result
-                        ServerSend.AutoMeaterHitZoneDamage(trackedAutoMeater.data, (byte)___Type, d);
+                        ServerSend.AutoMeaterHitZoneDamage(trackedAutoMeater.autoMeaterData, (byte)___Type, d);
                         return false;
                     }
                 }
@@ -2418,7 +2418,7 @@ namespace H3MP.Patches
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to precess it and return the result
-                        ServerSend.EncryptionDamage(trackedEncryption.data, d);
+                        ServerSend.EncryptionDamage(trackedEncryption.encryptionData, d);
                         return false;
                     }
                 }
@@ -2494,7 +2494,7 @@ namespace H3MP.Patches
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to process it and return the result
-                        ServerSend.EncryptionSubDamage(trackedEncryption.data, __instance.Index, d);
+                        ServerSend.EncryptionSubDamage(trackedEncryption.encryptionData, __instance.Index, d);
                         return false;
                     }
                 }
@@ -2543,7 +2543,7 @@ namespace H3MP.Patches
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to process it and return the result
-                        ServerSend.SosigWeaponDamage(trackedItem.data, d);
+                        ServerSend.SosigWeaponDamage(trackedItem.itemData, d);
                         return false;
                     }
                 }
@@ -2592,7 +2592,7 @@ namespace H3MP.Patches
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to process it and return the result
-                        ServerSend.RemoteMissileDamage(trackedItem.data, d);
+                        ServerSend.RemoteMissileDamage(trackedItem.itemData, d);
                         return false;
                     }
                 }
@@ -2641,7 +2641,7 @@ namespace H3MP.Patches
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to process it and return the result
-                        ServerSend.StingerMissileDamage(trackedItem.data, d);
+                        ServerSend.StingerMissileDamage(trackedItem.itemData, d);
                         return false;
                     }
                 }

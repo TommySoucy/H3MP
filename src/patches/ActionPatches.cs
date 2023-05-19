@@ -3028,7 +3028,7 @@ namespace H3MP.Patches
             TrackedSosig trackedSosig = __instance.GetComponent<TrackedSosig>();
             if (trackedSosig != null)
             {
-                trackedSosig.data.configTemplate = t;
+                trackedSosig.sosigData.configTemplate = t;
 
                 if (ThreadManager.host)
                 {
@@ -3353,19 +3353,19 @@ namespace H3MP.Patches
             TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
             {
-                trackedSosig.data.currentOrder = o;
+                trackedSosig.sosigData.currentOrder = o;
 
                 if (skipSendingOrder == 0)
                 {
                     if (ThreadManager.host)
                     {
-                        ServerSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                        ServerSend.SosigSetCurrentOrder(trackedSosig.sosigData, o);
                     }
                     else
                     {
                         if (trackedSosig.data.trackedID != -1)
                         {
-                            ClientSend.SosigSetCurrentOrder(trackedSosig.data, o);
+                            ClientSend.SosigSetCurrentOrder(trackedSosig.sosigData, o);
                         }
                         else
                         {
@@ -3404,18 +3404,18 @@ namespace H3MP.Patches
             TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
             {
-                trackedSosig.data.guardPoint = point;
-                trackedSosig.data.hardGuard = hardguard;
+                trackedSosig.sosigData.guardPoint = point;
+                trackedSosig.sosigData.hardGuard = hardguard;
 
                 if (ThreadManager.host)
                 {
-                    ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.GuardPoint);
+                    ServerSend.SosigSetCurrentOrder(trackedSosig.sosigData, Sosig.SosigOrder.GuardPoint);
                 }
                 else
                 {
                     if (trackedSosig.data.trackedID != -1)
                     {
-                        ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.GuardPoint);
+                        ClientSend.SosigSetCurrentOrder(trackedSosig.sosigData, Sosig.SosigOrder.GuardPoint);
                     }
                     else
                     {
@@ -3453,17 +3453,17 @@ namespace H3MP.Patches
             TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
             {
-                trackedSosig.data.assaultPoint = point;
+                trackedSosig.sosigData.assaultPoint = point;
 
                 if (ThreadManager.host)
                 {
-                    ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Assault);
+                    ServerSend.SosigSetCurrentOrder(trackedSosig.sosigData, Sosig.SosigOrder.Assault);
                 }
                 else
                 {
                     if (trackedSosig.data.trackedID != -1)
                     {
-                        ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Assault);
+                        ClientSend.SosigSetCurrentOrder(trackedSosig.sosigData, Sosig.SosigOrder.Assault);
                     }
                     else
                     {
@@ -3501,18 +3501,18 @@ namespace H3MP.Patches
             TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
             {
-                trackedSosig.data.idleToPoint = point;
-                trackedSosig.data.idleDominantDir = dominantDir;
+                trackedSosig.sosigData.idleToPoint = point;
+                trackedSosig.sosigData.idleDominantDir = dominantDir;
 
                 if (ThreadManager.host)
                 {
-                    ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Idle);
+                    ServerSend.SosigSetCurrentOrder(trackedSosig.sosigData, Sosig.SosigOrder.Idle);
                 }
                 else
                 {
                     if (trackedSosig.data.trackedID != -1)
                     {
-                        ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.Idle);
+                        ClientSend.SosigSetCurrentOrder(trackedSosig.sosigData, Sosig.SosigOrder.Idle);
                     }
                     else
                     {
@@ -3544,17 +3544,17 @@ namespace H3MP.Patches
             TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
             if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
             {
-                trackedSosig.data.pathToPoint = trackedSosig.physicalSosigScript.m_pathToPoint;
+                trackedSosig.sosigData.pathToPoint = trackedSosig.physicalSosig.m_pathToPoint;
 
                 if (ThreadManager.host)
                 {
-                    ServerSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.PathTo);
+                    ServerSend.SosigSetCurrentOrder(trackedSosig.sosigData, Sosig.SosigOrder.PathTo);
                 }
                 else
                 {
                     if (trackedSosig.data.trackedID != -1)
                     {
-                        ClientSend.SosigSetCurrentOrder(trackedSosig.data, Sosig.SosigOrder.PathTo);
+                        ClientSend.SosigSetCurrentOrder(trackedSosig.sosigData, Sosig.SosigOrder.PathTo);
                     }
                     else
                     {
@@ -3737,21 +3737,42 @@ namespace H3MP.Patches
                         else
                         {
                             Mod.LogError("SosigWearable: " + knownWearableID + " not found in map");
+                            return;
                         }
                     }
-                    if (ThreadManager.host)
+                    if (trackedSosig.data.trackedID == -1)
                     {
-                        ServerSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        if(TrackedSosig.unknownWearable.TryGetValue(trackedSosig.data.localWaitingIndex, out Dictionary<string, List<int>> dict))
+                        {
+                            if(dict.TryGetValue(knownWearableID, out List<int> entryLinkIndex))
+                            {
+                                entryLinkIndex.Add(linkIndex);
+                            }
+                            else
+                            {
+                                dict.Add(knownWearableID, new List<int>() { linkIndex });
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<string, List<int>> newDict = new Dictionary<string, List<int>>();
+                            newDict.Add(knownWearableID, new List<int>() { linkIndex });
+                            TrackedSosig.unknownWearable.Add(trackedSosig.data.localWaitingIndex, newDict);
+                        }
                     }
                     else
                     {
-                        if (trackedSosig.data.trackedID != -1)
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
+                        }
+                        else
                         {
                             ClientSend.SosigLinkRegisterWearable(trackedSosig.data.trackedID, linkIndex, knownWearableID);
                         }
                     }
 
-                    trackedSosig.data.wearables[linkIndex].Add(knownWearableID);
+                    trackedSosig.sosigData.wearables[linkIndex].Add(knownWearableID);
 
                     knownWearableID = null;
                 }
@@ -3818,7 +3839,7 @@ namespace H3MP.Patches
                         }
                     }
 
-                    trackedSosig.data.wearables[linkIndex].Remove(knownWearableID);
+                    trackedSosig.sosigData.wearables[linkIndex].Remove(knownWearableID);
 
                     knownWearableID = null;
                 }
@@ -4078,7 +4099,7 @@ namespace H3MP.Patches
                 }
                 else
                 {
-                    trackedSosig.data.IFF = (byte)i;
+                    trackedSosig.sosigData.IFF = (byte)i;
                     if (ThreadManager.host)
                     {
                         ServerSend.SosigSetIFF(trackedSosig.data.trackedID, i);
@@ -4113,7 +4134,7 @@ namespace H3MP.Patches
                 }
                 else
                 {
-                    trackedSosig.data.IFF = (byte)i;
+                    trackedSosig.sosigData.IFF = (byte)i;
                     if (ThreadManager.host)
                     {
                         ServerSend.SosigSetOriginalIFF(trackedSosig.data.trackedID, i);
@@ -4171,9 +4192,9 @@ namespace H3MP.Patches
                 if (!runOriginal)
                 {
                     // Call AutoMeater update methods we don't want to skip
-                    if (trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].IsFlameThrower)
+                    if (trackedAutoMeater.physicalAutoMeater.FireControl.Firearms[0].IsFlameThrower)
                     {
-                        trackedAutoMeater.data.physicalObject.physicalAutoMeaterScript.FireControl.Firearms[0].Tick(Time.deltaTime);
+                        trackedAutoMeater.physicalAutoMeater.FireControl.Firearms[0].Tick(Time.deltaTime);
                     }
                 }
                 return runOriginal;
@@ -4416,9 +4437,9 @@ namespace H3MP.Patches
                     if (trackedAutoMeater.data.controller == 0)
                     {
                         int firearmIndex = -1;
-                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
+                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeater.FireControl.Firearms.Count; ++i)
                         {
-                            if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
+                            if (trackedAutoMeater.physicalAutoMeater.FireControl.Firearms[i] == __instance)
                             {
                                 firearmIndex = i;
                                 break;
@@ -4432,9 +4453,9 @@ namespace H3MP.Patches
                     if (trackedAutoMeater.data.trackedID != -1)
                     {
                         int firearmIndex = -1;
-                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms.Count; ++i)
+                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeater.FireControl.Firearms.Count; ++i)
                         {
-                            if (trackedAutoMeater.physicalAutoMeaterScript.FireControl.Firearms[i] == __instance)
+                            if (trackedAutoMeater.physicalAutoMeater.FireControl.Firearms[i] == __instance)
                             {
                                 firearmIndex = i;
                                 break;
@@ -4480,7 +4501,7 @@ namespace H3MP.Patches
                 TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(encryption) ? GameManager.trackedEncryptionByEncryption[encryption] : encryption.GetComponent<TrackedEncryption>();
                 if (trackedEncryption != null && trackedEncryption.data.controller == GameManager.ID)
                 {
-                    trackedEncryption.data.subTargsActive[index] = true;
+                    trackedEncryption.encryptionData.subTargsActive[index] = true;
 
                     if (ThreadManager.host)
                     {
@@ -4527,14 +4548,14 @@ namespace H3MP.Patches
                 TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
                 if (trackedEncryption != null && trackedEncryption.data.controller == GameManager.ID)
                 {
-                    trackedEncryption.data.tendrilsActive[index] = true;
-                    trackedEncryption.data.growthPoints[index] = point;
-                    trackedEncryption.data.subTargsPos[index] = point;
-                    trackedEncryption.data.subTargsActive[index] = true;
-                    trackedEncryption.data.tendrilFloats[index] = 1f;
-                    Vector3 forward = point - trackedEncryption.physicalEncryptionScript.Tendrils[index].transform.position;
-                    trackedEncryption.data.tendrilsRot[index] = Quaternion.LookRotation(forward);
-                    trackedEncryption.data.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+                    trackedEncryption.encryptionData.tendrilsActive[index] = true;
+                    trackedEncryption.encryptionData.growthPoints[index] = point;
+                    trackedEncryption.encryptionData.subTargsPos[index] = point;
+                    trackedEncryption.encryptionData.subTargsActive[index] = true;
+                    trackedEncryption.encryptionData.tendrilFloats[index] = 1f;
+                    Vector3 forward = point - trackedEncryption.physicalEncryption.Tendrils[index].transform.position;
+                    trackedEncryption.encryptionData.tendrilsRot[index] = Quaternion.LookRotation(forward);
+                    trackedEncryption.encryptionData.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
                     if (ThreadManager.host)
                     {
@@ -4583,11 +4604,11 @@ namespace H3MP.Patches
                 {
                     if (trackedEncryption.data.controller == GameManager.ID)
                     {
-                        trackedEncryption.data.growthPoints[index] = point;
-                        trackedEncryption.data.tendrilFloats[index] = 0;
+                        trackedEncryption.encryptionData.growthPoints[index] = point;
+                        trackedEncryption.encryptionData.tendrilFloats[index] = 0;
                         Vector3 forward = point - __instance.Tendrils[index].transform.position;
-                        trackedEncryption.data.tendrilsRot[index] = Quaternion.LookRotation(forward);
-                        trackedEncryption.data.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
+                        trackedEncryption.encryptionData.tendrilsRot[index] = Quaternion.LookRotation(forward);
+                        trackedEncryption.encryptionData.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
                         if (ThreadManager.host)
                         {
@@ -4650,7 +4671,7 @@ namespace H3MP.Patches
                 TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
                 if (trackedEncryption != null)
                 {
-                    trackedEncryption.data.subTargsActive[i] = false;
+                    trackedEncryption.encryptionData.subTargsActive[i] = false;
 
                     if (ThreadManager.host)
                     {
@@ -5231,7 +5252,7 @@ namespace H3MP.Patches
                 {
                     if (ThreadManager.host)
                     {
-                        ServerSend.MolotovDamage(trackedItem.data, d);
+                        ServerSend.MolotovDamage(trackedItem.itemData, d);
                     }
                     else
                     {
@@ -5307,9 +5328,9 @@ namespace H3MP.Patches
                     }
                     if (__instance.UsesRecursiveSubTarg)
                     {
-                        for (int i = 0; i < trackedEncryption.data.subTargsActive.Length; ++i)
+                        for (int i = 0; i < trackedEncryption.encryptionData.subTargsActive.Length; ++i)
                         {
-                            if (trackedEncryption.data.subTargsActive[i])
+                            if (trackedEncryption.encryptionData.subTargsActive[i])
                             {
                                 ++___m_numSubTargsLeft;
                             }
@@ -6108,7 +6129,7 @@ namespace H3MP.Patches
             TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.SpeedLoader, out trackedItem) ? trackedItem : __instance.SpeedLoader.GetComponent<TrackedItem>();
             if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
             {
-                Speedloader speedLoader = trackedItem.physicalObject as Speedloader;
+                Speedloader speedLoader = trackedItem.physicalItem as Speedloader;
                 int chamberIndex = -1;
                 for (int i = 0; i < speedLoader.Chambers.Count; ++i)
                 {
@@ -6695,27 +6716,27 @@ namespace H3MP.Patches
 
             if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
             {
-                trackedItem.data.additionalData = new byte[grappleThrowable.finalRopePoints.Count * 12 + 2];
+                trackedItem.itemData.additionalData = new byte[grappleThrowable.finalRopePoints.Count * 12 + 2];
 
-                trackedItem.data.additionalData[0] = grappleThrowable.m_hasLanded ? (byte)1 : (byte)0;
-                trackedItem.data.additionalData[1] = (byte)grappleThrowable.finalRopePoints.Count;
+                trackedItem.itemData.additionalData[0] = grappleThrowable.m_hasLanded ? (byte)1 : (byte)0;
+                trackedItem.itemData.additionalData[1] = (byte)grappleThrowable.finalRopePoints.Count;
                 if (grappleThrowable.finalRopePoints.Count > 0)
                 {
                     for (int i = 0; i < grappleThrowable.finalRopePoints.Count; ++i)
                     {
-                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].x).CopyTo(trackedItem.data.additionalData, i * 12 + 2);
-                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].y).CopyTo(trackedItem.data.additionalData, i * 12 + 6);
-                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].z).CopyTo(trackedItem.data.additionalData, i * 12 + 10);
+                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].x).CopyTo(trackedItem.itemData.additionalData, i * 12 + 2);
+                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].y).CopyTo(trackedItem.itemData.additionalData, i * 12 + 6);
+                        BitConverter.GetBytes(grappleThrowable.finalRopePoints[i].z).CopyTo(trackedItem.itemData.additionalData, i * 12 + 10);
                     }
                 }
 
                 if (ThreadManager.host)
                 {
-                    ServerSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.data.additionalData);
+                    ServerSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.itemData.additionalData);
                 }
                 else
                 {
-                    ClientSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.data.additionalData);
+                    ClientSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.itemData.additionalData);
                 }
             }
         }

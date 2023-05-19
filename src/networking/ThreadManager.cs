@@ -117,29 +117,26 @@ namespace H3MP.Networking
                 }
 
                 // Send all trackedItems to all clients
-                ServerSend.TrackedItems();
-                ServerSend.TrackedSosigs();
-                ServerSend.TrackedAutoMeaters();
-                ServerSend.TrackedEncryptions();
+                ServerSend.TrackedObjects();
 
                 // Also send the host's player state to all clients
                 if (GM.CurrentPlayerBody != null)
                 {
                     ServerSend.PlayerState(0,
-                                                GM.CurrentPlayerBody.transform.position,
-                                                GM.CurrentPlayerBody.transform.rotation,
-                                                GM.CurrentPlayerBody.headPositionFiltered,
-                                                GM.CurrentPlayerBody.headRotationFiltered,
-                                                GM.CurrentPlayerBody.headPositionFiltered + GameManager.torsoOffset,
-                                                GM.CurrentPlayerBody.Torso.rotation,
-                                                GM.CurrentPlayerBody.LeftHand.position,
-                                                GM.CurrentPlayerBody.LeftHand.rotation,
-                                                GM.CurrentPlayerBody.RightHand.position,
-                                                GM.CurrentPlayerBody.RightHand.rotation,
-                                                GM.CurrentPlayerBody.Health,
-                                                GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(),
-                                                GameManager.scene,
-                                                GameManager.instance);
+                                           GM.CurrentPlayerBody.transform.position,
+                                           GM.CurrentPlayerBody.transform.rotation,
+                                           GM.CurrentPlayerBody.headPositionFiltered,
+                                           GM.CurrentPlayerBody.headRotationFiltered,
+                                           GM.CurrentPlayerBody.headPositionFiltered + GameManager.torsoOffset,
+                                           GM.CurrentPlayerBody.Torso.rotation,
+                                           GM.CurrentPlayerBody.LeftHand.position,
+                                           GM.CurrentPlayerBody.LeftHand.rotation,
+                                           GM.CurrentPlayerBody.RightHand.position,
+                                           GM.CurrentPlayerBody.RightHand.rotation,
+                                           GM.CurrentPlayerBody.Health,
+                                           GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(),
+                                           GameManager.scene,
+                                           GameManager.instance);
                 }
             }
             else
@@ -147,26 +144,23 @@ namespace H3MP.Networking
                 // Send this client's up to date trackedItems to host and all other clients of there are others in the scene
                 if (GameManager.playersPresent > 0)
                 {
-                    ClientSend.TrackedItems();
-                    ClientSend.TrackedSosigs();
-                    ClientSend.TrackedAutoMeaters();
-                    ClientSend.TrackedEncryptions();
+                    ClientSend.TrackedObjects();
 
                     // Also send the player state to all clients
                     if (GM.CurrentPlayerBody != null)
                     {
                         ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,
-                                                    GM.CurrentPlayerBody.transform.rotation,
-                                                    GM.CurrentPlayerBody.headPositionFiltered,
-                                                    GM.CurrentPlayerBody.headRotationFiltered,
-                                                    GM.CurrentPlayerBody.headPositionFiltered + GameManager.torsoOffset,
-                                                    GM.CurrentPlayerBody.Torso.rotation,
-                                                    GM.CurrentPlayerBody.LeftHand.position,
-                                                    GM.CurrentPlayerBody.LeftHand.rotation,
-                                                    GM.CurrentPlayerBody.RightHand.position,
-                                                    GM.CurrentPlayerBody.RightHand.rotation,
-                                                    GM.CurrentPlayerBody.Health,
-                                                    GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
+                                               GM.CurrentPlayerBody.transform.rotation,
+                                               GM.CurrentPlayerBody.headPositionFiltered,
+                                               GM.CurrentPlayerBody.headRotationFiltered,
+                                               GM.CurrentPlayerBody.headPositionFiltered + GameManager.torsoOffset,
+                                               GM.CurrentPlayerBody.Torso.rotation,
+                                               GM.CurrentPlayerBody.LeftHand.position,
+                                               GM.CurrentPlayerBody.LeftHand.rotation,
+                                               GM.CurrentPlayerBody.RightHand.position,
+                                               GM.CurrentPlayerBody.RightHand.rotation,
+                                               GM.CurrentPlayerBody.Health,
+                                               GM.CurrentPlayerBody.GetMaxHealthPlayerRaw());
                     }
                 }
             }
