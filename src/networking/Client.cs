@@ -46,8 +46,16 @@ namespace H3MP.Networking
         public static uint localObjectCounter = 0;
         public static Dictionary<uint, TrackedObjectData> waitingLocalObjects = new Dictionary<uint, TrackedObjectData>();
 
-        // Customization: Event to let mods know when the client disconnects
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnDisconnect event
+        /// </summary>
         public delegate void OnDisconnectDelegate();
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we (Client) disconnect from a Server
+        /// </summary>
         public static event OnDisconnectDelegate OnDisconnect;
 
         private void Awake()

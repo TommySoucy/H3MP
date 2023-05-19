@@ -72,8 +72,19 @@ namespace H3MP.Tracking
                                                                                     80,81,82,83,84,85,86,87,88,89,
                                                                                     90,91,92,93,94,95,96,97,98,99};
 
-        // Customization: Event to let mods override the item type
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnInitItemType event
+        /// </summary>
+        /// <param name="trackedItem">The TrackedItem we must find the subtype of</param>
+        /// <param name="physObj">The FVRPhysicalObject this tracked item is tracking</param>
+        /// <param name="found">Custom override for whether the item type was found</param>
         public delegate void OnInitItemTypeDelegate(TrackedItem trackedItem, FVRPhysicalObject physObj, ref bool found);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we initialize the type of a TrackedItem
+        /// </summary>
         public static event OnInitItemTypeDelegate OnInitItemType;
 
         public override void Awake()

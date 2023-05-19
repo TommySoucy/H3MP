@@ -20,8 +20,16 @@ namespace H3MP.Networking
         public bool connected;
         public long ping;
 
-        // Customization: Event to let mods know when the client disconnects
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnClientDisconnect event
+        /// </summary>
         public delegate void OnClientDisconnectDelegate();
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when this Client disconnects from us (Server)
+        /// </summary>
         public event OnClientDisconnectDelegate OnClientDisconnect;
 
         public ServerClient(int ID)

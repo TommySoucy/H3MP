@@ -47,7 +47,12 @@ namespace H3MP
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> objectsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
 
-        // Customization: Lets a mod prevent synchronization in specific scenes
+        /// <summary>
+        /// CUSTOMIZATION
+        /// A dictionary of all scenes we do not want to sychronize
+        /// Key: Name of the scene
+        /// Value: Irrelevant
+        /// </summary>
         public static Dictionary<string, byte> nonSynchronizedScenes = new Dictionary<string, byte>();
 
         public static int giveControlOfDestroyed;
@@ -84,12 +89,33 @@ namespace H3MP
         //public GameObject localPlayerPrefab;
         public GameObject playerPrefab;
 
-        // Customization: Event to let mods override player visibility
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnUpdatePlayerHidden event
+        /// </summary>
+        /// <param name="player">The player we want to update visibility of</param>
+        /// <param name="visible">Custom override for whether should be visible or not</param>
         public delegate void OnUpdatePlayerHiddenDelegate(PlayerManager player, ref bool visible);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we update a player's visibility
+        /// </summary>
         public static event OnUpdatePlayerHiddenDelegate OnUpdatePlayerHidden;
 
-        // Customization: Event to let mods override player damage
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnPlayerDamage event
+        /// </summary>
+        /// <param name="part">The part that player received the damage on</param>
+        /// <param name="damage">The damage</param>
+        /// <param name="processDamage">Custom override for whether H3MP should process the damage itself</param>
         public delegate void OnPlayerDamageDelegate(PlayerHitbox.Part part, Damage damage, ref bool processDamage);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when the player takes damage
+        /// </summary>
         public static event OnPlayerDamageDelegate OnPlayerDamage;
 
         private void Awake()

@@ -25,8 +25,16 @@ namespace H3MP.Networking
         public static TcpListener tcpListener;
         public static UdpClient udpListener;
 
-        // Customization: Event to let mods know when the server closes
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnServerClose event
+        /// </summary>
         public delegate void OnServerCloseDelegate();
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we (Server) close the Server
+        /// </summary>
         public static event OnServerCloseDelegate OnServerClose;
 
         public static void Start(ushort _maxClientCount, ushort _port)

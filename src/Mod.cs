@@ -114,24 +114,78 @@ namespace H3MP
         public static CustomPacketHandler[] customPacketHandlers = new CustomPacketHandler[10];
         public static Dictionary<string, int> registeredCustomPacketIDs = new Dictionary<string, int>();
 
-        // Customization: Event to let mods process registered custom packets
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the CustomPacketHandlerReceived event
+        /// </summary>
+        /// <param name="ID">The identifier that was used for the new packet ID</param>
+        /// <param name="index">The new packet ID</param>
         public delegate void CustomPacketHandlerReceivedDelegate(string ID, int index);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when a new custom packet is added to the network
+        /// </summary>
         public static event CustomPacketHandlerReceivedDelegate CustomPacketHandlerReceived;
 
-        // Customization: Event to let mods process generic/unregistered custom packets
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the GenericCustomPacketReceived event
+        /// </summary>
+        /// <param name="clientID">The index of the client this packet comes from</param>
+        /// <param name="ID">The packet's identifier</param>
+        /// <param name="packet">The packet</param>
         public delegate void GenericCustomPacketReceivedDelegate(int clientID, string ID, Packet packet);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when a new unregistered/generic custom packet is received
+        /// </summary>
         public static event GenericCustomPacketReceivedDelegate GenericCustomPacketReceived;
 
-        // Customization: Event to let mods modify the H3MP remote player prefab when we get the asset
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSetupPlayerPrefab event
+        /// </summary>
+        /// <param name="playerPrefab">The player prefab</param>
         public delegate void OnSetupPlayerPrefabDelegate(GameObject playerPrefab);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when the player prefab gets setup
+        /// </summary>
         public static event OnSetupPlayerPrefabDelegate OnSetupPlayerPrefab;
 
-        // Customization: Event to let mods override the best potential object host
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnGetBestPotentialObjectHost event
+        /// </summary>
+        /// <param name="currentController">The object's current controller (If applicable). -1 means to find the best host in current context without restrictions.</param>
+        /// <param name="forUs">Whether the call was made to find new host for something controlled by another player</param>
+        /// <param name="hasWhiteList">Whether a whitelist was included</param>
+        /// <param name="whiteList">The whitelist. Contains the IDs of only the players who can possibly take control.</param>
+        /// <param name="sceneOverride">The override for which scene we want to find best host in. null will use current scene.</param>
+        /// <param name="instanceOverride">The override for which instance we want to find best host in. -1 will use current instance.</param>
+        /// <param name="bestPotentialObjectHost">Custom override for the ID of the best host</param>
         public delegate void OnGetBestPotentialObjectHostDelegate(int currentController, bool forUs, bool hasWhiteList , List<int> whiteList, string sceneOverride, int instanceOverride, ref int bestPotentialObjectHost);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we try to get the best potential host for an object or context
+        /// </summary>
         public static event OnGetBestPotentialObjectHostDelegate OnGetBestPotentialObjectHost;
 
-        // Customization: Event to let mods know we are getting rid of a certain player
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnRemovePlayerFromSpecificLists event
+        /// </summary>
+        /// <param name="player">The player we are getting rid of</param>
         public delegate void OnRemovePlayerFromSpecificListsDelegate(PlayerManager player);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we remove a player from the network
+        /// </summary>
         public static event OnRemovePlayerFromSpecificListsDelegate OnRemovePlayerFromSpecificLists;
 
         // Debug

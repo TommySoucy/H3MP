@@ -2364,6 +2364,10 @@ namespace H3MP.Networking
             }
         }
 
+        /// <summary>
+        /// Requests the registration of a new packet ID to the Server
+        /// </summary>
+        /// <param name="ID">The identifier for the new packet ID</param>
         public static void RegisterCustomPacketType(string ID)
         {
             using (Packet packet = new Packet((int)ClientPackets.registerCustomPacketType))
