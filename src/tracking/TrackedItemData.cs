@@ -767,6 +767,19 @@ namespace H3MP.Tracking
                 {
                     TrackedItem.unknownSosigInventoryObjects.Remove((physical.physical as SosigWeaponPlayerInterface).W);
                 }
+
+                // If not tracked, make sure we remove from tracked lists in case object was unawoken
+                if (physicalItem != null && physicalItem.physicalItem != null)
+                {
+                    GameManager.trackedItemByItem.Remove(physicalItem.physicalItem);
+
+                    if (physicalItem.physicalItem is SosigWeaponPlayerInterface)
+                    {
+                        GameManager.trackedItemBySosigWeapon.Remove((physicalItem.physicalItem as SosigWeaponPlayerInterface).W);
+                    }
+
+                    GameManager.trackedObjectByInteractive.Remove(physicalItem.physicalItem);
+                }
             }
         }
 

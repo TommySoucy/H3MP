@@ -260,6 +260,7 @@ namespace H3MP
             TrackedSosig.unknownTNHKills.Clear();
             TrackedSosig.unknownCurrentOrder.Clear();
             TrackedSosig.unknownConfiguration.Clear();
+            TrackedSosig.unknownWearable.Clear();
 
             TrackedEncryption.unknownDisableSubTarg.Clear();
             TrackedEncryption.unknownInit.Clear();

@@ -613,6 +613,12 @@ namespace H3MP.Tracking
                 TrackedEncryption.unknownResetGrowth.Remove(localWaitingIndex);
                 TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
                 TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
+
+                // If not tracked, make sure we remove from tracked lists in case object was unawoken
+                if (physicalEncryption != null && physicalEncryption.physicalEncryption != null)
+                {
+                    GameManager.trackedEncryptionByEncryption.Remove(physicalEncryption.physicalEncryption);
+                }
             }
         }
     }

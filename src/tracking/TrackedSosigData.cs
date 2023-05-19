@@ -1296,11 +1296,14 @@ namespace H3MP.Tracking
 
                 TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
             }
-            if(localTrackedID != -1 && TrackedSosig.unknownWearable.TryGetValue(localWaitingIndex, out Dictionary<string,int> wearableEntries))
+            if(localTrackedID != -1 && TrackedSosig.unknownWearable.TryGetValue(localWaitingIndex, out Dictionary<string, List<int>> wearableEntries))
             {
-                foreach(KeyValuePair<string,int> entry in wearableEntries)
+                foreach(KeyValuePair<string, List<int>> entry in wearableEntries)
                 {
-                    ClientSend.SosigLinkRegisterWearable(trackedID, entry.Value, entry.Key);
+                    for (int i = 0; i < entry.Value.Count; ++i) 
+                    {
+                        ClientSend.SosigLinkRegisterWearable(trackedID, entry.Value[i], entry.Key);
+                    }
                 }
 
                 TrackedSosig.unknownWearable.Remove(localWaitingIndex);
@@ -1322,6 +1325,13 @@ namespace H3MP.Tracking
                 TrackedSosig.unknownIFFChart.Remove(localWaitingIndex);
                 TrackedSosig.unknownCurrentOrder.Remove(localWaitingIndex);
                 TrackedSosig.unknownConfiguration.Remove(localWaitingIndex);
+                TrackedSosig.unknownWearable.Remove(localWaitingIndex);
+
+                // If not tracked, make sure we remove from tracked lists in case object was unawoken
+                if (physicalSosig != null && physicalSosig.physicalSosig != null)
+                {
+                    GameManager.trackedSosigBySosig.Remove(physicalSosig.physicalSosig);
+                }
             }
         }
         
@@ -1360,18 +1370,21 @@ namespace H3MP.Tracking
                     TakeInventoryControl();
                 }
 
-                if (physicalSosig != null)
+                if (physicalSosig != null && physicalSosig.physicalSosig != null)
                 {
                     if (GM.CurrentAIManager != null)
                     {
                         GM.CurrentAIManager.RegisterAIEntity(physicalSosig.physicalSosig.E);
                     }
-                    physicalSosig.physicalSosig.CoreRB.isKinematic = false;
+                    if (physicalSosig.physicalSosig.CoreRB != null)
+                    {
+                        physicalSosig.physicalSosig.CoreRB.isKinematic = false;
+                    }
                 }
             }
             else if (controller == GameManager.ID) // Lose control
             {
-                if (physicalSosig != null)
+                if (physicalSosig != null && physicalSosig.physicalSosig != null)
                 {
                     physicalSosig.EnsureUncontrolled();
 
@@ -1379,7 +1392,10 @@ namespace H3MP.Tracking
                     {
                         GM.CurrentAIManager.DeRegisterAIEntity(physicalSosig.physicalSosig.E);
                     }
-                    physicalSosig.physicalSosig.CoreRB.isKinematic = true;
+                    if (physicalSosig.physicalSosig.CoreRB != null)
+                    {
+                        physicalSosig.physicalSosig.CoreRB.isKinematic = true;
+                    }
                 }
             }
         }

@@ -438,6 +438,12 @@ namespace H3MP.Tracking
                 TrackedItem.unknownParentTrackedIDs.Remove(localWaitingIndex);
                 TrackedItem.unknownControlTrackedIDs.Remove(localWaitingIndex);
                 TrackedItem.unknownDestroyTrackedIDs.Remove(localWaitingIndex);
+
+                // If not tracked, make sure we remove from tracked lists in case object was unawoken
+                if(physical != null && physical.physical != null)
+                {
+                    GameManager.trackedObjectByObject.Remove(physical.physical);
+                }
             }
 
             if (localTrackedID > -1 && localTrackedID < GameManager.objects.Count)
@@ -450,7 +456,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                Mod.LogWarning("\tlocaltrackedID out of range!:\n" + Environment.StackTrace);
+                Mod.LogWarning("\tlocaltrackedID "+localTrackedID+" for object at "+trackedID+" out of range!:\n" + Environment.StackTrace);
             }
         }
 

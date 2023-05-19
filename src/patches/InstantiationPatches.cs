@@ -512,36 +512,18 @@ namespace H3MP.Patches
                         continue;
                     }
 
-                    TrackedItem trackedItem = null;
-                    TrackedSosig trackedSosig = null;
-                    TrackedAutoMeater trackedAutoMeater = null;
-                    TrackedEncryption trackedEncryption = null;
+                    TrackedObject trackedObject = null;
                     if (obj is GameObject)
                     {
                         GameObject go = obj as GameObject;
                         if (go != null)
                         {
-                            trackedItem = go.GetComponent<TrackedItem>();
-                            trackedSosig = go.GetComponent<TrackedSosig>();
-                            trackedAutoMeater = go.GetComponent<TrackedAutoMeater>();
-                            trackedEncryption = go.GetComponent<TrackedEncryption>();
+                            trackedObject = go.GetComponent<TrackedObject>();
                         }
                     }
-                    if (trackedItem != null)
+                    if (trackedObject != null)
                     {
-                        trackedItem.skipFullDestroy = true;
-                    }
-                    if (trackedSosig != null)
-                    {
-                        trackedSosig.skipFullDestroy = true;
-                    }
-                    if (trackedAutoMeater != null)
-                    {
-                        trackedAutoMeater.skipFullDestroy = true;
-                    }
-                    if (trackedEncryption != null)
-                    {
-                        trackedEncryption.skipFullDestroy = true;
+                        trackedObject.skipFullDestroy = true;
                     }
 
                     UnityEngine.Object.Destroy(obj);

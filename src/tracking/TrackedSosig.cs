@@ -22,7 +22,7 @@ namespace H3MP.Tracking
         public static Dictionary<uint, int> unknownIFFChart = new Dictionary<uint, int>();
         public static Dictionary<uint, Sosig.SosigOrder> unknownCurrentOrder = new Dictionary<uint, Sosig.SosigOrder>();
         public static Dictionary<uint, SosigConfigTemplate> unknownConfiguration = new Dictionary<uint, SosigConfigTemplate>();
-        public static Dictionary<uint, Dictionary<string, int>> unknownWearable = new Dictionary<uint, Dictionary<string, int>>();
+        public static Dictionary<uint, Dictionary<string, List<int>>> unknownWearable = new Dictionary<uint, Dictionary<string, List<int>>>();
 
         private void FixedUpdate()
         {

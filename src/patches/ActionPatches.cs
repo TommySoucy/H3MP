@@ -3742,21 +3742,21 @@ namespace H3MP.Patches
                     }
                     if (trackedSosig.data.trackedID == -1)
                     {
-                        if(TrackedSosig.unknownWearable.TryGetValue(trackedSosig.data.localWaitingIndex, out Dictionary<string,int> dict))
+                        if(TrackedSosig.unknownWearable.TryGetValue(trackedSosig.data.localWaitingIndex, out Dictionary<string, List<int>> dict))
                         {
-                            if(dict.TryGetValue(knownWearableID, out int entryLinkIndex))
+                            if(dict.TryGetValue(knownWearableID, out List<int> entryLinkIndex))
                             {
-                                Mod.LogError("Wearable "+ knownWearableID+" to be registered as "+linkIndex+" already unknown registered on link "+ entryLinkIndex + " on sosig as local waiting index: "+ trackedSosig.data.localWaitingIndex);
+                                entryLinkIndex.Add(linkIndex);
                             }
                             else
                             {
-                                dict.Add(knownWearableID, linkIndex);
+                                dict.Add(knownWearableID, new List<int>() { linkIndex });
                             }
                         }
                         else
                         {
-                            Dictionary<string, int> newDict = new Dictionary<string, int>();
-                            newDict.Add(knownWearableID, linkIndex);
+                            Dictionary<string, List<int>> newDict = new Dictionary<string, List<int>>();
+                            newDict.Add(knownWearableID, new List<int>() { linkIndex });
                             TrackedSosig.unknownWearable.Add(trackedSosig.data.localWaitingIndex, newDict);
                         }
                     }

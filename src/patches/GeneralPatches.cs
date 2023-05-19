@@ -139,7 +139,7 @@ namespace H3MP.Patches
 
         static bool Prefix(ref Rigidbody __instance, bool value)
         {
-            if (Mod.managerObject == null || skip > 0)
+            if (Mod.managerObject == null || skip > 0 || __instance == null)
             {
                 return true;
             }

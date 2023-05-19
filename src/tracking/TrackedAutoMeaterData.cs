@@ -397,18 +397,21 @@ namespace H3MP.Tracking
             // Note that this only gets called when the new controller is different from the old one
             if (newController == GameManager.ID) // Gain control
             {
-                if (physicalAutoMeater != null)
+                if (physicalAutoMeater != null && physicalAutoMeater.physicalAutoMeater != null)
                 {
                     if (GM.CurrentAIManager != null)
                     {
                         GM.CurrentAIManager.RegisterAIEntity(physicalAutoMeater.physicalAutoMeater.E);
                     }
-                    physicalAutoMeater.physicalAutoMeater.RB.isKinematic = false;
+                    if (physicalAutoMeater.physicalAutoMeater.RB != null)
+                    {
+                        physicalAutoMeater.physicalAutoMeater.RB.isKinematic = false;
+                    }
                 }
             }
             else if (controller == GameManager.ID) // Lose control
             {
-                if (physicalAutoMeater != null)
+                if (physicalAutoMeater != null && physicalAutoMeater.physicalAutoMeater != null) 
                 {
                     physicalAutoMeater.EnsureUncontrolled();
 
@@ -416,7 +419,10 @@ namespace H3MP.Tracking
                     {
                         GM.CurrentAIManager.DeRegisterAIEntity(physicalAutoMeater.physicalAutoMeater.E);
                     }
-                    physicalAutoMeater.physicalAutoMeater.RB.isKinematic = true;
+                    if (physicalAutoMeater.physicalAutoMeater.RB != null)
+                    {
+                        physicalAutoMeater.physicalAutoMeater.RB.isKinematic = true;
+                    }
                 }
             }
         }
@@ -445,6 +451,21 @@ namespace H3MP.Tracking
             packet.Write(hingeTargetPos);
             packet.Write(upDownMotorRotation);
             packet.Write(upDownJointTargetPos);
+        }
+
+        public override void RemoveFromLocal()
+        {
+            base.RemoveFromLocal();
+
+            // Manage unknown lists
+            if (trackedID == -1)
+            {
+                // If not tracked, make sure we remove from tracked lists in case object was unawoken
+                if (physicalAutoMeater != null && physicalAutoMeater.physicalAutoMeater != null)
+                {
+                    GameManager.trackedAutoMeaterByAutoMeater.Remove(physicalAutoMeater.physicalAutoMeater);
+                }
+            }
         }
     }
 }

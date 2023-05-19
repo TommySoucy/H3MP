@@ -451,6 +451,8 @@ namespace H3MP.Tracking
         /// Note: This will get called when instantiating a new TrackedObjectData with packet constructor if we are the init tracker
         ///       So when you receive an tracked object back from server after having tracked it, this may get called without
         ///       all data being initialized yet. See TrackedSosigData implementation, where we need to check if inventory exists
+        /// Note: This will get called OnDestroy if we give control when giveControlOnDestroy = true. This means you cannot assume
+        ///       you still have physical
         /// </summary>
         /// <param name="newController">The cliend ID of the new controller</param>
         public override void OnControlChanged(int newController)
