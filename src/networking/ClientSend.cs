@@ -2377,5 +2377,28 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void BreakableGlassDamage(int trackedID, Damage d)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.breakableGlassDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void BreakableGlassDamage(Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ClientPackets.breakableGlassDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(packet);
+        }
     }
 }

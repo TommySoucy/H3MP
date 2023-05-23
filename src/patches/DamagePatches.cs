@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Networking;
+using H3MP.src.tracking;
 using H3MP.Tracking;
 using HarmonyLib;
 using System;
@@ -379,6 +380,18 @@ namespace H3MP.Patches
 
             PatchController.Verify(TNH_ShatterableCrateDamagePatchOriginal, harmony, false);
             harmony.Patch(TNH_ShatterableCrateDamagePatchOriginal, new HarmonyMethod(TNH_ShatterableCrateDamagePatchPrefix));
+
+            // BreakableGlassDamagerDamagePatch
+            MethodInfo BreakableGlassDamagerDamageOriginal = typeof(BreakableGlassDamager).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo BreakableGlassDamagerDamagePrefix = typeof(BreakableGlassDamagerPatch).GetMethod("DamagePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo BreakableGlassDamagerShatterOriginal = typeof(BreakableGlassDamager).GetMethod("ShatterGlass", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo BreakableGlassDamagerShatterPrefix = typeof(BreakableGlassDamagerPatch).GetMethod("ShatterGlassPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo BreakableGlassDamagerShatterPostfix = typeof(BreakableGlassDamagerPatch).GetMethod("ShatterGlassPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(BreakableGlassDamagerDamageOriginal, harmony, false);
+            PatchController.Verify(BreakableGlassDamagerShatterOriginal, harmony, false);
+            harmony.Patch(BreakableGlassDamagerDamageOriginal, new HarmonyMethod(BreakableGlassDamagerDamagePrefix));
+            harmony.Patch(BreakableGlassDamagerShatterOriginal, new HarmonyMethod(BreakableGlassDamagerShatterPrefix), new HarmonyMethod(BreakableGlassDamagerShatterPostfix));
         }
     }
 
@@ -2686,6 +2699,72 @@ namespace H3MP.Patches
                     }
                 }
             }
+        }
+    }
+
+    // Patches BreakableGlassDamager to keep track of damage taken by a breakable glass and shattering event
+    class BreakableGlassDamagerPatch
+    {
+        public static int damageSkip;
+
+        static bool DamagePrefix(BreakableGlassDamager __instance, Damage d)
+        {
+            if (damageSkip > 0)
+            {
+                return true;
+            }
+
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedBreakableGlass trackedBreakableGlass = GameManager.trackedBreakableGlassByBreakableGlassDamager.TryGetValue(__instance, out trackedBreakableGlass) ? trackedBreakableGlass : __instance.GetComponent<TrackedBreakableGlass>();
+            if (trackedBreakableGlass != null)
+            {
+                if(trackedBreakableGlass.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.BreakableGlassDamage(trackedBreakableGlass.breakableGlassData, d);
+                    }
+                    else
+                    {
+                        ClientSend.BreakableGlassDamage(trackedBreakableGlass.data.trackedID, d);
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        static void ShatterGlassPrefix(BreakableGlassDamager __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            ++Mod.skipAllInstantiates;
+        }
+
+        static void ShatterGlassPostfix(BreakableGlassDamager __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            --Mod.skipAllInstantiates;
+
+            GameManager.SyncTrackedObjects(__instance.m_wrapper.transform, true, null, GameManager.scene);
         }
     }
 }

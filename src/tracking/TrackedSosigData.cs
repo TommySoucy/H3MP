@@ -1206,9 +1206,9 @@ namespace H3MP.Tracking
             return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousMustard != mustard;
         }
 
-        public override void OnTrackedIDReceived()
+        public override void OnTrackedIDReceived(TrackedObjectData newData)
         {
-            base.OnTrackedIDReceived();
+            base.OnTrackedIDReceived(newData);
 
             if (TrackedSosig.unknownTNHKills.ContainsKey(localWaitingIndex))
             {

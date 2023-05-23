@@ -170,7 +170,8 @@ namespace H3MP.Networking
         trackedObjects = 157,
         objectUpdate = 158,
         destroyObject = 159,
-        registerCustomPacketType = 160
+        registerCustomPacketType = 160,
+        breakableGlassDamage = 161
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -331,6 +332,7 @@ namespace H3MP.Networking
         pinnedGrenadePullPin = 152,
         magazineAddRound = 153,
         clipAddRound = 154,
+        breakableGlassDamage = 155
     }
 
     public class Packet : IDisposable

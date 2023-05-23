@@ -272,7 +272,7 @@ namespace H3MP.Tracking
             latestUpdateSent = false;
         }
 
-        public virtual void OnTrackedIDReceived()
+        public virtual void OnTrackedIDReceived(TrackedObjectData newData)
         {
             if (TrackedObject.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {

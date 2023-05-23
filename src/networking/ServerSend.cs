@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using H3MP.src.tracking;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -4031,6 +4032,29 @@ namespace H3MP.Networking
 
                 SendTCPDataToAll(packet);
             }
+        }
+
+        public static void BreakableGlassDamage(TrackedBreakableGlassData trackedBreakableGlassData, Damage d)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.breakableGlassDamage))
+            {
+                packet.Write(trackedBreakableGlassData.trackedID);
+                packet.Write(d);
+
+                SendTCPData(trackedBreakableGlassData.controller, packet);
+            }
+        }
+
+        public static void BreakableGlassDamage(Packet packet, int controller)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.breakableGlassDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(controller, packet);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Patches;
+using H3MP.src.tracking;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -4015,6 +4016,30 @@ namespace H3MP.Networking
 
                 // Send event so a mod can add their handler at the index
                 Mod.CustomPacketHandlerReceivedInvoke(handlerID, index);
+            }
+        }
+
+        public static void BreakableGlassDamage(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            TrackedBreakableGlassData trackedBreakableGlass = Client.objects[trackedID] as TrackedBreakableGlassData;
+            if (trackedBreakableGlass != null)
+            {
+                if (trackedBreakableGlass.controller == GameManager.ID)
+                {
+                    if (trackedBreakableGlass.damager != null)
+                    {
+                        ++BreakableGlassDamagerPatch.damageSkip;
+                        trackedBreakableGlass.damager.Damage(damage);
+                        --BreakableGlassDamagerPatch.damageSkip;
+                    }
+                }
+                else
+                {
+                    ClientSend.BreakableGlassDamage(packet);
+                }
             }
         }
     }

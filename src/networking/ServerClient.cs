@@ -171,7 +171,7 @@ namespace H3MP.Networking
 #if DEBUG
                                         else
                                         {
-                                            Mod.LogError("\tServer received invalid custom TCP packet ID: " + packetID+" from client "+ID);
+                                            Mod.LogWarning("\tServer received invalid custom TCP packet ID: " + packetID+" from client "+ID);
                                         }
 #endif
                                     }

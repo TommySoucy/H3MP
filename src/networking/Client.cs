@@ -567,6 +567,7 @@ namespace H3MP.Networking
                 ClientHandle.ObjectUpdate,
                 ClientHandle.DestroyObject,
                 ClientHandle.RegisterCustomPacketType,
+                ClientHandle.BreakableGlassDamage,
             };
 
             // All vanilla scenes can be synced by default
@@ -643,7 +644,7 @@ namespace H3MP.Networking
                         GameManager.objectsByInstanceByScene.Add(trackedObject.scene, newInstances);
                     }
 
-                    actualTrackedObject.OnTrackedIDReceived();
+                    actualTrackedObject.OnTrackedIDReceived(trackedObject);
 
                     notLocalWaiting = false;
                 }

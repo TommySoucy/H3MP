@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Patches;
+using H3MP.src.tracking;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -4316,6 +4317,30 @@ namespace H3MP.Networking
         public static void RegisterCustomPacketType(int clientID, Packet packet)
         {
             Server.RegisterCustomPacketType(packet.ReadString(), clientID);
+        }
+
+        public static void BreakableGlassDamage(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            TrackedBreakableGlassData trackedBreakableGlass = Server.objects[trackedID] as TrackedBreakableGlassData;
+            if (trackedBreakableGlass != null)
+            {
+                if (trackedBreakableGlass.controller == 0)
+                {
+                    if (trackedBreakableGlass.damager != null)
+                    {
+                        ++BreakableGlassDamagerPatch.damageSkip;
+                        trackedBreakableGlass.damager.Damage(damage);
+                        --BreakableGlassDamagerPatch.damageSkip;
+                    }
+                }
+                else
+                {
+                    ServerSend.BreakableGlassDamage(packet, trackedBreakableGlass.controller);
+                }
+            }
         }
     }
 }

@@ -462,6 +462,7 @@ namespace H3MP.Networking
                 ServerHandle.PinnedGrenadePullPin,
                 ServerHandle.MagazineAddRound,
                 ServerHandle.ClipAddRound,
+                ServerHandle.BreakableGlassDamage,
             };
 
             objects = new TrackedObjectData[100];

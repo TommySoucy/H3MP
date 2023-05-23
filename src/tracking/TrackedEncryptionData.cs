@@ -549,9 +549,9 @@ namespace H3MP.Tracking
             }
         }
 
-        public override void OnTrackedIDReceived()
+        public override void OnTrackedIDReceived(TrackedObjectData newData)
         {
-            base.OnTrackedIDReceived();
+            base.OnTrackedIDReceived(newData);
 
             if (localTrackedID != -1 && TrackedEncryption.unknownInit.ContainsKey(localWaitingIndex))
             {

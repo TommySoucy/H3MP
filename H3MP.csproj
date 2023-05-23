@@ -59,6 +59,8 @@
     <Compile Include="src\networking\TNHInstance.cs" />
     <Compile Include="src\tracking\TrackedAutoMeater.cs" />
     <Compile Include="src\tracking\TrackedAutoMeaterData.cs" />
+    <Compile Include="src\tracking\TrackedBreakableGlass.cs" />
+    <Compile Include="src\tracking\TrackedBreakableGlassData.cs" />
     <Compile Include="src\tracking\TrackedEncryption.cs" />
     <Compile Include="src\tracking\TrackedEncryptionData.cs" />
     <Compile Include="src\tracking\TrackedItem.cs" />

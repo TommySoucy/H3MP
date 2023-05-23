@@ -2,6 +2,7 @@
 using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
+using H3MP.src.tracking;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -45,9 +46,11 @@ namespace H3MP
         public GameObject playerPrefab;
         public static Material reticleFriendlyContactArrowMat;
         public static Material reticleFriendlyContactIconMat;
+        public static Material glassMaterial;
         public static GameObject TNHMenu;
         public static Dictionary<string, string> sosigWearableMap;
         public static string H3MPPath;
+        public static MatDef glassMatDef;
 
         // Menu refs
         public static Text mainStatusText;
@@ -625,6 +628,7 @@ namespace H3MP
             TNHMenuPrefab = assetBundle.LoadAsset<GameObject>("TNHMenu");
             reticleFriendlyContactArrowMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactArrowMat");
             reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
+            glassMaterial = assetBundle.LoadAsset<Material>("Glass");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
             SetupPlayerPrefab();
@@ -635,6 +639,14 @@ namespace H3MP
             FVRPointableButton startEquipButton = TNHStartEquipButtonPrefab.transform.GetChild(0).gameObject.AddComponent<FVRPointableButton>();
             startEquipButton.SetButton();
             startEquipButton.MaxPointingRange = 1;
+
+            // Build glass MatDef
+            glassMatDef = ScriptableObject.CreateInstance<MatDef>();
+            glassMatDef.BallisticType = MatBallisticType.GlassThin;
+            glassMatDef.SoundType = MatSoundType.Tile;
+            glassMatDef.ImpactEffectType = BallisticImpactEffectType.Generic;
+            glassMatDef.BulletHoleType = BulletHoleDecalType.None;
+            glassMatDef.BulletImpactSound = BulletImpactSoundType.GlassWindshield;
         }
 
         public void SetupPlayerPrefab()
@@ -761,6 +773,8 @@ namespace H3MP
 
             SteamVR_Events.Loading.Listen(GameManager.OnSceneLoadedVR);
             SceneManager.sceneLoaded += OnSceneLoaded;
+
+            SteamVR_Events.Loading.Listen(TrackedBreakableGlassData.ClearWrapperDicts);
         }
 
         private void OnHostClicked()

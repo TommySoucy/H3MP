@@ -1,6 +1,7 @@
 ﻿using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
+using H3MP.src.tracking;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,8 @@ namespace H3MP
         public static Dictionary<Sosig, TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, TrackedSosig>();
         public static Dictionary<AutoMeater, TrackedAutoMeater> trackedAutoMeaterByAutoMeater = new Dictionary<AutoMeater, TrackedAutoMeater>();
         public static Dictionary<TNH_EncryptionTarget, TrackedEncryption> trackedEncryptionByEncryption = new Dictionary<TNH_EncryptionTarget, TrackedEncryption>();
+        public static Dictionary<BreakableGlass, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlass = new Dictionary<BreakableGlass, TrackedBreakableGlass>();
+        public static Dictionary<BreakableGlassDamager, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlassDamager = new Dictionary<BreakableGlassDamager, TrackedBreakableGlass>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, TNHInstance> TNHInstances = new Dictionary<int, TNHInstance>();
         public static List<int> playersAtLoadStart;
@@ -226,6 +229,8 @@ namespace H3MP
             trackedItemBySosigWeapon.Clear();
             trackedAutoMeaterByAutoMeater.Clear();
             trackedEncryptionByEncryption.Clear();
+            trackedBreakableGlassByBreakableGlass.Clear();
+            trackedBreakableGlassByBreakableGlassDamager.Clear();
             activeInstances.Clear();
             TNHInstances.Clear();
             playersByInstanceByScene.Clear();
