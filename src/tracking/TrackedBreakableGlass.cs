@@ -1,10 +1,4 @@
-﻿using FistVR;
-using H3MP.Tracking;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using H3MP.Tracking;
 
 namespace H3MP.src.tracking
 {
@@ -12,8 +6,6 @@ namespace H3MP.src.tracking
     {
         public BreakableGlass physicalBreakableGlass;
         public TrackedBreakableGlassData breakableGlassData;
-
-        public DestructibleWindowWrapper wrapper;
 
         protected override void OnDestroy()
         {
