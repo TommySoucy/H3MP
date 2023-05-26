@@ -387,11 +387,12 @@ namespace H3MP.Patches
             MethodInfo BreakableGlassDamagerShatterOriginal = typeof(BreakableGlassDamager).GetMethod("ShatterGlass", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo BreakableGlassDamagerShatterPrefix = typeof(BreakableGlassDamagerPatch).GetMethod("ShatterGlassPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo BreakableGlassDamagerShatterPostfix = typeof(BreakableGlassDamagerPatch).GetMethod("ShatterGlassPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo BreakableGlassDamagerShatterTranspiler = typeof(BreakableGlassDamagerPatch).GetMethod("ShatterGlassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(BreakableGlassDamagerDamageOriginal, harmony, false);
             PatchController.Verify(BreakableGlassDamagerShatterOriginal, harmony, false);
             harmony.Patch(BreakableGlassDamagerDamageOriginal, new HarmonyMethod(BreakableGlassDamagerDamagePrefix));
-            harmony.Patch(BreakableGlassDamagerShatterOriginal, new HarmonyMethod(BreakableGlassDamagerShatterPrefix), new HarmonyMethod(BreakableGlassDamagerShatterPostfix));
+            harmony.Patch(BreakableGlassDamagerShatterOriginal, new HarmonyMethod(BreakableGlassDamagerShatterPrefix), new HarmonyMethod(BreakableGlassDamagerShatterPostfix), new HarmonyMethod(BreakableGlassDamagerShatterTranspiler));
         }
     }
 

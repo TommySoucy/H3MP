@@ -656,6 +656,10 @@ namespace H3MP
 
             // Build glass audio events
             glassShotEvent = new AudioEvent();
+            glassThudHeadEvent = new AudioEvent();
+            glassThudTailEvent = new AudioEvent();
+            glassGroundShatterEvent = new AudioEvent();
+            glassTotalMediumEvent = new AudioEvent();
             for (int i = 1; i <= 3; ++i) 
             {
                 glassShotEvent.Clips.Add(assetBundle.LoadAsset<AudioClip>("SheetBreak_Shot_Head_0" + i + ".wav"));
