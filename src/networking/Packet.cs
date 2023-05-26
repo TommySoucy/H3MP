@@ -171,7 +171,8 @@ namespace H3MP.Networking
         objectUpdate = 158,
         destroyObject = 159,
         registerCustomPacketType = 160,
-        breakableGlassDamage = 161
+        breakableGlassDamage = 161,
+        windowShatterSound = 162
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -332,7 +333,8 @@ namespace H3MP.Networking
         pinnedGrenadePullPin = 152,
         magazineAddRound = 153,
         clipAddRound = 154,
-        breakableGlassDamage = 155
+        breakableGlassDamage = 155,
+        windowShatterSound = 156
     }
 
     public class Packet : IDisposable

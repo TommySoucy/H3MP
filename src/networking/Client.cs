@@ -568,6 +568,7 @@ namespace H3MP.Networking
                 ClientHandle.DestroyObject,
                 ClientHandle.RegisterCustomPacketType,
                 ClientHandle.BreakableGlassDamage,
+                ClientHandle.WindowShatterSound,
             };
 
             // All vanilla scenes can be synced by default

@@ -4042,5 +4042,17 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void WindowShatterSound(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int mode = packet.ReadByte();
+
+            TrackedBreakableGlassData trackedBreakableGlass = Client.objects[trackedID] as TrackedBreakableGlassData;
+            if (trackedBreakableGlass != null && trackedBreakableGlass.physicalBreakableGlass != null)
+            {
+                trackedBreakableGlass.physicalBreakableGlass.PlayerShatterAudio(mode);
+            }
+        }
     }
 }

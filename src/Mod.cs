@@ -51,6 +51,11 @@ namespace H3MP
         public static Dictionary<string, string> sosigWearableMap;
         public static string H3MPPath;
         public static MatDef glassMatDef;
+        public static AudioEvent glassShotEvent;
+        public static AudioEvent glassThudHeadEvent;
+        public static AudioEvent glassThudTailEvent;
+        public static AudioEvent glassTotalMediumEvent;
+        public static AudioEvent glassGroundShatterEvent;
 
         // Menu refs
         public static Text mainStatusText;
@@ -115,6 +120,7 @@ namespace H3MP
         public static Dictionary<string, Type> trackedObjectTypesByName;
         public delegate void CustomPacketHandler(int clientID, Packet packet);
         public static CustomPacketHandler[] customPacketHandlers = new CustomPacketHandler[10];
+        public static List<int> availableCustomPacketIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9 };
         public static Dictionary<string, int> registeredCustomPacketIDs = new Dictionary<string, int>();
 
         /// <summary>
@@ -647,6 +653,23 @@ namespace H3MP
             glassMatDef.ImpactEffectType = BallisticImpactEffectType.Generic;
             glassMatDef.BulletHoleType = BulletHoleDecalType.None;
             glassMatDef.BulletImpactSound = BulletImpactSoundType.GlassWindshield;
+
+            // Build glass audio events
+            glassShotEvent = new AudioEvent();
+            for (int i = 1; i <= 3; ++i) 
+            {
+                glassShotEvent.Clips.Add(assetBundle.LoadAsset<AudioClip>("SheetBreak_Shot_Head_0" + i + ".wav"));
+            }
+            for (int i = 1; i <= 4; ++i) 
+            {
+                glassThudHeadEvent.Clips.Add(assetBundle.LoadAsset<AudioClip>("SheetBreak_Thud_Head_0" + i + ".wav"));
+                glassThudTailEvent.Clips.Add(assetBundle.LoadAsset<AudioClip>("SheetBreak_Thud_Tail_0" + i + ".wav"));
+                glassGroundShatterEvent.Clips.Add(assetBundle.LoadAsset<AudioClip>("SmallShard_GroundImpactShatter_0" + i + ".wav"));
+            }
+            for (int i = 1; i <= 8; ++i)
+            {
+                glassTotalMediumEvent.Clips.Add(assetBundle.LoadAsset<AudioClip>("SheetBreak_Total_Medium_0" + i + ".wav"));
+            }
         }
 
         public void SetupPlayerPrefab()

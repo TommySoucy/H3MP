@@ -205,6 +205,11 @@ namespace H3MP.src.tracking
                 newWrapper.GlassDamager = damager;
                 wrapperObject.SetActive(true);
             }
+            damager.AudEvent_Head_Projectile = Mod.glassShotEvent;
+            damager.AudEvent_Head_Melee = Mod.glassThudHeadEvent;
+            damager.AudEvent_Tail = Mod.glassThudTailEvent;
+            damager.AudEvent_Shatter_BlowOut = Mod.glassTotalMediumEvent;
+            damager.AudEvent_GroundShatter = Mod.glassGroundShatterEvent;
 
             physicalBreakableGlass.physicalBreakableGlass.shape = vertices;
             physicalBreakableGlass.physicalBreakableGlass.thickness = thickness;

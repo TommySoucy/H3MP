@@ -2754,6 +2754,75 @@ namespace H3MP.Patches
             ++Mod.skipAllInstantiates;
         }
 
+        static IEnumerable<CodeInstruction> ShatterGlassTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load damager instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BreakableGlassDamagerPatch), "ShatterAudio"))); // Call our ShatterAudio
+
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load damager instance
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load 1
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BreakableGlassDamagerPatch), "ShatterAudio"))); // Call our ShatterAudio
+
+            List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load damager instance
+            toInsert2.Add(new CodeInstruction(OpCodes.Ldc_I4_2)); // Load 2
+            toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BreakableGlassDamagerPatch), "ShatterAudio"))); // Call our ShatterAudio
+
+            int found = 0;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("PlayCoreSoundDelayed"))
+                {
+                    if (found == 0)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert0);
+                        i += toInsert0.Count;
+                    }
+                    else if(found == 2)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert1);
+                        i += toInsert1.Count;
+                    }
+                    else if(found == 4)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert2);
+                        break;
+                    }
+
+                    ++found;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void ShatterAudio(BreakableGlassDamager __instance, int mode)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedBreakableGlass trackedBreakableGlass = GameManager.trackedBreakableGlassByBreakableGlassDamager.TryGetValue(__instance, out trackedBreakableGlass) ? trackedBreakableGlass : __instance.GetComponent<TrackedBreakableGlass>();
+            if (trackedBreakableGlass != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.WindowShatterSound(trackedBreakableGlass.data.trackedID, mode);
+                }
+                else
+                {
+                    ClientSend.WindowShatterSound(trackedBreakableGlass.data.trackedID, mode);
+                }
+            }
+        }
+
         static void ShatterGlassPostfix(BreakableGlassDamager __instance)
         {
             // Skip if not connected

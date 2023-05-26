@@ -463,6 +463,7 @@ namespace H3MP.Networking
                 ServerHandle.MagazineAddRound,
                 ServerHandle.ClipAddRound,
                 ServerHandle.BreakableGlassDamage,
+                ServerHandle.WindowShatterSound,
             };
 
             objects = new TrackedObjectData[100];
@@ -496,13 +497,10 @@ namespace H3MP.Networking
             else // We don't yet have this handlerID, add it
             {
                 // Get next available handler ID
-                for (int i = 0; i < Mod.customPacketHandlers.Length; ++i)
+                if(Mod.availableCustomPacketIndices.Count > 0)
                 {
-                    if (Mod.customPacketHandlers[i] == null)
-                    {
-                        index = i;
-                        break;
-                    }
+                    index = Mod.availableCustomPacketIndices[Mod.availableCustomPacketIndices.Count - 1];
+                    Mod.availableCustomPacketIndices.RemoveAt(Mod.availableCustomPacketIndices.Count - 1);
                 }
 
                 // If couldn't find one, need to add more space to handlers array
@@ -514,6 +512,10 @@ namespace H3MP.Networking
                     for (int i = 0; i < temp.Length; ++i)
                     {
                         Mod.customPacketHandlers[i] = temp[i];
+                    }
+                    for (int i = index + 1; i < Mod.customPacketHandlers.Length; ++i) 
+                    {
+                        Mod.availableCustomPacketIndices.Add(i);
                     }
                 }
 

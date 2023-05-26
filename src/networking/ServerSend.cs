@@ -4056,5 +4056,23 @@ namespace H3MP.Networking
 
             SendTCPData(controller, packet);
         }
+
+        public static void WindowShatterSound(int trackedID, int mode, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.windowShatterSound))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)mode);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }
