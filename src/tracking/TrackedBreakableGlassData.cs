@@ -307,6 +307,17 @@ namespace H3MP.src.tracking
                 return false;
             }
 
+            if (full)
+            {
+                vertices = physicalBreakableGlass.physicalBreakableGlass.shape;
+                deletionTimer = physicalBreakableGlass.physicalBreakableGlass.m_deletionTimer;
+                deletionTimerStart = physicalBreakableGlass.physicalBreakableGlass.m_deletionTimerStart;
+                tickingDownToDeletion = physicalBreakableGlass.physicalBreakableGlass.m_tickingDownToDeletion;
+                thickness = physicalBreakableGlass.physicalBreakableGlass.thickness;
+                isAttached = physicalBreakableGlass.physicalBreakableGlass.isAttached;
+                breakDepth = physicalBreakableGlass.physicalBreakableGlass.breakDepth;
+            }
+
             previousPos = position;
             previousRot = rotation;
             position = physicalBreakableGlass.transform.position;
