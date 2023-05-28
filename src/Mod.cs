@@ -697,12 +697,29 @@ namespace H3MP
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             for (int i = 0; i < assemblies.Length; ++i)
             {
-                Type[] types = assemblies[i].GetTypes();
-                for (int j = 0; j < types.Length; ++j) 
+                try
                 {
-                    if (IsTypeTrackedObject(types[j]))
+                    Type[] types = assemblies[i].GetTypes();
+                    for (int j = 0; j < types.Length; ++j)
                     {
-                        AddTrackedType(types[j]);
+                        if (IsTypeTrackedObject(types[j]))
+                        {
+                            AddTrackedType(types[j]);
+                        }
+                    }
+                }
+                catch
+                {
+                    Mod.LogError("Unable to read types from assembly: "+ assemblies[i].FullName);
+
+                    if (assemblies[i].FullName.Split(',')[0].Equals("H3MP"))
+                    {
+                        Mod.LogInfo("\tIs H3MP, adding type manually...");
+                        AddTrackedType(typeof(TrackedItemData));
+                        AddTrackedType(typeof(TrackedSosigData));
+                        AddTrackedType(typeof(TrackedEncryptionData));
+                        AddTrackedType(typeof(TrackedAutoMeaterData));
+                        AddTrackedType(typeof(TrackedBreakableGlassData));
                     }
                 }
             }
