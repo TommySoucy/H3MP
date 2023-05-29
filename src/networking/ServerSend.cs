@@ -4,6 +4,7 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 namespace H3MP.Networking
 {
@@ -228,6 +229,11 @@ namespace H3MP.Networking
                 {
                     packet.Write(entry.Key);
                     packet.Write(entry.Value);
+                }
+                packet.Write(GameManager.spectatorHosts.Count);
+                for(int i = 0;i < GameManager.spectatorHosts.Count; ++i)
+                {
+                    packet.Write(GameManager.spectatorHosts[i]);
                 }
 
                 SendTCPData(toClient, packet);

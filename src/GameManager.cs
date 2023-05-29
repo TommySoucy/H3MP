@@ -33,7 +33,6 @@ namespace H3MP
         }
 
         public static Dictionary<int, PlayerManager> players = new Dictionary<int, PlayerManager>();
-        public static List<int> spectatorHosts = new List<int>(); // List of all spectator hosts, not necessarily available 
         public static List<TrackedObjectData> objects = new List<TrackedObjectData>(); // Tracked objects under control of this gameManager
         public static Dictionary<MonoBehaviour, TrackedObject> trackedObjectByObject = new Dictionary<MonoBehaviour, TrackedObject>();
         public static Dictionary<FVRInteractiveObject, TrackedObject> trackedObjectByInteractive = new Dictionary<FVRInteractiveObject, TrackedObject>();
@@ -49,6 +48,8 @@ namespace H3MP
         public static List<int> playersAtLoadStart;
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> objectsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
+        public static bool spectatorHost;
+        public static List<int> spectatorHosts = new List<int>(); // List of all spectator hosts, not necessarily available 
 
         /// <summary>
         /// CUSTOMIZATION
@@ -121,12 +122,76 @@ namespace H3MP
         /// </summary>
         public static event OnPlayerDamageDelegate OnPlayerDamage;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSpectatorHostsChanged event
+        /// </summary>
+        public delegate void OnSpectatorHostsChangedDelegate();
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when the list of spectator hosts changes
+        /// </summary>
+        public static event OnSpectatorHostsChangedDelegate OnSpectatorHostsChanged;
+
         private void Awake()
         {
             singleton = this;
 
             // Init the main instance
             activeInstances.Add(instance, 1);
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F6))
+            {
+                spectatorHost = !spectatorHost;
+
+                if (GM.CurrentPlayerBody != null)
+                {
+                    GM.CurrentPlayerBody.EyeCam.enabled = !spectatorHost;
+                }
+
+                if (ThreadManager.host)
+                {
+                    if (spectatorHost)
+                    {
+                        spectatorHosts.Add(0);
+                        Server.availableSpectatorHosts.Add(0);
+                    }
+                    else
+                    {
+                        spectatorHosts.Remove(0);
+                        Server.availableSpectatorHosts.Remove(0);
+                    }
+                    ServerSend.SpectatorHost(0, spectatorHost);
+                }
+                else
+                {
+                    spectatorHosts.Add(ID);
+                    ClientSend.SpectatorHost(spectatorHost);
+                }
+
+                if (spectatorHost)
+                {
+                    Mod.LogWarning("Player is now a spectator host!");
+                }
+                else
+                {
+                    Mod.LogWarning("Player is no longer a spectator host!");
+                }
+            }
+        }
+
+        public static void OnSpectatorHostsChangedInvoke()
+        {
+            if(OnSpectatorHostsChanged != null)
+            {
+                OnSpectatorHostsChanged();
+            }
+
+            // TODO: Update UI of TNH menu
         }
 
         public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, bool join = false)
@@ -252,6 +317,8 @@ namespace H3MP
             radarColor = true;
             maxHealthIndex = -1;
             maxHealthByInstanceByScene.Clear();
+            spectatorHost = false;
+            GM.CurrentPlayerBody.EyeCam.enabled = true;
 
             for (int i=0; i< TrackedItem.trackedItemRefObjects.Length; ++i)
             {

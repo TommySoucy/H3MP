@@ -268,7 +268,7 @@ namespace H3MP.Patches
         {
             if (Mod.managerObject != null && ___m_currentPlayerBody != null)
             {
-                ___m_currentPlayerBody.EyeCam.enabled = !Mod.spectatorHost;
+                ___m_currentPlayerBody.EyeCam.enabled = !GameManager.spectatorHost;
             }
         }
     }

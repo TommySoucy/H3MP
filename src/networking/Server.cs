@@ -76,6 +76,7 @@ namespace H3MP.Networking
             clients.Clear();
             objects = null;
             availableObjectIndices = null;
+            availableSpectatorHosts.Clear();
 
             tcpListener.Stop();
             tcpListener = null;

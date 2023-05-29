@@ -3206,7 +3206,7 @@ namespace H3MP.Networking
 
             GameManager.UpdatePlayerHidden(GameManager.players[clientID]);
 
-            //TODO: Update UI
+            GameManager.OnSpectatorHostsChangedInvoke();
         }
 
         public static void ResetTNH(Packet packet)

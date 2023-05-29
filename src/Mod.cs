@@ -115,7 +115,6 @@ namespace H3MP
         public static TNH_UIManager currentTNHUIManager;
         public static SceneLoader currentTNHSceneLoader;
         public static GameObject TNHStartEquipButton;
-        public static bool spectatorHost;
         public static Dictionary<Type, List<Type>> trackedObjectTypes;
         public static Dictionary<string, Type> trackedObjectTypesByName;
         public delegate void CustomPacketHandler(int clientID, Packet packet);
@@ -220,7 +219,6 @@ namespace H3MP
             setLatestInstance = false;
             currentTNHInstance = null;
             currentlyPlayingTNH = false;
-            spectatorHost = false;
             customPacketHandlers = new CustomPacketHandler[10];
             registeredCustomPacketIDs.Clear();
 
@@ -347,44 +345,6 @@ namespace H3MP
                 }
             }
 #endif
-            if (Input.GetKeyDown(KeyCode.F6) && managerObject != null)
-            {
-                spectatorHost = !spectatorHost;
-
-                if (GM.CurrentPlayerBody != null)
-                {
-                    GM.CurrentPlayerBody.EyeCam.enabled = !spectatorHost;
-                }
-
-                if (ThreadManager.host)
-                {
-                    if (spectatorHost)
-                    {
-                        GameManager.spectatorHosts.Add(0);
-                        Server.availableSpectatorHosts.Add(0);
-                    }
-                    else
-                    {
-                        GameManager.spectatorHosts.Remove(0);
-                        Server.availableSpectatorHosts.Remove(0);
-                    }
-                    ServerSend.SpectatorHost(0, spectatorHost);
-                }
-                else
-                {
-                    GameManager.spectatorHosts.Add(GameManager.ID);
-                    ClientSend.SpectatorHost(spectatorHost);
-                }
-
-                if (spectatorHost)
-                {
-                    Mod.LogWarning("Player is now a spectator host!");
-                }
-                else
-                {
-                    Mod.LogWarning("Player is no longer a spectator host!");
-                }
-            }
         }
 
 #if DEBUG
