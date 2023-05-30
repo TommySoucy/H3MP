@@ -175,7 +175,8 @@ namespace H3MP.Networking
         windowShatterSound = 162,
         spectatorHostAssignment = 163,
         giveUpSpectatorHost = 164,
-        spectatorHostOrderTNHHost = 165
+        spectatorHostOrderTNHHost = 165,
+        TNHSpectatorHostReady = 166
     }
 
     /// <summary>Sent from client to server.</summary>

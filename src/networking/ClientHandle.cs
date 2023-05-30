@@ -4111,5 +4111,29 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void TNHSpectatorHostReady(Packet packet)
+        {
+            int instance = packet.ReadInt();
+
+            if (GameManager.controlledSpectatorHost != -1 && GameManager.TNHInstances.TryGetValue(instance, out TNHInstance TNHInstance))
+            {
+                if (Mod.waitingForTNHHost)
+                {
+                    if (Mod.TNHMenu != null)
+                    {
+                        Mod.TNHHostedInstance = instance;
+                        Mod.TNHMenuPages[6].SetActive(false);
+                        Mod.TNHMenuPages[2].SetActive(true);
+                        Mod.TNHStatusText.text = "Setting up as Client";
+                        Mod.TNHStatusText.color = Color.blue;
+                    }
+                    else
+                    {
+                        Mod.waitingForTNHHost = false;
+                    }
+                }
+            }
+        }
     }
 }

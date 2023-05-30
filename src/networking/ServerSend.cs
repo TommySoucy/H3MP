@@ -4109,5 +4109,15 @@ namespace H3MP.Networking
                 SendTCPData(host, packet);
             }
         }
+
+        public static void TNHSpectatorHostReady(int controller, int instance)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.TNHSpectatorHostReady))
+            {
+                packet.Write(instance);
+
+                SendTCPData(controller, packet);
+            }
+        }
     }
 }

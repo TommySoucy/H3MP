@@ -136,6 +136,19 @@ namespace H3MP
         /// </summary>
         public static event OnSpectatorHostsChangedDelegate OnSpectatorHostsChanged;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSpectatorHostToggled event
+        /// </summary>
+        /// <param name="spectatorHost">The new value</param>
+        public delegate void OnSpectatorHostToggledDelegate(bool spectatorHost);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we toggle between being a spectator host or not
+        /// </summary>
+        public static event OnSpectatorHostToggledDelegate OnSpectatorHostToggled;
+
         private void Awake()
         {
             singleton = this;
@@ -189,6 +202,11 @@ namespace H3MP
                     Mod.LogWarning("Player is no longer a spectator host!");
                     spectatorHostControlledBy = -1;
                     Mod.spectatorHostWaitingForTNHSetup = false;
+                }
+
+                if(OnSpectatorHostToggled != null)
+                {
+                    OnSpectatorHostToggled(spectatorHost);
                 }
             }
         }
