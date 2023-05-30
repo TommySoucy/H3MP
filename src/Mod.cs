@@ -47,7 +47,6 @@ namespace H3MP
         public static Material reticleFriendlyContactArrowMat;
         public static Material reticleFriendlyContactIconMat;
         public static Material glassMaterial;
-        public static GameObject TNHMenu;
         public static Dictionary<string, string> sosigWearableMap;
         public static string H3MPPath;
         public static MatDef glassMatDef;
@@ -66,6 +65,7 @@ namespace H3MP
         public GameObject joinButton;
 
         // TNH Menu refs
+        public static GameObject TNHMenu;
         public static GameObject[] TNHMenuPages; // Main, Host, Join_Options, Join_Instance, Instance, RequestHost_Options, RequestHost_Waiting
         public static Text TNHStatusText;
         public static GameObject TNHInstanceList;
@@ -124,6 +124,7 @@ namespace H3MP
         public static TNH_UIManager currentTNHUIManager;
         public static SceneLoader currentTNHSceneLoader;
         public static bool waitingForTNHHost;
+        public static int TNHHostedInstance;
         public static GameObject TNHStartEquipButton;
         public static Dictionary<Type, List<Type>> trackedObjectTypes;
         public static Dictionary<string, Type> trackedObjectTypesByName;
@@ -131,7 +132,7 @@ namespace H3MP
         public static CustomPacketHandler[] customPacketHandlers = new CustomPacketHandler[10];
         public static List<int> availableCustomPacketIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9 };
         public static Dictionary<string, int> registeredCustomPacketIDs = new Dictionary<string, int>();
-        public static int controlledSpectatorHost = -1;
+        public static bool spectatorHostWaitingForTNHSetup;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -257,7 +258,7 @@ namespace H3MP
             currentlyPlayingTNH = false;
             customPacketHandlers = new CustomPacketHandler[10];
             registeredCustomPacketIDs.Clear();
-            controlledSpectatorHost = -1;
+            spectatorHostWaitingForTNHSetup = false;
 
             Destroy(Mod.managerObject);
         }
@@ -911,7 +912,7 @@ namespace H3MP
             //mainStatusText.color = Color.white;
         }
 
-        private void OnTNHHostClicked()
+        public static void OnTNHHostClicked()
         {
             TNHMenuPages[0].SetActive(false);
             TNHMenuPages[1].SetActive(true);
@@ -950,7 +951,7 @@ namespace H3MP
             TNHOnDeathSpectate = TNHHostOnDeathSpectateCheckMark.activeSelf;
         }
 
-        private void OnTNHHostConfirmClicked()
+        public static void OnTNHHostConfirmClicked()
         {
             TNHMenuPages[1].SetActive(false);
             TNHMenuPages[4].SetActive(true);
@@ -1008,9 +1009,40 @@ namespace H3MP
 
         private void OnTNHJoinConfirmClicked()
         {
-            TNHMenuPages[2].SetActive(false);
-            TNHMenuPages[3].SetActive(true);
+            if (waitingForTNHHost)
+            {
+                TNHMenuPages[2].SetActive(false);
 
+                // Handle joining instance success/fail
+                if (SetTNHInstance(GameManager.TNHInstances[TNHHostedInstance]))
+                {
+                    TNHMenuPages[4].SetActive(true);
+
+                    TNHStatusText.text = "Client in TNH game";
+                    TNHStatusText.color = Color.green;
+                }
+                else
+                {
+                    TNHMenuPages[3].SetActive(true);
+
+                    PopulateInstancesList();
+
+                    joinTNHInstances[TNHHostedInstance].transform.GetChild(0).GetComponent<Text>().color = Color.red;
+                }
+
+                waitingForTNHHost = false;
+            }
+            else
+            {
+                TNHMenuPages[2].SetActive(false);
+                TNHMenuPages[3].SetActive(true);
+
+                PopulateInstancesList();
+            }
+        }
+
+        private void PopulateInstancesList()
+        {
             if (joinTNHInstances == null)
             {
                 joinTNHInstances = new Dictionary<int, GameObject>();
@@ -1122,12 +1154,12 @@ namespace H3MP
                 //  Go back to main screen and remove Request button
                 if(Server.availableSpectatorHosts.Count > 0)
                 {
-                    controlledSpectatorHost = Server.availableSpectatorHosts[Server.availableSpectatorHosts.Count - 1];
-                    Server.spectatorHostByController.Add(0, controlledSpectatorHost);
-                    Server.spectatorHostControllers.Add(controlledSpectatorHost, 0);
+                    GameManager.controlledSpectatorHost = Server.availableSpectatorHosts[Server.availableSpectatorHosts.Count - 1];
+                    Server.spectatorHostByController.Add(0, GameManager.controlledSpectatorHost);
+                    Server.spectatorHostControllers.Add(GameManager.controlledSpectatorHost, 0);
                     Server.availableSpectatorHosts.RemoveAt(Server.availableSpectatorHosts.Count - 1);
 
-                    ServerSend.SpectatorHostOrderTNHHost(controlledSpectatorHost, TNHRequestHostOnDeathSpectate);
+                    ServerSend.SpectatorHostOrderTNHHost(GameManager.controlledSpectatorHost, TNHRequestHostOnDeathSpectate);
 
                     waitingForTNHHost = true;
                 }
@@ -1158,7 +1190,7 @@ namespace H3MP
 
             if (waitingForTNHHost)
             {
-                controlledSpectatorHost = host;
+                GameManager.controlledSpectatorHost = host;
                 confirmed = true;
                 OnSpectatorHostReceived -= OnReceiveTNHHost;
                 OnSpectatorHostGiveUp += OnSpectatorHostGiveUpOrdered;
@@ -1193,7 +1225,7 @@ namespace H3MP
             if (!confirmed)
             {
                 // Note: If received a spectator host, we must be client
-                controlledSpectatorHost = -1;
+                GameManager.controlledSpectatorHost = -1;
                 ClientSend.UnassignSpectatorHost();
             }
         }
@@ -1205,7 +1237,7 @@ namespace H3MP
                 OnSpectatorHostGiveUp();
             }
 
-            controlledSpectatorHost = -1;
+            GameManager.controlledSpectatorHost = -1;
         }
 
         private void OnTNHRequestHostCancelClicked()
@@ -1220,7 +1252,7 @@ namespace H3MP
         private void OnTNHRequestHostWaitingCancelClicked()
         {
             TNHMenuPages[0].SetActive(true);
-            TNHMenuPages[7].SetActive(false);
+            TNHMenuPages[6].SetActive(false);
 
             TNHStatusText.text = "Solo";
             TNHStatusText.color = Color.red;

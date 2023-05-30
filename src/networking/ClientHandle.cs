@@ -4058,13 +4058,58 @@ namespace H3MP.Networking
         public static void SpectatorHostAssignment(Packet packet)
         {
             int host = packet.ReadInt();
+            int controller = packet.ReadInt();
 
-            Mod.OnSpectatorHostReceivedInvoke(host);
+            if(host == GameManager.ID)
+            {
+                if (GameManager.spectatorHost)
+                {
+                    GameManager.spectatorHostControlledBy = controller;
+                }
+            }
+            else
+            {
+                Mod.OnSpectatorHostReceivedInvoke(host);
+            }
         }
 
         public static void GiveUpSpectatorHost(Packet packet)
         {
             Mod.OnSpectatorHostGiveUpInvoke();
+        }
+
+        public static void SpectatorHostOrderTNHHost(Packet packet)
+        {
+            if (GameManager.spectatorHost && GameManager.spectatorHostControlledBy != -1)
+            {
+                if (GameManager.sceneLoading)
+                {
+                    Mod.spectatorHostWaitingForTNHSetup = true;
+                    Mod.TNHRequestHostOnDeathSpectate = packet.ReadBool();
+                }
+                else
+                {
+                    if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
+                    {
+                        Mod.OnTNHHostClicked();
+                        Mod.TNHOnDeathSpectate = packet.ReadBool();
+                        Mod.OnTNHHostConfirmClicked();
+
+                        ClientSend.TNHSpectatorHostReady(GameManager.instance);
+                        Mod.spectatorHostWaitingForTNHSetup = false;
+                    }
+                    else if (GameManager.scene.Equals("MainMenu3"))
+                    {
+                        SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
+                        Mod.spectatorHostWaitingForTNHSetup = true;
+                    }
+                    else
+                    {
+                        SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                        Mod.spectatorHostWaitingForTNHSetup = true;
+                    }
+                }
+            }
         }
     }
 }

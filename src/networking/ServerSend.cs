@@ -4086,8 +4086,9 @@ namespace H3MP.Networking
             using (Packet packet = new Packet((int)ServerPackets.spectatorHostAssignment))
             {
                 packet.Write(host);
+                packet.Write(clientID);
 
-                SendTCPData(clientID, packet);
+                SendTCPDataToClients(packet, new List<int>() { host, clientID }, 0);
             }
         }
 
@@ -4096,6 +4097,16 @@ namespace H3MP.Networking
             using (Packet packet = new Packet((int)ServerPackets.giveUpSpectatorHost))
             {
                 SendTCPData(clientID, packet);
+            }
+        }
+
+        public static void SpectatorHostOrderTNHHost(int host, bool spectateOnDeath)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.spectatorHostOrderTNHHost))
+            {
+                packet.Write(spectateOnDeath);
+
+                SendTCPData(host, packet);
             }
         }
     }

@@ -4378,6 +4378,11 @@ namespace H3MP.Networking
                 Server.spectatorHostByController.Add(clientID, host);
                 Server.spectatorHostControllers.Add(host, clientID);
                 Server.availableSpectatorHosts.RemoveAt(Server.availableSpectatorHosts.Count - 1);
+
+                if(host == 0)
+                {
+                    GameManager.spectatorHostControlledBy = clientID;
+                }
             }
 
             ServerSend.SpectatorHostAssignment(host, clientID);
@@ -4405,21 +4410,71 @@ namespace H3MP.Networking
                 {
                     if (GameManager.sceneLoading)
                     {
-                        Mod.spectatorHostWaitingForTNHSetup
+                        Mod.spectatorHostWaitingForTNHSetup = true;
+                        Mod.TNHRequestHostOnDeathSpectate = packet.ReadBool();
                     }
                     else
                     {
-                        if()
+                        if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
+                        {
+                            Mod.OnTNHHostClicked();
+                            Mod.TNHOnDeathSpectate = packet.ReadBool();
+                            Mod.OnTNHHostConfirmClicked();
+
+                            ServerSend.TNHSpectatorHostReady(clientID, GameManager.instance);
+                            Mod.spectatorHostWaitingForTNHSetup = false;
+                        }
+                        else if(GameManager.scene.Equals("MainMenu3"))
+                        {
+                            SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
+                            Mod.spectatorHostWaitingForTNHSetup = true;
+                        }
+                        else
+                        {
+                            SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                            Mod.spectatorHostWaitingForTNHSetup = true;
+                        }
                     }
                 }
                 else
                 {
-                    ServerSend.SpectatorHostOrderTNHHost(host);
+                    ServerSend.SpectatorHostOrderTNHHost(host, packet.ReadBool());
                 }
             }
             else
             {
                 ServerSend.GiveUpSpectatorHost(clientID);
+            }
+        }
+
+        public static void TNHSpectatorHostReady(int clientID, Packet packet)
+        {
+            if(Server.spectatorHostControllers.TryGetValue(clientID, out int controller))
+            {
+                int instance = packet.ReadInt();
+
+                if(controller == GameManager.ID)
+                {
+                    if (Mod.waitingForTNHHost)
+                    {
+                        if(Mod.TNHMenu != null)
+                        {
+                            Mod.TNHHostedInstance = instance;
+                            Mod.TNHMenuPages[6].SetActive(false);
+                            Mod.TNHMenuPages[2].SetActive(true);
+                            Mod.TNHStatusText.text = "Setting up as Client";
+                            Mod.TNHStatusText.color = Color.blue;
+                        }
+                        else
+                        {
+                            Mod.waitingForTNHHost = false;
+                        }
+                    }
+                }
+                else
+                {
+                    ServerSend.TNHSpectatorHostReady(controller, instance);
+                }
             }
         }
     }

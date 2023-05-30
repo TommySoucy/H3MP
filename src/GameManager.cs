@@ -50,6 +50,8 @@ namespace H3MP
         public static Dictionary<string, Dictionary<int, List<int>>> objectsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static bool spectatorHost;
         public static List<int> spectatorHosts = new List<int>(); // List of all spectator hosts, not necessarily available 
+        public static int controlledSpectatorHost = -1;
+        public static int spectatorHostControlledBy = -1;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -144,7 +146,7 @@ namespace H3MP
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F6))
+            if (Input.GetKeyDown(KeyCode.F6) && !sceneLoading)
             {
                 spectatorHost = !spectatorHost;
 
@@ -176,11 +178,17 @@ namespace H3MP
                 if (spectatorHost)
                 {
                     Mod.LogWarning("Player is now a spectator host!");
-                    TODO:// Force change scene to main menu
+
+                    if (!scene.Equals("MainMenu3"))
+                    {
+                        SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                    }
                 }
                 else
                 {
                     Mod.LogWarning("Player is no longer a spectator host!");
+                    spectatorHostControlledBy = -1;
+                    Mod.spectatorHostWaitingForTNHSetup = false;
                 }
             }
         }
@@ -320,6 +328,8 @@ namespace H3MP
             maxHealthByInstanceByScene.Clear();
             spectatorHost = false;
             GM.CurrentPlayerBody.EyeCam.enabled = true;
+            spectatorHostControlledBy = -1;
+            controlledSpectatorHost = -1;
 
             for (int i=0; i< TrackedItem.trackedItemRefObjects.Length; ++i)
             {
@@ -1411,6 +1421,43 @@ namespace H3MP
                         {
                             objects[i].awaitingInstantiation = true;
                             AnvilManager.Run(objects[i].Instantiate());
+                        }
+                    }
+
+                    if (Mod.spectatorHostWaitingForTNHSetup)
+                    {
+                        if (scene.Equals("TakeAndHold_Lobby_2"))
+                        {
+                            if (spectatorHostControlledBy != -1)
+                            {
+                                Mod.OnTNHHostClicked();
+                                Mod.TNHOnDeathSpectate = Mod.TNHRequestHostOnDeathSpectate;
+                                Mod.OnTNHHostConfirmClicked();
+
+                                if (ThreadManager.host)
+                                {
+                                    ServerSend.TNHSpectatorHostReady(spectatorHostControlledBy, instance);
+                                }
+                                else
+                                {
+                                    ClientSend.TNHSpectatorHostReady(instance);
+                                }
+                                Mod.spectatorHostWaitingForTNHSetup = false;
+                            }
+                            else
+                            {
+                                Mod.spectatorHostWaitingForTNHSetup = false;
+                            }
+                        }
+                        else if (scene.Equals("MainMenu3"))
+                        {
+                            SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
+                            Mod.spectatorHostWaitingForTNHSetup = true;
+                        }
+                        else
+                        {
+                            SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                            Mod.spectatorHostWaitingForTNHSetup = true;
                         }
                     }
                 }

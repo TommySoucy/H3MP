@@ -2426,7 +2426,7 @@ namespace H3MP.Networking
 
         /// <summary>
         /// CUSTOMIZATION
-        /// Used to give up the control of a spectator 
+        /// Used to give up the control of a spectator host
         /// </summary>
         public static void UnassignSpectatorHost()
         {
@@ -2441,6 +2441,16 @@ namespace H3MP.Networking
             using (Packet packet = new Packet((int)ClientPackets.spectatorHostOrderTNHHost))
             {
                 packet.Write(onDeathSpectate);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void TNHSpectatorHostReady(int instance)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.TNHSpectatorHostReady))
+            {
+                packet.Write(instance);
 
                 SendTCPData(packet);
             }

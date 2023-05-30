@@ -471,6 +471,7 @@ namespace H3MP.Networking
                 ServerHandle.RequestSpectatorHost,
                 ServerHandle.UnassignSpectatorHost,
                 ServerHandle.SpectatorHostOrderTNHHost,
+                ServerHandle.TNHSpectatorHostReady,
             };
 
             objects = new TrackedObjectData[100];

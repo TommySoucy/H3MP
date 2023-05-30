@@ -174,7 +174,8 @@ namespace H3MP.Networking
         breakableGlassDamage = 161,
         windowShatterSound = 162,
         spectatorHostAssignment = 163,
-        giveUpSpectatorHost = 164
+        giveUpSpectatorHost = 164,
+        spectatorHostOrderTNHHost = 165
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -339,7 +340,8 @@ namespace H3MP.Networking
         windowShatterSound = 156,
         requestSpectatorHost = 157,
         unassignSpectatorHost = 158,
-        spectatorHostOrderTNHHost = 159
+        spectatorHostOrderTNHHost = 159,
+        TNHSpectatorHostReady = 160
     }
 
     public class Packet : IDisposable
