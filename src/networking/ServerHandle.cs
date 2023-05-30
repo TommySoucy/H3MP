@@ -2,6 +2,7 @@
 using H3MP.Patches;
 using H3MP.src.tracking;
 using H3MP.Tracking;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -3607,6 +3608,14 @@ namespace H3MP.Networking
             {
                 GameManager.spectatorHosts.Remove(clientID);
                 Server.availableSpectatorHosts.Remove(clientID);
+
+                if(Server.spectatorHostControllers.TryGetValue(clientID, out int controller))
+                {
+                    Server.spectatorHostControllers.Remove(clientID);
+                    Server.spectatorHostByController.Remove(controller);
+
+                    ServerSend.GiveUpSpectatorHost(controller);
+                }
             }
 
             GameManager.UpdatePlayerHidden(GameManager.players[clientID]);
@@ -4357,6 +4366,60 @@ namespace H3MP.Networking
                 }
 
                 ServerSend.WindowShatterSound(trackedID, mode, clientID);
+            }
+        }
+
+        public static void RequestSpectatorHost(int clientID, Packet packet)
+        {
+            int host = -1;
+            if (Server.availableSpectatorHosts.Count > 0)
+            {
+                host = Server.availableSpectatorHosts[Server.availableSpectatorHosts.Count - 1];
+                Server.spectatorHostByController.Add(clientID, host);
+                Server.spectatorHostControllers.Add(host, clientID);
+                Server.availableSpectatorHosts.RemoveAt(Server.availableSpectatorHosts.Count - 1);
+            }
+
+            ServerSend.SpectatorHostAssignment(host, clientID);
+        }
+
+        public static void UnassignSpectatorHost(int clientID, Packet packet)
+        {
+            if(Server.spectatorHostByController.TryGetValue(clientID, out int host))
+            {
+                Server.spectatorHostByController.Remove(clientID);
+                Server.spectatorHostControllers.Remove(host);
+
+                if (GameManager.spectatorHosts.Contains(host))
+                {
+                    Server.availableSpectatorHosts.Add(host);
+                }
+            }
+        }
+
+        public static void SpectatorHostOrderTNHHost(int clientID, Packet packet)
+        {
+            if(Server.spectatorHostByController.TryGetValue(clientID, out int host))
+            {
+                if(host == GameManager.ID)
+                {
+                    if (GameManager.sceneLoading)
+                    {
+                        Mod.spectatorHostWaitingForTNHSetup
+                    }
+                    else
+                    {
+                        if()
+                    }
+                }
+                else
+                {
+                    ServerSend.SpectatorHostOrderTNHHost(host);
+                }
+            }
+            else
+            {
+                ServerSend.GiveUpSpectatorHost(clientID);
             }
         }
     }

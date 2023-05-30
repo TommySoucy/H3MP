@@ -2411,5 +2411,39 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Used to request a Spectator Host from the server
+        /// </summary>
+        public static void RequestSpectatorHost()
+        {
+            using (Packet packet = new Packet((int)ClientPackets.requestSpectatorHost))
+            {
+                SendTCPData(packet);
+            }
+        }
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Used to give up the control of a spectator 
+        /// </summary>
+        public static void UnassignSpectatorHost()
+        {
+            using (Packet packet = new Packet((int)ClientPackets.unassignSpectatorHost))
+            {
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SpectatorHostOrderTNHHost(bool onDeathSpectate)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.spectatorHostOrderTNHHost))
+            {
+                packet.Write(onDeathSpectate);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

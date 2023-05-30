@@ -569,6 +569,8 @@ namespace H3MP.Networking
                 ClientHandle.RegisterCustomPacketType,
                 ClientHandle.BreakableGlassDamage,
                 ClientHandle.WindowShatterSound,
+                ClientHandle.SpectatorHostAssignment,
+                ClientHandle.GiveUpSpectatorHost,
             };
 
             // All vanilla scenes can be synced by default

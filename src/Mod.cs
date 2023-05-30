@@ -66,7 +66,7 @@ namespace H3MP
         public GameObject joinButton;
 
         // TNH Menu refs
-        public static GameObject[] TNHMenuPages; // Main, Host, Join_Options, Join_Instance, Instance
+        public static GameObject[] TNHMenuPages; // Main, Host, Join_Options, Join_Instance, Instance, RequestHost_Options, RequestHost_Waiting
         public static Text TNHStatusText;
         public static GameObject TNHInstanceList;
         public static GameObject TNHInstancePrefab;
@@ -96,6 +96,14 @@ namespace H3MP
         public static GameObject TNHHostOnDeathLeaveCheckMark;
         public static GameObject TNHJoinOnDeathSpectateCheckMark;
         public static GameObject TNHJoinOnDeathLeaveCheckMark;
+        public static GameObject TNHRequestHostButton;
+        public static GameObject TNHRequestHostConfirmButton;
+        public static GameObject TNHRequestHostCancelButton;
+        public static GameObject TNHRequestHostWaitingCancelButton;
+        public static GameObject TNHRequestHostOnDeathSpectateRadio;
+        public static GameObject TNHRequestHostOnDeathLeaveRadio;
+        public static GameObject TNHRequestHostOnDeathSpectateCheckMark;
+        public static GameObject TNHRequestHostOnDeathLeaveCheckMark;
         public static Text TNHInstanceTitle;
 
         // Live
@@ -106,6 +114,7 @@ namespace H3MP
         public static AudioEvent sosigFootstepAudioEvent;
         public static bool TNHMenuLPJ;
         public static bool TNHOnDeathSpectate; // If false, leave
+        public static bool TNHRequestHostOnDeathSpectate;
         public static bool TNHSpectating;
         public static bool setLatestInstance; // Whether to set instance screen according to new instance index when we receive server response
         public static TNHInstance currentTNHInstance;
@@ -114,6 +123,7 @@ namespace H3MP
         public static Dictionary<int, GameObject> currentTNHInstancePlayers;
         public static TNH_UIManager currentTNHUIManager;
         public static SceneLoader currentTNHSceneLoader;
+        public static bool waitingForTNHHost;
         public static GameObject TNHStartEquipButton;
         public static Dictionary<Type, List<Type>> trackedObjectTypes;
         public static Dictionary<string, Type> trackedObjectTypesByName;
@@ -121,6 +131,7 @@ namespace H3MP
         public static CustomPacketHandler[] customPacketHandlers = new CustomPacketHandler[10];
         public static List<int> availableCustomPacketIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9 };
         public static Dictionary<string, int> registeredCustomPacketIDs = new Dictionary<string, int>();
+        public static int controlledSpectatorHost = -1;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -196,6 +207,31 @@ namespace H3MP
         /// </summary>
         public static event OnRemovePlayerFromSpecificListsDelegate OnRemovePlayerFromSpecificLists;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSpectatorHostReceived event
+        /// </summary>
+        /// <param name="confirmed">Custom override for whether we are going to use this host or not</param>
+        public delegate void OnSpectatorHostReceivedDelegate(int host, ref bool confirmed);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we receive a host that was assigned to us
+        /// </summary>
+        public static event OnSpectatorHostReceivedDelegate OnSpectatorHostReceived;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSpectatorHostGiveUp event
+        /// </summary>
+        public delegate void OnSpectatorHostGiveUpDelegate();
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we receive order to give up current spectator host
+        /// </summary>
+        public static event OnSpectatorHostGiveUpDelegate OnSpectatorHostGiveUp;
+
         // Debug
         public static bool debug;
         public static Vector3 TNHSpawnPoint;
@@ -221,6 +257,7 @@ namespace H3MP
             currentlyPlayingTNH = false;
             customPacketHandlers = new CustomPacketHandler[10];
             registeredCustomPacketIDs.Clear();
+            controlledSpectatorHost = -1;
 
             Destroy(Mod.managerObject);
         }
@@ -406,13 +443,15 @@ namespace H3MP
             backgroundPointable.MaxPointingRange = 5;
 
             // Init refs
-            TNHMenuPages = new GameObject[5];
+            TNHMenuPages = new GameObject[7];
             TNHMenuPages[0] = TNHMenu.transform.GetChild(1).gameObject;
             TNHMenuPages[1] = TNHMenu.transform.GetChild(2).gameObject;
             TNHMenuPages[2] = TNHMenu.transform.GetChild(3).gameObject;
             TNHMenuPages[3] = TNHMenu.transform.GetChild(4).gameObject;
             TNHMenuPages[4] = TNHMenu.transform.GetChild(5).gameObject;
-            TNHStatusText = TNHMenu.transform.GetChild(6).GetChild(0).GetComponent<Text>();
+            TNHMenuPages[5] = TNHMenu.transform.GetChild(6).gameObject;
+            TNHMenuPages[6] = TNHMenu.transform.GetChild(7).gameObject;
+            TNHStatusText = TNHMenu.transform.GetChild(8).GetChild(0).GetComponent<Text>();
             TNHInstanceList = TNHMenu.transform.GetChild(4).GetChild(2).GetChild(0).GetChild(0).gameObject;
             TNHInstancePrefab = TNHMenu.transform.GetChild(4).GetChild(2).GetChild(0).GetChild(0).GetChild(0).gameObject;
             TNHInstanceListScrollBar = TNHMenu.transform.GetChild(4).GetChild(2).GetChild(1).GetComponent<Scrollbar>();
@@ -425,6 +464,8 @@ namespace H3MP
             TNHJoinOnDeathSpectateCheckMark = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(1).GetChild(0).gameObject;
             TNHJoinOnDeathLeaveCheckMark = TNHMenu.transform.GetChild(3).GetChild(1).GetChild(2).GetChild(0).gameObject;
             TNHInstanceTitle = TNHMenu.transform.GetChild(5).GetChild(0).GetComponent<Text>();
+            TNHRequestHostOnDeathSpectateCheckMark = TNHMenu.transform.GetChild(6).GetChild(1).GetChild(1).GetChild(0).gameObject;
+            TNHRequestHostOnDeathLeaveCheckMark = TNHMenu.transform.GetChild(6).GetChild(1).GetChild(2).GetChild(0).gameObject;
 
             // Init buttons
             TNHHostButton = TNHMenu.transform.GetChild(1).GetChild(1).gameObject;
@@ -437,6 +478,11 @@ namespace H3MP
             currentButton.SetButton();
             currentButton.MaxPointingRange = 5;
             currentButton.Button.onClick.AddListener(OnTNHJoinClicked);
+            TNHRequestHostButton = TNHMenu.transform.GetChild(1).GetChild(3).gameObject;
+            currentButton = TNHRequestHostButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHRequestHostClicked);
             TNHLPJCheck = TNHMenu.transform.GetChild(2).GetChild(1).GetChild(0).gameObject;
             currentButton = TNHLPJCheck.AddComponent<FVRPointableButton>();
             currentButton.SetButton();
@@ -523,6 +569,31 @@ namespace H3MP
             currentButton.SetButton();
             currentButton.MaxPointingRange = 5;
             currentButton.Button.onClick.AddListener(OnTNHDisconnectClicked);
+            TNHRequestHostOnDeathSpectateRadio = TNHMenu.transform.GetChild(6).GetChild(1).GetChild(1).gameObject;
+            currentButton = TNHJoinOnDeathSpectateRadio.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHRequestHostOnDeathSpectateClicked);
+            TNHRequestHostOnDeathLeaveRadio = TNHMenu.transform.GetChild(6).GetChild(1).GetChild(2).gameObject;
+            currentButton = TNHJoinOnDeathLeaveRadio.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHRequestHostOnDeathLeaveClicked);
+            TNHRequestHostConfirmButton = TNHMenu.transform.GetChild(6).GetChild(2).gameObject;
+            currentButton = TNHJoinConfirmButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHRequestHostConfirmClicked);
+            TNHRequestHostCancelButton = TNHMenu.transform.GetChild(6).GetChild(3).gameObject;
+            currentButton = TNHJoinConfirmButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHRequestHostCancelClicked);
+            TNHRequestHostWaitingCancelButton = TNHMenu.transform.GetChild(7).GetChild(2).gameObject;
+            currentButton = TNHJoinConfirmButton.AddComponent<FVRPointableButton>();
+            currentButton.SetButton();
+            currentButton.MaxPointingRange = 5;
+            currentButton.Button.onClick.AddListener(OnTNHRequestHostWaitingCancelClicked);
 
             // Set option defaults
             TNHMenuLPJ = true;
@@ -1006,6 +1077,164 @@ namespace H3MP
 
             TNHStatusText.text = "Solo";
             TNHStatusText.color = Color.red;
+        }
+
+        // TODO: Implement UI
+        private void OnTNHRequestHostClicked()
+        {
+            TNHMenuPages[0].SetActive(false);
+            TNHMenuPages[5].SetActive(true);
+            TNHStatusText.text = "Setting up host request";
+            TNHStatusText.color = Color.blue;
+        }
+
+        private void OnTNHRequestHostOnDeathSpectateClicked()
+        {
+            TNHRequestHostOnDeathSpectateCheckMark.SetActive(!TNHRequestHostOnDeathSpectateCheckMark.activeSelf);
+            TNHRequestHostOnDeathLeaveCheckMark.SetActive(!TNHRequestHostOnDeathSpectateCheckMark.activeSelf);
+
+            TNHRequestHostOnDeathSpectate = TNHRequestHostOnDeathSpectateCheckMark.activeSelf;
+        }
+
+        private void OnTNHRequestHostOnDeathLeaveClicked()
+        {
+            TNHRequestHostOnDeathLeaveCheckMark.SetActive(!TNHRequestHostOnDeathLeaveCheckMark.activeSelf);
+            TNHRequestHostOnDeathSpectateCheckMark.SetActive(!TNHRequestHostOnDeathLeaveCheckMark.activeSelf);
+
+            TNHRequestHostOnDeathSpectate = TNHRequestHostOnDeathSpectateCheckMark.activeSelf;
+        }
+
+        private void OnTNHRequestHostConfirmClicked()
+        {
+            TNHMenuPages[5].SetActive(false);
+            TNHMenuPages[6].SetActive(true);
+            TNHStatusText.text = "Waiting for host";
+            TNHStatusText.color = Color.blue;
+
+            if (ThreadManager.host)
+            {
+                // If there are any available
+                //  Assign them to us
+                //  Tell them to go to TNH main menu
+                //  Tell them to host a TNH instance with given settings
+                //  Join the new TNH instance once received
+                // If not
+                //  Go back to main screen and remove Request button
+                if(Server.availableSpectatorHosts.Count > 0)
+                {
+                    controlledSpectatorHost = Server.availableSpectatorHosts[Server.availableSpectatorHosts.Count - 1];
+                    Server.spectatorHostByController.Add(0, controlledSpectatorHost);
+                    Server.spectatorHostControllers.Add(controlledSpectatorHost, 0);
+                    Server.availableSpectatorHosts.RemoveAt(Server.availableSpectatorHosts.Count - 1);
+
+                    ServerSend.SpectatorHostOrderTNHHost(controlledSpectatorHost, TNHRequestHostOnDeathSpectate);
+
+                    waitingForTNHHost = true;
+                }
+                else
+                {
+                    TNHRequestHostButton.SetActive(false);
+
+                    TNHMenuPages[0].SetActive(true);
+                    TNHMenuPages[6].SetActive(false);
+                }
+            }
+            else
+            {
+                ClientSend.RequestSpectatorHost();
+                OnSpectatorHostReceived += OnReceiveTNHHost;
+
+                waitingForTNHHost = true;
+            }
+        }
+
+        private void OnReceiveTNHHost(int host, ref bool confirmed)
+        {
+            if (confirmed)
+            {
+                Mod.LogError("Spectator host was already confirmed!");
+                return;
+            }
+
+            if (waitingForTNHHost)
+            {
+                controlledSpectatorHost = host;
+                confirmed = true;
+                OnSpectatorHostReceived -= OnReceiveTNHHost;
+                OnSpectatorHostGiveUp += OnSpectatorHostGiveUpOrdered;
+
+                ClientSend.SpectatorHostOrderTNHHost(TNHRequestHostOnDeathSpectate);
+            }
+        }
+
+        private void OnSpectatorHostGiveUpOrdered()
+        {
+            if (waitingForTNHHost)
+            {
+                TNHRequestHostButton.SetActive(false);
+
+                TNHMenuPages[0].SetActive(true);
+                TNHMenuPages[6].SetActive(false);
+
+                waitingForTNHHost = false;
+
+                OnSpectatorHostGiveUp -= OnSpectatorHostGiveUpOrdered;
+            }
+        }
+
+        public static void OnSpectatorHostReceivedInvoke(int host)
+        {
+            bool confirmed = false;
+            if (OnSpectatorHostReceived != null)
+            {
+                OnSpectatorHostReceived(host, ref confirmed);
+            }
+
+            if (!confirmed)
+            {
+                // Note: If received a spectator host, we must be client
+                controlledSpectatorHost = -1;
+                ClientSend.UnassignSpectatorHost();
+            }
+        }
+
+        public static void OnSpectatorHostGiveUpInvoke()
+        {
+            if (OnSpectatorHostGiveUp != null)
+            {
+                OnSpectatorHostGiveUp();
+            }
+
+            controlledSpectatorHost = -1;
+        }
+
+        private void OnTNHRequestHostCancelClicked()
+        {
+            TNHMenuPages[0].SetActive(true);
+            TNHMenuPages[5].SetActive(false);
+
+            TNHStatusText.text = "Solo";
+            TNHStatusText.color = Color.red;
+        }
+
+        private void OnTNHRequestHostWaitingCancelClicked()
+        {
+            TNHMenuPages[0].SetActive(true);
+            TNHMenuPages[7].SetActive(false);
+
+            TNHStatusText.text = "Solo";
+            TNHStatusText.color = Color.red;
+
+            waitingForTNHHost = false;
+
+            if (ThreadManager.host)
+            {
+                // Unassign Spectator host
+            }
+            else
+            {
+                ClientSend.UnassignSpectatorHost();
+            }
         }
 
         public static void OnTNHSpawnStartEquipClicked()

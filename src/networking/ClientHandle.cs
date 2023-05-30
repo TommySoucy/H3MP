@@ -4054,5 +4054,17 @@ namespace H3MP.Networking
                 trackedBreakableGlass.physicalBreakableGlass.PlayerShatterAudio(mode);
             }
         }
+
+        public static void SpectatorHostAssignment(Packet packet)
+        {
+            int host = packet.ReadInt();
+
+            Mod.OnSpectatorHostReceivedInvoke(host);
+        }
+
+        public static void GiveUpSpectatorHost(Packet packet)
+        {
+            Mod.OnSpectatorHostGiveUpInvoke();
+        }
     }
 }

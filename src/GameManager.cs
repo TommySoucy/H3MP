@@ -176,6 +176,7 @@ namespace H3MP
                 if (spectatorHost)
                 {
                     Mod.LogWarning("Player is now a spectator host!");
+                    TODO:// Force change scene to main menu
                 }
                 else
                 {

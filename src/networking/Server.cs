@@ -18,6 +18,8 @@ namespace H3MP.Networking
         public static List<int> availableObjectIndices;
 
         public static List<int> availableSpectatorHosts;
+        public static Dictionary<int, int> spectatorHostByController = new Dictionary<int, int>();
+        public static Dictionary<int, int> spectatorHostControllers = new Dictionary<int, int>();
 
         public static Dictionary<int, List<int>> clientsWaitingUpDate = new Dictionary<int, List<int>>(); // Clients we requested up to date objects from, for which clients
         public static Dictionary<int, List<int>> loadingClientsWaitingFrom = new Dictionary<int, List<int>>(); // Clients currently loading, waiting for up to date objects from which clients
@@ -77,6 +79,7 @@ namespace H3MP.Networking
             objects = null;
             availableObjectIndices = null;
             availableSpectatorHosts.Clear();
+            spectatorHostByController.Clear();
 
             tcpListener.Stop();
             tcpListener = null;
@@ -465,6 +468,9 @@ namespace H3MP.Networking
                 ServerHandle.ClipAddRound,
                 ServerHandle.BreakableGlassDamage,
                 ServerHandle.WindowShatterSound,
+                ServerHandle.RequestSpectatorHost,
+                ServerHandle.UnassignSpectatorHost,
+                ServerHandle.SpectatorHostOrderTNHHost,
             };
 
             objects = new TrackedObjectData[100];

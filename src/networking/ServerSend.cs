@@ -4080,5 +4080,23 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void SpectatorHostAssignment(int host, int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.spectatorHostAssignment))
+            {
+                packet.Write(host);
+
+                SendTCPData(clientID, packet);
+            }
+        }
+
+        public static void GiveUpSpectatorHost(int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.giveUpSpectatorHost))
+            {
+                SendTCPData(clientID, packet);
+            }
+        }
     }
 }

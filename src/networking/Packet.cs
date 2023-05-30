@@ -172,7 +172,9 @@ namespace H3MP.Networking
         destroyObject = 159,
         registerCustomPacketType = 160,
         breakableGlassDamage = 161,
-        windowShatterSound = 162
+        windowShatterSound = 162,
+        spectatorHostAssignment = 163,
+        giveUpSpectatorHost = 164
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -334,7 +336,10 @@ namespace H3MP.Networking
         magazineAddRound = 153,
         clipAddRound = 154,
         breakableGlassDamage = 155,
-        windowShatterSound = 156
+        windowShatterSound = 156,
+        requestSpectatorHost = 157,
+        unassignSpectatorHost = 158,
+        spectatorHostOrderTNHHost = 159
     }
 
     public class Packet : IDisposable
