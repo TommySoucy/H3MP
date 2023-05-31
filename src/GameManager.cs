@@ -52,6 +52,7 @@ namespace H3MP
         public static List<int> spectatorHosts = new List<int>(); // List of all spectator hosts, not necessarily available 
         public static int controlledSpectatorHost = -1;
         public static int spectatorHostControlledBy = -1;
+        public static bool resetSpectatorHost;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -856,9 +857,9 @@ namespace H3MP
             else
             {
                 ClientSend.AddTNHInstance(hostID, letPeopleJoin,
-                                               progressionTypeSetting, healthModeSetting, equipmentModeSetting,
-                                               targetModeSetting, AIDifficultyModifier, radarModeModifier,
-                                               itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
+                                          progressionTypeSetting, healthModeSetting, equipmentModeSetting,
+                                          targetModeSetting, AIDifficultyModifier, radarModeModifier,
+                                          itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
 
                 return null;
             }
@@ -1489,6 +1490,19 @@ namespace H3MP
 
                 // Set max health based on setting
                 WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
+
+                // Spectator host stuff
+                if (resetSpectatorHost)
+                {
+                    if (!GameManager.scene.Equals("MainMenu3"))
+                    {
+                        SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                    }
+
+                    resetSpectatorHost = false;
+                }
+
+                // TNH stuff
             }
         }
 

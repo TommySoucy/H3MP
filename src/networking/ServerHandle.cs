@@ -6,6 +6,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace H3MP.Networking
 {
@@ -3693,6 +3694,11 @@ namespace H3MP.Networking
                     Mod.LogInfo("\tThey were initializer, relaying");
                     TNHInstance.initializationRequested = false;
                     ServerSend.TNHInitializer(instance, clientID);
+
+                    if(Mod.currentTNHInstance == TNHInstance && Mod.waitingForTNHGameStart)
+                    {
+                        Mod.currentTNHSceneLoader.LoadMG();
+                    }
                 }
                 else
                 {
@@ -4399,6 +4405,25 @@ namespace H3MP.Networking
                 {
                     Server.availableSpectatorHosts.Add(host);
                 }
+
+                if(host == GameManager.ID)
+                {
+                    GameManager.spectatorHostControlledBy = -1;
+
+                    if (!GameManager.sceneLoading)
+                    {
+                        if (!GameManager.scene.Equals("MainMenu3"))
+                        {
+                            SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                        }
+                    }
+                    else
+                    {
+                        GameManager.resetSpectatorHost = true;
+                    }
+                }
+
+                ServerSend.UnassignSpectatorHost(host);
             }
         }
 
@@ -4474,6 +4499,28 @@ namespace H3MP.Networking
                 else
                 {
                     ServerSend.TNHSpectatorHostReady(controller, instance);
+                }
+            }
+        }
+
+        public static void SpectatorHostStartTNH(int clientID, Packet packet)
+        {
+            int host = packet.ReadInt();
+
+            if(Server.spectatorHostControllers.TryGetValue(host, out int controller))
+            {
+                if(host == GameManager.ID)
+                {
+                    if (GameManager.spectatorHost && !GameManager.sceneLoading && GameManager.scene.Equals("TakeAndHold_Lobby_2") &&
+                        Mod.currentTNHInstance != null && Mod.currentTNHInstance.playerIDs.Count > 0 &&
+                        Mod.currentTNHInstance.playerIDs[0] == GameManager.ID && Mod.currentTNHSceneLoader != null)
+                    {
+                        Mod.currentTNHSceneLoader.LoadMG();
+                    }
+                }
+                else
+                {
+                    ServerSend.SpectatorHostStartTNH(host);
                 }
             }
         }

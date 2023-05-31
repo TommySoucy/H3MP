@@ -3444,6 +3444,11 @@ namespace H3MP.Networking
                 if(initializer != GameManager.ID)
                 {
                     TNHInstance.initializationRequested = false;
+
+                    if (Mod.currentTNHInstance == TNHInstance && Mod.waitingForTNHGameStart)
+                    {
+                        Mod.currentTNHSceneLoader.LoadMG();
+                    }
                 }
             }
         }
@@ -4132,6 +4137,36 @@ namespace H3MP.Networking
                     {
                         Mod.waitingForTNHHost = false;
                     }
+                }
+            }
+        }
+
+        public static void SpectatorHostStartTNH(Packet packet)
+        {
+            if (GameManager.spectatorHost && !GameManager.sceneLoading && GameManager.scene.Equals("TakeAndHold_Lobby_2") &&
+                Mod.currentTNHInstance != null && Mod.currentTNHInstance.playerIDs.Count > 0 &&
+                Mod.currentTNHInstance.playerIDs[0] == GameManager.ID && Mod.currentTNHSceneLoader != null)
+            {
+                Mod.currentTNHSceneLoader.LoadMG();
+            }
+        }
+
+        public static void UnassignSpectatorHost(Packet packet)
+        {
+            if (GameManager.spectatorHost)
+            {
+                GameManager.spectatorHostControlledBy = -1;
+
+                if (!GameManager.sceneLoading)
+                {
+                    if (!GameManager.scene.Equals("MainMenu3"))
+                    {
+                        SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                    }
+                }
+                else
+                {
+                    GameManager.resetSpectatorHost = true;
                 }
             }
         }

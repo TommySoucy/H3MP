@@ -133,6 +133,7 @@ namespace H3MP
         public static List<int> availableCustomPacketIndices = new List<int>() { 0,1,2,3,4,5,6,7,8,9 };
         public static Dictionary<string, int> registeredCustomPacketIDs = new Dictionary<string, int>();
         public static bool spectatorHostWaitingForTNHSetup;
+        public static bool waitingForTNHGameStart;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -1251,21 +1252,38 @@ namespace H3MP
 
         private void OnTNHRequestHostWaitingCancelClicked()
         {
-            TNHMenuPages[0].SetActive(true);
-            TNHMenuPages[6].SetActive(false);
-
-            TNHStatusText.text = "Solo";
-            TNHStatusText.color = Color.red;
-
-            waitingForTNHHost = false;
-
-            if (ThreadManager.host)
+            if (waitingForTNHHost)
             {
-                // Unassign Spectator host
+                TNHMenuPages[0].SetActive(true);
+                TNHMenuPages[6].SetActive(false);
+
+                TNHStatusText.text = "Solo";
+                TNHStatusText.color = Color.red;
+
+                waitingForTNHHost = false;
+
+                if (ThreadManager.host)
+                {
+                    Server.spectatorHostByController.Remove(0);
+                    Server.spectatorHostControllers.Remove(GameManager.controlledSpectatorHost);
+
+                    if (GameManager.spectatorHosts.Contains(GameManager.controlledSpectatorHost))
+                    {
+                        Server.availableSpectatorHosts.Add(GameManager.controlledSpectatorHost);
+                    }
+                    GameManager.controlledSpectatorHost = -1;
+                }
+                else
+                {
+                    ClientSend.UnassignSpectatorHost();
+                }
             }
-            else
+            else if(waitingForTNHGameStart)
             {
-                ClientSend.UnassignSpectatorHost();
+                TNHMenuPages[6].SetActive(false);
+                TNHMenuPages[4].SetActive(true);
+
+                waitingForTNHGameStart = false;
             }
         }
 

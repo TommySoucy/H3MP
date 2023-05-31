@@ -2455,5 +2455,15 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void SpectatorHostStartTNH(int host)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.spectatorHostStartTNH))
+            {
+                packet.Write(host);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

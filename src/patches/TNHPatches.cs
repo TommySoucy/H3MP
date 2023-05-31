@@ -5,6 +5,7 @@ using HarmonyLib;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -342,6 +343,13 @@ namespace H3MP.Patches
 
             PatchController.Verify(TNH_WeaponCrateSpawnObjectsPatchOriginal, harmony, false);
             harmony.Patch(TNH_WeaponCrateSpawnObjectsPatchOriginal, new HarmonyMethod(TNH_WeaponCrateSpawnObjectsPatchPrefix));
+
+            // SceneLoaderPatch
+            MethodInfo SceneLoaderPatchLoadMGOriginal = typeof(SceneLoader).GetMethod("LoadMG", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo SceneLoaderPatchLoadMGPrefix = typeof(SceneLoaderPatch).GetMethod("LoadMGPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(SceneLoaderPatchLoadMGOriginal, harmony, true);
+            harmony.Patch(SceneLoaderPatchLoadMGOriginal, new HarmonyMethod(SceneLoaderPatchLoadMGPrefix));
         }
     }
 
@@ -2886,6 +2894,40 @@ namespace H3MP.Patches
                     destroyer.triggered = true;
                 }
             }
+        }
+    }
+
+    // Patches SceneLoader.LoadMG to know when we want to start loading into a TNH game
+    class SceneLoaderPatch
+    {
+        static bool LoadMGPrefix(SceneLoader __instance)
+        {
+            // If we are in a TNH instance hosted by a spectator host but spectator host is not yet in the game
+            if (Mod.managerObject != null && !GameManager.spectatorHost && !GameManager.sceneLoading && GameManager.scene.Equals("TakeAndHold_Lobby_2") && 
+                Mod.currentTNHInstance != null && Mod.currentTNHInstance.playerIDs.Count > 0 && GameManager.spectatorHosts.Contains(Mod.currentTNHInstance.playerIDs[0]) &&
+                !Mod.currentTNHInstance.currentlyPlaying.Contains(Mod.currentTNHInstance.playerIDs[0]))
+            {
+                // Tell them to go start game and skip original
+                if (ThreadManager.host)
+                {
+                    ServerSend.SpectatorHostStartTNH(Mod.currentTNHInstance.playerIDs[0]);
+                }
+                else
+                {
+                    ClientSend.SpectatorHostStartTNH(Mod.currentTNHInstance.playerIDs[0]);
+                }
+
+                __instance.gameObject.SetActive(false);
+
+                Mod.TNHMenuPages[4].SetActive(false);
+                Mod.TNHMenuPages[6].SetActive(true);
+
+                Mod.waitingForTNHGameStart = true;
+
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -4119,5 +4119,21 @@ namespace H3MP.Networking
                 SendTCPData(controller, packet);
             }
         }
+
+        public static void SpectatorHostStartTNH(int host)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.spectatorHostStartTNH))
+            {
+                SendTCPData(host, packet);
+            }
+        }
+
+        public static void UnassignSpectatorHost(int host)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.unassignSpectatorHost))
+            {
+                SendTCPData(host, packet);
+            }
+        }
     }
 }
