@@ -139,18 +139,14 @@ namespace H3MP.Networking
                     }
                     else
                     {
-                        Mod.LogInfo("Client " + clientID + " just changed scene, no other player in scene/instance, sending relevant tracked objects");
                         Server.clients[clientID].SendRelevantTrackedObjects();
                     }
                 }
                 else // No other player in the client's scene/instance 
                 {
-                    Mod.LogInfo("Client " + clientID + " just changed scene, no other player in scene/instance, sending relevant tracked objects");
                     Server.clients[clientID].SendRelevantTrackedObjects();
                 }
             }
-
-            Mod.LogInfo("Synced with player who just joined a scene");
         }
 
         public static void PlayerInstance(int clientID, Packet packet)
@@ -208,13 +204,11 @@ namespace H3MP.Networking
                         }
                         else
                         {
-                            Mod.LogInfo("Client " + clientID + " just changed instance, no other player in scene/instance, sending relevant tracked objects");
                             Server.clients[clientID].SendRelevantTrackedObjects();
                         }
                     }
                     else // No other player in the client's scene/instance 
                     {
-                        Mod.LogInfo("Client " + clientID + " just changed instance, no other player in scene/instance, sending relevant tracked objects");
                         Server.clients[clientID].SendRelevantTrackedObjects();
                     }
                 }
@@ -4377,11 +4371,9 @@ namespace H3MP.Networking
 
         public static void RequestSpectatorHost(int clientID, Packet packet)
         {
-            Mod.LogInfo("Received a request for spectator host from "+clientID);
             int host = -1;
             if (Server.availableSpectatorHosts.Count > 0)
             {
-                Mod.LogInfo("\tAvailable spectator hosts");
                 host = Server.availableSpectatorHosts[Server.availableSpectatorHosts.Count - 1];
                 Server.spectatorHostByController.Add(clientID, host);
                 Server.spectatorHostControllers.Add(host, clientID);
@@ -4393,7 +4385,6 @@ namespace H3MP.Networking
                 }
             }
 
-            Mod.LogInfo("\tSending host "+host);
             ServerSend.SpectatorHostAssignment(host, clientID);
         }
 
@@ -4432,25 +4423,19 @@ namespace H3MP.Networking
 
         public static void SpectatorHostOrderTNHHost(int clientID, Packet packet)
         {
-            Mod.LogInfo("SpectatorHostOrderTNHHost received from: "+clientID);
             if (Server.spectatorHostByController.TryGetValue(clientID, out int host))
             {
-                Mod.LogInfo("\tThey have host: "+host);
                 if (host == GameManager.ID)
                 {
-                    Mod.LogInfo("\t\tIts us");
                     if (GameManager.sceneLoading)
                     {
-                        Mod.LogInfo("\t\t\tAlready loading, setting flag");
                         Mod.spectatorHostWaitingForTNHSetup = true;
                         Mod.TNHRequestHostOnDeathSpectate = packet.ReadBool();
                     }
                     else
                     {
-                        Mod.LogInfo("\t\t\tNot loading");
                         if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
                         {
-                            Mod.LogInfo("\t\t\t\tAlready in TNH lobby, creating instance and sending ready");
                             Mod.OnTNHHostClicked();
                             Mod.TNHOnDeathSpectate = packet.ReadBool();
                             Mod.OnTNHHostConfirmClicked();
@@ -4460,13 +4445,11 @@ namespace H3MP.Networking
                         }
                         else if(GameManager.scene.Equals("MainMenu3"))
                         {
-                            Mod.LogInfo("\t\t\t\tIn main menu, setting flag and loading to lobby");
                             SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
                             Mod.spectatorHostWaitingForTNHSetup = true;
                         }
                         else
                         {
-                            Mod.LogInfo("\t\t\t\tIn other scene, setting flag and loading to main menu");
                             SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
                             Mod.spectatorHostWaitingForTNHSetup = true;
                         }
@@ -4474,34 +4457,27 @@ namespace H3MP.Networking
                 }
                 else
                 {
-                    Mod.LogInfo("\t\tNot us, relaying");
                     ServerSend.SpectatorHostOrderTNHHost(host, packet.ReadBool());
                 }
             }
             else
             {
-                Mod.LogInfo("\tNo host, sending order to give up host");
                 ServerSend.GiveUpSpectatorHost(clientID);
             }
         }
 
         public static void TNHSpectatorHostReady(int clientID, Packet packet)
         {
-            Mod.LogInfo("TNHSpectatorHostReady received from client: " + clientID);
             if (Server.spectatorHostControllers.TryGetValue(clientID, out int controller))
             {
                 int instance = packet.ReadInt();
 
-                Mod.LogInfo("\tGot controller, for instance: "+instance);
                 if (controller == GameManager.ID)
                 {
-                    Mod.LogInfo("\t\tWe are controller");
                     if (Mod.waitingForTNHHost)
                     {
-                        Mod.LogInfo("\t\t\tWe were waiting");
                         if (Mod.TNHMenu != null)
                         {
-                            Mod.LogInfo("\t\t\t\tWe have menu, setting up as client");
                             Mod.TNHHostedInstance = instance;
                             Mod.TNHMenuPages[6].SetActive(false);
                             Mod.TNHMenuPages[2].SetActive(true);
@@ -4510,14 +4486,12 @@ namespace H3MP.Networking
                         }
                         else
                         {
-                            Mod.LogInfo("\t\t\t\tNo menu, stop waiting");
                             Mod.waitingForTNHHost = false;
                         }
                     }
                 }
                 else
                 {
-                    Mod.LogInfo("\t\tWe are not controller, relaying");
                     ServerSend.TNHSpectatorHostReady(controller, instance);
                 }
             }

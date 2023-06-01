@@ -745,11 +745,10 @@ namespace H3MP
                 }
                 catch
                 {
-                    Mod.LogError("Unable to read types from assembly: "+ assemblies[i].FullName);
+                    Mod.LogWarning("Unable to read types from assembly: "+ assemblies[i].FullName);
 
                     if (assemblies[i].FullName.Split(',')[0].Equals("H3MP"))
                     {
-                        Mod.LogInfo("\tIs H3MP, adding type manually...");
                         AddTrackedType(typeof(TrackedItemData));
                         AddTrackedType(typeof(TrackedSosigData));
                         AddTrackedType(typeof(TrackedEncryptionData));
@@ -1155,14 +1154,10 @@ namespace H3MP
             TNHStatusText.text = "Waiting for host";
             TNHStatusText.color = Color.blue;
 
-            Mod.LogInfo("OnTNHRequestHostConfirmClicked");
-
             if (ThreadManager.host)
             {
-                Mod.LogInfo("\tServer");
                 if (Server.availableSpectatorHosts.Count > 0)
                 {
-                    Mod.LogInfo("\t\tAvailable spectator hosts");
                     GameManager.controlledSpectatorHost = Server.availableSpectatorHosts[Server.availableSpectatorHosts.Count - 1];
                     Server.spectatorHostByController.Add(0, GameManager.controlledSpectatorHost);
                     Server.spectatorHostControllers.Add(GameManager.controlledSpectatorHost, 0);
@@ -1173,11 +1168,9 @@ namespace H3MP
                     ServerSend.SpectatorHostOrderTNHHost(GameManager.controlledSpectatorHost, TNHRequestHostOnDeathSpectate);
 
                     waitingForTNHHost = true;
-                    Mod.LogInfo("\t\tTook "+ GameManager.controlledSpectatorHost);
                 }
                 else
                 {
-                    Mod.LogInfo("\t\tNo spectator hosts available");
                     TNHRequestHostButton.SetActive(false);
 
                     TNHMenuPages[0].SetActive(true);
@@ -1186,7 +1179,6 @@ namespace H3MP
             }
             else
             {
-                Mod.LogInfo("\tClient, requesting spectator host");
                 ClientSend.RequestSpectatorHost();
                 OnSpectatorHostReceived += OnReceiveTNHHost;
 
@@ -1196,7 +1188,6 @@ namespace H3MP
 
         private void OnReceiveTNHHost(int host, ref bool confirmed)
         {
-            Mod.LogInfo("OnReceiveTNHHost");
             if (confirmed)
             {
                 Mod.LogError("Spectator host was already confirmed!");
@@ -1205,7 +1196,6 @@ namespace H3MP
 
             if (waitingForTNHHost)
             {
-                Mod.LogInfo("\tWe were waiting, ordering TNH host");
                 GameManager.controlledSpectatorHost = host;
                 confirmed = true;
                 OnSpectatorHostReceived -= OnReceiveTNHHost;

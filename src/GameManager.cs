@@ -569,7 +569,7 @@ namespace H3MP
 
         public static void UpdatePlayerInstance(int playerID, int instance)
         {
-            Mod.LogInfo("Player " + playerID + " joining instance " + instance);
+            Mod.LogInfo("Player " + playerID + " joining instance " + instance, false);
             PlayerManager player = players[playerID];
 
             if (activeInstances.ContainsKey(player.instance))
@@ -1311,13 +1311,10 @@ namespace H3MP
                 }
 
                 // Check if there are other players where we are going to prevent things like prefab spawns
-                Mod.LogInfo("\tChecking if have control at load start");
                 if (playersByInstanceByScene.TryGetValue(LoadLevelBeginPatch.loadingLevel, out Dictionary<int, List<int>> relevantInstances))
                 {
-                    Mod.LogInfo("\t\tThere are "+ relevantInstances .Count+ " instances listed in the level we are loading: "+ LoadLevelBeginPatch.loadingLevel);
                     if (relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
                     {
-                        Mod.LogInfo("\t\t\tThere are " + relevantPlayers.Count + " players listed in the instance we are in: " + instance);
                         controlOverride = relevantPlayers.Count == 0;
                         firstPlayerInSceneInstance = controlOverride;
                     }
@@ -1332,7 +1329,6 @@ namespace H3MP
                     controlOverride = true;
                     firstPlayerInSceneInstance = true;
                 }
-                Mod.LogInfo("\tAt load start, controlOverride: " + controlOverride + ", first in scene: " + firstPlayerInSceneInstance);
 
                 // Clear any of our tracked items that have not awoken in the previous scene
                 ClearUnawoken();
@@ -1366,15 +1362,12 @@ namespace H3MP
                 playersPresent = 0;
                 if (!nonSynchronizedScenes.ContainsKey(scene))
                 {
-                    Mod.LogInfo("Arrived in synchronized scene");
                     controlOverride = true;
                     firstPlayerInSceneInstance = true;
                     foreach (KeyValuePair<int, PlayerManager> player in players)
                     {
-                        Mod.LogInfo("\tChecking other player "+player.Key+" with scene: "+player.Value.scene+" and instance: "+player.Value.instance);
                         if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                         {
-                            Mod.LogInfo("\t\tThis player is in our scene/instance: "+ scene+"/"+instance);
                             ++playersPresent;
 
                             // NOTE: Calculating control override when we finish loading here is necessary
@@ -1395,7 +1388,6 @@ namespace H3MP
                                 // We do this because we may not have the most up to date version of objects since
                                 // clients only send updated data when there are others in their scene
                                 // But we need the most of to date data to instantiate the object
-                                Mod.LogInfo("Server sending request for up to date objects to " + player.Key);
 
                                 if (Server.clientsWaitingUpDate.TryGetValue(player.Key, out List<int> waitingClients))
                                 {
@@ -1445,25 +1437,20 @@ namespace H3MP
 
                     if (Mod.spectatorHostWaitingForTNHSetup)
                     {
-                        Mod.LogInfo("Just arrived in scene: " + scene+" and was waiting for TNH setup");
                         if (scene.Equals("TakeAndHold_Lobby_2"))
                         {
-                            Mod.LogInfo("\tTNH lobby");
                             if (spectatorHostControlledBy != -1)
                             {
-                                Mod.LogInfo("\t\tWe are controlled spectator host, creating instance and sending ready");
                                 Mod.OnTNHHostClicked();
                                 Mod.TNHOnDeathSpectate = Mod.TNHRequestHostOnDeathSpectate;
                                 Mod.OnTNHHostConfirmClicked();
 
                                 if (ThreadManager.host)
                                 {
-                                    Mod.LogInfo("\t\t\tHost, sending ready");
                                     ServerSend.TNHSpectatorHostReady(spectatorHostControlledBy, instance);
                                 }
                                 else
                                 {
-                                    Mod.LogInfo("\t\t\tClient, setting flag and waiting for isntance creation");
                                     Mod.spectatorHostWaitingForTNHInstance = true;
                                 }
                             }
@@ -1472,13 +1459,11 @@ namespace H3MP
                         }
                         else if (scene.Equals("MainMenu3"))
                         {
-                            Mod.LogInfo("\tIn main menu, setting flag and loading to lobby");
                             SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
                             Mod.spectatorHostWaitingForTNHSetup = true;
                         }
                         else
                         {
-                            Mod.LogInfo("\tIn other scene, setting flag and loading to main menu");
                             SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
                             Mod.spectatorHostWaitingForTNHSetup = true;
                         }
@@ -1666,7 +1651,6 @@ namespace H3MP
                 arrToUse = Client.objects;
             }
 
-            Mod.LogInfo("Taking all physical control, destroying item scripts? : "+ destroyTrackedScript);
             foreach (TrackedObjectData currentObject in arrToUse)
             {
                 if(currentObject != null && currentObject.physical != null)
