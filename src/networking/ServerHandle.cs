@@ -4416,8 +4416,10 @@ namespace H3MP.Networking
                         GameManager.resetSpectatorHost = true;
                     }
                 }
-
-                ServerSend.UnassignSpectatorHost(host);
+                else
+                {
+                    ServerSend.UnassignSpectatorHost(host);
+                }
             }
         }
 
@@ -4517,6 +4519,18 @@ namespace H3MP.Networking
                     ServerSend.SpectatorHostStartTNH(host);
                 }
             }
+        }
+
+        public static void ReassignSpectatorHost(int clientID, Packet packet)
+        {
+            List<int> debounce = new List<int>();
+            int debounceCount = packet.ReadInt();
+            for(int i = 0; i < debounceCount; ++i)
+            {
+                debounce.Add(packet.ReadInt());
+            }
+
+            GameManager.ReassignSpectatorHost(clientID, debounce);
         }
     }
 }

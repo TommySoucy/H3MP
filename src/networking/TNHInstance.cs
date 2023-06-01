@@ -184,6 +184,7 @@ namespace H3MP.Networking
             }
             else if (fromServer) // If the server is the one who removed a player
             {
+                // Manager TNH controller
                 if (currentlyPlaying.Contains(playerIDs[0]))
                 {
                     // If new controller is different, distribute sosigs/automeaters/encryptions because those should be controlled by TNH controller
@@ -221,8 +222,50 @@ namespace H3MP.Networking
                 }
             }
 
+            // Manage if last player spectator host
+            if(currentlyPlaying.Count == 1 && GameManager.spectatorHosts.Contains(currentlyPlaying[0]))
+            {
+                if(currentlyPlaying[0] == GameManager.ID) // Its us
+                {
+                    // Reset
+                    GameManager.spectatorHostControlledBy = -1;
+
+                    if (!GameManager.sceneLoading)
+                    {
+                        if (!GameManager.scene.Equals("MainMenu3"))
+                        {
+                            SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                        }
+                    }
+                    else
+                    {
+                        GameManager.resetSpectatorHost = true;
+                    }
+                }
+                else if(GameManager.controlledSpectatorHost == currentlyPlaying[0]) // It is a host we control
+                {
+                    // Give up the host
+                    Mod.OnSpectatorHostGiveUpInvoke();
+                }
+
+                // If server, need to manage lists/dicts
+                if (ThreadManager.host)
+                {
+                    if (Server.spectatorHostControllers.TryGetValue(currentlyPlaying[0], out int controller))
+                    {
+                        Server.spectatorHostByController.Remove(controller);
+                        Server.spectatorHostControllers.Remove(currentlyPlaying[0]);
+
+                        if (GameManager.spectatorHosts.Contains(currentlyPlaying[0]))
+                        {
+                            Server.availableSpectatorHosts.Add(currentlyPlaying[0]);
+                        }
+                    }
+                }
+            }
+
             // Reset initialization fields if we were waiting for init from this player
-            if(initializer == ID && initializationRequested)
+            if (initializer == ID && initializationRequested)
             {
                 initializer = -1;
                 initializationRequested = false;

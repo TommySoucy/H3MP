@@ -345,7 +345,8 @@ namespace H3MP.Networking
         unassignSpectatorHost = 158,
         spectatorHostOrderTNHHost = 159,
         TNHSpectatorHostReady = 160,
-        spectatorHostStartTNH = 161
+        spectatorHostStartTNH = 161,
+        reassignSpectatorHost = 162
     }
 
     public class Packet : IDisposable

@@ -4081,12 +4081,13 @@ namespace H3MP.Networking
             }
         }
 
-        public static void SpectatorHostAssignment(int host, int clientID)
+        public static void SpectatorHostAssignment(int host, int clientID, bool reassignment = false)
         {
             using (Packet packet = new Packet((int)ServerPackets.spectatorHostAssignment))
             {
                 packet.Write(host);
                 packet.Write(clientID);
+                packet.Write(reassignment);
 
                 SendTCPDataToClients(packet, new List<int>() { host, clientID }, 0);
             }

@@ -4060,6 +4060,7 @@ namespace H3MP.Networking
         {
             int host = packet.ReadInt();
             int controller = packet.ReadInt();
+            bool reassignment = packet.ReadBool();
 
             if (host == GameManager.ID)
             {
@@ -4070,7 +4071,7 @@ namespace H3MP.Networking
             }
             else
             {
-                Mod.OnSpectatorHostReceivedInvoke(host);
+                Mod.OnSpectatorHostReceivedInvoke(host, reassignment);
             }
         }
 

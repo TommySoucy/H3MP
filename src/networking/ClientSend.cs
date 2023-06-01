@@ -2465,5 +2465,26 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void ReassignSpectatorHost(List<int> debounce)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.reassignSpectatorHost))
+            {
+                if(debounce == null)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(debounce.Count);
+                    for (int i = 0; i < debounce.Count; ++i)
+                    {
+                        packet.Write(debounce[i]);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

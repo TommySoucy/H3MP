@@ -574,6 +574,7 @@ namespace H3MP.Networking
                 ClientHandle.SpectatorHostOrderTNHHost,
                 ClientHandle.TNHSpectatorHostReady,
                 ClientHandle.SpectatorHostStartTNH,
+                ClientHandle.UnassignSpectatorHost,
             };
 
             // All vanilla scenes can be synced by default

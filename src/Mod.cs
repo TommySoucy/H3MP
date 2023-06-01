@@ -1220,7 +1220,7 @@ namespace H3MP
             }
         }
 
-        public static void OnSpectatorHostReceivedInvoke(int host)
+        public static void OnSpectatorHostReceivedInvoke(int host, bool reassignment = false)
         {
             bool confirmed = false;
             if (OnSpectatorHostReceived != null)
@@ -1228,11 +1228,19 @@ namespace H3MP
                 OnSpectatorHostReceived(host, ref confirmed);
             }
 
-            if (!confirmed)
+            if (reassignment)
             {
-                // Note: If received a spectator host, we must be client
-                GameManager.controlledSpectatorHost = -1;
-                ClientSend.UnassignSpectatorHost();
+                // Will not necessarily get confirmation so set controlled
+                GameManager.controlledSpectatorHost = host;
+            }
+            else
+            {
+                if (!confirmed)
+                {
+                    // Note: If received a spectator host, we must be client
+                    GameManager.controlledSpectatorHost = -1;
+                    ClientSend.UnassignSpectatorHost();
+                }
             }
         }
 

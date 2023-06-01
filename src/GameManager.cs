@@ -150,6 +150,32 @@ namespace H3MP
         /// </summary>
         public static event OnSpectatorHostToggledDelegate OnSpectatorHostToggled;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnInstanceLeft event
+        /// </summary>
+        /// <param name="instance">The instance we left</param>
+        public delegate void OnInstanceLeftDelegate(int instance);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we leave an instance
+        /// </summary>
+        public static event OnInstanceLeftDelegate OnInstanceLeft;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnInstanceJoined event
+        /// </summary>
+        /// <param name="instance">The instance we joined</param>
+        public delegate void OnInstanceJoinedDelegate(int instance);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we join an instance
+        /// </summary>
+        public static event OnInstanceJoinedDelegate OnInstanceJoined;
+
         private void Awake()
         {
             singleton = this;
@@ -945,6 +971,13 @@ namespace H3MP
             {
                 Mod.LogError("Instance we are leaving is missing from active instances!");
             }
+
+            // Called instance left event
+            if(OnInstanceLeft != null)
+            {
+                OnInstanceLeft(GameManager.instance);
+            }
+
             if (TNHInstances.TryGetValue(GameManager.instance, out TNHInstance currentInstance))
             {
                 currentInstance.playerIDs.Remove(ID);
@@ -965,6 +998,22 @@ namespace H3MP
                 // Remove from currently playing and dead if necessary
                 currentInstance.currentlyPlaying.Remove(ID);
                 currentInstance.dead.Remove(ID);
+
+                // If we are leaving the spectator host we control in the game but there are other players still
+                if(controlledSpectatorHost != -1 && currentInstance.currentlyPlaying.Count > 1 && currentInstance.currentlyPlaying.Contains(controlledSpectatorHost))
+                {
+                    // We want to give control of the spectator host to another of the playing players
+                    if (ThreadManager.host)
+                    {
+                        ReassignSpectatorHost(0, new List<int>() { 0 });
+                    }
+                    else
+                    {
+                        ClientSend.ReassignSpectatorHost(new List<int>() { ID });
+                    }
+
+                    Mod.OnSpectatorHostGiveUpInvoke();
+                }
             }
 
             if (!sceneLoading)
@@ -1002,6 +1051,13 @@ namespace H3MP
             {
                 ++activeInstances[instance];
             }
+
+            // Called instance joined event
+            if (OnInstanceJoined != null)
+            {
+                OnInstanceJoined(instance);
+            }
+
             if (TNHInstances.ContainsKey(instance))
             {
                 // PlayerIDs could already contain our ID if this instance was created by us
@@ -1166,6 +1222,81 @@ namespace H3MP
 
             // Set max health based on setting
             WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
+        }
+
+        public static void ReassignSpectatorHost(int clientID, List<int> debounce)
+        {
+            if (Server.spectatorHostByController.TryGetValue(clientID, out int host))
+            {
+                List<int> whitelist = new List<int>();
+                if (GameManager.scene.Equals(Server.clients[clientID].player.scene) && GameManager.instance == Server.clients[clientID].player.instance)
+                {
+                    whitelist.Add(0);
+                }
+                if (GameManager.playersByInstanceByScene.TryGetValue(Server.clients[clientID].player.scene, out Dictionary<int, List<int>> instances) &&
+                    instances.TryGetValue(Server.clients[clientID].player.instance, out List<int> otherPlayers))
+                {
+                    whitelist.AddRange(otherPlayers);
+                }
+                whitelist.RemoveRange(0, debounce.Count);
+
+                int newController = -1;
+                if (whitelist.Count > 0)
+                {
+                    newController = Mod.GetBestPotentialObjectHost(clientID, false);
+                }
+
+                if (newController == -1)
+                {
+                    Server.spectatorHostByController.Remove(clientID);
+                    Server.spectatorHostControllers.Remove(host);
+
+                    if (GameManager.spectatorHosts.Contains(host))
+                    {
+                        Server.availableSpectatorHosts.Add(host);
+                    }
+
+                    if (host == GameManager.ID)
+                    {
+                        GameManager.spectatorHostControlledBy = -1;
+
+                        if (!GameManager.sceneLoading)
+                        {
+                            if (!GameManager.scene.Equals("MainMenu3"))
+                            {
+                                SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                            }
+                        }
+                        else
+                        {
+                            GameManager.resetSpectatorHost = true;
+                        }
+                    }
+                    else
+                    {
+                        ServerSend.UnassignSpectatorHost(host);
+                    }
+                }
+                else
+                {
+                    Server.spectatorHostByController.Remove(clientID);
+                    Server.spectatorHostControllers.Remove(host);
+
+                    Server.spectatorHostByController.Add(newController, host);
+                    Server.spectatorHostControllers.Add(host, newController);
+
+                    if (host == 0)
+                    {
+                        GameManager.spectatorHostControlledBy = newController;
+                    }
+                    else if (newController == 0)
+                    {
+                        Mod.OnSpectatorHostReceivedInvoke(host, true);
+                    }
+
+                    ServerSend.SpectatorHostAssignment(host, newController, true);
+                }
+            }
         }
 
         public static bool GetTrackedObjectType(Transform t, out Type trackedObjectType)
