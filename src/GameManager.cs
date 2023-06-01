@@ -1445,36 +1445,40 @@ namespace H3MP
 
                     if (Mod.spectatorHostWaitingForTNHSetup)
                     {
+                        Mod.LogInfo("Just arrived in scene: " + scene+" and was waiting for TNH setup");
                         if (scene.Equals("TakeAndHold_Lobby_2"))
                         {
+                            Mod.LogInfo("\tTNH lobby");
                             if (spectatorHostControlledBy != -1)
                             {
+                                Mod.LogInfo("\t\tWe are controlled spectator host, creating instance and sending ready");
                                 Mod.OnTNHHostClicked();
                                 Mod.TNHOnDeathSpectate = Mod.TNHRequestHostOnDeathSpectate;
                                 Mod.OnTNHHostConfirmClicked();
 
                                 if (ThreadManager.host)
                                 {
+                                    Mod.LogInfo("\t\t\tHost, sending ready");
                                     ServerSend.TNHSpectatorHostReady(spectatorHostControlledBy, instance);
                                 }
                                 else
                                 {
-                                    ClientSend.TNHSpectatorHostReady(instance);
+                                    Mod.LogInfo("\t\t\tClient, setting flag and waiting for isntance creation");
+                                    Mod.spectatorHostWaitingForTNHInstance = true;
                                 }
-                                Mod.spectatorHostWaitingForTNHSetup = false;
                             }
-                            else
-                            {
-                                Mod.spectatorHostWaitingForTNHSetup = false;
-                            }
+
+                            Mod.spectatorHostWaitingForTNHSetup = false;
                         }
                         else if (scene.Equals("MainMenu3"))
                         {
+                            Mod.LogInfo("\tIn main menu, setting flag and loading to lobby");
                             SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
                             Mod.spectatorHostWaitingForTNHSetup = true;
                         }
                         else
                         {
+                            Mod.LogInfo("\tIn other scene, setting flag and loading to main menu");
                             SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
                             Mod.spectatorHostWaitingForTNHSetup = true;
                         }
@@ -1501,8 +1505,6 @@ namespace H3MP
 
                     resetSpectatorHost = false;
                 }
-
-                // TNH stuff
             }
         }
 

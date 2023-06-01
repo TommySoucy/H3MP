@@ -4064,8 +4064,9 @@ namespace H3MP.Networking
         {
             int host = packet.ReadInt();
             int controller = packet.ReadInt();
+            Mod.LogInfo("Received a SpectatorHostAssignment with host: " + host+" and controller: "+ controller);
 
-            if(host == GameManager.ID)
+            if (host == GameManager.ID)
             {
                 if (GameManager.spectatorHost)
                 {
@@ -4080,36 +4081,44 @@ namespace H3MP.Networking
 
         public static void GiveUpSpectatorHost(Packet packet)
         {
+            Mod.LogInfo("Received order to give up spectator host");
             Mod.OnSpectatorHostGiveUpInvoke();
         }
 
         public static void SpectatorHostOrderTNHHost(Packet packet)
         {
+            Mod.LogInfo("SpectatorHostOrderTNHHost received");
             if (GameManager.spectatorHost && GameManager.spectatorHostControlledBy != -1)
             {
+                Mod.LogInfo("\tWe are controlled spectator host");
                 if (GameManager.sceneLoading)
                 {
+                    Mod.LogInfo("\tAlready loading, setting flag");
                     Mod.spectatorHostWaitingForTNHSetup = true;
                     Mod.TNHRequestHostOnDeathSpectate = packet.ReadBool();
                 }
                 else
                 {
+                    Mod.LogInfo("\tNot loading");
                     if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
                     {
+                        Mod.LogInfo("\t\tAlready in TNH lobby, creating instance, setting flag, and waiting to send ready");
                         Mod.OnTNHHostClicked();
                         Mod.TNHOnDeathSpectate = packet.ReadBool();
                         Mod.OnTNHHostConfirmClicked();
 
-                        ClientSend.TNHSpectatorHostReady(GameManager.instance);
+                        Mod.spectatorHostWaitingForTNHInstance = true;
                         Mod.spectatorHostWaitingForTNHSetup = false;
                     }
                     else if (GameManager.scene.Equals("MainMenu3"))
                     {
+                        Mod.LogInfo("\t\tIn main menu, setting flag and loading to lobby");
                         SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
                         Mod.spectatorHostWaitingForTNHSetup = true;
                     }
                     else
                     {
+                        Mod.LogInfo("\t\tIn other scene, setting flag and loading to main menu");
                         SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
                         Mod.spectatorHostWaitingForTNHSetup = true;
                     }
@@ -4121,12 +4130,16 @@ namespace H3MP.Networking
         {
             int instance = packet.ReadInt();
 
+            Mod.LogInfo("TNHSpectatorHostReady received for instance: " + instance);
             if (GameManager.controlledSpectatorHost != -1 && GameManager.TNHInstances.TryGetValue(instance, out TNHInstance TNHInstance))
             {
+                Mod.LogInfo("\tWe have host and instance");
                 if (Mod.waitingForTNHHost)
                 {
+                    Mod.LogInfo("\t\tWe were waiting");
                     if (Mod.TNHMenu != null)
                     {
+                        Mod.LogInfo("\t\t\tWe have menu, setting up join");
                         Mod.TNHHostedInstance = instance;
                         Mod.TNHMenuPages[6].SetActive(false);
                         Mod.TNHMenuPages[2].SetActive(true);
@@ -4135,6 +4148,7 @@ namespace H3MP.Networking
                     }
                     else
                     {
+                        Mod.LogInfo("\t\t\tDont have menu, stop waiting");
                         Mod.waitingForTNHHost = false;
                     }
                 }
