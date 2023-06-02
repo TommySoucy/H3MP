@@ -1837,7 +1837,7 @@ namespace H3MP
             // Manage players present
             if (player.scene.Equals(GameManager.scene) && !GameManager.nonSynchronizedScenes.ContainsKey(player.scene) && GameManager.instance == player.instance)
             {
-                --GameManager.playersPresent;
+                GameManager.playersPresent.Remove(playerID);
             }
 
             RemovePlayerFromSpecificLists(player);

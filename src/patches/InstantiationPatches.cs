@@ -276,7 +276,7 @@ namespace H3MP.Patches
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
                 // because the client that has initialized the scene spawned these and synced them
-                if (GameManager.playersPresent > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                if (GameManager.playersPresent.Count > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
                 {
                     List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
                     objectsToDestroy.Add(__result);
@@ -317,7 +317,7 @@ namespace H3MP.Patches
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
                 // because the client that has initialized the scene spawned these and synced them
-                if (GameManager.playersPresent > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                if (GameManager.playersPresent.Count > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
                 {
                     List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
                     objectsToDestroy.Add(__result);
@@ -393,7 +393,7 @@ namespace H3MP.Patches
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
                 // because the client that has initialized the scene spawned these and synced them
-                if (GameManager.playersPresent > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
+                if (GameManager.playersPresent.Count > 0 && SpawnVaultFileRoutinePatch.routineData.ContainsKey(SpawnVaultFileRoutinePatch.currentFile))
                 {
                     List<UnityEngine.Object> objectsToDestroy = SpawnVaultFileRoutinePatch.routineData[SpawnVaultFileRoutinePatch.currentFile];
                     objectsToDestroy.Add(__result);

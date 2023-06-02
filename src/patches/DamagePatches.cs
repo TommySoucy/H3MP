@@ -439,7 +439,7 @@ namespace H3MP.Patches
         public static bool GetActualFlag(bool flag2, FVRFireArm tempFA)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return flag2;
             }
@@ -678,7 +678,7 @@ namespace H3MP.Patches
         public static void AddControllerReference(GameObject dest, Component src = null)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -699,7 +699,7 @@ namespace H3MP.Patches
         public static IFVRDamageable GetActualDamageable(MonoBehaviour mb, IFVRDamageable original)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return original;
             }
@@ -850,7 +850,7 @@ namespace H3MP.Patches
         static bool UpdatePrefix(ref FVRPhysicalObject ___m_obj)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || ___m_obj == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || ___m_obj == null || GameManager.playersPresent.Count == 0)
             {
                 return true;
             }
@@ -933,7 +933,7 @@ namespace H3MP.Patches
         public static IFVRReceiveDamageable GetActualReceiveDamageable(MonoBehaviour mb, IFVRReceiveDamageable original)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return original;
             }

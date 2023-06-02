@@ -142,7 +142,7 @@ namespace H3MP.Networking
             else
             {
                 // Send this client's up to date trackedItems to host and all other clients of there are others in the scene
-                if (GameManager.playersPresent > 0)
+                if (GameManager.playersPresent.Count > 0)
                 {
                     ClientSend.TrackedObjects();
 

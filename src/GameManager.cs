@@ -70,7 +70,7 @@ namespace H3MP
         public static int ID = 0;
         public static Vector3 torsoOffset = new Vector3(0, -0.4f, 0);
         public static Vector3 overheadDisplayOffset = new Vector3(0, 0.25f, 0);
-        public static int playersPresent = 0;
+        public static List<int> playersPresent = new List<int>();
         public static int playerStateAddtionalDataSize = -1;
         public static int instance = 0;
         public static string scene = "MainMenu3";
@@ -322,7 +322,7 @@ namespace H3MP
             // Make sure to count the player if in the same scene/instance
             if (!nonSynchronizedScenes.ContainsKey(scene) && scene.Equals(GameManager.scene) && instance == GameManager.instance)
             {
-                ++playersPresent;
+                playersPresent.Add(ID);
 
                 if (join)
                 {
@@ -359,7 +359,7 @@ namespace H3MP
             controlOverride = false;
             firstPlayerInSceneInstance = false;
             dontAddToInstance = false;
-            playersPresent = 0;
+            playersPresent.Clear();
             playerStateAddtionalDataSize = -1;
             sceneLoading = false;
             instanceAtSceneLoadStart = 0;
@@ -483,7 +483,7 @@ namespace H3MP
 
             if (player.scene.Equals(GameManager.scene) && !nonSynchronizedScenes.ContainsKey(player.scene) && instance == player.instance)
             {
-                --playersPresent;
+                playersPresent.Remove(playerID);
             }
 
             player.scene = sceneName;
@@ -526,7 +526,7 @@ namespace H3MP
 
             if (sceneName.Equals(GameManager.scene) && !nonSynchronizedScenes.ContainsKey(sceneName) && instance == player.instance)
             {
-                ++playersPresent;
+                playersPresent.Add(playerID);
             }
         }
 
@@ -663,7 +663,7 @@ namespace H3MP
 
             if (player.scene.Equals(GameManager.scene) && !nonSynchronizedScenes.ContainsKey(player.scene) && GameManager.instance == player.instance)
             {
-                --playersPresent;
+                playersPresent.Remove(playerID);
             }
 
             player.instance = instance;
@@ -696,7 +696,7 @@ namespace H3MP
 
             if (player.scene.Equals(GameManager.scene) && !nonSynchronizedScenes.ContainsKey(player.scene) && GameManager.instance == player.instance)
             {
-                ++playersPresent;
+                playersPresent.Add(playerID);
             }
 
             if (activeInstances.ContainsKey(instance))
@@ -1169,7 +1169,7 @@ namespace H3MP
             }
 
             // Set players active and playersPresent
-            playersPresent = 0;
+            playersPresent.Clear();
             if (!nonSynchronizedScenes.ContainsKey(scene))
             {
                 // Check each players scene/instance to know if they are in the one we are going into
@@ -1179,7 +1179,7 @@ namespace H3MP
                 {
                     if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                     {
-                        ++playersPresent;
+                        playersPresent.Add(player.Key);
 
                         if (ThreadManager.host && !sceneLoading)
                         {
@@ -1489,7 +1489,7 @@ namespace H3MP
                 }
 
                 // Update players' active state depending on which are in the same scene/instance
-                playersPresent = 0;
+                playersPresent.Clear();
                 if (!nonSynchronizedScenes.ContainsKey(scene))
                 {
                     controlOverride = true;
@@ -1498,7 +1498,7 @@ namespace H3MP
                     {
                         if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                         {
-                            ++playersPresent;
+                            playersPresent.Add(player.Key);
 
                             // NOTE: Calculating control override when we finish loading here is necessary
                             // Consider the server loading into a scene. When they started loading, they thought they would be the first in the scene, controlOverride = true.

@@ -801,7 +801,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -824,7 +824,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -859,7 +859,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 positions = null;
                 directions = null;
@@ -1024,7 +1024,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -1047,7 +1047,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -1076,7 +1076,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 positions = null;
                 directions = null;
@@ -1254,7 +1254,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -1277,7 +1277,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -1306,7 +1306,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!fireSucessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!fireSucessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 positions = null;
                 directions = null;
@@ -1455,7 +1455,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -1478,7 +1478,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -1507,7 +1507,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (fireSucessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (fireSucessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 positions = null;
                 directions = null;
@@ -1635,7 +1635,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -1658,7 +1658,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -1727,7 +1727,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 positions = null;
                 directions = null;
@@ -1802,7 +1802,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 FirePatch.positions = null;
                 FirePatch.directions = null;
@@ -1855,7 +1855,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 FirePatch.positions = null;
                 FirePatch.directions = null;
@@ -1911,7 +1911,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 FirePatch.positions = null;
                 FirePatch.directions = null;
@@ -1971,7 +1971,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 FirePatch.positions = null;
                 FirePatch.directions = null;
@@ -2027,7 +2027,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 FirePatch.positions = null;
                 FirePatch.directions = null;
@@ -2083,7 +2083,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 FirePatch.positions = null;
                 FirePatch.directions = null;
@@ -2142,7 +2142,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!FirePatch.fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 FirePatch.positions = null;
                 FirePatch.directions = null;
@@ -2379,7 +2379,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -2402,7 +2402,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -2430,7 +2430,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 positions = null;
                 directions = null;
@@ -2602,7 +2602,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (!fireSuccessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 positions = null;
                 directions = null;
@@ -2841,7 +2841,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -2981,7 +2981,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -4345,7 +4345,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
@@ -4422,7 +4422,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
                 return;
             }
