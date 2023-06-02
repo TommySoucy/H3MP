@@ -372,10 +372,7 @@ namespace H3MP.Networking
 
         public static void TrackedObjects()
         {
-            // TODO: Optomization: Could store the list of all players in same scene/instance when we and they change scene so we could just use that instead of
-            //                     getting the list every time
-            if (GameManager.playersByInstanceByScene.TryGetValue(GameManager.scene, out Dictionary<int, List<int>> playerInstances) &&
-                playerInstances.TryGetValue(GameManager.instance, out List<int> players) && players.Count > 0)
+            if (GameManager.playersPresent.Count > 0)
             {
                 int index = 0;
                 while (index < GameManager.objects.Count)
@@ -433,7 +430,7 @@ namespace H3MP.Networking
                             packet.buffer[i] = countArr[j];
                         }
 
-                        SendUDPDataToClients(packet, players);
+                        SendUDPDataToClients(packet, GameManager.playersPresent);
                     }
                 }
             }
