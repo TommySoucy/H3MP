@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace H3MP.src.tracking
+namespace H3MP.Tracking
 {
     public class TrackedBreakableGlassData : TrackedObjectData
     {

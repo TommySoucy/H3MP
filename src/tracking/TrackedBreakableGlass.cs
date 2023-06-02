@@ -2,7 +2,7 @@
 using H3MP.Tracking;
 using UnityEngine;
 
-namespace H3MP.src.tracking
+namespace H3MP.Tracking
 {
     public class TrackedBreakableGlass : TrackedObject
     {
