@@ -261,6 +261,13 @@ namespace H3MP.Networking
             {
                 TrackedObjectData.Update(packet, true);
             }
+
+            // Relay to other clients in same scene/instance as clientID right away
+            if (GameManager.playersByInstanceByScene.TryGetValue(Server.clients[clientID].player.scene, out Dictionary<int, List<int>> instances) && 
+                instances.TryGetValue(Server.clients[clientID].player.instance, out List<int> players))
+            {
+                ServerSend.TrackedObjects(packet, players, clientID);
+            }
         }
 
         public static void ObjectUpdate(int clientID, Packet packet)

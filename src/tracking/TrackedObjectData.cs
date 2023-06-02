@@ -154,7 +154,7 @@ namespace H3MP.Tracking
 
             if (includesLength)
             {
-                // If we make it here, it is because we did update from packet
+                // If we make it here, it is because we didn't update from packet
                 packet.readPos += (length - 5); // -5 because we read a byte and an int above
             }
         }
