@@ -64,7 +64,7 @@ namespace H3MP.Networking
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
-                Mod.LogInfo("SendUDPData multiple: " + BitConverter.ToInt32(packet.ToArray(), 0));
+                Mod.LogInfo("SendUDPData multiple: " + BitConverter.ToInt32(packet.ToArray(), 0)+" with length "+packet.buffer.Count);
             }
 #endif
             packet.WriteLength();
@@ -291,17 +291,6 @@ namespace H3MP.Networking
                         player.health, player.maxHealth, scene, instance);
         }
 
-        public static void PlayerState(Packet packet, Player player)
-        {
-            if (GameManager.playersByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> instances) &&
-                instances.TryGetValue(player.instance, out List<int> otherPlayers) && (otherPlayers.Count > 1 || otherPlayers[0] != player.ID))
-            {
-                packet.readPos = 0;
-
-                SendUDPData(otherPlayers, packet, player.ID);
-            }
-        }
-
         public static void PlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
                                        Vector3 leftHandPos, Quaternion leftHandRot,
                                        Vector3 rightHandPos, Quaternion rightHandRot,
@@ -344,6 +333,29 @@ namespace H3MP.Networking
             }
         }
 
+        public static void PlayerState(Packet packet, Player player)
+        {
+            if (GameManager.playersByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(player.instance, out List<int> otherPlayers) && (otherPlayers.Count > 1 || otherPlayers[0] != player.ID))
+            {
+                // Make sure the packet ID is correct
+                // Note: Must do this if relaying packets, because the packet ID is not necessarily the same in ClientPackets and ServerPackets
+                //       so when a client receives the relayed packet, it will expect the ServerPackets ID but if we didn't replace it
+                //       like we do here, it will still be the ClientPackets ID which might be different
+                byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.playerState);
+                for (int i = 0; i < 4; ++i)
+                {
+                    packet.buffer[i] = IDbytes[i];
+                }
+
+                // TODO: Optimization: Verify which is best, including the ID in the packet (Using bandwidth, time writing), or inserting it here (Time inserting) 
+                // Write the player's ID because it was sent from a client and was not included in the packet
+                packet.buffer.InsertRange(4, BitConverter.GetBytes(player.ID)); // 4 because we want to insert after the packet ID
+
+                SendUDPData(otherPlayers, packet, player.ID);
+            }
+        }
+
         public static void PlayerIFF(int clientID, int IFF)
         {
             using (Packet packet = new Packet((int)ServerPackets.playerIFF))
@@ -380,6 +392,8 @@ namespace H3MP.Networking
             }
         }
 
+        // TODO: Optimization: Limit this to a max number of objects per frame, this will most likely come in useful in meatov when we have over a hundred items to update per frame
+        //                     if physics are weird and objects need updates because it rotated 0.00001 deg since last update or something
         public static void TrackedObjects()
         {
             if (GameManager.playersPresent.Count > 0)
@@ -448,6 +462,11 @@ namespace H3MP.Networking
 
         public static void TrackedObjects(Packet packet, List<int> players, int sender)
         {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.trackedObjects);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
             packet.readPos = 0;
 
             SendUDPDataToClients(packet, players, sender);

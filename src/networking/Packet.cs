@@ -394,6 +394,8 @@ namespace H3MP.Networking
         /// <summary>Inserts the length of the packet's content at the start of the buffer.</summary>
         public void WriteLength()
         {
+            // TODO: Optimization: When we instantiate a packet, maybe add 4 placeholder bytes to the buffer right away to reserve space for this so we sdon't have to insert
+            //                     every time we send a packet
             buffer.InsertRange(0, BitConverter.GetBytes(buffer.Count)); // Insert the byte length of the packet at the very beginning
         }
 
@@ -401,6 +403,8 @@ namespace H3MP.Networking
         /// <param name="_value">The int to insert.</param>
         public void InsertInt(int _value)
         {
+            // TODO: Optimization: When we instantiate a packet, maybe add 4 placeholder bytes to the buffer right away to reserve space for this so we sdon't have to insert
+            //                     every time we send a packet. See WriteLength() above
             buffer.InsertRange(0, BitConverter.GetBytes(_value)); // Insert the int at the start of the buffer
         }
 
