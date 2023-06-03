@@ -107,36 +107,30 @@ namespace H3MP.Networking
             // Can only update clients if this is the host
             if (host)
             {
-                // Send every client's player state to every other client
-                foreach (ServerClient client in Server.clients.Values)
+                if (GameManager.playersPresent.Count > 0)
                 {
-                    if (client.player != null)
+                    // Send all trackedItems to all clients
+                    ServerSend.TrackedObjects();
+
+                    // Also send the host's player state to all clients
+                    if (GM.CurrentPlayerBody != null)
                     {
-                        client.player.UpdateState();
+                        ServerSend.PlayerState(0,
+                                               GM.CurrentPlayerBody.transform.position,
+                                               GM.CurrentPlayerBody.transform.rotation,
+                                               GM.CurrentPlayerBody.headPositionFiltered,
+                                               GM.CurrentPlayerBody.headRotationFiltered,
+                                               GM.CurrentPlayerBody.headPositionFiltered + GameManager.torsoOffset,
+                                               GM.CurrentPlayerBody.Torso.rotation,
+                                               GM.CurrentPlayerBody.LeftHand.position,
+                                               GM.CurrentPlayerBody.LeftHand.rotation,
+                                               GM.CurrentPlayerBody.RightHand.position,
+                                               GM.CurrentPlayerBody.RightHand.rotation,
+                                               GM.CurrentPlayerBody.Health,
+                                               GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(),
+                                               GameManager.scene,
+                                               GameManager.instance);
                     }
-                }
-
-                // Send all trackedItems to all clients
-                ServerSend.TrackedObjects();
-
-                // Also send the host's player state to all clients
-                if (GM.CurrentPlayerBody != null)
-                {
-                    ServerSend.PlayerState(0,
-                                           GM.CurrentPlayerBody.transform.position,
-                                           GM.CurrentPlayerBody.transform.rotation,
-                                           GM.CurrentPlayerBody.headPositionFiltered,
-                                           GM.CurrentPlayerBody.headRotationFiltered,
-                                           GM.CurrentPlayerBody.headPositionFiltered + GameManager.torsoOffset,
-                                           GM.CurrentPlayerBody.Torso.rotation,
-                                           GM.CurrentPlayerBody.LeftHand.position,
-                                           GM.CurrentPlayerBody.LeftHand.rotation,
-                                           GM.CurrentPlayerBody.RightHand.position,
-                                           GM.CurrentPlayerBody.RightHand.rotation,
-                                           GM.CurrentPlayerBody.Health,
-                                           GM.CurrentPlayerBody.GetMaxHealthPlayerRaw(),
-                                           GameManager.scene,
-                                           GameManager.instance);
                 }
             }
             else

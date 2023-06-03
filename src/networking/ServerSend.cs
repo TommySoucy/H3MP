@@ -3,7 +3,6 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.EventSystems.EventTrigger;
 
 namespace H3MP.Networking
 {
@@ -290,6 +289,17 @@ namespace H3MP.Networking
                         player.leftHandPos, player.leftHandRot,
                         player.leftHandPos, player.leftHandRot,
                         player.health, player.maxHealth, scene, instance);
+        }
+
+        public static void PlayerState(Packet packet, Player player)
+        {
+            if (GameManager.playersByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> instances) &&
+                instances.TryGetValue(player.instance, out List<int> otherPlayers) && (otherPlayers.Count > 1 || otherPlayers[0] != player.ID))
+            {
+                packet.readPos = 0;
+
+                SendUDPData(otherPlayers, packet, player.ID);
+            }
         }
 
         public static void PlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
