@@ -2773,6 +2773,11 @@ namespace H3MP.Patches
             toInsert2.Add(new CodeInstruction(OpCodes.Ldc_I4_2)); // Load 2
             toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BreakableGlassDamagerPatch), "ShatterAudio"))); // Call our ShatterAudio
 
+            List<CodeInstruction> toInsert3 = new List<CodeInstruction>();
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load damager instance
+            toInsert3.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BreakableGlassDamager), "m_shards"))); // Load shards
+            toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BreakableGlassDamagerPatch), "TrackShards"))); // Call our TrackShards
+
             int found = 0;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -2792,10 +2797,16 @@ namespace H3MP.Patches
                     else if(found == 4)
                     {
                         instructionList.InsertRange(i + 1, toInsert2);
-                        break;
+                        i += toInsert2.Count;
                     }
 
                     ++found;
+                }
+                else if(instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Clear"))
+                {
+                    Mod.LogInfo("Shatter transpiler track applied");
+                    instructionList.InsertRange(i - 2, toInsert3);
+                    break;
                 }
             }
             return instructionList;
@@ -2823,6 +2834,21 @@ namespace H3MP.Patches
             }
         }
 
+        public static void TrackShards(List<GameObject> shards)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            Mod.LogInfo("Tracking "+ shards.Count+" shards");
+            for (int i = 0; i < shards.Count; ++i) 
+            {
+                GameManager.SyncTrackedObjects(shards[i].transform, true, null, GameManager.scene);
+            }
+        }
+
         static void ShatterGlassPostfix(BreakableGlassDamager __instance)
         {
             // Skip if not connected
@@ -2832,8 +2858,6 @@ namespace H3MP.Patches
             }
 
             --Mod.skipAllInstantiates;
-
-            GameManager.SyncTrackedObjects(__instance.m_wrapper.transform, true, null, GameManager.scene);
         }
     }
 }

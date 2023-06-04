@@ -26,6 +26,7 @@ namespace H3MP.Tracking
         public bool isAttached;
         public int breakDepth;
 
+        public bool hasWrapper;
         public int wrapperID = -1;
         public int localWrapperID = -1;
         public static int wrapperIDCounter = 0;
@@ -61,9 +62,10 @@ namespace H3MP.Tracking
             breakDepth = packet.ReadInt();
             wrapperID = packet.ReadInt();
             localWrapperID = packet.ReadInt();
+            hasWrapper = packet.ReadBool();
             if (ThreadManager.host)
             {
-                if(wrapperID == -1)
+                if(wrapperID == -1 && hasWrapper)
                 {
                     wrapperID = wrapperIDCounter++;
                 }
@@ -94,42 +96,50 @@ namespace H3MP.Tracking
             data.initTracker = GameManager.ID;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
             data.damager = root.GetComponent<BreakableGlassDamager>();
-            if(wrapperIDsbyWrapper.TryGetValue(data.damager.m_wrapper, out int currentID))
+            if (data.damager.m_wrapper != null)
             {
-                data.wrapperID = currentID;
-            }
-            else
-            {
-                if (ThreadManager.host)
+                data.hasWrapper = true;
+                if (wrapperIDsbyWrapper.TryGetValue(data.damager.m_wrapper, out int currentID))
                 {
-                    if(wrapperIDsbyWrapper.TryGetValue(data.damager.m_wrapper, out int currentWrapperID))
-                    {
-                        data.wrapperID = currentWrapperID;
-                    }
-                    else
-                    {
-                        data.wrapperID = wrapperIDCounter;
-
-                        wrappersByID.Add(data.wrapperID, data.damager.m_wrapper);
-                        wrapperIDsbyWrapper.Add(data.damager.m_wrapper, data.wrapperID);
-                    }
+                    data.wrapperID = currentID;
                 }
                 else
                 {
-                    if (localWrapperIDsbyWrapper.TryGetValue(data.damager.m_wrapper, out int currentLocalID))
+                    if (ThreadManager.host)
                     {
-                        data.localWrapperID = currentLocalID;
+                        if (wrapperIDsbyWrapper.TryGetValue(data.damager.m_wrapper, out int currentWrapperID))
+                        {
+                            data.wrapperID = currentWrapperID;
+                        }
+                        else
+                        {
+                            data.wrapperID = wrapperIDCounter;
+
+                            wrappersByID.Add(data.wrapperID, data.damager.m_wrapper);
+                            wrapperIDsbyWrapper.Add(data.damager.m_wrapper, data.wrapperID);
+                        }
                     }
                     else
                     {
-                        data.localWrapperID = wrapperIDCounter;
+                        if (localWrapperIDsbyWrapper.TryGetValue(data.damager.m_wrapper, out int currentLocalID))
+                        {
+                            data.localWrapperID = currentLocalID;
+                        }
+                        else
+                        {
+                            data.localWrapperID = wrapperIDCounter;
 
-                        localWrappersByID.Add(data.localWrapperID, data.damager.m_wrapper);
-                        localWrapperIDsbyWrapper.Add(data.damager.m_wrapper, data.localWrapperID);
+                            localWrappersByID.Add(data.localWrapperID, data.damager.m_wrapper);
+                            localWrapperIDsbyWrapper.Add(data.damager.m_wrapper, data.localWrapperID);
+                        }
                     }
                 }
+                ++wrapperIDCounter;
             }
-            ++wrapperIDCounter;
+            else
+            {
+                data.hasWrapper = false;
+            }
 
             GameManager.trackedBreakableGlassByBreakableGlass.Add(data.physicalBreakableGlass.physicalBreakableGlass, trackedBreakableGlass);
             GameManager.trackedBreakableGlassByBreakableGlassDamager.Add(data.damager, trackedBreakableGlass);
@@ -186,24 +196,27 @@ namespace H3MP.Tracking
             physicalBreakableGlass.physicalBreakableGlass.area = CynGlass.AreaOf(vertices);
             rb.mass = Mathf.Lerp(0.05f, 0.2f, Mathf.InverseLerp(0.025f, 0.1f, physicalBreakableGlass.physicalBreakableGlass.area));
             damager.Glass = physicalBreakableGlass.physicalBreakableGlass;
-            if(wrappersByID.TryGetValue(wrapperID, out DestructibleWindowWrapper currentWrapper))
+            if (hasWrapper)
             {
-                damager.SetWrapper(currentWrapper);
-                objectInstance.transform.parent = currentWrapper.transform;
-            }
-            else
-            {
-                GameObject wrapperObject = new GameObject("WindowWrapper");
-                wrapperObject.SetActive(false);
-                DestructibleWindowWrapper newWrapper = wrapperObject.AddComponent<DestructibleWindowWrapper>();
+                if (wrappersByID.TryGetValue(wrapperID, out DestructibleWindowWrapper currentWrapper))
+                {
+                    damager.SetWrapper(currentWrapper);
+                    objectInstance.transform.parent = currentWrapper.transform;
+                }
+                else
+                {
+                    GameObject wrapperObject = new GameObject("WindowWrapper");
+                    wrapperObject.SetActive(false);
+                    DestructibleWindowWrapper newWrapper = wrapperObject.AddComponent<DestructibleWindowWrapper>();
 
-                wrappersByID.Add(wrapperID, newWrapper);
-                wrapperIDsbyWrapper.Add(newWrapper, wrapperID);
+                    wrappersByID.Add(wrapperID, newWrapper);
+                    wrapperIDsbyWrapper.Add(newWrapper, wrapperID);
 
-                objectInstance.transform.parent = wrapperObject.transform;
+                    objectInstance.transform.parent = wrapperObject.transform;
 
-                newWrapper.GlassDamager = damager;
-                wrapperObject.SetActive(true);
+                    newWrapper.GlassDamager = damager;
+                    wrapperObject.SetActive(true);
+                }
             }
             damager.AudEvent_Head_Projectile = Mod.glassShotEvent;
             damager.AudEvent_Head_Melee = Mod.glassThudHeadEvent;
@@ -247,6 +260,7 @@ namespace H3MP.Tracking
                 breakDepth = updatedBreakableGlass.breakDepth;
                 wrapperID = updatedBreakableGlass.wrapperID;
                 localWrapperID = updatedBreakableGlass.localWrapperID;
+                hasWrapper = updatedBreakableGlass.hasWrapper;
             }
 
             previousPos = position;
@@ -287,9 +301,10 @@ namespace H3MP.Tracking
                 breakDepth = packet.ReadInt();
                 wrapperID = packet.ReadInt();
                 localWrapperID = packet.ReadInt();
+                hasWrapper = packet.ReadBool();
                 if (ThreadManager.host)
                 {
-                    if (wrapperID == -1)
+                    if (wrapperID == -1 && hasWrapper)
                     {
                         wrapperID = wrapperIDCounter++;
                     }
@@ -358,6 +373,7 @@ namespace H3MP.Tracking
                 packet.Write(breakDepth);
                 packet.Write(wrapperID);
                 packet.Write(localWrapperID);
+                packet.Write(hasWrapper);
             }
         }
 

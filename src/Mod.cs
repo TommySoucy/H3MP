@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
@@ -381,6 +382,19 @@ namespace H3MP
                 else if (Input.GetKeyDown(KeyCode.KeypadDivide))
                 {
                     SteamVR_LoadLevel.Begin("Grillhouse_2Story", false, 0.5f, 0f, 0f, 0f, 1f);
+                }
+                else if (Input.GetKeyDown(KeyCode.KeypadEnter))
+                {
+                    foreach(StandaloneInputModule sim in FindObjectsOfType<StandaloneInputModule>())
+                    {
+                        Mod.LogWarning("Destroying sim: " + sim.gameObject.name);
+                        Destroy(sim);
+                    }
+                    foreach(EventSystem es in FindObjectsOfType<EventSystem>())
+                    {
+                        Mod.LogWarning("Destroying es: "+es.gameObject.name);
+                        Destroy(es);
+                    }
                 }
             }
 #endif
