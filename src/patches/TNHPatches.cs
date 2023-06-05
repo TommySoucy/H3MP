@@ -1273,7 +1273,9 @@ namespace H3MP.Patches
                                 Mod.LogInfo("\tConfiguring TNH tweaker supply point with panelIndex: " + panelIndex);
                                 TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
 
-                                PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });
+                                object[] args = new object[] { tnh_SupplyPoint, level, panelIndex };
+                                PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, args);
+                                panelIndex = (int)args[2];
 
                                 TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
                                 tnh_SupplyPoint.SetContact(contact);
