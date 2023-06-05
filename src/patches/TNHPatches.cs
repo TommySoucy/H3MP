@@ -1550,6 +1550,15 @@ namespace H3MP.Patches
                 Mod.currentTNHInstance.manager.VoiceUpdate();
                 Mod.currentTNHInstance.manager.FMODController.SetMasterVolume(0.25f * GM.CurrentPlayerBody.GlobalHearing);
 
+                // Test visited on the supply points
+                if(Mod.currentTNHInstance.manager.Phase == TNH_Phase.Take)
+                {
+                    for (int i = 0; i < Mod.currentTNHInstance.manager.SupplyPoints.Count; i++)
+                    {
+                        Mod.currentTNHInstance.manager.SupplyPoints[i].TestVisited();
+                    }
+                }
+
                 // Since we are not controller, our initialization will not complete fully due to lack of SetPhase
                 // So here we check if the instance is initialized (phase not startup) and if we have to and are ready to init
                 // Then init with the instance data
