@@ -1270,6 +1270,7 @@ namespace H3MP.Patches
                         {
                             for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
                             {
+                                Mod.LogInfo("\tConfiguring TNH tweaker supply point with panelIndex: " + panelIndex);
                                 TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
 
                                 PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });

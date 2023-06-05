@@ -350,7 +350,10 @@ namespace H3MP
             trackedEncryptionByEncryption.Clear();
             trackedBreakableGlassByBreakableGlass.Clear();
             trackedBreakableGlassByBreakableGlassDamager.Clear();
-            playersAtLoadStart.Clear();
+            if (playersAtLoadStart != null)
+            {
+                playersAtLoadStart.Clear();
+            }
             activeInstances.Clear();
             TNHInstances.Clear();
             playersByInstanceByScene.Clear();
