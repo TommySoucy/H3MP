@@ -383,7 +383,7 @@ namespace H3MP.Networking
 #if DEBUG
                                 if (Input.GetKey(KeyCode.PageDown))
                                 {
-                                    Mod.LogInfo("\tHandling UDP packet: " + packetID);
+                                    Mod.LogInfo("\tHandling UDP packet: " + packetID+", length: "+packet.buffer.Count);
                                 }
 #endif
                                 packetHandlers[packetID](packet);

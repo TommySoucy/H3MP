@@ -997,12 +997,51 @@ namespace H3MP.Networking
 
         public static void SosigWeaponFire(int clientID, Packet packet)
         {
+#if DEBUG
+            if(packet == null)
+            {
+                Mod.LogError("SosigWeaponFire packet null");
+                return;
+            }
+#endif
+
             int trackedID = packet.ReadInt();
             float recoilMult = packet.ReadFloat();
+
+#if DEBUG
+            if (Server.objects[trackedID] == null)
+            {
+                Mod.LogError("SosigWeaponFire object at "+trackedID+" null");
+                return;
+            }
+#endif
 
             // Update locally
             if (Server.objects[trackedID].physical != null)
             {
+#if DEBUG
+                if (Server.objects[trackedID].physical as TrackedItem == null)
+                {
+                    Mod.LogError("SosigWeaponFire physical not trackedItem");
+                    return;
+                }
+                if ((Server.objects[trackedID].physical as TrackedItem).dataObject as SosigWeaponPlayerInterface == null)
+                {
+                    Mod.LogError("SosigWeaponFire physical item not SosigWeaponPlayerInterface");
+                    return;
+                }
+                if ((Server.objects[trackedID].physical as TrackedItem).dataObject as SosigWeaponPlayerInterface == null)
+                {
+                    Mod.LogError("SosigWeaponFire physical item not SosigWeaponPlayerInterface");
+                    return;
+                }
+                if (((Server.objects[trackedID].physical as TrackedItem).dataObject as SosigWeaponPlayerInterface).W == null)
+                {
+                    Mod.LogError("SosigWeaponFire SosigWeaponPlayerInterface has no weapon");
+                    return;
+                }
+#endif
+
                 FireSosigWeaponPatch.positions = new List<Vector3>();
                 FireSosigWeaponPatch.directions = new List<Vector3>();
                 byte count = packet.ReadByte();

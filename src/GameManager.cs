@@ -339,6 +339,7 @@ namespace H3MP
                 Destroy(playerEntry.Value.gameObject);
             }
             players.Clear();
+            objects.Clear();
             spectatorHosts.Clear();
             trackedObjectByObject.Clear();
             trackedObjectByInteractive.Clear();
@@ -349,6 +350,7 @@ namespace H3MP
             trackedEncryptionByEncryption.Clear();
             trackedBreakableGlassByBreakableGlass.Clear();
             trackedBreakableGlassByBreakableGlassDamager.Clear();
+            playersAtLoadStart.Clear();
             activeInstances.Clear();
             TNHInstances.Clear();
             playersByInstanceByScene.Clear();

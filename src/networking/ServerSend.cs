@@ -124,7 +124,7 @@ namespace H3MP.Networking
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
-                Mod.LogInfo("SendUDPDataToClients: " + BitConverter.ToInt32(packet.ToArray(), 0));
+                Mod.LogInfo("SendUDPDataToClients: " + BitConverter.ToInt32(packet.ToArray(), 0)+", size "+packet.buffer.Count);
             }
 #endif
             packet.WriteLength();
