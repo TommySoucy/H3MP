@@ -2804,7 +2804,6 @@ namespace H3MP.Patches
                 }
                 else if(instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Clear"))
                 {
-                    Mod.LogInfo("Shatter transpiler track applied");
                     instructionList.InsertRange(i - 2, toInsert3);
                     break;
                 }

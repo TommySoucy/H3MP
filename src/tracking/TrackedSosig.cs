@@ -105,6 +105,18 @@ namespace H3MP.Tracking
 
         public override void BeginInteraction(FVRViveHand hand)
         {
+            //// Add link to All
+            //for (int i = 0; i < physicalSosig.Links.Count; ++i) 
+            //{
+            //    if (physicalSosig.Links[i].O.m_hand == hand)
+            //    {
+            //        physicalSosig.Links[i].O.m_index = FVRInteractiveObject.All.Count;
+            //        FVRInteractiveObject.All.Add(physicalSosig.Links[i].O);
+
+            //        break;
+            //    }
+            //}
+
             if (data.controller != GameManager.ID)
             {
                 if (ThreadManager.host)
@@ -126,6 +138,20 @@ namespace H3MP.Tracking
 
         public override void EndInteraction(FVRViveHand hand)
         {
+            //// Manage FVRInteractiveObject.All
+            //for (int i = 0; i < physicalSosig.Links.Count; i++)
+            //{
+            //    // Remove links from All if necessary
+            //    if (physicalSosig.Links[i].O.m_hand == null && physicalSosig.Links[i].O.m_index != -1)
+            //    {
+            //        FVRInteractiveObject.All[physicalSosig.Links[i].O.m_index] = FVRInteractiveObject.All[FVRInteractiveObject.All.Count - 1];
+            //        FVRInteractiveObject.All[physicalSosig.Links[i].O.m_index].m_index = physicalSosig.Links[i].O.m_index;
+            //        FVRInteractiveObject.All.RemoveAt(FVRInteractiveObject.All.Count - 1);
+
+            //        physicalSosig.Links[i].O.m_index = -1;
+            //    }
+            //}
+
             // Need to make sure that we give control of the sosig back to the controller of a the current TNH instance if there is one
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != GameManager.ID)
             {

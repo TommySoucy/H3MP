@@ -149,42 +149,49 @@ namespace H3MP.Networking
                             {
                                 int packetID = packet.ReadInt();
 
-                                if(packetID < 0)
+                                try
                                 {
-                                    if(packetID == -1)
+                                    if (packetID < 0)
                                     {
-                                        Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
-                                    }
-                                    else // packetID <= -2
-                                    {
-                                        int index = packetID * -1 - 2;
-                                        if (Mod.customPacketHandlers[index] != null)
+                                        if (packetID == -1)
                                         {
-#if DEBUG
-                                            if (Input.GetKey(KeyCode.PageDown))
+                                            Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
+                                        }
+                                        else // packetID <= -2
+                                        {
+                                            int index = packetID * -1 - 2;
+                                            if (Mod.customPacketHandlers[index] != null)
                                             {
-                                                Mod.LogInfo("\tHandling custom TCP packet: " + packetID);
+#if DEBUG
+                                                if (Input.GetKey(KeyCode.PageDown))
+                                                {
+                                                    Mod.LogInfo("\tHandling custom TCP packet: " + packetID);
+                                                }
+#endif
+                                                Mod.customPacketHandlers[index](ID, packet);
+                                            }
+#if DEBUG
+                                            else
+                                            {
+                                                Mod.LogWarning("\tServer received invalid custom TCP packet ID: " + packetID + " from client " + ID);
                                             }
 #endif
-                                            Mod.customPacketHandlers[index](ID, packet);
                                         }
+                                    }
+                                    else
+                                    {
 #if DEBUG
-                                        else
+                                        if (Input.GetKey(KeyCode.PageDown))
                                         {
-                                            Mod.LogWarning("\tServer received invalid custom TCP packet ID: " + packetID+" from client "+ID);
+                                            Mod.LogInfo("\tHandling TCP packet: " + packetID);
                                         }
 #endif
+                                        Server.packetHandlers[packetID](ID, packet);
                                     }
                                 }
-                                else
+                                catch (IndexOutOfRangeException ex)
                                 {
-#if DEBUG
-                                    if (Input.GetKey(KeyCode.PageDown))
-                                    {
-                                        Mod.LogInfo("\tHandling TCP packet: " + packetID);
-                                    }
-#endif
-                                    Server.packetHandlers[packetID](ID, packet);
+                                    Mod.LogError("Server TCP received packet with ID: " + packetID + " as ClientPacket: " + ((ClientPackets)packetID).ToString() + ":\n" + ex.StackTrace);
                                 }
                             }
                         }

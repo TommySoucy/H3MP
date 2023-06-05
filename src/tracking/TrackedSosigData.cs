@@ -469,6 +469,20 @@ namespace H3MP.Tracking
 
             data.CollectExternalData();
 
+            //// Manage FVRInteractiveObject.All
+            //for(int i= 0; i < sosigScript.Links.Count; i++)
+            //{
+            //    // Remove links from All if necessary
+            //    if (sosigScript.Links[i].O.m_hand == null && sosigScript.Links[i].O.m_index != -1)
+            //    {
+            //        FVRInteractiveObject.All[sosigScript.Links[i].O.m_index] = FVRInteractiveObject.All[FVRInteractiveObject.All.Count - 1];
+            //        FVRInteractiveObject.All[sosigScript.Links[i].O.m_index].m_index = sosigScript.Links[i].O.m_index;
+            //        FVRInteractiveObject.All.RemoveAt(FVRInteractiveObject.All.Count - 1);
+
+            //        sosigScript.Links[i].O.m_index = -1;
+            //    }
+            //}
+
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
             GameManager.objects.Add(data);
@@ -791,6 +805,20 @@ namespace H3MP.Tracking
             }
             --SosigPickUpPatch.skip;
             --SosigPlaceObjectInPatch.skip;
+
+            //// Manage FVRInteractiveObject.All
+            //for (int i = 0; i < physicalSosig.physicalSosig.Links.Count; i++)
+            //{
+            //    // Remove links from All if necessary
+            //    if (physicalSosig.physicalSosig.Links[i].O.m_hand == null && physicalSosig.physicalSosig.Links[i].O.m_index != -1)
+            //    {
+            //        FVRInteractiveObject.All[physicalSosig.physicalSosig.Links[i].O.m_index] = FVRInteractiveObject.All[FVRInteractiveObject.All.Count - 1];
+            //        FVRInteractiveObject.All[physicalSosig.physicalSosig.Links[i].O.m_index].m_index = physicalSosig.physicalSosig.Links[i].O.m_index;
+            //        FVRInteractiveObject.All.RemoveAt(FVRInteractiveObject.All.Count - 1);
+
+            //        physicalSosig.physicalSosig.Links[i].O.m_index = -1;
+            //    }
+            //}
 
             ProcessData();
 
