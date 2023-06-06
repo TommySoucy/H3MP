@@ -2183,6 +2183,8 @@ namespace H3MP.Patches
             trackedItem = __instance.GetComponent<TrackedItem>();
             if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
             {
+                trackedItem.itemData.additionalData[3] = 1;
+
                 if (trackedItem.data.trackedID == -1)
                 {
                     if (TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 1)
@@ -2231,6 +2233,8 @@ namespace H3MP.Patches
             trackedItem = __instance.GetComponent<TrackedItem>();
             if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
             {
+                trackedItem.itemData.additionalData[4] = 1;
+
                 if (trackedItem.data.trackedID == -1)
                 {
                     if (TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 0)
