@@ -259,7 +259,7 @@ namespace H3MP.Tracking
                 isAttached = updatedBreakableGlass.isAttached;
                 breakDepth = updatedBreakableGlass.breakDepth;
                 wrapperID = updatedBreakableGlass.wrapperID;
-                localWrapperID = updatedBreakableGlass.localWrapperID;
+                //localWrapperID = updatedBreakableGlass.localWrapperID;
                 hasWrapper = updatedBreakableGlass.hasWrapper;
             }
 
@@ -300,7 +300,7 @@ namespace H3MP.Tracking
                 isAttached = packet.ReadBool();
                 breakDepth = packet.ReadInt();
                 wrapperID = packet.ReadInt();
-                localWrapperID = packet.ReadInt();
+                /*localWrapperID = packet.ReadInt();*/ packet.readPos += 4;
                 hasWrapper = packet.ReadBool();
                 if (ThreadManager.host)
                 {

@@ -164,15 +164,15 @@ namespace H3MP.Tracking
         {
             if (full)
             {
-                typeIdentifier = updatedObject.typeIdentifier;
+                //typeIdentifier = updatedObject.typeIdentifier;
                 controller = updatedObject.controller;
                 parent = updatedObject.parent;
-                localTrackedID = updatedObject.localTrackedID;
+                //localTrackedID = updatedObject.localTrackedID;
                 scene = updatedObject.scene;
                 instance = updatedObject.instance;
-                sceneInit = updatedObject.sceneInit;
+                //sceneInit = updatedObject.sceneInit;
                 localWaitingIndex = updatedObject.localWaitingIndex;
-                initTracker = updatedObject.initTracker;
+                //initTracker = updatedObject.initTracker;
             }
 
             order = updatedObject.order;
@@ -202,15 +202,20 @@ namespace H3MP.Tracking
         {
             if (full)
             {
-                typeIdentifier = packet.ReadString();
+                // NOTE: Some of these are commented out because we don't want to replace these values
+                //       They are the ones that should never change
+                //       In some cases, like localTrackedID for example, the receiver sets the value to -1 on their side if they are not in control of the object
+                //       If we do a full update, we would overwrite the local value, which we don't want to do
+                //       These have been left here for documentation
+                /*typeIdentifier =*/ packet.ReadString();
                 controller = packet.ReadInt();
                 parent = packet.ReadInt();
-                localTrackedID = packet.ReadInt();
+                /*localTrackedID = packet.ReadInt();*/ packet.readPos += 4;
                 scene = packet.ReadString();
                 instance = packet.ReadInt();
-                sceneInit = packet.ReadBool();
+                /*sceneInit = packet.ReadBool();*/ ++packet.readPos;
                 localWaitingIndex = packet.ReadUInt();
-                initTracker = packet.ReadInt();
+                /*initTracker = packet.ReadInt();*/ packet.readPos += 4;
             }
 
             previousActive = active;
