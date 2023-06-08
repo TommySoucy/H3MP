@@ -127,10 +127,20 @@ namespace H3MP.Tracking
             TrackedObjectData trackedObjectData = null;
             if (ThreadManager.host)
             {
+                if(trackedID >= Server.objects.Length)
+                {
+                    Mod.LogError("Server got update for object at "+trackedID+" which is out of range of objects array");
+                    return;
+                }
                 trackedObjectData = Server.objects[trackedID];
             }
             else
             {
+                if (trackedID >= Client.objects.Length)
+                {
+                    Mod.LogError("Client got update for object at " + trackedID + " which is out of range of objects array");
+                    return;
+                }
                 trackedObjectData = Client.objects[trackedID];
             }
 
