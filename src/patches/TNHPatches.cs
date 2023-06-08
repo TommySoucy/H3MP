@@ -956,55 +956,6 @@ namespace H3MP.Patches
                         }
 
                         Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);
-                        //for (int i = 0; i < Mod.currentTNHInstance.manager.HoldPoints.Count; i++)
-                        //{
-                        //    // ForceClearConfiguration
-                        //    Mod.TNH_HoldPoint_m_isInHold.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], false);
-                        //    Mod.TNH_HoldPoint_m_state.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], TNH_HoldPoint.HoldState.Beginning);
-                        //    Mod.currentTNHInstance.manager.HoldPoints[i].NavBlockers.SetActive(false);
-                        //    Mod.TNH_HoldPoint_m_phaseIndex.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], 0);
-                        //    Mod.TNH_HoldPoint_m_maxPhases.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], 0);
-                        //    Mod.TNH_HoldPoint_m_curPhase.SetValue(Mod.currentTNHInstance.manager.HoldPoints[i], null);
-                        //    Mod.TNH_HoldPoint_DeleteSystemNode.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
-
-                        //    // DeleteAllActiveEntities
-                        //    (Mod.TNH_HoldPoint_m_activeTargets.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<TNH_EncryptionTarget>).Clear();
-                        //    Mod.TNH_HoldPoint_DeleteAllActiveWarpIns.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
-                        //    Mod.TNH_HoldPoint_DeleteBarriers.Invoke(Mod.currentTNHInstance.manager.HoldPoints[i], null);
-                        //    (Mod.TNH_HoldPoint_m_activeSosigs.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<Sosig>).Clear();
-                        //    (Mod.TNH_HoldPoint_m_activeTurrets.GetValue(Mod.currentTNHInstance.manager.HoldPoints[i]) as List<AutoMeater>).Clear();
-                        //}
-                        //for (int j = 0; j < Mod.currentTNHInstance.manager.SupplyPoints.Count; j++)
-                        //{
-                        //    // DeleteAllActiveEntities
-                        //    (Mod.TNH_SupplyPoint_m_activeSosigs.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<Sosig>).Clear();
-                        //    (Mod.TNH_SupplyPoint_m_activeTurrets.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<AutoMeater>).Clear();
-                        //    List<GameObject> trackedObjects = (Mod.TNH_SupplyPoint_m_trackedObjects.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as List<GameObject>);
-                        //    if (trackedObjects.Count > 0)
-                        //    {
-                        //        for (int i = trackedObjects.Count - 1; i >= 0; i--)
-                        //        {
-                        //            if (trackedObjects[i] != null)
-                        //            {
-                        //                UnityEngine.Object.Destroy(trackedObjects[i]);
-                        //            }
-                        //        }
-                        //    }
-                        //    GameObject constructor = (Mod.TNH_SupplyPoint_m_constructor.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as GameObject);
-                        //    if (constructor != null)
-                        //    {
-                        //        constructor.GetComponent<TNH_ObjectConstructor>().ClearCase();
-                        //        UnityEngine.Object.Destroy(constructor);
-                        //        Mod.TNH_SupplyPoint_m_constructor.SetValue(Mod.currentTNHInstance.manager.SupplyPoints[j], null);
-                        //    }
-                        //    GameObject panel = (Mod.TNH_SupplyPoint_m_panel.GetValue(Mod.currentTNHInstance.manager.SupplyPoints[j]) as GameObject);
-                        //    if (panel != null)
-                        //    {
-                        //        UnityEngine.Object.Destroy(panel);
-                        //        Mod.TNH_SupplyPoint_m_panel.SetValue(Mod.currentTNHInstance.manager.SupplyPoints[j], null);
-                        //    }
-                        //}
-                        //Mod.TNH_Manager_DispatchScore.Invoke(Mod.currentTNHInstance.manager, null);
 
                         return false;
                     }

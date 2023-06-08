@@ -191,10 +191,12 @@ namespace H3MP.Networking
 
         public static void AddTrackedObject(TrackedObjectData trackedObject, int clientID)
         {
+            Mod.LogInfo("Server adding new tracked object with waiting local index: "+trackedObject.localWaitingIndex+" from client: "+clientID, false);
             // If this is a sceneInit object received from client that we haven't tracked yet
             // And if the controller is not the first player in scene/instance
-            if(trackedObject.trackedID == -1 && trackedObject.controller != 0 && trackedObject.sceneInit && !clients[trackedObject.controller].player.firstInSceneInstance)
+            if (trackedObject.trackedID == -1 && trackedObject.controller != 0 && trackedObject.sceneInit && !clients[trackedObject.controller].player.firstInSceneInstance)
             {
+                Mod.LogInfo("\tRejecting", false);
                 // We only want to track this if controller was first in their scene/instance, so in this case set tracked ID to -2 to
                 // indicate this to the sending client so they can destroy their item
                 trackedObject.trackedID = -2;
@@ -213,6 +215,8 @@ namespace H3MP.Networking
             availableObjectIndices.RemoveAt(availableObjectIndices.Count - 1);
 
             objects[trackedObject.trackedID] = trackedObject;
+
+            Mod.LogInfo("\tAssigned tracked ID: "+ trackedObject.trackedID, false);
 
             // Add to item tracking list
             if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))

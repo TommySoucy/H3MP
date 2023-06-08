@@ -198,6 +198,7 @@ namespace H3MP.Tracking
 
         protected virtual void OnDestroy()
         {
+            Mod.LogInfo("OnDestroy for object at "+data.trackedID+" with local waiting index: "+data.localWaitingIndex, false);
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
             {
@@ -221,24 +222,30 @@ namespace H3MP.Tracking
                 // explicitly says to destroy
                 if (GameManager.giveControlOfDestroyed == 0 || dontGiveControl)
                 {
+                    Mod.LogInfo("\tNot giving control", false);
                     DestroyGlobally(ref removeFromLocal);
                 }
                 else // We want to give control of this object instead of destroying it globally
                 {
+                    Mod.LogInfo("\tGiving control", false);
                     if (data.controller == GameManager.ID)
                     {
+                        Mod.LogInfo("\t\tWe control", false);
                         // Find best potential host
                         int otherPlayer = Mod.GetBestPotentialObjectHost(data.controller, true, true, GameManager.playersAtLoadStart);
                         if (otherPlayer == -1)
                         {
+                            Mod.LogInfo("\t\t\tNo potential host, destroying globally", false);
                             // No other best potential host, destroy globally
                             DestroyGlobally(ref removeFromLocal);
                         }
                         else // We have a potential new host to give control to
                         {
+                            Mod.LogInfo("\t\t\tPotential host: "+otherPlayer, false);
                             // Check if can give control
                             if (data.trackedID > -1)
                             {
+                                Mod.LogInfo("\t\t\t\tGot trackedID, giving control", false);
                                 // Give control with us as debounce because we know we are no longer eligible to control this object
                                 if (ThreadManager.host)
                                 {
@@ -254,6 +261,7 @@ namespace H3MP.Tracking
                             }
                             else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag
                             {
+                                Mod.LogInfo("\t\t\t\tNo trackedID, adding to unknown", false);
                                 // Tell destruction we want to keep this in local for later
                                 removeFromLocal = false;
 
@@ -292,13 +300,16 @@ namespace H3MP.Tracking
 
         private void DestroyGlobally(ref bool removeFromLocal)
         {
+            Mod.LogInfo("DestroyGlobally for object at " + data.trackedID + " with local waiting index: " + data.localWaitingIndex, false);
             // Check if can destroy globally
             if (data.trackedID > -1)
             {
+                Mod.LogInfo("\tGot tracked ID", false);
                 // Check if want to send destruction
                 // Used to prevent feedback loops
                 if (sendDestroy)
                 {
+                    Mod.LogInfo("\t\tSending destroy", false);
                     // Send destruction
                     if (ThreadManager.host)
                     {
@@ -313,11 +324,13 @@ namespace H3MP.Tracking
                 // Remove from globals lists if we want
                 if (data.removeFromListOnDestroy)
                 {
+                    Mod.LogInfo("\t\tRemoving from lists", false);
                     data.RemoveFromLists();
                 }
             }
             else // trackedID == -1, note that it cannot == -2 because DestroyGlobally will never get called in that case due to skipDestroyProcessing flag
             {
+                Mod.LogInfo("\tNo tracked ID, adding to unknown", false);
                 // Tell destruction we want to keep this in local for later
                 removeFromLocal = false;
 

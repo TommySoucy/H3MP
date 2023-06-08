@@ -797,6 +797,7 @@ namespace H3MP
                             {
                                 if (ThreadManager.host)
                                 {
+                                    Mod.LogInfo("Server made new object tracked",false);
                                     // This will also send a packet with the object to be added in the client's global item list
                                     Server.AddTrackedObject(trackedObject.data, 0);
                                 }
@@ -804,6 +805,7 @@ namespace H3MP
                                 {
                                     // Tell the server we need to add this item to global tracked objects
                                     trackedObject.data.localWaitingIndex = Client.localObjectCounter++;
+                                    Mod.LogInfo("Client made new object tracked with local waiting index: " + trackedObject.data.localWaitingIndex, false);
                                     Client.waitingLocalObjects.Add(trackedObject.data.localWaitingIndex, trackedObject.data);
                                     ClientSend.TrackedObject(trackedObject.data);
                                 }

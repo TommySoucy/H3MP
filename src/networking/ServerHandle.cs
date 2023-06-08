@@ -291,6 +291,7 @@ namespace H3MP.Networking
             {
                 debounce.Add(packet.ReadInt());
             }
+            Mod.LogInfo("Server received GiveObjectControl for " + trackedID + " to controller: " + newController, false);
 
             // Update locally
             TrackedObjectData trackedObject = Server.objects[trackedID];
@@ -306,17 +307,21 @@ namespace H3MP.Networking
             {
                 if (trackedObject.controller != 0 && newController == 0)
                 {
+                    Mod.LogInfo("\tNew controller", false);
                     trackedObject.localTrackedID = GameManager.objects.Count;
                     GameManager.objects.Add(trackedObject);
                     // Physical object could be null if we are given control while we are loading, the giving client will think we are in their scene/instance
                     if (trackedObject.physical == null)
                     {
+                        Mod.LogInfo("\t\tNo phys", false);
                         // If its is null and we receive this after having finished loading, we only want to instantiate if it is in our current scene/instance
                         // Otherwise we send destroy order for the object
                         if (!GameManager.sceneLoading)
                         {
+                            Mod.LogInfo("\t\t\tNot loading", false);
                             if (trackedObject.scene.Equals(GameManager.scene) && trackedObject.instance == GameManager.instance)
                             {
+                                Mod.LogInfo("\t\t\t\tSame scene instance, instantiating", false);
                                 if (!trackedObject.awaitingInstantiation)
                                 {
                                     trackedObject.awaitingInstantiation = true;
@@ -325,6 +330,7 @@ namespace H3MP.Networking
                             }
                             else
                             {
+                                Mod.LogInfo("\t\t\t\tDifferent scene instance, can't take control", false);
                                 if (GameManager.playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> playerInstances) &&
                                     playerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
                                 {
@@ -336,6 +342,7 @@ namespace H3MP.Networking
                                     newController = Mod.GetBestPotentialObjectHost(trackedObject.controller, true, true, newPlayerList, trackedObject.scene, trackedObject.instance);
                                     if (newController == -1)
                                     {
+                                        Mod.LogInfo("\t\t\t\t\tNo one to bounce to, destroying", false);
                                         ServerSend.DestroyObject(trackedID);
                                         trackedObject.RemoveFromLocal();
                                         Server.objects[trackedID] = null;
@@ -350,6 +357,7 @@ namespace H3MP.Networking
                                     }
                                     else
                                     {
+                                        Mod.LogInfo("\t\t\t\t\tBouncing to " + newController, false);
                                         trackedObject.RemoveFromLocal();
                                         debounce.Add(GameManager.ID);
                                         // Don't resend give control here right away, we will send at the end
@@ -357,6 +365,7 @@ namespace H3MP.Networking
                                 }
                                 else
                                 {
+                                    Mod.LogInfo("\t\t\t\t\tNo one to bounce to, destroying", false);
                                     ServerSend.DestroyObject(trackedID);
                                     trackedObject.RemoveFromLocal();
                                     Server.objects[trackedID] = null;
@@ -373,6 +382,7 @@ namespace H3MP.Networking
                         }
                         else // Loading or not our scene/instance
                         {
+                            Mod.LogInfo("\t\t\tLoading or not our scene/instance", false);
                             if (GameManager.playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> playerInstances) &&
                                 playerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
                             {
@@ -384,6 +394,7 @@ namespace H3MP.Networking
                                 newController = Mod.GetBestPotentialObjectHost(trackedObject.controller, true, true, newPlayerList, trackedObject.scene, trackedObject.instance);
                                 if (newController == -1)
                                 {
+                                    Mod.LogInfo("\t\t\t\tNo one to bounce to, destroying", false);
                                     ServerSend.DestroyObject(trackedID);
                                     trackedObject.RemoveFromLocal();
                                     Server.objects[trackedID] = null;
@@ -398,6 +409,7 @@ namespace H3MP.Networking
                                 }
                                 else
                                 {
+                                    Mod.LogInfo("\t\t\t\tBouncing to " + newController, false);
                                     trackedObject.RemoveFromLocal();
                                     debounce.Add(GameManager.ID);
                                     // Don't resend give control here right away, we will send at the end
@@ -405,6 +417,7 @@ namespace H3MP.Networking
                             }
                             else
                             {
+                                Mod.LogInfo("\t\t\t\tNo one to bounce to, destroying", false);
                                 ServerSend.DestroyObject(trackedID);
                                 trackedObject.RemoveFromLocal();
                                 Server.objects[trackedID] = null;
@@ -422,6 +435,7 @@ namespace H3MP.Networking
                 }
                 else if (trackedObject.controller == 0 && newController != 0)
                 {
+                    Mod.LogInfo("\tNew controller", false);
                     trackedObject.RemoveFromLocal();
                 }
 
@@ -441,13 +455,16 @@ namespace H3MP.Networking
             bool removeFromList = packet.ReadBool();
             TrackedObjectData trackedObject = Server.objects[trackedID];
 
+            Mod.LogInfo("Server received object destruction for tracked ID: " + trackedID + ", remove from lists: " + removeFromList, false);
             if (trackedObject != null)
             {
+                Mod.LogInfo("\tGot object", false);
                 trackedObject.awaitingInstantiation = false;
 
                 bool destroyed = false;
                 if (trackedObject.physical != null)
                 {
+                    Mod.LogInfo("\t\tGot phys, destroying", false);
                     trackedObject.removeFromListOnDestroy = removeFromList;
                     trackedObject.physical.sendDestroy = false;
                     trackedObject.physical.dontGiveControl = true;
@@ -460,12 +477,14 @@ namespace H3MP.Networking
 
                 if (!destroyed && trackedObject.localTrackedID != -1)
                 {
+                    Mod.LogInfo("\t\tNo phys, is local, removing from local", false);
                     trackedObject.RemoveFromLocal();
                 }
 
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
                 if (removeFromList && !destroyed)
                 {
+                    Mod.LogInfo("\t\tNo phys, removing from lists", false);
                     trackedObject.RemoveFromLists();
                 }
             }

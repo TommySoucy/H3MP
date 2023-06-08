@@ -595,11 +595,14 @@ namespace H3MP.Networking
 
         public static void AddTrackedObject(TrackedObjectData trackedObject)
         {
+            Mod.LogInfo("Client adding new tracked object with waiting local index: " + trackedObject.localWaitingIndex+" and tracked ID: "+trackedObject.trackedID, false);
             TrackedObjectData actualTrackedObject = null;
             // If this is a scene init object the server rejected
             if (trackedObject.trackedID == -2)
             {
+                Mod.LogInfo("\tRejected", false);
                 actualTrackedObject = waitingLocalObjects[trackedObject.localWaitingIndex];
+                waitingLocalObjects.Remove(trackedObject.localWaitingIndex);
                 if (actualTrackedObject.physical != null)
                 {
                     // Get rid of the object
@@ -619,6 +622,7 @@ namespace H3MP.Networking
 
             if (trackedObject.controller == GameManager.ID) // We control this object
             {
+                Mod.LogInfo("\tController", false);
                 // Check if we were waiting for this object's data
                 bool notLocalWaiting = true;
                 if (waitingLocalObjects.TryGetValue(trackedObject.localWaitingIndex, out actualTrackedObject) && trackedObject.initTracker == GameManager.ID)
@@ -631,6 +635,7 @@ namespace H3MP.Networking
 
                     // Add the object to client global list
                     objects[actualTrackedObject.trackedID] = actualTrackedObject;
+                    Mod.LogInfo("\t\tSet in objects array, was local waiting", false);
 
                     // Add to object tracking list
                     if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))
@@ -664,6 +669,7 @@ namespace H3MP.Networking
                     {
                         // Dont have object data yet, set it
                         objects[trackedObject.trackedID] = trackedObject;
+                        Mod.LogInfo("\t\tSet in objects array, was not local waiting, didnt have data yet", false);
                         actual = trackedObject;
 
                         // Add to object tracking list
@@ -689,6 +695,10 @@ namespace H3MP.Networking
                         trackedObject.localTrackedID = GameManager.objects.Count;
                         GameManager.objects.Add(trackedObject);
                     }
+                    else
+                    {
+                        Mod.LogInfo("\t\tAlready set in objects array", false);
+                    }
 
                     if (actual.physical == null && !actual.awaitingInstantiation &&
                         !GameManager.sceneLoading && actual.scene.Equals(GameManager.scene) && actual.instance == GameManager.instance)
@@ -700,9 +710,11 @@ namespace H3MP.Networking
             }
             else // We are not controller
             {
+                Mod.LogInfo("\tNot controller", false);
                 // We might already have the object
                 if (objects[trackedObject.trackedID] != null)
                 {
+                    Mod.LogInfo("\t\tAlready set in objects array", false);
                     // We could have received this data again from relevant objects, if so, need to instantiate
                     actualTrackedObject = objects[trackedObject.trackedID];
                     if (actualTrackedObject.physical == null && !actualTrackedObject.awaitingInstantiation &&
@@ -719,6 +731,7 @@ namespace H3MP.Networking
 
                 // Add the object to client global list
                 objects[trackedObject.trackedID] = trackedObject;
+                Mod.LogInfo("\t\tSet in objects array, didnt have data yet", false);
 
                 // Add to object tracking list
                 if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> relevantInstances))

@@ -121,6 +121,10 @@ namespace H3MP.Tracking
                 {
                     packet.readPos += (length - 5); // -5 because we read a byte and an int above
                 }
+                if(trackedID == -2)
+                {
+                    Mod.LogWarning("Got update packet for object with trackedID -2");
+                }
                 return;
             }
 
@@ -289,10 +293,12 @@ namespace H3MP.Tracking
 
         public virtual void OnTrackedIDReceived(TrackedObjectData newData)
         {
+            Mod.LogInfo("Received trackedID " + trackedID + " for oobject with local waiting index: " + localWaitingIndex, false);
             if (TrackedObject.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 ClientSend.DestroyObject(trackedID);
 
+                Mod.LogInfo("\tDestroying from unknown", false);
                 // Note that if we receive a tracked ID that was previously unknown, we must be a client
                 Client.objects[trackedID] = null;
 
@@ -676,13 +682,16 @@ namespace H3MP.Tracking
 
         public virtual void RemoveFromLists()
         {
+            Mod.LogInfo("Remove from lists called for object with trackedID: " + trackedID,false);
             if (ThreadManager.host)
             {
+                Mod.LogInfo("\tHost", false);
                 Server.objects[trackedID] = null;
                 Server.availableObjectIndices.Add(trackedID);
             }
             else
             {
+                Mod.LogInfo("\tClient", false);
                 Client.objects[trackedID] = null;
             }
 

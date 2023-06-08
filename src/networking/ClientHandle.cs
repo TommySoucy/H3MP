@@ -177,27 +177,34 @@ namespace H3MP.Networking
             {
                 debounce.Add(packet.ReadInt());
             }
+            Mod.LogInfo("Client received GiveObjectControl for "+trackedID+" to controller: "+controllerID, false);
 
             TrackedObjectData trackedObject = Client.objects[trackedID];
 
             if (trackedObject != null)
             {
+                Mod.LogInfo("\tGot object", false);
                 bool destroyed = false;
                 if (trackedObject.controller == GameManager.ID && controllerID != GameManager.ID)
                 {
+                    Mod.LogInfo("\t\tWas controller, removing from local", false);
                     trackedObject.RemoveFromLocal();
                 }
                 else if (trackedObject.controller != GameManager.ID && controllerID == GameManager.ID)
                 {
+                    Mod.LogInfo("\t\tNew controller", false);
                     trackedObject.localTrackedID = GameManager.objects.Count;
                     GameManager.objects.Add(trackedObject);
                     if (trackedObject.physical == null)
                     {
+                        Mod.LogInfo("\t\t\tNo phys", false);
                         // If it is null and we receive this after having finishing loading, we only want to instantiate if it is in our current scene/instance
                         if (!GameManager.sceneLoading)
                         {
+                            Mod.LogInfo("\t\t\t\tNot loading", false);
                             if (trackedObject.scene.Equals(GameManager.scene) && trackedObject.instance == GameManager.instance)
                             {
+                                Mod.LogInfo("\t\t\t\t\tSame scene instance, instantiating", false);
                                 if (!trackedObject.awaitingInstantiation)
                                 {
                                     trackedObject.awaitingInstantiation = true;
@@ -206,6 +213,7 @@ namespace H3MP.Networking
                             }
                             else
                             {
+                                Mod.LogInfo("\t\t\t\t\tDifferent scene instance, can't take control", false);
                                 // Scene not loading but object is not in our scene/instance, try bouncing or destroy
                                 if (GameManager.playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> playerInstances) &&
                                     playerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
@@ -218,6 +226,7 @@ namespace H3MP.Networking
                                     controllerID = Mod.GetBestPotentialObjectHost(trackedObject.controller, true, true, newPlayerList, trackedObject.scene, trackedObject.instance);
                                     if (controllerID == -1)
                                     {
+                                        Mod.LogInfo("\t\t\t\t\t\tNo one to bounce to, destroying", false);
                                         ClientSend.DestroyObject(trackedID);
                                         trackedObject.RemoveFromLocal();
                                         Client.objects[trackedID] = null;
@@ -231,6 +240,7 @@ namespace H3MP.Networking
                                     }
                                     else
                                     {
+                                        Mod.LogInfo("\t\t\t\t\t\tBouncing to "+ controllerID, false);
                                         trackedObject.RemoveFromLocal();
                                         debounce.Add(GameManager.ID);
                                         ClientSend.GiveObjectControl(trackedID, controllerID, debounce);
@@ -238,6 +248,7 @@ namespace H3MP.Networking
                                 }
                                 else
                                 {
+                                    Mod.LogInfo("\t\t\t\t\t\tNo one to bounce to, destroying", false);
                                     ClientSend.DestroyObject(trackedID);
                                     trackedObject.RemoveFromLocal();
                                     Client.objects[trackedID] = null;
@@ -253,9 +264,11 @@ namespace H3MP.Networking
                         }
                         else
                         {
+                            Mod.LogInfo("\t\t\t\tLoading", false);
                             // Only bounce control or destroy if we are not on our way towards the object's scene/instance
                             if (!trackedObject.scene.Equals(LoadLevelBeginPatch.loadingLevel) || trackedObject.instance != GameManager.instance)
                             {
+                                Mod.LogInfo("\t\t\t\t\tDestination not same scene instance", false);
                                 if (GameManager.playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> playerInstances) &&
                                     playerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
                                 {
@@ -267,6 +280,7 @@ namespace H3MP.Networking
                                     controllerID = Mod.GetBestPotentialObjectHost(trackedObject.controller, true, true, newPlayerList, trackedObject.scene, trackedObject.instance);
                                     if (controllerID == -1)
                                     {
+                                        Mod.LogInfo("\t\t\t\t\t\tNo one to bounce to, destroying", false);
                                         ClientSend.DestroyObject(trackedID);
                                         trackedObject.RemoveFromLocal();
                                         Client.objects[trackedID] = null;
@@ -280,6 +294,7 @@ namespace H3MP.Networking
                                     }
                                     else
                                     {
+                                        Mod.LogInfo("\t\t\t\t\t\tBouncing to " + controllerID, false);
                                         trackedObject.RemoveFromLocal();
                                         debounce.Add(GameManager.ID);
                                         ClientSend.GiveObjectControl(trackedID, controllerID, debounce);
@@ -287,6 +302,7 @@ namespace H3MP.Networking
                                 }
                                 else
                                 {
+                                    Mod.LogInfo("\t\t\t\t\t\tNo one to bounce to, destroying", false);
                                     ClientSend.DestroyObject(trackedID);
                                     trackedObject.RemoveFromLocal();
                                     Client.objects[trackedID] = null;
@@ -316,14 +332,17 @@ namespace H3MP.Networking
             int trackedID = packet.ReadInt();
             bool removeFromList = packet.ReadBool();
             TrackedObjectData trackedObject = Client.objects[trackedID];
+            Mod.LogInfo("Client received object destruction for tracked ID: " + trackedID+", remove from lists: "+removeFromList, false);
 
             if (trackedObject != null)
             {
+                Mod.LogInfo("\tGot object",false);
                 trackedObject.awaitingInstantiation = false;
 
                 bool destroyed = false;
                 if (trackedObject.physical != null)
                 {
+                    Mod.LogInfo("\t\tGot phys, destroying", false);
                     trackedObject.removeFromListOnDestroy = removeFromList;
                     trackedObject.physical.sendDestroy = false;
                     trackedObject.physical.dontGiveControl = true;
@@ -336,12 +355,14 @@ namespace H3MP.Networking
 
                 if (!destroyed && trackedObject.localTrackedID != -1)
                 {
+                    Mod.LogInfo("\t\tNo phys, is local, removing from local", false);
                     trackedObject.RemoveFromLocal();
                 }
 
                 // Check if want to ensure this was removed from list, if it wasn't by the destruction, do it here
                 if (removeFromList && !destroyed)
                 {
+                    Mod.LogInfo("\t\tNo phys, removing from lists", false);
                     trackedObject.RemoveFromLists();
                 }
             }
