@@ -115,7 +115,7 @@ namespace H3MP.Tracking
             byte order = packet.ReadByte();
             int trackedID = packet.ReadInt();
 
-            if (trackedID == -1)
+            if (trackedID < 0)
             {
                 if (includesLength)
                 {
