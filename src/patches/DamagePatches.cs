@@ -383,6 +383,8 @@ namespace H3MP.Patches
             // BreakableGlassDamagerDamagePatch
             MethodInfo BreakableGlassDamagerDamageOriginal = typeof(BreakableGlassDamager).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo BreakableGlassDamagerDamagePrefix = typeof(BreakableGlassDamagerPatch).GetMethod("DamagePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo BreakableGlassDamagerColOriginal = typeof(BreakableGlassDamager).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo BreakableGlassDamagerColPrefix = typeof(BreakableGlassDamagerPatch).GetMethod("OnCollisionEnterPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo BreakableGlassDamagerShatterOriginal = typeof(BreakableGlassDamager).GetMethod("ShatterGlass", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo BreakableGlassDamagerShatterPrefix = typeof(BreakableGlassDamagerPatch).GetMethod("ShatterGlassPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo BreakableGlassDamagerShatterPostfix = typeof(BreakableGlassDamagerPatch).GetMethod("ShatterGlassPostfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -390,7 +392,9 @@ namespace H3MP.Patches
 
             PatchController.Verify(BreakableGlassDamagerDamageOriginal, harmony, false);
             PatchController.Verify(BreakableGlassDamagerShatterOriginal, harmony, false);
+            PatchController.Verify(BreakableGlassDamagerColOriginal, harmony, false);
             harmony.Patch(BreakableGlassDamagerDamageOriginal, new HarmonyMethod(BreakableGlassDamagerDamagePrefix));
+            harmony.Patch(BreakableGlassDamagerColOriginal, new HarmonyMethod(BreakableGlassDamagerColPrefix));
             harmony.Patch(BreakableGlassDamagerShatterOriginal, new HarmonyMethod(BreakableGlassDamagerShatterPrefix), new HarmonyMethod(BreakableGlassDamagerShatterPostfix), new HarmonyMethod(BreakableGlassDamagerShatterTranspiler));
         }
     }
@@ -2861,6 +2865,20 @@ namespace H3MP.Patches
             }
 
             --Mod.skipAllInstantiates;
+        }
+
+        // Prevents processing collision if non controller
+        static bool OnCollisionEnterPrefix(BreakableGlassDamager __instance)
+        {
+            if(Mod.managerObject != null)
+            {
+                TrackedBreakableGlass trackedBreakableGlass = GameManager.trackedBreakableGlassByBreakableGlassDamager.TryGetValue(__instance, out trackedBreakableGlass) ? trackedBreakableGlass : __instance.GetComponent<TrackedBreakableGlass>();
+                if (trackedBreakableGlass != null)
+                {
+                    return trackedBreakableGlass.data.controller == GameManager.ID;
+                }
+            }
+            return true;
         }
     }
 }

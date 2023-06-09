@@ -1,7 +1,6 @@
 ﻿using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
-using H3MP.Tracking;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,7 +13,8 @@ namespace H3MP.Tracking
 
         public BreakableGlassDamager damager;
 
-        public List<Vector2> vertices;
+        public List<Vector2> shape;
+        public List<Vector2> baseShape;
         public Vector3 previousPos;
         public Vector3 position;
         public Quaternion previousRot;
@@ -45,13 +45,22 @@ namespace H3MP.Tracking
             position = packet.ReadVector3();
             rotation = packet.ReadQuaternion();
 
-            vertices = new List<Vector2>();
             int length = packet.ReadByte();
             if (length > 0)
             {
+                shape = new List<Vector2>();
                 for (int i = 0; i < length; ++i)
                 {
-                    vertices.Add(packet.ReadVector2());
+                    shape.Add(packet.ReadVector2());
+                }
+            }
+            length = packet.ReadByte();
+            if (length > 0)
+            {
+                baseShape = new List<Vector2>();
+                for (int i = 0; i < length; ++i)
+                {
+                    baseShape.Add(packet.ReadVector2());
                 }
             }
             deletionTimer = packet.ReadFloat();
@@ -147,7 +156,8 @@ namespace H3MP.Tracking
 
             List<Vector3> tempVerts = new List<Vector3>();
             root.GetComponent<MeshFilter>().mesh.GetVertices(tempVerts);
-            data.vertices = CynGlass.MeshToShape(tempVerts, data.physicalBreakableGlass.physicalBreakableGlass.thickness);
+            data.shape = CynGlass.MeshToShape(tempVerts, data.physicalBreakableGlass.physicalBreakableGlass.thickness);
+            data.baseShape = data.physicalBreakableGlass.physicalBreakableGlass.baseShape;
             data.position = trackedBreakableGlass.transform.position;
             data.rotation = trackedBreakableGlass.transform.rotation;
             data.deletionTimer = data.physicalBreakableGlass.physicalBreakableGlass.m_deletionTimer;
@@ -167,35 +177,31 @@ namespace H3MP.Tracking
         public override IEnumerator Instantiate()
         {
             ++Mod.skipAllInstantiates;
-            GameObject objectInstance = new GameObject("TrackedBreakableGlassInstance"+trackedID);
+            GameObject objectInstance = GameObject.Instantiate(Mod.glassPrefab);
+            objectInstance.name = "TrackedBreakableGlassInstance" + trackedID;
             --Mod.skipAllInstantiates;
             physicalBreakableGlass = objectInstance.AddComponent<TrackedBreakableGlass>();
             physical = physicalBreakableGlass;
-            physicalBreakableGlass.physicalBreakableGlass = objectInstance.AddComponent<BreakableGlass>();
+            physicalBreakableGlass.physicalBreakableGlass = objectInstance.GetComponent<BreakableGlass>();
             physical.physical = physicalBreakableGlass.physicalBreakableGlass;
             physicalBreakableGlass.breakableGlassData = this;
             physical.data = this;
             awaitingInstantiation = false;
 
-            MeshFilter mf = objectInstance.AddComponent<MeshFilter>();
-            MeshRenderer mr = objectInstance.AddComponent<MeshRenderer>();
-            Rigidbody rb = objectInstance.AddComponent<Rigidbody>();
-            damager = objectInstance.AddComponent<BreakableGlassDamager>();
-            PMat pmat = objectInstance.AddComponent<PMat>();
-            pmat.MatDef = Mod.glassMatDef;
-            MeshCollider collider = objectInstance.AddComponent<MeshCollider>();
+            MeshFilter mf = objectInstance.GetComponent<MeshFilter>();
+            Rigidbody rb = objectInstance.GetComponent<Rigidbody>();
+            damager = objectInstance.GetComponent<BreakableGlassDamager>();
+            MeshCollider collider = objectInstance.GetComponent<MeshCollider>();
 
             Mesh mesh = new Mesh();
-            CynGlass.ShapeToMesh(vertices, thickness, vertices[0], mesh);
+            CynGlass.ShapeToMesh(shape, thickness, shape[0], mesh);
             mf.sharedMesh = mesh;
-            mr.material = Mod.glassMaterial;
             collider.enabled = true;
             collider.convex = true;
             collider.sharedMesh = mesh;
             rb.isKinematic = true;
-            physicalBreakableGlass.physicalBreakableGlass.area = CynGlass.AreaOf(vertices);
+            physicalBreakableGlass.physicalBreakableGlass.area = CynGlass.AreaOf(shape);
             rb.mass = Mathf.Lerp(0.05f, 0.2f, Mathf.InverseLerp(0.025f, 0.1f, physicalBreakableGlass.physicalBreakableGlass.area));
-            damager.Glass = physicalBreakableGlass.physicalBreakableGlass;
             if (hasWrapper)
             {
                 if (wrappersByID.TryGetValue(wrapperID, out DestructibleWindowWrapper currentWrapper))
@@ -218,16 +224,19 @@ namespace H3MP.Tracking
                     wrapperObject.SetActive(true);
                 }
             }
-            damager.AudEvent_Head_Projectile = Mod.glassShotEvent;
-            damager.AudEvent_Head_Melee = Mod.glassThudHeadEvent;
-            damager.AudEvent_Tail = Mod.glassThudTailEvent;
-            damager.AudEvent_Shatter_BlowOut = Mod.glassTotalMediumEvent;
-            damager.AudEvent_GroundShatter = Mod.glassGroundShatterEvent;
 
-            physicalBreakableGlass.physicalBreakableGlass.shape = vertices;
+            physicalBreakableGlass.physicalBreakableGlass.shape = shape;
             physicalBreakableGlass.physicalBreakableGlass.thickness = thickness;
             physicalBreakableGlass.physicalBreakableGlass.isAttached = isAttached;
             physicalBreakableGlass.physicalBreakableGlass.breakDepth = breakDepth;
+            if(breakDepth == 0)
+            {
+                physicalBreakableGlass.physicalBreakableGlass.baseShape = shape;
+            }
+            else
+            {
+                physicalBreakableGlass.physicalBreakableGlass.baseShape = baseShape;
+            }
             physicalBreakableGlass.physicalBreakableGlass.m_deletionTimer = deletionTimer;
             physicalBreakableGlass.physicalBreakableGlass.m_deletionTimerStart = deletionTimerStart;
             physicalBreakableGlass.physicalBreakableGlass.m_tickingDownToDeletion = tickingDownToDeletion;
@@ -251,7 +260,8 @@ namespace H3MP.Tracking
 
             if (full)
             {
-                vertices = updatedBreakableGlass.vertices;
+                shape = updatedBreakableGlass.shape;
+                baseShape = updatedBreakableGlass.baseShape;
                 deletionTimer = updatedBreakableGlass.deletionTimer;
                 deletionTimerStart = updatedBreakableGlass.deletionTimerStart;
                 tickingDownToDeletion = updatedBreakableGlass.tickingDownToDeletion;
@@ -284,13 +294,22 @@ namespace H3MP.Tracking
 
             if (full)
             {
-                vertices = new List<Vector2>();
                 int length = packet.ReadByte();
                 if (length > 0)
                 {
+                    shape = new List<Vector2>();
                     for (int i = 0; i < length; ++i)
                     {
-                        vertices.Add(packet.ReadVector2());
+                        shape.Add(packet.ReadVector2());
+                    }
+                }
+                length = packet.ReadByte();
+                if (length > 0)
+                {
+                    baseShape = new List<Vector2>();
+                    for (int i = 0; i < length; ++i)
+                    {
+                        baseShape.Add(packet.ReadVector2());
                     }
                 }
                 deletionTimer = packet.ReadFloat();
@@ -329,7 +348,10 @@ namespace H3MP.Tracking
 
             if (full)
             {
-                vertices = physicalBreakableGlass.physicalBreakableGlass.shape;
+                List<Vector3> tempVerts = new List<Vector3>();
+                physicalBreakableGlass.physicalBreakableGlass.GetComponent<MeshFilter>().mesh.GetVertices(tempVerts);
+                shape = CynGlass.MeshToShape(tempVerts, physicalBreakableGlass.physicalBreakableGlass.thickness);
+                baseShape = physicalBreakableGlass.physicalBreakableGlass.baseShape;
                 deletionTimer = physicalBreakableGlass.physicalBreakableGlass.m_deletionTimer;
                 deletionTimerStart = physicalBreakableGlass.physicalBreakableGlass.m_deletionTimerStart;
                 tickingDownToDeletion = physicalBreakableGlass.physicalBreakableGlass.m_tickingDownToDeletion;
@@ -360,10 +382,29 @@ namespace H3MP.Tracking
 
             if (full)
             {
-                packet.Write((byte)vertices.Count);
-                for(int i=0; i < vertices.Count; ++i)
+                if (shape == null || shape.Count == 0)
                 {
-                    packet.Write(vertices[i]);
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)shape.Count);
+                    for (int i = 0; i < shape.Count; ++i)
+                    {
+                        packet.Write(shape[i]);
+                    }
+                }
+                if (baseShape == null || baseShape.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)baseShape.Count);
+                    for (int i = 0; i < baseShape.Count; ++i)
+                    {
+                        packet.Write(baseShape[i]);
+                    }
                 }
                 packet.Write(deletionTimer);
                 packet.Write(deletionTimerStart);

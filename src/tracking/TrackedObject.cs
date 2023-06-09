@@ -52,6 +52,7 @@ namespace H3MP.Tracking
 
         private void OnTransformParentChanged()
         {
+            cont from ehre//when breaking instantiated glass we control, error here when parent of new shard is initially set, but why are we tracking before we set the parent? we are supposed to be tracking the new shards only once done with breaklocal
             if (data.ignoreParentChanged > 0)
             {
                 return;
@@ -177,7 +178,6 @@ namespace H3MP.Tracking
                 {
                     if (data.controller == GameManager.ID)
                     {
-                        Mod.LogInfo(name + " was unparented, sending to others");
                         // We were detached from current parent
                         // Update other clients
                         if (ThreadManager.host)
@@ -227,7 +227,7 @@ namespace H3MP.Tracking
                 }
                 else // We want to give control of this object instead of destroying it globally
                 {
-                    Mod.LogInfo("\tGiving control", false);
+                    Mod.LogInfo("\tGiving control if we control", false);
                     if (data.controller == GameManager.ID)
                     {
                         Mod.LogInfo("\t\tWe control", false);

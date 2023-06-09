@@ -46,9 +46,10 @@ namespace H3MP
         public GameObject playerPrefab;
         public static Material reticleFriendlyContactArrowMat;
         public static Material reticleFriendlyContactIconMat;
-        public static Material glassMaterial;
         public static Dictionary<string, string> sosigWearableMap;
         public static string H3MPPath;
+        public static GameObject glassPrefab;
+        public static GameObject glassPFXPrefab;
         public static MatDef glassMatDef;
         public static AudioEvent glassShotEvent;
         public static AudioEvent glassThudHeadEvent;
@@ -682,7 +683,6 @@ namespace H3MP
             TNHMenuPrefab = assetBundle.LoadAsset<GameObject>("TNHMenu");
             reticleFriendlyContactArrowMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactArrowMat");
             reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
-            glassMaterial = assetBundle.LoadAsset<Material>("Glass");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
             SetupPlayerPrefab();
@@ -722,6 +722,22 @@ namespace H3MP
             {
                 glassTotalMediumEvent.Clips.Add(assetBundle.LoadAsset<AudioClip>("SheetBreak_Total_Medium_0" + i + ".wav"));
             }
+
+            // Build glass prefabs
+            glassPrefab = assetBundle.LoadAsset<GameObject>("GlassPrefab");
+            BreakableGlassDamager damager = glassPrefab.AddComponent<BreakableGlassDamager>();
+            damager.Glass = glassPrefab.AddComponent<BreakableGlass>();
+            damager.Glass.shardPrefab = glassPrefab;
+            damager.AudEvent_Head_Projectile = Mod.glassShotEvent;
+            damager.AudEvent_Head_Melee = Mod.glassThudHeadEvent;
+            damager.AudEvent_Tail = Mod.glassThudTailEvent;
+            damager.AudEvent_Shatter_BlowOut = Mod.glassTotalMediumEvent;
+            damager.AudEvent_GroundShatter = Mod.glassGroundShatterEvent;
+            glassPrefab.AddComponent<PMat>().MatDef = Mod.glassMatDef;
+            glassPFXPrefab = assetBundle.LoadAsset<GameObject>("GlassPFXPlaceholder");
+            glassPFXPrefab.AddComponent<KillAfter>().DieTime = 5;
+            damager.DestructionPFX_Directional = glassPFXPrefab;
+            damager.DestructionPFX_Omni = glassPFXPrefab;
         }
 
         public void SetupPlayerPrefab()
