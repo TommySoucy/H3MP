@@ -52,7 +52,6 @@ namespace H3MP.Tracking
 
         private void OnTransformParentChanged()
         {
-            cont from ehre//when breaking instantiated glass we control, error here when parent of new shard is initially set, but why are we tracking before we set the parent? we are supposed to be tracking the new shards only once done with breaklocal
             if (data.ignoreParentChanged > 0)
             {
                 return;

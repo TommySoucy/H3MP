@@ -200,6 +200,7 @@ namespace H3MP.Tracking
             collider.convex = true;
             collider.sharedMesh = mesh;
             rb.isKinematic = true;
+            physicalBreakableGlass.physicalBreakableGlass.shardPrefab = Mod.glassPrefab;
             physicalBreakableGlass.physicalBreakableGlass.area = CynGlass.AreaOf(shape);
             rb.mass = Mathf.Lerp(0.05f, 0.2f, Mathf.InverseLerp(0.025f, 0.1f, physicalBreakableGlass.physicalBreakableGlass.area));
             if (hasWrapper)

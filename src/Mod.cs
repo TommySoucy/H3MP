@@ -727,7 +727,6 @@ namespace H3MP
             glassPrefab = assetBundle.LoadAsset<GameObject>("GlassPrefab");
             BreakableGlassDamager damager = glassPrefab.AddComponent<BreakableGlassDamager>();
             damager.Glass = glassPrefab.AddComponent<BreakableGlass>();
-            damager.Glass.shardPrefab = glassPrefab;
             damager.AudEvent_Head_Projectile = Mod.glassShotEvent;
             damager.AudEvent_Head_Melee = Mod.glassThudHeadEvent;
             damager.AudEvent_Tail = Mod.glassThudTailEvent;
