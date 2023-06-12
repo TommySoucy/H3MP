@@ -58,6 +58,7 @@ namespace H3MP.Tracking
 
         // Integrated laser specific
         public LAPD2019Laser integratedLaser;
+        public bool usesAutoToggle;
 
         // TrackedItemReferences array
         // Used by certain item subtypes who need to get access to their TrackedItem very often (On Update for example)
@@ -182,8 +183,8 @@ namespace H3MP.Tracking
                 if(integratedLaser != null)
                 {
                     this.integratedLaser = integratedLaser;
+                    usesAutoToggle = integratedLaser.UsesAutoOnOff;
                 }
-                TODO: // Add integrated laser to every update or make general firearm update more general like attachemnts
 
                 // Process the type
                 if (asFA is ClosedBoltWeapon)
@@ -7857,7 +7858,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[asHandgun.GetIntegratedAttachableFirearm() == null ? 7 : 11];
+                itemData.data = new byte[asHandgun.GetIntegratedAttachableFirearm() == null ? 8 : 12];
                 modified = true;
             }
 
@@ -7920,6 +7921,26 @@ namespace H3MP.Tracking
                 }
 
                 modified |= (preval != itemData.data[7] || preval0 != itemData.data[8] || preval1 != itemData.data[9] || preval2 != itemData.data[10]);
+
+                if (integratedLaser != null)
+                {
+                    preval = itemData.data[11];
+
+                    itemData.data[11] = integratedLaser.m_isOn ? (byte)1 : (byte)0;
+
+                    modified |= preval != itemData.data[11];
+                }
+            }
+            else
+            {
+                if (integratedLaser != null)
+                {
+                    preval = itemData.data[7];
+
+                    itemData.data[7] = integratedLaser.m_isOn ? (byte)1 : (byte)0;
+
+                    modified |= preval != itemData.data[7];
+                }
             }
 
             return modified;
@@ -8052,6 +8073,32 @@ namespace H3MP.Tracking
                             integratedChamber.RoundType = prevRoundType;
                         }
                         modified = true;
+                    }
+                }
+
+                if (integratedLaser != null)
+                {
+                    if (newData[11] == 1 && !integratedLaser.m_isOn)
+                    {
+                        integratedLaser.TurnOn();
+                    }
+                    else if (newData[11] == 0 && integratedLaser.m_isOn)
+                    {
+                        integratedLaser.TurnOff();
+                    }
+                }
+            }
+            else
+            {
+                if (integratedLaser != null)
+                {
+                    if (newData[7] == 1 && !integratedLaser.m_isOn)
+                    {
+                        integratedLaser.TurnOn();
+                    }
+                    else if (newData[7] == 0 && integratedLaser.m_isOn)
+                    {
+                        integratedLaser.TurnOff();
                     }
                 }
             }

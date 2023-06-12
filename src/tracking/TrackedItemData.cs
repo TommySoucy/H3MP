@@ -430,6 +430,11 @@ namespace H3MP.Tracking
                     }
                 }
             }
+
+            if(physicalItem.integratedLaser != null && controller != GameManager.ID)
+            {
+                physicalItem.integratedLaser.UsesAutoOnOff = false;
+            }
         }
 
         public virtual GameObject GetItemPrefab()
@@ -789,9 +794,17 @@ namespace H3MP.Tracking
             // Note that this only gets called when the new controller is different from the old one
             if(newController == GameManager.ID) // Gain control
             {
-                if (physicalItem != null && parent == -1)
+                if(physicalItem != null)
                 {
-                    Mod.SetKinematicRecursive(physicalItem.transform, false);
+                    if (parent == -1)
+                    {
+                        Mod.SetKinematicRecursive(physicalItem.transform, false);
+                    }
+
+                    if(physicalItem.integratedLaser != null)
+                    {
+                        physicalItem.integratedLaser.UsesAutoOnOff = physicalItem.usesAutoToggle;
+                    }
                 }
             }
             else if(controller == GameManager.ID) // Lose control
@@ -801,6 +814,11 @@ namespace H3MP.Tracking
                     physicalItem.EnsureUncontrolled();
 
                     Mod.SetKinematicRecursive(physicalItem.transform, true);
+
+                    if (physicalItem.integratedLaser != null)
+                    {
+                        physicalItem.integratedLaser.UsesAutoOnOff = false;
+                    }
                 }
             }
         }
