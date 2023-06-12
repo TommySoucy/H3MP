@@ -56,6 +56,9 @@ namespace H3MP.Tracking
         // StingerLauncher specific
         public StingerMissile stingerMissile;
 
+        // Integrated laser specific
+        public LAPD2019Laser integratedLaser;
+
         // TrackedItemReferences array
         // Used by certain item subtypes who need to get access to their TrackedItem very often (On Update for example)
         // This is used to bypass having to find the item in a datastructure too often
@@ -173,6 +176,14 @@ namespace H3MP.Tracking
                         attachableFirearmGetChamberFunc = M203GetChamber;
                     }
                 }
+
+                // Process integrated LAPD2019Laser if we have one
+                LAPD2019Laser integratedLaser = asFA.GetComponentInChildren<LAPD2019Laser>();
+                if(integratedLaser != null)
+                {
+                    this.integratedLaser = integratedLaser;
+                }
+                TODO: // Add integrated laser to every update or make general firearm update more general like attachemnts
 
                 // Process the type
                 if (asFA is ClosedBoltWeapon)
