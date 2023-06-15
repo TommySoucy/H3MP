@@ -2697,6 +2697,18 @@ namespace H3MP.Patches
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.O, out TrackedItem item) ? item : __instance.O.GetComponent<TrackedItem>();
                 if (trackedItem != null)
                 {
+                    List<byte> newAdditionalData = new List<byte>();
+                    newAdditionalData.Add(1);
+                    newAdditionalData.Add(1);
+                    newAdditionalData.AddRange(BitConverter.GetBytes(point.x));
+                    newAdditionalData.AddRange(BitConverter.GetBytes(point.y));
+                    newAdditionalData.AddRange(BitConverter.GetBytes(point.z));
+                    newAdditionalData.AddRange(BitConverter.GetBytes(dir.x));
+                    newAdditionalData.AddRange(BitConverter.GetBytes(dir.y));
+                    newAdditionalData.AddRange(BitConverter.GetBytes(dir.z));
+                    newAdditionalData.AddRange(BitConverter.GetBytes(intensity));
+                    trackedItem.itemData.additionalData = newAdditionalData.ToArray();
+
                     if (ThreadManager.host)
                     {
                         ServerSend.UberShatterableShatter(trackedItem.data.trackedID, point, dir, intensity);

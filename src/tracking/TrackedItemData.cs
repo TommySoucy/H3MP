@@ -31,6 +31,32 @@ namespace H3MP.Tracking
         public byte[] previousData;
         public int[] toPutInSosigInventory;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnCollectAdditionalData event
+        /// </summary>
+        /// <param name="collected">Custom override for whether additional data was collected. If false, H3MP will try to collect</param>
+        public delegate void OnCollectAdditionalDataDelegate(ref bool collected);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when collecting an item's additional data
+        /// </summary>
+        public static event OnCollectAdditionalDataDelegate OnCollectAdditionalData;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnProcessAdditionalData event
+        /// </summary>
+        /// <param name="processed">Custom override for whether additional data was processed. If false, H3MP will try to process</param>
+        public delegate void OnProcessAdditionalDataDelegate(ref bool processed);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when processing an item's additional data on instantiation
+        /// </summary>
+        public static event OnProcessAdditionalDataDelegate OnProcessAdditionalData;
+
         public TrackedItemData()
         {
 
@@ -139,6 +165,16 @@ namespace H3MP.Tracking
 
         private void CollectExternalData()
         {
+            bool collected = false;
+            if(OnCollectAdditionalData != null)
+            {
+                OnCollectAdditionalData(ref collected);
+            }
+            if (collected)
+            {
+                return;
+            }
+
             TNH_ShatterableCrate crate = physical.GetComponent<TNH_ShatterableCrate>();
             if (crate != null)
             {
@@ -169,6 +205,12 @@ namespace H3MP.Tracking
                         BitConverter.GetBytes(asGrappleThrowable.finalRopePoints[i].z).CopyTo(additionalData, i * 12 + 10);
                     }
                 }
+            }
+            else if(physicalItem.dataObject is UberShatterable)
+            {
+                additionalData = new byte[2];
+                additionalData[0] = (physicalItem.dataObject as UberShatterable).m_hasShattered ? (byte)1 : (byte)0;
+                additionalData[1] = 0; // Do not have destruction data
             }
         }
 
@@ -364,6 +406,16 @@ namespace H3MP.Tracking
 
         private void ProcessAdditionalData()
         {
+            bool processed = false;
+            if(OnProcessAdditionalData != null)
+            {
+                OnProcessAdditionalData(ref processed);
+            }
+            if (processed)
+            {
+                return;
+            }
+
             TNH_ShatterableCrate crate = physical.GetComponent<TNH_ShatterableCrate>();
             if (crate != null)
             {
@@ -427,6 +479,27 @@ namespace H3MP.Tracking
                         }
                         asGrappleThrowable.finalRopePoints.Add(newPoint);
                         currentRopePoint = newPoint;
+                    }
+                }
+            }
+            else if(physicalItem.dataObject is UberShatterable)
+            {
+                if (additionalData[0] == 1)
+                {
+                    if(additionalData[1] == 0)
+                    {
+                        ++UberShatterableShatterPatch.skip;
+                        (physicalItem.dataObject as UberShatterable).Shatter(Vector3.zero, Vector3.zero, 0);
+                        --UberShatterableShatterPatch.skip;
+                    }
+                    else // We have destruction data
+                    {
+                        Vector3 point = new Vector3(BitConverter.ToSingle(additionalData, 2), BitConverter.ToSingle(additionalData, 6), BitConverter.ToSingle(additionalData, 10));
+                        Vector3 dir = new Vector3(BitConverter.ToSingle(additionalData, 14), BitConverter.ToSingle(additionalData, 18), BitConverter.ToSingle(additionalData, 22));
+                        float intensity = BitConverter.ToSingle(additionalData, 26);
+                        ++UberShatterableShatterPatch.skip;
+                        (physicalItem.dataObject as UberShatterable).Shatter(point, dir, intensity);
+                        --UberShatterableShatterPatch.skip;
                     }
                 }
             }

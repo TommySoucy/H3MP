@@ -752,6 +752,14 @@ namespace H3MP.Tracking
                 updateGivenFunc = UpdateGivenGrappleThrowable;
                 dataObject = asGrappleThrowable;
             }
+            else // This is just a pure FVRPhysicalObject, we might want to track some other specific script on this item
+            {
+                UberShatterable uberShatterable = physObj.GetComponent<UberShatterable>();
+                if(uberShatterable != null)
+                {
+                    dataObject = uberShatterable;
+                }
+            }
         }
 
         public bool UpdateItemData(byte[] newData = null)

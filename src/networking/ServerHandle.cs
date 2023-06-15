@@ -1307,11 +1307,24 @@ namespace H3MP.Networking
         public static void UberShatterableShatter(int clientID, Packet packet)
         {
             int trackedID = packet.ReadInt();
-            if (Server.objects[trackedID] != null && Server.objects[trackedID].physical != null)
+
+            TrackedItemData trackedItem = Server.objects[trackedID] as TrackedItemData;
+            if (trackedItem != null)
             {
-                ++UberShatterableShatterPatch.skip;
-                Server.objects[trackedID].physical.GetComponent<UberShatterable>().Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
-                --UberShatterableShatterPatch.skip;
+                trackedItem.additionalData = new byte[30];
+                trackedItem.additionalData[0] = 1;
+                trackedItem.additionalData[1] = 1;
+                for (int i = 2, j = 0; i < 30; ++i, ++j)
+                {
+                    trackedItem.additionalData[i] = packet.readableBuffer[packet.readPos + j];
+                }
+
+                if (trackedItem.physical != null)
+                {
+                    ++UberShatterableShatterPatch.skip;
+                    (trackedItem.physicalItem.dataObject as UberShatterable).Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
+                    --UberShatterableShatterPatch.skip;
+                }
             }
 
             ServerSend.UberShatterableShatter(clientID, packet);
