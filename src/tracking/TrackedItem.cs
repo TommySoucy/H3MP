@@ -757,6 +757,8 @@ namespace H3MP.Tracking
                 UberShatterable uberShatterable = physObj.GetComponent<UberShatterable>();
                 if(uberShatterable != null)
                 {
+                    updateFunc = UpdateUberShatterable;
+                    updateGivenFunc = UpdateGivenUberShatterable;
                     dataObject = uberShatterable;
                 }
             }
@@ -7601,6 +7603,16 @@ namespace H3MP.Tracking
             itemData.data = newData;
 
             return modified;
+        }
+
+        private bool UpdateUberShatterable()
+        {
+            return false;
+        }
+
+        private bool UpdateGivenUberShatterable(byte[] newData)
+        {
+            return false;
         }
 
         private bool UpdateClosedBoltWeapon()
