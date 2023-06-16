@@ -9055,7 +9055,7 @@ namespace H3MP.Tracking
                         parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
-                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > currentMountIndex)
                     {
                         mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[currentMountIndex];
                     }
