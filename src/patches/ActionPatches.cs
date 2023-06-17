@@ -3227,7 +3227,14 @@ namespace H3MP.Patches
             {
                 if (trackedSosig.data.trackedID == -1)
                 {
-                    TrackedSosig.unknownBodyStates.Add(trackedSosig.data.localWaitingIndex, s);
+                    if (TrackedSosig.unknownBodyStates.ContainsKey(trackedSosig.data.localWaitingIndex))
+                    {
+                        TrackedSosig.unknownBodyStates[trackedSosig.data.localWaitingIndex] = s;
+                    }
+                    else
+                    {
+                        TrackedSosig.unknownBodyStates.Add(trackedSosig.data.localWaitingIndex, s);
+                    }
                 }
                 else
                 {
