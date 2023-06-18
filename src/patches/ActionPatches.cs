@@ -250,6 +250,8 @@ namespace H3MP.Patches
             MethodInfo sosigCommandPathToPatchOriginalTransform = typeof(Sosig).GetMethod("CommandPathTo", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(List<Transform>), typeof(float), typeof(Vector2), typeof(float), typeof(Sosig.SosigMoveSpeed), typeof(Sosig.PathLoopType), typeof(List<Sosig>), typeof(float), typeof(float), typeof(bool), typeof(float) }, null);
             MethodInfo sosigCommandPathToPatchOriginalVector = typeof(Sosig).GetMethod("CommandPathTo", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(List<Vector3>), typeof(List<Vector3>), typeof(float), typeof(Vector2), typeof(float), typeof(Sosig.SosigMoveSpeed), typeof(Sosig.PathLoopType), typeof(List<Sosig>), typeof(float), typeof(float), typeof(bool), typeof(float) }, null);
             MethodInfo sosigCommandPathToPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandPathToPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigProcessColOriginal = typeof(Sosig).GetMethod("ProcessCollision", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sosigProcessColPrefix = typeof(SosigActionPatch).GetMethod("ProcessCollisionPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sosigDiesPatchOriginal, harmony, false);
             PatchController.Verify(sosigBodyStatePatchOriginal, harmony, false);
@@ -262,6 +264,7 @@ namespace H3MP.Patches
             PatchController.Verify(sosigCommandAssaultPatchOriginal, harmony, false);
             PatchController.Verify(sosigCommandPathToPatchOriginalTransform, harmony, false);
             PatchController.Verify(sosigCommandPathToPatchOriginalVector, harmony, false);
+            PatchController.Verify(sosigProcessColOriginal, harmony, false);
             harmony.Patch(sosigDiesPatchOriginal, new HarmonyMethod(sosigDiesPatchPrefix), new HarmonyMethod(sosigDiesPatchPosfix));
             harmony.Patch(sosigBodyStatePatchOriginal, new HarmonyMethod(sosigBodyStatePatchPrefix));
             harmony.Patch(sosigBodyUpdatePatchOriginal, null, null, new HarmonyMethod(sosigBodyUpdatePatchTranspiler));
@@ -274,6 +277,7 @@ namespace H3MP.Patches
             harmony.Patch(sosigCommandAssaultPatchOriginal, new HarmonyMethod(sosigCommandAssaultPatchPrefix), new HarmonyMethod(sosigCommandAssaultPatchPostfix));
             harmony.Patch(sosigCommandPathToPatchOriginalTransform, null, new HarmonyMethod(sosigCommandPathToPatchPostfix));
             harmony.Patch(sosigCommandPathToPatchOriginalVector, null, new HarmonyMethod(sosigCommandPathToPatchPostfix));
+            harmony.Patch(sosigProcessColOriginal, new HarmonyMethod(sosigProcessColPrefix));
 
             // SosigLinkActionPatch
             MethodInfo sosigLinkRegisterWearablePatchOriginal = typeof(SosigLink).GetMethod("RegisterWearable", BindingFlags.Public | BindingFlags.Instance);
@@ -3685,6 +3689,18 @@ namespace H3MP.Patches
             {
                 ClientSend.SosigRequestHitDecal(sosigTrackedID, point, normal, edgeNormal, scale, linkIndex);
             }
+        }
+
+        static bool ProcessCollisionPrefix(Sosig __instance)
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
+            return trackedSosig == null || trackedSosig.data.controller == GameManager.ID;
         }
     }
 

@@ -2028,6 +2028,8 @@ namespace H3MP.Patches
                                         return false;
                                     }
                                 }
+
+                                break;
                             }
                         }
                     }
@@ -2050,6 +2052,8 @@ namespace H3MP.Patches
                                     return false;
                                 }
                             }
+
+                            break;
                         }
                     }
                 }
