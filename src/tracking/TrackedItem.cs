@@ -9898,12 +9898,6 @@ namespace H3MP.Tracking
         {
             if (interpolated && physicalItem != null && data.controller != GameManager.ID && itemData.position != null && itemData.rotation != null)
             {
-                // TODO: Improvement: Should consider is it really necessary to process position of parented items as local?
-                //                    Should we just use position no matter what?
-                //                    When checking to see if position has changed to know if we need to send an update we could still check
-                //                    local pos for parented items so that we only send an update when its local pos has changed
-                //                    but instead of sending the local pos we send the world pos, so that here, we don't need to make the parented check
-                //                    and also risk fucking up because our parentage may not be consistent with controller yet.
                 if (Vector3.Distance(data.parent == -1 ? physicalItem.transform.position : physicalItem.transform.localPosition, itemData.position) > 0.001f)
                 {
                     positionSet = false;

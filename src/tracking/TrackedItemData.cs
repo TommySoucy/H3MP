@@ -142,10 +142,16 @@ namespace H3MP.Tracking
                 }
                 data.childIndex = parent.children.Count;
                 parent.children.Add(data);
+
+                data.position = trackedItem.transform.localPosition;
+                data.rotation = trackedItem.transform.localRotation;
+            }
+            else
+            {
+                data.position = trackedItem.transform.position;
+                data.rotation = trackedItem.transform.rotation;
             }
             data.SetItemIdentifyingInfo();
-            data.position = trackedItem.transform.position;
-            data.rotation = trackedItem.transform.rotation;
             data.underActiveControl = data.IsControlled();
 
             data.CollectExternalData();
@@ -943,6 +949,13 @@ namespace H3MP.Tracking
             if (physicalItem.updateParentFunc != null)
             {
                 physicalItem.updateParentFunc();
+            }
+
+            // If have parent we want to make sure our position is correct
+            if(parent != -1)
+            {
+                physicalItem.transform.localPosition = position;
+                physicalItem.transform.localRotation = rotation;
             }
         }
     }
