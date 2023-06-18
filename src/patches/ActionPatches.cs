@@ -3315,6 +3315,8 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Sosig), "CurrentOrder"))); // Load CurrentOrder
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Sosig), "m_speakingSource"))); // Load m_speakingSource
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendSpeakState"))); // Call our own method
 
             for (int i = 0; i < instructionList.Count; ++i)
@@ -3328,9 +3330,9 @@ namespace H3MP.Patches
             return instructionList;
         }
 
-        public static void SendSpeakState(Sosig sosig, Sosig.SosigOrder currentOrder)
+        public static void SendSpeakState(Sosig sosig, Sosig.SosigOrder currentOrder, FVRPooledAudioSource m_speakingSource)
         {
-            if (Mod.managerObject == null)
+            if (Mod.managerObject == null || m_speakingSource == null)
             {
                 return;
             }
