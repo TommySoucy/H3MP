@@ -37,6 +37,7 @@ namespace H3MP.Networking
 
         private bool isConnected = false;
         public bool gotWelcome = false;
+        public bool gotConnectSync = false;
         public int pingAttemptCounter = 0;
         private delegate void PacketHandler(Packet packet);
         private static PacketHandler[] packetHandlers;

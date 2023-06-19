@@ -80,6 +80,7 @@ namespace H3MP.Networking
 
         public static void ConnectSync(Packet packet)
         {
+            Client.singleton.gotConnectSync = true;
             bool inControl = packet.ReadBool();
 
             // Just connected, sync if current scene is syncable

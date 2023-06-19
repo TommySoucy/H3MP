@@ -768,6 +768,12 @@ namespace H3MP
 
         public static void SyncTrackedObjects(bool init = false, bool inControl = false)
         {
+            // Return right away if haven't received connect sync yet
+            if (!Client.singleton.gotConnectSync)
+            {
+                return;
+            }
+
             // When we sync our current scene, if we are alone, we sync and take control of everything
             // If we are not alone, we take control only of what we are currently interacting with
             // while all other items get destroyed. We will receive any item that the players inside this scene are controlling
@@ -781,6 +787,12 @@ namespace H3MP
 
         public static void SyncTrackedObjects(Transform root, bool controlEverything, TrackedObjectData parent, string scene)
         {
+            // Return right away if haven't received connect sync yet
+            if (!Client.singleton.gotConnectSync)
+            {
+                return;
+            }
+
             if (GetTrackedObjectType(root, out Type trackedObjectType))
             {
                 // Check if already tracked
