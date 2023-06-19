@@ -769,7 +769,7 @@ namespace H3MP
         public static void SyncTrackedObjects(bool init = false, bool inControl = false)
         {
             // Return right away if haven't received connect sync yet
-            if (!Client.singleton.gotConnectSync)
+            if (!ThreadManager.host && !Client.singleton.gotConnectSync)
             {
                 return;
             }
@@ -788,7 +788,7 @@ namespace H3MP
         public static void SyncTrackedObjects(Transform root, bool controlEverything, TrackedObjectData parent, string scene)
         {
             // Return right away if haven't received connect sync yet
-            if (!Client.singleton.gotConnectSync)
+            if (!ThreadManager.host && !Client.singleton.gotConnectSync)
             {
                 return;
             }
