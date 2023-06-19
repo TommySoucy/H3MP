@@ -6383,12 +6383,14 @@ namespace H3MP.Patches
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
 
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
+
             toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Mod), "managerObject"))); // Load managerObject
             toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Inequality"))); // Compare for inequality (true if connected) ***
             toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Init trackedItem to null
             toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe inequality call result on stack (true if connected)
+            int labelIndex0 = toInsert.Count;
             Label afterGettingTrackedItemLabel = il.DefineLabel();
             toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemLabel)); // If false (not connected) skip trying to get a tracked item
 
@@ -6396,13 +6398,14 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load speedloader instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldloca_S, 0)); // Load trackedItem address
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<FVRPhysicalObject, TrackedItem>), "TryGetValue"))); // Call TryGetValue trackedItemByItem
+            int labelIndex3 = toInsert.Count;
             toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemLabel)); // If true (found speedloader in trackedItemByItem) skip trying to get a tracked item component directly
 
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load speedloader instance
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "GetComponent", null, new Type[] { typeof(TrackedItem) }))); // Get TrackedItem component directly from speedloader
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set trackedItem
 
-            int labelIndex = toInsert.Count;
+            int labelIndex1 = toInsert.Count;
             Label startLoadLabel = il.DefineLabel();
             CodeInstruction afterGettingTrackedItem = new CodeInstruction(OpCodes.Brfalse_S, startLoadLabel); // If false (not connected) (see *** above), skip or to start of cylinder load
             afterGettingTrackedItem.labels.Add(afterGettingTrackedItemLabel);
@@ -6411,7 +6414,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load trackedItem
             toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Equality"))); // Compare for equality (true if dont have trackedItem)
-            int labelIndex1 = toInsert.Count;
+            int labelIndex2 = toInsert.Count;
             toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, startLoadLabel)); // If true (trackedItem is null), goto start cylinder load
 
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load trackedItem
@@ -6422,6 +6425,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadLabel)); // Compare our ID with controller, if we are not controller skip load into cylinder
 
             // Define grappling start label
+            Label afterGettingGrapplingTrackedItemLabel = il.DefineLabel();
             Label startGrapplingLoadLabel = il.DefineLabel();
 
             bool firstStartFound = false;
@@ -6440,8 +6444,11 @@ namespace H3MP.Patches
                         firstStartFound = true;
 
                         // Switch the start label instructions for the grappling one
-                        toInsert[labelIndex] = new CodeInstruction(OpCodes.Brfalse_S, startGrapplingLoadLabel);
-                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brtrue_S, startGrapplingLoadLabel);
+                        toInsert[labelIndex0] = new CodeInstruction(OpCodes.Brfalse_S, afterGettingGrapplingTrackedItemLabel);
+                        toInsert[labelIndex1] = new CodeInstruction(OpCodes.Brfalse_S, startGrapplingLoadLabel);
+                        toInsert[labelIndex1].labels.Add(afterGettingGrapplingTrackedItemLabel);
+                        toInsert[labelIndex2] = new CodeInstruction(OpCodes.Brtrue_S, startGrapplingLoadLabel);
+                        toInsert[labelIndex3] = new CodeInstruction(OpCodes.Brtrue_S, afterGettingGrapplingTrackedItemLabel);
                     }
                     else if (!secondStartFound)
                     {
@@ -6458,6 +6465,7 @@ namespace H3MP.Patches
                     break;
                 }
             }
+
             return instructionList;
         }
     }
