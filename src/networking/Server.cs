@@ -258,7 +258,8 @@ namespace H3MP.Networking
             {
                 // Here, we don't want to instantiate if this is a scene we are in the process of loading
                 // This is due to the possibility of objects only being identifiable in certain contexts like TNH_ShatterableCrates needing a TNH_manager
-                if (!trackedObject.awaitingInstantiation && trackedObject.scene.Equals(GameManager.scene) && trackedObject.instance == GameManager.instance)
+                if (trackedObject.physical == null && !trackedObject.awaitingInstantiation && 
+                    !GameManager.sceneLoading && trackedObject.scene.Equals(GameManager.scene) && trackedObject.instance == GameManager.instance)
                 {
                     trackedObject.awaitingInstantiation = true;
                     AnvilManager.Run(trackedObject.Instantiate());
