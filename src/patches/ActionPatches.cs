@@ -662,6 +662,13 @@ namespace H3MP.Patches
 
             PatchController.Verify(encryptionSpawnGrowthOriginal, harmony, false);
             harmony.Patch(encryptionSpawnGrowthOriginal, new HarmonyMethod(encryptionSpawnGrowthPrefix));
+
+            // FireArmPatch
+            MethodInfo fireArmAwakeOriginal = typeof(FVRFireArm).GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo fireArmAwakePostfix = typeof(FireArmPatch).GetMethod("AwakePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(fireArmAwakeOriginal, harmony, false);
+            harmony.Patch(fireArmAwakeOriginal, new HarmonyMethod(fireArmAwakePostfix));
         }
     }
 
@@ -6771,6 +6778,24 @@ namespace H3MP.Patches
                 {
                     ClientSend.GrappleAttached(trackedItem.data.trackedID, trackedItem.itemData.additionalData);
                 }
+            }
+        }
+    }
+
+    class FireArmPatch
+    {
+        // Patches Awake to modify audio pools and add our own
+        static void AwakePostfix(FVRFireArm __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null)
+            {
+                // TODO
             }
         }
     }
