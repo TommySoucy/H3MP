@@ -666,9 +666,17 @@ namespace H3MP.Patches
             // FireArmPatch
             MethodInfo fireArmAwakeOriginal = typeof(FVRFireArm).GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo fireArmAwakePostfix = typeof(FireArmPatch).GetMethod("AwakePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireArmPlayAudioGunShotOriginalRound = typeof(FVRFireArm).GetMethod("PlayAudioGunShot", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(FVRFireArmRound), typeof(FVRSoundEnvironment), typeof(float) }, null);
+            MethodInfo fireArmPlayAudioGunShotOriginalBool = typeof(FVRFireArm).GetMethod("PlayAudioGunShot", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(bool), typeof(FVRTailSoundClass), typeof(FVRTailSoundClass), typeof(FVRSoundEnvironment) }, null);
+            MethodInfo fireArmPlayAudioGunShotTranspiler = typeof(FireArmPatch).GetMethod("PlayAudioGunShotTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireArmPlayAudioGunShotPostfix = typeof(FireArmPatch).GetMethod("PlayAudioGunShotPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(fireArmAwakeOriginal, harmony, false);
+            PatchController.Verify(fireArmPlayAudioGunShotOriginalRound, harmony, false);
+            PatchController.Verify(fireArmPlayAudioGunShotOriginalBool, harmony, false);
             harmony.Patch(fireArmAwakeOriginal, new HarmonyMethod(fireArmAwakePostfix));
+            harmony.Patch(fireArmPlayAudioGunShotOriginalRound, null, new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
+            harmony.Patch(fireArmPlayAudioGunShotOriginalBool, null, new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
         }
     }
 
@@ -6792,10 +6800,93 @@ namespace H3MP.Patches
                 return;
             }
 
-            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
-            if (trackedItem != null)
+            // TODO: Improvement: Possibly just edit the pooled audio source prefab at H3MP start, instead of having to edit it on every awake
+            // Configure shot pool
+            foreach (FVRPooledAudioSource audioSource in __instance.m_pool_shot.SourceQueue_Disabled)
             {
-                // TODO
+                audioSource.Source.maxDistance = 75;
+            }
+
+            // Configure tail pool
+            foreach (FVRPooledAudioSource audioSource in __instance.m_pool_tail.SourceQueue_Disabled)
+            {
+                audioSource.Source.maxDistance = 150;
+                audioSource.Source.spatialBlend = 1;
+            }
+        }
+
+        // Patches both PlayAudioGunShot to pass correct sound source IFF to OnPerceiveableSound
+        static IEnumerable<CodeInstruction> PlayAudioGunShotTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRFireArm instance
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireArmPatch), "GetCorrectIFF"))); // Call our method
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRFireArm instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_S, 4)); // Load TailEnvironment
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireArmPatch), "GetCorrectEnv"))); // Call our method
+            toInsert0.Add(new CodeInstruction(OpCodes.Starg_S, 4)); // Set TailEnvironment
+
+            //TODO:// Will need to set maxDistance of tail audio source depending on environment if dist > 75
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("get_CurrentPlayerBody"))
+                {
+                    instructionList.RemoveAt(i); // Remove get_CurrentPlayerBody call
+                    instructionList.RemoveAt(i); // Remove GetPlayerIFF call
+                    instructionList.InsertRange(i, toInsert); // Insert call to our own method
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static FVRSoundEnvironment GetCorrectEnv(FVRFireArm fireArm, FVRSoundEnvironment TailEnvironment)
+        {
+            if(Mod.managerObject == null)
+            {
+                return TailEnvironment;
+            }
+
+            return SM.GetSoundEnvironment(fireArm.transform.position);
+        }
+
+        public static int GetCorrectIFF(FVRFireArm fireArm)
+        {
+            if(Mod.managerObject == null)
+            {
+                return GM.CurrentPlayerBody.GetPlayerIFF();
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(fireArm, out trackedItem) ? trackedItem : fireArm.GetComponent<TrackedItem>();
+            if(trackedItem == null)
+            {
+                return GM.CurrentPlayerBody.GetPlayerIFF();
+            }
+            else
+            {
+                return GameManager.players[trackedItem.data.controller].IFF;
+            }
+        }
+
+        // Patches both PlayAudioGunShot to add a distant shot if needed
+        static void PlayAudioGunShotPostfix(FVRFireArm __instance, FVRSoundEnvironment TailEnvironment)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            float dist = Vector3.Distance(__instance.transform.position, GM.CurrentPlayerBody.Head.position);
+
+            if (dist > 75)
+            {
+                float delay = dist / 343f;
+                SM.PlayCoreSoundDelayedOverrides(FVRPooledAudioType.NPCShotFarDistant, Mod.distantShotSets[TailEnvironment], __instance.transform.position, Mod.distantShotSets[TailEnvironment].VolumeRange, Mod.distantShotSets[TailEnvironment].PitchRange, delay);
             }
         }
     }

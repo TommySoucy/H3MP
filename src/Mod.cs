@@ -56,6 +56,7 @@ namespace H3MP
         public static AudioEvent glassThudTailEvent;
         public static AudioEvent glassTotalMediumEvent;
         public static AudioEvent glassGroundShatterEvent;
+        public static Dictionary<FVRSoundEnvironment, AudioEvent> distantShotSets;
 
         // Menu refs
         public static Text mainStatusText;
@@ -737,6 +738,61 @@ namespace H3MP
             glassPFXPrefab.AddComponent<KillAfter>().DieTime = 5;
             damager.DestructionPFX_Directional = glassPFXPrefab;
             damager.DestructionPFX_Omni = glassPFXPrefab;
+
+            // Build distant shot set
+            // TODO: Improvement: These sounds are currently only using pistol distant sounds, should be dependent on FireArmRoundType
+            AudioEvent[] shotSets = new AudioEvent[4];
+            for(int i=0; i < 3; ++i)
+            {
+                shotSets[i] = new AudioEvent();
+                shotSets[i].PitchRange = new Vector2(1.3f, 1.33f);
+                shotSets[i].VolumeRange = new Vector2(0.4f, 0.4f);
+                string name = "";
+                switch (i)
+                {
+                    case 0:
+                        name = "InsideLarge";
+                        break;
+                    case 1:
+                        name = "InsideSmall";
+                        break;
+                    case 2:
+                        name = "OutsideOpen";
+                        break;
+                }
+                for (int j=1; j < 4; ++j)
+                {
+                    shotSets[i].Clips.Add(assetBundle.LoadAsset<AudioClip>("DistantShot_" + name + "_"+j+".wav"));
+                }
+            }
+            distantShotSets = new Dictionary<FVRSoundEnvironment, AudioEvent>();
+            foreach (FVRSoundEnvironment env in Enum.GetValues(typeof(FVRSoundEnvironment)))
+            {
+                switch (env)
+                {
+                    case FVRSoundEnvironment.None:
+                    case FVRSoundEnvironment.InsideNarrow:
+                    case FVRSoundEnvironment.InsideWarehouse:
+                    case FVRSoundEnvironment.InsideWarehouseSmall:
+                    case FVRSoundEnvironment.InsideLargeHighCeiling:
+                    case FVRSoundEnvironment.SniperRange:
+                    case FVRSoundEnvironment.ShootingRange:
+                        distantShotSets.Add(env, shotSets[0]);
+                        break;
+                    case FVRSoundEnvironment.InsideSmall:
+                    case FVRSoundEnvironment.InsideNarrowSmall:
+                    case FVRSoundEnvironment.InsideMedium:
+                    case FVRSoundEnvironment.InsideLarge:
+                        distantShotSets.Add(env, shotSets[1]);
+                        break;
+                    case FVRSoundEnvironment.OutsideEnclosed:
+                    case FVRSoundEnvironment.OutsideEnclosedNarrow:
+                    case FVRSoundEnvironment.OutsideOpen:
+                    case FVRSoundEnvironment.Forest:
+                        distantShotSets.Add(env, shotSets[2]);
+                        break;
+                }
+            }
         }
 
         public void SetupPlayerPrefab()
