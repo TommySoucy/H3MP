@@ -669,14 +669,15 @@ namespace H3MP.Patches
             MethodInfo fireArmPlayAudioGunShotOriginalRound = typeof(FVRFireArm).GetMethod("PlayAudioGunShot", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(FVRFireArmRound), typeof(FVRSoundEnvironment), typeof(float) }, null);
             MethodInfo fireArmPlayAudioGunShotOriginalBool = typeof(FVRFireArm).GetMethod("PlayAudioGunShot", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(bool), typeof(FVRTailSoundClass), typeof(FVRTailSoundClass), typeof(FVRSoundEnvironment) }, null);
             MethodInfo fireArmPlayAudioGunShotTranspiler = typeof(FireArmPatch).GetMethod("PlayAudioGunShotTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireArmPlayAudioGunShotPrefix = typeof(FireArmPatch).GetMethod("PlayAudioGunShotPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireArmPlayAudioGunShotPostfix = typeof(FireArmPatch).GetMethod("PlayAudioGunShotPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(fireArmAwakeOriginal, harmony, false);
             PatchController.Verify(fireArmPlayAudioGunShotOriginalRound, harmony, false);
             PatchController.Verify(fireArmPlayAudioGunShotOriginalBool, harmony, false);
             harmony.Patch(fireArmAwakeOriginal, new HarmonyMethod(fireArmAwakePostfix));
-            harmony.Patch(fireArmPlayAudioGunShotOriginalRound, null, new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
-            harmony.Patch(fireArmPlayAudioGunShotOriginalBool, null, new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
+            harmony.Patch(fireArmPlayAudioGunShotOriginalRound, new HarmonyMethod(fireArmPlayAudioGunShotPrefix), new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
+            harmony.Patch(fireArmPlayAudioGunShotOriginalBool, new HarmonyMethod(fireArmPlayAudioGunShotPrefix), new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
         }
     }
 
@@ -6815,6 +6816,17 @@ namespace H3MP.Patches
             }
         }
 
+        // Patches both PlayAudioGunShot to override TailEnvironment
+        static void PlayAudioGunShotPrefix(FVRFireArm __instance, ref FVRSoundEnvironment TailEnvironment)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TailEnvironment = SM.GetSoundEnvironment(__instance.transform.position);
+        }
+
         // Patches both PlayAudioGunShot to pass correct sound source IFF to OnPerceiveableSound
         static IEnumerable<CodeInstruction> PlayAudioGunShotTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
@@ -6824,13 +6836,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRFireArm instance
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireArmPatch), "GetCorrectIFF"))); // Call our method
 
-            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
-            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRFireArm instance
-            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_S, 4)); // Load TailEnvironment
-            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireArmPatch), "GetCorrectEnv"))); // Call our method
-            toInsert0.Add(new CodeInstruction(OpCodes.Starg_S, 4)); // Set TailEnvironment
-
-            //TODO:// Will need to set maxDistance of tail audio source depending on environment if dist > 75
+            //TODO:// Will need to set maxDistance of tail audio source depending on environment if dist > 75, also must make it dependent on supressed
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -6843,16 +6849,6 @@ namespace H3MP.Patches
                 }
             }
             return instructionList;
-        }
-
-        public static FVRSoundEnvironment GetCorrectEnv(FVRFireArm fireArm, FVRSoundEnvironment TailEnvironment)
-        {
-            if(Mod.managerObject == null)
-            {
-                return TailEnvironment;
-            }
-
-            return SM.GetSoundEnvironment(fireArm.transform.position);
         }
 
         public static int GetCorrectIFF(FVRFireArm fireArm)
@@ -6883,7 +6879,17 @@ namespace H3MP.Patches
 
             float dist = Vector3.Distance(__instance.transform.position, GM.CurrentPlayerBody.Head.position);
 
-            if (dist > 75)
+            float maxDist = 1000;
+            if (__instance.IsSuppressed())
+            {
+                maxDist /= 6;
+            }
+            if((int)TailEnvironment >= 2 && (int)TailEnvironment <= 17) // Inside
+            {
+                maxDist /= 3;
+            }
+
+            if (dist > 75 && dist < maxDist)
             {
                 float delay = dist / 343f;
                 SM.PlayCoreSoundDelayedOverrides(FVRPooledAudioType.NPCShotFarDistant, Mod.distantShotSets[TailEnvironment], __instance.transform.position, Mod.distantShotSets[TailEnvironment].VolumeRange, Mod.distantShotSets[TailEnvironment].PitchRange, delay);
