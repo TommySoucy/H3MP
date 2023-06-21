@@ -675,7 +675,7 @@ namespace H3MP.Patches
             PatchController.Verify(fireArmAwakeOriginal, harmony, false);
             PatchController.Verify(fireArmPlayAudioGunShotOriginalRound, harmony, false);
             PatchController.Verify(fireArmPlayAudioGunShotOriginalBool, harmony, false);
-            harmony.Patch(fireArmAwakeOriginal, new HarmonyMethod(fireArmAwakePostfix));
+            harmony.Patch(fireArmAwakeOriginal, null, new HarmonyMethod(fireArmAwakePostfix));
             harmony.Patch(fireArmPlayAudioGunShotOriginalRound, new HarmonyMethod(fireArmPlayAudioGunShotPrefix), new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
             harmony.Patch(fireArmPlayAudioGunShotOriginalBool, new HarmonyMethod(fireArmPlayAudioGunShotPrefix), new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
         }
@@ -6803,16 +6803,22 @@ namespace H3MP.Patches
 
             // TODO: Improvement: Possibly just edit the pooled audio source prefab at H3MP start, instead of having to edit it on every awake
             // Configure shot pool
-            foreach (FVRPooledAudioSource audioSource in __instance.m_pool_shot.SourceQueue_Disabled)
+            if (__instance.m_pool_shot != null)
             {
-                audioSource.Source.maxDistance = 75;
+                foreach (FVRPooledAudioSource audioSource in __instance.m_pool_shot.SourceQueue_Disabled)
+                {
+                    audioSource.Source.maxDistance = 75;
+                }
             }
 
             // Configure tail pool
-            foreach (FVRPooledAudioSource audioSource in __instance.m_pool_tail.SourceQueue_Disabled)
+            if (__instance.m_pool_tail != null)
             {
-                audioSource.Source.maxDistance = 150;
-                audioSource.Source.spatialBlend = 1;
+                foreach (FVRPooledAudioSource audioSource in __instance.m_pool_tail.SourceQueue_Disabled)
+                {
+                    audioSource.Source.maxDistance = 150;
+                    audioSource.Source.spatialBlend = 1;
+                }
             }
         }
 
@@ -6859,7 +6865,7 @@ namespace H3MP.Patches
             }
 
             TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(fireArm, out trackedItem) ? trackedItem : fireArm.GetComponent<TrackedItem>();
-            if(trackedItem == null)
+            if(trackedItem == null || trackedItem.data.controller == GameManager.ID)
             {
                 return GM.CurrentPlayerBody.GetPlayerIFF();
             }
