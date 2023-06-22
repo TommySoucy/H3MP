@@ -667,17 +667,16 @@ namespace H3MP.Patches
             MethodInfo fireArmAwakeOriginal = typeof(FVRFireArm).GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo fireArmAwakePostfix = typeof(FireArmPatch).GetMethod("AwakePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireArmPlayAudioGunShotOriginalRound = typeof(FVRFireArm).GetMethod("PlayAudioGunShot", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(FVRFireArmRound), typeof(FVRSoundEnvironment), typeof(float) }, null);
+            MethodInfo fireArmPlayAudioGunShotRoundPrefix = typeof(FireArmPatch).GetMethod("PlayAudioGunShotRoundPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo fireArmPlayAudioGunShotOriginalBool = typeof(FVRFireArm).GetMethod("PlayAudioGunShot", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(bool), typeof(FVRTailSoundClass), typeof(FVRTailSoundClass), typeof(FVRSoundEnvironment) }, null);
-            MethodInfo fireArmPlayAudioGunShotTranspiler = typeof(FireArmPatch).GetMethod("PlayAudioGunShotTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireArmPlayAudioGunShotPrefix = typeof(FireArmPatch).GetMethod("PlayAudioGunShotPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireArmPlayAudioGunShotPostfix = typeof(FireArmPatch).GetMethod("PlayAudioGunShotPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo fireArmPlayAudioGunShotBoolPrefix = typeof(FireArmPatch).GetMethod("PlayAudioGunShotBoolPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(fireArmAwakeOriginal, harmony, false);
             PatchController.Verify(fireArmPlayAudioGunShotOriginalRound, harmony, false);
             PatchController.Verify(fireArmPlayAudioGunShotOriginalBool, harmony, false);
             harmony.Patch(fireArmAwakeOriginal, null, new HarmonyMethod(fireArmAwakePostfix));
-            harmony.Patch(fireArmPlayAudioGunShotOriginalRound, new HarmonyMethod(fireArmPlayAudioGunShotPrefix), new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
-            harmony.Patch(fireArmPlayAudioGunShotOriginalBool, new HarmonyMethod(fireArmPlayAudioGunShotPrefix), new HarmonyMethod(fireArmPlayAudioGunShotPostfix), new HarmonyMethod(fireArmPlayAudioGunShotTranspiler));
+            harmony.Patch(fireArmPlayAudioGunShotOriginalRound, new HarmonyMethod(fireArmPlayAudioGunShotRoundPrefix));
+            harmony.Patch(fireArmPlayAudioGunShotOriginalBool, new HarmonyMethod(fireArmPlayAudioGunShotBoolPrefix));
         }
     }
 
@@ -6793,7 +6792,7 @@ namespace H3MP.Patches
 
     class FireArmPatch
     {
-        // Patches Awake to modify audio pools and add our own
+        // Patches Awake to modify audio pools
         static void AwakePostfix(FVRFireArm __instance)
         {
             if (Mod.managerObject == null)
@@ -6802,6 +6801,7 @@ namespace H3MP.Patches
             }
 
             // TODO: Improvement: Possibly just edit the pooled audio source prefab at H3MP start, instead of having to edit it on every awake
+            //                    Or will have to set these dynamically on each shot anyway becausewe want to change the distance depending on environment?
             // Configure shot pool
             if (__instance.m_pool_shot != null)
             {
@@ -6822,84 +6822,231 @@ namespace H3MP.Patches
             }
         }
 
-        // Patches both PlayAudioGunShot to override TailEnvironment
-        static void PlayAudioGunShotPrefix(FVRFireArm __instance, ref FVRSoundEnvironment TailEnvironment)
+        // Patches PlayAudioGunShot(Round) to adapt to MP
+        static bool PlayAudioGunShotRoundPrefix(FVRFireArm __instance, FVRFireArmRound round, float globalLoudnessMultiplier)
         {
             if (Mod.managerObject == null)
             {
-                return;
+                return true;
             }
 
-            TailEnvironment = SM.GetSoundEnvironment(__instance.transform.position);
-        }
+            // Get actual environment
+            FVRSoundEnvironment env = SM.GetSoundEnvironment(__instance.transform.position);
 
-        // Patches both PlayAudioGunShot to pass correct sound source IFF to OnPerceiveableSound
-        static IEnumerable<CodeInstruction> PlayAudioGunShotTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
-
-            List<CodeInstruction> toInsert = new List<CodeInstruction>();
-            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load FVRFireArm instance
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireArmPatch), "GetCorrectIFF"))); // Call our method
-
-            //TODO:// Will need to set maxDistance of tail audio source depending on environment if dist > 75, also must make it dependent on supressed
-            for (int i = 0; i < instructionList.Count; ++i)
+            // Get actual IFF
+            int IFF = GM.CurrentPlayerBody.GetPlayerIFF();
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
             {
-                CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("get_CurrentPlayerBody"))
+                IFF = GameManager.players[trackedItem.data.controller].IFF;
+            }
+
+            // Get distance and delay
+            Vector3 pos = __instance.transform.position;
+            float dist = Vector3.Distance(pos, GM.CurrentPlayerBody.Head.position);
+            float delay = dist / 343f;
+
+            // Do original but using delay
+            FVRTailSoundClass tailClass = FVRTailSoundClass.Tiny;
+            if (__instance.IsSuppressed())
+            {
+                __instance.m_pool_shot.PlayDelayedClip(delay, __instance.AudioClipSet.Shots_Suppressed, __instance.GetMuzzle().position, __instance.AudioClipSet.Shots_Suppressed.VolumeRange, __instance.AudioClipSet.Shots_Suppressed.PitchRange);
+                if (__instance.IsHeld)
                 {
-                    instructionList.RemoveAt(i); // Remove get_CurrentPlayerBody call
-                    instructionList.RemoveAt(i); // Remove GetPlayerIFF call
-                    instructionList.InsertRange(i, toInsert); // Insert call to our own method
-                    break;
+                    __instance.m_hand.ForceTubeKick(__instance.AudioClipSet.FTP.Kick_Shot);
+                    __instance.m_hand.ForceTubeRumble(__instance.AudioClipSet.FTP.Rumble_Shot_Intensity, __instance.AudioClipSet.FTP.Rumble_Shot_Duration);
+                }
+                if (__instance.AudioClipSet.UsesTail_Suppressed)
+                {
+                    tailClass = round.TailClassSuppressed;
+                    AudioEvent tailSet = SM.GetTailSet(tailClass, env);
+                    __instance.m_pool_tail.PlayDelayedClip(delay, tailSet, pos, tailSet.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_Suppressed * tailSet.PitchRange.x);
                 }
             }
-            return instructionList;
-        }
-
-        public static int GetCorrectIFF(FVRFireArm fireArm)
-        {
-            if(Mod.managerObject == null)
+            else if (__instance.AudioClipSet.UsesLowPressureSet)
             {
-                return GM.CurrentPlayerBody.GetPlayerIFF();
-            }
-
-            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(fireArm, out trackedItem) ? trackedItem : fireArm.GetComponent<TrackedItem>();
-            if(trackedItem == null || trackedItem.data.controller == GameManager.ID)
-            {
-                return GM.CurrentPlayerBody.GetPlayerIFF();
+                if (round.IsHighPressure)
+                {
+                    __instance.m_pool_shot.PlayDelayedClip(delay, __instance.AudioClipSet.Shots_Main, __instance.GetMuzzle().position, __instance.AudioClipSet.Shots_Main.VolumeRange, __instance.AudioClipSet.Shots_Main.PitchRange);
+                    if (__instance.AudioClipSet.UsesTail_Main)
+                    {
+                        tailClass = round.TailClass;
+                        AudioEvent tailSet2 = SM.GetTailSet(tailClass, env);
+                        __instance.m_pool_tail.PlayDelayedClip(delay, tailSet2, pos, tailSet2.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_Main * tailSet2.PitchRange.x);
+                    }
+                }
+                else
+                {
+                    __instance.m_pool_shot.PlayDelayedClip(delay, __instance.AudioClipSet.Shots_LowPressure, __instance.GetMuzzle().position, __instance.AudioClipSet.Shots_LowPressure.VolumeRange, __instance.AudioClipSet.Shots_LowPressure.PitchRange);
+                    if (__instance.AudioClipSet.UsesTail_Main)
+                    {
+                        tailClass = round.TailClass;
+                        AudioEvent tailSet3 = SM.GetTailSet(round.TailClass, env);
+                        __instance.m_pool_tail.PlayDelayedClip(delay, tailSet3, pos, tailSet3.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_LowPressure * tailSet3.PitchRange.x);
+                    }
+                }
             }
             else
             {
-                return GameManager.players[trackedItem.data.controller].IFF;
+                __instance.m_pool_shot.PlayDelayedClip(delay, __instance.AudioClipSet.Shots_Main, __instance.GetMuzzle().position, __instance.AudioClipSet.Shots_Main.VolumeRange, __instance.AudioClipSet.Shots_Main.PitchRange);
+                if (__instance.AudioClipSet.UsesTail_Main)
+                {
+                    tailClass = round.TailClass;
+                    AudioEvent tailSet4 = SM.GetTailSet(round.TailClass, env);
+                    __instance.m_pool_tail.PlayDelayedClip(delay, tailSet4, pos, tailSet4.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_Main * tailSet4.PitchRange.x);
+                }
             }
-        }
-
-        // Patches both PlayAudioGunShot to add a distant shot if needed
-        static void PlayAudioGunShotPostfix(FVRFireArm __instance, FVRSoundEnvironment TailEnvironment)
-        {
-            if (Mod.managerObject == null)
+            float soundTravelDistanceMultByEnvironment = SM.GetSoundTravelDistanceMultByEnvironment(env);
+            if (__instance.IsSuppressed())
             {
-                return;
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Suppressed, __instance.AudioClipSet.Loudness_Suppressed * soundTravelDistanceMultByEnvironment * 0.5f * globalLoudnessMultiplier, pos, IFF);
+            }
+            else if (__instance.AudioClipSet.UsesLowPressureSet && !round.IsHighPressure)
+            {
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary * 0.6f, __instance.AudioClipSet.Loudness_Primary * 0.6f * soundTravelDistanceMultByEnvironment * globalLoudnessMultiplier, pos, IFF);
+            }
+            else
+            {
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary, __instance.AudioClipSet.Loudness_Primary * soundTravelDistanceMultByEnvironment * globalLoudnessMultiplier, pos, IFF);
+            }
+            if (!__instance.IsSuppressed())
+            {
+                __instance.SceneSettings.PingReceivers(__instance.MuzzlePos.position);
+            }
+            __instance.RattleSuppresor();
+            for (int i = 0; i < __instance.MuzzleDevices.Count; i++)
+            {
+                __instance.MuzzleDevices[i].OnShot(__instance, tailClass);
             }
 
-            float dist = Vector3.Distance(__instance.transform.position, GM.CurrentPlayerBody.Head.position);
-
+            // Do distant shot audio if necessary
             float maxDist = 1000;
             if (__instance.IsSuppressed())
             {
                 maxDist /= 6;
             }
-            if((int)TailEnvironment >= 2 && (int)TailEnvironment <= 17) // Inside
+            if ((int)env >= 2 && (int)env <= 17) // Inside
             {
                 maxDist /= 3;
             }
 
             if (dist > 75 && dist < maxDist)
             {
-                float delay = dist / 343f;
-                SM.PlayCoreSoundDelayedOverrides(FVRPooledAudioType.NPCShotFarDistant, Mod.distantShotSets[TailEnvironment], __instance.transform.position, Mod.distantShotSets[TailEnvironment].VolumeRange, Mod.distantShotSets[TailEnvironment].PitchRange, delay);
+                SM.PlayCoreSoundDelayedOverrides(FVRPooledAudioType.NPCShotFarDistant, Mod.distantShotSets[env], __instance.transform.position, Mod.distantShotSets[env].VolumeRange, Mod.distantShotSets[env].PitchRange, delay);
             }
+
+            return false;
+        }
+
+        // Patches PlayAudioGunShot(Bool) to adapt to MP
+        static bool PlayAudioGunShotBoolPrefix(FVRFireArm __instance, bool IsHighPressure, FVRTailSoundClass TailClass, FVRTailSoundClass TailClassSuppressed, float globalLoudnessMultiplier)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // Get actual environment
+            FVRSoundEnvironment env = SM.GetSoundEnvironment(__instance.transform.position);
+
+            // Get actual IFF
+            int IFF = GM.CurrentPlayerBody.GetPlayerIFF();
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+            {
+                IFF = GameManager.players[trackedItem.data.controller].IFF;
+            }
+
+            // Get distance and delay
+            Vector3 pos = __instance.transform.position;
+            float dist = Vector3.Distance(pos, GM.CurrentPlayerBody.Head.position);
+            float delay = dist / 343f;
+
+            // Do original but using delay
+            FVRTailSoundClass tailClass = FVRTailSoundClass.Tiny;
+            if (__instance.IsSuppressed())
+            {
+                __instance.m_pool_shot.PlayDelayedClip(delay, __instance.AudioClipSet.Shots_Suppressed, __instance.GetMuzzle().position, __instance.AudioClipSet.Shots_Suppressed.VolumeRange, __instance.AudioClipSet.Shots_Suppressed.PitchRange);
+                if (__instance.IsHeld)
+                {
+                    __instance.m_hand.ForceTubeKick(__instance.AudioClipSet.FTP.Kick_Shot);
+                    __instance.m_hand.ForceTubeRumble(__instance.AudioClipSet.FTP.Rumble_Shot_Intensity, __instance.AudioClipSet.FTP.Rumble_Shot_Duration);
+                }
+                if (__instance.AudioClipSet.UsesTail_Suppressed)
+                {
+                    tailClass = TailClassSuppressed;
+                    AudioEvent tailSet = SM.GetTailSet(TailClassSuppressed, env);
+                    __instance.m_pool_tail.PlayDelayedClip(delay, tailSet, pos, tailSet.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_Suppressed * tailSet.PitchRange.x);
+                }
+            }
+            else
+            {
+                float num = 1f;
+                if (__instance.IsBraked())
+                {
+                    num = 0.92f;
+                }
+                if (IsHighPressure)
+                {
+                    __instance.PlayAudioEvent(FirearmAudioEventType.Shots_Main, num);
+                    if (__instance.AudioClipSet.UsesTail_Main)
+                    {
+                        tailClass = TailClass;
+                        AudioEvent tailSet2 = SM.GetTailSet(TailClass, env);
+                        __instance.m_pool_tail.PlayDelayedClip(delay, tailSet2, pos, tailSet2.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_Main * tailSet2.PitchRange.x * num);
+                    }
+                }
+                else
+                {
+                    __instance.m_pool_shot.PlayDelayedClip(delay, __instance.AudioClipSet.Shots_LowPressure, __instance.GetMuzzle().position, __instance.AudioClipSet.Shots_LowPressure.VolumeRange, __instance.AudioClipSet.Shots_LowPressure.PitchRange * num);
+                    if (__instance.AudioClipSet.UsesTail_Main)
+                    {
+                        tailClass = TailClass;
+                        AudioEvent tailSet3 = SM.GetTailSet(TailClass, env);
+                        __instance.m_pool_tail.PlayDelayedClip(delay, tailSet3, pos, tailSet3.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_LowPressure * tailSet3.PitchRange.x * num);
+                    }
+                }
+            }
+            float soundTravelDistanceMultByEnvironment = SM.GetSoundTravelDistanceMultByEnvironment(env);
+            if (__instance.IsSuppressed())
+            {
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Suppressed, __instance.AudioClipSet.Loudness_Suppressed * soundTravelDistanceMultByEnvironment * 0.4f, pos, IFF);
+            }
+            else if (__instance.AudioClipSet.UsesLowPressureSet && !IsHighPressure)
+            {
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary * 0.6f, __instance.AudioClipSet.Loudness_Primary * 0.6f * soundTravelDistanceMultByEnvironment, pos, IFF);
+            }
+            else
+            {
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary, __instance.AudioClipSet.Loudness_Primary * soundTravelDistanceMultByEnvironment, pos, IFF);
+            }
+            if (!__instance.IsSuppressed())
+            {
+                __instance.SceneSettings.PingReceivers(__instance.MuzzlePos.position);
+            }
+            __instance.RattleSuppresor();
+            for (int i = 0; i < __instance.MuzzleDevices.Count; i++)
+            {
+                __instance.MuzzleDevices[i].OnShot(__instance, tailClass);
+            }
+
+            // Do distant shot audio if necessary
+            float maxDist = 1000;
+            if (__instance.IsSuppressed())
+            {
+                maxDist /= 6;
+            }
+            if ((int)env >= 2 && (int)env <= 17) // Inside
+            {
+                maxDist /= 3;
+            }
+
+            if (dist > 75 && dist < maxDist)
+            {
+                SM.PlayCoreSoundDelayedOverrides(FVRPooledAudioType.NPCShotFarDistant, Mod.distantShotSets[env], __instance.transform.position, Mod.distantShotSets[env].VolumeRange, Mod.distantShotSets[env].PitchRange, delay);
+            }
+
+            return false;
         }
     }
 }
