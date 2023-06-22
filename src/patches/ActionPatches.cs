@@ -6801,7 +6801,7 @@ namespace H3MP.Patches
             }
 
             // TODO: Improvement: Possibly just edit the pooled audio source prefab at H3MP start, instead of having to edit it on every awake
-            //                    Or will have to set these dynamically on each shot anyway becausewe want to change the distance depending on environment?
+            //                    Or will have to set these dynamically on each shot anyway because we want to change the distance depending on environment?
             // Configure shot pool
             if (__instance.m_pool_shot != null)
             {
@@ -6939,7 +6939,7 @@ namespace H3MP.Patches
         }
 
         // Patches PlayAudioGunShot(Bool) to adapt to MP
-        static bool PlayAudioGunShotBoolPrefix(FVRFireArm __instance, bool IsHighPressure, FVRTailSoundClass TailClass, FVRTailSoundClass TailClassSuppressed, float globalLoudnessMultiplier)
+        static bool PlayAudioGunShotBoolPrefix(FVRFireArm __instance, bool IsHighPressure, FVRTailSoundClass TailClass, FVRTailSoundClass TailClassSuppressed)
         {
             if (Mod.managerObject == null)
             {
@@ -6976,7 +6976,7 @@ namespace H3MP.Patches
                 {
                     tailClass = TailClassSuppressed;
                     AudioEvent tailSet = SM.GetTailSet(TailClassSuppressed, env);
-                    __instance.m_pool_tail.PlayDelayedClip(delay, tailSet, pos, tailSet.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_Suppressed * tailSet.PitchRange.x);
+                    __instance.m_pool_tail.PlayDelayedClip(delay, tailSet, pos, tailSet.VolumeRange, __instance.AudioClipSet.TailPitchMod_Suppressed * tailSet.PitchRange.x);
                 }
             }
             else
@@ -6993,7 +6993,7 @@ namespace H3MP.Patches
                     {
                         tailClass = TailClass;
                         AudioEvent tailSet2 = SM.GetTailSet(TailClass, env);
-                        __instance.m_pool_tail.PlayDelayedClip(delay, tailSet2, pos, tailSet2.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_Main * tailSet2.PitchRange.x * num);
+                        __instance.m_pool_tail.PlayDelayedClip(delay, tailSet2, pos, tailSet2.VolumeRange, __instance.AudioClipSet.TailPitchMod_Main * tailSet2.PitchRange.x * num);
                     }
                 }
                 else
@@ -7003,7 +7003,7 @@ namespace H3MP.Patches
                     {
                         tailClass = TailClass;
                         AudioEvent tailSet3 = SM.GetTailSet(TailClass, env);
-                        __instance.m_pool_tail.PlayDelayedClip(delay, tailSet3, pos, tailSet3.VolumeRange * globalLoudnessMultiplier, __instance.AudioClipSet.TailPitchMod_LowPressure * tailSet3.PitchRange.x * num);
+                        __instance.m_pool_tail.PlayDelayedClip(delay, tailSet3, pos, tailSet3.VolumeRange, __instance.AudioClipSet.TailPitchMod_LowPressure * tailSet3.PitchRange.x * num);
                     }
                 }
             }
