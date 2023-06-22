@@ -6802,6 +6802,7 @@ namespace H3MP.Patches
 
             // TODO: Improvement: Possibly just edit the pooled audio source prefab at H3MP start, instead of having to edit it on every awake
             //                    Or will have to set these dynamically on each shot anyway because we want to change the distance depending on environment?
+            //                    Something like that should also be dependent on something like round type
             // Configure shot pool
             if (__instance.m_pool_shot != null)
             {
