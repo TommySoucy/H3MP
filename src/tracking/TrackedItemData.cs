@@ -133,7 +133,6 @@ namespace H3MP.Tracking
             }
             GameManager.trackedObjectByObject.Add(data.physicalItem.physicalItem, trackedItem);
             GameManager.trackedObjectByInteractive.Add(data.physicalItem.physicalItem, trackedItem);
-            TODO: // Make sure we call the remove from damageables func for the speicifc item type on destroy
 
             if (parent != null)
             {

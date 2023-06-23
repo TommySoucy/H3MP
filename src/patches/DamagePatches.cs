@@ -440,7 +440,7 @@ namespace H3MP.Patches
     // Patches BallisticProjectile.MoveBullet to ignore latest IFVRDamageable if necessary
     class BallisticProjectileDamageablePatch
     {
-        public static bool GetActualFlag(bool flag2, FVRFireArm tempFA)
+        public static bool GetActualFlag(bool flag2, FVRFireArm tempFA, IFVRDamageable damageable)
         {
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
@@ -448,27 +448,33 @@ namespace H3MP.Patches
                 return flag2;
             }
 
-            TODO: // Store all tracked objects by their IFVRDamageable, then here, if object not found in dict, return true
-                  // Essentially we only want to prevent damage if it is tracked and we are not controller. If it is not tracked, or we are nto controller, apply damage
             if (flag2)
             {
-                if (tempFA == null)
+                // Note: If flag2, damageable != null
+                TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(damageable, out damageableObject) ? damageableObject : null;
+                if(damageableObject == null)
                 {
-                    // If we don't have a ref to the firearm that fired this projectile, let the damage be controlled by the best host
-                    int bestHost = Mod.GetBestPotentialObjectHost(-1);
-                    return bestHost == -1 || bestHost == GameManager.ID;
+                    return true; // Damageable object client side (not tracked), apply damage
                 }
-                else // We have a ref to the firearm that fired this projectile
+                else // Damageable object tracked, only want to apply damage if firearm controller
                 {
-                    // We only want to let this projectile do damage if we control the firearm
-                    TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(tempFA) ? GameManager.trackedItemByItem[tempFA] : tempFA.GetComponent<TrackedItem>();
-                    if (trackedItem == null)
+                    if (tempFA == null) // Can't identify firearm, let the damage be controlled by the best host
                     {
-                        return false;
+                        int bestHost = Mod.GetBestPotentialObjectHost(-1);
+                        return bestHost == -1 || bestHost == GameManager.ID;
                     }
-                    else
+                    else // We have a ref to the firearm that fired this projectile
                     {
-                        return trackedItem.data.controller == GameManager.ID;
+                        // We only want to let this projectile do damage if we control the firearm
+                        TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(tempFA) ? GameManager.trackedItemByItem[tempFA] : tempFA.GetComponent<TrackedItem>();
+                        if (trackedItem == null)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            return trackedItem.data.controller == GameManager.ID;
+                        }
                     }
                 }
             }
@@ -482,6 +488,7 @@ namespace H3MP.Patches
             toInsertFirst.Add(new CodeInstruction(OpCodes.Ldloc_S, 14)); // Load flag2
             toInsertFirst.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load projectile instance
             toInsertFirst.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BallisticProjectile), "tempFA"))); // Load tempFA from instance
+            toInsertFirst.Add(new CodeInstruction(OpCodes.Ldloc_S, 13)); // Load IFVRDamageable
             toInsertFirst.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BallisticProjectileDamageablePatch), "GetActualFlag"))); // Call GetActualFlag, put return val on stack
             toInsertFirst.Add(new CodeInstruction(OpCodes.Stloc_S, 14)); // Set flag2
             for (int i = 0; i < instructionList.Count; ++i)
@@ -712,26 +719,34 @@ namespace H3MP.Patches
 
             if (original != null)
             {
-                ControllerReference cr = mb.GetComponent<ControllerReference>();
-                if (cr == null)
+                TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(original, out damageableObject) ? damageableObject : null;
+                if (damageableObject == null)
                 {
-                    TrackedItem ti = mb.GetComponent<TrackedItem>();
-                    if (ti == null)
+                    return original; // Damageable object client side (not tracked), apply damage
+                }
+                else // Damageable object tracked, only want to apply damage if damager controller
+                {
+                    ControllerReference cr = mb.GetComponent<ControllerReference>();
+                    if (cr == null)
                     {
-                        // Controller of damaging item unknown, lest best postential host control it
-                        int bestHost = Mod.GetBestPotentialObjectHost(-1);
-                        return (bestHost == GameManager.ID || bestHost == -1) ? original : null;
+                        TrackedItem ti = mb.GetComponent<TrackedItem>();
+                        if (ti == null)
+                        {
+                            // Controller of damaging item unknown, lest best postential host control it
+                            int bestHost = Mod.GetBestPotentialObjectHost(-1);
+                            return (bestHost == GameManager.ID || bestHost == -1) ? original : null;
+                        }
+                        else // We have a ref to the item itself
+                        {
+                            // We only want to let this item do damage if we control it
+                            return ti.data.controller == GameManager.ID ? original : null;
+                        }
                     }
-                    else // We have a ref to the item itself
+                    else // We have a ref to the controller of the item that caused this damage
                     {
                         // We only want to let this item do damage if we control it
-                        return ti.data.controller == GameManager.ID ? original : null;
+                        return cr.controller == GameManager.ID ? original : null;
                     }
-                }
-                else // We have a ref to the controller of the item that caused this damage
-                {
-                    // We only want to let this item do damage if we control it
-                    return cr.controller == GameManager.ID ? original : null;
                 }
             }
             return original;
