@@ -383,7 +383,7 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadDivide))
                 {
-                    SteamVR_LoadLevel.Begin("ArizonaTargets", false, 0.5f, 0f, 0f, 0f, 1f);
+                    SteamVR_LoadLevel.Begin("Friendly45_New", false, 0.5f, 0f, 0f, 0f, 1f);
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadEnter))
                 {

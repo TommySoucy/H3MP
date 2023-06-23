@@ -35,6 +35,7 @@ namespace H3MP
         public static List<TrackedObjectData> objects = new List<TrackedObjectData>(); // Tracked objects under control of this gameManager
         public static Dictionary<MonoBehaviour, TrackedObject> trackedObjectByObject = new Dictionary<MonoBehaviour, TrackedObject>();
         public static Dictionary<FVRInteractiveObject, TrackedObject> trackedObjectByInteractive = new Dictionary<FVRInteractiveObject, TrackedObject>();
+        public static Dictionary<IFVRDamageable, TrackedObject> trackedObjectByDamageable = new Dictionary<IFVRDamageable, TrackedObject>();
         public static Dictionary<FVRPhysicalObject, TrackedItem> trackedItemByItem = new Dictionary<FVRPhysicalObject, TrackedItem>();
         public static Dictionary<SosigWeapon, TrackedItem> trackedItemBySosigWeapon = new Dictionary<SosigWeapon, TrackedItem>();
         public static Dictionary<Sosig, TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, TrackedSosig>();
@@ -343,6 +344,7 @@ namespace H3MP
             spectatorHosts.Clear();
             trackedObjectByObject.Clear();
             trackedObjectByInteractive.Clear();
+            trackedObjectByDamageable.Clear();
             trackedItemByItem.Clear();
             trackedSosigBySosig.Clear();
             trackedItemBySosigWeapon.Clear();

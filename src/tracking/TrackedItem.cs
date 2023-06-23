@@ -34,6 +34,7 @@ namespace H3MP.Tracking
         public delegate void UpdateAttachmentInterfaceWithGiven(FVRFireArmAttachment att, byte[] newData, ref bool modified);
         public delegate int GetChamberIndex(FVRFireArmChamber chamber);
         public delegate void ChamberRound(FireArmRoundClass roundClass, FireArmRoundType roundType, int chamberIndex);
+        public delegate void RemoveTrackedDamageables();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
@@ -47,6 +48,7 @@ namespace H3MP.Tracking
         public UpdateAttachmentInterfaceWithGiven attachmentInterfaceUpdateGivenFunc; // Update the attachment's attachment interface
         public GetChamberIndex getChamberIndex; // Get the index of the given chamber on the item
         public ChamberRound chamberRound; // Set round of chamber at given index of this item
+        public RemoveTrackedDamageables removeTrackedDamageables;
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public UnityEngine.Object dataObject;
         public int attachmentInterfaceDataSize;
@@ -499,6 +501,9 @@ namespace H3MP.Tracking
                 updateFunc = UpdateMolotov;
                 updateGivenFunc = UpdateGivenMolotov;
                 dataObject = asMolotov;
+
+                GameManager.trackedObjectByDamageable.Add(asMolotov, this);
+                removeTrackedDamageables = RemoveTrackedCommonDamageables;
             }
             else if(physObj is PinnedGrenade)
             {
@@ -600,6 +605,9 @@ namespace H3MP.Tracking
                 updateFunc = UpdateSLAM;
                 updateGivenFunc = UpdateGivenSLAM;
                 dataObject = asSLAM;
+
+                GameManager.trackedObjectByDamageable.Add(asSLAM, this);
+                removeTrackedDamageables = RemoveTrackedCommonDamageables;
             }
             else if (physObj is LAPD2019Battery)
             {
@@ -744,6 +752,9 @@ namespace H3MP.Tracking
                 updateGivenFunc = UpdateGivenSosigWeaponInterface;
                 dataObject = asInterface;
                 sosigWeaponfireFunc = asInterface.W.FireGun;
+
+                GameManager.trackedObjectByDamageable.Add(asInterface.W, this);
+                removeTrackedDamageables = RemoveTrackedSosigWeaponDamageables;
             }
             else if (physObj is GrappleThrowable)
             {
@@ -760,8 +771,21 @@ namespace H3MP.Tracking
                     updateFunc = UpdateUberShatterable;
                     updateGivenFunc = UpdateGivenUberShatterable;
                     dataObject = uberShatterable;
+
+                    GameManager.trackedObjectByDamageable.Add(uberShatterable, this);
+                    removeTrackedDamageables = RemoveTrackedCommonDamageables;
                 }
             }
+        }
+
+        public void RemoveTrackedCommonDamageables()
+        {
+            GameManager.trackedObjectByDamageable.Remove(dataObject as IFVRDamageable);
+        }
+
+        public void RemoveTrackedSosigWeaponDamageables()
+        {
+            GameManager.trackedObjectByDamageable.Remove(((SosigWeaponPlayerInterface)dataObject).W as IFVRDamageable);
         }
 
         public bool UpdateItemData(byte[] newData = null)
@@ -9977,6 +10001,10 @@ namespace H3MP.Tracking
                 GameManager.trackedItemBySosigWeapon.Remove((physicalItem as SosigWeaponPlayerInterface).W);
             }
             GameManager.trackedObjectByInteractive.Remove(physicalItem);
+            if(removeTrackedDamageables != null)
+            {
+                removeTrackedDamageables();
+            }
 
             // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
             EnsureUncontrolled();

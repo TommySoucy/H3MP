@@ -448,6 +448,8 @@ namespace H3MP.Patches
                 return flag2;
             }
 
+            TODO: // Store all tracked objects by their IFVRDamageable, then here, if object not found in dict, return true
+                  // Essentially we only want to prevent damage if it is tracked and we are not controller. If it is not tracked, or we are nto controller, apply damage
             if (flag2)
             {
                 if (tempFA == null)

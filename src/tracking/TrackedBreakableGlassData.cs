@@ -153,6 +153,7 @@ namespace H3MP.Tracking
             GameManager.trackedBreakableGlassByBreakableGlass.Add(data.physicalBreakableGlass.physicalBreakableGlass, trackedBreakableGlass);
             GameManager.trackedBreakableGlassByBreakableGlassDamager.Add(data.damager, trackedBreakableGlass);
             GameManager.trackedObjectByObject.Add(data.physicalBreakableGlass.physicalBreakableGlass, trackedBreakableGlass);
+            GameManager.trackedObjectByDamageable.Add(data.damager, trackedBreakableGlass);
 
             List<Vector3> tempVerts = new List<Vector3>();
             root.GetComponent<MeshFilter>().mesh.GetVertices(tempVerts);
@@ -246,6 +247,7 @@ namespace H3MP.Tracking
             GameManager.trackedBreakableGlassByBreakableGlass.Add(physicalBreakableGlass.physicalBreakableGlass, physicalBreakableGlass);
             GameManager.trackedBreakableGlassByBreakableGlassDamager.Add(damager, physicalBreakableGlass);
             GameManager.trackedObjectByObject.Add(physicalBreakableGlass.physicalBreakableGlass, physicalBreakableGlass);
+            GameManager.trackedObjectByDamageable.Add(damager, physicalBreakableGlass);
 
             // Initially set itself
             UpdateFromData(this);
@@ -453,6 +455,7 @@ namespace H3MP.Tracking
                 {
                     GameManager.trackedBreakableGlassByBreakableGlass.Remove(physicalBreakableGlass.physicalBreakableGlass);
                     GameManager.trackedBreakableGlassByBreakableGlassDamager.Remove(damager);
+                    GameManager.trackedObjectByDamageable.Remove(damager);
                 }
             }
         }

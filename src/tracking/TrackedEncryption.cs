@@ -85,6 +85,7 @@ namespace H3MP.Tracking
 
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
             GameManager.trackedEncryptionByEncryption.Remove(physicalEncryption);
+            GameManager.trackedObjectByDamageable.Remove(physicalEncryption);
 
             base.OnDestroy();
         }

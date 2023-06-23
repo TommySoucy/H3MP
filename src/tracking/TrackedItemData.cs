@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static H3MP.Tracking.TrackedItem;
 
 namespace H3MP.Tracking
 {
@@ -132,6 +133,7 @@ namespace H3MP.Tracking
             }
             GameManager.trackedObjectByObject.Add(data.physicalItem.physicalItem, trackedItem);
             GameManager.trackedObjectByInteractive.Add(data.physicalItem.physicalItem, trackedItem);
+            TODO: // Make sure we call the remove from damageables func for the speicifc item type on destroy
 
             if (parent != null)
             {
@@ -862,6 +864,11 @@ namespace H3MP.Tracking
                     }
 
                     GameManager.trackedObjectByInteractive.Remove(physicalItem.physicalItem);
+
+                    if (physicalItem.removeTrackedDamageables != null)
+                    {
+                        physicalItem.removeTrackedDamageables();
+                    }
                 }
             }
         }

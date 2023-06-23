@@ -84,6 +84,7 @@ namespace H3MP.Tracking
             for (int i = 0; i < physicalSosig.Links.Count; ++i)
             {
                 GameManager.trackedObjectByInteractive.Remove(physicalSosig.Links[i].O);
+                GameManager.trackedObjectByDamageable.Remove(physicalSosig.Links[i]);
             }
 
             // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore

@@ -234,6 +234,7 @@ namespace H3MP.Tracking
             for(int i=0; i < sosigScript.Links.Count; ++i)
             {
                 GameManager.trackedObjectByInteractive.Add(sosigScript.Links[i].O, trackedSosig);
+                GameManager.trackedObjectByDamageable.Add(sosigScript.Links[i], trackedSosig);
             }
 
             data.configTemplate = ScriptableObject.CreateInstance<SosigConfigTemplate>();
@@ -699,6 +700,7 @@ namespace H3MP.Tracking
             for (int i = 0; i < physicalSosig.physicalSosig.Links.Count; ++i)
             {
                 GameManager.trackedObjectByInteractive.Add(physicalSosig.physicalSosig.Links[i].O, physicalSosig);
+                GameManager.trackedObjectByDamageable.Add(physicalSosig.physicalSosig.Links[i], physicalSosig);
             }
 
             AnvilManager.Run(EquipWearables());
@@ -1359,6 +1361,11 @@ namespace H3MP.Tracking
                 if (physicalSosig != null && physicalSosig.physicalSosig != null)
                 {
                     GameManager.trackedSosigBySosig.Remove(physicalSosig.physicalSosig);
+                    for (int i = 0; i < physicalSosig.physicalSosig.Links.Count; ++i)
+                    {
+                        GameManager.trackedObjectByInteractive.Remove(physicalSosig.physicalSosig.Links[i].O);
+                        GameManager.trackedObjectByDamageable.Remove(physicalSosig.physicalSosig.Links[i]);
+                    }
                 }
             }
         }

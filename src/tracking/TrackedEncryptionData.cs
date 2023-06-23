@@ -127,6 +127,8 @@ namespace H3MP.Tracking
 
             GameManager.trackedEncryptionByEncryption.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
             GameManager.trackedObjectByObject.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
+            GameManager.trackedObjectByDamageable.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
+
 
             data.type = data.physicalEncryption.physicalEncryption.Type;
             data.position = trackedEncryption.transform.position;
@@ -218,6 +220,7 @@ namespace H3MP.Tracking
 
             GameManager.trackedEncryptionByEncryption.Add(physicalEncryption.physicalEncryption, physicalEncryption);
             GameManager.trackedObjectByObject.Add(physicalEncryption.physicalEncryption, physicalEncryption);
+            GameManager.trackedObjectByDamageable.Add(physicalEncryption.physicalEncryption, physicalEncryption);
 
             // Register to hold
             if (GM.TNH_Manager != null)
@@ -625,6 +628,7 @@ namespace H3MP.Tracking
                 if (physicalEncryption != null && physicalEncryption.physicalEncryption != null)
                 {
                     GameManager.trackedEncryptionByEncryption.Remove(physicalEncryption.physicalEncryption);
+                    GameManager.trackedObjectByDamageable.Remove(physicalEncryption.physicalEncryption);
                 }
             }
         }

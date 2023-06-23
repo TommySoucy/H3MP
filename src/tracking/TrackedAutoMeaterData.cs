@@ -94,6 +94,11 @@ namespace H3MP.Tracking
             GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
             GameManager.trackedObjectByObject.Add(autoMeaterScript, trackedAutoMeater);
             GameManager.trackedObjectByInteractive.Add(autoMeaterScript.PO, trackedAutoMeater);
+            AutoMeaterHitZone[] hitZones = autoMeaterScript.GetComponentsInChildren<AutoMeaterHitZone>();
+            for(int i = 0; i < hitZones.Length; ++i)
+            {
+                GameManager.trackedObjectByDamageable.Add(hitZones[i], trackedAutoMeater);
+            }
 
             data.position = autoMeaterScript.RB.position;
             data.rotation = autoMeaterScript.RB.rotation;
@@ -201,6 +206,11 @@ namespace H3MP.Tracking
             GameManager.trackedAutoMeaterByAutoMeater.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);
             GameManager.trackedObjectByObject.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);
             GameManager.trackedObjectByInteractive.Add(physicalAutoMeater.physicalAutoMeater.PO, physicalAutoMeater);
+            AutoMeaterHitZone[] tempHitZones = physicalAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
+            for (int i = 0; i < tempHitZones.Length; ++i)
+            {
+                GameManager.trackedObjectByDamageable.Add(tempHitZones[i], physicalAutoMeater);
+            }
 
             // Deregister the AI from the manager if we are not in control
             // Also set RB as kinematic
@@ -470,6 +480,12 @@ namespace H3MP.Tracking
                 if (physicalAutoMeater != null && physicalAutoMeater.physicalAutoMeater != null)
                 {
                     GameManager.trackedAutoMeaterByAutoMeater.Remove(physicalAutoMeater.physicalAutoMeater);
+                    GameManager.trackedObjectByInteractive.Remove(physicalAutoMeater.physicalAutoMeater.PO);
+                    AutoMeaterHitZone[] tempHitZones = physicalAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
+                    for (int i = 0; i < tempHitZones.Length; ++i)
+                    {
+                        GameManager.trackedObjectByDamageable.Remove(tempHitZones[i]);
+                    }
                 }
             }
         }
