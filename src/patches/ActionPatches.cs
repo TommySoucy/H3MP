@@ -677,6 +677,13 @@ namespace H3MP.Patches
             harmony.Patch(fireArmAwakeOriginal, null, new HarmonyMethod(fireArmAwakePostfix));
             harmony.Patch(fireArmPlayAudioGunShotOriginalRound, new HarmonyMethod(fireArmPlayAudioGunShotRoundPrefix));
             harmony.Patch(fireArmPlayAudioGunShotOriginalBool, new HarmonyMethod(fireArmPlayAudioGunShotBoolPrefix));
+
+            // SteelPopTargetPatch
+            MethodInfo steelPopTargetStartOriginal = typeof(SteelPopTarget).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo steelPopTargetStartPostfix = typeof(SteelPopTargetPatch).GetMethod("StartPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(steelPopTargetStartOriginal, harmony, false);
+            harmony.Patch(steelPopTargetStartOriginal, null, new HarmonyMethod(steelPopTargetStartPostfix));
         }
     }
 
@@ -7048,6 +7055,26 @@ namespace H3MP.Patches
             }
 
             return false;
+        }
+    }
+
+    // Patches SteelPopTarget
+    class SteelPopTargetPatch
+    {
+        // Postfixes start to set joint rots correctly if got data from controller
+        static void StartPostfix(SteelPopTarget __instance)
+        {
+            if (Mod.managerObject != null)
+            {
+                TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+                if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+                {
+                    for (int i = 0; i < __instance.Joints.Count; ++i)
+                    {
+                        __instance.Joints[i].transform.localEulerAngles = new Vector3(BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 1), BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 5), BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 9));
+                    }
+                }
+            }
         }
     }
 }

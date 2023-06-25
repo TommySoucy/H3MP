@@ -2486,5 +2486,27 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void ReactiveSteelTargetDamage(int trackedID, int targetIndex, float damKinetic, float damBlunt, Vector3 point, Vector3 dir, bool usesHoles, Vector3 pos, Quaternion rot, float scale)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.reactiveSteelTargetDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(targetIndex);
+                packet.Write(damKinetic);
+                packet.Write(damBlunt);
+                packet.Write(point);
+                packet.Write(dir);
+                packet.Write(usesHoles);
+                if (usesHoles)
+                {
+                    packet.Write(pos);
+                    packet.Write(rot);
+                    packet.Write(scale);
+                }
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

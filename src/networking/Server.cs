@@ -479,6 +479,7 @@ namespace H3MP.Networking
                 ServerHandle.TNHSpectatorHostReady,
                 ServerHandle.SpectatorHostStartTNH,
                 ServerHandle.ReassignSpectatorHost,
+                ServerHandle.ReactiveSteelTargetDamage,
             };
 
             objects = new TrackedObjectData[100];

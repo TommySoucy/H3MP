@@ -4199,5 +4199,66 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void ReactiveSteelTargetDamage(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+            float damKinetic = packet.ReadInt();
+            float damBlunt = packet.ReadInt();
+            Vector3 point = packet.ReadVector3();
+            Vector3 dir = packet.ReadVector3();
+            bool usesHoles = packet.ReadBool();
+            Vector3 pos = Vector3.zero;
+            Quaternion rot = Quaternion.identity;
+            float scale = 0;
+            if (usesHoles)
+            {
+                pos = packet.ReadVector3();
+                rot = packet.ReadQuaternion();
+                scale = packet.ReadFloat();
+            }
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                if (trackedItemData.physicalItem != null)
+                {
+                    ReactiveSteelTarget rst = trackedItemData.physicalItem.getSecondary(index) as ReactiveSteelTarget;
+
+                    if (rst != null)
+                    {
+                        if (rst.BulletHolePrefabs.Length > 0 && usesHoles)
+                        {
+                            if (rst.m_currentHoles.Count > rst.MaxHoles)
+                            {
+                                rst.holeindex++;
+                                if (rst.holeindex > rst.MaxHoles - 1)
+                                {
+                                    rst.holeindex = 0;
+                                }
+                                rst.m_currentHoles[rst.holeindex].transform.position = pos;
+                                rst.m_currentHoles[rst.holeindex].transform.rotation = rot;
+                                rst.m_currentHoles[rst.holeindex].transform.localScale = new Vector3(scale, scale, scale);
+                            }
+                            else
+                            {
+                                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(rst.BulletHolePrefabs[UnityEngine.Random.Range(0, rst.BulletHolePrefabs.Length)], pos, rot);
+                                gameObject.transform.SetParent(rst.transform);
+                                gameObject.transform.localScale = new Vector3(scale, scale, scale);
+                                rst.m_currentHoles.Add(gameObject);
+                            }
+                        }
+                        if (trackedItemData.controller == GameManager.ID && rst.m_hasRB && rst.AddForceJuice)
+                        {
+                            float d = Mathf.Clamp(damBlunt * 0.01f, 0f, rst.MaxForceImpulse);
+                            Debug.DrawLine(point, point + dir * d, Color.red, 40f);
+                            rst.rb.AddForceAtPosition(dir * d, point, ForceMode.Impulse);
+                        }
+                        rst.PlayHitSound(Mathf.Clamp(damKinetic * 0.0025f, 0.05f, 1f));
+                    }
+                }
+            }
+        }
     }
 }

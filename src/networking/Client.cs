@@ -576,6 +576,7 @@ namespace H3MP.Networking
                 ClientHandle.TNHSpectatorHostReady,
                 ClientHandle.SpectatorHostStartTNH,
                 ClientHandle.UnassignSpectatorHost,
+                ClientHandle.ReactiveSteelTargetDamage,
             };
 
             // All vanilla scenes can be synced by default

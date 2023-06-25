@@ -396,6 +396,14 @@ namespace H3MP.Patches
             harmony.Patch(BreakableGlassDamagerDamageOriginal, new HarmonyMethod(BreakableGlassDamagerDamagePrefix));
             harmony.Patch(BreakableGlassDamagerColOriginal, new HarmonyMethod(BreakableGlassDamagerColPrefix));
             harmony.Patch(BreakableGlassDamagerShatterOriginal, new HarmonyMethod(BreakableGlassDamagerShatterPrefix), new HarmonyMethod(BreakableGlassDamagerShatterPostfix), new HarmonyMethod(BreakableGlassDamagerShatterTranspiler));
+
+            // ReactiveSteelTargetDamagePatch
+            MethodInfo ReactiveSteelTargetDamageOriginal = typeof(ReactiveSteelTarget).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo ReactiveSteelTargetDamagePrefix = typeof(ReactiveSteelTargetDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo ReactiveSteelTargetDamagePostfix = typeof(ReactiveSteelTargetDamagePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(ReactiveSteelTargetDamageOriginal, harmony, false);
+            harmony.Patch(ReactiveSteelTargetDamageOriginal, new HarmonyMethod(ReactiveSteelTargetDamagePrefix), new HarmonyMethod(ReactiveSteelTargetDamagePostfix));
         }
     }
 
@@ -2912,6 +2920,113 @@ namespace H3MP.Patches
                 }
             }
             return true;
+        }
+    }
+
+    // Patches ReactiveSteelTarget.Damage to keep track of damage taken by a ReactiveSteelTarget
+    class ReactiveSteelTargetDamagePatch
+    {
+        static TrackedObject trackedObject;
+
+        static bool Prefix(ReactiveSteelTarget __instance, Damage dam)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control, apply damage, send to everyone else
+            // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
+            trackedObject = GameManager.trackedObjectByDamageable.TryGetValue(__instance, out trackedObject) ? trackedObject : null;
+            if (trackedObject != null)
+            { 
+                if(trackedObject.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else // Not controller, do everything apart from adding force to RB
+                {
+                    if (dam.Class != FistVR.Damage.DamageClass.Projectile)
+                    {
+                        return false;
+                    }
+                    Vector3 position = dam.point + dam.hitNormal * UnityEngine.Random.Range(0.001f, 0.005f);
+                    if (__instance.BulletHolePrefabs.Length > 0 && __instance.m_useHoles)
+                    {
+                        float t = Mathf.InverseLerp(400f, 2000f, dam.Dam_TotalKinetic);
+                        float num = Mathf.Lerp(__instance.BulletHoleSizeRange.x, __instance.BulletHoleSizeRange.y, t);
+                        if (__instance.m_currentHoles.Count > __instance.MaxHoles)
+                        {
+                            __instance.holeindex++;
+                            if (__instance.holeindex > __instance.MaxHoles - 1)
+                            {
+                                __instance.holeindex = 0;
+                            }
+                            __instance.m_currentHoles[__instance.holeindex].transform.position = position;
+                            __instance.m_currentHoles[__instance.holeindex].transform.rotation = Quaternion.LookRotation(dam.hitNormal, UnityEngine.Random.onUnitSphere);
+                            __instance.m_currentHoles[__instance.holeindex].transform.localScale = new Vector3(num, num, num);
+                        }
+                        else
+                        {
+                            GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.BulletHolePrefabs[UnityEngine.Random.Range(0, __instance.BulletHolePrefabs.Length)], position, Quaternion.LookRotation(dam.hitNormal, UnityEngine.Random.onUnitSphere));
+                            gameObject.transform.SetParent(__instance.transform);
+                            gameObject.transform.localScale = new Vector3(num, num, num);
+                            __instance.m_currentHoles.Add(gameObject);
+                        }
+                    }
+                    __instance.PlayHitSound(Mathf.Clamp(dam.Dam_TotalKinetic * 0.0025f, 0.05f, 1f));
+
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        static void Postfix(ReactiveSteelTarget __instance, Damage dam)
+        {
+            if (Mod.managerObject == null || dam.Class != Damage.DamageClass.Projectile)
+            {
+                return;
+            }
+
+            if (trackedObject != null)
+            {
+                TrackedItem trackedItem = trackedObject as TrackedItem;
+                int index = -1;
+                if (trackedItem.findSecondary != null)
+                {
+                    index = trackedItem.findSecondary(__instance);
+                }
+
+                if (index != -1)
+                {
+                    if (ThreadManager.host)
+                    {
+                        if (__instance.m_useHoles)
+                        {
+                            GameObject currentHole = __instance.m_currentHoles[__instance.holeindex];
+                            ServerSend.ReactiveSteelTargetDamage(trackedObject.data.trackedID, index, dam.Dam_TotalKinetic, dam.Dam_Blunt, dam.point, dam.strikeDir, true, currentHole.transform.position, currentHole.transform.rotation, currentHole.transform.localScale.x);
+                        }
+                        else
+                        {
+                            ServerSend.ReactiveSteelTargetDamage(trackedObject.data.trackedID, index, dam.Dam_TotalKinetic, dam.Dam_Blunt, dam.point, dam.strikeDir, false, Vector3.zero, Quaternion.identity, 0);
+                        }
+                    }
+                    else
+                    {
+
+                        if (__instance.m_useHoles)
+                        {
+                            GameObject currentHole = __instance.m_currentHoles[__instance.holeindex];
+                            ClientSend.ReactiveSteelTargetDamage(trackedObject.data.trackedID, index, dam.Dam_TotalKinetic, dam.Dam_Blunt, dam.point, dam.strikeDir, true, currentHole.transform.position, currentHole.transform.rotation, currentHole.transform.localScale.x);
+                        }
+                        else
+                        {
+                            ClientSend.ReactiveSteelTargetDamage(trackedObject.data.trackedID, index, dam.Dam_TotalKinetic, dam.Dam_Blunt, dam.point, dam.strikeDir, false, Vector3.zero, Quaternion.identity, 0);
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -178,7 +178,8 @@ namespace H3MP.Networking
         spectatorHostOrderTNHHost = 165,
         TNHSpectatorHostReady = 166,
         spectatorHostStartTNH = 167,
-        unassignSpectatorHost = 168
+        unassignSpectatorHost = 168,
+        reactiveSteelTargetDamage = 169
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -346,7 +347,8 @@ namespace H3MP.Networking
         spectatorHostOrderTNHHost = 159,
         TNHSpectatorHostReady = 160,
         spectatorHostStartTNH = 161,
-        reassignSpectatorHost = 162
+        reassignSpectatorHost = 162,
+        reactiveSteelTargetDamage = 163
     }
 
     public class Packet : IDisposable

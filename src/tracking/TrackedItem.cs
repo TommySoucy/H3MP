@@ -35,6 +35,8 @@ namespace H3MP.Tracking
         public delegate int GetChamberIndex(FVRFireArmChamber chamber);
         public delegate void ChamberRound(FireArmRoundClass roundClass, FireArmRoundType roundType, int chamberIndex);
         public delegate void RemoveTrackedDamageables();
+        public delegate int FindSecondary(object secondary);
+        public delegate object GetSecondary(int index);
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
@@ -49,6 +51,9 @@ namespace H3MP.Tracking
         public GetChamberIndex getChamberIndex; // Get the index of the given chamber on the item
         public ChamberRound chamberRound; // Set round of chamber at given index of this item
         public RemoveTrackedDamageables removeTrackedDamageables;
+        public FindSecondary findSecondary;
+        public GetSecondary getSecondary;
+        public object[] secondaries;
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public UnityEngine.Object dataObject;
         public int attachmentInterfaceDataSize;
@@ -495,6 +500,23 @@ namespace H3MP.Tracking
                     chamberRound = ChamberFireArmRound;
                 }
             }
+            else if(physObj is SteelPopTarget)
+            {
+                SteelPopTarget asSPT = (SteelPopTarget)physObj;
+                updateFunc = UpdateSteelPopTarget;
+                updateGivenFunc = UpdateGivenSteelPopTarget;
+                dataObject = asSPT;
+                findSecondary = FindSteelPopTargetSecondary;
+                getSecondary = GetSteelPopTargetSecondary;
+
+                ReactiveSteelTarget[] secondaries = physObj.GetComponentsInChildren<ReactiveSteelTarget>();
+                this.secondaries = secondaries;
+                for (int i=0; i< secondaries.Length; ++i)
+                {
+                    GameManager.trackedObjectByDamageable.Add(secondaries[i], this);
+                    removeTrackedDamageables = RemoveTrackedSteelPopTargetDamageables;
+                }
+            }
             else if (physObj is Molotov)
             {
                 Molotov asMolotov = (Molotov)physObj;
@@ -786,6 +808,17 @@ namespace H3MP.Tracking
         public void RemoveTrackedSosigWeaponDamageables()
         {
             GameManager.trackedObjectByDamageable.Remove(((SosigWeaponPlayerInterface)dataObject).W as IFVRDamageable);
+        }
+
+        public void RemoveTrackedSteelPopTargetDamageables()
+        {
+            for(int i=0; i < secondaries.Length; ++i)
+            {
+                if (secondaries[i] != null)
+                {
+                    GameManager.trackedObjectByDamageable.Remove(secondaries[i] as IFVRDamageable);
+                }
+            }
         }
 
         public bool UpdateItemData(byte[] newData = null)
@@ -1913,6 +1946,95 @@ namespace H3MP.Tracking
             itemData.data = newData;
 
             return modified;
+        }
+
+        private bool UpdateSteelPopTarget()
+        {
+            SteelPopTarget asSPT = (SteelPopTarget)dataObject;
+            bool modified = false;
+
+            if (itemData.data == null)
+            {
+                itemData.data = new byte[asSPT.Joints.Count * 12 + 1];
+                modified = true;
+            }
+
+            byte preval = itemData.data[0];
+
+            itemData.data[0] = asSPT.m_isSpringEnabled ? (byte)1 : (byte)0;
+
+            modified |= preval != itemData.data[0];
+
+            for(int i=0; i < asSPT.Joints.Count; ++i)
+            {
+                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.x).CopyTo(itemData.data, i * 12 + 1);
+                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.y).CopyTo(itemData.data, i * 12 + 5);
+                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.z).CopyTo(itemData.data, i * 12 + 9);
+            }
+
+            return modified;
+        }
+
+        private bool UpdateGivenSteelPopTarget(byte[] newData)
+        {
+            bool modified = false;
+            SteelPopTarget asSPT = (SteelPopTarget)dataObject;
+
+            if (itemData.data == null)
+            {
+                modified = true;
+
+                // Set spring enabled
+                if ((newData[0] == 1 && !asSPT.m_isSpringEnabled) || (newData[0] == 0 && asSPT.m_isSpringEnabled))
+                {
+                    asSPT.ToggleSpringSwitch();
+                }
+            }
+            else
+            {
+
+                // Set spring enabled
+                if ((newData[0] == 1 && !asSPT.m_isSpringEnabled) || (newData[0] == 0 && asSPT.m_isSpringEnabled))
+                {
+                    asSPT.ToggleSpringSwitch();
+                    modified = true;
+                }
+            }
+
+            for (int i = 0; i < asSPT.Joints.Count; ++i)
+            {
+                Vector3 preval = asSPT.Joints[i].transform.localEulerAngles;
+
+                asSPT.Joints[i].transform.localEulerAngles = new Vector3(BitConverter.ToSingle(newData, i * 12 + 1), BitConverter.ToSingle(newData, i * 12 + 5), BitConverter.ToSingle(newData, i * 12 + 9));
+
+                modified |= preval != asSPT.Joints[i].transform.localEulerAngles;
+            }
+
+            itemData.data = newData;
+
+            return modified;
+        }
+
+        private int FindSteelPopTargetSecondary(object o)
+        {
+            for(int i=0; i < secondaries.Length; ++i)
+            {
+                if (secondaries[i] == o)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private object GetSteelPopTargetSecondary(int i)
+        {
+            if(i > -1 && i < secondaries.Length)
+            {
+                return secondaries[i];
+            }
+            return null;
         }
 
         private bool UpdateMolotov()
