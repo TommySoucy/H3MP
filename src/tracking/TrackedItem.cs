@@ -1965,11 +1965,29 @@ namespace H3MP.Tracking
 
             modified |= preval != itemData.data[0];
 
-            for(int i=0; i < asSPT.Joints.Count; ++i)
+            for(int i=0, index; i < asSPT.Joints.Count; ++i)
             {
-                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.x).CopyTo(itemData.data, i * 12 + 1);
-                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.y).CopyTo(itemData.data, i * 12 + 5);
-                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.z).CopyTo(itemData.data, i * 12 + 9);
+                index = i * 12 + 1;
+                preval = itemData.data[index];
+                byte preval1 = itemData.data[index + 1];
+                byte preval2 = itemData.data[index + 2];
+                byte preval3 = itemData.data[index + 3];
+                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.x).CopyTo(itemData.data, index);
+                modified |= preval != itemData.data[index] || preval1 != itemData.data[index + 1] || preval2 != itemData.data[index + 2] || preval3 != itemData.data[index + 3];
+
+                preval = itemData.data[index + 4];
+                preval1 = itemData.data[index + 5];
+                preval2 = itemData.data[index + 6];
+                preval3 = itemData.data[index + 7];
+                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.y).CopyTo(itemData.data, index + 4);
+                modified |= preval != itemData.data[index + 4] || preval1 != itemData.data[index + 5] || preval2 != itemData.data[index + 6] || preval3 != itemData.data[index + 7];
+
+                preval = itemData.data[index + 8];
+                preval1 = itemData.data[index + 9];
+                preval2 = itemData.data[index + 10];
+                preval3 = itemData.data[index + 11];
+                BitConverter.GetBytes(asSPT.Joints[i].transform.localEulerAngles.z).CopyTo(itemData.data, index + 8);
+                modified |= preval != itemData.data[index + 8] || preval1 != itemData.data[index + 9] || preval2 != itemData.data[index + 10] || preval3 != itemData.data[index + 11];
             }
 
             return modified;
@@ -2007,7 +2025,7 @@ namespace H3MP.Tracking
 
                 asSPT.Joints[i].transform.localEulerAngles = new Vector3(BitConverter.ToSingle(newData, i * 12 + 1), BitConverter.ToSingle(newData, i * 12 + 5), BitConverter.ToSingle(newData, i * 12 + 9));
 
-                modified |= preval != asSPT.Joints[i].transform.localEulerAngles;
+                modified |= !preval.Equals(asSPT.Joints[i].transform.localEulerAngles);
             }
 
             itemData.data = newData;
