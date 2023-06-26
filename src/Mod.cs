@@ -387,15 +387,19 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadEnter))
                 {
-                    foreach(StandaloneInputModule sim in FindObjectsOfType<StandaloneInputModule>())
+                    Logger.LogWarning("Sending packet with size > MTU");
+                    using(Packet packet = new Packet(ThreadManager.host? (int)ServerPackets.MTUTest : (int)ClientPackets.MTUTest))
                     {
-                        Mod.LogWarning("Destroying sim: " + sim.gameObject.name);
-                        Destroy(sim);
-                    }
-                    foreach(EventSystem es in FindObjectsOfType<EventSystem>())
-                    {
-                        Mod.LogWarning("Destroying es: "+es.gameObject.name);
-                        Destroy(es);
+                        byte[] testArr = new byte[2048];
+                        packet.Write(testArr);
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.SendTCPDataToAll(packet);
+                        }
+                        else
+                        {
+                            ClientSend.SendTCPData(packet);
+                        }
                     }
                 }
             }

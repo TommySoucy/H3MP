@@ -4260,5 +4260,10 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void MTUTest(Packet packet)
+        {
+            Mod.LogWarning("Received MTU test packet from server");
+        }
     }
 }

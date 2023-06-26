@@ -4675,5 +4675,10 @@ namespace H3MP.Networking
                 ServerSend.ReactiveSteelTargetDamage(packet, clientID);
             }
         }
+
+        public static void MTUTest(int clientID, Packet packet)
+        {
+            Mod.LogWarning("Received MTU test packet from client");
+        }
     }
 }

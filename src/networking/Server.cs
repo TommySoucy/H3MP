@@ -480,6 +480,7 @@ namespace H3MP.Networking
                 ServerHandle.SpectatorHostStartTNH,
                 ServerHandle.ReassignSpectatorHost,
                 ServerHandle.ReactiveSteelTargetDamage,
+                ServerHandle.MTUTest,
             };
 
             objects = new TrackedObjectData[100];
