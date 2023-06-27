@@ -1444,8 +1444,9 @@ namespace H3MP
                 }
 
                 // Get out of TNH instance 
-                // This makes assumption that player must go through main menu to leave TNH
-                // TODO: If this is not always true, will have to handle by "if we leave a TNH scene" instead of "if we go into main menu"
+                // This makes assumption that player must go through main menu to leave TNH game or lobby
+                // They cannot go from TNH game or lobby to a scene other than main menu
+                //TODO: If this is not always true, will have to handle by "if we leave a TNH scene" instead of "if we go into main menu"
                 if (LoadLevelBeginPatch.loadingLevel.Equals("MainMenu3") && Mod.currentTNHInstance != null) 
                 {
                     // The destruction of items as we leave the level with giveControlOfDestroyed to true will handle the handover of 

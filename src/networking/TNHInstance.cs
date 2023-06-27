@@ -296,6 +296,12 @@ namespace H3MP.Networking
             {
                 Mod.TNHSpectating = false;
 
+                if (Mod.TNHStartEquipButton == null)
+                {
+                    Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
+                    Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
+                }
+
                 if (received && manager != null)
                 {
                     manager.InitPlayerPosition();
