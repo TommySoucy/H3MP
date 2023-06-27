@@ -1118,7 +1118,7 @@ namespace H3MP.Patches
                 bool cont = (TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == GameManager.ID) ||
                             (Mod.currentTNHInstance.controller == GameManager.ID && Mod.currentTNHInstance.initializer != -1 &&
                             (!ThreadManager.host || !Mod.currentTNHInstance.initializationRequested));
-                Mod.LogInfo("SetPhasePrefix: phase: " + p + ", preventing: " + cont, false);
+                Mod.LogInfo("SetPhasePrefix: phase: " + p + ", continuing: " + cont, false);
                 return cont;
             }
             return true;
