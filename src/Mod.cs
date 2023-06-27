@@ -368,6 +368,8 @@ namespace H3MP
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadPlus))
                 {
+                    GM.TNH_Manager.m_curHoldPoint.m_systemNode.m_hasActivated = true;
+                    GM.TNH_Manager.m_curHoldPoint.m_systemNode.m_hasInitiatedHold = true;
                     GM.TNH_Manager.m_curHoldPoint.BeginHoldChallenge();
                 }
                 else if (Input.GetKeyDown(KeyCode.KeypadMinus))

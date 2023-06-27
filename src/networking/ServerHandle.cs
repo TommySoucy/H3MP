@@ -259,13 +259,14 @@ namespace H3MP.Networking
 
         public static void TrackedObjects(int clientID, Packet packet)
         {
-            int count = packet.ReadShort();
-            for(int i=0; i < count; ++i)
-            {
+            //int count = packet.ReadShort();
+            //for(int i=0; i < count; ++i)
+            //{
                 TrackedObjectData.Update(packet, true);
-            }
+            //}
 
             // Relay to other clients in same scene/instance as clientID right away
+            // TODO: Optimization: Is this better than just sending it to everyone and client just ignoring if don't have data?
             if (GameManager.playersByInstanceByScene.TryGetValue(Server.clients[clientID].player.scene, out Dictionary<int, List<int>> instances) && 
                 instances.TryGetValue(Server.clients[clientID].player.instance, out List<int> players))
             {
@@ -2734,6 +2735,8 @@ namespace H3MP.Networking
                     {
                         // Begin hold on our side
                         ++TNH_HoldPointPatch.beginHoldSendSkip;
+                        Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasActivated = true;
+                        Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasInitiatedHold = true;
                         Mod.currentTNHInstance.manager.m_curHoldPoint.BeginHoldChallenge();
                         --TNH_HoldPointPatch.beginHoldSendSkip;
 
@@ -2753,6 +2756,8 @@ namespace H3MP.Networking
                 if(actualInstance.controller == GameManager.ID)
                 {
                     // We received order to begin hold and we are the controller, begin it
+                    Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasActivated = true;
+                    Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasInitiatedHold = true;
                     Mod.currentTNHInstance.manager.m_curHoldPoint.BeginHoldChallenge();
 
                     // TP to point since we are not the one who started the hold
@@ -2768,6 +2773,8 @@ namespace H3MP.Networking
                 {
                     // Begin hold on our side
                     ++TNH_HoldPointPatch.beginHoldSendSkip;
+                    Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasActivated = true;
+                    Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasInitiatedHold = true;
                     Mod.currentTNHInstance.manager.m_curHoldPoint.BeginHoldChallenge();
                     --TNH_HoldPointPatch.beginHoldSendSkip;
 
@@ -4335,6 +4342,8 @@ namespace H3MP.Networking
                 if (Mod.currentTNHInstance.manager != null && !Mod.currentTNHInstance.holdOngoing)
                 {
                     GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode.position, true);
+                    Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_systemNode.m_hasActivated = true;
+                    Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_systemNode.m_hasInitiatedHold = true;
                     Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].BeginHoldChallenge();
                 }
             }

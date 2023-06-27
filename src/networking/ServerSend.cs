@@ -398,66 +398,104 @@ namespace H3MP.Networking
         {
             if (GameManager.playersPresent.Count > 0)
             {
-                int index = 0;
-                while (index < GameManager.objects.Count)
+                for (int i = 0; i < GameManager.objects.Count; ++i)
                 {
-                    using (Packet packet = new Packet((int)ServerPackets.trackedObjects))
+                    TrackedObjectData trackedObject = GameManager.objects[i];
+
+                    if (trackedObject.trackedID == -1)
                     {
-                        // Write place holder int at start to hold the count once we know it
-                        int countPos = packet.buffer.Count;
-                        packet.Write((short)0);
+                        continue;
+                    }
 
-                        short count = 0;
-                        for (int i = index; i < GameManager.objects.Count; ++i, ++index)
+                    if (trackedObject.Update())
+                    {
+                        trackedObject.latestUpdateSent = false;
+
+                        using (Packet packet = new Packet((int)ServerPackets.trackedObjects))
                         {
-                            TrackedObjectData trackedObject = GameManager.objects[i];
-                            if (trackedObject.Update())
+                            // Write packet
+                            trackedObject.WriteToPacket(packet, true, false);
+
+                            if (packet.buffer.Count >= 1500)
                             {
-                                trackedObject.latestUpdateSent = false;
-
-                                // Keep length before we write backet
-                                int preLength = packet.buffer.Count;
-                                packet.Write((ushort)0); // Place holder
-
-                                trackedObject.WriteToPacket(packet, true, false);
-
-                                // Replace placeholder with length of object data
-                                byte[] actualLength = BitConverter.GetBytes((ushort)(packet.buffer.Count - preLength - 2));
-                                packet.buffer[preLength] = actualLength[0];
-                                packet.buffer[preLength + 1] = actualLength[1];
-
-                                ++count;
-
-                                // Limit buffer size to MTU, will send next set of tracked items in separate packet
-                                if (packet.buffer.Count >= 1300)
-                                {
-                                    break;
-                                }
+                                Mod.LogWarning("Update packet size for " + trackedObject.trackedID + " of type: " + trackedObject.typeIdentifier + " is above 1500 bytes");
                             }
-                            else if (!trackedObject.latestUpdateSent)
-                            {
-                                trackedObject.latestUpdateSent = true;
 
-                                ObjectUpdate(trackedObject);
-                            }
+                            SendUDPDataToClients(packet, GameManager.playersPresent);
                         }
+                    }
+                    else if (!trackedObject.latestUpdateSent)
+                    {
+                        trackedObject.latestUpdateSent = true;
 
-                        if (count == 0)
-                        {
-                            break;
-                        }
-
-                        // Write the count to packet
-                        byte[] countArr = BitConverter.GetBytes(count);
-                        for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
-                        {
-                            packet.buffer[i] = countArr[j];
-                        }
-
-                        SendUDPDataToClients(packet, GameManager.playersPresent);
+                        // Send latest update on its own
+                        ObjectUpdate(trackedObject);
                     }
                 }
             }
+
+            //if (GameManager.playersPresent.Count > 0)
+            //{
+            //    int index = 0;
+            //    while (index < GameManager.objects.Count)
+            //    {
+            //        using (Packet packet = new Packet((int)ServerPackets.trackedObjects))
+            //        {
+            //            // Write place holder int at start to hold the count once we know it
+            //            int countPos = packet.buffer.Count;
+            //            packet.Write((short)0);
+
+            //            short count = 0;
+            //            for (int i = index; i < GameManager.objects.Count; ++i, ++index)
+            //            {
+            //                TrackedObjectData trackedObject = GameManager.objects[i];
+            //                if (trackedObject.Update())
+            //                {
+            //                    trackedObject.latestUpdateSent = false;
+
+            //                    // Keep length before we write backet
+            //                    int preLength = packet.buffer.Count;
+            //                    packet.Write((ushort)0); // Place holder
+
+            //                    trackedObject.WriteToPacket(packet, true, false);
+
+            //                    // Replace placeholder with length of object data
+            //                    byte[] actualLength = BitConverter.GetBytes((ushort)(packet.buffer.Count - preLength - 2));
+            //                    packet.buffer[preLength] = actualLength[0];
+            //                    packet.buffer[preLength + 1] = actualLength[1];
+
+            //                    ++count;
+
+            //                    // Limit buffer size to MTU, will send next set of tracked items in separate packet
+            //                    if (packet.buffer.Count >= 1200)
+            //                    {
+            //                        break;
+            //                    }
+            //                }
+            //                else if (!trackedObject.latestUpdateSent)
+            //                {
+            //                    trackedObject.latestUpdateSent = true;
+
+            //                    ObjectUpdate(trackedObject);
+            //                }
+            //            }
+
+            //            if (count == 0)
+            //            {
+            //                break;
+            //            }
+
+            //            // Write the count to packet
+            //            byte[] countArr = BitConverter.GetBytes(count);
+            //            for (int i = countPos, j = 0; i < countPos + 2; ++i, ++j)
+            //            {
+            //                packet.buffer[i] = countArr[j];
+            //            }
+
+            //            SendUDPDataToClients(packet, GameManager.playersPresent);
+            //        }
+            //    }
+            //}
         }
 
         public static void TrackedObjects(Packet packet, List<int> players, int sender)

@@ -7629,7 +7629,7 @@ namespace H3MP.Tracking
                 // Set MechaState
                 asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
             }
-            else 
+            else
             {
                 if (itemData.data[0] != newData[0] || itemData.data[1] != newData[1])
                 {

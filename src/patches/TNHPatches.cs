@@ -1666,6 +1666,8 @@ namespace H3MP.Patches
                 TNH_Progression.Level curLevel = Mod.currentTNHInstance.manager.m_curLevel;
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
                 ++TNH_HoldPointPatch.beginHoldSendSkip;
+                Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_systemNode.m_hasActivated = true;
+                Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_systemNode.m_hasInitiatedHold = true;
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].BeginHoldChallenge();
                 --TNH_HoldPointPatch.beginHoldSendSkip;
 
@@ -2192,7 +2194,7 @@ namespace H3MP.Patches
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == GameManager.ID)
             {
-                Mod.LogInfo("BeginHoldPrefix and we cotnrol, sending", false);
+                Mod.LogInfo("BeginPhasePostfix and we cotnrol, sending", false);
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
 
                 if (ThreadManager.host)

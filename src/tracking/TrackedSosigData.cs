@@ -1003,128 +1003,146 @@ namespace H3MP.Tracking
         {
             base.UpdateFromPacket(packet, full);
 
-            previousPos = position;
-            previousRot = rotation;
-            position = packet.ReadVector3();
-            velocity = previousPos == null ? Vector3.zero : position - previousPos;
-            rotation = packet.ReadQuaternion();
-            previousMustard = mustard;
-            mustard = packet.ReadFloat();
-            previousAmmoStores = ammoStores;
-            byte ammoStoreLength = packet.ReadByte();
-            if (ammoStoreLength > 0)
+            int debugStep = 0;
+
+            try
             {
-                ammoStores = new int[ammoStoreLength];
-                for (int i = 0; i < ammoStoreLength; ++i)
+                previousPos = position;
+                previousRot = rotation;
+                position = packet.ReadVector3();
+                velocity = previousPos == null ? Vector3.zero : position - previousPos;
+                rotation = packet.ReadQuaternion();
+                previousMustard = mustard;
+                mustard = packet.ReadFloat();
+                previousAmmoStores = ammoStores;
+                byte ammoStoreLength = packet.ReadByte();
+                if (ammoStoreLength > 0)
                 {
-                    ammoStores[i] = packet.ReadInt();
+                    ammoStores = new int[ammoStoreLength];
+                    for (int i = 0; i < ammoStoreLength; ++i)
+                    {
+                        ammoStores[i] = packet.ReadInt();
+                    }
+                }
+                ++debugStep;
+                previousBodyPose = bodyPose;
+                bodyPose = (Sosig.SosigBodyPose)packet.ReadByte();
+                byte sosigLinkIntegrityLength = packet.ReadByte();
+                previousLinkIntegrity = linkIntegrity;
+                if (sosigLinkIntegrityLength > 0)
+                {
+                    if (linkIntegrity == null)
+                    {
+                        linkIntegrity = new float[sosigLinkIntegrityLength];
+                    }
+                    for (int i = 0; i < sosigLinkIntegrityLength; ++i)
+                    {
+                        linkIntegrity[i] = packet.ReadFloat();
+                    }
+                }
+                fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
+                previousOrder = currentOrder;
+                currentOrder = (Sosig.SosigOrder)packet.ReadByte();
+                ++debugStep;
+
+                if (full)
+                {
+                    ++debugStep;
+                    byte sosigLinkDataLength = packet.ReadByte();
+                    if (sosigLinkDataLength > 0)
+                    {
+                        if (linkData == null)
+                        {
+                            linkData = new float[sosigLinkDataLength][];
+                        }
+                        for (int i = 0; i < sosigLinkDataLength; ++i)
+                        {
+                            if (linkData[i] == null || linkData[i].Length != 5)
+                            {
+                                linkData[i] = new float[5];
+                            }
+
+                            for (int j = 0; j < 5; ++j)
+                            {
+                                linkData[i][j] = packet.ReadFloat();
+                            }
+                        }
+                    }
+                    ++debugStep;
+                    IFF = packet.ReadByte();
+                    configTemplate = packet.ReadSosigConfig();
+                    byte linkCount = packet.ReadByte();
+                    wearables = new List<List<string>>();
+                    for (int i = 0; i < linkCount; ++i)
+                    {
+                        wearables.Add(new List<string>());
+                        byte wearableCount = packet.ReadByte();
+                        if (wearableCount > 0)
+                        {
+                            for (int j = 0; j < wearableCount; ++j)
+                            {
+                                wearables[i].Add(packet.ReadString());
+                            }
+                        }
+                    }
+                    ++debugStep;
+                    IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(packet.ReadInt());
+                    ++debugStep;
+                    int dataLen = packet.ReadInt();
+                    if (dataLen > 0)
+                    {
+                        data = packet.ReadBytes(dataLen);
+                    }
+                    ++debugStep;
+                    switch (currentOrder)
+                    {
+                        case Sosig.SosigOrder.GuardPoint:
+                            guardPoint = packet.ReadVector3();
+                            guardDir = packet.ReadVector3();
+                            hardGuard = packet.ReadBool();
+                            break;
+                        case Sosig.SosigOrder.Skirmish:
+                            skirmishPoint = packet.ReadVector3();
+                            pathToPoint = packet.ReadVector3();
+                            assaultPoint = packet.ReadVector3();
+                            faceTowards = packet.ReadVector3();
+                            break;
+                        case Sosig.SosigOrder.Investigate:
+                            guardPoint = packet.ReadVector3();
+                            hardGuard = packet.ReadBool();
+                            faceTowards = packet.ReadVector3();
+                            break;
+                        case Sosig.SosigOrder.SearchForEquipment:
+                        case Sosig.SosigOrder.Wander:
+                            wanderPoint = packet.ReadVector3();
+                            break;
+                        case Sosig.SosigOrder.Assault:
+                            assaultPoint = packet.ReadVector3();
+                            assaultSpeed = (Sosig.SosigMoveSpeed)packet.ReadByte();
+                            faceTowards = packet.ReadVector3();
+                            break;
+                        case Sosig.SosigOrder.Idle:
+                            idleToPoint = packet.ReadVector3();
+                            idleDominantDir = packet.ReadVector3();
+                            break;
+                        case Sosig.SosigOrder.PathTo:
+                            pathToPoint = packet.ReadVector3();
+                            pathToLookDir = packet.ReadVector3();
+                            break;
+                    }
+                    ++debugStep;
+                    byte inventoryLength = packet.ReadByte();
+                    inventory = new int[inventoryLength];
+                    for (int i = 0; i < inventoryLength; ++i)
+                    {
+                        inventory[i] = packet.ReadInt();
+                    }
+                    ++debugStep;
                 }
             }
-            previousBodyPose = bodyPose;
-            bodyPose = (Sosig.SosigBodyPose)packet.ReadByte();
-            byte sosigLinkIntegrityLength = packet.ReadByte();
-            previousLinkIntegrity = linkIntegrity;
-            if (sosigLinkIntegrityLength > 0)
+            catch(Exception ex)
             {
-                if (linkIntegrity == null)
-                {
-                    linkIntegrity = new float[sosigLinkIntegrityLength];
-                }
-                for (int i = 0; i < sosigLinkIntegrityLength; ++i)
-                {
-                    linkIntegrity[i] = packet.ReadFloat();
-                }
-            }
-            fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
-            previousOrder = currentOrder;
-            currentOrder = (Sosig.SosigOrder)packet.ReadByte();
-
-            if (full)
-            {
-                byte sosigLinkDataLength = packet.ReadByte();
-                if (sosigLinkDataLength > 0)
-                {
-                    if (linkData == null)
-                    {
-                        linkData = new float[sosigLinkDataLength][];
-                    }
-                    for (int i = 0; i < sosigLinkDataLength; ++i)
-                    {
-                        if (linkData[i] == null || linkData[i].Length != 5)
-                        {
-                            linkData[i] = new float[5];
-                        }
-
-                        for (int j = 0; j < 5; ++j)
-                        {
-                            linkData[i][j] = packet.ReadFloat();
-                        }
-                    }
-                }
-                IFF = packet.ReadByte();
-                configTemplate = packet.ReadSosigConfig();
-                byte linkCount = packet.ReadByte();
-                wearables = new List<List<string>>();
-                for (int i = 0; i < linkCount; ++i)
-                {
-                    wearables.Add(new List<string>());
-                    byte wearableCount = packet.ReadByte();
-                    if (wearableCount > 0)
-                    {
-                        for (int j = 0; j < wearableCount; ++j)
-                        {
-                            wearables[i].Add(packet.ReadString());
-                        }
-                    }
-                }
-                IFFChart = SosigTargetPrioritySystemPatch.IntToBoolArr(packet.ReadInt());
-                int dataLen = packet.ReadInt();
-                if (dataLen > 0)
-                {
-                    data = packet.ReadBytes(dataLen);
-                }
-                switch (currentOrder)
-                {
-                    case Sosig.SosigOrder.GuardPoint:
-                        guardPoint = packet.ReadVector3();
-                        guardDir = packet.ReadVector3();
-                        hardGuard = packet.ReadBool();
-                        break;
-                    case Sosig.SosigOrder.Skirmish:
-                        skirmishPoint = packet.ReadVector3();
-                        pathToPoint = packet.ReadVector3();
-                        assaultPoint = packet.ReadVector3();
-                        faceTowards = packet.ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.Investigate:
-                        guardPoint = packet.ReadVector3();
-                        hardGuard = packet.ReadBool();
-                        faceTowards = packet.ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.SearchForEquipment:
-                    case Sosig.SosigOrder.Wander:
-                        wanderPoint = packet.ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.Assault:
-                        assaultPoint = packet.ReadVector3();
-                        assaultSpeed = (Sosig.SosigMoveSpeed)packet.ReadByte();
-                        faceTowards = packet.ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.Idle:
-                        idleToPoint = packet.ReadVector3();
-                        idleDominantDir = packet.ReadVector3();
-                        break;
-                    case Sosig.SosigOrder.PathTo:
-                        pathToPoint = packet.ReadVector3();
-                        pathToLookDir = packet.ReadVector3();
-                        break;
-                }
-                byte inventoryLength = packet.ReadByte();
-                inventory = new int[inventoryLength];
-                for (int i = 0; i < inventoryLength; ++i)
-                {
-                    inventory[i] = packet.ReadInt();
-                }
+                Mod.LogError("Sosig update from packet error at step: "+debugStep+": "+ex.Message+":\n"+ex.StackTrace);
             }
 
             // Set physically

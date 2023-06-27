@@ -111,16 +111,16 @@ namespace H3MP.Tracking
         // Processes an update packet
         public static void Update(Packet packet, bool includesLength = true, bool full = false)
         {
-            ushort length =  includesLength ? packet.ReadUShort() : (ushort)0;
+            //ushort length =  includesLength ? packet.ReadUShort() : (ushort)0;
             byte order = packet.ReadByte();
             int trackedID = packet.ReadInt();
 
             if (trackedID < 0)
             {
-                if (includesLength)
-                {
-                    packet.readPos += (length - 5); // -5 because we read a byte and an int above
-                }
+                //if (includesLength)
+                //{
+                //    packet.readPos += (length - 5); // -5 because we read a byte and an int above
+                //}
                 if(trackedID == -2)
                 {
                     Mod.LogWarning("Got update packet for object with trackedID -2");
@@ -166,11 +166,11 @@ namespace H3MP.Tracking
                 }
             }
 
-            if (includesLength)
-            {
-                // If we make it here, it is because we didn't update from packet
-                packet.readPos += (length - 5); // -5 because we read a byte and an int above
-            }
+            //if (includesLength)
+            //{
+            //    // If we make it here, it is because we didn't update from packet
+            //    packet.readPos += (length - 5); // -5 because we read a byte and an int above
+            //}
         }
 
         // Updates the object using given data
