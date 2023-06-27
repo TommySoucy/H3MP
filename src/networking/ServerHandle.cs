@@ -2731,7 +2731,10 @@ namespace H3MP.Networking
             {
                 if (GameManager.TNHInstances.TryGetValue(instance, out TNHInstance actualInstance))
                 {
-                    if(actualInstance.manager != null && actualInstance.manager.m_hasInit)
+                    actualInstance.holdOngoing = true;
+                    Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+
+                    if (actualInstance.manager != null && actualInstance.manager.m_hasInit)
                     {
                         // Begin hold on our side
                         ++TNH_HoldPointPatch.beginHoldSendSkip;
@@ -2766,30 +2769,11 @@ namespace H3MP.Networking
                         GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.m_curHoldPoint.SpawnPoint_SystemNode.position, true);
                     }
 
-                    // Pass it on
-                    ServerSend.TNHHoldBeginChallenge(instance, true, true, clientID);
+                    // Relay will be done by BeginHoldChallenge patch
                 }
-                else if(actualInstance.manager != null && actualInstance.manager.m_hasInit)
+                else // We are not controller
                 {
-                    // Begin hold on our side
-                    ++TNH_HoldPointPatch.beginHoldSendSkip;
-                    Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasActivated = true;
-                    Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasInitiatedHold = true;
-                    Mod.currentTNHInstance.manager.m_curHoldPoint.BeginHoldChallenge();
-                    --TNH_HoldPointPatch.beginHoldSendSkip;
-
-                    // TP to hold point
-                    if (!actualInstance.dead.Contains(GameManager.ID) || Mod.TNHOnDeathSpectate)
-                    {
-                        GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.m_curHoldPoint.SpawnPoint_SystemNode.position, true);
-                    }
-
-                    // Send it to controller
-                    ServerSend.TNHHoldBeginChallenge(instance, false, false, actualInstance.controller);
-                }
-                else // We are not in this TNH game
-                {
-                    // Send it to controller
+                    // Relay to controller
                     ServerSend.TNHHoldBeginChallenge(instance, false, false, actualInstance.controller);
                 }
             }

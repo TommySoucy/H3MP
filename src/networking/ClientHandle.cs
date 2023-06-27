@@ -2442,6 +2442,9 @@ namespace H3MP.Networking
             {
                 if (GameManager.TNHInstances.TryGetValue(instance, out TNHInstance actualInstance))
                 {
+                    actualInstance.holdOngoing = true;
+                    Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
+
                     if (actualInstance.manager != null && actualInstance.manager.m_hasInit)
                     {
                         // Begin hold on our side
@@ -2469,21 +2472,6 @@ namespace H3MP.Networking
                     Mod.currentTNHInstance.manager.m_curHoldPoint.BeginHoldChallenge();
 
                     // TP to point since we are not the one who started the hold
-                    if (!actualInstance.dead.Contains(GameManager.ID) || Mod.TNHOnDeathSpectate)
-                    {
-                        GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.m_curHoldPoint.SpawnPoint_SystemNode.position, true);
-                    }
-                }
-                else if (actualInstance.manager != null && actualInstance.manager.m_hasInit)
-                {
-                    // Begin hold on our side
-                    ++TNH_HoldPointPatch.beginHoldSendSkip;
-                    Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasActivated = true;
-                    Mod.currentTNHInstance.manager.m_curHoldPoint.m_systemNode.m_hasInitiatedHold = true;
-                    Mod.currentTNHInstance.manager.m_curHoldPoint.BeginHoldChallenge();
-                    --TNH_HoldPointPatch.beginHoldSendSkip;
-
-                    // TP to hold point
                     if (!actualInstance.dead.Contains(GameManager.ID) || Mod.TNHOnDeathSpectate)
                     {
                         GM.CurrentMovementManager.TeleportToPoint(Mod.currentTNHInstance.manager.m_curHoldPoint.SpawnPoint_SystemNode.position, true);

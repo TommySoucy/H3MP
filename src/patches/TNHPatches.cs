@@ -2150,7 +2150,7 @@ namespace H3MP.Patches
 
                     if (beginHoldSendSkip == 0)
                     {
-                        Mod.LogInfo("\t\tNot skipped sending", false);
+                        Mod.LogInfo("\t\tNot skipped, sending", false);
                         if (ThreadManager.host)
                         {
                             ServerSend.TNHHoldBeginChallenge(Mod.currentTNHInstance.instance, false, false, Mod.currentTNHInstance.controller);
@@ -2162,6 +2162,7 @@ namespace H3MP.Patches
                     }
                     else // Told to skip, begin hold was an order from controller, prepare for data
                     {
+                        Mod.LogInfo("\t\tSkipped, prepping", false);
                         // Deletion burst
                         ___m_activeSosigs.Clear();
                         Mod.currentTNHInstance.manager.m_miscEnemies.Clear();
