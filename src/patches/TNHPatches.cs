@@ -1216,16 +1216,16 @@ namespace H3MP.Patches
                         bool spawnToken = true;
                         Mod.currentTNHInstance.manager.m_activeSupplyPointIndicies = Mod.currentTNHInstance.activeSupplyPointIndices;
 
-                        int panelIndex = 0;
                         if (PatchController.TNHTweakerAsmIdx > -1)
                         {
                             for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
                             {
                                 TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
 
+                                int panelIndex = Mod.currentTNHInstance.nextSupplyPanelType;
                                 object[] args = new object[] { tnh_SupplyPoint, level, panelIndex };
                                 PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, args);
-                                panelIndex = (int)args[2];
+                                Mod.currentTNHInstance.nextSupplyPanelType = (int)args[2];
 
                                 TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
                                 tnh_SupplyPoint.SetContact(contact);
@@ -1240,11 +1240,11 @@ namespace H3MP.Patches
                                 int num6 = i;
                                 if (i > 0)
                                 {
-                                    num6 = panelIndex;
-                                    panelIndex++;
-                                    if (panelIndex > 2)
+                                    num6 = Mod.currentTNHInstance.nextSupplyPanelType;
+                                    Mod.currentTNHInstance.nextSupplyPanelType++;
+                                    if (Mod.currentTNHInstance.nextSupplyPanelType > 2)
                                     {
-                                        panelIndex = 1;
+                                        Mod.currentTNHInstance.nextSupplyPanelType = 1;
                                     }
                                 }
                                 TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;

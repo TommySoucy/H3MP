@@ -31,6 +31,7 @@ namespace H3MP.Networking
         public List<int> activeSupplyPointIndices;
         public List<int> raisedBarriers;
         public List<int> raisedBarrierPrefabIndices;
+        public int nextSupplyPanelType = 1;
 
         // Settings
         public bool letPeopleJoin;
@@ -346,6 +347,7 @@ namespace H3MP.Networking
             tickDownToFailure = 120;
             initializationRequested = false;
             initializer = -1;
+            nextSupplyPanelType = 1;
 
             // The game has reset, a new game will be created when a player goes in again, if we were spectating we want to stop
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)
