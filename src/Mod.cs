@@ -238,7 +238,8 @@ namespace H3MP
         public static event OnSpectatorHostGiveUpDelegate OnSpectatorHostGiveUp;
 
         // Debug
-        public static bool debug;
+        public static bool waitingForDebugCode;
+        public static string debugCode;
         public static Vector3 TNHSpawnPoint;
 
         private void Start()
@@ -269,138 +270,200 @@ namespace H3MP
 
         private void Update()
         {
-#if DEBUG
-            if (Input.GetKeyDown(KeyCode.KeypadPeriod))
-            {
-                debug = !debug;
-            }
-
-            if (!debug)
+#if DEBUG 
+            if (waitingForDebugCode)
             {
                 if (Input.GetKeyDown(KeyCode.Keypad0))
                 {
-                    OnHostClicked();
+                    debugCode += "0";
+                    Mod.LogInfo("DebugCode: " + debugCode);
                 }
-                else if (Input.GetKeyDown(KeyCode.Keypad1))
+                else if(Input.GetKeyDown(KeyCode.Keypad1))
                 {
-                    OnConnectClicked();
+                    debugCode += "1";
+                    Mod.LogInfo("DebugCode: " + debugCode);
                 }
-                else if (Input.GetKeyDown(KeyCode.Keypad2))
+                else if(Input.GetKeyDown(KeyCode.Keypad2))
                 {
-                    LoadConfig();
+                    debugCode += "2";
+                    Mod.LogInfo("DebugCode: " + debugCode);
                 }
-                else if (Input.GetKeyDown(KeyCode.Keypad3))
+                else if(Input.GetKeyDown(KeyCode.Keypad3))
                 {
-                    if(Mod.managerObject != null)
+                    debugCode += "3";
+                    Mod.LogInfo("DebugCode: " + debugCode);
+                }
+                else if(Input.GetKeyDown(KeyCode.Keypad4))
+                {
+                    debugCode += "4";
+                    Mod.LogInfo("DebugCode: " + debugCode);
+                }
+                else if(Input.GetKeyDown(KeyCode.Keypad5))
+                {
+                    debugCode += "5";
+                    Mod.LogInfo("DebugCode: " + debugCode);
+                }
+                else if(Input.GetKeyDown(KeyCode.Keypad6))
+                {
+                    debugCode += "6";
+                    Mod.LogInfo("DebugCode: " + debugCode);
+                }
+                else if(Input.GetKeyDown(KeyCode.Keypad7))
+                {
+                    debugCode += "7";
+                    Mod.LogInfo("DebugCode: " + debugCode);
+                }
+                else if(Input.GetKeyDown(KeyCode.Keypad8))
+                {
+                    debugCode += "8";
+                    Mod.LogInfo("DebugCode: " + debugCode);
+                }
+                else if(Input.GetKeyDown(KeyCode.Keypad9))
+                {
+                    debugCode += "9";
+                    Mod.LogInfo("DebugCode: " + debugCode);
+                }
+            }
+            if(Input.GetKeyDown(KeyCode.F11))
+            {
+                waitingForDebugCode = !waitingForDebugCode;
+                if (waitingForDebugCode)
+                {
+                    debugCode = string.Empty;
+                }
+                else
+                {
+                    Mod.LogInfo("Activating DebugCode: " + debugCode);
+                    if (debugCode != string.Empty)
                     {
-                        if (ThreadManager.host)
+                        switch (int.Parse(debugCode))
                         {
-                            Server.Close();
-                        }
-                        else
-                        {
-                            Client.singleton.Disconnect(true, 0);
-                        }
-                    }
-                }
-                else if (Input.GetKeyDown(KeyCode.Keypad4))
-                {
-                    SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
-                }
-                else if (Input.GetKeyDown(KeyCode.Keypad5))
-                {
-                    SteamVR_LoadLevel.Begin("ProvingGround", false, 0.5f, 0f, 0f, 0f, 1f);
-                }
-                else if (Input.GetKeyDown(KeyCode.Keypad6))
-                {
-                    Dictionary<string, string> map = new Dictionary<string, string>();
-                    foreach (KeyValuePair<string, FVRObject> o in IM.OD)
-                    {
-                        GameObject prefab = null;
-                        try
-                        {
-                            prefab = o.Value.GetGameObject();
+                            case 0: // Start hosting
+                                Mod.LogInfo("\tDebug: Start hosting");
+                                OnHostClicked();
+                                break;
+                            case 1: // Connect
+                                Mod.LogInfo("\tDebug: Connect");
+                                OnConnectClicked();
+                                break;
+                            case 2: // Load config
+                                Mod.LogInfo("\tDebug: Load config");
+                                LoadConfig();
+                                break;
+                            case 3: // Disconnect/Close server
+                                Mod.LogInfo("\tDebug: Disconnect/Close server");
+                                if (Mod.managerObject != null)
+                                {
+                                    if (ThreadManager.host)
+                                    {
+                                        Server.Close();
+                                    }
+                                    else
+                                    {
+                                        Client.singleton.Disconnect(true, 0);
+                                    }
+                                }
+                                break;
+                            case 4: // Load to main menu
+                                Mod.LogInfo("\tDebug: Laod to main menu");
+                                SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                                break;
+                            case 5: // Load to proving grounds
+                                Mod.LogInfo("\tDebug: Load to proving grounds");
+                                SteamVR_LoadLevel.Begin("ProvingGround", false, 0.5f, 0f, 0f, 0f, 1f);
+                                break;
+                            case 6: // Build sosig wearable map
+                                Mod.LogInfo("\tDebug: Build sosig wearable map");
+                                Dictionary<string, string> map = new Dictionary<string, string>();
+                                foreach (KeyValuePair<string, FVRObject> o in IM.OD)
+                                {
+                                    GameObject prefab = null;
+                                    try
+                                    {
+                                        prefab = o.Value.GetGameObject();
 
-                        }
-                        catch (Exception)
-                        {
-                            Mod.LogError("There was an error trying to retrieve prefab with ID: " + o.Key);
-                            continue;
-                        }
-                        try
-                        {
-                            SosigWearable wearable = prefab.GetComponent<SosigWearable>();
-                            if (wearable != null)
-                            {
-                                if (map.ContainsKey(prefab.name))
-                                {
-                                    Mod.LogWarning("Sosig wearable with name: " + prefab.name + " is already in the map with value: " + map[prefab.name] + " and wewanted to add value: " + o.Key);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        Mod.LogError("There was an error trying to retrieve prefab with ID: " + o.Key);
+                                        continue;
+                                    }
+                                    try
+                                    {
+                                        SosigWearable wearable = prefab.GetComponent<SosigWearable>();
+                                        if (wearable != null)
+                                        {
+                                            if (map.ContainsKey(prefab.name))
+                                            {
+                                                Mod.LogWarning("Sosig wearable with name: " + prefab.name + " is already in the map with value: " + map[prefab.name] + " and wewanted to add value: " + o.Key);
+                                            }
+                                            else
+                                            {
+                                                map.Add(prefab.name, o.Key);
+                                            }
+                                        }
+                                    }
+                                    catch (Exception)
+                                    {
+                                        Mod.LogError("There was an error trying to check if prefab with ID: " + o.Key + " is wearable or adding it to the list");
+                                        continue;
+                                    }
                                 }
-                                else
+                                JObject jDict = JObject.FromObject(map);
+                                File.WriteAllText(H3MPPath + "/Debug/SosigWearableMap.json", jDict.ToString());
+                                break;
+                            case 7: // Load to TNH lobby
+                                Mod.LogInfo("\tDebug: Load to TNH lobby");
+                                SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
+                                break;
+                            case 8: // Join first TNH instance
+                                Mod.LogInfo("\tDebug: Join first TNH instance");
+                                OnTNHJoinClicked();
+                                OnTNHJoinConfirmClicked();
+                                OnTNHInstanceClicked(1);
+                                break;
+                            case 9: // Create new TNH instance
+                                Mod.LogInfo("\tDebug: Create new TNH instance");
+                                OnTNHHostClicked();
+                                OnTNHHostConfirmClicked();
+                                break;
+                            case 10: // Begin TNH hold
+                                Mod.LogInfo("\tDebug: Begin TNH hold");
+                                GM.TNH_Manager.m_curHoldPoint.m_systemNode.m_hasActivated = true;
+                                GM.TNH_Manager.m_curHoldPoint.m_systemNode.m_hasInitiatedHold = true;
+                                GM.TNH_Manager.m_curHoldPoint.BeginHoldChallenge();
+                                break;
+                            case 11: // Load into TNH game (Trigger first scene loader we can find in the scene)
+                                Mod.LogInfo("\tDebug: Trigger first scene loader we can find in the scene");
+                                GameObject.FindObjectOfType<SceneLoader>().LoadMG();
+                                break;
+                            case 12: // Write PatchHashes
+                                Mod.LogInfo("\tDebug: Write PatchHashes");
+                                string dest = H3MPPath + "/PatchHashes" + DateTimeOffset.Now.ToString().Replace("/", ".").Replace(":", ".") + ".json";
+                                File.Copy(H3MPPath + "/PatchHashes.json", dest);
+                                Mod.LogWarning("Writing new hashes to file!");
+                                File.WriteAllText(H3MPPath + "/PatchHashes.json", JObject.FromObject(PatchController.hashes).ToString());
+                                break;
+                            case 13: // Load to friendly 45
+                                Mod.LogInfo("\tDebug: Load to friendly 45");
+                                SteamVR_LoadLevel.Begin("Friendly45_New", false, 0.5f, 0f, 0f, 0f, 1f);
+                                break;
+                            case 14: // Send packet with size > MTU
+                                Mod.LogInfo("\tDebug: Send packet with size > MTU");
+                                using (Packet packet = new Packet(ThreadManager.host ? (int)ServerPackets.MTUTest : (int)ClientPackets.MTUTest))
                                 {
-                                    map.Add(prefab.name, o.Key);
+                                    byte[] testArr = new byte[2048];
+                                    packet.Write(testArr);
+                                    if (ThreadManager.host)
+                                    {
+                                        ServerSend.SendTCPDataToAll(packet);
+                                    }
+                                    else
+                                    {
+                                        ClientSend.SendTCPData(packet);
+                                    }
                                 }
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            Mod.LogError("There was an error trying to check if prefab with ID: " + o.Key + " is wearable or adding it to the list");
-                            continue;
-                        }
-                    }
-                    JObject jDict = JObject.FromObject(map);
-                    File.WriteAllText(H3MPPath + "/Debug/SosigWearableMap.json", jDict.ToString());
-                }
-                else if (Input.GetKeyDown(KeyCode.Keypad7))
-                {
-                    SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
-                }
-                else if (Input.GetKeyDown(KeyCode.Keypad8))
-                {
-                    OnTNHJoinClicked();
-                    OnTNHJoinConfirmClicked();
-                    OnTNHInstanceClicked(1);
-                }
-                else if (Input.GetKeyDown(KeyCode.Keypad9))
-                {
-                    OnTNHHostClicked();
-                    OnTNHHostConfirmClicked();
-                }
-                else if (Input.GetKeyDown(KeyCode.KeypadPlus))
-                {
-                    GM.TNH_Manager.m_curHoldPoint.m_systemNode.m_hasActivated = true;
-                    GM.TNH_Manager.m_curHoldPoint.m_systemNode.m_hasInitiatedHold = true;
-                    GM.TNH_Manager.m_curHoldPoint.BeginHoldChallenge();
-                }
-                else if (Input.GetKeyDown(KeyCode.KeypadMinus))
-                {
-                    GameObject.FindObjectOfType<SceneLoader>().LoadMG();
-                }
-                else if (Input.GetKeyDown(KeyCode.KeypadMultiply))
-                {
-                    string dest = H3MPPath + "/PatchHashes" + DateTimeOffset.Now.ToString().Replace("/", ".").Replace(":", ".") + ".json";
-                    File.Copy(H3MPPath + "/PatchHashes.json", dest);
-                    Mod.LogWarning("Writing new hashes to file!");
-                    File.WriteAllText(H3MPPath + "/PatchHashes.json", JObject.FromObject(PatchController.hashes).ToString());
-                }
-                else if (Input.GetKeyDown(KeyCode.KeypadDivide))
-                {
-                    SteamVR_LoadLevel.Begin("Friendly45_New", false, 0.5f, 0f, 0f, 0f, 1f);
-                }
-                else if (Input.GetKeyDown(KeyCode.KeypadEnter))
-                {
-                    Logger.LogWarning("Sending packet with size > MTU");
-                    using(Packet packet = new Packet(ThreadManager.host? (int)ServerPackets.MTUTest : (int)ClientPackets.MTUTest))
-                    {
-                        byte[] testArr = new byte[2048];
-                        packet.Write(testArr);
-                        if (ThreadManager.host)
-                        {
-                            ServerSend.SendTCPDataToAll(packet);
-                        }
-                        else
-                        {
-                            ClientSend.SendTCPData(packet);
+                                break;
                         }
                     }
                 }
