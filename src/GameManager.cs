@@ -811,7 +811,7 @@ namespace H3MP
                             {
                                 if (ThreadManager.host)
                                 {
-                                    Mod.LogInfo("Server made new object tracked",false);
+                                    Mod.LogInfo("Server made new object tracked with type ID: "+trackedObject.data.typeIdentifier,false);
                                     // This will also send a packet with the object to be added in the client's global item list
                                     Server.AddTrackedObject(trackedObject.data, 0);
                                 }
@@ -819,7 +819,7 @@ namespace H3MP
                                 {
                                     // Tell the server we need to add this item to global tracked objects
                                     trackedObject.data.localWaitingIndex = Client.localObjectCounter++;
-                                    Mod.LogInfo("Client made new object tracked with local waiting index: " + trackedObject.data.localWaitingIndex, false);
+                                    Mod.LogInfo("Client made new object tracked with local waiting index: " + trackedObject.data.localWaitingIndex+ " and type ID: "+trackedObject.data.typeIdentifier, false);
                                     Client.waitingLocalObjects.Add(trackedObject.data.localWaitingIndex, trackedObject.data);
                                     ClientSend.TrackedObject(trackedObject.data);
                                 }
@@ -859,6 +859,7 @@ namespace H3MP
 
         private static TrackedObject MakeObjectTracked(Transform root, TrackedObjectData parent, Type trackedObjectType)
         {
+            Mod.LogInfo("Making tracked object from "+root.name);
             return (TrackedObject)trackedObjectType.GetMethod("MakeTracked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).Invoke(null, new object[] { root, parent });
         }
 

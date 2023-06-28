@@ -600,7 +600,7 @@ namespace H3MP.Networking
 
         public static void AddTrackedObject(TrackedObjectData trackedObject)
         {
-            Mod.LogInfo("Client adding new tracked object with waiting local index: " + trackedObject.localWaitingIndex+" and tracked ID: "+trackedObject.trackedID, false);
+            Mod.LogInfo("Client adding new tracked object with waiting local index: " + trackedObject.localWaitingIndex+", tracked ID: "+trackedObject.trackedID+", and type ID: "+trackedObject.typeIdentifier, false);
             TrackedObjectData actualTrackedObject = null;
             // If this is a scene init object the server rejected
             if (trackedObject.trackedID == -2)
