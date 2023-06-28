@@ -257,6 +257,7 @@ namespace H3MP.Networking
 
         public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, bool join = false)
         {
+            Mod.LogInfo("Server sending SpawnPlayer order to "+clientID+": ID: "+ID+", username: "+username+", scene: "+scene+", instance: "+instance, false);
             using (Packet packet = new Packet((int)ServerPackets.spawnPlayer))
             {
                 packet.Write(ID);

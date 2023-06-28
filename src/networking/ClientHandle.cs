@@ -75,6 +75,8 @@ namespace H3MP.Networking
             int colorIndex = packet.ReadInt();
             bool join = packet.ReadBool();
 
+            Mod.LogInfo("ClientHandle SpawnPlayer, ID: " + ID + ", username: " + username, false);
+
             GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation, IFF, colorIndex, join);
         }
 

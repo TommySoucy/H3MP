@@ -315,22 +315,19 @@ namespace H3MP.Networking
             player.scene = scene;
             player.instance = instance;
 
-            // Spawn this client's player in all connected client but itself
+            // Spawn all other clients' players in this client
             foreach(ServerClient client in Server.clients.Values)
             {
-                if(client.player != null)
+                if(client.player != null && client.ID != ID)
                 {
-                    if(client.ID != ID)
-                    {
-                        ServerSend.SpawnPlayer(ID, client.player, scene, instance, IFF, colorIndex);
-                    }
+                    ServerSend.SpawnPlayer(ID, client.player, scene, instance, IFF, colorIndex);
                 }
             }
 
-            // Also spawn player for host
+            // Spawn this player for ourselves
             GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, instance, player.position, player.rotation, IFF, colorIndex);
 
-            // Spawn all clients' players in this client
+            // Spawn this client's player in every other client
             bool inControl = true;
             foreach (ServerClient client in Server.clients.Values)
             {
