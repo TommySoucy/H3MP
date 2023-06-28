@@ -1142,7 +1142,7 @@ namespace H3MP.Tracking
             }
             catch(Exception ex)
             {
-                Mod.LogError("Sosig update from packet error at step: "+debugStep+": "+ex.Message+":\n"+ex.StackTrace);
+                Mod.LogError("Sosig "+trackedID+" with local index "+localWaitingIndex+", update from packet with size: "+packet.buffer.Count+" error at step: "+debugStep+": "+ex.Message+":\n"+ex.StackTrace);
             }
 
             // Set physically

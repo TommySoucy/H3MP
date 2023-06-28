@@ -206,7 +206,7 @@ namespace H3MP.Networking
                                             else // packetID <= -2
                                             {
                                                 int index = packetID * -1 - 2;
-                                                if (Mod.customPacketHandlers[index] != null)
+                                                if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
                                                 {
 #if DEBUG
                                                     if (Input.GetKey(KeyCode.PageDown))
@@ -219,7 +219,7 @@ namespace H3MP.Networking
 #if DEBUG
                                                 else
                                                 {
-                                                    Mod.LogError("\tClient received invalid custom TCP packet ID: " + packetID);
+                                                    Mod.LogWarning("\tClient received invalid custom TCP packet ID: " + packetID);
                                                 }
 #endif
                                             }
@@ -363,7 +363,7 @@ namespace H3MP.Networking
                                 else // packetID <= -2
                                 {
                                     int index = packetID * -1 - 2;
-                                    if (Mod.customPacketHandlers[index] != null)
+                                    if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
                                     {
 #if DEBUG
                                         if (Input.GetKey(KeyCode.PageDown))
@@ -376,7 +376,7 @@ namespace H3MP.Networking
 #if DEBUG
                                     else
                                     {
-                                        Mod.LogError("\tClient received invalid custom UDP packet ID: " + packetID);
+                                        Mod.LogWarning("\tClient received invalid custom UDP packet ID: " + packetID);
                                     }
 #endif
                                 }
