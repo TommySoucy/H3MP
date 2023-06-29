@@ -37,6 +37,7 @@ namespace H3MP.Tracking
         public delegate void RemoveTrackedDamageables();
         public delegate int FindSecondary(object secondary);
         public delegate object GetSecondary(int index);
+        public delegate void OnDestruction();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
@@ -53,6 +54,7 @@ namespace H3MP.Tracking
         public RemoveTrackedDamageables removeTrackedDamageables;
         public FindSecondary findSecondary;
         public GetSecondary getSecondary;
+        public OnDestruction onDestruction;
         public object[] secondaries;
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public UnityEngine.Object dataObject;
@@ -774,6 +776,7 @@ namespace H3MP.Tracking
                 updateGivenFunc = UpdateGivenSosigWeaponInterface;
                 dataObject = asInterface;
                 sosigWeaponfireFunc = asInterface.W.FireGun;
+                onDestruction = SosigWeaponDestruction;
 
                 GameManager.trackedObjectByDamageable.Add(asInterface.W, this);
                 removeTrackedDamageables = RemoveTrackedSosigWeaponDamageables;
@@ -807,7 +810,7 @@ namespace H3MP.Tracking
 
         public void RemoveTrackedSosigWeaponDamageables()
         {
-            GameManager.trackedObjectByDamageable.Remove(((SosigWeaponPlayerInterface)dataObject).W as IFVRDamageable);
+            GameManager.trackedObjectByDamageable.Remove(((SosigWeaponPlayerInterface)dataObject).W);
         }
 
         public void RemoveTrackedSteelPopTargetDamageables()
@@ -7650,6 +7653,38 @@ namespace H3MP.Tracking
             return modified;
         }
 
+        private void SosigWeaponDestruction()
+        {
+            // Make sure this is not being interacted with by a Sosig
+            SosigWeaponPlayerInterface asInterface = dataObject as SosigWeaponPlayerInterface;
+            if(asInterface.W.SosigHoldingThis != null)
+            {
+                if(asInterface.W.HandHoldingThis != null)
+                {
+                    if (asInterface.W.HandHoldingThis.IsRightHand)
+                    {
+                        asInterface.W.SosigHoldingThis.Hand_Primary.DropHeldObject();
+                    }
+                    else
+                    {
+                        asInterface.W.SosigHoldingThis.Hand_Secondary.DropHeldObject();
+                    }
+                }
+                else
+                {
+                    for(int i=0; i< asInterface.W.SosigHoldingThis.Inventory.Slots.Count; ++i)
+                    {
+                        if (asInterface.W.SosigHoldingThis.Inventory.Slots[i] != null 
+                            && asInterface.W.SosigHoldingThis.Inventory.Slots[i].HeldObject == asInterface.W)
+                        {
+                            asInterface.W.SosigHoldingThis.Inventory.Slots[i].DetachHeldObject();
+                            break;
+                        }
+                    }
+                } 
+            }
+        }
+
         private bool UpdateGrappleThrowable()
         {
             GrappleThrowable asGrappleThrowable = dataObject as GrappleThrowable;
@@ -10146,7 +10181,13 @@ namespace H3MP.Tracking
                 removeTrackedDamageables();
             }
 
-            // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
+            // Call onDestruction in case the item subtype has something to do when it gets destroyed (See sosigWeaponPlayerInterface subtype)
+            if (onDestruction != null)
+            {
+                onDestruction();
+            }
+
+            // Ensure uncontrolled, which has to be done no matter what OnDestroy because we will not have the physicalObject anymore
             EnsureUncontrolled();
 
             base.OnDestroy();
