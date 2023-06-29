@@ -7622,30 +7622,43 @@ namespace H3MP.Tracking
             bool modified = false;
             SosigWeaponPlayerInterface asInterface = dataObject as SosigWeaponPlayerInterface;
 
-            if (itemData.data == null)
+            int debugStep = 0;
+            try
             {
-                modified = true;
-
-                // Set shots left
-                asInterface.W.m_shotsLeft = BitConverter.ToInt16(newData, 0);
-
-                // Set MechaState
-                asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
-            }
-            else
-            {
-                if (itemData.data[0] != newData[0] || itemData.data[1] != newData[1])
+                if (itemData.data == null)
                 {
+                    debugStep = 1;
+                    modified = true;
+
                     // Set shots left
                     asInterface.W.m_shotsLeft = BitConverter.ToInt16(newData, 0);
-                    modified = true;
-                }
-                if (itemData.data[2] != newData[2])
-                {
+
+                    debugStep = 2;
                     // Set MechaState
                     asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
-                    modified = true;
                 }
+                else
+                {
+                    debugStep = 3;
+                    if (itemData.data[0] != newData[0] || itemData.data[1] != newData[1])
+                    {
+                        debugStep = 4;
+                        // Set shots left
+                        asInterface.W.m_shotsLeft = BitConverter.ToInt16(newData, 0);
+                        modified = true;
+                    }
+                    if (itemData.data[2] != newData[2])
+                    {
+                        debugStep = 5;
+                        // Set MechaState
+                        asInterface.W.MechaState = (SosigWeapon.SosigWeaponMechaState)newData[2];
+                        modified = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("TrackedItem SosigWeaponPlayerInterface " + data.trackedID + " with local index " + data.localWaitingIndex + ", update given with newData size: " + newData.Length + " error at step: " + debugStep + ": " + ex.Message + ":\n" + ex.StackTrace);
             }
 
             itemData.data = newData;
