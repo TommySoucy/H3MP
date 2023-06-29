@@ -2196,7 +2196,7 @@ namespace H3MP.Networking
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
             {
                 ++TNH_UIManagerPatch.seedSkip;
-                Mod.currentTNHUIManager.OBS_RunSeed.SetSelectedButton(i);
+                Mod.currentTNHUIManager.OBS_RunSeed.SetSelectedButton(i + 1);
                 Mod.currentTNHUIManager.SetOBS_RunSeed(i);
                 GM.TNHOptions.TNHSeed = i;
                 --TNH_UIManagerPatch.seedSkip;
