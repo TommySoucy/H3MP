@@ -440,12 +440,6 @@ namespace H3MP.Patches
 
         static void Prefix()
         {
-            // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null)
-            {
-                return;
-            }
-
             inLoadDefaultSceneRoutine = true;
         }
 
@@ -460,15 +454,10 @@ namespace H3MP.Patches
     {
         static void Prefix(VaultFile file)
         {
-            if (Mod.managerObject == null)
-            {
-                return;
-            }
-
             if (LoadDefaultSceneRoutinePatch.inLoadDefaultSceneRoutine)
             {
                 // If first in scene/instance
-                if (GameManager.firstPlayerInSceneInstance)
+                if (Mod.managerObject == null || GameManager.firstPlayerInSceneInstance)
                 {
                     if (SpawnVaultFileRoutinePatch.initFiles == null)
                     {
@@ -534,12 +523,6 @@ namespace H3MP.Patches
 
         static void Prefix(ref VaultFile ___f)
         {
-            // Skip if not connected
-            if (Mod.managerObject == null)
-            {
-                return;
-            }
-
             if (filesToSkip != null && filesToSkip.Contains(___f.FileName))
             {
                 inSpawnVaultFileRoutineToSkip = true;
