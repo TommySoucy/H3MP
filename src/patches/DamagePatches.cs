@@ -448,6 +448,11 @@ namespace H3MP.Patches
     // Patches BallisticProjectile.MoveBullet to ignore latest IFVRDamageable if necessary
     class BallisticProjectileDamageablePatch
     {
+        // This will only let Damage() be called on the damageable by a single player
+        // We will apply damage if:
+        //  Damageable not identifiable across network
+        //  Firearm unidentified and we are best host
+        //  Firearm identified and we are controller
         public static bool GetActualFlag(bool flag2, FVRFireArm tempFA, IFVRDamageable damageable)
         {
             // Skip if not connected or no one to send data to
@@ -460,7 +465,7 @@ namespace H3MP.Patches
             {
                 // Note: If flag2, damageable != null
                 TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(damageable, out damageableObject) ? damageableObject : null;
-                if(damageableObject == null)
+                if(!(damageable is PlayerHitbox) && damageableObject == null)
                 {
                     return true; // Damageable object client side (not tracked), apply damage
                 }
@@ -728,7 +733,7 @@ namespace H3MP.Patches
             if (original != null)
             {
                 TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(original, out damageableObject) ? damageableObject : null;
-                if (damageableObject == null)
+                if (!(original is PlayerHitbox) && damageableObject == null)
                 {
                     return original; // Damageable object client side (not tracked), apply damage
                 }

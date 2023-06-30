@@ -1915,6 +1915,7 @@ namespace H3MP.Patches
             }
         }
 
+        // Patches ObjectCleanupInHold
         static IEnumerable<CodeInstruction> ObjectCleanupInHoldTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             // (3) Declare local for the tracked item
