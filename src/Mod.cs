@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
@@ -37,7 +36,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.6.5";
+        public const string pluginVersion = "1.6.6";
 
         // Assets
         public static JObject config;
@@ -334,9 +333,9 @@ namespace H3MP
                 else
                 {
                     Mod.LogInfo("Activating DebugCode: " + debugCode);
-                    if (debugCode != string.Empty)
+                    if (debugCode != string.Empty && int.TryParse(debugCode, out int code))
                     {
-                        switch (int.Parse(debugCode))
+                        switch (code)
                         {
                             case 0: // Start hosting
                                 Mod.LogInfo("\tDebug: Start hosting");
@@ -365,7 +364,7 @@ namespace H3MP
                                 }
                                 break;
                             case 4: // Load to main menu
-                                Mod.LogInfo("\tDebug: Laod to main menu");
+                                Mod.LogInfo("\tDebug: Load to main menu");
                                 SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
                                 break;
                             case 5: // Load to proving grounds
