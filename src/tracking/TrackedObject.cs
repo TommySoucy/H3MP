@@ -50,7 +50,7 @@ namespace H3MP.Tracking
             }
         }
 
-        private void OnTransformParentChanged()
+        public virtual void OnTransformParentChanged()
         {
             if (data.ignoreParentChanged > 0)
             {

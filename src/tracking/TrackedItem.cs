@@ -10,7 +10,7 @@ namespace H3MP.Tracking
     public class TrackedItem : TrackedObject
     {
         public TrackedItemData itemData;
-        public FVRPhysicalObject physicalItem; 
+        public FVRPhysicalObject physicalItem;
 
         public static float interpolationSpeed = 12f;
         public static bool interpolated = true;
@@ -37,6 +37,7 @@ namespace H3MP.Tracking
         public delegate void RemoveTrackedDamageables();
         public delegate int FindSecondary(object secondary);
         public delegate object GetSecondary(int index);
+        public delegate void ParentChanged();
         public delegate void OnDestruction();
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
@@ -54,9 +55,11 @@ namespace H3MP.Tracking
         public RemoveTrackedDamageables removeTrackedDamageables;
         public FindSecondary findSecondary;
         public GetSecondary getSecondary;
+        public ParentChanged parentChanged; // Update item's mount object depending on current state (See updateParentFunc above)
         public OnDestruction onDestruction;
         public object[] secondaries;
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
+        public int mountObjectID;
         public UnityEngine.Object dataObject;
         public int attachmentInterfaceDataSize;
         private bool positionSet;
@@ -136,19 +139,19 @@ namespace H3MP.Tracking
                 updateGivenFunc = UpdateGivenMagazine;
                 dataObject = physObj as FVRFireArmMagazine;
             }
-            else if(physObj is FVRFireArmClip)
+            else if (physObj is FVRFireArmClip)
             {
                 updateFunc = UpdateClip;
                 updateGivenFunc = UpdateGivenClip;
                 dataObject = physObj as FVRFireArmClip;
             }
-            else if(physObj is Speedloader)
+            else if (physObj is Speedloader)
             {
                 updateFunc = UpdateSpeedloader;
                 updateGivenFunc = UpdateGivenSpeedloader;
                 dataObject = physObj as Speedloader;
             }
-            else if(physObj is FVRFireArm)
+            else if (physObj is FVRFireArm)
             {
                 FVRFireArm asFA = physObj as FVRFireArm;
 
@@ -189,7 +192,7 @@ namespace H3MP.Tracking
 
                 // Process integrated LAPD2019Laser if we have one
                 LAPD2019Laser integratedLaser = asFA.GetComponentInChildren<LAPD2019Laser>();
-                if(integratedLaser != null)
+                if (integratedLaser != null)
                 {
                     this.integratedLaser = integratedLaser;
                     usesAutoToggle = integratedLaser.UsesAutoOnOff;
@@ -502,7 +505,7 @@ namespace H3MP.Tracking
                     chamberRound = ChamberFireArmRound;
                 }
             }
-            else if(physObj is SteelPopTarget)
+            else if (physObj is SteelPopTarget)
             {
                 SteelPopTarget asSPT = (SteelPopTarget)physObj;
                 updateFunc = UpdateSteelPopTarget;
@@ -513,7 +516,7 @@ namespace H3MP.Tracking
 
                 ReactiveSteelTarget[] secondaries = physObj.GetComponentsInChildren<ReactiveSteelTarget>();
                 this.secondaries = secondaries;
-                for (int i=0; i< secondaries.Length; ++i)
+                for (int i = 0; i < secondaries.Length; ++i)
                 {
                     GameManager.trackedObjectByDamageable.Add(secondaries[i], this);
                     removeTrackedDamageables = RemoveTrackedSteelPopTargetDamageables;
@@ -529,7 +532,7 @@ namespace H3MP.Tracking
                 GameManager.trackedObjectByDamageable.Add(asMolotov, this);
                 removeTrackedDamageables = RemoveTrackedCommonDamageables;
             }
-            else if(physObj is PinnedGrenade)
+            else if (physObj is PinnedGrenade)
             {
                 PinnedGrenade asPG = (PinnedGrenade)physObj;
                 updateFunc = UpdatePinnedGrenade;
@@ -569,7 +572,7 @@ namespace H3MP.Tracking
                 refScript.refIndex = refIndex;
                 asPG.SpawnOnSplode.Add(trackedItemRef);
             }
-            else if(physObj is FVRGrenade)
+            else if (physObj is FVRGrenade)
             {
                 FVRGrenade asGrenade = (FVRGrenade)physObj;
                 updateFunc = UpdateGrenade;
@@ -609,21 +612,21 @@ namespace H3MP.Tracking
                 refScript.refIndex = refIndex;
                 trackedItemRef.SetActive(false);
             }
-            else if(physObj is C4)
+            else if (physObj is C4)
             {
                 C4 asC4 = (C4)physObj;
                 updateFunc = UpdateC4;
                 updateGivenFunc = UpdateGivenC4;
                 dataObject = asC4;
             }
-            else if(physObj is ClaymoreMine)
+            else if (physObj is ClaymoreMine)
             {
                 ClaymoreMine asCM = (ClaymoreMine)physObj;
                 updateFunc = UpdateClaymoreMine;
                 updateGivenFunc = UpdateGivenClaymoreMine;
                 dataObject = asCM;
             }
-            else if(physObj is SLAM)
+            else if (physObj is SLAM)
             {
                 SLAM asSLAM = (SLAM)physObj;
                 updateFunc = UpdateSLAM;
@@ -642,7 +645,7 @@ namespace H3MP.Tracking
             else if (physObj is AttachableFirearmPhysicalObject)
             {
                 AttachableFirearmPhysicalObject asAttachableFirearmPhysicalObject = (AttachableFirearmPhysicalObject)physObj;
-                if(asAttachableFirearmPhysicalObject.FA is AttachableBreakActions)
+                if (asAttachableFirearmPhysicalObject.FA is AttachableBreakActions)
                 {
                     updateFunc = UpdateAttachableBreakActions;
                     updateGivenFunc = UpdateGivenAttachableBreakActions;
@@ -652,7 +655,7 @@ namespace H3MP.Tracking
                     getChamberIndex = GetFirstChamberIndex;
                     chamberRound = ChamberAttachableBreakActionsRound;
                 }
-                else if(asAttachableFirearmPhysicalObject.FA is AttachableClosedBoltWeapon)
+                else if (asAttachableFirearmPhysicalObject.FA is AttachableClosedBoltWeapon)
                 {
                     updateFunc = UpdateAttachableClosedBoltWeapon;
                     updateGivenFunc = UpdateGivenAttachableClosedBoltWeapon;
@@ -662,7 +665,7 @@ namespace H3MP.Tracking
                     getChamberIndex = GetFirstChamberIndex;
                     chamberRound = ChamberAttachableClosedBoltWeaponRound;
                 }
-                else if(asAttachableFirearmPhysicalObject.FA is AttachableTubeFed)
+                else if (asAttachableFirearmPhysicalObject.FA is AttachableTubeFed)
                 {
                     updateFunc = UpdateAttachableTubeFed;
                     updateGivenFunc = UpdateGivenAttachableTubeFed;
@@ -672,7 +675,7 @@ namespace H3MP.Tracking
                     getChamberIndex = GetFirstChamberIndex;
                     chamberRound = ChamberAttachableTubeFedRound;
                 }
-                else if(asAttachableFirearmPhysicalObject.FA is GP25)
+                else if (asAttachableFirearmPhysicalObject.FA is GP25)
                 {
                     updateFunc = UpdateGP25;
                     updateGivenFunc = UpdateGivenGP25;
@@ -682,7 +685,7 @@ namespace H3MP.Tracking
                     getChamberIndex = GetFirstChamberIndex;
                     chamberRound = ChamberGP25Round;
                 }
-                else if(asAttachableFirearmPhysicalObject.FA is M203)
+                else if (asAttachableFirearmPhysicalObject.FA is M203)
                 {
                     updateFunc = UpdateM203;
                     updateGivenFunc = UpdateGivenM203;
@@ -693,6 +696,7 @@ namespace H3MP.Tracking
                     chamberRound = ChamberM203Round;
                 }
                 updateParentFunc = UpdateAttachableFirearmParent;
+                parentChanged = AttachmentParentChanged;
                 dataObject = asAttachableFirearmPhysicalObject.FA;
             }
             else if (physObj is Suppressor)
@@ -701,6 +705,7 @@ namespace H3MP.Tracking
                 updateFunc = UpdateSuppressor;
                 updateGivenFunc = UpdateGivenSuppressor;
                 updateParentFunc = UpdateAttachmentParent;
+                parentChanged = AttachmentParentChanged;
                 dataObject = asAttachment;
             }
             else if (physObj is FVRFireArmAttachment)
@@ -709,6 +714,7 @@ namespace H3MP.Tracking
                 updateFunc = UpdateAttachment;
                 updateGivenFunc = UpdateGivenAttachment;
                 updateParentFunc = UpdateAttachmentParent;
+                parentChanged = AttachmentParentChanged;
                 dataObject = asAttachment;
 
                 // Init interface
@@ -725,43 +731,43 @@ namespace H3MP.Tracking
                 //       SmartTrigger
                 if (asAttachment.AttachmentInterface != null)
                 {
-                    if(asAttachment.AttachmentInterface is AttachableBipodInterface)
+                    if (asAttachment.AttachmentInterface is AttachableBipodInterface)
                     {
                         attachmentInterfaceUpdateFunc = UpdateAttachableBipod;
                         attachmentInterfaceUpdateGivenFunc = UpdateGivenAttachableBipod;
                         attachmentInterfaceDataSize = 1;
                     }
-                    else if(asAttachment.AttachmentInterface is FlagPoseSwitcher)
+                    else if (asAttachment.AttachmentInterface is FlagPoseSwitcher)
                     {
                         attachmentInterfaceUpdateFunc = UpdateFlagPoseSwitcher;
                         attachmentInterfaceUpdateGivenFunc = UpdateGivenFlagPoseSwitcher;
                         attachmentInterfaceDataSize = 2;
                     }
-                    else if(asAttachment.AttachmentInterface is FlipSight)
+                    else if (asAttachment.AttachmentInterface is FlipSight)
                     {
                         attachmentInterfaceUpdateFunc = UpdateFlipSight;
                         attachmentInterfaceUpdateGivenFunc = UpdateGivenFlipSight;
                         attachmentInterfaceDataSize = 1;
                     }
-                    else if(asAttachment.AttachmentInterface is FlipSightY)
+                    else if (asAttachment.AttachmentInterface is FlipSightY)
                     {
                         attachmentInterfaceUpdateFunc = UpdateFlipSightY;
                         attachmentInterfaceUpdateGivenFunc = UpdateGivenFlipSightY;
                         attachmentInterfaceDataSize = 1;
                     }
-                    else if(asAttachment.AttachmentInterface is LAM)
+                    else if (asAttachment.AttachmentInterface is LAM)
                     {
                         attachmentInterfaceUpdateFunc = UpdateLAM;
                         attachmentInterfaceUpdateGivenFunc = UpdateGivenLAM;
                         attachmentInterfaceDataSize = 1;
                     }
-                    else if(asAttachment.AttachmentInterface is LaserPointer)
+                    else if (asAttachment.AttachmentInterface is LaserPointer)
                     {
                         attachmentInterfaceUpdateFunc = UpdateLaserPointer;
                         attachmentInterfaceUpdateGivenFunc = UpdateGivenLaserPointer;
                         attachmentInterfaceDataSize = 1;
                     }
-                    else if(asAttachment.AttachmentInterface is TacticalFlashlight)
+                    else if (asAttachment.AttachmentInterface is TacticalFlashlight)
                     {
                         attachmentInterfaceUpdateFunc = UpdateTacticalFlashlight;
                         attachmentInterfaceUpdateGivenFunc = UpdateGivenTacticalFlashlight;
@@ -791,7 +797,7 @@ namespace H3MP.Tracking
             else // This is just a pure FVRPhysicalObject, we might want to track some other specific script on this item
             {
                 UberShatterable uberShatterable = physObj.GetComponent<UberShatterable>();
-                if(uberShatterable != null)
+                if (uberShatterable != null)
                 {
                     updateFunc = UpdateUberShatterable;
                     updateGivenFunc = UpdateGivenUberShatterable;
@@ -815,7 +821,7 @@ namespace H3MP.Tracking
 
         public void RemoveTrackedSteelPopTargetDamageables()
         {
-            for(int i=0; i < secondaries.Length; ++i)
+            for (int i = 0; i < secondaries.Length; ++i)
             {
                 if (secondaries[i] != null)
                 {
@@ -826,9 +832,9 @@ namespace H3MP.Tracking
 
         public bool UpdateItemData(byte[] newData = null)
         {
-            if(dataObject != null)
+            if (dataObject != null)
             {
-                if(newData != null)
+                if (newData != null)
                 {
                     return updateGivenFunc(newData);
                 }
@@ -894,7 +900,7 @@ namespace H3MP.Tracking
             {
                 int firstIndex = i * 4;
 
-                if(firstIndex >= asFA.GetChambers().Count)
+                if (firstIndex >= asFA.GetChambers().Count)
                 {
                     break;
                 }
@@ -944,7 +950,7 @@ namespace H3MP.Tracking
 
         private bool FireFireArm(int chamberIndex)
         {
-            if(chamberIndex == -1)
+            if (chamberIndex == -1)
             {
                 return false;
             }
@@ -956,7 +962,7 @@ namespace H3MP.Tracking
 
         private void SetFireArmUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
-            if(chamberIndex == -1)
+            if (chamberIndex == -1)
             {
                 return;
             }
@@ -972,14 +978,14 @@ namespace H3MP.Tracking
 
         private int GetFireArmChamberIndex(FVRFireArmChamber chamber)
         {
-            if(chamber == null)
+            if (chamber == null)
             {
                 return -1;
             }
 
             FVRFireArm asFA = dataObject as FVRFireArm;
             List<FVRFireArmChamber> chambers = asFA.GetChambers();
-            for (int i=0; i < chambers.Count; ++i)
+            for (int i = 0; i < chambers.Count; ++i)
             {
                 if (chambers[i] == chamber)
                 {
@@ -1920,7 +1926,7 @@ namespace H3MP.Tracking
                 {
                     if (!asPG.m_rings[i].HasPinDetached())
                     {
-                        if(newData[i + 1] == 1)
+                        if (newData[i + 1] == 1)
                         {
                             asPG.m_rings[i].m_hasPinDetached = true;
                             asPG.m_rings[i].Pin.RootRigidbody = asPG.m_rings[i].Pin.gameObject.AddComponent<Rigidbody>();
@@ -1940,7 +1946,7 @@ namespace H3MP.Tracking
                     }
                 }
 
-                if(pinPulled != newPinPulled)
+                if (pinPulled != newPinPulled)
                 {
                     asPG.m_isPinPulled = newPinPulled;
                 }
@@ -1968,7 +1974,7 @@ namespace H3MP.Tracking
 
             modified |= preval != itemData.data[0];
 
-            for(int i=0, index; i < asSPT.Joints.Count; ++i)
+            for (int i = 0, index; i < asSPT.Joints.Count; ++i)
             {
                 index = i * 12 + 1;
                 preval = itemData.data[index];
@@ -2038,7 +2044,7 @@ namespace H3MP.Tracking
 
         private int FindSteelPopTargetSecondary(object o)
         {
-            for(int i=0; i < secondaries.Length; ++i)
+            for (int i = 0; i < secondaries.Length; ++i)
             {
                 if (secondaries[i] == o)
                 {
@@ -2051,7 +2057,7 @@ namespace H3MP.Tracking
 
         private object GetSteelPopTargetSecondary(int i)
         {
-            if(i > -1 && i < secondaries.Length)
+            if (i > -1 && i < secondaries.Length)
             {
                 return secondaries[i];
             }
@@ -2454,9 +2460,9 @@ namespace H3MP.Tracking
         public int GetSingleActionRevolverChamberIndex(FVRFireArmChamber chamber)
         {
             SingleActionRevolver asRevolver = dataObject as SingleActionRevolver;
-            List< FVRFireArmChamber> chambers = asRevolver.GetChambers();
+            List<FVRFireArmChamber> chambers = asRevolver.GetChambers();
 
-            if(chamber == null)
+            if (chamber == null)
             {
                 return -1;
             }
@@ -2466,7 +2472,7 @@ namespace H3MP.Tracking
                 return chambers.Count;
             }
 
-            for (int i=0; i < chambers.Count; ++i)
+            for (int i = 0; i < chambers.Count; ++i)
             {
                 if (chambers[i] == chamber)
                 {
@@ -2482,7 +2488,7 @@ namespace H3MP.Tracking
             SingleActionRevolver asRevolver = dataObject as SingleActionRevolver;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == asRevolver.GetChambers().Count)
+            if (chamberIndex == asRevolver.GetChambers().Count)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asRevolver.GetChambers()[chamberIndex].transform.position, asRevolver.GetChambers()[chamberIndex].transform.rotation);
             }
@@ -2543,7 +2549,7 @@ namespace H3MP.Tracking
 
                 // Set mode
                 asSimpleLauncher.Mode = (SimpleLauncher2.fMode)newData[0];
-                if(asSimpleLauncher.Mode == SimpleLauncher2.fMode.dr)
+                if (asSimpleLauncher.Mode == SimpleLauncher2.fMode.dr)
                 {
                     // Dont want it to go into DR mode if not in control
                     asSimpleLauncher.Mode = SimpleLauncher2.fMode.tr;
@@ -2611,7 +2617,7 @@ namespace H3MP.Tracking
         {
             SimpleLauncher2 asSimpleLauncher = (SimpleLauncher2)dataObject;
             bool wasOnSA = false;
-            if(asSimpleLauncher.Mode == SimpleLauncher2.fMode.sa)
+            if (asSimpleLauncher.Mode == SimpleLauncher2.fMode.sa)
             {
                 wasOnSA = true;
                 asSimpleLauncher.Mode = SimpleLauncher2.fMode.tr;
@@ -2634,7 +2640,7 @@ namespace H3MP.Tracking
             --ChamberPatch.chamberSkip;
             asSimpleLauncher.Chamber.RoundType = prevRoundType;
         }
-        
+
         private bool UpdateSimpleLauncher()
         {
             SimpleLauncher asSimpleLauncher = (SimpleLauncher)dataObject;
@@ -3160,7 +3166,7 @@ namespace H3MP.Tracking
             RemoteMissileLauncher asRML = dataObject as RemoteMissileLauncher;
 
             // Set powered up
-            if((asRML.IsPoweredUp && newData[0] == 0) || (!asRML.IsPoweredUp && newData[0] == 1))
+            if ((asRML.IsPoweredUp && newData[0] == 0) || (!asRML.IsPoweredUp && newData[0] == 1))
             {
                 // Toggle
                 asRML.TogglePower();
@@ -3197,7 +3203,7 @@ namespace H3MP.Tracking
 
                     asRML.m_missile.speed = BitConverter.ToSingle(newData, 27);
                     asRML.m_missile.tarSpeed = BitConverter.ToSingle(newData, 31);
-                } 
+                }
                 //else if (newData[2] == 0)
                 //{
                 //    NOTE: This would destroy the current missile we have if the update says we do not want a missile
@@ -3277,7 +3283,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (itemData.data[0] != newData[0] ||itemData.data[1] != newData[1] ||itemData.data[2] != newData[2] ||itemData.data[3] != newData[3])
+                if (itemData.data[0] != newData[0] || itemData.data[1] != newData[1] || itemData.data[2] != newData[2] || itemData.data[3] != newData[3])
                 {
                     // Set m_chamberGas
                     asPG.m_chamberGas = BitConverter.ToSingle(newData, 0);
@@ -3381,7 +3387,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (itemData.data[0] != newData[0] ||itemData.data[1] != newData[1] ||itemData.data[2] != newData[2] ||itemData.data[3] != newData[3])
+                if (itemData.data[0] != newData[0] || itemData.data[1] != newData[1] || itemData.data[2] != newData[2] || itemData.data[3] != newData[3])
                 {
                     // Set heat
                     asMinigun.m_heat = BitConverter.ToSingle(newData, 0);
@@ -3421,7 +3427,7 @@ namespace H3MP.Tracking
             preval = itemData.data[1];
 
             // Write m_isCapOpen
-            itemData.data[1] = asM72.CanTubeBeGrabbed()? (byte)1 : (byte)0;
+            itemData.data[1] = asM72.CanTubeBeGrabbed() ? (byte)1 : (byte)0;
 
             modified |= preval != itemData.data[1];
 
@@ -3453,24 +3459,24 @@ namespace H3MP.Tracking
 
                 // Set safety
                 bool currentSafety = asM72.m_isSafetyEngaged;
-                if ((currentSafety && newData[0] == 0) || (!currentSafety && newData[0] == 1)) 
+                if ((currentSafety && newData[0] == 0) || (!currentSafety && newData[0] == 1))
                 {
                     asM72.ToggleSafety();
                 }
 
                 // Set cap
-                if((asM72.CanTubeBeGrabbed() && newData[1] == 0)||(!asM72.CanTubeBeGrabbed() && newData[1] == 1))
+                if ((asM72.CanTubeBeGrabbed() && newData[1] == 0) || (!asM72.CanTubeBeGrabbed() && newData[1] == 1))
                 {
                     asM72.ToggleCap();
                 }
 
                 // Set Tube state
-                if((asM72.TState == M72.TubeState.Forward || asM72.TState == M72.TubeState.Mid) && newData[2] == 2)
+                if ((asM72.TState == M72.TubeState.Forward || asM72.TState == M72.TubeState.Mid) && newData[2] == 2)
                 {
                     asM72.TState = M72.TubeState.Rear;
                     asM72.Tube.transform.localPosition = asM72.Tube_Rear.localPosition;
                 }
-                else if((asM72.TState == M72.TubeState.Mid || asM72.TState == M72.TubeState.Rear) && newData[2] == 0)
+                else if ((asM72.TState == M72.TubeState.Mid || asM72.TState == M72.TubeState.Rear) && newData[2] == 0)
                 {
                     asM72.TState = M72.TubeState.Forward;
                     asM72.Tube.transform.localPosition = asM72.Tube_Front.localPosition;
@@ -4071,7 +4077,7 @@ namespace H3MP.Tracking
                 return -1;
             }
 
-            for(int i=0; i < chambers.Length; ++i)
+            for (int i = 0; i < chambers.Length; ++i)
             {
                 if (chambers[i] == chamber)
                 {
@@ -4085,7 +4091,7 @@ namespace H3MP.Tracking
         private bool UpdateGBeamer()
         {
             GBeamer asGBeamer = dataObject as GBeamer;
-            
+
             bool modified = false;
 
             if (itemData.data == null)
@@ -4134,7 +4140,7 @@ namespace H3MP.Tracking
             GBeamer asGBeamer = dataObject as GBeamer;
 
             // Set battery switch state
-            if((asGBeamer.m_isBatterySwitchedOn && newData[0] == 0) || (!asGBeamer.m_isBatterySwitchedOn && newData[0] == 1))
+            if ((asGBeamer.m_isBatterySwitchedOn && newData[0] == 0) || (!asGBeamer.m_isBatterySwitchedOn && newData[0] == 1))
             {
                 // Toggle
                 asGBeamer.BatterySwitch.ToggleSwitch(false);
@@ -4142,7 +4148,7 @@ namespace H3MP.Tracking
             }
 
             // Set capacitor switch state
-            if((asGBeamer.m_isCapacitorSwitchedOn && newData[1] == 0) || (!asGBeamer.m_isCapacitorSwitchedOn && newData[1] == 1))
+            if ((asGBeamer.m_isCapacitorSwitchedOn && newData[1] == 0) || (!asGBeamer.m_isCapacitorSwitchedOn && newData[1] == 1))
             {
                 // Toggle
                 asGBeamer.CapacitorSwitch.ToggleSwitch(false);
@@ -4158,7 +4164,7 @@ namespace H3MP.Tracking
             }
 
             float newCapCharge = BitConverter.ToSingle(newData, 3);
-            if(asGBeamer.m_capacitorCharge != newCapCharge)
+            if (asGBeamer.m_capacitorCharge != newCapCharge)
             {
                 asGBeamer.m_capacitorCharge = newCapCharge;
                 modified = true;
@@ -4172,7 +4178,7 @@ namespace H3MP.Tracking
         private bool UpdateFlintlockWeapon()
         {
             FlintlockWeapon asFLW = physicalItem as FlintlockWeapon;
-            
+
             bool modified = false;
 
             if (itemData.data == null)
@@ -4272,7 +4278,7 @@ namespace H3MP.Tracking
             byte preval = itemData.data[0];
 
             // Write hammer state
-            itemData.data[0] = asFG.m_isHammerCocked ? (byte)1: (byte)0;
+            itemData.data[0] = asFG.m_isHammerCocked ? (byte)1 : (byte)0;
 
             modified |= preval != itemData.data[0];
 
@@ -4401,7 +4407,7 @@ namespace H3MP.Tracking
                 asFT.StopFiring();
                 modified = true;
             }
-            else if(!asFT.m_isFiring && newData[0] == 1)
+            else if (!asFT.m_isFiring && newData[0] == 1)
             {
                 // Start firing
                 asFT.m_hasFiredStartSound = true;
@@ -4591,11 +4597,11 @@ namespace H3MP.Tracking
             }
             else if (asCG.TailLatch.LState != CarlGustafLatch.CGLatchState.Open && asCG.TailLatch.m_hand == null)
             {
-                    float val = asCG.TailLatch.IsMinOpen ? asCG.TailLatch.RotMin : asCG.TailLatch.RotMax;
-                    asCG.TailLatch.m_curRot = val;
-                    asCG.TailLatch.m_tarRot = val;
-                    asCG.TailLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
-                    asCG.TailLatch.LState = CarlGustafLatch.CGLatchState.Open;
+                float val = asCG.TailLatch.IsMinOpen ? asCG.TailLatch.RotMin : asCG.TailLatch.RotMax;
+                asCG.TailLatch.m_curRot = val;
+                asCG.TailLatch.m_tarRot = val;
+                asCG.TailLatch.transform.localEulerAngles = new Vector3(0f, val, 0f);
+                asCG.TailLatch.LState = CarlGustafLatch.CGLatchState.Open;
             }
 
             // Set shell slide state
@@ -4927,15 +4933,15 @@ namespace H3MP.Tracking
                 return -1;
             }
 
-            if(asLAF.Chamber == chamber)
+            if (asLAF.Chamber == chamber)
             {
                 return 0;
             }
-            else if(asLAF.Chamber2 == chamber)
+            else if (asLAF.Chamber2 == chamber)
             {
                 return 1;
             }
-            else if(asLAF.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
+            else if (asLAF.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
             {
                 return 2;
             }
@@ -4947,19 +4953,19 @@ namespace H3MP.Tracking
         {
             LeverActionFirearm asLAF = dataObject as LeverActionFirearm;
 
-            if(chamberIndex == 0)
+            if (chamberIndex == 0)
             {
                 ++ChamberPatch.chamberSkip;
                 asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
                 --ChamberPatch.chamberSkip;
             }
-            else if(chamberIndex == 1)
+            else if (chamberIndex == 1)
             {
                 ++ChamberPatch.chamberSkip;
                 asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
                 --ChamberPatch.chamberSkip;
             }
-            else if(chamberIndex == 2)
+            else if (chamberIndex == 2)
             {
                 ++ChamberPatch.chamberSkip;
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
@@ -5030,7 +5036,7 @@ namespace H3MP.Tracking
                 {
                     asDerringer.CockHammer();
                 }
-                else if(newData[0] == 0 && asDerringer.IsExternalHammerCocked())
+                else if (newData[0] == 0 && asDerringer.IsExternalHammerCocked())
                 {
                     asDerringer.m_isExternalHammerCocked = false;
                 }
@@ -5102,12 +5108,12 @@ namespace H3MP.Tracking
             Derringer asDerringer = dataObject as Derringer;
             List<Derringer.DBarrel> barrels = asDerringer.Barrels;
 
-            if(chamber == null)
+            if (chamber == null)
             {
                 return -1;
             }
 
-            for(int i=0; i < barrels.Count; ++i)
+            for (int i = 0; i < barrels.Count; ++i)
             {
                 if (barrels[i].Chamber == chamber)
                 {
@@ -5317,7 +5323,7 @@ namespace H3MP.Tracking
             BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == asBreakActionWeapon.Barrels.Length)
+            if (chamberIndex == asBreakActionWeapon.Barrels.Length)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asBreakActionWeapon.GetChambers()[chamberIndex].transform.position, asBreakActionWeapon.GetChambers()[chamberIndex].transform.rotation);
             }
@@ -5538,7 +5544,7 @@ namespace H3MP.Tracking
             BAP asBAP = dataObject as BAP;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == 1)
+            if (chamberIndex == 1)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
             }
@@ -5659,7 +5665,7 @@ namespace H3MP.Tracking
 
                 // Set cyl loaded
                 bool newCylLoaded = newData[1] == 1;
-                if(newCylLoaded && !asRS.CylinderLoaded)
+                if (newCylLoaded && !asRS.CylinderLoaded)
                 {
                     // Load cylinder, chambers will be updated separately
                     asRS.ProxyCylinder.gameObject.SetActive(true);
@@ -5667,7 +5673,7 @@ namespace H3MP.Tracking
                     asRS.CurChamber = 0;
                     asRS.ProxyCylinder.localRotation = asRS.GetLocalRotationFromCylinder(0);
                 }
-                else if(!newCylLoaded && asRS.CylinderLoaded)
+                else if (!newCylLoaded && asRS.CylinderLoaded)
                 {
                     // Eject cylinder, chambers will be updated separately, handling the spawn of a physical cylinder will also be handled separately
                     asRS.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
@@ -5802,7 +5808,7 @@ namespace H3MP.Tracking
             RevolvingShotgun asRS = dataObject as RevolvingShotgun;
             FVRFireArmChamber[] chambers = asRS.Chambers;
 
-            if(chamber == null)
+            if (chamber == null)
             {
                 return -1;
             }
@@ -5812,7 +5818,7 @@ namespace H3MP.Tracking
                 return chambers.Length;
             }
 
-            for (int i=0; i < chambers.Length; ++i)
+            for (int i = 0; i < chambers.Length; ++i)
             {
                 if (chambers[i] == chamber)
                 {
@@ -5828,7 +5834,7 @@ namespace H3MP.Tracking
             RevolvingShotgun asRS = dataObject as RevolvingShotgun;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == asRS.GetChambers().Count)
+            if (chamberIndex == asRS.GetChambers().Count)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asRS.GetChambers()[chamberIndex].transform.position, asRS.GetChambers()[chamberIndex].transform.rotation);
             }
@@ -6030,7 +6036,7 @@ namespace H3MP.Tracking
                 return -1;
             }
 
-            if(asRevolver.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
+            if (asRevolver.GetIntegratedAttachableFirearm() != null && attachableFirearmGetChamberFunc() == chamber)
             {
                 return chambers.Length;
             }
@@ -6051,7 +6057,7 @@ namespace H3MP.Tracking
             Revolver asRevolver = dataObject as Revolver;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == asRevolver.Chambers.Length)
+            if (chamberIndex == asRevolver.Chambers.Length)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asRevolver.Chambers[chamberIndex].transform.position, asRevolver.Chambers[chamberIndex].transform.rotation);
             }
@@ -6069,7 +6075,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[5];
+                itemData.data = new byte[9];
                 modified = true;
             }
 
@@ -6084,29 +6090,13 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                if (asM203.Attachment.curMount.GetRootMount().ParentToThis)
+                for (int i = 0; i < asM203.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    for (int i = 0; i < asM203.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
+                    if (asM203.Attachment.curMount.MyObject.AttachmentMounts[i] == asM203.Attachment.curMount)
                     {
-                        if (asM203.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asM203.Attachment.curMount.GetRootMount())
-                        {
-                            itemData.data[0] = (byte)i;
-                            currentMountIndex = itemData.data[0];
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < asM203.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
-                    {
-                        if (asM203.Attachment.curMount.MyObject.AttachmentMounts[i] == asM203.Attachment.curMount)
-                        {
-                            itemData.data[0] = (byte)i;
-                            found = true;
-                            break;
-                        }
+                        itemData.data[0] = (byte)i;
+                        found = true;
+                        break;
                     }
                 }
                 if (!found)
@@ -6133,6 +6123,16 @@ namespace H3MP.Tracking
             }
 
             modified |= (preval != itemData.data[1] || preval0 != itemData.data[2] || preval1 != itemData.data[3] || preval2 != itemData.data[4]);
+
+            preval = itemData.data[5];
+            preval0 = itemData.data[6];
+            preval1 = itemData.data[7];
+            preval2 = itemData.data[8];
+
+            // Write mountObjectID
+            BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 5);
+
+            modified |= (preval != itemData.data[5] || preval0 != itemData.data[6] || preval1 != itemData.data[7] || preval2 != itemData.data[8]);
 
             return modified;
         }
@@ -6166,13 +6166,14 @@ namespace H3MP.Tracking
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
+                mountObjectID = BitConverter.ToInt32(newData, 5);
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -6295,7 +6296,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[6];
+                itemData.data = new byte[10];
                 modified = true;
             }
 
@@ -6310,29 +6311,13 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                if (asGP25.Attachment.curMount.GetRootMount().ParentToThis)
+                for (int i = 0; i < asGP25.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    for (int i = 0; i < asGP25.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
+                    if (asGP25.Attachment.curMount.MyObject.AttachmentMounts[i] == asGP25.Attachment.curMount)
                     {
-                        if (asGP25.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asGP25.Attachment.curMount.GetRootMount())
-                        {
-                            itemData.data[0] = (byte)i;
-                            currentMountIndex = itemData.data[0];
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < asGP25.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
-                    {
-                        if (asGP25.Attachment.curMount.MyObject.AttachmentMounts[i] == asGP25.Attachment.curMount)
-                        {
-                            itemData.data[0] = (byte)i;
-                            found = true;
-                            break;
-                        }
+                        itemData.data[0] = (byte)i;
+                        found = true;
+                        break;
                     }
                 }
                 if (!found)
@@ -6345,7 +6330,7 @@ namespace H3MP.Tracking
             byte preval = itemData.data[1];
 
             // Write safety
-            itemData.data[1] = (byte)(asGP25.m_safetyEngaged ? 1:0);
+            itemData.data[1] = (byte)(asGP25.m_safetyEngaged ? 1 : 0);
 
             modified |= preval != itemData.data[1];
 
@@ -6366,6 +6351,16 @@ namespace H3MP.Tracking
             }
 
             modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
+
+            preval = itemData.data[6];
+            preval0 = itemData.data[7];
+            preval1 = itemData.data[8];
+            preval2 = itemData.data[9];
+
+            // Write mountObjectID
+            BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 6);
+
+            modified |= (preval != itemData.data[6] || preval0 != itemData.data[7] || preval1 != itemData.data[8] || preval2 != itemData.data[9]);
 
             return modified;
         }
@@ -6399,13 +6394,14 @@ namespace H3MP.Tracking
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
+                mountObjectID = BitConverter.ToInt32(newData, 6);
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -6426,8 +6422,8 @@ namespace H3MP.Tracking
                         asGP25.Attachment.DetachFromMount();
                     }
 
-                    if (mount.isMountableOn(asGP25.Attachment)) 
-                    { 
+                    if (mount.isMountableOn(asGP25.Attachment))
+                    {
                         asGP25.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -6545,7 +6541,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[9];
+                itemData.data = new byte[13];
                 modified = true;
             }
 
@@ -6560,29 +6556,13 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                if (asATF.Attachment.curMount.GetRootMount().ParentToThis)
+                for (int i = 0; i < asATF.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    for (int i = 0; i < asATF.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
+                    if (asATF.Attachment.curMount.MyObject.AttachmentMounts[i] == asATF.Attachment.curMount)
                     {
-                        if (asATF.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asATF.Attachment.curMount.GetRootMount())
-                        {
-                            itemData.data[0] = (byte)i;
-                            currentMountIndex = itemData.data[0];
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < asATF.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
-                    {
-                        if (asATF.Attachment.curMount.MyObject.AttachmentMounts[i] == asATF.Attachment.curMount)
-                        {
-                            itemData.data[0] = (byte)i;
-                            found = true;
-                            break;
-                        }
+                        itemData.data[0] = (byte)i;
+                        found = true;
+                        break;
                     }
                 }
                 if (!found)
@@ -6641,6 +6621,16 @@ namespace H3MP.Tracking
                 modified |= preval != itemData.data[8];
             }
 
+            preval = itemData.data[9];
+            preval0 = itemData.data[10];
+            preval1 = itemData.data[11];
+            preval2 = itemData.data[12];
+
+            // Write mountObjectID
+            BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 9);
+
+            modified |= (preval != itemData.data[9] || preval0 != itemData.data[10] || preval1 != itemData.data[11] || preval2 != itemData.data[12]);
+
             return modified;
         }
 
@@ -6673,13 +6663,14 @@ namespace H3MP.Tracking
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
+                mountObjectID = BitConverter.ToInt32(newData, 9);
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -6700,8 +6691,8 @@ namespace H3MP.Tracking
                         asATF.Attachment.DetachFromMount();
                     }
 
-                    if (mount.isMountableOn(asATF.Attachment)) 
-                    { 
+                    if (mount.isMountableOn(asATF.Attachment))
+                    {
                         asATF.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -6863,7 +6854,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[8];
+                itemData.data = new byte[12];
                 modified = true;
             }
 
@@ -6878,29 +6869,13 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                if (asACBW.Attachment.curMount.GetRootMount().ParentToThis)
+                for (int i = 0; i < asACBW.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    for (int i = 0; i < asACBW.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
+                    if (asACBW.Attachment.curMount.MyObject.AttachmentMounts[i] == asACBW.Attachment.curMount)
                     {
-                        if (asACBW.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asACBW.Attachment.curMount.GetRootMount())
-                        {
-                            itemData.data[0] = (byte)i;
-                            currentMountIndex = itemData.data[0];
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < asACBW.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
-                    {
-                        if (asACBW.Attachment.curMount.MyObject.AttachmentMounts[i] == asACBW.Attachment.curMount)
-                        {
-                            itemData.data[0] = (byte)i;
-                            found = true;
-                            break;
-                        }
+                        itemData.data[0] = (byte)i;
+                        found = true;
+                        break;
                     }
                 }
                 if (!found)
@@ -6949,6 +6924,16 @@ namespace H3MP.Tracking
 
             modified |= (preval != itemData.data[4] || preval0 != itemData.data[5] || preval1 != itemData.data[5] || preval2 != itemData.data[6]);
 
+            preval = itemData.data[8];
+            preval0 = itemData.data[9];
+            preval1 = itemData.data[10];
+            preval2 = itemData.data[11];
+
+            // Write mountObjectID
+            BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 8);
+
+            modified |= (preval != itemData.data[8] || preval0 != itemData.data[9] || preval1 != itemData.data[10] || preval2 != itemData.data[11]);
+
             return modified;
         }
 
@@ -6981,13 +6966,14 @@ namespace H3MP.Tracking
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
+                mountObjectID = BitConverter.ToInt32(newData, 8);
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -7009,7 +6995,7 @@ namespace H3MP.Tracking
                     }
 
                     if (mount.isMountableOn(asACBW.Attachment))
-                    { 
+                    {
                         asACBW.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -7154,7 +7140,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[6];
+                itemData.data = new byte[10];
                 modified = true;
             }
 
@@ -7169,29 +7155,13 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                if (asABA.Attachment.curMount.GetRootMount().ParentToThis)
+                for (int i = 0; i < asABA.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    for (int i = 0; i < asABA.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
+                    if (asABA.Attachment.curMount.MyObject.AttachmentMounts[i] == asABA.Attachment.curMount)
                     {
-                        if (asABA.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asABA.Attachment.curMount.GetRootMount())
-                        {
-                            itemData.data[0] = (byte)i;
-                            currentMountIndex = itemData.data[0];
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < asABA.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
-                    {
-                        if (asABA.Attachment.curMount.MyObject.AttachmentMounts[i] == asABA.Attachment.curMount)
-                        {
-                            itemData.data[0] = (byte)i;
-                            found = true;
-                            break;
-                        }
+                        itemData.data[0] = (byte)i;
+                        found = true;
+                        break;
                     }
                 }
                 if (!found)
@@ -7226,6 +7196,16 @@ namespace H3MP.Tracking
 
             modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
 
+            preval = itemData.data[6];
+            preval0 = itemData.data[7];
+            preval1 = itemData.data[8];
+            preval2 = itemData.data[9];
+
+            // Write mountObjectID
+            BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 6);
+
+            modified |= (preval != itemData.data[6] || preval0 != itemData.data[7] || preval1 != itemData.data[8] || preval2 != itemData.data[9]);
+
             return modified;
         }
 
@@ -7258,13 +7238,14 @@ namespace H3MP.Tracking
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
+                mountObjectID = BitConverter.ToInt32(newData, 6);
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -7285,8 +7266,8 @@ namespace H3MP.Tracking
                         asABA.Attachment.DetachFromMount();
                     }
 
-                    if (mount.isMountableOn(asABA.Attachment)) 
-                    { 
+                    if (mount.isMountableOn(asABA.Attachment))
+                    {
                         asABA.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -7297,7 +7278,7 @@ namespace H3MP.Tracking
 
             // Set breachOpen
             bool newVal = newData[1] == 1;
-            if ((asABA.m_isBreachOpen && !newVal)||(!asABA.m_isBreachOpen && newVal))
+            if ((asABA.m_isBreachOpen && !newVal) || (!asABA.m_isBreachOpen && newVal))
             {
                 asABA.ToggleBreach();
                 modified = true;
@@ -7521,7 +7502,7 @@ namespace H3MP.Tracking
             byte preval2;
 
             // Write chambered round classes
-            for(int i=0; i < 5; ++i)
+            for (int i = 0; i < 5; ++i)
             {
                 int firstIndex = i * 4 + 1;
                 preval = itemData.data[firstIndex];
@@ -7652,12 +7633,12 @@ namespace H3MP.Tracking
             LAPD2019 asLAPD2019 = dataObject as LAPD2019;
             FVRFireArmChamber[] chambers = asLAPD2019.Chambers;
 
-            if(chamber == null)
+            if (chamber == null)
             {
                 return -1;
             }
 
-            for(int i = 0; i < chambers.Length; ++i)
+            for (int i = 0; i < chambers.Length; ++i)
             {
                 if (chambers[i] == chamber)
                 {
@@ -7665,7 +7646,7 @@ namespace H3MP.Tracking
                 }
             }
 
-            return - 1;
+            return -1;
         }
 
         private bool UpdateSosigWeaponInterface()
@@ -7750,9 +7731,9 @@ namespace H3MP.Tracking
         {
             // Make sure this is not being interacted with by a Sosig
             SosigWeaponPlayerInterface asInterface = dataObject as SosigWeaponPlayerInterface;
-            if(asInterface.W.SosigHoldingThis != null)
+            if (asInterface.W.SosigHoldingThis != null)
             {
-                if(asInterface.W.HandHoldingThis != null)
+                if (asInterface.W.HandHoldingThis != null)
                 {
                     if (asInterface.W.HandHoldingThis.IsRightHand)
                     {
@@ -7765,16 +7746,16 @@ namespace H3MP.Tracking
                 }
                 else
                 {
-                    for(int i=0; i< asInterface.W.SosigHoldingThis.Inventory.Slots.Count; ++i)
+                    for (int i = 0; i < asInterface.W.SosigHoldingThis.Inventory.Slots.Count; ++i)
                     {
-                        if (asInterface.W.SosigHoldingThis.Inventory.Slots[i] != null 
+                        if (asInterface.W.SosigHoldingThis.Inventory.Slots[i] != null
                             && asInterface.W.SosigHoldingThis.Inventory.Slots[i].HeldObject == asInterface.W)
                         {
                             asInterface.W.SosigHoldingThis.Inventory.Slots[i].DetachHeldObject();
                             break;
                         }
                     }
-                } 
+                }
             }
         }
 
@@ -7945,7 +7926,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[6];
 
             // Write chambered round class
-            if(asCBW.Chamber.GetRound() == null || asCBW.Chamber.GetRound().IsSpent)
+            if (asCBW.Chamber.GetRound() == null || asCBW.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 5);
             }
@@ -7987,7 +7968,7 @@ namespace H3MP.Tracking
             bool modified = false;
             ClosedBoltWeapon asCBW = dataObject as ClosedBoltWeapon;
 
-            if(itemData.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -7997,7 +7978,7 @@ namespace H3MP.Tracking
                 // Set camBurst
                 asCBW.m_CamBurst = newData[1];
             }
-            else 
+            else
             {
                 if (itemData.data[0] != newData[0])
                 {
@@ -8034,9 +8015,9 @@ namespace H3MP.Tracking
             // Set chamber
             short chamberTypeIndex = BitConverter.ToInt16(newData, 3);
             short chamberClassIndex = BitConverter.ToInt16(newData, 5);
-            if(chamberClassIndex == -1) // We don't want round in chamber
+            if (chamberClassIndex == -1) // We don't want round in chamber
             {
-                if(asCBW.Chamber.GetRound() != null)
+                if (asCBW.Chamber.GetRound() != null)
                 {
                     ++ChamberPatch.chamberSkip;
                     asCBW.Chamber.SetRound(null, false);
@@ -8047,7 +8028,7 @@ namespace H3MP.Tracking
             else // We want a round in the chamber
             {
                 FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
-                FireArmRoundClass roundClass = (FireArmRoundClass) chamberClassIndex;
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asCBW.Chamber.GetRound() == null || asCBW.Chamber.GetRound().RoundClass != roundClass)
                 {
                     if (asCBW.Chamber.RoundType == roundType)
@@ -8133,7 +8114,7 @@ namespace H3MP.Tracking
             ClosedBoltWeapon asCBW = (ClosedBoltWeapon)dataObject;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == 1)
+            if (chamberIndex == 1)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
             }
@@ -8263,7 +8244,7 @@ namespace H3MP.Tracking
             bool modified = false;
             Handgun asHandgun = dataObject as Handgun;
 
-            if(itemData.data == null)
+            if (itemData.data == null)
             {
                 modified = true;
 
@@ -8273,7 +8254,7 @@ namespace H3MP.Tracking
                 // Set camBurst
                 asHandgun.m_CamBurst = newData[1];
             }
-            else 
+            else
             {
                 if (itemData.data[0] != newData[0])
                 {
@@ -8312,9 +8293,9 @@ namespace H3MP.Tracking
             // Set chamber
             short chamberTypeIndex = BitConverter.ToInt16(newData, 3);
             short chamberClassIndex = BitConverter.ToInt16(newData, 5);
-            if(chamberClassIndex == -1) // We don't want round in chamber
+            if (chamberClassIndex == -1) // We don't want round in chamber
             {
-                if(asHandgun.Chamber.GetRound() != null)
+                if (asHandgun.Chamber.GetRound() != null)
                 {
                     ++ChamberPatch.chamberSkip;
                     asHandgun.Chamber.SetRound(null, false);
@@ -8325,7 +8306,7 @@ namespace H3MP.Tracking
             else // We want a round in the chamber
             {
                 FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
-                FireArmRoundClass roundClass = (FireArmRoundClass) chamberClassIndex;
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asHandgun.Chamber.GetRound() == null || asHandgun.Chamber.GetRound().RoundClass != roundClass)
                 {
                     if (asHandgun.Chamber.RoundType == roundType)
@@ -8451,7 +8432,7 @@ namespace H3MP.Tracking
             Handgun asHandgun = dataObject as Handgun;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == 1)
+            if (chamberIndex == 1)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
             }
@@ -8498,7 +8479,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[5];
 
             // Write chambered round class
-            if(asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().IsSpent)
+            if (asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -8621,7 +8602,7 @@ namespace H3MP.Tracking
             // Set chamber
             short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
             short chamberClassIndex = BitConverter.ToInt16(newData, 4);
-            if(chamberClassIndex == -1) // We don't want round in chamber
+            if (chamberClassIndex == -1) // We don't want round in chamber
             {
                 if (asTFS.Chamber.GetRound() != null)
                 {
@@ -8634,7 +8615,7 @@ namespace H3MP.Tracking
             else // We want a round in the chamber
             {
                 FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
-                FireArmRoundClass roundClass = (FireArmRoundClass) chamberClassIndex;
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().RoundClass != roundClass)
                 {
                     if (asTFS.Chamber.RoundType == roundType)
@@ -8734,7 +8715,7 @@ namespace H3MP.Tracking
             TubeFedShotgun asTFS = dataObject as TubeFedShotgun;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == 1)
+            if (chamberIndex == 1)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
             }
@@ -8781,7 +8762,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[5];
 
             // Write chambered round class
-            if(asBAR.Chamber.GetRound() == null || asBAR.Chamber.GetRound().IsSpent)
+            if (asBAR.Chamber.GetRound() == null || asBAR.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -8852,7 +8833,7 @@ namespace H3MP.Tracking
                 asBAR.BoltHandle.LastHandleRot = asBAR.BoltHandle.HandleRot;
                 asBAR.BoltHandle.HandleRot = (BoltActionRifle_Handle.BoltActionHandleRot)newData[7];
             }
-            else 
+            else
             {
                 if (itemData.data[0] != newData[0])
                 {
@@ -8891,13 +8872,13 @@ namespace H3MP.Tracking
                     modified = true;
                 }
             }
-            
+
             // Set chamber
             short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
             short chamberClassIndex = BitConverter.ToInt16(newData, 4);
-            if(chamberClassIndex == -1) // We don't want round in chamber
+            if (chamberClassIndex == -1) // We don't want round in chamber
             {
-                if(asBAR.Chamber.GetRound() != null)
+                if (asBAR.Chamber.GetRound() != null)
                 {
                     ++ChamberPatch.chamberSkip;
                     asBAR.Chamber.SetRound(null, false);
@@ -8908,7 +8889,7 @@ namespace H3MP.Tracking
             else // We want a round in the chamber
             {
                 FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
-                FireArmRoundClass roundClass = (FireArmRoundClass) chamberClassIndex;
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
                 if (asBAR.Chamber.GetRound() == null || asBAR.Chamber.GetRound().RoundClass != roundClass)
                 {
                     if (asBAR.Chamber.RoundType == roundType)
@@ -9008,7 +8989,7 @@ namespace H3MP.Tracking
             BoltActionRifle asBar = dataObject as BoltActionRifle;
 
             ++ChamberPatch.chamberSkip;
-            if(chamberIndex == 1)
+            if (chamberIndex == 1)
             {
                 attachableFirearmGetChamberFunc().SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
             }
@@ -9031,7 +9012,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[5];
+                itemData.data = new byte[9];
                 modified = true;
             }
 
@@ -9046,29 +9027,13 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                if (asAttachment.curMount.GetRootMount().ParentToThis)
+                for (int i = 0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    for (int i = 0; i < asAttachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
+                    if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
                     {
-                        if (asAttachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asAttachment.curMount.GetRootMount())
-                        {
-                            itemData.data[0] = (byte)i;
-                            currentMountIndex = itemData.data[0];
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
-                    {
-                        if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
-                        {
-                            itemData.data[0] = (byte)i;
-                            found = true;
-                            break;
-                        }
+                        itemData.data[0] = (byte)i;
+                        found = true;
+                        break;
                     }
                 }
                 if (!found)
@@ -9084,6 +9049,16 @@ namespace H3MP.Tracking
             preVals[3] = itemData.data[4];
             BitConverter.GetBytes(asAttachment.CatchRot).CopyTo(itemData.data, 1);
             modified |= (preVals[0] != itemData.data[1] || preVals[1] != itemData.data[2] || preVals[2] != itemData.data[3] || preVals[3] != itemData.data[4]);
+
+            preVals[0] = itemData.data[5];
+            preVals[1] = itemData.data[6];
+            preVals[2] = itemData.data[7];
+            preVals[3] = itemData.data[8];
+
+            // Write mountObjectID
+            BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 5);
+
+            modified |= (preVals[0] != itemData.data[5] || preVals[1] != itemData.data[6] || preVals[2] != itemData.data[7] || preVals[3] != itemData.data[8]);
 
             return modified || (preIndex != itemData.data[0]);
         }
@@ -9119,18 +9094,19 @@ namespace H3MP.Tracking
                     }
                 }
             }
-            else if(data.parent != -1)
+            else if (data.parent != -1)
             {
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
+                mountObjectID = BitConverter.ToInt32(newData, 6);
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -9162,7 +9138,7 @@ namespace H3MP.Tracking
             else // We have mount index but no parent index
             {
                 // Detach from any mount we are still on
-                if(asAttachment.curMount != null)
+                if (asAttachment.curMount != null)
                 {
                     ++data.ignoreParentChanged;
                     asAttachment.DetachFromMount();
@@ -9177,7 +9153,7 @@ namespace H3MP.Tracking
             }
 
             float newRot = BitConverter.ToSingle(newData, 1);
-            if(asAttachment.CatchRot != newRot)
+            if (asAttachment.CatchRot != newRot)
             {
                 asAttachment.CatchRot = newRot;
                 asAttachment.transform.localEulerAngles = new Vector3(0f, 0f, newRot);
@@ -9196,7 +9172,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[1 + attachmentInterfaceDataSize];
+                itemData.data = new byte[5 + attachmentInterfaceDataSize];
                 modified = true;
             }
 
@@ -9212,30 +9188,14 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                if (asAttachment.curMount.GetRootMount().ParentToThis)
+                for (int i = 0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
                 {
-                    for (int i = 0; i < asAttachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
+                    if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
                     {
-                        if (asAttachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asAttachment.curMount.GetRootMount())
-                        {
-                            itemData.data[0] = (byte)i;
-                            currentMountIndex = itemData.data[0];
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
-                    {
-                        if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
-                        {
-                            itemData.data[0] = (byte)i;
-                            currentMountIndex = itemData.data[0];
-                            found = true;
-                            break;
-                        }
+                        itemData.data[0] = (byte)i;
+                        currentMountIndex = itemData.data[0];
+                        found = true;
+                        break;
                     }
                 }
                 if (!found)
@@ -9245,8 +9205,19 @@ namespace H3MP.Tracking
                 }
             }
 
+            byte[] preVals = new byte[4];
+            preVals[0] = itemData.data[1];
+            preVals[1] = itemData.data[2];
+            preVals[2] = itemData.data[3];
+            preVals[3] = itemData.data[4];
+
+            // Write mountObjectID
+            BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 1);
+
+            modified |= (preVals[0] != itemData.data[1] || preVals[1] != itemData.data[2] || preVals[2] != itemData.data[3] || preVals[3] != itemData.data[4]);
+
             // Do interface update
-            if(attachmentInterfaceUpdateFunc != null)
+            if (attachmentInterfaceUpdateFunc != null)
             {
                 attachmentInterfaceUpdateFunc(asAttachment, ref modified);
             }
@@ -9290,21 +9261,24 @@ namespace H3MP.Tracking
                 // Find mount instance we want to be mounted to
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
+                mountObjectID = BitConverter.ToInt32(newData, 1);
                 if (ThreadManager.host)
                 {
-                    parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                 }
                 else
                 {
-                    parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                 {
+                    Mod.LogInfo("Trying to mount item at " + data.trackedID + " " + name + " to parent mount: " + newData[0]);
                     // We want to be mounted, we have a parent
                     if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                     {
                         mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
+                        Mod.LogInfo("\tGot enough mounts, null?: " + (mount == null));
                     }
                 }
 
@@ -9316,8 +9290,8 @@ namespace H3MP.Tracking
                         asAttachment.DetachFromMount();
                     }
 
-                    if (mount.isMountableOn(asAttachment)) 
-                    { 
+                    if (mount.isMountableOn(asAttachment))
+                    {
                         asAttachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -9379,22 +9353,24 @@ namespace H3MP.Tracking
                         parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
                     }
 
+                    Mod.LogInfo("Trying to mount item at " + data.trackedID + " " + name + " to parent mount: " + currentMountIndex);
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > currentMountIndex)
                     {
                         mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[currentMountIndex];
+                        Mod.LogInfo("\tGot enough mounts, null?: " + (mount == null));
                     }
 
                     // If not yet physically mounted to anything, can right away mount to the proper mount
                     if (asAttachment.curMount == null)
                     {
                         if (mount.isMountableOn(asAttachment))
-                        { 
+                        {
                             ++data.ignoreParentChanged;
                             asAttachment.AttachToMount(mount, true);
                             --data.ignoreParentChanged;
                         }
                     }
-                    else if(asAttachment.curMount != mount) // Already mounted, but not on the right one, need to unmount, then mount of right one
+                    else if (asAttachment.curMount != mount) // Already mounted, but not on the right one, need to unmount, then mount of right one
                     {
                         ++data.ignoreParentChanged;
                         if (asAttachment.curMount != null)
@@ -9415,14 +9391,38 @@ namespace H3MP.Tracking
             // else, on update we will detach from any current mount if this is the case, no need to handle this here
         }
 
+        private void AttachmentParentChanged()
+        {
+            if (data.controller == GameManager.ID)
+            {
+                FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
+
+                if (asAttachment.curMount == null)
+                {
+                    mountObjectID = -1;
+                }
+                else
+                {
+                    if (GameManager.trackedItemByItem.TryGetValue(asAttachment.curMount.MyObject, out TrackedItem myTrackedItem))
+                    {
+                        mountObjectID = myTrackedItem.data.trackedID;
+                    }
+                    else
+                    {
+                        mountObjectID = -1;
+                    }
+                }
+            }
+        }
+
         private void UpdateAttachableBipod(FVRFireArmAttachment att, ref bool modified)
         {
             AttachableBipodInterface asInterface = att.AttachmentInterface as AttachableBipodInterface;
 
             // Write expanded
-            byte preval = itemData.data[1];
-            itemData.data[1] = asInterface.Bipod.m_isBipodExpanded ? (byte)1 : (byte)0;
-            modified |= preval != itemData.data[1];
+            byte preval = itemData.data[5];
+            itemData.data[5] = asInterface.Bipod.m_isBipodExpanded ? (byte)1 : (byte)0;
+            modified |= preval != itemData.data[5];
         }
 
         private void UpdateGivenAttachableBipod(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9430,7 +9430,7 @@ namespace H3MP.Tracking
             AttachableBipodInterface asInterface = att.AttachmentInterface as AttachableBipodInterface;
 
             // Set expanded
-            if ((newData[1] == 1 && !asInterface.Bipod.m_isBipodExpanded) || (newData[1] == 0 && asInterface.Bipod.m_isBipodExpanded))
+            if ((newData[5] == 1 && !asInterface.Bipod.m_isBipodExpanded) || (newData[5] == 0 && asInterface.Bipod.m_isBipodExpanded))
             {
                 asInterface.Bipod.Toggle();
                 modified = true;
@@ -9442,10 +9442,10 @@ namespace H3MP.Tracking
             FlagPoseSwitcher asInterface = att.AttachmentInterface as FlagPoseSwitcher;
 
             // Write index
-            byte preval0 = itemData.data[1];
-            byte preval1 = itemData.data[2];
-            BitConverter.GetBytes((short)asInterface.m_index).CopyTo(itemData.data, 1);
-            modified |= (preval0 != itemData.data[1] || preval1 != itemData.data[2]);
+            byte preval0 = itemData.data[5];
+            byte preval1 = itemData.data[6];
+            BitConverter.GetBytes((short)asInterface.m_index).CopyTo(itemData.data, 5);
+            modified |= (preval0 != itemData.data[5] || preval1 != itemData.data[6]);
         }
 
         private void UpdateGivenFlagPoseSwitcher(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9453,7 +9453,7 @@ namespace H3MP.Tracking
             FlagPoseSwitcher asInterface = att.AttachmentInterface as FlagPoseSwitcher;
 
             // Set index
-            int newIndex = BitConverter.ToInt16(newData, 1);
+            int newIndex = BitConverter.ToInt16(newData, 5);
             if (newIndex != asInterface.m_index)
             {
                 asInterface.m_index = newIndex;
@@ -9468,9 +9468,9 @@ namespace H3MP.Tracking
             FlipSight asInterface = att.AttachmentInterface as FlipSight;
 
             // Write up
-            byte preval0 = itemData.data[1];
-            itemData.data[1] = asInterface.IsUp ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[1];
+            byte preval0 = itemData.data[5];
+            itemData.data[5] = asInterface.IsUp ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[5];
         }
 
         private void UpdateGivenFlipSight(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9478,7 +9478,7 @@ namespace H3MP.Tracking
             FlipSight asInterface = att.AttachmentInterface as FlipSight;
 
             // Set up
-            if ((newData[1] == 1 && !asInterface.IsUp)||(newData[1] == 0 && asInterface.IsUp))
+            if ((newData[5] == 1 && !asInterface.IsUp) || (newData[5] == 0 && asInterface.IsUp))
             {
                 asInterface.Flip();
                 modified = true;
@@ -9490,9 +9490,9 @@ namespace H3MP.Tracking
             FlipSightY asInterface = att.AttachmentInterface as FlipSightY;
 
             // Write up
-            byte preval0 = itemData.data[1];
-            itemData.data[1] = asInterface.IsUp ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[1];
+            byte preval0 = itemData.data[5];
+            itemData.data[5] = asInterface.IsUp ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[5];
         }
 
         private void UpdateGivenFlipSightY(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9500,7 +9500,7 @@ namespace H3MP.Tracking
             FlipSightY asInterface = att.AttachmentInterface as FlipSightY;
 
             // Set up
-            if ((newData[1] == 1 && !asInterface.IsUp)||(newData[1] == 0 && asInterface.IsUp))
+            if ((newData[5] == 1 && !asInterface.IsUp) || (newData[5] == 0 && asInterface.IsUp))
             {
                 asInterface.Flip();
                 modified = true;
@@ -9512,9 +9512,9 @@ namespace H3MP.Tracking
             LAM asInterface = att.AttachmentInterface as LAM;
 
             // Write state
-            byte preval0 = itemData.data[1];
-            itemData.data[1] = (byte)asInterface.LState;
-            modified |= preval0 != itemData.data[1];
+            byte preval0 = itemData.data[5];
+            itemData.data[5] = (byte)asInterface.LState;
+            modified |= preval0 != itemData.data[5];
         }
 
         private void UpdateGivenLAM(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9522,9 +9522,9 @@ namespace H3MP.Tracking
             LAM asInterface = att.AttachmentInterface as LAM;
 
             // Set state
-            if ((LAM.LAMState)newData[1] != asInterface.LState)
+            if ((LAM.LAMState)newData[5] != asInterface.LState)
             {
-                asInterface.LState = (LAM.LAMState)newData[1];
+                asInterface.LState = (LAM.LAMState)newData[5];
 
                 if (asInterface.LState == LAM.LAMState.Off)
                 {
@@ -9570,9 +9570,9 @@ namespace H3MP.Tracking
             LaserPointer asInterface = att.AttachmentInterface as LaserPointer;
 
             // Write on
-            byte preval0 = itemData.data[1];
-            itemData.data[1] = asInterface.BeamHitPoint.activeSelf ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[1];
+            byte preval0 = itemData.data[5];
+            itemData.data[5] = asInterface.BeamHitPoint.activeSelf ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[5];
         }
 
         private void UpdateGivenLaserPointer(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9580,7 +9580,7 @@ namespace H3MP.Tracking
             LaserPointer asInterface = att.AttachmentInterface as LaserPointer;
 
             // Set up
-            if ((newData[1] == 1 && !asInterface.BeamHitPoint.activeSelf) || (newData[1] == 0 && asInterface.BeamHitPoint.activeSelf))
+            if ((newData[5] == 1 && !asInterface.BeamHitPoint.activeSelf) || (newData[5] == 0 && asInterface.BeamHitPoint.activeSelf))
             {
                 asInterface.ToggleOn();
                 modified = true;
@@ -9592,9 +9592,9 @@ namespace H3MP.Tracking
             TacticalFlashlight asInterface = att.AttachmentInterface as TacticalFlashlight;
 
             // Write on
-            byte preval0 = itemData.data[1];
-            itemData.data[1] = asInterface.LightParts.activeSelf ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[1];
+            byte preval0 = itemData.data[5];
+            itemData.data[5] = asInterface.LightParts.activeSelf ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[5];
         }
 
         private void UpdateGivenTacticalFlashlight(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -9602,7 +9602,7 @@ namespace H3MP.Tracking
             TacticalFlashlight asInterface = att.AttachmentInterface as TacticalFlashlight;
 
             // Set up
-            if ((newData[1] == 1 && !asInterface.LightParts.activeSelf) || (newData[1] == 0 && asInterface.LightParts.activeSelf))
+            if ((newData[5] == 1 && !asInterface.LightParts.activeSelf) || (newData[5] == 0 && asInterface.LightParts.activeSelf))
             {
                 asInterface.ToggleOn();
                 modified = true;
@@ -9616,7 +9616,7 @@ namespace H3MP.Tracking
 
             int necessarySize = asMag.m_capacity * 2 + 10;
 
-            if(itemData.data == null || itemData.data.Length < necessarySize)
+            if (itemData.data == null || itemData.data.Length < necessarySize)
             {
                 itemData.data = new byte[necessarySize];
                 modified = true;
@@ -9631,7 +9631,7 @@ namespace H3MP.Tracking
             modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1]);
 
             // Write loaded round classes
-            for (int i=0; i < asMag.m_numRounds; ++i)
+            for (int i = 0; i < asMag.m_numRounds; ++i)
             {
                 preval0 = itemData.data[i * 2 + 2];
                 preval1 = itemData.data[i * 2 + 3];
@@ -9732,7 +9732,7 @@ namespace H3MP.Tracking
             {
                 int first = i * 2 + 2;
                 FireArmRoundClass newClass = (FireArmRoundClass)BitConverter.ToInt16(newData, first);
-                if(asMag.LoadedRounds.Length > i && asMag.LoadedRounds[i] != null && newClass == asMag.LoadedRounds[i].LR_Class)
+                if (asMag.LoadedRounds.Length > i && asMag.LoadedRounds[i] != null && newClass == asMag.LoadedRounds[i].LR_Class)
                 {
                     ++asMag.m_numRounds;
                 }
@@ -9781,7 +9781,7 @@ namespace H3MP.Tracking
                                 }
                                 else
                                 {
-                                    for(int i=0; i < asMag.FireArm.SecondaryMagazineSlots.Length; ++i)
+                                    for (int i = 0; i < asMag.FireArm.SecondaryMagazineSlots.Length; ++i)
                                     {
                                         if (asMag.FireArm.SecondaryMagazineSlots[i].Magazine == asMag)
                                         {
@@ -9805,7 +9805,7 @@ namespace H3MP.Tracking
                                 modified = true;
                             }
                         }
-                        else if(asMag.AttachableFireArm != null)
+                        else if (asMag.AttachableFireArm != null)
                         {
                             // Unload from current, load into new firearm
                             if (asMag.AttachableFireArm.Magazine == asMag)
@@ -9982,7 +9982,7 @@ namespace H3MP.Tracking
                     }
                     modified = true;
                 }
-                else if(asMag.AttachableFireArm != null)
+                else if (asMag.AttachableFireArm != null)
                 {
                     if (asMag.AttachableFireArm.Magazine == asMag)
                     {
@@ -10206,7 +10206,7 @@ namespace H3MP.Tracking
                     asSpeedloader.Chambers[i].Load(newClass, false);
                     --SpeedloaderChamberPatch.loadSkip;
                 }
-                else if(classIndex == -1 && asSpeedloader.Chambers[i].IsLoaded)
+                else if (classIndex == -1 && asSpeedloader.Chambers[i].IsLoaded)
                 {
                     asSpeedloader.Chambers[i].Unload();
                 }
@@ -10248,7 +10248,7 @@ namespace H3MP.Tracking
                         }
                     }
                 }
-                else if(!positionSet)
+                else if (!positionSet)
                 {
                     if (data.parent == -1)
                     {
@@ -10301,7 +10301,7 @@ namespace H3MP.Tracking
                 GameManager.trackedItemBySosigWeapon.Remove((physicalItem as SosigWeaponPlayerInterface).W);
             }
             GameManager.trackedObjectByInteractive.Remove(physicalItem);
-            if(removeTrackedDamageables != null)
+            if (removeTrackedDamageables != null)
             {
                 removeTrackedDamageables();
             }
@@ -10342,6 +10342,15 @@ namespace H3MP.Tracking
                 // Update locally
                 Mod.SetKinematicRecursive(physical.transform, false);
             }
+        }
+        public override void OnTransformParentChanged()
+        {
+            if(parentChanged != null)
+            {
+                parentChanged();
+            }
+
+            base.OnTransformParentChanged();
         }
     }
 }
