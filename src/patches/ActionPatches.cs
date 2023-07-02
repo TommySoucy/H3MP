@@ -5982,6 +5982,7 @@ namespace H3MP.Patches
             return Load(__instance, fireArm, slot);
         }
 
+        // Only allow load if we control mag
         private static bool Load(FVRFireArmMagazine magInstance, FVRFireArm fireArm, int slot = -1)
         {
             if (Mod.managerObject == null || loadSkip > 0)
