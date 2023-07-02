@@ -6084,13 +6084,29 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asM203.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                if (asM203.Attachment.curMount.GetRootMount().ParentToThis)
                 {
-                    if (asM203.Attachment.curMount.MyObject.AttachmentMounts[i] == asM203.Attachment.curMount)
+                    for (int i = 0; i < asM203.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
                     {
-                        itemData.data[0] = (byte)i;
-                        found = true;
-                        break;
+                        if (asM203.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asM203.Attachment.curMount.GetRootMount())
+                        {
+                            itemData.data[0] = (byte)i;
+                            currentMountIndex = itemData.data[0];
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < asM203.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                    {
+                        if (asM203.Attachment.curMount.MyObject.AttachmentMounts[i] == asM203.Attachment.curMount)
+                        {
+                            itemData.data[0] = (byte)i;
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found)
@@ -6294,13 +6310,29 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asGP25.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                if (asGP25.Attachment.curMount.GetRootMount().ParentToThis)
                 {
-                    if (asGP25.Attachment.curMount.MyObject.AttachmentMounts[i] == asGP25.Attachment.curMount)
+                    for (int i = 0; i < asGP25.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
                     {
-                        itemData.data[0] = (byte)i;
-                        found = true;
-                        break;
+                        if (asGP25.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asGP25.Attachment.curMount.GetRootMount())
+                        {
+                            itemData.data[0] = (byte)i;
+                            currentMountIndex = itemData.data[0];
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < asGP25.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                    {
+                        if (asGP25.Attachment.curMount.MyObject.AttachmentMounts[i] == asGP25.Attachment.curMount)
+                        {
+                            itemData.data[0] = (byte)i;
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found)
@@ -6528,13 +6560,29 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asATF.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                if (asATF.Attachment.curMount.GetRootMount().ParentToThis)
                 {
-                    if (asATF.Attachment.curMount.MyObject.AttachmentMounts[i] == asATF.Attachment.curMount)
+                    for (int i = 0; i < asATF.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
                     {
-                        itemData.data[0] = (byte)i;
-                        found = true;
-                        break;
+                        if (asATF.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asATF.Attachment.curMount.GetRootMount())
+                        {
+                            itemData.data[0] = (byte)i;
+                            currentMountIndex = itemData.data[0];
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < asATF.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                    {
+                        if (asATF.Attachment.curMount.MyObject.AttachmentMounts[i] == asATF.Attachment.curMount)
+                        {
+                            itemData.data[0] = (byte)i;
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found)
@@ -6830,13 +6878,29 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asACBW.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                if (asACBW.Attachment.curMount.GetRootMount().ParentToThis)
                 {
-                    if (asACBW.Attachment.curMount.MyObject.AttachmentMounts[i] == asACBW.Attachment.curMount)
+                    for (int i = 0; i < asACBW.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
                     {
-                        itemData.data[0] = (byte)i;
-                        found = true;
-                        break;
+                        if (asACBW.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asACBW.Attachment.curMount.GetRootMount())
+                        {
+                            itemData.data[0] = (byte)i;
+                            currentMountIndex = itemData.data[0];
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < asACBW.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                    {
+                        if (asACBW.Attachment.curMount.MyObject.AttachmentMounts[i] == asACBW.Attachment.curMount)
+                        {
+                            itemData.data[0] = (byte)i;
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found)
@@ -7105,13 +7169,29 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asABA.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                if (asABA.Attachment.curMount.GetRootMount().ParentToThis)
                 {
-                    if (asABA.Attachment.curMount.MyObject.AttachmentMounts[i] == asABA.Attachment.curMount)
+                    for (int i = 0; i < asABA.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
                     {
-                        itemData.data[0] = (byte)i;
-                        found = true;
-                        break;
+                        if (asABA.Attachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asABA.Attachment.curMount.GetRootMount())
+                        {
+                            itemData.data[0] = (byte)i;
+                            currentMountIndex = itemData.data[0];
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < asABA.Attachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                    {
+                        if (asABA.Attachment.curMount.MyObject.AttachmentMounts[i] == asABA.Attachment.curMount)
+                        {
+                            itemData.data[0] = (byte)i;
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found)
@@ -8966,13 +9046,29 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                for (int i = 0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                if (asAttachment.curMount.GetRootMount().ParentToThis)
                 {
-                    if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
+                    for (int i = 0; i < asAttachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
                     {
-                        itemData.data[0] = (byte)i;
-                        found = true;
-                        break;
+                        if (asAttachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asAttachment.curMount.GetRootMount())
+                        {
+                            itemData.data[0] = (byte)i;
+                            currentMountIndex = itemData.data[0];
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                    {
+                        if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
+                        {
+                            itemData.data[0] = (byte)i;
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found)
@@ -9116,14 +9212,30 @@ namespace H3MP.Tracking
             {
                 // Find the mount and set it
                 bool found = false;
-                for(int i=0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                if (asAttachment.curMount.GetRootMount().ParentToThis)
                 {
-                    if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
+                    for (int i = 0; i < asAttachment.curMount.GetRootMount().MyObject.AttachmentMounts.Count; ++i)
                     {
-                        itemData.data[0] = (byte)i;
-                        currentMountIndex = itemData.data[0];
-                        found = true;
-                        break;
+                        if (asAttachment.curMount.GetRootMount().MyObject.AttachmentMounts[i] == asAttachment.curMount.GetRootMount())
+                        {
+                            itemData.data[0] = (byte)i;
+                            currentMountIndex = itemData.data[0];
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < asAttachment.curMount.MyObject.AttachmentMounts.Count; ++i)
+                    {
+                        if (asAttachment.curMount.MyObject.AttachmentMounts[i] == asAttachment.curMount)
+                        {
+                            itemData.data[0] = (byte)i;
+                            currentMountIndex = itemData.data[0];
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found)
