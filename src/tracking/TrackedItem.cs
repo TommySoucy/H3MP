@@ -9337,7 +9337,7 @@ namespace H3MP.Tracking
 
             if (itemData.data[0] != 255) // We want to be attached to a mount
             {
-                if (data.parent != -1) // We have parent
+                if (mountObjectID != -1) // We have parent
                 {
                     // We could be on wrong mount (or none physically) if we got a new mount through update but the parent hadn't been updated yet
 
@@ -9346,17 +9346,17 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
 
-                    Mod.LogInfo("Trying to mount item at " + data.trackedID + " " + name + " to parent mount: " + currentMountIndex);
-                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > currentMountIndex)
+                    Mod.LogInfo("Trying to mount item at " + data.trackedID + " " + name + " to parent mount: " + itemData.data[0]);
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > itemData.data[0])
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[currentMountIndex];
+                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[itemData.data[0]];
                         Mod.LogInfo("\tGot enough mounts, null?: " + (mount == null));
                     }
 
