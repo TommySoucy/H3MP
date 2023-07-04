@@ -6148,6 +6148,8 @@ namespace H3MP.Tracking
                 // Should not be mounted, check if currently is
                 if (asM203.Attachment.curMount != null)
                 {
+                    asM203.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                    asM203.Attachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
                     asM203.Attachment.DetachFromMount();
                     --data.ignoreParentChanged;
@@ -6191,11 +6193,17 @@ namespace H3MP.Tracking
                     ++data.ignoreParentChanged;
                     if (asM203.Attachment.curMount != null)
                     {
+                        asM203.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asM203.Attachment.transform.localScale = new Vector3(1, 1, 1);
                         asM203.Attachment.DetachFromMount();
                     }
 
                     if (mount.isMountableOn(asM203.Attachment))
                     {
+                        if (asM203.Attachment.CanScaleToMount && mount.CanThisRescale())
+                        {
+                            asM203.Attachment.ScaleToMount(mount);
+                        }
                         asM203.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -6376,6 +6384,8 @@ namespace H3MP.Tracking
                 // Should not be mounted, check if currently is
                 if (asGP25.Attachment.curMount != null)
                 {
+                    asGP25.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                    asGP25.Attachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
                     asGP25.Attachment.DetachFromMount();
                     --data.ignoreParentChanged;
@@ -6419,11 +6429,17 @@ namespace H3MP.Tracking
                     ++data.ignoreParentChanged;
                     if (asGP25.Attachment.curMount != null)
                     {
+                        asGP25.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asGP25.Attachment.transform.localScale = new Vector3(1, 1, 1);
                         asGP25.Attachment.DetachFromMount();
                     }
 
                     if (mount.isMountableOn(asGP25.Attachment))
                     {
+                        if (asGP25.Attachment.CanScaleToMount && mount.CanThisRescale())
+                        {
+                            asGP25.Attachment.ScaleToMount(mount);
+                        }
                         asGP25.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -6645,6 +6661,8 @@ namespace H3MP.Tracking
                 // Should not be mounted, check if currently is
                 if (asATF.Attachment.curMount != null)
                 {
+                    asATF.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                    asATF.Attachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
                     asATF.Attachment.DetachFromMount();
                     --data.ignoreParentChanged;
@@ -6688,11 +6706,17 @@ namespace H3MP.Tracking
                     ++data.ignoreParentChanged;
                     if (asATF.Attachment.curMount != null)
                     {
+                        asATF.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asATF.Attachment.transform.localScale = new Vector3(1, 1, 1);
                         asATF.Attachment.DetachFromMount();
                     }
 
                     if (mount.isMountableOn(asATF.Attachment))
                     {
+                        if (asATF.Attachment.CanScaleToMount && mount.CanThisRescale())
+                        {
+                            asATF.Attachment.ScaleToMount(mount);
+                        }
                         asATF.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -6948,6 +6972,8 @@ namespace H3MP.Tracking
                 // Should not be mounted, check if currently is
                 if (asACBW.Attachment.curMount != null)
                 {
+                    asACBW.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                    asACBW.Attachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
                     asACBW.Attachment.DetachFromMount();
                     --data.ignoreParentChanged;
@@ -6991,11 +7017,17 @@ namespace H3MP.Tracking
                     ++data.ignoreParentChanged;
                     if (asACBW.Attachment.curMount != null)
                     {
+                        asACBW.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asACBW.Attachment.transform.localScale = new Vector3(1, 1, 1);
                         asACBW.Attachment.DetachFromMount();
                     }
 
                     if (mount.isMountableOn(asACBW.Attachment))
                     {
+                        if (asACBW.Attachment.CanScaleToMount && mount.CanThisRescale())
+                        {
+                            asACBW.Attachment.ScaleToMount(mount);
+                        }
                         asACBW.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -7220,6 +7252,8 @@ namespace H3MP.Tracking
                 // Should not be mounted, check if currently is
                 if (asABA.Attachment.curMount != null)
                 {
+                    asABA.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                    asABA.Attachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
                     asABA.Attachment.DetachFromMount();
                     --data.ignoreParentChanged;
@@ -7263,11 +7297,17 @@ namespace H3MP.Tracking
                     ++data.ignoreParentChanged;
                     if (asABA.Attachment.curMount != null)
                     {
+                        asABA.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asABA.Attachment.transform.localScale = new Vector3(1, 1, 1);
                         asABA.Attachment.DetachFromMount();
                     }
 
                     if (mount.isMountableOn(asABA.Attachment))
                     {
+                        if (asABA.Attachment.CanScaleToMount && mount.CanThisRescale())
+                        {
+                            asABA.Attachment.ScaleToMount(mount);
+                        }
                         asABA.Attachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -7402,6 +7442,10 @@ namespace H3MP.Tracking
                     {
                         if (mount.isMountableOn(asAttachment))
                         {
+                            if (asAttachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asAttachment.ScaleToMount(mount);
+                            }
                             ++data.ignoreParentChanged;
                             asAttachment.AttachToMount(mount, true);
                             --data.ignoreParentChanged;
@@ -7412,11 +7456,17 @@ namespace H3MP.Tracking
                         ++data.ignoreParentChanged;
                         if (asAttachment.curMount != null)
                         {
+                            asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                            asAttachment.transform.localScale = new Vector3(1, 1, 1);
                             asAttachment.DetachFromMount();
                         }
 
                         if (mount.isMountableOn(asAttachment))
                         {
+                            if (asAttachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asAttachment.ScaleToMount(mount);
+                            }
                             asAttachment.AttachToMount(mount, true);
                         }
                         --data.ignoreParentChanged;
@@ -9082,6 +9132,8 @@ namespace H3MP.Tracking
                 // Should not be mounted, check if currently is
                 if (asAttachment.curMount != null)
                 {
+                    asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                    asAttachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
                     asAttachment.DetachFromMount();
                     --data.ignoreParentChanged;
@@ -9124,11 +9176,17 @@ namespace H3MP.Tracking
                     ++data.ignoreParentChanged;
                     if (asAttachment.curMount != null)
                     {
+                        asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                        asAttachment.transform.localScale = new Vector3(1, 1, 1);
                         asAttachment.DetachFromMount();
                     }
 
                     if (mount.isMountableOn(asAttachment))
                     {
+                        if (asAttachment.CanScaleToMount && mount.CanThisRescale())
+                        {
+                            asAttachment.ScaleToMount(mount);
+                        }
                         asAttachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -9140,6 +9198,8 @@ namespace H3MP.Tracking
                 // Detach from any mount we are still on
                 if (asAttachment.curMount != null)
                 {
+                    asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                    asAttachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
                     asAttachment.DetachFromMount();
                     --data.ignoreParentChanged;
@@ -9244,6 +9304,8 @@ namespace H3MP.Tracking
                 // Should not be mounted, check if currently is
                 if (asAttachment.curMount != null)
                 {
+                    asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                    asAttachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
                     asAttachment.DetachFromMount();
                     --data.ignoreParentChanged;
@@ -9287,11 +9349,17 @@ namespace H3MP.Tracking
                 {
                     if (asAttachment.curMount != null)
                     {
+                        asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                        asAttachment.transform.localScale = new Vector3(1, 1, 1);
                         asAttachment.DetachFromMount();
                     }
 
                     if (mount.isMountableOn(asAttachment))
                     {
+                        if (asAttachment.CanScaleToMount && mount.CanThisRescale())
+                        {
+                            asAttachment.ScaleToMount(mount);
+                        }
                         asAttachment.AttachToMount(mount, true);
                     }
                     currentMountIndex = newData[0];
@@ -9302,6 +9370,8 @@ namespace H3MP.Tracking
                 // Detach from any mount we are still on
                 if (asAttachment.curMount != null)
                 {
+                    asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                    asAttachment.transform.localScale = new Vector3(1, 1, 1);
                     asAttachment.DetachFromMount();
 
                     // Detach from mount will recover rigidbody, set as kinematic if not controller
@@ -9365,6 +9435,10 @@ namespace H3MP.Tracking
                     {
                         if (mount.isMountableOn(asAttachment))
                         {
+                            if (asAttachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asAttachment.ScaleToMount(mount);
+                            }
                             ++data.ignoreParentChanged;
                             asAttachment.AttachToMount(mount, true);
                             --data.ignoreParentChanged;
@@ -9375,11 +9449,17 @@ namespace H3MP.Tracking
                         ++data.ignoreParentChanged;
                         if (asAttachment.curMount != null)
                         {
+                            asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                            asAttachment.transform.localScale = new Vector3(1, 1, 1);
                             asAttachment.DetachFromMount();
                         }
 
                         if (mount.isMountableOn(asAttachment))
                         {
+                            if (asAttachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asAttachment.ScaleToMount(mount);
+                            }
                             asAttachment.AttachToMount(mount, true);
                         }
                         --data.ignoreParentChanged;
