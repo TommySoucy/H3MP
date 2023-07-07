@@ -9489,6 +9489,7 @@ namespace H3MP.Tracking
             {
                 itemData.data[0] = 255;
                 currentMountIndex = 255;
+                mountObjectID = -1;
             }
             else
             {
@@ -9500,6 +9501,7 @@ namespace H3MP.Tracking
                     {
                         itemData.data[0] = (byte)i;
                         currentMountIndex = itemData.data[0];
+                        // Note: Instead of updating mountObjectID here, since it would be expensive, we set it on parent change and upon tracking
                         found = true;
                         break;
                     }
@@ -9508,6 +9510,7 @@ namespace H3MP.Tracking
                 {
                     itemData.data[0] = 255;
                     currentMountIndex = 255;
+                    mountObjectID = -1;
                 }
             }
 
@@ -9761,7 +9764,6 @@ namespace H3MP.Tracking
                         {
                             if (asAttachment.CanScaleToMount && mount.CanThisRescale())
                             {
-                                TODO: // Test every other modul prebuilt to check if scaling is correct
                                 asAttachment.ScaleToMount(mount);
                             }
                             asAttachment.AttachToMount(mount, true);

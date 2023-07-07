@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static H3MP.Tracking.TrackedItem;
 
 namespace H3MP.Tracking
 {
@@ -218,6 +217,28 @@ namespace H3MP.Tracking
                 additionalData = new byte[2];
                 additionalData[0] = (physicalItem.dataObject as UberShatterable).m_hasShattered ? (byte)1 : (byte)0;
                 additionalData[1] = 0; // Do not have destruction data
+            }
+            else if(physicalItem.dataObject is FVRFireArmAttachment)
+            {
+                if (GameManager.trackedItemByItem.TryGetValue((physicalItem.dataObject as FVRFireArmAttachment).curMount.MyObject, out TrackedItem myTrackedItem))
+                {
+                    physicalItem.mountObjectID = myTrackedItem.data.trackedID;
+                }
+                else
+                {
+                    physicalItem.mountObjectID = -1;
+                }
+            }
+            else if(physicalItem.dataObject is AttachableFirearm)
+            {
+                if (GameManager.trackedItemByItem.TryGetValue((physicalItem.dataObject as AttachableFirearm).Attachment.curMount.MyObject, out TrackedItem myTrackedItem))
+                {
+                    physicalItem.mountObjectID = myTrackedItem.data.trackedID;
+                }
+                else
+                {
+                    physicalItem.mountObjectID = -1;
+                }
             }
         }
 

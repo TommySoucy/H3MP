@@ -463,6 +463,16 @@ namespace H3MP
                                     }
                                 }
                                 break;
+                            case 15: // Spawn items
+                                Mod.LogInfo("\tDebug: Spawning items");
+                                //ModulAR300LowerFDEdupe
+                                //AR15UpperM4FDE
+
+                                GameObject lowerPrefab = IM.OD["ModulAR300LowerFDEdupe"].GetGameObject();
+                                Instantiate(lowerPrefab, GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward * 0.5f, Quaternion.identity);
+                                GameObject upperPrefab = IM.OD["AR15UpperM4FDE"].GetGameObject();
+                                Instantiate(upperPrefab, GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward, Quaternion.identity);
+                                break;
                         }
                     }
                 }
