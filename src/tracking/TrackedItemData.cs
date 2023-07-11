@@ -220,7 +220,8 @@ namespace H3MP.Tracking
             }
             else if(physicalItem.dataObject is FVRFireArmAttachment)
             {
-                if (GameManager.trackedItemByItem.TryGetValue((physicalItem.dataObject as FVRFireArmAttachment).curMount.MyObject, out TrackedItem myTrackedItem))
+                FVRFireArmAttachment asAttachment = physicalItem.dataObject as FVRFireArmAttachment;
+                if (asAttachment.curMount != null && GameManager.trackedItemByItem.TryGetValue(asAttachment.curMount.MyObject, out TrackedItem myTrackedItem))
                 {
                     physicalItem.mountObjectID = myTrackedItem.data.trackedID;
                 }
@@ -231,7 +232,8 @@ namespace H3MP.Tracking
             }
             else if(physicalItem.dataObject is AttachableFirearm)
             {
-                if (GameManager.trackedItemByItem.TryGetValue((physicalItem.dataObject as AttachableFirearm).Attachment.curMount.MyObject, out TrackedItem myTrackedItem))
+                AttachableFirearm asAFA = physicalItem.dataObject as AttachableFirearm;
+                if (asAFA.Attachment.curMount != null && GameManager.trackedItemByItem.TryGetValue(asAFA.Attachment.curMount.MyObject, out TrackedItem myTrackedItem))
                 {
                     physicalItem.mountObjectID = myTrackedItem.data.trackedID;
                 }

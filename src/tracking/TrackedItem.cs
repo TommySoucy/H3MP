@@ -6178,13 +6178,16 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 5);
-                if (ThreadManager.host)
+                if (mountObjectID != -1)
                 {
-                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
-                }
-                else
-                {
-                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    }
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -6445,13 +6448,16 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
-                if (ThreadManager.host)
+                if (mountObjectID != -1)
                 {
-                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
-                }
-                else
-                {
-                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    }
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -6753,13 +6759,16 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 9);
-                if (ThreadManager.host)
+                if (mountObjectID != -1)
                 {
-                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
-                }
-                else
-                {
-                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    }
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -7095,13 +7104,16 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 8);
-                if (ThreadManager.host)
+                if (mountObjectID != -1)
                 {
-                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
-                }
-                else
-                {
-                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    }
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -7406,13 +7418,16 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
-                if (ThreadManager.host)
+                if (mountObjectID != -1)
                 {
-                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
-                }
-                else
-                {
-                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    }
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -9373,13 +9388,16 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
-                if (ThreadManager.host)
+                if (mountObjectID != -1)
                 {
-                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
-                }
-                else
-                {
-                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    }
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -9579,13 +9597,20 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 1);
-                if (ThreadManager.host)
+                if (mountObjectID != -1)
                 {
-                    parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    }
                 }
                 else
                 {
-                    parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
+                    Mod.LogWarning("Item "+name+" at "+data.trackedID+" with parent: "+data.parent+" supposedly does not have mountObjectID");
                 }
 
                 if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
