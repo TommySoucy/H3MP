@@ -60,6 +60,7 @@ namespace H3MP.Tracking
         public object[] secondaries;
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public int mountObjectID;
+        public Vector3 mountObjectScale;
         public UnityEngine.Object dataObject;
         public int attachmentInterfaceDataSize;
         private bool positionSet;
@@ -6078,7 +6079,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[9];
+                itemData.data = new byte[21];
                 modified = true;
             }
 
@@ -6137,6 +6138,54 @@ namespace H3MP.Tracking
 
             modified |= (preval != itemData.data[5] || preval0 != itemData.data[6] || preval1 != itemData.data[7] || preval2 != itemData.data[8]);
 
+            // Write mount object scale
+            if(transform.parent == null)
+            {
+                preval = itemData.data[9];
+                preval0 = itemData.data[10];
+                preval1 = itemData.data[11];
+                preval2 = itemData.data[12];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 9);
+                modified |= (preval != itemData.data[9] || preval0 != itemData.data[10] || preval1 != itemData.data[11] || preval2 != itemData.data[12]);
+
+                preval = itemData.data[13];
+                preval0 = itemData.data[14];
+                preval1 = itemData.data[15];
+                preval2 = itemData.data[16];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 13);
+                modified |= (preval != itemData.data[13] || preval0 != itemData.data[14] || preval1 != itemData.data[15] || preval2 != itemData.data[16]);
+
+                preval = itemData.data[17];
+                preval0 = itemData.data[18];
+                preval1 = itemData.data[19];
+                preval2 = itemData.data[20];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 17);
+                modified |= (preval != itemData.data[17] || preval0 != itemData.data[18] || preval1 != itemData.data[19] || preval2 != itemData.data[20]);
+            }
+            else
+            {
+                preval = itemData.data[9];
+                preval0 = itemData.data[10];
+                preval1 = itemData.data[11];
+                preval2 = itemData.data[12];
+                BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 9);
+                modified |= (preval != itemData.data[9] || preval0 != itemData.data[10] || preval1 != itemData.data[11] || preval2 != itemData.data[12]);
+
+                preval = itemData.data[13];
+                preval0 = itemData.data[14];
+                preval1 = itemData.data[15];
+                preval2 = itemData.data[16];
+                BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 13);
+                modified |= (preval != itemData.data[13] || preval0 != itemData.data[14] || preval1 != itemData.data[15] || preval2 != itemData.data[16]);
+
+                preval = itemData.data[17];
+                preval0 = itemData.data[18];
+                preval1 = itemData.data[19];
+                preval2 = itemData.data[20];
+                BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 17);
+                modified |= (preval != itemData.data[17] || preval0 != itemData.data[18] || preval1 != itemData.data[19] || preval2 != itemData.data[20]);
+            }
+
             return modified;
         }
 
@@ -6178,6 +6227,7 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 5);
+                mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 9), BitConverter.ToSingle(newData, 13), BitConverter.ToSingle(newData, 17));
                 if (mountObjectID != -1)
                 {
                     if (ThreadManager.host)
@@ -6212,6 +6262,16 @@ namespace H3MP.Tracking
 
                     if (CanAttachToMount(asM203.Attachment, mount))
                     {
+                        // Apply mount object scale
+                        if (mount.GetRootMount().ParentToThis)
+                        {
+                            mount.GetRootMount().transform.localScale = mountObjectScale;
+                        }
+                        else
+                        {
+                            mount.MyObject.transform.localScale = mountObjectScale;
+                        }
+
                         if (asM203.Attachment.CanScaleToMount && mount.CanThisRescale())
                         {
                             asM203.Attachment.ScaleToMount(mount);
@@ -6341,7 +6401,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[10];
+                itemData.data = new byte[22];
                 modified = true;
             }
 
@@ -6407,6 +6467,54 @@ namespace H3MP.Tracking
 
             modified |= (preval != itemData.data[6] || preval0 != itemData.data[7] || preval1 != itemData.data[8] || preval2 != itemData.data[9]);
 
+            // Write mount object scale
+            if (transform.parent == null)
+            {
+                preval = itemData.data[10];
+                preval0 = itemData.data[11];
+                preval1 = itemData.data[12];
+                preval2 = itemData.data[13];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 10);
+                modified |= (preval != itemData.data[10] || preval0 != itemData.data[11] || preval1 != itemData.data[12] || preval2 != itemData.data[13]);
+
+                preval = itemData.data[14];
+                preval0 = itemData.data[15];
+                preval1 = itemData.data[16];
+                preval2 = itemData.data[17];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 14);
+                modified |= (preval != itemData.data[14] || preval0 != itemData.data[15] || preval1 != itemData.data[16] || preval2 != itemData.data[17]);
+
+                preval = itemData.data[18];
+                preval0 = itemData.data[19];
+                preval1 = itemData.data[20];
+                preval2 = itemData.data[21];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 18);
+                modified |= (preval != itemData.data[18] || preval0 != itemData.data[19] || preval1 != itemData.data[20] || preval2 != itemData.data[21]);
+            }
+            else
+            {
+                preval = itemData.data[10];
+                preval0 = itemData.data[11];
+                preval1 = itemData.data[12];
+                preval2 = itemData.data[13];
+                BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 10);
+                modified |= (preval != itemData.data[10] || preval0 != itemData.data[11] || preval1 != itemData.data[12] || preval2 != itemData.data[13]);
+
+                preval = itemData.data[14];
+                preval0 = itemData.data[15];
+                preval1 = itemData.data[16];
+                preval2 = itemData.data[17];
+                BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 14);
+                modified |= (preval != itemData.data[14] || preval0 != itemData.data[15] || preval1 != itemData.data[16] || preval2 != itemData.data[17]);
+
+                preval = itemData.data[18];
+                preval0 = itemData.data[19];
+                preval1 = itemData.data[20];
+                preval2 = itemData.data[21];
+                BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 18);
+                modified |= (preval != itemData.data[18] || preval0 != itemData.data[19] || preval1 != itemData.data[20] || preval2 != itemData.data[21]);
+            }
+
             return modified;
         }
 
@@ -6448,6 +6556,7 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
+                mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 10), BitConverter.ToSingle(newData, 14), BitConverter.ToSingle(newData, 18));
                 if (mountObjectID != -1)
                 {
                     if (ThreadManager.host)
@@ -6482,6 +6591,16 @@ namespace H3MP.Tracking
 
                     if (CanAttachToMount(asGP25.Attachment, mount))
                     {
+                        // Apply mount object scale
+                        if (mount.GetRootMount().ParentToThis)
+                        {
+                            mount.GetRootMount().transform.localScale = mountObjectScale;
+                        }
+                        else
+                        {
+                            mount.MyObject.transform.localScale = mountObjectScale;
+                        }
+
                         if (asGP25.Attachment.CanScaleToMount && mount.CanThisRescale())
                         {
                             asGP25.Attachment.ScaleToMount(mount);
@@ -6628,7 +6747,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[13];
+                itemData.data = new byte[25];
                 modified = true;
             }
 
@@ -6718,6 +6837,54 @@ namespace H3MP.Tracking
 
             modified |= (preval != itemData.data[9] || preval0 != itemData.data[10] || preval1 != itemData.data[11] || preval2 != itemData.data[12]);
 
+            // Write mount object scale
+            if (transform.parent == null)
+            {
+                preval = itemData.data[13];
+                preval0 = itemData.data[14];
+                preval1 = itemData.data[15];
+                preval2 = itemData.data[16];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 13);
+                modified |= (preval != itemData.data[13] || preval0 != itemData.data[14] || preval1 != itemData.data[15] || preval2 != itemData.data[16]);
+
+                preval = itemData.data[17];
+                preval0 = itemData.data[18];
+                preval1 = itemData.data[19];
+                preval2 = itemData.data[20];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 17);
+                modified |= (preval != itemData.data[17] || preval0 != itemData.data[18] || preval1 != itemData.data[19] || preval2 != itemData.data[20]);
+
+                preval = itemData.data[21];
+                preval0 = itemData.data[22];
+                preval1 = itemData.data[23];
+                preval2 = itemData.data[24];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 21);
+                modified |= (preval != itemData.data[21] || preval0 != itemData.data[22] || preval1 != itemData.data[23] || preval2 != itemData.data[24]);
+            }
+            else
+            {
+                preval = itemData.data[13];
+                preval0 = itemData.data[14];
+                preval1 = itemData.data[15];
+                preval2 = itemData.data[16];
+                BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 13);
+                modified |= (preval != itemData.data[13] || preval0 != itemData.data[14] || preval1 != itemData.data[15] || preval2 != itemData.data[16]);
+
+                preval = itemData.data[17];
+                preval0 = itemData.data[18];
+                preval1 = itemData.data[19];
+                preval2 = itemData.data[20];
+                BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 17);
+                modified |= (preval != itemData.data[17] || preval0 != itemData.data[18] || preval1 != itemData.data[19] || preval2 != itemData.data[20]);
+
+                preval = itemData.data[21];
+                preval0 = itemData.data[22];
+                preval1 = itemData.data[23];
+                preval2 = itemData.data[24];
+                BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 21);
+                modified |= (preval != itemData.data[21] || preval0 != itemData.data[22] || preval1 != itemData.data[23] || preval2 != itemData.data[24]);
+            }
+
             return modified;
         }
 
@@ -6759,6 +6926,7 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 9);
+                mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 13), BitConverter.ToSingle(newData, 17), BitConverter.ToSingle(newData, 21));
                 if (mountObjectID != -1)
                 {
                     if (ThreadManager.host)
@@ -6793,6 +6961,16 @@ namespace H3MP.Tracking
 
                     if (CanAttachToMount(asATF.Attachment, mount))
                     {
+                        // Apply mount object scale
+                        if (mount.GetRootMount().ParentToThis)
+                        {
+                            mount.GetRootMount().transform.localScale = mountObjectScale;
+                        }
+                        else
+                        {
+                            mount.MyObject.transform.localScale = mountObjectScale;
+                        }
+
                         if (asATF.Attachment.CanScaleToMount && mount.CanThisRescale())
                         {
                             asATF.Attachment.ScaleToMount(mount);
@@ -6983,7 +7161,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[12];
+                itemData.data = new byte[24];
                 modified = true;
             }
 
@@ -7063,6 +7241,54 @@ namespace H3MP.Tracking
 
             modified |= (preval != itemData.data[8] || preval0 != itemData.data[9] || preval1 != itemData.data[10] || preval2 != itemData.data[11]);
 
+            // Write mount object scale
+            if (transform.parent == null)
+            {
+                preval = itemData.data[12];
+                preval0 = itemData.data[13];
+                preval1 = itemData.data[14];
+                preval2 = itemData.data[15];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 12);
+                modified |= (preval != itemData.data[12] || preval0 != itemData.data[13] || preval1 != itemData.data[14] || preval2 != itemData.data[15]);
+
+                preval = itemData.data[16];
+                preval0 = itemData.data[17];
+                preval1 = itemData.data[18];
+                preval2 = itemData.data[19];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 16);
+                modified |= (preval != itemData.data[16] || preval0 != itemData.data[17] || preval1 != itemData.data[18] || preval2 != itemData.data[19]);
+
+                preval = itemData.data[20];
+                preval0 = itemData.data[21];
+                preval1 = itemData.data[22];
+                preval2 = itemData.data[23];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 20);
+                modified |= (preval != itemData.data[20] || preval0 != itemData.data[21] || preval1 != itemData.data[22] || preval2 != itemData.data[23]);
+            }
+            else
+            {
+                preval = itemData.data[12];
+                preval0 = itemData.data[13];
+                preval1 = itemData.data[14];
+                preval2 = itemData.data[15];
+                BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 12);
+                modified |= (preval != itemData.data[12] || preval0 != itemData.data[13] || preval1 != itemData.data[14] || preval2 != itemData.data[15]);
+
+                preval = itemData.data[16];
+                preval0 = itemData.data[17];
+                preval1 = itemData.data[18];
+                preval2 = itemData.data[19];
+                BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 16);
+                modified |= (preval != itemData.data[16] || preval0 != itemData.data[17] || preval1 != itemData.data[18] || preval2 != itemData.data[19]);
+
+                preval = itemData.data[20];
+                preval0 = itemData.data[21];
+                preval1 = itemData.data[22];
+                preval2 = itemData.data[23];
+                BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 20);
+                modified |= (preval != itemData.data[20] || preval0 != itemData.data[21] || preval1 != itemData.data[22] || preval2 != itemData.data[23]);
+            }
+
             return modified;
         }
 
@@ -7104,6 +7330,7 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 8);
+                mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 12), BitConverter.ToSingle(newData, 16), BitConverter.ToSingle(newData, 20));
                 if (mountObjectID != -1)
                 {
                     if (ThreadManager.host)
@@ -7138,6 +7365,16 @@ namespace H3MP.Tracking
 
                     if (CanAttachToMount(asACBW.Attachment, mount))
                     {
+                        // Apply mount object scale
+                        if (mount.GetRootMount().ParentToThis)
+                        {
+                            mount.GetRootMount().transform.localScale = mountObjectScale;
+                        }
+                        else
+                        {
+                            mount.MyObject.transform.localScale = mountObjectScale;
+                        }
+
                         if (asACBW.Attachment.CanScaleToMount && mount.CanThisRescale())
                         {
                             asACBW.Attachment.ScaleToMount(mount);
@@ -7311,7 +7548,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[10];
+                itemData.data = new byte[22];
                 modified = true;
             }
 
@@ -7377,6 +7614,54 @@ namespace H3MP.Tracking
 
             modified |= (preval != itemData.data[6] || preval0 != itemData.data[7] || preval1 != itemData.data[8] || preval2 != itemData.data[9]);
 
+            // Write mount object scale
+            if (transform.parent == null)
+            {
+                preval = itemData.data[10];
+                preval0 = itemData.data[11];
+                preval1 = itemData.data[12];
+                preval2 = itemData.data[13];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 10);
+                modified |= (preval != itemData.data[10] || preval0 != itemData.data[11] || preval1 != itemData.data[12] || preval2 != itemData.data[13]);
+
+                preval = itemData.data[14];
+                preval0 = itemData.data[15];
+                preval1 = itemData.data[16];
+                preval2 = itemData.data[17];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 14);
+                modified |= (preval != itemData.data[14] || preval0 != itemData.data[15] || preval1 != itemData.data[16] || preval2 != itemData.data[17]);
+
+                preval = itemData.data[18];
+                preval0 = itemData.data[19];
+                preval1 = itemData.data[20];
+                preval2 = itemData.data[21];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 18);
+                modified |= (preval != itemData.data[18] || preval0 != itemData.data[19] || preval1 != itemData.data[20] || preval2 != itemData.data[21]);
+            }
+            else
+            {
+                preval = itemData.data[10];
+                preval0 = itemData.data[11];
+                preval1 = itemData.data[12];
+                preval2 = itemData.data[13];
+                BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 10);
+                modified |= (preval != itemData.data[10] || preval0 != itemData.data[11] || preval1 != itemData.data[12] || preval2 != itemData.data[13]);
+
+                preval = itemData.data[14];
+                preval0 = itemData.data[15];
+                preval1 = itemData.data[16];
+                preval2 = itemData.data[17];
+                BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 14);
+                modified |= (preval != itemData.data[14] || preval0 != itemData.data[15] || preval1 != itemData.data[16] || preval2 != itemData.data[17]);
+
+                preval = itemData.data[18];
+                preval0 = itemData.data[19];
+                preval1 = itemData.data[20];
+                preval2 = itemData.data[21];
+                BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 18);
+                modified |= (preval != itemData.data[18] || preval0 != itemData.data[19] || preval1 != itemData.data[20] || preval2 != itemData.data[21]);
+            }
+
             return modified;
         }
 
@@ -7418,6 +7703,7 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
+                mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 10), BitConverter.ToSingle(newData, 14), BitConverter.ToSingle(newData, 18));
                 if (mountObjectID != -1)
                 {
                     if (ThreadManager.host)
@@ -7452,6 +7738,16 @@ namespace H3MP.Tracking
 
                     if (CanAttachToMount(asABA.Attachment, mount))
                     {
+                        // Apply mount object scale
+                        if (mount.GetRootMount().ParentToThis)
+                        {
+                            mount.GetRootMount().transform.localScale = mountObjectScale;
+                        }
+                        else
+                        {
+                            mount.MyObject.transform.localScale = mountObjectScale;
+                        }
+
                         if (asABA.Attachment.CanScaleToMount && mount.CanThisRescale())
                         {
                             asABA.Attachment.ScaleToMount(mount);
@@ -7589,7 +7885,7 @@ namespace H3MP.Tracking
 
             if (currentMountIndex != 255) // We want to be attached to a mount
             {
-                if (data.parent != -1) // We have parent
+                if (mountObjectID != -1) // We have parent
                 {
                     // We could be on wrong mount (or none physically) if we got a new mount through update but the parent hadn't been updated yet
 
@@ -7598,11 +7894,11 @@ namespace H3MP.Tracking
                     TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
-                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                        parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
                     }
                     else
                     {
-                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                        parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
 
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
@@ -7615,6 +7911,16 @@ namespace H3MP.Tracking
                     {
                         if (CanAttachToMount(asAttachment, mount))
                         {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
                             if (asAttachment.CanScaleToMount && mount.CanThisRescale())
                             {
                                 asAttachment.ScaleToMount(mount);
@@ -7661,6 +7967,16 @@ namespace H3MP.Tracking
 
                         if (CanAttachToMount(asAttachment, mount))
                         {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
                             if (asAttachment.CanScaleToMount && mount.CanThisRescale())
                             {
                                 asAttachment.ScaleToMount(mount);
@@ -9292,7 +9608,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[9];
+                itemData.data = new byte[21];
                 modified = true;
             }
 
@@ -9339,6 +9655,54 @@ namespace H3MP.Tracking
             BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 5);
 
             modified |= (preVals[0] != itemData.data[5] || preVals[1] != itemData.data[6] || preVals[2] != itemData.data[7] || preVals[3] != itemData.data[8]);
+
+            // Write mount object scale
+            if (transform.parent == null)
+            {
+                preVals[0] = itemData.data[9];
+                preVals[1] = itemData.data[10];
+                preVals[2] = itemData.data[11];
+                preVals[3] = itemData.data[12];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 9);
+                modified |= (preVals[0] != itemData.data[9] || preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
+
+                preVals[0] = itemData.data[13];
+                preVals[1] = itemData.data[14];
+                preVals[2] = itemData.data[15];
+                preVals[3] = itemData.data[16];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 13);
+                modified |= (preVals[0] != itemData.data[13] || preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
+
+                preVals[0] = itemData.data[17];
+                preVals[1] = itemData.data[18];
+                preVals[2] = itemData.data[19];
+                preVals[3] = itemData.data[20];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 17);
+                modified |= (preVals[0] != itemData.data[17] || preVals[1] != itemData.data[18] || preVals[2] != itemData.data[19] || preVals[3] != itemData.data[20]);
+            }
+            else
+            {
+                preVals[0] = itemData.data[9];
+                preVals[1] = itemData.data[10];
+                preVals[2] = itemData.data[11];
+                preVals[3] = itemData.data[12];
+                BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 9);
+                modified |= (preVals[0] != itemData.data[9] || preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
+
+                preVals[0] = itemData.data[13];
+                preVals[1] = itemData.data[14];
+                preVals[2] = itemData.data[15];
+                preVals[3] = itemData.data[16];
+                BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 13);
+                modified |= (preVals[0] != itemData.data[13] || preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
+
+                preVals[0] = itemData.data[17];
+                preVals[1] = itemData.data[18];
+                preVals[2] = itemData.data[19];
+                preVals[3] = itemData.data[20];
+                BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 17);
+                modified |= (preVals[0] != itemData.data[17] || preVals[1] != itemData.data[18] || preVals[2] != itemData.data[19] || preVals[3] != itemData.data[20]);
+            }
 
             return modified || (preIndex != itemData.data[0]);
         }
@@ -9388,6 +9752,7 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
+                mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 9), BitConverter.ToSingle(newData, 13), BitConverter.ToSingle(newData, 17));
                 if (mountObjectID != -1)
                 {
                     if (ThreadManager.host)
@@ -9422,6 +9787,16 @@ namespace H3MP.Tracking
 
                     if (CanAttachToMount(asAttachment, mount))
                     {
+                        // Apply mount object scale
+                        if (mount.GetRootMount().ParentToThis)
+                        {
+                            mount.GetRootMount().transform.localScale = mountObjectScale;
+                        }
+                        else
+                        {
+                            mount.MyObject.transform.localScale = mountObjectScale;
+                        }
+
                         if (asAttachment.CanScaleToMount && mount.CanThisRescale())
                         {
                             asAttachment.ScaleToMount(mount);
@@ -9496,7 +9871,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[5 + attachmentInterfaceDataSize];
+                itemData.data = new byte[17 + attachmentInterfaceDataSize];
                 modified = true;
             }
 
@@ -9542,6 +9917,54 @@ namespace H3MP.Tracking
             BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 1);
 
             modified |= (preVals[0] != itemData.data[1] || preVals[1] != itemData.data[2] || preVals[2] != itemData.data[3] || preVals[3] != itemData.data[4]);
+
+            // Write mount object scale
+            if (transform.parent == null)
+            {
+                preVals[0] = itemData.data[5];
+                preVals[1] = itemData.data[6];
+                preVals[2] = itemData.data[7];
+                preVals[3] = itemData.data[8];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 5);
+                modified |= (preVals[0] != itemData.data[5] || preVals[1] != itemData.data[6] || preVals[2] != itemData.data[7] || preVals[3] != itemData.data[8]);
+
+                preVals[0] = itemData.data[9];
+                preVals[1] = itemData.data[10];
+                preVals[2] = itemData.data[11];
+                preVals[3] = itemData.data[12];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 9);
+                modified |= (preVals[0] != itemData.data[9] || preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
+
+                preVals[0] = itemData.data[13];
+                preVals[1] = itemData.data[14];
+                preVals[2] = itemData.data[15];
+                preVals[3] = itemData.data[16];
+                BitConverter.GetBytes(1).CopyTo(itemData.data, 13);
+                modified |= (preVals[0] != itemData.data[13] || preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
+            }
+            else
+            {
+                preVals[0] = itemData.data[5];
+                preVals[1] = itemData.data[6];
+                preVals[2] = itemData.data[7];
+                preVals[3] = itemData.data[8];
+                BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 5);
+                modified |= (preVals[0] != itemData.data[5] || preVals[1] != itemData.data[6] || preVals[2] != itemData.data[7] || preVals[3] != itemData.data[8]);
+
+                preVals[0] = itemData.data[9];
+                preVals[1] = itemData.data[10];
+                preVals[2] = itemData.data[11];
+                preVals[3] = itemData.data[12];
+                BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 9);
+                modified |= (preVals[0] != itemData.data[9] || preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
+
+                preVals[0] = itemData.data[13];
+                preVals[1] = itemData.data[14];
+                preVals[2] = itemData.data[15];
+                preVals[3] = itemData.data[16];
+                BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 13);
+                modified |= (preVals[0] != itemData.data[13] || preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
+            }
 
             // Do interface update
             if (attachmentInterfaceUpdateFunc != null)
@@ -9597,6 +10020,7 @@ namespace H3MP.Tracking
                 FVRFireArmAttachmentMount mount = null;
                 TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 1);
+                mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 5), BitConverter.ToSingle(newData, 9), BitConverter.ToSingle(newData, 13));
                 if (mountObjectID != -1)
                 {
                     if (ThreadManager.host)
@@ -9636,6 +10060,16 @@ namespace H3MP.Tracking
 
                     if (CanAttachToMount(asAttachment, mount))
                     {
+                        // Apply mount object scale
+                        if (mount.GetRootMount().ParentToThis)
+                        {
+                            mount.GetRootMount().transform.localScale = mountObjectScale;
+                        }
+                        else
+                        {
+                            mount.MyObject.transform.localScale = mountObjectScale;
+                        }
+
                         Mod.LogInfo("\t"+name+" is mountable on "+ mount.name+", checking if need to scale");
                         if (asAttachment.CanScaleToMount && mount.CanThisRescale())
                         {
@@ -9741,6 +10175,16 @@ namespace H3MP.Tracking
                     {
                         if (CanAttachToMount(asAttachment, mount))
                         {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
                             if (asAttachment.CanScaleToMount && mount.CanThisRescale())
                             {
                                 asAttachment.ScaleToMount(mount);
@@ -9787,6 +10231,16 @@ namespace H3MP.Tracking
 
                         if (CanAttachToMount(asAttachment, mount))
                         {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
                             if (asAttachment.CanScaleToMount && mount.CanThisRescale())
                             {
                                 asAttachment.ScaleToMount(mount);
