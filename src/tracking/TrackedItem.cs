@@ -9928,7 +9928,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                mountObjectID = BitConverter.ToInt32(newData, 6);
+                mountObjectID = BitConverter.ToInt32(newData, 5);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 9), BitConverter.ToSingle(newData, 13), BitConverter.ToSingle(newData, 17));
                 Mod.LogInfo("\tHave mount index, object ID: " + mountObjectID + ", scale: " + mountObjectScale.ToString());
                 if (mountObjectID == -1)
