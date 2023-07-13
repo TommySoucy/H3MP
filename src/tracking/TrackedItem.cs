@@ -3,6 +3,7 @@ using H3MP.Networking;
 using H3MP.Patches;
 using System;
 using System.Collections.Generic;
+using System.Net.Mail;
 using UnityEngine;
 
 namespace H3MP.Tracking
@@ -6141,6 +6142,7 @@ namespace H3MP.Tracking
             // Write mount object scale
             if(transform.parent == null)
             {
+                mountObjectScale = Vector3.one;
                 preval = itemData.data[9];
                 preval0 = itemData.data[10];
                 preval1 = itemData.data[11];
@@ -6164,6 +6166,7 @@ namespace H3MP.Tracking
             }
             else
             {
+                mountObjectScale = transform.parent.localScale;
                 preval = itemData.data[9];
                 preval0 = itemData.data[10];
                 preval1 = itemData.data[11];
@@ -6223,13 +6226,31 @@ namespace H3MP.Tracking
             }
             else
             {
-                // Find mount instance we want to be mounted to
-                FVRFireArmAttachmentMount mount = null;
-                TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 5);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 9), BitConverter.ToSingle(newData, 13), BitConverter.ToSingle(newData, 17));
                 if (mountObjectID != -1)
                 {
+                    // Detach from any mount we are still on
+                    if (asM203.Attachment.curMount != null)
+                    {
+                        asM203.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asM203.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                        ++data.ignoreParentChanged;
+                        asM203.Attachment.DetachFromMount();
+                        --data.ignoreParentChanged;
+
+                        // Detach from mount will recover rigidbody, set as kinematic if not controller
+                        if (data.controller != GameManager.ID)
+                        {
+                            Mod.SetKinematicRecursive(asM203.Attachment.transform, true);
+                        }
+                    }
+                }
+                else
+                {
+                    // Find mount instance we want to be mounted to
+                    FVRFireArmAttachmentMount mount = null;
+                    TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
                         parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
@@ -6238,73 +6259,86 @@ namespace H3MP.Tracking
                     {
                         parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
-                }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
-                {
-                    // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
+                    bool addedForLater = false;
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
-                    }
-                }
-
-                // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
-                if (mount != null && asM203.Attachment.curMount != mount)
-                {
-                    ++data.ignoreParentChanged;
-                    if (asM203.Attachment.curMount != null)
-                    {
-                        asM203.Attachment.Sensor.m_storedScaleMagnified = 1f;
-                        asM203.Attachment.transform.localScale = new Vector3(1, 1, 1);
-                        asM203.Attachment.DetachFromMount();
-                    }
-
-                    if (CanAttachToMount(asM203.Attachment, mount))
-                    {
-                        // Apply mount object scale
-                        if (mount.GetRootMount().ParentToThis)
+                        // We want to be mounted, we have a parent
+                        if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                         {
-                            mount.GetRootMount().transform.localScale = mountObjectScale;
-                        }
-                        else
-                        {
-                            mount.MyObject.transform.localScale = mountObjectScale;
-                        }
-
-                        if (asM203.Attachment.CanScaleToMount && mount.CanThisRescale())
-                        {
-                            asM203.Attachment.ScaleToMount(mount);
-                        }
-                        asM203.Attachment.AttachToMount(mount, true);
-
-                        // Check if there were any children attachments waiting for us
-                        if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
-                        {
-                            for(int i=0; i < list.Count; ++i)
-                            {
-                                if(list[i] != null)
-                                {
-                                    list[i].data.UpdateFromData(list[i].data);
-                                }
-                            }
-
-                            toAttachByMountObjectID.Remove(data.trackedID);
+                            mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                         }
                     }
-                    else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                    else
                     {
-                        if(toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                        addedForLater = true;
+                        if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                         {
                             list.Add(this);
                         }
-                        else 
+                        else
                         {
                             toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
                         }
                     }
-                    currentMountIndex = newData[0];
-                    --data.ignoreParentChanged;
+
+                    // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
+                    if (mount != null && asM203.Attachment.curMount != mount)
+                    {
+                        ++data.ignoreParentChanged;
+                        if (asM203.Attachment.curMount != null)
+                        {
+                            asM203.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                            asM203.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                            asM203.Attachment.DetachFromMount();
+                        }
+
+                        if (CanAttachToMount(asM203.Attachment, mount))
+                        {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
+                            if (asM203.Attachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asM203.Attachment.ScaleToMount(mount);
+                            }
+                            asM203.Attachment.AttachToMount(mount, true);
+
+                            // Check if there were any children attachments waiting for us
+                            if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
+                            {
+                                for (int i = 0; i < list.Count; ++i)
+                                {
+                                    if (list[i] != null)
+                                    {
+                                        list[i].data.UpdateFromData(list[i].data);
+                                    }
+                                }
+
+                                toAttachByMountObjectID.Remove(data.trackedID);
+                            }
+                        }
+                        else if(!addedForLater) // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                        {
+                            if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                            {
+                                list.Add(this);
+                            }
+                            else
+                            {
+                                toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
+                            }
+                        }
+                        currentMountIndex = newData[0];
+                        --data.ignoreParentChanged;
+                    }
                 }
             }
             modified |= preMountIndex != currentMountIndex;
@@ -6470,6 +6504,7 @@ namespace H3MP.Tracking
             // Write mount object scale
             if (transform.parent == null)
             {
+                mountObjectScale = Vector3.one;
                 preval = itemData.data[10];
                 preval0 = itemData.data[11];
                 preval1 = itemData.data[12];
@@ -6493,6 +6528,7 @@ namespace H3MP.Tracking
             }
             else
             {
+                mountObjectScale = transform.parent.localScale;
                 preval = itemData.data[10];
                 preval0 = itemData.data[11];
                 preval1 = itemData.data[12];
@@ -6552,13 +6588,33 @@ namespace H3MP.Tracking
             }
             else
             {
-                // Find mount instance we want to be mounted to
-                FVRFireArmAttachmentMount mount = null;
-                TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 10), BitConverter.ToSingle(newData, 14), BitConverter.ToSingle(newData, 18));
-                if (mountObjectID != -1)
+                if (mountObjectID == -1)
                 {
+                    // Should not be mounted, check if currently is
+                    if (asGP25.Attachment.curMount != null)
+                    {
+                        asGP25.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asGP25.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                        ++data.ignoreParentChanged;
+                        asGP25.Attachment.DetachFromMount();
+                        --data.ignoreParentChanged;
+                        currentMountIndex = 255;
+
+                        // Detach from mount will recover rigidbody, set as kinematic if not controller
+                        // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                        if (data.controller != GameManager.ID)
+                        {
+                            Mod.SetKinematicRecursive(asGP25.Attachment.transform, true);
+                        }
+                    }
+                }
+                else
+                {
+                    // Find mount instance we want to be mounted to
+                    FVRFireArmAttachmentMount mount = null;
+                    TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
                         parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
@@ -6567,62 +6623,19 @@ namespace H3MP.Tracking
                     {
                         parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
-                }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
-                {
-                    // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
+                    bool addedForLater = false;
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
-                    }
-                }
-
-                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null && asGP25.Attachment.curMount != mount)
-                {
-                    ++data.ignoreParentChanged;
-                    if (asGP25.Attachment.curMount != null)
-                    {
-                        asGP25.Attachment.Sensor.m_storedScaleMagnified = 1f;
-                        asGP25.Attachment.transform.localScale = new Vector3(1, 1, 1);
-                        asGP25.Attachment.DetachFromMount();
-                    }
-
-                    if (CanAttachToMount(asGP25.Attachment, mount))
-                    {
-                        // Apply mount object scale
-                        if (mount.GetRootMount().ParentToThis)
+                        // We want to be mounted, we have a parent
+                        if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                         {
-                            mount.GetRootMount().transform.localScale = mountObjectScale;
-                        }
-                        else
-                        {
-                            mount.MyObject.transform.localScale = mountObjectScale;
-                        }
-
-                        if (asGP25.Attachment.CanScaleToMount && mount.CanThisRescale())
-                        {
-                            asGP25.Attachment.ScaleToMount(mount);
-                        }
-                        asGP25.Attachment.AttachToMount(mount, true);
-
-                        // Check if there were any children attachments waiting for us
-                        if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
-                        {
-                            for (int i = 0; i < list.Count; ++i)
-                            {
-                                if (list[i] != null)
-                                {
-                                    list[i].data.UpdateFromData(list[i].data);
-                                }
-                            }
-
-                            toAttachByMountObjectID.Remove(data.trackedID);
+                            mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                         }
                     }
-                    else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                    else
                     {
+                        addedForLater = true;
                         if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                         {
                             list.Add(this);
@@ -6632,8 +6645,64 @@ namespace H3MP.Tracking
                             toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
                         }
                     }
-                    currentMountIndex = newData[0];
-                    --data.ignoreParentChanged;
+
+                    // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                    if (mount != null && asGP25.Attachment.curMount != mount)
+                    {
+                        ++data.ignoreParentChanged;
+                        if (asGP25.Attachment.curMount != null)
+                        {
+                            asGP25.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                            asGP25.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                            asGP25.Attachment.DetachFromMount();
+                        }
+
+                        if (CanAttachToMount(asGP25.Attachment, mount))
+                        {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
+                            if (asGP25.Attachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asGP25.Attachment.ScaleToMount(mount);
+                            }
+                            asGP25.Attachment.AttachToMount(mount, true);
+
+                            // Check if there were any children attachments waiting for us
+                            if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
+                            {
+                                for (int i = 0; i < list.Count; ++i)
+                                {
+                                    if (list[i] != null)
+                                    {
+                                        list[i].data.UpdateFromData(list[i].data);
+                                    }
+                                }
+
+                                toAttachByMountObjectID.Remove(data.trackedID);
+                            }
+                        }
+                        else if(!addedForLater) // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                        {
+                            if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                            {
+                                list.Add(this);
+                            }
+                            else
+                            {
+                                toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
+                            }
+                        }
+                        currentMountIndex = newData[0];
+                        --data.ignoreParentChanged;
+                    }
                 }
             }
             modified |= preMountIndex != currentMountIndex;
@@ -6840,6 +6909,7 @@ namespace H3MP.Tracking
             // Write mount object scale
             if (transform.parent == null)
             {
+                mountObjectScale = Vector3.one;
                 preval = itemData.data[13];
                 preval0 = itemData.data[14];
                 preval1 = itemData.data[15];
@@ -6863,6 +6933,7 @@ namespace H3MP.Tracking
             }
             else
             {
+                mountObjectScale = transform.parent.localScale;
                 preval = itemData.data[13];
                 preval0 = itemData.data[14];
                 preval1 = itemData.data[15];
@@ -6922,13 +6993,33 @@ namespace H3MP.Tracking
             }
             else
             {
-                // Find mount instance we want to be mounted to
-                FVRFireArmAttachmentMount mount = null;
-                TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 9);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 13), BitConverter.ToSingle(newData, 17), BitConverter.ToSingle(newData, 21));
                 if (mountObjectID != -1)
                 {
+                    // Should not be mounted, check if currently is
+                    if (asATF.Attachment.curMount != null)
+                    {
+                        asATF.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asATF.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                        ++data.ignoreParentChanged;
+                        asATF.Attachment.DetachFromMount();
+                        --data.ignoreParentChanged;
+                        currentMountIndex = 255;
+
+                        // Detach from mount will recover rigidbody, set as kinematic if not controller
+                        // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                        if (data.controller != GameManager.ID)
+                        {
+                            Mod.SetKinematicRecursive(asATF.Attachment.transform, true);
+                        }
+                    }
+                }
+                else
+                {
+                    // Find mount instance we want to be mounted to
+                    FVRFireArmAttachmentMount mount = null;
+                    TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
                         parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
@@ -6937,62 +7028,19 @@ namespace H3MP.Tracking
                     {
                         parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
-                }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
-                {
-                    // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
+                    bool addedForLater = false;
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
-                    }
-                }
-
-                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null && asATF.Attachment.curMount != mount)
-                {
-                    ++data.ignoreParentChanged;
-                    if (asATF.Attachment.curMount != null)
-                    {
-                        asATF.Attachment.Sensor.m_storedScaleMagnified = 1f;
-                        asATF.Attachment.transform.localScale = new Vector3(1, 1, 1);
-                        asATF.Attachment.DetachFromMount();
-                    }
-
-                    if (CanAttachToMount(asATF.Attachment, mount))
-                    {
-                        // Apply mount object scale
-                        if (mount.GetRootMount().ParentToThis)
+                        // We want to be mounted, we have a parent
+                        if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                         {
-                            mount.GetRootMount().transform.localScale = mountObjectScale;
-                        }
-                        else
-                        {
-                            mount.MyObject.transform.localScale = mountObjectScale;
-                        }
-
-                        if (asATF.Attachment.CanScaleToMount && mount.CanThisRescale())
-                        {
-                            asATF.Attachment.ScaleToMount(mount);
-                        }
-                        asATF.Attachment.AttachToMount(mount, true);
-
-                        // Check if there were any children attachments waiting for us
-                        if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
-                        {
-                            for (int i = 0; i < list.Count; ++i)
-                            {
-                                if (list[i] != null)
-                                {
-                                    list[i].data.UpdateFromData(list[i].data);
-                                }
-                            }
-
-                            toAttachByMountObjectID.Remove(data.trackedID);
+                            mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                         }
                     }
-                    else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                    else
                     {
+                        addedForLater = true;
                         if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                         {
                             list.Add(this);
@@ -7002,8 +7050,64 @@ namespace H3MP.Tracking
                             toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
                         }
                     }
-                    currentMountIndex = newData[0];
-                    --data.ignoreParentChanged;
+
+                    // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                    if (mount != null && asATF.Attachment.curMount != mount)
+                    {
+                        ++data.ignoreParentChanged;
+                        if (asATF.Attachment.curMount != null)
+                        {
+                            asATF.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                            asATF.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                            asATF.Attachment.DetachFromMount();
+                        }
+
+                        if (CanAttachToMount(asATF.Attachment, mount))
+                        {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
+                            if (asATF.Attachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asATF.Attachment.ScaleToMount(mount);
+                            }
+                            asATF.Attachment.AttachToMount(mount, true);
+
+                            // Check if there were any children attachments waiting for us
+                            if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
+                            {
+                                for (int i = 0; i < list.Count; ++i)
+                                {
+                                    if (list[i] != null)
+                                    {
+                                        list[i].data.UpdateFromData(list[i].data);
+                                    }
+                                }
+
+                                toAttachByMountObjectID.Remove(data.trackedID);
+                            }
+                        }
+                        else if(!addedForLater) // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                        {
+                            if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                            {
+                                list.Add(this);
+                            }
+                            else
+                            {
+                                toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
+                            }
+                        }
+                        currentMountIndex = newData[0];
+                        --data.ignoreParentChanged;
+                    }
                 }
             }
             modified |= preMountIndex != currentMountIndex;
@@ -7244,6 +7348,7 @@ namespace H3MP.Tracking
             // Write mount object scale
             if (transform.parent == null)
             {
+                mountObjectScale = Vector3.one;
                 preval = itemData.data[12];
                 preval0 = itemData.data[13];
                 preval1 = itemData.data[14];
@@ -7267,6 +7372,7 @@ namespace H3MP.Tracking
             }
             else
             {
+                mountObjectScale = transform.parent.localScale;
                 preval = itemData.data[12];
                 preval0 = itemData.data[13];
                 preval1 = itemData.data[14];
@@ -7326,13 +7432,33 @@ namespace H3MP.Tracking
             }
             else
             {
-                // Find mount instance we want to be mounted to
-                FVRFireArmAttachmentMount mount = null;
-                TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 8);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 12), BitConverter.ToSingle(newData, 16), BitConverter.ToSingle(newData, 20));
-                if (mountObjectID != -1)
+                if (mountObjectID == -1)
                 {
+                    // Should not be mounted, check if currently is
+                    if (asACBW.Attachment.curMount != null)
+                    {
+                        asACBW.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asACBW.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                        ++data.ignoreParentChanged;
+                        asACBW.Attachment.DetachFromMount();
+                        --data.ignoreParentChanged;
+                        currentMountIndex = 255;
+
+                        // Detach from mount will recover rigidbody, set as kinematic if not controller
+                        // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                        if (data.controller != GameManager.ID)
+                        {
+                            Mod.SetKinematicRecursive(asACBW.Attachment.transform, true);
+                        }
+                    }
+                }
+                else
+                {
+                    // Find mount instance we want to be mounted to
+                    FVRFireArmAttachmentMount mount = null;
+                    TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
                         parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
@@ -7341,62 +7467,19 @@ namespace H3MP.Tracking
                     {
                         parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
-                }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
-                {
-                    // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
+                    bool addedForLater = false;
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
-                    }
-                }
-
-                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null && asACBW.Attachment.curMount != mount)
-                {
-                    ++data.ignoreParentChanged;
-                    if (asACBW.Attachment.curMount != null)
-                    {
-                        asACBW.Attachment.Sensor.m_storedScaleMagnified = 1f;
-                        asACBW.Attachment.transform.localScale = new Vector3(1, 1, 1);
-                        asACBW.Attachment.DetachFromMount();
-                    }
-
-                    if (CanAttachToMount(asACBW.Attachment, mount))
-                    {
-                        // Apply mount object scale
-                        if (mount.GetRootMount().ParentToThis)
+                        // We want to be mounted, we have a parent
+                        if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                         {
-                            mount.GetRootMount().transform.localScale = mountObjectScale;
-                        }
-                        else
-                        {
-                            mount.MyObject.transform.localScale = mountObjectScale;
-                        }
-
-                        if (asACBW.Attachment.CanScaleToMount && mount.CanThisRescale())
-                        {
-                            asACBW.Attachment.ScaleToMount(mount);
-                        }
-                        asACBW.Attachment.AttachToMount(mount, true);
-
-                        // Check if there were any children attachments waiting for us
-                        if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
-                        {
-                            for (int i = 0; i < list.Count; ++i)
-                            {
-                                if (list[i] != null)
-                                {
-                                    list[i].data.UpdateFromData(list[i].data);
-                                }
-                            }
-
-                            toAttachByMountObjectID.Remove(data.trackedID);
+                            mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                         }
                     }
-                    else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                    else
                     {
+                        addedForLater = true;
                         if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                         {
                             list.Add(this);
@@ -7406,8 +7489,64 @@ namespace H3MP.Tracking
                             toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
                         }
                     }
-                    currentMountIndex = newData[0];
-                    --data.ignoreParentChanged;
+
+                    // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                    if (mount != null && asACBW.Attachment.curMount != mount)
+                    {
+                        ++data.ignoreParentChanged;
+                        if (asACBW.Attachment.curMount != null)
+                        {
+                            asACBW.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                            asACBW.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                            asACBW.Attachment.DetachFromMount();
+                        }
+
+                        if (CanAttachToMount(asACBW.Attachment, mount))
+                        {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
+                            if (asACBW.Attachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asACBW.Attachment.ScaleToMount(mount);
+                            }
+                            asACBW.Attachment.AttachToMount(mount, true);
+
+                            // Check if there were any children attachments waiting for us
+                            if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
+                            {
+                                for (int i = 0; i < list.Count; ++i)
+                                {
+                                    if (list[i] != null)
+                                    {
+                                        list[i].data.UpdateFromData(list[i].data);
+                                    }
+                                }
+
+                                toAttachByMountObjectID.Remove(data.trackedID);
+                            }
+                        }
+                        else if(!addedForLater) // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                        {
+                            if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                            {
+                                list.Add(this);
+                            }
+                            else
+                            {
+                                toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
+                            }
+                        }
+                        currentMountIndex = newData[0];
+                        --data.ignoreParentChanged;
+                    }
                 }
             }
             modified |= preMountIndex != currentMountIndex;
@@ -7617,6 +7756,7 @@ namespace H3MP.Tracking
             // Write mount object scale
             if (transform.parent == null)
             {
+                mountObjectScale = Vector3.one;
                 preval = itemData.data[10];
                 preval0 = itemData.data[11];
                 preval1 = itemData.data[12];
@@ -7640,6 +7780,7 @@ namespace H3MP.Tracking
             }
             else
             {
+                mountObjectScale = transform.parent.localScale;
                 preval = itemData.data[10];
                 preval0 = itemData.data[11];
                 preval1 = itemData.data[12];
@@ -7699,13 +7840,33 @@ namespace H3MP.Tracking
             }
             else
             {
-                // Find mount instance we want to be mounted to
-                FVRFireArmAttachmentMount mount = null;
-                TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 10), BitConverter.ToSingle(newData, 14), BitConverter.ToSingle(newData, 18));
-                if (mountObjectID != -1)
+                if (mountObjectID == -1)
                 {
+                    // Should not be mounted, check if currently is
+                    if (asABA.Attachment.curMount != null)
+                    {
+                        asABA.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                        asABA.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                        ++data.ignoreParentChanged;
+                        asABA.Attachment.DetachFromMount();
+                        --data.ignoreParentChanged;
+                        currentMountIndex = 255;
+
+                        // Detach from mount will recover rigidbody, set as kinematic if not controller
+                        // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                        if (data.controller != GameManager.ID)
+                        {
+                            Mod.SetKinematicRecursive(asABA.Attachment.transform, true);
+                        }
+                    }
+                }
+                else
+                {
+                    // Find mount instance we want to be mounted to
+                    FVRFireArmAttachmentMount mount = null;
+                    TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
                         parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
@@ -7714,62 +7875,19 @@ namespace H3MP.Tracking
                     {
                         parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
-                }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
-                {
-                    // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
+                    bool addedForLater = false;
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
-                    }
-                }
-
-                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null && asABA.Attachment.curMount != mount)
-                {
-                    ++data.ignoreParentChanged;
-                    if (asABA.Attachment.curMount != null)
-                    {
-                        asABA.Attachment.Sensor.m_storedScaleMagnified = 1f;
-                        asABA.Attachment.transform.localScale = new Vector3(1, 1, 1);
-                        asABA.Attachment.DetachFromMount();
-                    }
-
-                    if (CanAttachToMount(asABA.Attachment, mount))
-                    {
-                        // Apply mount object scale
-                        if (mount.GetRootMount().ParentToThis)
+                        // We want to be mounted, we have a parent
+                        if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                         {
-                            mount.GetRootMount().transform.localScale = mountObjectScale;
-                        }
-                        else
-                        {
-                            mount.MyObject.transform.localScale = mountObjectScale;
-                        }
-
-                        if (asABA.Attachment.CanScaleToMount && mount.CanThisRescale())
-                        {
-                            asABA.Attachment.ScaleToMount(mount);
-                        }
-                        asABA.Attachment.AttachToMount(mount, true);
-
-                        // Check if there were any children attachments waiting for us
-                        if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
-                        {
-                            for (int i = 0; i < list.Count; ++i)
-                            {
-                                if (list[i] != null)
-                                {
-                                    list[i].data.UpdateFromData(list[i].data);
-                                }
-                            }
-
-                            toAttachByMountObjectID.Remove(data.trackedID);
+                            mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                         }
                     }
-                    else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                    else 
                     {
+                        addedForLater = true;
                         if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                         {
                             list.Add(this);
@@ -7779,8 +7897,64 @@ namespace H3MP.Tracking
                             toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
                         }
                     }
-                    currentMountIndex = newData[0];
-                    --data.ignoreParentChanged;
+
+                    // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                    if (mount != null && asABA.Attachment.curMount != mount)
+                    {
+                        ++data.ignoreParentChanged;
+                        if (asABA.Attachment.curMount != null)
+                        {
+                            asABA.Attachment.Sensor.m_storedScaleMagnified = 1f;
+                            asABA.Attachment.transform.localScale = new Vector3(1, 1, 1);
+                            asABA.Attachment.DetachFromMount();
+                        }
+
+                        if (CanAttachToMount(asABA.Attachment, mount))
+                        {
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
+                            if (asABA.Attachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                asABA.Attachment.ScaleToMount(mount);
+                            }
+                            asABA.Attachment.AttachToMount(mount, true);
+
+                            // Check if there were any children attachments waiting for us
+                            if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
+                            {
+                                for (int i = 0; i < list.Count; ++i)
+                                {
+                                    if (list[i] != null)
+                                    {
+                                        list[i].data.UpdateFromData(list[i].data);
+                                    }
+                                }
+
+                                toAttachByMountObjectID.Remove(data.trackedID);
+                            }
+                        }
+                        else if(!addedForLater) // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                        {
+                            if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                            {
+                                list.Add(this);
+                            }
+                            else
+                            {
+                                toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
+                            }
+                        }
+                        currentMountIndex = newData[0];
+                        --data.ignoreParentChanged;
+                    }
                 }
             }
             modified |= preMountIndex != currentMountIndex;
@@ -9659,6 +9833,7 @@ namespace H3MP.Tracking
             // Write mount object scale
             if (transform.parent == null)
             {
+                mountObjectScale = Vector3.one;
                 preVals[0] = itemData.data[9];
                 preVals[1] = itemData.data[10];
                 preVals[2] = itemData.data[11];
@@ -9682,6 +9857,7 @@ namespace H3MP.Tracking
             }
             else
             {
+                mountObjectScale = transform.parent.localScale;
                 preVals[0] = itemData.data[9];
                 preVals[1] = itemData.data[10];
                 preVals[2] = itemData.data[11];
@@ -9719,19 +9895,23 @@ namespace H3MP.Tracking
                 currentMountIndex = 255;
                 modified = true;
             }
+            Mod.LogInfo("UpdateGivenSuppressor on " + name + " at " + data.trackedID + ", mount index: " + newData[0]);
 
             byte preMountIndex = currentMountIndex;
             if (newData[0] == 255)
             {
+                Mod.LogInfo("\tNo mount index");
                 // Check if were waiting for mount object
                 if (mountObjectID != -1 && toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                 {
+                    Mod.LogInfo("\t\tWe were waiting for mount object, removing");
                     list.Remove(this);
                 }
 
                 // Should not be mounted, check if currently is
                 if (asAttachment.curMount != null)
                 {
+                    Mod.LogInfo("\t\tWe have mount, detaching");
                     asAttachment.Sensor.m_storedScaleMagnified = 1f;
                     asAttachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
@@ -9746,15 +9926,36 @@ namespace H3MP.Tracking
                     }
                 }
             }
-            else if (data.parent != -1)
+            else
             {
-                // Find mount instance we want to be mounted to
-                FVRFireArmAttachmentMount mount = null;
-                TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 6);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 9), BitConverter.ToSingle(newData, 13), BitConverter.ToSingle(newData, 17));
-                if (mountObjectID != -1)
+                Mod.LogInfo("\tHave mount index, object ID: " + mountObjectID + ", scale: " + mountObjectScale.ToString());
+                if (mountObjectID == -1)
                 {
+                    Mod.LogInfo("\t\tWe have mount index but no mount object yet");
+                    // Detach from any mount we are still on
+                    if (asAttachment.curMount != null)
+                    {
+                        asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                        asAttachment.transform.localScale = new Vector3(1, 1, 1);
+                        ++data.ignoreParentChanged;
+                        asAttachment.DetachFromMount();
+                        --data.ignoreParentChanged;
+
+                        // Detach from mount will recover rigidbody, set as kinematic if not controller
+                        if (data.controller != GameManager.ID)
+                        {
+                            Mod.SetKinematicRecursive(asAttachment.transform, true);
+                        }
+                    }
+                }
+                else
+                {
+                    Mod.LogInfo("\t\tHave mount index and mount object ID");
+                    // Find mount instance we want to be mounted to
+                    FVRFireArmAttachmentMount mount = null;
+                    TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
                         parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
@@ -9763,62 +9964,22 @@ namespace H3MP.Tracking
                     {
                         parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
-                }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
-                {
-                    // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
+                    bool addedForLater = false;
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
-                    }
-                }
-
-                // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
-                if (mount != null && mount != asAttachment.curMount)
-                {
-                    ++data.ignoreParentChanged;
-                    if (asAttachment.curMount != null)
-                    {
-                        asAttachment.Sensor.m_storedScaleMagnified = 1f;
-                        asAttachment.transform.localScale = new Vector3(1, 1, 1);
-                        asAttachment.DetachFromMount();
-                    }
-
-                    if (CanAttachToMount(asAttachment, mount))
-                    {
-                        // Apply mount object scale
-                        if (mount.GetRootMount().ParentToThis)
+                        Mod.LogInfo("\t\t\tGot mount object " + parentTrackedItemData.physicalItem.name);
+                        // We want to be mounted, we have a parent
+                        if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                         {
-                            mount.GetRootMount().transform.localScale = mountObjectScale;
-                        }
-                        else
-                        {
-                            mount.MyObject.transform.localScale = mountObjectScale;
-                        }
-
-                        if (asAttachment.CanScaleToMount && mount.CanThisRescale())
-                        {
-                            asAttachment.ScaleToMount(mount);
-                        }
-                        asAttachment.AttachToMount(mount, true);
-
-                        // Check if there were any children attachments waiting for us
-                        if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
-                        {
-                            for (int i = 0; i < list.Count; ++i)
-                            {
-                                if (list[i] != null)
-                                {
-                                    list[i].data.UpdateFromData(list[i].data);
-                                }
-                            }
-
-                            toAttachByMountObjectID.Remove(data.trackedID);
+                            Mod.LogInfo("\t\t\t\tMount index fits");
+                            mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                         }
                     }
-                    else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                    else
                     {
+                        Mod.LogInfo("\t\t\tDont yet have mount object, adding to toAttachByMountObjectID");
+                        addedForLater = true;
                         if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                         {
                             list.Add(this);
@@ -9828,25 +9989,70 @@ namespace H3MP.Tracking
                             toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
                         }
                     }
-                    currentMountIndex = newData[0];
-                    --data.ignoreParentChanged;
-                }
-            }
-            else // We have mount index but no parent index
-            {
-                // Detach from any mount we are still on
-                if (asAttachment.curMount != null)
-                {
-                    asAttachment.Sensor.m_storedScaleMagnified = 1f;
-                    asAttachment.transform.localScale = new Vector3(1, 1, 1);
-                    ++data.ignoreParentChanged;
-                    asAttachment.DetachFromMount();
-                    --data.ignoreParentChanged;
 
-                    // Detach from mount will recover rigidbody, set as kinematic if not controller
-                    if (data.controller != GameManager.ID)
+                    // Mount could be null if the mount index corresponds to a parent we have yet a receive a change to
+                    if (mount != null && mount != asAttachment.curMount)
                     {
-                        Mod.SetKinematicRecursive(asAttachment.transform, true);
+                        Mod.LogInfo("\t\t\tGot mount and is different: " + mount.name);
+                        ++data.ignoreParentChanged;
+                        if (asAttachment.curMount != null)
+                        {
+                            Mod.LogInfo("\t\t\t\tDetaching from old mount first");
+                            asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                            asAttachment.transform.localScale = new Vector3(1, 1, 1);
+                            asAttachment.DetachFromMount();
+                        }
+
+                        if (CanAttachToMount(asAttachment, mount))
+                        {
+                            Mod.LogInfo("\t\t\tCan attach");
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
+                            if (asAttachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                Mod.LogInfo("\t\t\t\tRescaling first");
+                                asAttachment.ScaleToMount(mount);
+                            }
+                            asAttachment.AttachToMount(mount, true);
+
+                            // Check if there were any children attachments waiting for us
+                            if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
+                            {
+                                Mod.LogInfo("\t\t\tChildren attachment waiting for us, updating them");
+                                for (int i = 0; i < list.Count; ++i)
+                                {
+                                    if (list[i] != null)
+                                    {
+                                        Mod.LogInfo("\t\t\t\tUpdating " + list[i].name + " at " + list[i].data.trackedID);
+                                        list[i].data.UpdateFromData(list[i].data);
+                                    }
+                                }
+
+                                toAttachByMountObjectID.Remove(data.trackedID);
+                            }
+                        }
+                        else if(!addedForLater) // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                        {
+                            Mod.LogInfo("\t\t\tcan't mount " + name + " on " + mount.name + " yet, adding to toAttachByMountObjectID");
+                            if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                            {
+                                list.Add(this);
+                            }
+                            else
+                            {
+                                toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
+                            }
+                        }
+                        currentMountIndex = newData[0];
+                        --data.ignoreParentChanged;
                     }
                 }
             }
@@ -9921,6 +10127,7 @@ namespace H3MP.Tracking
             // Write mount object scale
             if (transform.parent == null)
             {
+                mountObjectScale = Vector3.one;
                 preVals[0] = itemData.data[5];
                 preVals[1] = itemData.data[6];
                 preVals[2] = itemData.data[7];
@@ -9944,6 +10151,7 @@ namespace H3MP.Tracking
             }
             else
             {
+                mountObjectScale = transform.parent.localScale;
                 preVals[0] = itemData.data[5];
                 preVals[1] = itemData.data[6];
                 preVals[2] = itemData.data[7];
@@ -9987,19 +10195,23 @@ namespace H3MP.Tracking
                 currentMountIndex = 255;
                 modified = true;
             }
+            Mod.LogInfo("UpdateGivenAttachment on " + name + " at "+data.trackedID+", mount index: "+ newData[0]);
 
             byte preMountIndex = currentMountIndex;
             if (newData[0] == 255)
             {
+                Mod.LogInfo("\tNo mount index");
                 // Check if were waiting for mount object
                 if (mountObjectID != -1 && toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                 {
+                    Mod.LogInfo("\t\tWe were waiting for mount object, removing");
                     list.Remove(this);
                 }
 
                 // Should not be mounted, check if currently is
                 if (asAttachment.curMount != null)
                 {
+                    Mod.LogInfo("\t\tWe have mount, detaching");
                     asAttachment.Sensor.m_storedScaleMagnified = 1f;
                     asAttachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
@@ -10014,15 +10226,35 @@ namespace H3MP.Tracking
                     }
                 }
             }
-            else if (data.parent != -1)
+            else // Have mount index
             {
-                // Find mount instance we want to be mounted to
-                FVRFireArmAttachmentMount mount = null;
-                TrackedItemData parentTrackedItemData = null;
                 mountObjectID = BitConverter.ToInt32(newData, 1);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 5), BitConverter.ToSingle(newData, 9), BitConverter.ToSingle(newData, 13));
-                if (mountObjectID != -1)
+                Mod.LogInfo("\tHave mount index, object ID: "+mountObjectID+", scale: "+mountObjectScale.ToString());
+                if (mountObjectID == -1)
                 {
+                    // We have mount index but no mount object ID
+                    Mod.LogInfo("\t\tWe have mount index but no mount object yet");
+                    // Detach from any mount we are still on
+                    if (asAttachment.curMount != null)
+                    {
+                        asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                        asAttachment.transform.localScale = new Vector3(1, 1, 1);
+                        asAttachment.DetachFromMount();
+
+                        // Detach from mount will recover rigidbody, set as kinematic if not controller
+                        if (data.controller != GameManager.ID)
+                        {
+                            Mod.SetKinematicRecursive(asAttachment.transform, true);
+                        }
+                    }
+                }
+                else // We have mount object ID and mount index, must attach
+                {
+                    Mod.LogInfo("\t\tHave mount index and mount object ID");
+                    // Find mount object by mount object ID
+                    FVRFireArmAttachmentMount mount = null;
+                    TrackedItemData parentTrackedItemData = null;
                     if (ThreadManager.host)
                     {
                         parentTrackedItemData = Server.objects[mountObjectID] as TrackedItemData;
@@ -10031,68 +10263,21 @@ namespace H3MP.Tracking
                     {
                         parentTrackedItemData = Client.objects[mountObjectID] as TrackedItemData;
                     }
-                }
-                else
-                {
-                    Mod.LogWarning("Item "+name+" at "+data.trackedID+" with parent: "+data.parent+" supposedly does not have mountObjectID");
-                }
 
-                if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
-                {
-                    // We want to be mounted, we have a parent
-                    if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
+                    // Find mount instance we want to be mounted to
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
-                    }
-                }
-
-                // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
-                if (mount != null && mount != asAttachment.curMount)
-                {
-                    if (asAttachment.curMount != null)
-                    {
-                        asAttachment.Sensor.m_storedScaleMagnified = 1f;
-                        asAttachment.transform.localScale = new Vector3(1, 1, 1);
-                        asAttachment.DetachFromMount();
-                    }
-
-                    Mod.LogInfo("UpdateGivenAttachment Trying to mount item at " + data.trackedID + " " + name + " to parent mount: " + newData[0] +" on mount object "+ mountObjectID + ", checking if mount " + mount.name+" is mountable on, parent null?: "+(mount.Parent == null)+", parent name: "+ (mount.Parent == null ? "null" : mount.Parent.name));
-
-                    if (CanAttachToMount(asAttachment, mount))
-                    {
-                        // Apply mount object scale
-                        if (mount.GetRootMount().ParentToThis)
+                        Mod.LogInfo("\t\t\tGot mount object "+ parentTrackedItemData.physicalItem.name);
+                        // We want to be mounted, we have a parent
+                        if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                         {
-                            mount.GetRootMount().transform.localScale = mountObjectScale;
-                        }
-                        else
-                        {
-                            mount.MyObject.transform.localScale = mountObjectScale;
-                        }
-
-                        Mod.LogInfo("\t"+name+" is mountable on "+ mount.name+", checking if need to scale");
-                        if (asAttachment.CanScaleToMount && mount.CanThisRescale())
-                        {
-                            asAttachment.ScaleToMount(mount);
-                        }
-                        asAttachment.AttachToMount(mount, true);
-
-                        // Check if there were any children attachments waiting for us
-                        if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
-                        {
-                            for (int i = 0; i < list.Count; ++i)
-                            {
-                                if (list[i] != null)
-                                {
-                                    list[i].data.UpdateFromData(list[i].data);
-                                }
-                            }
-
-                            toAttachByMountObjectID.Remove(data.trackedID);
+                            Mod.LogInfo("\t\t\t\tMount index fits");
+                            mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                         }
                     }
-                    else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                    else
                     {
+                        Mod.LogInfo("\t\t\tDont yet have mount object, adding to toAttachByMountObjectID");
                         if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                         {
                             list.Add(this);
@@ -10102,22 +10287,68 @@ namespace H3MP.Tracking
                             toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
                         }
                     }
-                    currentMountIndex = newData[0];
-                }
-            }
-            else // We have mount index but no parent index
-            {
-                // Detach from any mount we are still on
-                if (asAttachment.curMount != null)
-                {
-                    asAttachment.Sensor.m_storedScaleMagnified = 1f;
-                    asAttachment.transform.localScale = new Vector3(1, 1, 1);
-                    asAttachment.DetachFromMount();
 
-                    // Detach from mount will recover rigidbody, set as kinematic if not controller
-                    if (data.controller != GameManager.ID)
+                    // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
+                    if (mount != null && mount != asAttachment.curMount)
                     {
-                        Mod.SetKinematicRecursive(asAttachment.transform, true);
+                        Mod.LogInfo("\t\t\tGot mount and is different: "+mount.name);
+                        if (asAttachment.curMount != null)
+                        {
+                            Mod.LogInfo("\t\t\t\tDetaching from old mount first");
+                            asAttachment.Sensor.m_storedScaleMagnified = 1f;
+                            asAttachment.transform.localScale = new Vector3(1, 1, 1);
+                            asAttachment.DetachFromMount();
+                        }
+
+                        if (CanAttachToMount(asAttachment, mount))
+                        {
+                            Mod.LogInfo("\t\t\tCan attach");
+                            // Apply mount object scale
+                            if (mount.GetRootMount().ParentToThis)
+                            {
+                                mount.GetRootMount().transform.localScale = mountObjectScale;
+                            }
+                            else
+                            {
+                                mount.MyObject.transform.localScale = mountObjectScale;
+                            }
+
+                            if (asAttachment.CanScaleToMount && mount.CanThisRescale())
+                            {
+                                Mod.LogInfo("\t\t\t\tRescaling first");
+                                asAttachment.ScaleToMount(mount);
+                            }
+                            asAttachment.AttachToMount(mount, true);
+
+                            // Check if there were any children attachments waiting for us
+                            if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
+                            {
+                                Mod.LogInfo("\t\t\tChildren attachment waiting for us, updating them");
+                                for (int i = 0; i < list.Count; ++i)
+                                {
+                                    if (list[i] != null)
+                                    {
+                                        Mod.LogInfo("\t\t\t\tUpdating "+ list[i].name+" at "+ list[i].data.trackedID);
+                                        list[i].data.UpdateFromData(list[i].data);
+                                    }
+                                }
+
+                                toAttachByMountObjectID.Remove(data.trackedID);
+                            }
+                        }
+                        else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                        {
+                            Mod.LogInfo("\t\t\tcan't mount " + name + " on " + mount.name + " yet, adding to toAttachByMountObjectID");
+                            if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                            {
+                                list.Add(this);
+                            }
+                            else
+                            {
+                                toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
+                            }
+                        }
+                        currentMountIndex = newData[0];
                     }
                 }
             }
@@ -10169,11 +10400,22 @@ namespace H3MP.Tracking
                         mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[itemData.data[0]];
                         Mod.LogInfo("\tGot enough mounts, null?: " + (mount == null));
                     }
+                    else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
+                    {
+                        if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
+                        {
+                            list.Add(this);
+                        }
+                        else
+                        {
+                            toAttachByMountObjectID.Add(mountObjectID, new List<TrackedItem>() { this });
+                        }
+                    }
 
                     // If not yet physically mounted to anything, can right away mount to the proper mount
                     if (asAttachment.curMount == null)
                     {
-                        if (CanAttachToMount(asAttachment, mount))
+                        if (mount != null && CanAttachToMount(asAttachment, mount))
                         {
                             // Apply mount object scale
                             if (mount.GetRootMount().ParentToThis)
@@ -10229,7 +10471,7 @@ namespace H3MP.Tracking
                             asAttachment.DetachFromMount();
                         }
 
-                        if (CanAttachToMount(asAttachment, mount))
+                        if (mount != null && CanAttachToMount(asAttachment, mount))
                         {
                             // Apply mount object scale
                             if (mount.GetRootMount().ParentToThis)
