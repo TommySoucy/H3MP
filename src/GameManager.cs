@@ -1719,7 +1719,26 @@ namespace H3MP
                         {
                             ServerSend.DestroyObject(trackedObject.trackedID);
                             Server.objects[trackedObject.trackedID] = null;
-                            Server.availableObjectIndices.Add(trackedObject.trackedID);
+                            if (playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentPlayerInstances) &&
+                                currentPlayerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
+                            {
+                                // Note: Player list being a reference, if a player leaves the scene/instance, they will be removed from the list of clients 
+                                //       this index is waiting for as well. This is fine though because if they leave the scene/instance, we can assume they
+                                //       got rid of the object on their side
+                                Server.availableIndexBufferWaitingFor.Add(trackedObject.trackedID, playerList);
+                                for(int j=0; j < playerList.Count; ++j)
+                                {
+                                    if(Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
+                                    {
+                                        // Already waiting for this client's confirmation for some index, just add it to existing list
+                                        existingIndices.Add(trackedObject.trackedID);
+                                    }
+                                    else // Not yet waiting for this client's confirmation for an index, add entry to dict
+                                    {
+                                        Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedObject.trackedID });
+                                    }
+                                }
+                            }
                             if (objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                 currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                             {
@@ -1767,7 +1786,23 @@ namespace H3MP
                                         ServerSend.DestroyObject(trackedObject.trackedID);
                                         trackedObject.RemoveFromLocal();
                                         Server.objects[trackedObject.trackedID] = null;
-                                        Server.availableObjectIndices.Add(trackedObject.trackedID);
+                                        if (playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentPlayerInstances) &&
+                                            currentPlayerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
+                                        {
+                                            Server.availableIndexBufferWaitingFor.Add(trackedObject.trackedID, playerList);
+                                            for (int j = 0; j < playerList.Count; ++j)
+                                            {
+                                                if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
+                                                {
+                                                    // Already waiting for this client's confirmation for some index, just add it to existing list
+                                                    existingIndices.Add(trackedObject.trackedID);
+                                                }
+                                                else // Not yet waiting for this client's confirmation for an index, add entry to dict
+                                                {
+                                                    Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedObject.trackedID });
+                                                }
+                                            }
+                                        }
                                         if (objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                             currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                         {

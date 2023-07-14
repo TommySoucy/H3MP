@@ -687,6 +687,7 @@ namespace H3MP.Tracking
             {
                 Mod.LogInfo("\tHost", false);
                 Server.objects[trackedID] = null;
+                 TODO: // Cont from here, use buffer ssytem, then impleent sending confirmation request every frame in threadmanager
                 Server.availableObjectIndices.Add(trackedID);
             }
             else

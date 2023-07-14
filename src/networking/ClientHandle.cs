@@ -349,6 +349,16 @@ namespace H3MP.Networking
                     trackedObject.removeFromListOnDestroy = removeFromList;
                     trackedObject.physical.sendDestroy = false;
                     trackedObject.physical.dontGiveControl = true;
+                    TrackedObject[] childrenTrackedObjects = trackedObject.physical.GetComponentsInChildren<TrackedObject>();
+                    for (int i = 0; i < childrenTrackedObjects.Length; ++i)
+                    {
+                        if (childrenTrackedObjects[i] != null)
+                        {
+                            childrenTrackedObjects[i].sendDestroy = false;
+                            childrenTrackedObjects[i].data.removeFromListOnDestroy = removeFromList;
+                            childrenTrackedObjects[i].dontGiveControl = true;
+                        }
+                    }
 
                     trackedObject.physical.SecondaryDestroy();
 

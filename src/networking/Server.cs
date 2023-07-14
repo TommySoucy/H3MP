@@ -16,6 +16,8 @@ namespace H3MP.Networking
         public static PacketHandler[] packetHandlers;
         public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under
         public static List<int> availableObjectIndices;
+        public static Dictionary<int, List<int>> availableIndexBufferWaitingFor = new Dictionary<int, List<int>>(); // Clients a key index is waiting for confirmation from
+        public static Dictionary<int, List<int>> availableIndexBufferClients = new Dictionary<int, List<int>>(); // Indices for which we are waiting for key client confirmation
 
         public static List<int> availableSpectatorHosts;
         public static Dictionary<int, int> spectatorHostByController = new Dictionary<int, int>();

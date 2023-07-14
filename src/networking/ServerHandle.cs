@@ -347,7 +347,19 @@ namespace H3MP.Networking
                                         ServerSend.DestroyObject(trackedID);
                                         trackedObject.RemoveFromLocal();
                                         Server.objects[trackedID] = null;
-                                        Server.availableObjectIndices.Add(trackedID);
+                                        Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                                        for (int j = 0; j < playerList.Count; ++j)
+                                        {
+                                            if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
+                                            {
+                                                // Already waiting for this client's confirmation for some index, just add it to existing list
+                                                existingIndices.Add(trackedID);
+                                            }
+                                            else // Not yet waiting for this client's confirmation for an index, add entry to dict
+                                            {
+                                                Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedID });
+                                            }
+                                        }
                                         if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                             currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                         {
@@ -399,7 +411,19 @@ namespace H3MP.Networking
                                     ServerSend.DestroyObject(trackedID);
                                     trackedObject.RemoveFromLocal();
                                     Server.objects[trackedID] = null;
-                                    Server.availableObjectIndices.Add(trackedID);
+                                    Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                                    for (int j = 0; j < playerList.Count; ++j)
+                                    {
+                                        if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
+                                        {
+                                            // Already waiting for this client's confirmation for some index, just add it to existing list
+                                            existingIndices.Add(trackedID);
+                                        }
+                                        else // Not yet waiting for this client's confirmation for an index, add entry to dict
+                                        {
+                                            Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedID });
+                                        }
+                                    }
                                     if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                         currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                     {
@@ -469,6 +493,16 @@ namespace H3MP.Networking
                     trackedObject.removeFromListOnDestroy = removeFromList;
                     trackedObject.physical.sendDestroy = false;
                     trackedObject.physical.dontGiveControl = true;
+                    TrackedObject[] childrenTrackedObjects = trackedObject.physical.GetComponentsInChildren<TrackedObject>();
+                    for (int i = 0; i < childrenTrackedObjects.Length; ++i)
+                    {
+                        if (childrenTrackedObjects[i] != null)
+                        {
+                            childrenTrackedObjects[i].sendDestroy = false;
+                            childrenTrackedObjects[i].data.removeFromListOnDestroy = removeFromList;
+                            childrenTrackedObjects[i].dontGiveControl = true;
+                        }
+                    }
 
                     trackedObject.physical.SecondaryDestroy();
 

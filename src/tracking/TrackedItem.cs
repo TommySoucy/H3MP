@@ -3,7 +3,6 @@ using H3MP.Networking;
 using H3MP.Patches;
 using System;
 using System.Collections.Generic;
-using System.Net.Mail;
 using UnityEngine;
 
 namespace H3MP.Tracking
