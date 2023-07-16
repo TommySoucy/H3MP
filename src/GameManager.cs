@@ -1739,6 +1739,10 @@ namespace H3MP
                                     }
                                 }
                             }
+                            else // No one to request ID availability from, can just readd directly
+                            {
+                                Server.availableObjectIndices.Add(trackedObject.trackedID);
+                            }
                             if (objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                 currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                             {
@@ -1802,6 +1806,10 @@ namespace H3MP
                                                     Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedObject.trackedID });
                                                 }
                                             }
+                                        }
+                                        else // No one to request ID availability from, can just readd directly
+                                        {
+                                            Server.availableObjectIndices.Add(trackedObject.trackedID);
                                         }
                                         if (objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                             currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))

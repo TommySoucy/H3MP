@@ -685,10 +685,32 @@ namespace H3MP.Tracking
             Mod.LogInfo("Remove from lists called for object with trackedID: " + trackedID,false);
             if (ThreadManager.host)
             {
+                TODO: // When adding clients to buffer system, we need to keep track of which ones weve sent out the request to already so need to have another list to which we will add each ID and the corresponding list of clients we need to sent request to, in thread manager we would then send request for each entry in the list, one per frame, when we do, remove from the list
                 Mod.LogInfo("\tHost", false);
                 Server.objects[trackedID] = null;
-                 TODO: // Cont from here, use buffer ssytem, then impleent sending confirmation request every frame in threadmanager
-                Server.availableObjectIndices.Add(trackedID);
+                TODO: //impleent sending confirmation request every frame in threadmanager
+                TODO: // Could an ID be added to buffer twice somehwere and then here? IF so need to check if keys already exists and handle that
+                if (GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> currentPlayerInstances) &&
+                                currentPlayerInstances.TryGetValue(instance, out List<int> playerList))
+                {
+                    Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                    for (int j = 0; j < playerList.Count; ++j)
+                    {
+                        if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
+                        {
+                            // Already waiting for this client's confirmation for some index, just add it to existing list
+                            existingIndices.Add(trackedID);
+                        }
+                        else // Not yet waiting for this client's confirmation for an index, add entry to dict
+                        {
+                            Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedID });
+                        }
+                    }
+                }
+                else // No one to request ID availability from, can just readd directly
+                {
+                    Server.availableObjectIndices.Add(trackedID);
+                }
             }
             else
             {
