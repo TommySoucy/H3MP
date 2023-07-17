@@ -29,6 +29,8 @@ namespace H3MP.Networking
 
             // Spawn player to clients 
             Server.clients[clientID].SendIntoGame(username, scene, instance, IFF, colorIndex);
+
+            Server.connectedClients.Add(clientID);
         }
 
         public static void Ping(int clientID, Packet packet)
@@ -347,48 +349,6 @@ namespace H3MP.Networking
                                         ServerSend.DestroyObject(trackedID);
                                         trackedObject.RemoveFromLocal();
                                         Server.objects[trackedID] = null;
-                                        if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedID, out List<int> waitingForPlayers))
-                                        {
-                                            for (int j = 0; j < playerList.Count; ++j)
-                                            {
-                                                if (!waitingForPlayers.Contains(playerList[j]))
-                                                {
-                                                    waitingForPlayers.Add(playerList[j]);
-                                                }
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
-                                        }
-                                        for (int j = 0; j < playerList.Count; ++j)
-                                        {
-                                            if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
-                                            {
-                                                // Already waiting for this client's confirmation for some index, just add it to existing list
-                                                existingIndices.Add(trackedID);
-                                            }
-                                            else // Not yet waiting for this client's confirmation for an index, add entry to dict
-                                            {
-                                                Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedID });
-                                            }
-                                        }
-
-                                        // Add to dict of IDs to request
-                                        if (Server.IDsToConfirm.TryGetValue(trackedObject.trackedID, out List<int> clientList))
-                                        {
-                                            for (int j = 0; j < playerList.Count; ++j)
-                                            {
-                                                if (!clientList.Contains(playerList[j]))
-                                                {
-                                                    clientList.Add(playerList[j]);
-                                                }
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Server.IDsToConfirm.Add(trackedID, playerList);
-                                        }
 
                                         if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                             currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
@@ -412,7 +372,6 @@ namespace H3MP.Networking
                                     ServerSend.DestroyObject(trackedID);
                                     trackedObject.RemoveFromLocal();
                                     Server.objects[trackedID] = null;
-                                    Server.availableObjectIndices.Add(trackedID);
                                     if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                         currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                     {
@@ -420,6 +379,59 @@ namespace H3MP.Networking
                                     }
                                     trackedObject.awaitingInstantiation = false;
                                     destroyed = true;
+                                }
+
+                                if(newController == -1)
+                                {
+                                    if (Server.connectedClients.Count > 0)
+                                    {
+                                        if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedObject.trackedID, out List<int> waitingForPlayers))
+                                        {
+                                            for (int j = 0; j < Server.connectedClients.Count; ++j)
+                                            {
+                                                if (!waitingForPlayers.Contains(Server.connectedClients[j]))
+                                                {
+                                                    waitingForPlayers.Add(Server.connectedClients[j]);
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Server.availableIndexBufferWaitingFor.Add(trackedObject.trackedID, Server.connectedClients);
+                                        }
+                                        for (int j = 0; j < Server.connectedClients.Count; ++j)
+                                        {
+                                            if (Server.availableIndexBufferClients.TryGetValue(Server.connectedClients[j], out List<int> existingIndices))
+                                            {
+                                                // Already waiting for this client's confirmation for some index, just add it to existing list
+                                                existingIndices.Add(trackedObject.trackedID);
+                                            }
+                                            else // Not yet waiting for this client's confirmation for an index, add entry to dict
+                                            {
+                                                Server.availableIndexBufferClients.Add(Server.connectedClients[j], new List<int>() { trackedObject.trackedID });
+                                            }
+                                        }
+
+                                        // Add to dict of IDs to request
+                                        if (Server.IDsToConfirm.TryGetValue(trackedObject.trackedID, out List<int> clientList))
+                                        {
+                                            for (int j = 0; j < Server.connectedClients.Count; ++j)
+                                            {
+                                                if (!clientList.Contains(Server.connectedClients[j]))
+                                                {
+                                                    clientList.Add(Server.connectedClients[j]);
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Server.IDsToConfirm.Add(trackedObject.trackedID, Server.connectedClients);
+                                        }
+                                    }
+                                    else // No one to request ID availability from, can just readd directly
+                                    {
+                                        Server.availableObjectIndices.Add(trackedObject.trackedID);
+                                    }
                                 }
                             }
                         }
@@ -441,49 +453,7 @@ namespace H3MP.Networking
                                     ServerSend.DestroyObject(trackedID);
                                     trackedObject.RemoveFromLocal();
                                     Server.objects[trackedID] = null;
-                                    if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedID, out List<int> waitingForPlayers))
-                                    {
-                                        for (int j = 0; j < playerList.Count; ++j)
-                                        {
-                                            if (!waitingForPlayers.Contains(playerList[j]))
-                                            {
-                                                waitingForPlayers.Add(playerList[j]);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
-                                    }
 
-                                    // Add to dict of IDs to request
-                                    if (Server.IDsToConfirm.TryGetValue(trackedObject.trackedID, out List<int> clientList))
-                                    {
-                                        for (int j = 0; j < playerList.Count; ++j)
-                                        {
-                                            if (!clientList.Contains(playerList[j]))
-                                            {
-                                                clientList.Add(playerList[j]);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Server.IDsToConfirm.Add(trackedID, playerList);
-                                    }
-
-                                    for (int j = 0; j < playerList.Count; ++j)
-                                    {
-                                        if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
-                                        {
-                                            // Already waiting for this client's confirmation for some index, just add it to existing list
-                                            existingIndices.Add(trackedID);
-                                        }
-                                        else // Not yet waiting for this client's confirmation for an index, add entry to dict
-                                        {
-                                            Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedID });
-                                        }
-                                    }
                                     if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                         currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                     {
@@ -506,7 +476,6 @@ namespace H3MP.Networking
                                 ServerSend.DestroyObject(trackedID);
                                 trackedObject.RemoveFromLocal();
                                 Server.objects[trackedID] = null;
-                                Server.availableObjectIndices.Add(trackedID);
                                 if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                     currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                 {
@@ -514,6 +483,59 @@ namespace H3MP.Networking
                                 }
                                 trackedObject.awaitingInstantiation = false;
                                 destroyed = true;
+                            }
+
+                            if (newController == -1)
+                            {
+                                if (Server.connectedClients.Count > 0)
+                                {
+                                    if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedObject.trackedID, out List<int> waitingForPlayers))
+                                    {
+                                        for (int j = 0; j < Server.connectedClients.Count; ++j)
+                                        {
+                                            if (!waitingForPlayers.Contains(Server.connectedClients[j]))
+                                            {
+                                                waitingForPlayers.Add(Server.connectedClients[j]);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Server.availableIndexBufferWaitingFor.Add(trackedObject.trackedID, Server.connectedClients);
+                                    }
+                                    for (int j = 0; j < Server.connectedClients.Count; ++j)
+                                    {
+                                        if (Server.availableIndexBufferClients.TryGetValue(Server.connectedClients[j], out List<int> existingIndices))
+                                        {
+                                            // Already waiting for this client's confirmation for some index, just add it to existing list
+                                            existingIndices.Add(trackedObject.trackedID);
+                                        }
+                                        else // Not yet waiting for this client's confirmation for an index, add entry to dict
+                                        {
+                                            Server.availableIndexBufferClients.Add(Server.connectedClients[j], new List<int>() { trackedObject.trackedID });
+                                        }
+                                    }
+
+                                    // Add to dict of IDs to request
+                                    if (Server.IDsToConfirm.TryGetValue(trackedObject.trackedID, out List<int> clientList))
+                                    {
+                                        for (int j = 0; j < Server.connectedClients.Count; ++j)
+                                        {
+                                            if (!clientList.Contains(Server.connectedClients[j]))
+                                            {
+                                                clientList.Add(Server.connectedClients[j]);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Server.IDsToConfirm.Add(trackedObject.trackedID, Server.connectedClients);
+                                    }
+                                }
+                                else // No one to request ID availability from, can just readd directly
+                                {
+                                    Server.availableObjectIndices.Add(trackedObject.trackedID);
+                                }
                             }
                         }
                     }

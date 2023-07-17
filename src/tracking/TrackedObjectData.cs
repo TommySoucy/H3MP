@@ -687,50 +687,49 @@ namespace H3MP.Tracking
             {
                 Mod.LogInfo("\tHost", false);
                 Server.objects[trackedID] = null;
-                if (GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> currentPlayerInstances) &&
-                                currentPlayerInstances.TryGetValue(instance, out List<int> playerList))
+                if (Server.connectedClients.Count > 0)
                 {
                     if(Server.availableIndexBufferWaitingFor.TryGetValue(trackedID, out List<int> waitingForPlayers))
                     {
-                        for(int i = 0; i < playerList.Count; ++i)
+                        for(int i = 0; i < Server.connectedClients.Count; ++i)
                         {
-                            if (!waitingForPlayers.Contains(playerList[i]))
+                            if (!waitingForPlayers.Contains(Server.connectedClients[i]))
                             {
-                                waitingForPlayers.Add(playerList[i]);
+                                waitingForPlayers.Add(Server.connectedClients[i]);
                             }
                         }
                     }
                     else
                     {
-                        Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                        Server.availableIndexBufferWaitingFor.Add(trackedID, Server.connectedClients);
                     }
-                    for (int j = 0; j < playerList.Count; ++j)
+                    for (int j = 0; j < Server.connectedClients.Count; ++j)
                     {
-                        if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
+                        if (Server.availableIndexBufferClients.TryGetValue(Server.connectedClients[j], out List<int> existingIndices))
                         {
                             // Already waiting for this client's confirmation for some index, just add it to existing list
                             existingIndices.Add(trackedID);
                         }
                         else // Not yet waiting for this client's confirmation for an index, add entry to dict
                         {
-                            Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedID });
+                            Server.availableIndexBufferClients.Add(Server.connectedClients[j], new List<int>() { trackedID });
                         }
                     }
 
                     // Add to dict of IDs to request
                     if (Server.IDsToConfirm.TryGetValue(trackedID, out List<int> clientList))
                     {
-                        for (int j = 0; j < playerList.Count; ++j)
+                        for (int j = 0; j < Server.connectedClients.Count; ++j)
                         {
-                            if (!clientList.Contains(playerList[j]))
+                            if (!clientList.Contains(Server.connectedClients[j]))
                             {
-                                clientList.Add(playerList[j]);
+                                clientList.Add(Server.connectedClients[j]);
                             }
                         }
                     }
                     else
                     {
-                        Server.IDsToConfirm.Add(trackedID, playerList);
+                        Server.IDsToConfirm.Add(trackedID, Server.connectedClients);
                     }
                 }
                 else // No one to request ID availability from, can just readd directly

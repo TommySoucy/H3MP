@@ -12,6 +12,7 @@ namespace H3MP.Networking
         public static ushort port;
         public static ushort maxClientCount;
         public static Dictionary<int, ServerClient> clients = new Dictionary<int, ServerClient>();
+        public static List<int> connectedClients = new List<int>();
         public delegate void PacketHandler(int clientID, Packet packet);
         public static PacketHandler[] packetHandlers;
         public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under

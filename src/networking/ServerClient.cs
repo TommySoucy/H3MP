@@ -461,6 +461,8 @@ namespace H3MP.Networking
             }
             ServerSend.ClientDisconnect(ID);
 
+            Server.connectedClients.Remove(ID);
+
             player = null;
         }
 
