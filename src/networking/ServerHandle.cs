@@ -4800,16 +4800,6 @@ namespace H3MP.Networking
 
             Mod.LogInfo("Server received IDConfirm for " + ID);
 
-            if (Server.availableIndexBufferWaitingFor.TryGetValue(ID, out List<int> clients))
-            {
-                clients.Remove(clientID);
-
-                if(clients.Count == 0)
-                {
-                    Server.availableIndexBufferWaitingFor.Remove(ID);
-                }
-            }
-
             if(Server.availableIndexBufferClients.TryGetValue(clientID, out List<int> IDs))
             {
                 IDs.Remove(ID);
@@ -4817,6 +4807,17 @@ namespace H3MP.Networking
                 if(IDs.Count == 0)
                 {
                     Server.availableIndexBufferClients.Remove(clientID);
+                }
+            }
+
+            if (Server.availableIndexBufferWaitingFor.TryGetValue(ID, out List<int> clients))
+            {
+                clients.Remove(clientID);
+
+                if (clients.Count == 0)
+                {
+                    Server.availableIndexBufferWaitingFor.Remove(ID);
+                    Server.availableObjectIndices.Add(ID);
                 }
             }
         }
