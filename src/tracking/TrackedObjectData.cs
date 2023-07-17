@@ -689,11 +689,23 @@ namespace H3MP.Tracking
                 Mod.LogInfo("\tHost", false);
                 Server.objects[trackedID] = null;
                 TODO: //impleent sending confirmation request every frame in threadmanager
-                TODO: // Could an ID be added to buffer twice somehwere and then here? IF so need to check if keys already exists and handle that
                 if (GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> currentPlayerInstances) &&
                                 currentPlayerInstances.TryGetValue(instance, out List<int> playerList))
                 {
-                    Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                    if(Server.availableIndexBufferWaitingFor.TryGetValue(trackedID, out List<int> waitingForPlayers))
+                    {
+                        for(int i = 0; i < playerList.Count; ++i)
+                        {
+                            if (!waitingForPlayers.Contains(playerList[i]))
+                            {
+                                waitingForPlayers.Add(playerList[i]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                    }
                     for (int j = 0; j < playerList.Count; ++j)
                     {
                         if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))

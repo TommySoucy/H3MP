@@ -1725,10 +1725,23 @@ namespace H3MP
                                 // Note: Player list being a reference, if a player leaves the scene/instance, they will be removed from the list of clients 
                                 //       this index is waiting for as well. This is fine though because if they leave the scene/instance, we can assume they
                                 //       got rid of the object on their side
-                                Server.availableIndexBufferWaitingFor.Add(trackedObject.trackedID, playerList);
-                                for(int j=0; j < playerList.Count; ++j)
+                                if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedObject.trackedID, out List<int> waitingForPlayers))
                                 {
-                                    if(Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
+                                    for (int j = 0; j < playerList.Count; ++j)
+                                    {
+                                        if (!waitingForPlayers.Contains(playerList[j]))
+                                        {
+                                            waitingForPlayers.Add(playerList[j]);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    Server.availableIndexBufferWaitingFor.Add(trackedObject.trackedID, playerList);
+                                }
+                                for (int j = 0; j < playerList.Count; ++j)
+                                {
+                                    if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
                                     {
                                         // Already waiting for this client's confirmation for some index, just add it to existing list
                                         existingIndices.Add(trackedObject.trackedID);
@@ -1793,7 +1806,20 @@ namespace H3MP
                                         if (playersByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentPlayerInstances) &&
                                             currentPlayerInstances.TryGetValue(trackedObject.instance, out List<int> playerList))
                                         {
-                                            Server.availableIndexBufferWaitingFor.Add(trackedObject.trackedID, playerList);
+                                            if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedObject.trackedID, out List<int> waitingForPlayers))
+                                            {
+                                                for (int j = 0; j < playerList.Count; ++j)
+                                                {
+                                                    if (!waitingForPlayers.Contains(playerList[j]))
+                                                    {
+                                                        waitingForPlayers.Add(playerList[j]);
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                Server.availableIndexBufferWaitingFor.Add(trackedObject.trackedID, playerList);
+                                            }
                                             for (int j = 0; j < playerList.Count; ++j)
                                             {
                                                 if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))

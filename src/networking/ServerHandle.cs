@@ -347,7 +347,20 @@ namespace H3MP.Networking
                                         ServerSend.DestroyObject(trackedID);
                                         trackedObject.RemoveFromLocal();
                                         Server.objects[trackedID] = null;
-                                        Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                                        if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedID, out List<int> waitingForPlayers))
+                                        {
+                                            for (int j = 0; j < playerList.Count; ++j)
+                                            {
+                                                if (!waitingForPlayers.Contains(playerList[j]))
+                                                {
+                                                    waitingForPlayers.Add(playerList[j]);
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                                        }
                                         for (int j = 0; j < playerList.Count; ++j)
                                         {
                                             if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
@@ -411,7 +424,20 @@ namespace H3MP.Networking
                                     ServerSend.DestroyObject(trackedID);
                                     trackedObject.RemoveFromLocal();
                                     Server.objects[trackedID] = null;
-                                    Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                                    if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedID, out List<int> waitingForPlayers))
+                                    {
+                                        for (int j = 0; j < playerList.Count; ++j)
+                                        {
+                                            if (!waitingForPlayers.Contains(playerList[j]))
+                                            {
+                                                waitingForPlayers.Add(playerList[j]);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
+                                    }
                                     for (int j = 0; j < playerList.Count; ++j)
                                     {
                                         if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
