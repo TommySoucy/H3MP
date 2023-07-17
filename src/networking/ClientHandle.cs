@@ -4278,6 +4278,8 @@ namespace H3MP.Networking
         {
             int IDToConfirm = packet.ReadInt();
 
+            Mod.LogInfo("Client received IDConfirm for "+IDToConfirm);
+
             TrackedObjectData trackedObjectData = Client.objects[IDToConfirm];
             if (trackedObjectData != null)
             {

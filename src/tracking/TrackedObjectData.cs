@@ -701,7 +701,7 @@ namespace H3MP.Tracking
                     }
                     else
                     {
-                        Server.availableIndexBufferWaitingFor.Add(trackedID, Server.connectedClients);
+                        Server.availableIndexBufferWaitingFor.Add(trackedID, new List<int>(Server.connectedClients));
                     }
                     for (int j = 0; j < Server.connectedClients.Count; ++j)
                     {
@@ -729,8 +729,10 @@ namespace H3MP.Tracking
                     }
                     else
                     {
-                        Server.IDsToConfirm.Add(trackedID, Server.connectedClients);
+                        Server.IDsToConfirm.Add(trackedID, new List<int>(Server.connectedClients));
                     }
+
+                    Mod.LogInfo("Added " + trackedID + " to ID buffer");
                 }
                 else // No one to request ID availability from, can just readd directly
                 {

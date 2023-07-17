@@ -136,10 +136,12 @@ namespace H3MP.Networking
                 // Send ID confirmation if there is one
                 if(Server.IDsToConfirm.Count > 0)
                 {
+                    Mod.LogInfo("There are IDs to confirm");
                     int count = 0;
                     List<int> entriesToRemove = new List<int>();
                     foreach (KeyValuePair<int, List<int>> entry in Server.IDsToConfirm)
                     {
+                        Mod.LogInfo("\tRequesting confirm for "+entry.Key);
                         ServerSend.IDConfirm(entry);
                         entriesToRemove.Add(entry.Key);
 

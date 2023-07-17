@@ -461,6 +461,34 @@ namespace H3MP.Networking
             }
             ServerSend.ClientDisconnect(ID);
 
+            List<int> IDsToRemoveFromIDsToConfirm = new List<int>();
+            foreach(KeyValuePair<int, List<int>> entry in Server.IDsToConfirm)
+            {
+                entry.Value.Remove(ID);
+                if(entry.Value.Count == 0)
+                {
+                    IDsToRemoveFromIDsToConfirm.Add(entry.Key);
+                }
+            }
+            for(int i=0; i < IDsToRemoveFromIDsToConfirm.Count; ++i)
+            {
+                Server.IDsToConfirm.Remove(IDsToRemoveFromIDsToConfirm[i]);
+            }
+            Server.availableIndexBufferClients.Remove(ID);
+            List<int> IDsToRemoveFromAvailableIndexBufferWaitingFor = new List<int>();
+            foreach (KeyValuePair<int, List<int>> entry in Server.availableIndexBufferWaitingFor)
+            {
+                entry.Value.Remove(ID);
+                if (entry.Value.Count == 0)
+                {
+                    Server.availableObjectIndices.Add(entry.Key);
+                    IDsToRemoveFromAvailableIndexBufferWaitingFor.Add(entry.Key);
+                }
+            }
+            for (int i = 0; i < IDsToRemoveFromAvailableIndexBufferWaitingFor.Count; ++i)
+            {
+                Server.availableIndexBufferWaitingFor.Remove(IDsToRemoveFromAvailableIndexBufferWaitingFor[i]);
+            }
             Server.connectedClients.Remove(ID);
 
             player = null;
