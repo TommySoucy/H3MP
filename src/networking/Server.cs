@@ -18,6 +18,8 @@ namespace H3MP.Networking
         public static List<int> availableObjectIndices;
         public static Dictionary<int, List<int>> availableIndexBufferWaitingFor = new Dictionary<int, List<int>>(); // Clients a key index is waiting for confirmation from
         public static Dictionary<int, List<int>> availableIndexBufferClients = new Dictionary<int, List<int>>(); // Indices for which we are waiting for key client confirmation
+        public static Dictionary<int, List<int>> IDsToConfirm = new Dictionary<int, List<int>>(); // IDs we still need to request confirmation for to lsit of clients
+        public static readonly int IDConfirmLimit = 1;
 
         public static List<int> availableSpectatorHosts;
         public static Dictionary<int, int> spectatorHostByController = new Dictionary<int, int>();
@@ -483,6 +485,7 @@ namespace H3MP.Networking
                 ServerHandle.ReassignSpectatorHost,
                 ServerHandle.ReactiveSteelTargetDamage,
                 ServerHandle.MTUTest,
+                ServerHandle.IDConfirm,
             };
 
             objects = new TrackedObjectData[100];

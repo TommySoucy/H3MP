@@ -3,6 +3,7 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Networking
 {
@@ -4204,6 +4205,16 @@ namespace H3MP.Networking
             packet.readPos = 0;
 
             SendTCPDataToAll(clientID, packet);
+        }
+
+        public static void IDConfirm(KeyValuePair<int, List<int>> entry)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.IDConfirm))
+            {
+                packet.Write(entry.Key);
+
+                SendTCPDataToClients(packet, entry.Value);
+            }
         }
     }
 }

@@ -4273,5 +4273,48 @@ namespace H3MP.Networking
         {
             Mod.LogWarning("Received MTU test packet from server");
         }
+
+        public static void IDConfirm(Packet packet)
+        {
+            int IDToConfirm = packet.ReadInt();
+
+            TrackedObjectData trackedObjectData = Client.objects[IDToConfirm];
+            if (trackedObjectData != null)
+            {
+                trackedObjectData.awaitingInstantiation = false;
+                
+                if (trackedObjectData.physical != null)
+                {
+                    trackedObjectData.removeFromListOnDestroy = true;
+                    trackedObjectData.physical.sendDestroy = false;
+                    trackedObjectData.physical.dontGiveControl = true;
+                    TrackedObject[] childrenTrackedObjects = trackedObjectData.physical.GetComponentsInChildren<TrackedObject>();
+                    for (int i = 0; i < childrenTrackedObjects.Length; ++i)
+                    {
+                        if (childrenTrackedObjects[i] != null)
+                        {
+                            childrenTrackedObjects[i].sendDestroy = false;
+                            childrenTrackedObjects[i].data.removeFromListOnDestroy = true;
+                            childrenTrackedObjects[i].dontGiveControl = true;
+                        }
+                    }
+
+                    trackedObjectData.physical.SecondaryDestroy();
+
+                    GameObject.Destroy(trackedObjectData.physical.gameObject);
+                }
+                else
+                {
+                    if (trackedObjectData.localTrackedID != -1)
+                    {
+                        trackedObjectData.RemoveFromLocal();
+                    }
+
+                    trackedObjectData.RemoveFromLists();
+                }
+            }
+
+            ClientSend.IDConfirm(IDToConfirm);
+        }
     }
 }

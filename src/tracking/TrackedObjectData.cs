@@ -685,10 +685,8 @@ namespace H3MP.Tracking
             Mod.LogInfo("Remove from lists called for object with trackedID: " + trackedID,false);
             if (ThreadManager.host)
             {
-                TODO: // When adding clients to buffer system, we need to keep track of which ones weve sent out the request to already so need to have another list to which we will add each ID and the corresponding list of clients we need to sent request to, in thread manager we would then send request for each entry in the list, one per frame, when we do, remove from the list
                 Mod.LogInfo("\tHost", false);
                 Server.objects[trackedID] = null;
-                TODO: //impleent sending confirmation request every frame in threadmanager
                 if (GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> currentPlayerInstances) &&
                                 currentPlayerInstances.TryGetValue(instance, out List<int> playerList))
                 {
@@ -717,6 +715,22 @@ namespace H3MP.Tracking
                         {
                             Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedID });
                         }
+                    }
+
+                    // Add to dict of IDs to request
+                    if (Server.IDsToConfirm.TryGetValue(trackedID, out List<int> clientList))
+                    {
+                        for (int j = 0; j < playerList.Count; ++j)
+                        {
+                            if (!clientList.Contains(playerList[j]))
+                            {
+                                clientList.Add(playerList[j]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Server.IDsToConfirm.Add(trackedID, playerList);
                     }
                 }
                 else // No one to request ID availability from, can just readd directly

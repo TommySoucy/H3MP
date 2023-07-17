@@ -373,6 +373,23 @@ namespace H3MP.Networking
                                                 Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedID });
                                             }
                                         }
+
+                                        // Add to dict of IDs to request
+                                        if (Server.IDsToConfirm.TryGetValue(trackedObject.trackedID, out List<int> clientList))
+                                        {
+                                            for (int j = 0; j < playerList.Count; ++j)
+                                            {
+                                                if (!clientList.Contains(playerList[j]))
+                                                {
+                                                    clientList.Add(playerList[j]);
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Server.IDsToConfirm.Add(trackedID, playerList);
+                                        }
+
                                         if (GameManager.objectsByInstanceByScene.TryGetValue(trackedObject.scene, out Dictionary<int, List<int>> currentInstances) &&
                                             currentInstances.TryGetValue(trackedObject.instance, out List<int> objectList))
                                         {
@@ -438,6 +455,23 @@ namespace H3MP.Networking
                                     {
                                         Server.availableIndexBufferWaitingFor.Add(trackedID, playerList);
                                     }
+
+                                    // Add to dict of IDs to request
+                                    if (Server.IDsToConfirm.TryGetValue(trackedObject.trackedID, out List<int> clientList))
+                                    {
+                                        for (int j = 0; j < playerList.Count; ++j)
+                                        {
+                                            if (!clientList.Contains(playerList[j]))
+                                            {
+                                                clientList.Add(playerList[j]);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Server.IDsToConfirm.Add(trackedID, playerList);
+                                    }
+
                                     for (int j = 0; j < playerList.Count; ++j)
                                     {
                                         if (Server.availableIndexBufferClients.TryGetValue(playerList[j], out List<int> existingIndices))
@@ -4732,6 +4766,31 @@ namespace H3MP.Networking
         public static void MTUTest(int clientID, Packet packet)
         {
             Mod.LogWarning("Received MTU test packet from client");
+        }
+
+        public static void IDConfirm(int clientID, Packet packet)
+        {
+            int ID = packet.ReadInt();
+
+            if(Server.availableIndexBufferWaitingFor.TryGetValue(ID, out List<int> clients))
+            {
+                clients.Remove(clientID);
+
+                if(clients.Count == 0)
+                {
+                    Server.availableIndexBufferWaitingFor.Remove(ID);
+                }
+            }
+
+            if(Server.availableIndexBufferClients.TryGetValue(clientID, out List<int> IDs))
+            {
+                IDs.Remove(ID);
+
+                if(IDs.Count == 0)
+                {
+                    Server.availableIndexBufferClients.Remove(clientID);
+                }
+            }
         }
     }
 }

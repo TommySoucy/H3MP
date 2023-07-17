@@ -132,6 +132,28 @@ namespace H3MP.Networking
                                                GameManager.instance);
                     }
                 }
+
+                // Send ID confirmation if there is one
+                if(Server.IDsToConfirm.Count > 0)
+                {
+                    int count = 0;
+                    List<int> entriesToRemove = new List<int>();
+                    foreach (KeyValuePair<int, List<int>> entry in Server.IDsToConfirm)
+                    {
+                        ServerSend.IDConfirm(entry);
+                        entriesToRemove.Add(entry.Key);
+
+                        if (++count >= Server.IDConfirmLimit)
+                        {
+                            break;
+                        }
+                    }
+
+                    for(int i=0; i < entriesToRemove.Count; ++i)
+                    {
+                        Server.IDsToConfirm.Remove(entriesToRemove[i]);
+                    }
+                }
             }
             else
             {

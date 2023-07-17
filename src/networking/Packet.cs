@@ -180,7 +180,8 @@ namespace H3MP.Networking
         spectatorHostStartTNH = 167,
         unassignSpectatorHost = 168,
         reactiveSteelTargetDamage = 169,
-        MTUTest = 170
+        MTUTest = 170,
+        IDConfirm = 171
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -350,7 +351,8 @@ namespace H3MP.Networking
         spectatorHostStartTNH = 161,
         reassignSpectatorHost = 162,
         reactiveSteelTargetDamage = 163,
-        MTUTest = 164
+        MTUTest = 164,
+        IDConfirm = 165
     }
 
     public class Packet : IDisposable

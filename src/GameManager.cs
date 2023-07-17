@@ -1751,6 +1751,22 @@ namespace H3MP
                                         Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedObject.trackedID });
                                     }
                                 }
+
+                                // Add to dict of IDs to request
+                                if(Server.IDsToConfirm.TryGetValue(trackedObject.trackedID, out List<int> clientList))
+                                {
+                                    for (int j = 0; j < playerList.Count; ++j)
+                                    {
+                                        if (!clientList.Contains(playerList[j]))
+                                        {
+                                            clientList.Add(playerList[j]);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    Server.IDsToConfirm.Add(trackedObject.trackedID, playerList);
+                                }
                             }
                             else // No one to request ID availability from, can just readd directly
                             {
@@ -1831,6 +1847,22 @@ namespace H3MP
                                                 {
                                                     Server.availableIndexBufferClients.Add(playerList[j], new List<int>() { trackedObject.trackedID });
                                                 }
+                                            }
+
+                                            // Add to dict of IDs to request
+                                            if (Server.IDsToConfirm.TryGetValue(trackedObject.trackedID, out List<int> clientList))
+                                            {
+                                                for (int j = 0; j < playerList.Count; ++j)
+                                                {
+                                                    if (!clientList.Contains(playerList[j]))
+                                                    {
+                                                        clientList.Add(playerList[j]);
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                Server.IDsToConfirm.Add(trackedObject.trackedID, playerList);
                                             }
                                         }
                                         else // No one to request ID availability from, can just readd directly
