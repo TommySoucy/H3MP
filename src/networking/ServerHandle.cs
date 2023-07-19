@@ -19,6 +19,7 @@ namespace H3MP.Networking
             int instance = packet.ReadInt();
             int IFF = packet.ReadInt();
             int colorIndex = packet.ReadInt();
+            string playerPrefabID = packet.ReadString();
 
             Mod.LogInfo($"{Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}", false);
 
@@ -28,7 +29,7 @@ namespace H3MP.Networking
             }
 
             // Spawn player to clients 
-            Server.clients[clientID].SendIntoGame(username, scene, instance, IFF, colorIndex);
+            Server.clients[clientID].SendIntoGame(username, scene, instance, IFF, colorIndex, playerPrefabID);
 
             Server.connectedClients.Add(clientID);
         }
@@ -4826,7 +4827,7 @@ namespace H3MP.Networking
         {
             string ID = packet.ReadString();
 
-
+            GameManager.SetPlayerPrefab(clientID, ID, true, clientID);
         }
     }
 }

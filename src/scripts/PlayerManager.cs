@@ -1,7 +1,6 @@
 ﻿using FistVR;
 using H3MP.Networking;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -208,8 +207,56 @@ namespace H3MP
                 OnSetPlayerPrefab(playerPrefabID, ref set);
             }
 
-            if (!set)
+            /* This piece of code is what you should have in your OnSetPlayerPrefab method but GetChild at the indices specific to your prefab
+             
+               if (!set && !this.playerPrefabID.Equals(playerPrefabID))
+               {
+                    Destroy(transform.GetChild(0).gameObject);
+
+                    if(GameManager.playerPrefabs.TryGetValue(playerPrefabID, out GameObject prefab))
+                    {
+                        Instantiate(prefab, transform);
+
+                        head = transform.GetChild(0).GetChild(0);
+                        headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
+                        headEntity.Beacons = new List<AIEntityIFFBeacon>();
+                        headEntity.IFFCode = IFF;
+                        headHitBox = head.gameObject.AddComponent<PlayerHitbox>();
+                        headHitBox.manager = this;
+                        headHitBox.part = PlayerHitbox.Part.Head;
+                        torso = transform.GetChild(0).GetChild(1);
+                        torsoEntity = torso.GetChild(0).gameObject.AddComponent<AIEntity>();
+                        torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
+                        torsoEntity.IFFCode = IFF;
+                        torsoHitBox = torso.gameObject.AddComponent<PlayerHitbox>();
+                        torsoHitBox.manager = this;
+                        torsoHitBox.part = PlayerHitbox.Part.Torso;
+                        leftHand = transform.GetChild(0).GetChild(2);
+                        leftHandHitBox = leftHand.gameObject.AddComponent<PlayerHitbox>();
+                        leftHandHitBox.manager = this;
+                        leftHandHitBox.part = PlayerHitbox.Part.LeftHand;
+                        rightHand = transform.GetChild(0).GetChild(3);
+                        rightHandHitBox = rightHand.gameObject.AddComponent<PlayerHitbox>();
+                        rightHandHitBox.manager = this;
+                        rightHandHitBox.part = PlayerHitbox.Part.RightHand;
+                        overheadDisplayBillboard = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<Billboard>();
+                        usernameLabel = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
+                        healthIndicator = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
+                        headMat = head.GetComponent<Renderer>().material;
+                        torsoMat = torso.GetComponent<Renderer>().material;
+                        leftHandMat = leftHand.GetComponent<Renderer>().material;
+                        rightHandMat = rightHand.GetComponent<Renderer>().material;
+                    }
+               }
+
+             */
+
+            if (!set && !this.playerPrefabID.Equals("Default"))
             {
+                Destroy(transform.GetChild(0).gameObject);
+
+                Instantiate(GameManager.playerPrefabs["Default"], transform);
+
                 head = transform.GetChild(0).GetChild(0);
                 headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
                 headEntity.Beacons = new List<AIEntityIFFBeacon>();

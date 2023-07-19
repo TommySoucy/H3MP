@@ -59,6 +59,7 @@ namespace H3MP.Networking
                 packet.Write(GameManager.instance);
                 packet.Write(GM.CurrentPlayerBody.GetPlayerIFF());
                 packet.Write(GameManager.colorIndex);
+                packet.Write(GameManager.playerPrefabID);
 
                 SendTCPData(packet);
             }

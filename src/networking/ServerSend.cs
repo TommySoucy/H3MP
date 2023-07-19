@@ -4217,5 +4217,23 @@ namespace H3MP.Networking
                 SendTCPDataToClients(packet, entry.Value);
             }
         }
+
+        public static void PlayerPrefabID(int clientID, string ID, int secondClientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.playerPrefabID))
+            {
+                packet.Write(clientID);
+                packet.Write(ID);
+
+                if(secondClientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(secondClientID, packet);
+                }
+            }
+        }
     }
 }

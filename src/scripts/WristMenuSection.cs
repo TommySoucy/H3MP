@@ -888,6 +888,15 @@ namespace H3MP
 
         private void OnNextPlayerModelClicked(Text textRef)
         {
+            if (Mod.managerObject == null)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
+                return;
+            }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             ++GameManager.playerPrefabIndex;
 
             if(GameManager.playerPrefabIndex >= GameManager.playerPrefabIDs.Count)
@@ -900,6 +909,15 @@ namespace H3MP
 
         private void OnPreviousPlayerModelClicked(Text textRef)
         {
+            if (Mod.managerObject == null)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+
+                return;
+            }
+
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
             --GameManager.playerPrefabIndex;
 
             if (GameManager.playerPrefabIndex == 0)

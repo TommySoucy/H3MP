@@ -309,7 +309,7 @@ namespace H3MP.Networking
             }
         }
 
-        public void SendIntoGame(string playerName, string scene, int instance, int IFF, int colorIndex)
+        public void SendIntoGame(string playerName, string scene, int instance, int IFF, int colorIndex, string playerPrefabID)
         {
             player = new Player(ID, playerName, Vector3.zero, IFF, colorIndex);
             player.scene = scene;
@@ -320,12 +320,12 @@ namespace H3MP.Networking
             {
                 if(client.player != null && client.ID != ID)
                 {
-                    ServerSend.SpawnPlayer(ID, client.player, scene, instance, IFF, colorIndex);
+                    ServerSend.SpawnPlayer(ID, client.player, scene, instance, IFF, colorIndex, playerPrefabID);
                 }
             }
 
             // Spawn this player for ourselves
-            GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, instance, player.position, player.rotation, IFF, colorIndex);
+            GameManager.singleton.SpawnPlayer(player.ID, player.username, scene, instance, player.position, player.rotation, IFF, colorIndex, playerPrefabID);
 
             // Spawn this client's player in every other client
             bool inControl = true;
@@ -333,13 +333,13 @@ namespace H3MP.Networking
             {
                 if(client.player != null && client.ID != ID)
                 {
-                    ServerSend.SpawnPlayer(client.ID, player, client.player.scene, client.player.instance, IFF, colorIndex, true);
+                    ServerSend.SpawnPlayer(client.ID, player, client.player.scene, client.player.instance, IFF, colorIndex, playerPrefabID, true);
                     inControl &= !scene.Equals(client.player.scene);
                 }
             }
 
             // Also spawn host player in this client
-            ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene, GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, GM.CurrentPlayerBody == null ? -3 : GM.CurrentPlayerBody.GetPlayerIFF(), GameManager.colorIndex, true);
+            ServerSend.SpawnPlayer(ID, 0, Mod.config["Username"].ToString(), GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene, GameManager.instance, GM.CurrentPlayerBody.transform.position, GM.CurrentPlayerBody.transform.rotation, GM.CurrentPlayerBody == null ? -3 : GM.CurrentPlayerBody.GetPlayerIFF(), GameManager.colorIndex, GameManager.playerPrefabID, true);
             inControl &= !scene.Equals(GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene);
 
             Mod.LogInfo("Player " + ID + " join server in scene " + scene, false);

@@ -181,7 +181,8 @@ namespace H3MP.Networking
         unassignSpectatorHost = 168,
         reactiveSteelTargetDamage = 169,
         MTUTest = 170,
-        IDConfirm = 171
+        IDConfirm = 171,
+        playerPrefabID = 172
     }
 
     /// <summary>Sent from client to server.</summary>
