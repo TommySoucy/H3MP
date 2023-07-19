@@ -352,7 +352,8 @@ namespace H3MP.Networking
         reassignSpectatorHost = 162,
         reactiveSteelTargetDamage = 163,
         MTUTest = 164,
-        IDConfirm = 165
+        IDConfirm = 165,
+        playerPrefabID = 166
     }
 
     public class Packet : IDisposable

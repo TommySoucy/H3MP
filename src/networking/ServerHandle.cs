@@ -4821,5 +4821,12 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void PlayerPrefabID(int clientID, Packet packet)
+        {
+            string ID = packet.ReadString();
+
+
+        }
     }
 }

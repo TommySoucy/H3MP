@@ -26,6 +26,7 @@ namespace H3MP.Networking
         public int instance;
         public bool firstInSceneInstance;
         public int colorIndex;
+        public string playerPrefabID;
 
         public Player(int ID, string username, Vector3 spawnPos, int IFF, int colorIndex)
         {

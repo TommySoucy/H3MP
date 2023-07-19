@@ -73,11 +73,12 @@ namespace H3MP.Networking
             Quaternion rotation = packet.ReadQuaternion();
             int IFF = packet.ReadInt();
             int colorIndex = packet.ReadInt();
+            string playerPrefabID = packet.ReadString();
             bool join = packet.ReadBool();
 
             Mod.LogInfo("ClientHandle SpawnPlayer, ID: " + ID + ", username: " + username, false);
 
-            GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation, IFF, colorIndex, join);
+            GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation, IFF, colorIndex, playerPrefabID, join);
         }
 
         public static void ConnectSync(Packet packet)

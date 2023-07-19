@@ -23,6 +23,7 @@ namespace H3MP
         public static Text radarModeText;
         public static Text radarColorText;
         public static Text maxHealthText;
+        public static Text playerModelText;
 
         public override void Enable()
         {
@@ -84,6 +85,9 @@ namespace H3MP
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnHostStartHoldClicked, "Debug: Host start hold", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnPlayerModelClicked, "Skin: Default", out playerModelText);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextPlayerModelClicked, ">", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousPlayerModelClicked, "<", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
@@ -874,6 +878,46 @@ namespace H3MP
                         --SetHealthThresholdPatch.skip;
                     }
                 }
+            }
+        }
+
+        private void OnPlayerModelClicked(Text textRef)
+        {
+            // Place holder
+        }
+
+        private void OnNextPlayerModelClicked(Text textRef)
+        {
+            ++GameManager.playerPrefabIndex;
+
+            if(GameManager.playerPrefabIndex >= GameManager.playerPrefabIDs.Count)
+            {
+                GameManager.playerPrefabIndex = 0;
+            }
+
+            ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex);
+        }
+
+        private void OnPreviousPlayerModelClicked(Text textRef)
+        {
+            --GameManager.playerPrefabIndex;
+
+            if (GameManager.playerPrefabIndex == 0)
+            {
+                GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count - 1;
+            }
+
+            ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex);
+        }
+
+        private void ProcessPlayerPrefabIndex(int index)
+        {
+            string newID = GameManager.playerPrefabIDs[GameManager.playerPrefabIndex];
+            if (!GameManager.playerPrefabID.Equals(newID))
+            {
+                GameManager.playerPrefabID = newID;
+
+                GameManager.SetPlayerPrefab(GameManager.ID, newID);
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using FistVR;
 using H3MP.Networking;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,6 +34,7 @@ namespace H3MP
         public int colorIndex;
         public TAH_ReticleContact reticleContact;
         public float health;
+        public string playerPrefabID;
 
         public string scene;
         public int instance;
@@ -40,37 +42,22 @@ namespace H3MP
 
         public bool visible;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSetPlayerPrefab event
+        /// </summary>
+        /// <param name="prefabID">The prefab identifier</param>
+        /// <param name="set">Custom override for whether prefab was set or not</param>
+        public delegate void OnSetPlayerPrefabDelegate(string prefabID, ref bool set);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we set the player's skin/model/prefab so you can set your own transforms and relevant objects
+        /// </summary>
+        public static event OnSetPlayerPrefabDelegate OnSetPlayerPrefab;
+
         private void Awake()
         {
-            head = transform.GetChild(0);
-            headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
-            headEntity.Beacons = new List<AIEntityIFFBeacon>();
-            headEntity.IFFCode = IFF;
-            headHitBox = head.gameObject.AddComponent<PlayerHitbox>();
-            headHitBox.manager = this;
-            headHitBox.part = PlayerHitbox.Part.Head;
-            torso = transform.GetChild(1);
-            torsoEntity = torso.GetChild(0).gameObject.AddComponent<AIEntity>();
-            torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
-            torsoEntity.IFFCode = IFF;
-            torsoHitBox = torso.gameObject.AddComponent<PlayerHitbox>();
-            torsoHitBox.manager = this;
-            torsoHitBox.part = PlayerHitbox.Part.Torso;
-            leftHand = transform.GetChild(2);
-            leftHandHitBox = leftHand.gameObject.AddComponent<PlayerHitbox>();
-            leftHandHitBox.manager = this;
-            leftHandHitBox.part = PlayerHitbox.Part.LeftHand;
-            rightHand = transform.GetChild(3);
-            rightHandHitBox = rightHand.gameObject.AddComponent<PlayerHitbox>();
-            rightHandHitBox.manager = this;
-            rightHandHitBox.part = PlayerHitbox.Part.RightHand;
-            overheadDisplayBillboard = transform.GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<Billboard>();
-            usernameLabel = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
-            healthIndicator = transform.GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
-            headMat = head.GetComponent<Renderer>().material;
-            torsoMat = torso.GetComponent<Renderer>().material;
-            leftHandMat = leftHand.GetComponent<Renderer>().material;
-            rightHandMat = rightHand.GetComponent<Renderer>().material;
         }
 
         public void Damage(PlayerHitbox.Part part, Damage damage)
@@ -210,6 +197,48 @@ namespace H3MP
             {
                 reticleContact.R_Arrow.material.color = GameManager.colors[colorIndex];
                 reticleContact.R_Icon.material.color = GameManager.colors[colorIndex];
+            }
+        }
+
+        public void SetPlayerPrefab(string playerPrefabID)
+        {
+            bool set = false;
+            if(OnSetPlayerPrefab != null)
+            {
+                OnSetPlayerPrefab(playerPrefabID, ref set);
+            }
+
+            if (!set)
+            {
+                head = transform.GetChild(0).GetChild(0);
+                headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
+                headEntity.Beacons = new List<AIEntityIFFBeacon>();
+                headEntity.IFFCode = IFF;
+                headHitBox = head.gameObject.AddComponent<PlayerHitbox>();
+                headHitBox.manager = this;
+                headHitBox.part = PlayerHitbox.Part.Head;
+                torso = transform.GetChild(0).GetChild(1);
+                torsoEntity = torso.GetChild(0).gameObject.AddComponent<AIEntity>();
+                torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
+                torsoEntity.IFFCode = IFF;
+                torsoHitBox = torso.gameObject.AddComponent<PlayerHitbox>();
+                torsoHitBox.manager = this;
+                torsoHitBox.part = PlayerHitbox.Part.Torso;
+                leftHand = transform.GetChild(0).GetChild(2);
+                leftHandHitBox = leftHand.gameObject.AddComponent<PlayerHitbox>();
+                leftHandHitBox.manager = this;
+                leftHandHitBox.part = PlayerHitbox.Part.LeftHand;
+                rightHand = transform.GetChild(0).GetChild(3);
+                rightHandHitBox = rightHand.gameObject.AddComponent<PlayerHitbox>();
+                rightHandHitBox.manager = this;
+                rightHandHitBox.part = PlayerHitbox.Part.RightHand;
+                overheadDisplayBillboard = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<Billboard>();
+                usernameLabel = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
+                healthIndicator = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
+                headMat = head.GetComponent<Renderer>().material;
+                torsoMat = torso.GetComponent<Renderer>().material;
+                leftHandMat = leftHand.GetComponent<Renderer>().material;
+                rightHandMat = rightHand.GetComponent<Renderer>().material;
             }
         }
     }

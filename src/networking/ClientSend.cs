@@ -2553,5 +2553,15 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void PlayerPrefabID(string ID)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.playerPrefabID))
+            {
+                packet.Write(ID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

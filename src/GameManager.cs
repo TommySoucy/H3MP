@@ -53,6 +53,7 @@ namespace H3MP
         public static int controlledSpectatorHost = -1;
         public static int spectatorHostControlledBy = -1;
         public static bool resetSpectatorHost;
+        public static long ping = -1;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -90,11 +91,22 @@ namespace H3MP
         public static float[] maxHealths = new float[] { 1, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000 };
         public static int maxHealthIndex = -1;
         public static Dictionary<string, Dictionary<int, KeyValuePair<float, int>>> maxHealthByInstanceByScene = new Dictionary<string, Dictionary<int, KeyValuePair<float, int>>>();
+        public static string playerPrefabID = "Default";
+        public static int playerPrefabIndex = 0;
 
-        public static long ping = -1;
+        /// <summary>
+        /// CUSTOMIZATION
+        /// A dictionary of all player prefabs. If you add a player prefab, its ID must also be added to playerPrefabIDs
+        /// Key: Identifier for the prefab
+        /// Value: The prefab
+        /// </summary>
+        public static Dictionary<string, GameObject> playerPrefabs = new Dictionary<string, GameObject>();
 
-        //public GameObject localPlayerPrefab;
-        public GameObject playerPrefab;
+        /// <summary>
+        /// CUSTOMIZATION
+        /// A list of all player prefab IDs. Must contain IDs of all player prefabs added to playerPrefabs
+        /// </summary>
+        public static List<string> playerPrefabIDs = new List<string>();
 
         /// <summary>
         /// CUSTOMIZATION
@@ -248,16 +260,17 @@ namespace H3MP
             // TODO: Update UI of TNH menu
         }
 
-        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, bool join = false)
+        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, string playerPrefabID, bool join = false)
         {
             Mod.LogInfo($"Spawn player called with ID: {ID}", false);
 
-            GameObject player = null;
+            GameObject playerRoot = null;
             // Always spawn if this is host (client is null)
             if(Client.singleton == null || ID != Client.singleton.ID)
             {
-                player = Instantiate(playerPrefab);
-                DontDestroyOnLoad(player);
+                playerRoot = new GameObject("PlayerRoot"+ID);
+                Instantiate(playerPrefabs[playerPrefabID], playerRoot.transform);
+                DontDestroyOnLoad(playerRoot);
             }
             else
             {
@@ -265,7 +278,7 @@ namespace H3MP
                 return;
             }
 
-            PlayerManager playerManager = player.GetComponent<PlayerManager>();
+            PlayerManager playerManager = playerRoot.AddComponent<PlayerManager>();
             playerManager.ID = ID;
             playerManager.username = username;
             playerManager.scene = scene;
@@ -273,6 +286,7 @@ namespace H3MP
             playerManager.usernameLabel.text = username;
             playerManager.SetIFF(IFF);
             playerManager.SetColor(colorIndex);
+            playerManager.SetPlayerPrefab(playerPrefabID);
             players.Add(ID, playerManager);
 
             // Add to scene/instance
@@ -764,6 +778,47 @@ namespace H3MP
                 else if (!received)
                 {
                     ClientSend.PlayerColor(ID, index);
+                }
+            }
+        }
+
+        public static void SetPlayerPrefab(int ID, string prefabID, bool received = false, int clientID = 0, bool send = true)
+        {
+            if (playerPrefabIDs.Contains(prefabID))
+            {
+                playerPrefabID = prefabID;
+            }
+            else // We don't have this player prefab installed, use default
+            {
+                playerPrefabID = "Default";
+            }
+
+            if (GameManager.ID == ID)
+            {
+                if (WristMenuSection.playerModelText != null)
+                {
+                    WristMenuSection.playerModelText.text = "Skin: " + playerPrefabID;
+                }
+            }
+            else
+            {
+                players[ID].SetPlayerPrefab(playerPrefabID);
+
+                if (ThreadManager.host)
+                {
+                    Server.clients[ID].player.playerPrefabID = playerPrefabID;
+                }
+            }
+
+            if (send)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.PlayerPrefabID(ID, prefabID, clientID);
+                }
+                else if (!received)
+                {
+                    ClientSend.PlayerPrefabID(prefabID);
                 }
             }
         }

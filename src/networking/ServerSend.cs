@@ -251,12 +251,12 @@ namespace H3MP.Networking
             }
         }
 
-        public static void SpawnPlayer(int clientID, Player player, string scene, int instance, int IFF, int colorIndex, bool join = false)
+        public static void SpawnPlayer(int clientID, Player player, string scene, int instance, int IFF, int colorIndex, string playerPrefabID, bool join = false)
         {
-            SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation, IFF, colorIndex, join);
+            SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation, IFF, colorIndex, playerPrefabID, join);
         }
 
-        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, bool join = false)
+        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, string playerPrefabID, bool join = false)
         {
             Mod.LogInfo("Server sending SpawnPlayer order to "+clientID+": ID: "+ID+", username: "+username+", scene: "+scene+", instance: "+instance, false);
             using (Packet packet = new Packet((int)ServerPackets.spawnPlayer))
@@ -269,6 +269,7 @@ namespace H3MP.Networking
                 packet.Write(rotation);
                 packet.Write(IFF);
                 packet.Write(colorIndex);
+                packet.Write(playerPrefabID);
                 packet.Write(join);
 
                 SendTCPData(clientID, packet);

@@ -487,6 +487,7 @@ namespace H3MP.Networking
                 ServerHandle.ReactiveSteelTargetDamage,
                 ServerHandle.MTUTest,
                 ServerHandle.IDConfirm,
+                ServerHandle.PlayerPrefabID,
             };
 
             objects = new TrackedObjectData[100];

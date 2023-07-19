@@ -168,19 +168,6 @@ namespace H3MP
 
         /// <summary>
         /// CUSTOMIZATION
-        /// Delegate for the OnSetupPlayerPrefab event
-        /// </summary>
-        /// <param name="playerPrefab">The player prefab</param>
-        public delegate void OnSetupPlayerPrefabDelegate(GameObject playerPrefab);
-
-        /// <summary>
-        /// CUSTOMIZATION
-        /// Event called when the player prefab gets setup
-        /// </summary>
-        public static event OnSetupPlayerPrefabDelegate OnSetupPlayerPrefab;
-
-        /// <summary>
-        /// CUSTOMIZATION
         /// Delegate for the OnGetBestPotentialObjectHost event
         /// </summary>
         /// <param name="currentController">The object's current controller (If applicable). -1 means to find the best host in current context without restrictions.</param>
@@ -764,7 +751,6 @@ namespace H3MP
             reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
-            SetupPlayerPrefab();
 
             sosigWearableMap = JObject.Parse(File.ReadAllText(H3MPPath + "/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
 
@@ -870,16 +856,6 @@ namespace H3MP
                         distantShotSets.Add(env, shotSets[2]);
                         break;
                 }
-            }
-        }
-
-        public void SetupPlayerPrefab()
-        {
-            playerPrefab.AddComponent<PlayerManager>();
-
-            if(OnSetupPlayerPrefab != null)
-            {
-                OnSetupPlayerPrefab(playerPrefab);
             }
         }
 
@@ -1743,7 +1719,9 @@ namespace H3MP
                 ThreadManager.host = host;
 
                 GameManager gameManager = managerObject.AddComponent<GameManager>();
-                gameManager.playerPrefab = playerPrefab;
+                GameManager.playerPrefabs.Add("Default", playerPrefab);
+                GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count;
+                GameManager.playerPrefabIDs.Add("Default");
 
                 DontDestroyOnLoad(managerObject);
             }
