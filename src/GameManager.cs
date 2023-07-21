@@ -100,6 +100,7 @@ namespace H3MP
         /// Key: Identifier for the prefab
         /// Value: The prefab
         /// </summary>
+        TODO: // Make these just Objects and then we check whether they are FVRObject or GameObject so we can load them when we need instead of at addition
         public static Dictionary<string, GameObject> playerPrefabs = new Dictionary<string, GameObject>();
 
         /// <summary>
@@ -265,10 +266,16 @@ namespace H3MP
             Mod.LogInfo($"Spawn player called with ID: {ID}", false);
 
             GameObject playerRoot = null;
+            bool spawned = false;
             // Always spawn if this is host (client is null)
             if(Client.singleton == null || ID != Client.singleton.ID)
             {
                 playerRoot = new GameObject("PlayerRoot"+ID);
+                UnityEngine.Object prefabObject = playerPrefabs[playerPrefabID];
+                if(prefabObject == null)
+                {
+                    TODO: // Cont from here, make a coroutine to spawn the player once we are done loading the asset from IM.OD
+                }
                 Instantiate(playerPrefabs[playerPrefabID], playerRoot.transform);
                 DontDestroyOnLoad(playerRoot);
             }
@@ -286,7 +293,10 @@ namespace H3MP
             playerManager.usernameLabel.text = username;
             playerManager.SetIFF(IFF);
             playerManager.SetColor(colorIndex);
-            playerManager.SetPlayerPrefab(playerPrefabID);
+            if (spawned)
+            {
+                playerManager.SetPlayerPrefab(playerPrefabID);
+            }
             players.Add(ID, playerManager);
 
             // Add to scene/instance
@@ -784,7 +794,7 @@ namespace H3MP
 
         public static void SetPlayerPrefab(int ID, string prefabID, bool received = false, int clientID = 0, bool send = true)
         {
-            if (playerPrefabIDs.Contains(prefabID))
+            if (playerPrefabs.ContainsKey(prefabID))
             {
                 playerPrefabID = prefabID;
             }
@@ -820,6 +830,23 @@ namespace H3MP
                 {
                     ClientSend.PlayerPrefabID(prefabID);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Registers a new player model ID for H3MP to use
+        /// </summary>
+        /// <param name="newPlayerPrefabID">The new ID to register</param>
+        public static void AddPlayerModelID(string newPlayerPrefabID)
+        {
+            if (newPlayerPrefabID.Equals("Default"))
+            {
+                Mod.LogError("A mod attempted to register \"Default\" player prefab ID:\n"+Environment.StackTrace);
+            }
+            else
+            {
+                playerPrefabs.Add(newPlayerPrefabID, null);
+                playerPrefabIDs.Add(newPlayerPrefabID);
             }
         }
 
