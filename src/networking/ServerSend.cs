@@ -4220,7 +4220,8 @@ namespace H3MP.Networking
 
         public static void PlayerPrefabID(int clientID, string ID, int secondClientID)
         {
-            using (Packet packet = new Packet((int)ServerPackets.playerPrefabID))
+            TODO: // Make this into the player model enforcement packet
+            using (Packet packet = new Packet((int)ServerPackets.enforcePlayerModels))
             {
                 packet.Write(clientID);
                 packet.Write(ID);

@@ -182,6 +182,7 @@ namespace H3MP.Networking
         reactiveSteelTargetDamage = 169,
         MTUTest = 170,
         IDConfirm = 171,
+        enforcePlayerModels = 172,
     }
 
     /// <summary>Sent from client to server.</summary>
