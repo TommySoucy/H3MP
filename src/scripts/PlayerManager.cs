@@ -55,6 +55,21 @@ namespace H3MP
         /// </summary>
         public static event OnSetPlayerPrefabDelegate OnSetPlayerPrefab;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSetPlayerColor event
+        /// </summary>
+        /// <param name="colorIndex">The index of the color we want to set this player to</param>
+        /// <param name="prefabID">The player's body prefab identifier</param>
+        /// <param name="set">Custom override for whether color was set or not</param>
+        public delegate void OnSetPlayerColorDelegate(int colorIndex, string prefabID, ref bool set);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we set the player's color so you can set color for your own materials
+        /// </summary>
+        public static event OnSetPlayerColorDelegate OnSetPlayerColor;
+
         private void Awake()
         {
         }
@@ -129,7 +144,7 @@ namespace H3MP
             SetEntitiesRegistered(visible);
         }
 
-        public void SetIFF(int IFF)
+        public void SetIFF(int IFF, bool spawned = true)
         {
             int preIFF = this.IFF;
             this.IFF = IFF;
@@ -139,7 +154,7 @@ namespace H3MP
                 torsoEntity.IFFCode = IFF;
             }
 
-            if (GameManager.colorByIFF)
+            if (GameManager.colorByIFF && spawned)
             {
                 SetColor(IFF);
             }
@@ -185,12 +200,21 @@ namespace H3MP
 
         public void SetColor(int colorIndex)
         {
-            this.colorIndex = Mathf.Abs(colorIndex % GameManager.colors.Length);
+            bool set = false;
+            if (OnSetPlayerColor != null)
+            {
+                OnSetPlayerColor(colorIndex, playerPrefabID, ref set);
+            }
 
-            headMat.color = GameManager.colors[colorIndex];
-            torsoMat.color = GameManager.colors[colorIndex];
-            leftHandMat.color = GameManager.colors[colorIndex];
-            rightHandMat.color = GameManager.colors[colorIndex];
+            if (!set && this.colorIndex != colorIndex && playerPrefabID.Equals("Default"))
+            {
+                this.colorIndex = Mathf.Abs(colorIndex % GameManager.colors.Length);
+
+                headMat.color = GameManager.colors[colorIndex];
+                torsoMat.color = GameManager.colors[colorIndex];
+                leftHandMat.color = GameManager.colors[colorIndex];
+                rightHandMat.color = GameManager.colors[colorIndex];
+            }
 
             if (!GameManager.radarColor && reticleContact != null)
             {
@@ -201,55 +225,12 @@ namespace H3MP
 
         public void SetPlayerPrefab(string playerPrefabID)
         {
+            TODO: // We would want this to handle: setting the ID, destroying old one, and instantiating new one if necessary. but currently using this only to set variables AND to do everything else, we need to decide what to do here
             bool set = false;
             if(OnSetPlayerPrefab != null)
             {
                 OnSetPlayerPrefab(playerPrefabID, ref set);
             }
-
-            /* This piece of code is what you should have in your OnSetPlayerPrefab method but GetChild at the indices specific to your prefab
-             
-               if (!set && !this.playerPrefabID.Equals(playerPrefabID))
-               {
-                    Destroy(transform.GetChild(0).gameObject);
-
-                    if(GameManager.playerPrefabs.TryGetValue(playerPrefabID, out GameObject prefab))
-                    {
-                        Instantiate(prefab, transform);
-
-                        head = transform.GetChild(0).GetChild(0);
-                        headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
-                        headEntity.Beacons = new List<AIEntityIFFBeacon>();
-                        headEntity.IFFCode = IFF;
-                        headHitBox = head.gameObject.AddComponent<PlayerHitbox>();
-                        headHitBox.manager = this;
-                        headHitBox.part = PlayerHitbox.Part.Head;
-                        torso = transform.GetChild(0).GetChild(1);
-                        torsoEntity = torso.GetChild(0).gameObject.AddComponent<AIEntity>();
-                        torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
-                        torsoEntity.IFFCode = IFF;
-                        torsoHitBox = torso.gameObject.AddComponent<PlayerHitbox>();
-                        torsoHitBox.manager = this;
-                        torsoHitBox.part = PlayerHitbox.Part.Torso;
-                        leftHand = transform.GetChild(0).GetChild(2);
-                        leftHandHitBox = leftHand.gameObject.AddComponent<PlayerHitbox>();
-                        leftHandHitBox.manager = this;
-                        leftHandHitBox.part = PlayerHitbox.Part.LeftHand;
-                        rightHand = transform.GetChild(0).GetChild(3);
-                        rightHandHitBox = rightHand.gameObject.AddComponent<PlayerHitbox>();
-                        rightHandHitBox.manager = this;
-                        rightHandHitBox.part = PlayerHitbox.Part.RightHand;
-                        overheadDisplayBillboard = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<Billboard>();
-                        usernameLabel = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
-                        healthIndicator = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
-                        headMat = head.GetComponent<Renderer>().material;
-                        torsoMat = torso.GetComponent<Renderer>().material;
-                        leftHandMat = leftHand.GetComponent<Renderer>().material;
-                        rightHandMat = rightHand.GetComponent<Renderer>().material;
-                    }
-               }
-
-             */
 
             if (!set && !this.playerPrefabID.Equals("Default"))
             {

@@ -2,7 +2,9 @@
 using H3MP.Networking;
 using H3MP.Patches;
 using H3MP.Tracking;
+using RUST.Steamworks;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -93,6 +95,7 @@ namespace H3MP
         public static Dictionary<string, Dictionary<int, KeyValuePair<float, int>>> maxHealthByInstanceByScene = new Dictionary<string, Dictionary<int, KeyValuePair<float, int>>>();
         public static string playerPrefabID = "Default";
         public static int playerPrefabIndex = 0;
+        public static GameObject currentPlayerModel = null;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -100,8 +103,7 @@ namespace H3MP
         /// Key: Identifier for the prefab
         /// Value: The prefab
         /// </summary>
-        TODO: // Make these just Objects and then we check whether they are FVRObject or GameObject so we can load them when we need instead of at addition
-        public static Dictionary<string, GameObject> playerPrefabs = new Dictionary<string, GameObject>();
+        public static Dictionary<string, UnityEngine.Object> playerPrefabs = new Dictionary<string, UnityEngine.Object>();
 
         /// <summary>
         /// CUSTOMIZATION
@@ -263,40 +265,61 @@ namespace H3MP
 
         public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, string playerPrefabID, bool join = false)
         {
-            Mod.LogInfo($"Spawn player called with ID: {ID}", false);
-
-            GameObject playerRoot = null;
-            bool spawned = false;
-            // Always spawn if this is host (client is null)
-            if(Client.singleton == null || ID != Client.singleton.ID)
+            // We dont want to spawn the local player as we will already have spawned when connecting to a server
+            if (Client.singleton != null && ID == Client.singleton.ID)
             {
-                playerRoot = new GameObject("PlayerRoot"+ID);
-                UnityEngine.Object prefabObject = playerPrefabs[playerPrefabID];
-                if(prefabObject == null)
-                {
-                    TODO: // Cont from here, make a coroutine to spawn the player once we are done loading the asset from IM.OD
-                }
-                Instantiate(playerPrefabs[playerPrefabID], playerRoot.transform);
-                DontDestroyOnLoad(playerRoot);
-            }
-            else
-            {
-                // We dont want to spawn the local player as we will already have spawned when connecting to a server
                 return;
             }
 
+            Mod.LogInfo($"Spawn player called with ID: {ID}", false);
+
+            GameObject playerRoot = new GameObject("PlayerRoot" + ID);
+            DontDestroyOnLoad(playerRoot);
             PlayerManager playerManager = playerRoot.AddComponent<PlayerManager>();
             playerManager.ID = ID;
             playerManager.username = username;
             playerManager.scene = scene;
             playerManager.instance = instance;
             playerManager.usernameLabel.text = username;
-            playerManager.SetIFF(IFF);
-            playerManager.SetColor(colorIndex);
+
+            bool spawned = false;
+            bool gotPrefab = false;
+
+            if (playerPrefabs.TryGetValue(playerPrefabID, out UnityEngine.Object prefabObject))
+            {
+                if (prefabObject == null)
+                {
+                    if (IM.OD.TryGetValue(playerPrefabID, out FVRObject prefabFVRObject) && prefabFVRObject != null)
+                    {
+                        gotPrefab = true;
+                        AnvilManager.Run(InstantiatePlayerModel(prefabFVRObject, playerPrefabID, playerRoot, playerManager, IFF));
+                    }
+                }
+                else if (prefabObject is FVRObject)
+                {
+                    gotPrefab = true;
+                    AnvilManager.Run(InstantiatePlayerModel(prefabObject as FVRObject, playerPrefabID, playerRoot, playerManager, IFF));
+                }
+            }
+                
+            if(playerPrefabID.Equals("Default"))
+            {
+                Instantiate(playerPrefabs["Default"], playerRoot.transform);
+                spawned = true;
+            }
+            else if (!gotPrefab)
+            {
+                Mod.LogError("Client " + ID + " was meant to be spawned with player body \"" + playerPrefabID + "\" but could not find asset.");
+                Instantiate(playerPrefabs["Default"], playerRoot.transform);
+                spawned = true;
+            }
+
             if (spawned)
             {
                 playerManager.SetPlayerPrefab(playerPrefabID);
+                playerManager.SetColor(colorIndex);
             }
+            playerManager.SetIFF(IFF, spawned);
             players.Add(ID, playerManager);
 
             // Add to scene/instance
@@ -355,6 +378,25 @@ namespace H3MP
                     GameManager.firstPlayerInSceneInstance = false;
                 }
             }
+        }
+
+        public IEnumerator InstantiatePlayerModel(FVRObject playerModelFVRObject, string playerPrefabID)
+        {
+            GameObject prefab = null;
+
+            yield return playerModelFVRObject.GetGameObjectAsync();
+            prefab = playerModelFVRObject.GetGameObject();
+
+            if (prefab == null)
+            {
+                Mod.LogError("Attempted to instantiate player model \""+ playerPrefabID + "\" but failed to get prefab.");
+                yield break;
+            }
+
+            currentPlayerModel = Instantiate(prefab);
+            DontDestroyOnLoad(currentPlayerModel);
+            
+            TODO: // Should color be visible on our own body? Should we also adapt the color setting and IFF setting to apply to our own body?
         }
 
         public static void Reset()
@@ -792,8 +834,9 @@ namespace H3MP
             }
         }
 
-        public static void SetPlayerPrefab(int ID, string prefabID, bool received = false, int clientID = 0, bool send = true)
+        public static void SetPlayerPrefab(string prefabID)
         {
+            string previous = playerPrefabID;
             if (playerPrefabs.ContainsKey(prefabID))
             {
                 playerPrefabID = prefabID;
@@ -803,33 +846,46 @@ namespace H3MP
                 playerPrefabID = "Default";
             }
 
-            if (GameManager.ID == ID)
+            if (WristMenuSection.playerModelText != null)
             {
-                if (WristMenuSection.playerModelText != null)
-                {
-                    WristMenuSection.playerModelText.text = "Skin: " + playerPrefabID;
-                }
-            }
-            else
-            {
-                players[ID].SetPlayerPrefab(playerPrefabID);
-
-                if (ThreadManager.host)
-                {
-                    Server.clients[ID].player.playerPrefabID = playerPrefabID;
-                }
+                WristMenuSection.playerModelText.text = "Skin: " + playerPrefabID;
             }
 
-            if (send)
+            // Note: If we are here, it is implied that the new prefabID is different than the current one
+            if(currentPlayerModel != null)
             {
-                if (ThreadManager.host)
+                Destroy(currentPlayerModel);
+            }
+
+            // Note: If we are here, it is implied that this player prefab ID is registered, but we have to get it anyway, so might as well put it in if statement
+            bool gotPrefab = false;
+            if (playerPrefabs.TryGetValue(playerPrefabID, out UnityEngine.Object prefabObject))
+            {
+                if (prefabObject == null)
                 {
-                    ServerSend.PlayerPrefabID(ID, prefabID, clientID);
+                    if (IM.OD.TryGetValue(playerPrefabID, out FVRObject prefabFVRObject) && prefabFVRObject != null)
+                    {
+                        gotPrefab = true;
+                        AnvilManager.Run(InstantiatePlayerModel(prefabFVRObject, playerPrefabID));
+                    }
                 }
-                else if (!received)
+                else if (prefabObject is FVRObject)
                 {
-                    ClientSend.PlayerPrefabID(prefabID);
+                    gotPrefab = true;
+                    AnvilManager.Run(InstantiatePlayerModel(prefabObject as FVRObject, playerPrefabID));
                 }
+            }
+
+            if (playerPrefabID.Equals("Default"))
+            {
+                Instantiate(playerPrefabs["Default"], playerRoot.transform);
+                spawned = true;
+            }
+            else if (!gotPrefab)
+            {
+                Mod.LogError("Client " + ID + " was meant to be spawned with player body \"" + playerPrefabID + "\" but could not find asset.");
+                Instantiate(playerPrefabs["Default"], playerRoot.transform);
+                spawned = true;
             }
         }
 
