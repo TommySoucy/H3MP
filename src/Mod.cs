@@ -752,8 +752,6 @@ namespace H3MP
             reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
-            PlayerBody defaultPlayerBody = playerPrefab.AddComponent<PlayerBody>();
-            defaultPlayerBody.playerPrefabID = "Default";
 
             GameManager.playerPrefabs.Add("Default", playerPrefab);
             GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count;

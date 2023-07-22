@@ -14,9 +14,19 @@ namespace H3MP.Scripts
 
         [Header("Head settings")]
         public Vector3 headOffset;
+        public Transform headTransform;
         [NonSerialized]
         public Transform headToFollow;
         public Renderer[] headRenderers;
+
+        [Header("Hand settings")]
+        public Transform[] handTransforms;
+        [NonSerialized]
+        public Transform[] handsToFollow;
+
+        [Header("Other")]
+        public Collider[] colliders;
+        public Renderer[] controlRenderers; 
 
         [Header("Optionals")]
         public Renderer[] bodyRenderers;
@@ -37,9 +47,9 @@ namespace H3MP.Scripts
         {
             if (headToFollow != null)
             {
-                transform.position = headToFollow.position;
-                transform.localPosition += headOffset;
-                transform.rotation = headToFollow.rotation;
+                headTransform.position = headToFollow.position;
+                headTransform.localPosition += headOffset;
+                headTransform.rotation = headToFollow.rotation;
             }
         }
 
