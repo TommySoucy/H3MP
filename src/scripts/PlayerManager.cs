@@ -225,19 +225,15 @@ namespace H3MP
 
         public void SetPlayerPrefab(string playerPrefabID)
         {
-            TODO: // We would want this to handle: setting the ID, destroying old one, and instantiating new one if necessary. but currently using this only to set variables AND to do everything else, we need to decide what to do here
+            TODO: // Make sure we handle setting all of these as part of new player model script
             bool set = false;
             if(OnSetPlayerPrefab != null)
             {
                 OnSetPlayerPrefab(playerPrefabID, ref set);
             }
 
-            if (!set && !this.playerPrefabID.Equals("Default"))
+            if (!set && this.playerPrefabID.Equals("Default"))
             {
-                Destroy(transform.GetChild(0).gameObject);
-
-                Instantiate(GameManager.playerPrefabs["Default"], transform);
-
                 head = transform.GetChild(0).GetChild(0);
                 headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
                 headEntity.Beacons = new List<AIEntityIFFBeacon>();

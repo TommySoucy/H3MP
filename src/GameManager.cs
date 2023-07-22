@@ -281,45 +281,6 @@ namespace H3MP
             playerManager.scene = scene;
             playerManager.instance = instance;
             playerManager.usernameLabel.text = username;
-
-            bool spawned = false;
-            bool gotPrefab = false;
-
-            if (playerPrefabs.TryGetValue(playerPrefabID, out UnityEngine.Object prefabObject))
-            {
-                if (prefabObject == null)
-                {
-                    if (IM.OD.TryGetValue(playerPrefabID, out FVRObject prefabFVRObject) && prefabFVRObject != null)
-                    {
-                        gotPrefab = true;
-                        AnvilManager.Run(InstantiatePlayerModel(prefabFVRObject, playerPrefabID, playerRoot, playerManager, IFF));
-                    }
-                }
-                else if (prefabObject is FVRObject)
-                {
-                    gotPrefab = true;
-                    AnvilManager.Run(InstantiatePlayerModel(prefabObject as FVRObject, playerPrefabID, playerRoot, playerManager, IFF));
-                }
-            }
-                
-            if(playerPrefabID.Equals("Default"))
-            {
-                Instantiate(playerPrefabs["Default"], playerRoot.transform);
-                spawned = true;
-            }
-            else if (!gotPrefab)
-            {
-                Mod.LogError("Client " + ID + " was meant to be spawned with player body \"" + playerPrefabID + "\" but could not find asset.");
-                Instantiate(playerPrefabs["Default"], playerRoot.transform);
-                spawned = true;
-            }
-
-            if (spawned)
-            {
-                playerManager.SetPlayerPrefab(playerPrefabID);
-                playerManager.SetColor(colorIndex);
-            }
-            playerManager.SetIFF(IFF, spawned);
             players.Add(ID, playerManager);
 
             // Add to scene/instance
@@ -380,7 +341,7 @@ namespace H3MP
             }
         }
 
-        public IEnumerator InstantiatePlayerModel(FVRObject playerModelFVRObject, string playerPrefabID)
+        public static IEnumerator InstantiatePlayerModel(FVRObject playerModelFVRObject, string playerPrefabID)
         {
             GameObject prefab = null;
 
@@ -395,8 +356,6 @@ namespace H3MP
 
             currentPlayerModel = Instantiate(prefab);
             DontDestroyOnLoad(currentPlayerModel);
-            
-            TODO: // Should color be visible on our own body? Should we also adapt the color setting and IFF setting to apply to our own body?
         }
 
         public static void Reset()
@@ -836,6 +795,8 @@ namespace H3MP
 
         public static void SetPlayerPrefab(string prefabID)
         {
+            TODO: // Must make sure that a tracked player model can change its scene instance
+            // Note: If we are here, it is implied that the new prefabID is different than the current one
             string previous = playerPrefabID;
             if (playerPrefabs.ContainsKey(prefabID))
             {
@@ -846,46 +807,57 @@ namespace H3MP
                 playerPrefabID = "Default";
             }
 
-            if (WristMenuSection.playerModelText != null)
-            {
-                WristMenuSection.playerModelText.text = "Skin: " + playerPrefabID;
-            }
-
-            // Note: If we are here, it is implied that the new prefabID is different than the current one
             if(currentPlayerModel != null)
             {
                 Destroy(currentPlayerModel);
             }
 
-            // Note: If we are here, it is implied that this player prefab ID is registered, but we have to get it anyway, so might as well put it in if statement
-            bool gotPrefab = false;
-            if (playerPrefabs.TryGetValue(playerPrefabID, out UnityEngine.Object prefabObject))
+            bool spawned = false;
+            if (playerPrefabID.Equals("Default"))
             {
-                if (prefabObject == null)
+                currentPlayerModel = Instantiate(playerPrefabs["Default"] as GameObject);
+                spawned = true;
+            }
+            else // Not default
+            {
+                // Note: If we are here, it is implied that this player prefab ID is registered, but we have to get it anyway, so might as well ensure we can get it
+                bool gotPrefab = false;
+                if (playerPrefabs.TryGetValue(playerPrefabID, out UnityEngine.Object prefabObject))
                 {
-                    if (IM.OD.TryGetValue(playerPrefabID, out FVRObject prefabFVRObject) && prefabFVRObject != null)
+                    if (prefabObject == null)
+                    {
+                        if (IM.OD.TryGetValue(playerPrefabID, out FVRObject prefabFVRObject) && prefabFVRObject != null)
+                        {
+                            gotPrefab = true;
+                            AnvilManager.Run(InstantiatePlayerModel(prefabFVRObject, playerPrefabID));
+                        }
+                    }
+                    else if (prefabObject is FVRObject)
                     {
                         gotPrefab = true;
-                        AnvilManager.Run(InstantiatePlayerModel(prefabFVRObject, playerPrefabID));
+                        AnvilManager.Run(InstantiatePlayerModel(prefabObject as FVRObject, playerPrefabID));
                     }
                 }
-                else if (prefabObject is FVRObject)
+
+                if (!gotPrefab)
                 {
-                    gotPrefab = true;
-                    AnvilManager.Run(InstantiatePlayerModel(prefabObject as FVRObject, playerPrefabID));
+                    Mod.LogError("Attempt to set player prefab to \""+ playerPrefabID+"\" failed, could not obtain prefab, using default");
+                    playerPrefabID = "Default";
+                    currentPlayerModel = Instantiate(playerPrefabs[playerPrefabID] as GameObject);
+                    spawned = true;
                 }
             }
 
-            if (playerPrefabID.Equals("Default"))
+            // If already spawned, set to dont destroy on load right away
+            if (spawned)
             {
-                Instantiate(playerPrefabs["Default"], playerRoot.transform);
-                spawned = true;
+                DontDestroyOnLoad(currentPlayerModel);
             }
-            else if (!gotPrefab)
+
+            // Set option text
+            if (WristMenuSection.playerModelText != null)
             {
-                Mod.LogError("Client " + ID + " was meant to be spawned with player body \"" + playerPrefabID + "\" but could not find asset.");
-                Instantiate(playerPrefabs["Default"], playerRoot.transform);
-                spawned = true;
+                WristMenuSection.playerModelText.text = "Skin: " + playerPrefabID;
             }
         }
 

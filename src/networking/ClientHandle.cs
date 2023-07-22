@@ -4319,13 +4319,5 @@ namespace H3MP.Networking
 
             ClientSend.IDConfirm(IDToConfirm);
         }
-
-        public static void PlayerPrefabID(Packet packet)
-        {
-            int clientID = packet.ReadInt();
-            string ID = packet.ReadString();
-
-            GameManager.SetPlayerPrefab(clientID, ID, true, clientID);
-        }
     }
 }

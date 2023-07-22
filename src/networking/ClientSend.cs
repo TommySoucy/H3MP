@@ -2554,16 +2554,5 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
-
-        public static void PlayerPrefabID(string ID)
-        {
-            TODO: // Review if process necessary
-            using (Packet packet = new Packet((int)ClientPackets.playerPrefabID))
-            {
-                packet.Write(ID);
-
-                SendTCPData(packet);
-            }
-        }
     }
 }
