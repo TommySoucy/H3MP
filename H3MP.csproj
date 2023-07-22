@@ -54,6 +54,7 @@
     <Compile Include="src\networking\ServerHandle.cs" />
     <Compile Include="src\networking\Packet.cs" />
     <Compile Include="src\networking\ServerSend.cs" />
+    <Compile Include="src\scripts\PlayerModel.cs" />
     <Compile Include="src\scripts\TrackedItemReference.cs" />
     <Compile Include="src\networking\ThreadManager.cs" />
     <Compile Include="src\scripts\TimerDestroyer.cs" />

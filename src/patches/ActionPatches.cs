@@ -4697,12 +4697,13 @@ namespace H3MP.Patches
     class EncryptionDisableSubtargPatch
     {
         static bool wasActive;
+        static TrackedEncryption trackedEncryption = null;
 
         static void Prefix(ref TNH_EncryptionTarget __instance, int i)
         {
             if (Mod.managerObject != null)
             {
-                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
+                trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
                 if (trackedEncryption != null)
                 {
                     wasActive = __instance.SubTargs[i].activeSelf;
@@ -4715,7 +4716,6 @@ namespace H3MP.Patches
             // Instance could be null if destroyed by the method, in which case we don't need to send anything, the destruction will be sent instead
             if (Mod.managerObject != null && __instance != null && wasActive && !__instance.SubTargs[i].activeSelf)
             {
-                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
                 if (trackedEncryption != null)
                 {
                     trackedEncryption.encryptionData.subTargsActive[i] = false;
@@ -5338,8 +5338,9 @@ namespace H3MP.Patches
 
         // To prevent Start from overriding initial data we got from controller
         static bool StartPrefix(TNH_EncryptionTarget __instance, ref int ___m_numHitsLeft, ref int ___m_maxHits, ref float ___m_damLeftForAHit,
-                                ref Vector3 ___agileStartPos, ref Quaternion ___m_fromRot, ref float ___m_timeTilWarp, ref float ___m_warpSpeed,
-                                ref List<Vector3> ___m_validAgilePos, ref int ___m_numSubTargsLeft)
+                                ref Vector3 ___initialPos, ref Quaternion ___m_fromRot, ref float ___m_timeTilWarp, ref float ___m_warpSpeed,
+                                ref List<Vector3> ___m_validAgilePos, ref int ___m_numSubTargsLeft, float ___AgileBaseSpeed, bool ___UsesRegeneratingSubtargs,
+                                ref float[] ___SubTargScales)
         {
             ++EncryptionSpawnGrowthPatch.skip;
 
@@ -5356,10 +5357,10 @@ namespace H3MP.Patches
                     ___m_numHitsLeft = __instance.NumHitsTilDestroyed;
                     ___m_maxHits = __instance.NumHitsTilDestroyed;
                     ___m_damLeftForAHit = __instance.DamagePerHit;
-                    ___agileStartPos = __instance.transform.position;
+                    ___initialPos = __instance.transform.position;
                     ___m_fromRot = __instance.transform.rotation;
                     ___m_timeTilWarp = 0f;
-                    ___m_warpSpeed = UnityEngine.Random.Range(4f, 5f);
+                    ___m_warpSpeed = UnityEngine.Random.Range(4f, 5f) * ___AgileBaseSpeed;
                     if (__instance.UsesAgileMovement)
                     {
                         ___m_validAgilePos = new List<Vector3>();
@@ -5372,6 +5373,10 @@ namespace H3MP.Patches
                             __instance.SubTargs[i].transform.SetParent(null);
                         }
                         ___m_numSubTargsLeft = __instance.StartingRegenSubTarg;
+                    }
+                    if (___UsesRegeneratingSubtargs)
+                    {
+                        ___SubTargScales = new float[__instance.SubTargs.Count];
                     }
                     if (__instance.UsesRecursiveSubTarg)
                     {
