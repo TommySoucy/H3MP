@@ -95,6 +95,7 @@ namespace H3MP
         public static Dictionary<string, Dictionary<int, KeyValuePair<float, int>>> maxHealthByInstanceByScene = new Dictionary<string, Dictionary<int, KeyValuePair<float, int>>>();
         public static string playerPrefabID = "Default";
         public static int playerPrefabIndex = 0;
+        public static TrackedPlayerBody currentPlayerBody;
         public static GameObject currentPlayerModel = null;
 
         /// <summary>
@@ -282,6 +283,7 @@ namespace H3MP
             playerManager.instance = instance;
             playerManager.usernameLabel.text = username;
             players.Add(ID, playerManager);
+            TODO: // Have transforms we position/rotate depending on player update data, these transforms can then be used by player models
 
             // Add to scene/instance
             bool firstInSceneInstance = false;

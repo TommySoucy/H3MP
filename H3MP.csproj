@@ -54,7 +54,7 @@
     <Compile Include="src\networking\ServerHandle.cs" />
     <Compile Include="src\networking\Packet.cs" />
     <Compile Include="src\networking\ServerSend.cs" />
-    <Compile Include="src\scripts\PlayerModel.cs" />
+    <Compile Include="src\scripts\PlayerBody.cs" />
     <Compile Include="src\scripts\TrackedItemReference.cs" />
     <Compile Include="src\networking\ThreadManager.cs" />
     <Compile Include="src\scripts\TimerDestroyer.cs" />
@@ -69,6 +69,8 @@
     <Compile Include="src\tracking\TrackedItemData.cs" />
     <Compile Include="src\tracking\TrackedObject.cs" />
     <Compile Include="src\tracking\TrackedObjectData.cs" />
+    <Compile Include="src\tracking\TrackedPlayerBody.cs" />
+    <Compile Include="src\tracking\TrackedPlayerBodyData.cs" />
     <Compile Include="src\tracking\TrackedSosig.cs" />
     <Compile Include="src\tracking\TrackedSosigData.cs" />
     <Compile Include="src\scripts\WristMenuSection.cs" />

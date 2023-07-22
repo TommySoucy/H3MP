@@ -2,6 +2,7 @@
 using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
+using H3MP.Scripts;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -751,6 +752,12 @@ namespace H3MP
             reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
+            PlayerBody defaultPlayerBody = playerPrefab.AddComponent<PlayerBody>();
+            defaultPlayerBody.playerPrefabID = "Default";
+
+            GameManager.playerPrefabs.Add("Default", playerPrefab);
+            GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count;
+            GameManager.playerPrefabIDs.Add("Default");
 
             sosigWearableMap = JObject.Parse(File.ReadAllText(H3MPPath + "/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
 
@@ -1719,9 +1726,6 @@ namespace H3MP
                 ThreadManager.host = host;
 
                 GameManager gameManager = managerObject.AddComponent<GameManager>();
-                GameManager.playerPrefabs.Add("Default", playerPrefab);
-                GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count;
-                GameManager.playerPrefabIDs.Add("Default");
 
                 DontDestroyOnLoad(managerObject);
             }
