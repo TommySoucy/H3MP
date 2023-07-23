@@ -894,7 +894,14 @@ namespace H3MP
 
             if(GameManager.playerPrefabIndex >= GameManager.playerPrefabIDs.Count)
             {
-                GameManager.playerPrefabIndex = 0;
+                if(Mod.managerObject == null)
+                {
+                    GameManager.playerPrefabIndex = -1;
+                }
+                else
+                {
+                    GameManager.playerPrefabIndex = 0;
+                }
             }
 
             ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex);
@@ -906,7 +913,8 @@ namespace H3MP
 
             --GameManager.playerPrefabIndex;
 
-            if (GameManager.playerPrefabIndex == 0)
+            if ((Mod.managerObject != null && GameManager.playerPrefabIndex <= 0)
+                || (Mod.managerObject == null && GameManager.playerPrefabIndex  == -1))
             {
                 GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count - 1;
             }

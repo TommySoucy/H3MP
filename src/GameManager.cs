@@ -93,8 +93,8 @@ namespace H3MP
         public static float[] maxHealths = new float[] { 1, 500, 1000, 2000, 3000, 4000, 5000, 7500, 10000 };
         public static int maxHealthIndex = -1;
         public static Dictionary<string, Dictionary<int, KeyValuePair<float, int>>> maxHealthByInstanceByScene = new Dictionary<string, Dictionary<int, KeyValuePair<float, int>>>();
-        public static string playerPrefabID = "Default";
-        public static int playerPrefabIndex = 0;
+        public static string playerPrefabID = "None";
+        public static int playerPrefabIndex = -1;
         public static TrackedPlayerBody currentPlayerBody;
         public static GameObject currentPlayerModel = null;
 
@@ -798,6 +798,7 @@ namespace H3MP
         public static void SetPlayerPrefab(string prefabID)
         {
             TODO: // Must make sure that a tracked player model can change its scene instance
+            TODOo: // Must handle case in which we do not have another player's body installed, so we have to instantiate a Default body instead
             // Note: If we are here, it is implied that the new prefabID is different than the current one
             string previous = playerPrefabID;
             if (playerPrefabs.ContainsKey(prefabID))
@@ -806,12 +807,29 @@ namespace H3MP
             }
             else // We don't have this player prefab installed, use default
             {
-                playerPrefabID = "Default";
+                if(Mod.managerObject == null)
+                {
+                    playerPrefabID = "None";
+                }
+                else
+                {
+                    playerPrefabID = "Default";
+                }
+            }
+
+            if (previous.Equals(playerPrefabID))
+            {
+                return;
             }
 
             if(currentPlayerModel != null)
             {
                 Destroy(currentPlayerModel);
+            }
+
+            if(playerPrefabIndex == -1)
+            {
+                return;
             }
 
             bool spawned = false;

@@ -37,7 +37,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.6.7";
+        public const string pluginVersion = "1.7.0";
 
         // Assets
         public static JObject config;
@@ -752,10 +752,9 @@ namespace H3MP
             reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
-
             GameManager.playerPrefabs.Add("Default", playerPrefab);
-            GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count;
             GameManager.playerPrefabIDs.Add("Default");
+            TODO: // Decide if put None in list or not
 
             sosigWearableMap = JObject.Parse(File.ReadAllText(H3MPPath + "/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
 
