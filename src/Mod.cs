@@ -754,7 +754,6 @@ namespace H3MP
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
             GameManager.playerPrefabs.Add("Default", playerPrefab);
             GameManager.playerPrefabIDs.Add("Default");
-            TODO: // Decide if put None in list or not
 
             sosigWearableMap = JObject.Parse(File.ReadAllText(H3MPPath + "/SosigWearableMap.json")).ToObject<Dictionary<string, string>>();
 
@@ -1023,10 +1022,33 @@ namespace H3MP
 
             Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]);
 
+            // TODO: Customization: Should probably have an event for connection so other mods can do things like we do below
             if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
                 Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 InitTNHMenu();
+            }
+
+            // Force Default player body
+            if((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None")) && GameManager.currentPlayerModel == null && !GameManager.playerModelAwaitingInstantiation)
+            {
+                GameManager.playerPrefabID = "Default";
+                for(int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
+                {
+                    if (GameManager.playerPrefabIDs[i].Equals(GameManager.playerPrefabID))
+                    {
+                        GameManager.playerPrefabIndex = i;
+                        break;
+                    }
+                }
+
+                GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
+                DontDestroyOnLoad(GameManager.currentPlayerModel);
+
+                if (WristMenuSection.playerModelText != null)
+                {
+                    WristMenuSection.playerModelText.text = "Skin: Default";
+                }
             }
 
             GameManager.firstPlayerInSceneInstance = true;
@@ -1060,6 +1082,28 @@ namespace H3MP
             {
                 Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 InitTNHMenu();
+            }
+
+            // Force Default player body
+            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None")) && GameManager.currentPlayerModel == null && !GameManager.playerModelAwaitingInstantiation)
+            {
+                GameManager.playerPrefabID = "Default";
+                for (int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
+                {
+                    if (GameManager.playerPrefabIDs[i].Equals(GameManager.playerPrefabID))
+                    {
+                        GameManager.playerPrefabIndex = i;
+                        break;
+                    }
+                }
+
+                GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
+                DontDestroyOnLoad(GameManager.currentPlayerModel);
+
+                if (WristMenuSection.playerModelText != null)
+                {
+                    WristMenuSection.playerModelText.text = "Skin: Default";
+                }
             }
 
             //mainStatusText.text = "Connecting...";

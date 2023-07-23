@@ -96,6 +96,7 @@ namespace H3MP
         public static string playerPrefabID = "None";
         public static int playerPrefabIndex = -1;
         public static TrackedPlayerBody currentPlayerBody;
+        public static bool playerModelAwaitingInstantiation = false;
         public static GameObject currentPlayerModel = null;
 
         /// <summary>
@@ -357,6 +358,7 @@ namespace H3MP
             }
 
             currentPlayerModel = Instantiate(prefab);
+            playerModelAwaitingInstantiation = false;
             DontDestroyOnLoad(currentPlayerModel);
         }
 
@@ -827,11 +829,6 @@ namespace H3MP
                 Destroy(currentPlayerModel);
             }
 
-            if(playerPrefabIndex == -1)
-            {
-                return;
-            }
-
             bool spawned = false;
             if (playerPrefabID.Equals("Default"))
             {
@@ -849,12 +846,14 @@ namespace H3MP
                         if (IM.OD.TryGetValue(playerPrefabID, out FVRObject prefabFVRObject) && prefabFVRObject != null)
                         {
                             gotPrefab = true;
+                            playerModelAwaitingInstantiation = true;
                             AnvilManager.Run(InstantiatePlayerModel(prefabFVRObject, playerPrefabID));
                         }
                     }
                     else if (prefabObject is FVRObject)
                     {
                         gotPrefab = true;
+                        playerModelAwaitingInstantiation = true;
                         AnvilManager.Run(InstantiatePlayerModel(prefabObject as FVRObject, playerPrefabID));
                     }
                 }

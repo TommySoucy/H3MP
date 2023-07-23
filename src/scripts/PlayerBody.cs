@@ -22,7 +22,7 @@ namespace H3MP.Scripts
         [Header("Hand settings")]
         public Transform[] handTransforms;
         [NonSerialized]
-        public Transform[] handsToFollow;
+        public Transform[] handsToFollow; // Left, Right
 
         [Header("Other")]
         public Collider[] colliders;
@@ -38,18 +38,31 @@ namespace H3MP.Scripts
             if(Mod.managerObject == null)
             {
                 headToFollow = GM.CurrentPlayerBody.Head.transform;
+                handsToFollow = new Transform[2];
+                handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
+                handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
                 SetHeadVisible(false);
+                SetCollidersEnabled(false);
             }
             //else Connected, let TrackedPlayerBody handle what transform to follow based on controller
         }
 
         public void Update()
         {
+            // These could only be null briefly if connected until TrackedPlayerBody sets them appropriately
             if (headToFollow != null)
             {
                 headTransform.position = headToFollow.position;
                 headTransform.localPosition += headOffset;
                 headTransform.rotation = headToFollow.rotation;
+            }
+            if(handsToFollow != null)
+            {
+                for(int i=0; i < handsToFollow.Length; ++i)
+                {
+                    handTransforms[i].position = handsToFollow[i].position;
+                    handTransforms[i].rotation = handsToFollow[i].rotation;
+                }
             }
         }
 
@@ -87,7 +100,7 @@ namespace H3MP.Scripts
             }
         }
 
-        public void SetVisible(bool visible)
+        public void SetBodyVisible(bool visible)
         {
             if (bodyRenderers != null)
             {
@@ -110,6 +123,20 @@ namespace H3MP.Scripts
                     if (handRenderers[i] != null)
                     {
                         handRenderers[i].enabled = visible;
+                    }
+                }
+            }
+        }
+
+        public void SetCollidersEnabled(bool enabled)
+        {
+            if(colliders != null)
+            {
+                for(int i=0; i < colliders.Length; ++i)
+                {
+                    if (colliders[i] != null)
+                    {
+                        colliders[i].enabled = enabled;
                     }
                 }
             }
