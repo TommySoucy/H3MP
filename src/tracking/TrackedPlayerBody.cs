@@ -1,9 +1,6 @@
 ﻿using FistVR;
 using H3MP.Scripts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using UnityEngine;
 
 namespace H3MP.Tracking
 {
@@ -14,15 +11,20 @@ namespace H3MP.Tracking
 
         public virtual void Start()
         {
-            if(playerBodyData.controller == GameManager.ID)
+            physicalPlayerBody.handsToFollow = new Transform[2];
+            if (playerBodyData.controller == GameManager.ID)
             {
                 physicalPlayerBody.headToFollow = GM.CurrentPlayerBody.Head;
+                physicalPlayerBody.handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
+                physicalPlayerBody.handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
                 physicalPlayerBody.SetHeadVisible(false);
+                physicalPlayerBody.SetCollidersEnabled(false);
             }
             else
             {
                 physicalPlayerBody.headToFollow = GameManager.players[playerBodyData.controller].head;
-                physicalPlayerBody.SetHeadVisible(true);
+                physicalPlayerBody.handsToFollow[0] = GameManager.players[playerBodyData.controller].leftHand;
+                physicalPlayerBody.handsToFollow[1] = GameManager.players[playerBodyData.controller].rightHand;
             }
         }
 
