@@ -1,10 +1,6 @@
 ﻿using FistVR;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
-using Valve.VR;
 
 namespace H3MP.Scripts
 {
@@ -35,12 +31,29 @@ namespace H3MP.Scripts
 
         public void Awake()
         {
-            if(Mod.managerObject == null)
+            GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
+
+            if(Mod.managerObject == null && GM.CurrentPlayerBody != null)
             {
                 headToFollow = GM.CurrentPlayerBody.Head.transform;
                 handsToFollow = new Transform[2];
                 handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
                 handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
+                SetHeadVisible(false);
+                SetCollidersEnabled(false);
+            }
+            //else Connected, let TrackedPlayerBody handle what transform to follow based on controller
+            //     OR not connected but no current player body. Setting these will be handled when a player body is initialized
+        }
+
+        private void OnPlayerBodyInit(FVRPlayerBody playerBody)
+        {
+            if (Mod.managerObject == null)
+            {
+                headToFollow = playerBody.Head.transform;
+                handsToFollow = new Transform[2];
+                handsToFollow[0] = playerBody.LeftHand;
+                handsToFollow[1] = playerBody.RightHand;
                 SetHeadVisible(false);
                 SetCollidersEnabled(false);
             }
@@ -60,8 +73,11 @@ namespace H3MP.Scripts
             {
                 for(int i=0; i < handsToFollow.Length; ++i)
                 {
-                    handTransforms[i].position = handsToFollow[i].position;
-                    handTransforms[i].rotation = handsToFollow[i].rotation;
+                    if (handsToFollow[i] != null)
+                    {
+                        handTransforms[i].position = handsToFollow[i].position;
+                        handTransforms[i].rotation = handsToFollow[i].rotation;
+                    }
                 }
             }
         }
@@ -140,6 +156,11 @@ namespace H3MP.Scripts
                     }
                 }
             }
+        }
+
+        public void OnDestroy()
+        {
+            GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
         }
     }
 }

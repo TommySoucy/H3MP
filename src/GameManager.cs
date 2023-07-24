@@ -193,6 +193,19 @@ namespace H3MP
         /// </summary>
         public static event OnInstanceJoinedDelegate OnInstanceJoined;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnPlayerBodyInit event
+        /// </summary>
+        /// <param name="playerBody">The FVRPlayerBody that got initialized</param>
+        public delegate void OnPlayerBodyInitDelegate(FVRPlayerBody playerBody);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when FVRPlayerBody.Init is called
+        /// </summary>
+        public static event OnPlayerBodyInitDelegate OnPlayerBodyInit;
+
         private void Awake()
         {
             singleton = this;
@@ -2050,6 +2063,14 @@ namespace H3MP
                         Destroy(currentObject.physical);
                     }
                 }
+            }
+        }
+
+        public static void RaisePlayerBodyInit(FVRPlayerBody playerBody)
+        {
+            if(OnPlayerBodyInit != null)
+            {
+                OnPlayerBodyInit(playerBody);
             }
         }
     }

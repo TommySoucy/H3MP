@@ -99,6 +99,13 @@ namespace H3MP.Patches
             PatchController.Verify(SetHealthThresholdOriginal, harmony, false);
             harmony.Patch(SetHealthThresholdOriginal, new HarmonyMethod(SetHealthThresholdPrefix));
 
+            // PlayerBodyInitPatch
+            MethodInfo playerBodyInitOriginal = typeof(FVRPlayerBody).GetMethod("Init", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo playerBodyInitPostfix = typeof(PlayerBodyInitPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(playerBodyInitOriginal, harmony, true);
+            harmony.Patch(playerBodyInitOriginal, null, new HarmonyMethod(playerBodyInitPostfix));
+
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
             //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -591,6 +598,15 @@ namespace H3MP.Patches
             }
 
             return true;
+        }
+    }
+
+    // Patches FVRPlayerBody.Init to raise the event
+    class PlayerBodyInitPatch
+    {
+        static void Postfix(FVRPlayerBody __instance)
+        {
+            GameManager.RaisePlayerBodyInit(__instance);
         }
     }
 
