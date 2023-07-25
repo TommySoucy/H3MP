@@ -9,6 +9,8 @@ namespace H3MP.Tracking
         public TrackedPlayerBodyData playerBodyData;
         public PlayerBody physicalPlayerBody;
 
+        public PlayerManager playerManager;
+
         public virtual void Start()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
@@ -23,16 +25,36 @@ namespace H3MP.Tracking
                     physicalPlayerBody.handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
                     physicalPlayerBody.SetHeadVisible(false);
                     physicalPlayerBody.SetCollidersEnabled(false);
+                    physicalPlayerBody.SetCanvasesEnabled(false);
+                    physicalPlayerBody.SetEntitiesRegistered(false);
+
+                    physicalPlayerBody.Init();
                 }
             }
             else
             {
-                physicalPlayerBody.headToFollow = GameManager.players[playerBodyData.controller].head;
-                physicalPlayerBody.handsToFollow[0] = GameManager.players[playerBodyData.controller].leftHand;
-                physicalPlayerBody.handsToFollow[1] = GameManager.players[playerBodyData.controller].rightHand;
+                playerManager = GameManager.players[playerBodyData.controller];
+                playerManager.playerBody = this;
+
+                physicalPlayerBody.headToFollow = playerManager.head;
+                physicalPlayerBody.handsToFollow[0] = playerManager.leftHand;
+                physicalPlayerBody.handsToFollow[1] = playerManager.rightHand;
                 physicalPlayerBody.SetHeadVisible(true);
                 physicalPlayerBody.SetCollidersEnabled(true);
+                physicalPlayerBody.SetCanvasesEnabled(true);
+                physicalPlayerBody.SetEntitiesRegistered(true);
+
+                Init();
             }
+        }
+
+        private void Init()
+        {
+            physicalPlayerBody.SetIFF(playerManager.IFF);
+            physicalPlayerBody.SetColor(GameManager.colors[playerManager.colorIndex]);
+
+            physicalPlayerBody.usernameLabel.text = playerManager.username;
+            physicalPlayerBody.healthLabel.text = playerManager.health+"/"+playerManager.maxHealth;
         }
 
         private void OnPlayerBodyInit(FVRPlayerBody playerBody)
@@ -45,6 +67,10 @@ namespace H3MP.Tracking
                 physicalPlayerBody.handsToFollow[1] = playerBody.RightHand;
                 physicalPlayerBody.SetHeadVisible(false);
                 physicalPlayerBody.SetCollidersEnabled(false);
+                physicalPlayerBody.SetCanvasesEnabled(false);
+                physicalPlayerBody.SetEntitiesRegistered(false);
+
+                physicalPlayerBody.Init();
             }
         }
 

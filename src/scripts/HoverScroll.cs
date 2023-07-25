@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using UnityEngine;
 
-namespace H3MP
+namespace H3MP.Scripts
 {
     public class HoverScroll : FVRPointableButton
     {

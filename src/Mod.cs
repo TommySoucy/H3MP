@@ -504,7 +504,6 @@ namespace H3MP
             playerManager.username = "Dummy";
             playerManager.scene = GameManager.scene;
             playerManager.instance = GameManager.instance;
-            playerManager.usernameLabel.text = "Dummy";
             playerManager.SetIFF(GM.CurrentPlayerBody.GetPlayerIFF());
         }
 

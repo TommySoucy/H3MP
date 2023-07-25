@@ -48,6 +48,7 @@
     <Compile Include="src\scripts\HoverScroll.cs" />
     <Compile Include="src\scripts\KinematicMarker.cs" />
     <Compile Include="src\networking\Player.cs" />
+    <Compile Include="src\scripts\OverheadDisplay.cs" />
     <Compile Include="src\scripts\PlayerHitbox.cs" />
     <Compile Include="src\scripts\PlayerManager.cs" />
     <Compile Include="src\networking\ServerClient.cs" />

@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Networking;
+using H3MP.Scripts;
 using H3MP.Tracking;
 using HarmonyLib;
 using System;
@@ -341,7 +342,7 @@ namespace H3MP.Patches
                 {
                     if (playerEntry.Value.visible)
                     {
-                        playerEntry.Value.SetEntitiesRegistered(true);
+                        playerEntry.Value.playerBody.physicalPlayerBody.SetEntitiesRegistered(true);
                     }
                 }
 

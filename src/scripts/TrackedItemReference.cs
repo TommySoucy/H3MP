@@ -1,7 +1,7 @@
 ﻿using H3MP.Tracking;
 using UnityEngine;
 
-namespace H3MP
+namespace H3MP.Scripts
 {
     public class TrackedItemReference : MonoBehaviour
     {

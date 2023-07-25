@@ -1,6 +1,7 @@
 ﻿using FistVR;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace H3MP.Scripts
 {
@@ -22,14 +23,18 @@ namespace H3MP.Scripts
 
         [Header("Other")]
         public Collider[] colliders;
-        public Renderer[] controlRenderers; 
+        public Renderer[] controlRenderers;
+        public AIEntity[] entities;
+        public Canvas[] canvases;
 
         [Header("Optionals")]
         public Renderer[] bodyRenderers;
         public Renderer[] handRenderers;
         public Renderer[] coloredParts;
+        public Text usernameLabel;
+        public Text healthLabel;
 
-        public void Awake()
+        public virtual void Awake()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
 
@@ -41,12 +46,16 @@ namespace H3MP.Scripts
                 handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
                 SetHeadVisible(false);
                 SetCollidersEnabled(false);
+                SetCanvasesEnabled(false);
+                SetEntitiesRegistered(false);
+
+                Init();
             }
             //else Connected, let TrackedPlayerBody handle what transform to follow based on controller
             //     OR not connected but no current player body. Setting these will be handled when a player body is initialized
         }
 
-        private void OnPlayerBodyInit(FVRPlayerBody playerBody)
+        public virtual void OnPlayerBodyInit(FVRPlayerBody playerBody)
         {
             if (Mod.managerObject == null)
             {
@@ -56,11 +65,20 @@ namespace H3MP.Scripts
                 handsToFollow[1] = playerBody.RightHand;
                 SetHeadVisible(false);
                 SetCollidersEnabled(false);
+                SetCanvasesEnabled(false);
+                SetEntitiesRegistered(false);
+
+                Init();
             }
             //else Connected, let TrackedPlayerBody handle what transform to follow based on controller
         }
 
-        public void Update()
+        public virtual void Init()
+        {
+            SetColor(GameManager.colors[GameManager.colorIndex]);
+        }
+
+        public virtual void Update()
         {
             // These could only be null briefly if connected until TrackedPlayerBody sets them appropriately
             if (headToFollow != null)
@@ -82,7 +100,7 @@ namespace H3MP.Scripts
             }
         }
 
-        public void SetHeadVisible(bool visible)
+        public virtual void SetHeadVisible(bool visible)
         {
             if (headRenderers != null)
             {
@@ -96,7 +114,7 @@ namespace H3MP.Scripts
             }
         }
 
-        public void SetColor(Color newColor)
+        public virtual void SetColor(Color newColor)
         {
             if (coloredParts != null)
             {
@@ -116,7 +134,7 @@ namespace H3MP.Scripts
             }
         }
 
-        public void SetBodyVisible(bool visible)
+        public virtual void SetBodyVisible(bool visible)
         {
             if (bodyRenderers != null)
             {
@@ -130,7 +148,7 @@ namespace H3MP.Scripts
             }
         }
 
-        public void SetHandsVisible(bool visible)
+        public virtual void SetHandsVisible(bool visible)
         {
             if (handRenderers != null) 
             {
@@ -144,7 +162,7 @@ namespace H3MP.Scripts
             }
         }
 
-        public void SetCollidersEnabled(bool enabled)
+        public virtual void SetCollidersEnabled(bool enabled)
         {
             if(colliders != null)
             {
@@ -158,7 +176,62 @@ namespace H3MP.Scripts
             }
         }
 
-        public void OnDestroy()
+        public virtual void SetCanvasesEnabled(bool enabled)
+        {
+            if(canvases != null)
+            {
+                for(int i=0; i < canvases.Length; ++i)
+                {
+                    if (canvases[i] != null)
+                    {
+                        canvases[i].enabled = enabled;
+                    }
+                }
+            }
+        }
+
+        public void SetEntitiesRegistered(bool registered)
+        {
+            if (GM.CurrentAIManager != null && entities != null)
+            {
+                if (registered)
+                {
+                    for(int i=0; i < entities.Length; ++i)
+                    {
+                        if (entities[i] != null)
+                        {
+                            GM.CurrentAIManager.RegisterAIEntity(entities[i]);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < entities.Length; ++i)
+                    {
+                        if (entities[i] != null)
+                        {
+                            GM.CurrentAIManager.DeRegisterAIEntity(entities[i]);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void SetIFF(int IFF)
+        {
+            if (entities != null)
+            {
+                for(int i=0; i < entities.Length; ++i)
+                {
+                    if (entities[i] != null)
+                    {
+                        entities[i].IFFCode = IFF;
+                    }
+                }
+            }
+        }
+
+        public virtual void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
         }

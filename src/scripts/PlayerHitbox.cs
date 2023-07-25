@@ -1,23 +1,18 @@
 ﻿using FistVR;
 using UnityEngine;
 
-namespace H3MP
+namespace H3MP.Scripts
 {
     public class PlayerHitbox : MonoBehaviour, IFVRDamageable
     {
         public PlayerManager manager;
-        public enum Part
-        {
-            Head,
-            Torso,
-            LeftHand,
-            RightHand
-        }
-        public Part part;
+
+        public bool isHead;
+        public float damageMultiplier;
 
         public void Damage(Damage dam)
         {
-            manager.Damage(part, dam);
+            manager.Damage(damageMultiplier, isHead, dam);
         }
     }
 }

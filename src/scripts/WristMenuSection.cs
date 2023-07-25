@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace H3MP
+namespace H3MP.Scripts
 {
     public class WristMenuSection : FVRWristMenuSection
     {
@@ -279,19 +279,16 @@ namespace H3MP
 
         private void OnNextColorClicked(Text textRef)
         {
-            if (Mod.managerObject == null)
+            if (GameManager.colorByIFF)
             {
                 SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
-
-                return;
             }
-
-            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
-
-            if (!GameManager.colorByIFF && Mod.managerObject != null)
+            else
             {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
                 ++GameManager.colorIndex;
-                if(GameManager.colorIndex >= GameManager.colors.Length)
+                if (GameManager.colorIndex >= GameManager.colors.Length)
                 {
                     GameManager.colorIndex = 0;
                 }
@@ -302,24 +299,24 @@ namespace H3MP
 
         private void OnPreviousColorClicked(Text textRef)
         {
-            if (Mod.managerObject == null)
+            if (GameManager.colorByIFF)
             {
                 SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
-
-                return;
             }
-
-            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
-
-            if (!GameManager.colorByIFF && Mod.managerObject != null)
+            else
             {
-                --GameManager.colorIndex;
-                if(GameManager.colorIndex < 0)
-                {
-                    GameManager.colorIndex = GameManager.colors.Length - 1;
-                }
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
-                GameManager.SetPlayerColor(GameManager.ID, GameManager.colorIndex, false, 0);
+                if (!GameManager.colorByIFF && Mod.managerObject != null)
+                {
+                    --GameManager.colorIndex;
+                    if (GameManager.colorIndex < 0)
+                    {
+                        GameManager.colorIndex = GameManager.colors.Length - 1;
+                    }
+
+                    GameManager.SetPlayerColor(GameManager.ID, GameManager.colorIndex, false, 0);
+                }
             }
         }
 
@@ -470,21 +467,21 @@ namespace H3MP
                         textRef.text = "Nameplates (All)";
                         foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                         {
-                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.visible);
+                            playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(playerEntry.Value.visible);
                         }
                         break;
                     case 1:
                         textRef.text = "Nameplates (Friendly only)";
                         foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                         {
-                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.visible && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                            playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(playerEntry.Value.visible && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
                         }
                         break;
                     case 2:
                         textRef.text = "Nameplates (None)";
                         foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                         {
-                            playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(false);
+                            playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(false);
                         }
                         break;
                 }

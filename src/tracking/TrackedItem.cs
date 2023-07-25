@@ -1,6 +1,7 @@
 ﻿using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
+using H3MP.Scripts;
 using System;
 using System.Collections.Generic;
 using UnityEngine;

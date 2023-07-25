@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Patches;
+using H3MP.Scripts;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -69,16 +70,13 @@ namespace H3MP.Networking
             string username = packet.ReadString();
             string scene = packet.ReadString();
             int instance = packet.ReadInt();
-            Vector3 position = packet.ReadVector3();
-            Quaternion rotation = packet.ReadQuaternion();
             int IFF = packet.ReadInt();
             int colorIndex = packet.ReadInt();
-            string playerPrefabID = packet.ReadString();
             bool join = packet.ReadBool();
 
             Mod.LogInfo("ClientHandle SpawnPlayer, ID: " + ID + ", username: " + username, false);
 
-            GameManager.singleton.SpawnPlayer(ID, username, scene, instance, position, rotation, IFF, colorIndex, playerPrefabID, join);
+            GameManager.singleton.SpawnPlayer(ID, username, scene, instance, IFF, colorIndex, join);
         }
 
         public static void ConnectSync(Packet packet)
@@ -1079,11 +1077,12 @@ namespace H3MP.Networking
 
         public static void PlayerDamage(Packet packet)
         {
-            PlayerHitbox.Part part = (PlayerHitbox.Part)packet.ReadByte();
+            float damageMultiplier = packet.ReadFloat();
+            bool head = packet.ReadBool();
             Damage damage = packet.ReadDamage();
 
             Mod.LogInfo("Client received player damage for itself",false);
-            GameManager.ProcessPlayerDamage(part, damage);
+            GameManager.ProcessPlayerDamage(damageMultiplier, head, damage);
         }
 
         public static void UberShatterableShatter(Packet packet)
@@ -3321,7 +3320,7 @@ namespace H3MP.Networking
                     }
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
-                        playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.visible);
+                        playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(playerEntry.Value.visible);
                     }
                     break;
                 case 1:
@@ -3331,7 +3330,7 @@ namespace H3MP.Networking
                     }
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
-                        playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(playerEntry.Value.visible && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                        playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(playerEntry.Value.visible && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
                     }
                     break;
                 case 2:
@@ -3341,7 +3340,7 @@ namespace H3MP.Networking
                     }
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
-                        playerEntry.Value.overheadDisplayBillboard.gameObject.SetActive(false);
+                        playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(false);
                     }
                     break;
             }

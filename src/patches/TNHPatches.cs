@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Networking;
+using H3MP.Scripts;
 using H3MP.Tracking;
 using HarmonyLib;
 using System;

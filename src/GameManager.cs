@@ -1,8 +1,8 @@
 ﻿using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
+using H3MP.Scripts;
 using H3MP.Tracking;
-using RUST.Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -131,10 +131,10 @@ namespace H3MP
         /// CUSTOMIZATION
         /// Delegate for the OnPlayerDamage event
         /// </summary>
-        /// <param name="part">The part that player received the damage on</param>
+        /// <param name="damageMultiplier">The damage multiplier</param>
         /// <param name="damage">The damage</param>
         /// <param name="processDamage">Custom override for whether H3MP should process the damage itself</param>
-        public delegate void OnPlayerDamageDelegate(PlayerHitbox.Part part, Damage damage, ref bool processDamage);
+        public delegate void OnPlayerDamageDelegate(float damageMultiplier, Damage damage, ref bool processDamage);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -278,7 +278,7 @@ namespace H3MP
             // TODO: Update UI of TNH menu
         }
 
-        public void SpawnPlayer(int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, string playerPrefabID, bool join = false)
+        public void SpawnPlayer(int ID, string username, string scene, int instance, int IFF, int colorIndex, bool join = false)
         {
             // We dont want to spawn the local player as we will already have spawned when connecting to a server
             if (Client.singleton != null && ID == Client.singleton.ID)
@@ -291,13 +291,8 @@ namespace H3MP
             GameObject playerRoot = new GameObject("PlayerRoot" + ID);
             DontDestroyOnLoad(playerRoot);
             PlayerManager playerManager = playerRoot.AddComponent<PlayerManager>();
-            playerManager.ID = ID;
-            playerManager.username = username;
-            playerManager.scene = scene;
-            playerManager.instance = instance;
-            playerManager.usernameLabel.text = username;
+            playerManager.Init(ID, username, scene, instance);
             players.Add(ID, playerManager);
-            TODO: // Have transforms we position/rotate depending on player update data, these transforms can then be used by player models
 
             // Add to scene/instance
             bool firstInSceneInstance = false;
@@ -488,20 +483,14 @@ namespace H3MP
 
             playerTransform.position = position;
             playerTransform.rotation = rotation;
-            player.head.transform.position = headPos;
-            player.head.transform.rotation = headRot;
-            player.torso.transform.position = torsoPos;
-            player.torso.transform.rotation = torsoRot;
-            player.leftHand.transform.position = leftHandPos;
-            player.leftHand.transform.rotation = leftHandRot;
-            player.rightHand.transform.position = rightHandPos;
-            player.rightHand.transform.rotation = rightHandRot;
-            player.overheadDisplayBillboard.transform.position = player.head.transform.position + overheadDisplayOffset;
+            player.head.position = headPos;
+            player.head.rotation = headRot;
+            player.leftHand.position = leftHandPos;
+            player.leftHand.rotation = leftHandRot;
+            player.rightHand.position = rightHandPos;
+            player.rightHand.rotation = rightHandRot;
             player.health = health;
-            if (player.healthIndicator.gameObject.activeSelf)
-            {
-                player.healthIndicator.text = ((int)health).ToString() + "/" + maxHealth;
-            }
+            player.maxHealth = maxHealth;
 
             if((health <= 0 && player.visible) || (health > 0 && !player.visible))
             {
@@ -778,6 +767,17 @@ namespace H3MP
 
         public static void SetPlayerColor(int ID, int index, bool received = false, int clientID = 0, bool send = true)
         {
+            if(Mod.managerObject == null)
+            {
+                colorIndex = index;
+                if (WristMenuSection.colorText != null)
+                {
+                    WristMenuSection.colorText.text = "Current color: " + colorNames[colorIndex];
+                }
+
+                return;
+            }
+
             if(GameManager.ID == ID)
             {
                 colorIndex = index;
@@ -1803,35 +1803,24 @@ namespace H3MP
             }
         }
 
-        public static void ProcessPlayerDamage(PlayerHitbox.Part part, Damage damage)
+        public static void ProcessPlayerDamage(float damageMult, bool head, Damage damage)
         {
             bool processDamage = true;
             if (OnPlayerDamage != null)
             {
-                OnPlayerDamage(part, damage, ref processDamage);
+                OnPlayerDamage(damageMult, damage, ref processDamage);
             }
 
             if (processDamage)
             {
-                if (part == PlayerHitbox.Part.Head)
+                damage.Dam_TotalEnergetic *= damageMult;
+                damage.Dam_TotalKinetic *= damageMult;
+                if (head)
                 {
-                    if (UnityEngine.Random.value < 0.5f)
-                    {
-                        GM.CurrentPlayerBody.Hitboxes[0].Damage(damage);
-                    }
-                    else
-                    {
-                        GM.CurrentPlayerBody.Hitboxes[1].Damage(damage);
-                    }
+                    GM.CurrentPlayerBody.Hitboxes[0].Damage(damage);
                 }
-                else if (part == PlayerHitbox.Part.Torso)
+                else // Apply to torso hitbox, same as neck
                 {
-                    GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
-                }
-                else
-                {
-                    damage.Dam_TotalEnergetic *= 0.15f;
-                    damage.Dam_TotalKinetic *= 0.15f;
                     GM.CurrentPlayerBody.Hitboxes[2].Damage(damage);
                 }
             }

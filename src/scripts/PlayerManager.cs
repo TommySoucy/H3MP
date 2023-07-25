@@ -1,10 +1,11 @@
 ﻿using FistVR;
 using H3MP.Networking;
+using H3MP.Tracking;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace H3MP
+namespace H3MP.Scripts
 {
     public class PlayerManager : MonoBehaviour
     {
@@ -12,28 +13,15 @@ namespace H3MP
         public string username;
 
         // Player transforms and state data
+        public TrackedPlayerBody playerBody;
         public Transform head;
-        public PlayerHitbox headHitBox;
-        public Material headMat;
-        public AIEntity headEntity;
-        public Transform torso;
-        public Material torsoMat;
-        public PlayerHitbox torsoHitBox;
-        public AIEntity torsoEntity;
         public Transform leftHand;
-        public PlayerHitbox leftHandHitBox;
-        public Material leftHandMat;
         public Transform rightHand;
-        public PlayerHitbox rightHandHitBox;
-        public Material rightHandMat;
-        public Billboard overheadDisplayBillboard;
-        public Text usernameLabel;
-        public Text healthIndicator;
         public int IFF;
         public int colorIndex;
-        public TAH_ReticleContact reticleContact;
         public float health;
-        public string playerPrefabID;
+        public int maxHealth;
+        public TAH_ReticleContact reticleContact;
 
         public string scene;
         public int instance;
@@ -43,26 +31,11 @@ namespace H3MP
 
         /// <summary>
         /// CUSTOMIZATION
-        /// Delegate for the OnSetPlayerPrefab event
-        /// </summary>
-        /// <param name="prefabID">The prefab identifier</param>
-        /// <param name="set">Custom override for whether prefab was set or not</param>
-        public delegate void OnSetPlayerPrefabDelegate(string prefabID, ref bool set);
-
-        /// <summary>
-        /// CUSTOMIZATION
-        /// Event called when we set the player's skin/model/prefab so you can set your own transforms and relevant objects
-        /// </summary>
-        public static event OnSetPlayerPrefabDelegate OnSetPlayerPrefab;
-
-        /// <summary>
-        /// CUSTOMIZATION
         /// Delegate for the OnSetPlayerColor event
         /// </summary>
         /// <param name="colorIndex">The index of the color we want to set this player to</param>
-        /// <param name="prefabID">The player's body prefab identifier</param>
         /// <param name="set">Custom override for whether color was set or not</param>
-        public delegate void OnSetPlayerColorDelegate(int colorIndex, string prefabID, ref bool set);
+        public delegate void OnSetPlayerColorDelegate(int colorIndex, ref bool set);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -70,43 +43,42 @@ namespace H3MP
         /// </summary>
         public static event OnSetPlayerColorDelegate OnSetPlayerColor;
 
-        private void Awake()
+        public void Init(int ID, string username, string scene, int instance)
         {
+            this.ID = ID;
+            this.username = username;
+            this.scene = scene;
+            this.instance = instance;
+
+            GameObject headObject = new GameObject("Head");
+            headObject.transform.parent = transform;
+            head = headObject.transform;
+
+            GameObject leftHandObject = new GameObject("LeftHand");
+            leftHandObject.transform.parent = transform;
+            leftHand = leftHandObject.transform;
+
+            GameObject rightHandObject = new GameObject("RightHand");
+            rightHandObject.transform.parent = transform;
+            rightHand = rightHandObject.transform;
         }
 
-        public void Damage(PlayerHitbox.Part part, Damage damage)
+        public void Damage(float damageMultiplier, bool head, Damage damage)
         {
             if (ID != -1)
             {
                 if (ThreadManager.host)
                 {
-                    ServerSend.PlayerDamage(ID, (byte)part, damage);
+                    ServerSend.PlayerDamage(ID, damageMultiplier, head, damage);
                 }
                 else
                 {
-                    ClientSend.PlayerDamage(ID, (byte)part, damage);
+                    ClientSend.PlayerDamage(ID, damageMultiplier, head, damage);
                 }
             }
             else
             {
-                Mod.LogInfo("Dummy player has receive damage on " + part);
-            }
-        }
-
-        public void SetEntitiesRegistered(bool registered)
-        {
-            if(GM.CurrentAIManager != null)
-            {
-                if (registered)
-                {
-                    GM.CurrentAIManager.RegisterAIEntity(headEntity);
-                    GM.CurrentAIManager.RegisterAIEntity(torsoEntity);
-                }
-                else
-                {
-                    GM.CurrentAIManager.DeRegisterAIEntity(headEntity);
-                    GM.CurrentAIManager.DeRegisterAIEntity(torsoEntity);
-                }
+                Mod.LogInfo("Dummy player has receive damage with mult: " + damageMultiplier);
             }
         }
 
@@ -114,11 +86,7 @@ namespace H3MP
         {
             this.visible = visible;
 
-            head.gameObject.SetActive(visible);
-            torso.gameObject.SetActive(visible);
-            leftHand.gameObject.SetActive(visible);
-            rightHand.gameObject.SetActive(visible);
-            overheadDisplayBillboard.gameObject.SetActive(visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+            playerBody.gameObject.SetActive(visible);
 
             if (visible && reticleContact == null &&
                 Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null &&
@@ -140,26 +108,21 @@ namespace H3MP
                     }
                 }
             }
-
-            SetEntitiesRegistered(visible);
         }
 
         public void SetIFF(int IFF, bool spawned = true)
         {
             int preIFF = this.IFF;
             this.IFF = IFF;
-            if (headEntity != null)
-            {
-                headEntity.IFFCode = IFF;
-                torsoEntity.IFFCode = IFF;
-            }
+
+            playerBody.physicalPlayerBody.SetIFF(IFF);
 
             if (GameManager.colorByIFF && spawned)
             {
                 SetColor(IFF);
             }
 
-            overheadDisplayBillboard.gameObject.SetActive(visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+            playerBody.physicalPlayerBody.SetCanvasesEnabled(visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
 
             if (GameManager.radarMode == 1)
             {
@@ -203,66 +166,20 @@ namespace H3MP
             bool set = false;
             if (OnSetPlayerColor != null)
             {
-                OnSetPlayerColor(colorIndex, playerPrefabID, ref set);
+                OnSetPlayerColor(colorIndex, ref set);
             }
 
-            if (!set && this.colorIndex != colorIndex && playerPrefabID.Equals("Default"))
+            if (!set && this.colorIndex != colorIndex)
             {
                 this.colorIndex = Mathf.Abs(colorIndex % GameManager.colors.Length);
 
-                headMat.color = GameManager.colors[colorIndex];
-                torsoMat.color = GameManager.colors[colorIndex];
-                leftHandMat.color = GameManager.colors[colorIndex];
-                rightHandMat.color = GameManager.colors[colorIndex];
+                playerBody.physicalPlayerBody.SetColor(GameManager.colors[colorIndex]);
             }
 
             if (!GameManager.radarColor && reticleContact != null)
             {
                 reticleContact.R_Arrow.material.color = GameManager.colors[colorIndex];
                 reticleContact.R_Icon.material.color = GameManager.colors[colorIndex];
-            }
-        }
-
-        public void SetPlayerPrefab(string playerPrefabID)
-        {
-            TODO: // Make sure we handle setting all of these as part of new player model script
-            bool set = false;
-            if(OnSetPlayerPrefab != null)
-            {
-                OnSetPlayerPrefab(playerPrefabID, ref set);
-            }
-
-            if (!set && this.playerPrefabID.Equals("Default"))
-            {
-                head = transform.GetChild(0).GetChild(0);
-                headEntity = head.GetChild(1).gameObject.AddComponent<AIEntity>();
-                headEntity.Beacons = new List<AIEntityIFFBeacon>();
-                headEntity.IFFCode = IFF;
-                headHitBox = head.gameObject.AddComponent<PlayerHitbox>();
-                headHitBox.manager = this;
-                headHitBox.part = PlayerHitbox.Part.Head;
-                torso = transform.GetChild(0).GetChild(1);
-                torsoEntity = torso.GetChild(0).gameObject.AddComponent<AIEntity>();
-                torsoEntity.Beacons = new List<AIEntityIFFBeacon>();
-                torsoEntity.IFFCode = IFF;
-                torsoHitBox = torso.gameObject.AddComponent<PlayerHitbox>();
-                torsoHitBox.manager = this;
-                torsoHitBox.part = PlayerHitbox.Part.Torso;
-                leftHand = transform.GetChild(0).GetChild(2);
-                leftHandHitBox = leftHand.gameObject.AddComponent<PlayerHitbox>();
-                leftHandHitBox.manager = this;
-                leftHandHitBox.part = PlayerHitbox.Part.LeftHand;
-                rightHand = transform.GetChild(0).GetChild(3);
-                rightHandHitBox = rightHand.gameObject.AddComponent<PlayerHitbox>();
-                rightHandHitBox.manager = this;
-                rightHandHitBox.part = PlayerHitbox.Part.RightHand;
-                overheadDisplayBillboard = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).gameObject.AddComponent<Billboard>();
-                usernameLabel = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>();
-                healthIndicator = transform.GetChild(0).GetChild(4).GetChild(0).GetChild(0).GetChild(1).GetComponent<Text>();
-                headMat = head.GetComponent<Renderer>().material;
-                torsoMat = torso.GetComponent<Renderer>().material;
-                leftHandMat = leftHand.GetComponent<Renderer>().material;
-                rightHandMat = rightHand.GetComponent<Renderer>().material;
             }
         }
     }

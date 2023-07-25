@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using H3MP.Patches;
+using H3MP.Scripts;
 using H3MP.Tracking;
 using HarmonyLib;
 using System;
@@ -19,7 +20,6 @@ namespace H3MP.Networking
             int instance = packet.ReadInt();
             int IFF = packet.ReadInt();
             int colorIndex = packet.ReadInt();
-            string playerPrefabID = packet.ReadString();
 
             Mod.LogInfo($"{Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}", false);
 
@@ -29,7 +29,7 @@ namespace H3MP.Networking
             }
 
             // Spawn player to clients 
-            Server.clients[clientID].SendIntoGame(username, scene, instance, IFF, colorIndex, playerPrefabID);
+            Server.clients[clientID].SendIntoGame(username, scene, instance, IFF, colorIndex);
 
             Server.connectedClients.Add(clientID);
         }
@@ -1411,18 +1411,17 @@ namespace H3MP.Networking
         public static void PlayerDamage(int clientID, Packet packet)
         {
             int ID = packet.ReadInt();
-            PlayerHitbox.Part part = (PlayerHitbox.Part)packet.ReadByte();
+            float damageMult = packet.ReadFloat();
+            bool head = packet.ReadBool();
             Damage damage = packet.ReadDamage();
 
             if (ID == 0)
             {
-                Mod.LogInfo("Server received player damage for itself from "+clientID, false);
-                GameManager.ProcessPlayerDamage(part, damage);
+                GameManager.ProcessPlayerDamage(damageMult, head, damage);
             }
             else
             {
-                Mod.LogInfo("Server received player damage for "+ ID+" from "+clientID, false);
-                ServerSend.PlayerDamage(ID, (byte)part, damage);
+                ServerSend.PlayerDamage(ID, damageMult, head, damage);
             }
         }
 

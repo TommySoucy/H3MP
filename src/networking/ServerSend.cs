@@ -3,7 +3,6 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Networking
 {
@@ -251,12 +250,12 @@ namespace H3MP.Networking
             }
         }
 
-        public static void SpawnPlayer(int clientID, Player player, string scene, int instance, int IFF, int colorIndex, string playerPrefabID, bool join = false)
+        public static void SpawnPlayer(int clientID, Player player, string scene, int instance, int IFF, int colorIndex, bool join = false)
         {
-            SpawnPlayer(clientID, player.ID, player.username, scene, instance, player.position, player.rotation, IFF, colorIndex, playerPrefabID, join);
+            SpawnPlayer(clientID, player.ID, player.username, scene, instance, IFF, colorIndex, join);
         }
 
-        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, Vector3 position, Quaternion rotation, int IFF, int colorIndex, string playerPrefabID, bool join = false)
+        public static void SpawnPlayer(int clientID, int ID, string username, string scene, int instance, int IFF, int colorIndex, bool join = false)
         {
             Mod.LogInfo("Server sending SpawnPlayer order to "+clientID+": ID: "+ID+", username: "+username+", scene: "+scene+", instance: "+instance, false);
             using (Packet packet = new Packet((int)ServerPackets.spawnPlayer))
@@ -265,11 +264,8 @@ namespace H3MP.Networking
                 packet.Write(username);
                 packet.Write(scene);
                 packet.Write(instance);
-                packet.Write(position);
-                packet.Write(rotation);
                 packet.Write(IFF);
                 packet.Write(colorIndex);
-                packet.Write(playerPrefabID);
                 packet.Write(join);
 
                 SendTCPData(clientID, packet);
@@ -1555,12 +1551,12 @@ namespace H3MP.Networking
             }
         }
 
-        public static void PlayerDamage(int clientID, byte part, Damage damage)
+        public static void PlayerDamage(int clientID, float damageMult, bool head, Damage damage)
         {
             using (Packet packet = new Packet((int)ServerPackets.playerDamage))
             {
-                Mod.LogInfo("Sending player damage to " + clientID + "\n" + Environment.StackTrace,false);
-                packet.Write(part);
+                packet.Write(damageMult);
+                packet.Write(head);
                 packet.Write(damage);
 
                 SendTCPData(clientID, packet);

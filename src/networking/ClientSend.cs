@@ -59,7 +59,6 @@ namespace H3MP.Networking
                 packet.Write(GameManager.instance);
                 packet.Write(GM.CurrentPlayerBody.GetPlayerIFF());
                 packet.Write(GameManager.colorIndex);
-                packet.Write(GameManager.playerPrefabID);
 
                 SendTCPData(packet);
             }
@@ -812,13 +811,13 @@ namespace H3MP.Networking
             }
         }
 
-        public static void PlayerDamage(int clientID, byte part, Damage damage)
+        public static void PlayerDamage(int clientID, float damageMult, bool head, Damage damage)
         {
             using (Packet packet = new Packet((int)ClientPackets.playerDamage))
             {
-                Mod.LogInfo("Sending player damage to " + clientID+"\n"+Environment.StackTrace, false);
                 packet.Write(clientID);
-                packet.Write(part);
+                packet.Write(damageMult);
+                packet.Write(head);
                 packet.Write(damage);
 
                 SendTCPData(packet);
