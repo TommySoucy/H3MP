@@ -195,6 +195,32 @@ namespace H3MP
 
         /// <summary>
         /// CUSTOMIZATION
+        /// Delegate for the OnSceneLeft event
+        /// </summary>
+        /// <param name="scene">The scene that we left</param>
+        public delegate void OnSceneLeftDelegate(string scene);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when a scene begins loading
+        /// </summary>
+        public static event OnSceneLeftDelegate OnSceneLeft;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSceneJoined event
+        /// </summary>
+        /// <param name="scene">The scene that we joined</param>
+        public delegate void OnSceneJoinedDelegate(string scene);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when a scene is done loading
+        /// </summary>
+        public static event OnSceneJoinedDelegate OnSceneJoined;
+
+        /// <summary>
+        /// CUSTOMIZATION
         /// Delegate for the OnPlayerBodyInit event
         /// </summary>
         /// <param name="playerBody">The FVRPlayerBody that got initialized</param>
@@ -931,6 +957,7 @@ namespace H3MP
 
         public static void SyncTrackedObjects(Transform root, bool controlEverything, TrackedObjectData parent, string scene)
         {
+            TODO: // When tracking an object with children that are already tracked, make sure the children get added to the children list of the parent
             // Return right away if haven't received connect sync yet
             if (!ThreadManager.host && !Client.singleton.gotConnectSync)
             {
@@ -1280,17 +1307,21 @@ namespace H3MP
                 }
                 for (int i = 0; i < filteredObjects.Count; ++i)
                 {
+                    TODO: // We currently bring anything we are actively interacting with. We could add a virtual method to tracked object data
+                    //       that would check if we want to bring the object with us. Playerbody will invariably be true as long as we are the controller
                     if (filteredObjects[i].IsControlled())
                     {
                         // Send destruction without removing from global list
                         // We just don't want the other clients to have the item on their side anymore if they had it
+                        TODO: // Review this process, do we ever change the instance of the data? on either side? Do we manage the objectBySceneInstance dict?
                         if (ThreadManager.host)
                         {
-                            ServerSend.DestroyObject(i, false);
+                            ServerSend.DestroyObject(filteredObjects[i].trackedID, false);
                         }
                         else
                         {
-                            ClientSend.DestroyObject(i, false);
+                            TODO: // Consider not having tracked ID yet
+                            ClientSend.DestroyObject(filteredObjects[i].trackedID, false);
                         }
                     }
                     else // Not being interacted with, just destroy on our side and give control
@@ -1303,6 +1334,8 @@ namespace H3MP
                             // Destroy just the tracked script because we want to make a copy for ourselves
                             DestroyImmediate(filteredObjects[i].physical);
 
+                            TODO: // This is flawed, idea is to only track most parent object, but what if we check here the most parent before having destroyed
+                            //       the children scripts, then none of the children get retracked, but theyre scripts will eventually be destroyed.
                             // Only sync the top parent of items. The children will also get retracked as children
                             if (hadNoParent)
                             {
@@ -1627,6 +1660,12 @@ namespace H3MP
 
                 // Clear any of our tracked items that have not awoken in the previous scene
                 ClearUnawoken();
+
+                // Raise event
+                if(OnSceneLeft != null)
+                {
+                    OnSceneLeft(sceneAtSceneLoadStart);
+                }
             }
             else // Finished loading
             {
@@ -1784,6 +1823,12 @@ namespace H3MP
                     }
 
                     resetSpectatorHost = false;
+                }
+
+                // Raise event
+                if (OnSceneLeft != null)
+                {
+                    OnSceneLeft(scene);
                 }
             }
         }

@@ -14,6 +14,8 @@ namespace H3MP.Tracking
         public virtual void Start()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
+            GameManager.OnSceneJoined += OnSceneLoaded;
+            GameManager.OnInstanceJoined += OnInstanceJoined;
 
             physicalPlayerBody.handsToFollow = new Transform[2];
             if (playerBodyData.controller == GameManager.ID)
@@ -94,9 +96,30 @@ namespace H3MP.Tracking
             }
         }
 
+        private void OnSceneLoaded(string scene)
+        {
+            // If this is our body, need to track scene change
+            if(playerBodyData.controller == GameManager.ID)
+            {
+                td
+            }
+        }
+
+        private void OnInstanceJoined(int instance)
+        {
+            // If this is our body, need to track instance change
+            if (playerBodyData.controller == GameManager.ID)
+            {
+                td
+                    // review how we bring items with us when we switch instance
+            }
+        }
+
         protected override void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
+            GameManager.OnSceneJoined -= OnSceneLoaded;
+            GameManager.OnInstanceJoined -= OnInstanceJoined;
 
             base.OnDestroy();
         }
