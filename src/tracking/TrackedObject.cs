@@ -15,6 +15,8 @@ namespace H3MP.Tracking
         public static Dictionary<uint, KeyValuePair<uint, bool>> unknownTrackedIDs = new Dictionary<uint, KeyValuePair<uint, bool>>();
         public static Dictionary<uint, List<uint>> unknownParentWaitList = new Dictionary<uint, List<uint>>();
         public static Dictionary<uint, List<int>> unknownParentTrackedIDs = new Dictionary<uint, List<int>>();
+        public static Dictionary<uint, string> unknownSceneChange = new Dictionary<uint, string>();
+        public static Dictionary<uint, int> unknownInstanceChange = new Dictionary<uint, int>();
 
         public bool awoken; // Whether this object has awoken yet
         public bool sendOnAwake; // Whether to send this object upon awakening

@@ -4318,5 +4318,16 @@ namespace H3MP.Networking
 
             ClientSend.IDConfirm(IDToConfirm);
         }
+
+        public static void ObjectScene(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            string scene = packet.ReadString();
+
+            if (Client.objects[trackedID] != null)
+            {
+                Client.objects[trackedID].SetScene(scene, false);
+            }
+        }
     }
 }

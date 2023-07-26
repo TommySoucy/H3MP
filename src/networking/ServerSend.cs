@@ -4232,5 +4232,23 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void ObjectScene(int trackedID, string scene, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.objectScene))
+            {
+                packet.Write(trackedID);
+                packet.Write(scene);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

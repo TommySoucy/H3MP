@@ -14,7 +14,7 @@ namespace H3MP.Tracking
         public virtual void Start()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
-            GameManager.OnSceneJoined += OnSceneLoaded;
+            GameManager.OnSceneJoined += OnSceneJoined;
             GameManager.OnInstanceJoined += OnInstanceJoined;
 
             physicalPlayerBody.handsToFollow = new Transform[2];
@@ -96,7 +96,7 @@ namespace H3MP.Tracking
             }
         }
 
-        private void OnSceneLoaded(string scene)
+        private void OnSceneJoined(string scene)
         {
             // If this is our body, need to track scene change
             if(playerBodyData.controller == GameManager.ID)
@@ -118,7 +118,7 @@ namespace H3MP.Tracking
         protected override void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
-            GameManager.OnSceneJoined -= OnSceneLoaded;
+            GameManager.OnSceneJoined -= OnSceneJoined;
             GameManager.OnInstanceJoined -= OnInstanceJoined;
 
             base.OnDestroy();

@@ -2553,5 +2553,16 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void ObjectScene(int trackedID, string scene)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.objectScene))
+            {
+                packet.Write(trackedID);
+                packet.Write(scene);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

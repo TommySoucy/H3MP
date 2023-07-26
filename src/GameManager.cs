@@ -1283,9 +1283,9 @@ namespace H3MP
             }
             else // Scene not currently loading, we don't want to manage items if we are loading into a new scene so only do it in this case
             {
+                // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these to new instance
                 // Item we do not control: Destroy, giveControlOfDestroyed = true will ensure destruction does not get sent
                 // Item we control: Destroy, giveControlOfDestroyed = true will ensure item's control is passed on if necessary
-                // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these to new instance
                 ++giveControlOfDestroyed;
 
                 TrackedObjectData[] arrToUse = null;
@@ -1302,52 +1302,42 @@ namespace H3MP
                 {
                     if (arrToUse[i] != null && arrToUse[i].physical != null)
                     {
-                        filteredObjects.Add(arrToUse[i]);
-                    }
-                }
-                for (int i = 0; i < filteredObjects.Count; ++i)
-                {
-                    TODO: // We currently bring anything we are actively interacting with. We could add a virtual method to tracked object data
-                    //       that would check if we want to bring the object with us. Playerbody will invariably be true as long as we are the controller
-                    if (filteredObjects[i].IsControlled())
-                    {
-                        // Send destruction without removing from global list
-                        // We just don't want the other clients to have the item on their side anymore if they had it
-                        TODO: // Review this process, do we ever change the instance of the data? on either side? Do we manage the objectBySceneInstance dict?
-                        if (ThreadManager.host)
+                        TODO: // We currently bring anything we are actively interacting with. We could add a virtual method to tracked object
+                        //       that would check if we want to bring the object with us. Playerbody will invariably be true as long as we are the controller
+                        //       while other objects will check if they are actively being interacted with
+                        //       CONSIDER THE FACT THAT  APLAYER BODY WILL BE DESTROYED BEFORE WE ARRIVE IN THE NEW SCENE, MEANING THIS WOULD HAVE TO BE DONE UPON
+                        //       LEAVING THE SCENE, NOT UPON ARRIVING IN THE NEW ONE
+                        if (filteredObjects[i].IsControlled())
                         {
-                            ServerSend.DestroyObject(filteredObjects[i].trackedID, false);
+                            // Tell everyone this object is changing instance
+                            // If it is leaving theirs and it is physical, they will destroy it on their side but keep data
+                            filteredObjects[i].SetInstance(instance, true);
                         }
-                        else
+                        else // Not being interacted with, just destroy on our side and give control
                         {
-                            TODO: // Consider not having tracked ID yet
-                            ClientSend.DestroyObject(filteredObjects[i].trackedID, false);
-                        }
-                    }
-                    else // Not being interacted with, just destroy on our side and give control
-                    {
-                        if (bringItems)
-                        {
-                            GameObject go = filteredObjects[i].physical.gameObject;
-                            bool hadNoParent = filteredObjects[i].parent == -1;
-
-                            // Destroy just the tracked script because we want to make a copy for ourselves
-                            DestroyImmediate(filteredObjects[i].physical);
-
-                            TODO: // This is flawed, idea is to only track most parent object, but what if we check here the most parent before having destroyed
-                            //       the children scripts, then none of the children get retracked, but theyre scripts will eventually be destroyed.
-                            // Only sync the top parent of items. The children will also get retracked as children
-                            if (hadNoParent)
+                            if (bringItems)
                             {
-                                SyncTrackedObjects(go.transform, true, null, scene);
+                                GameObject go = filteredObjects[i].physical.gameObject;
+                                bool hadNoParent = filteredObjects[i].parent == -1;
+
+                                // Destroy just the tracked script because we want to make a copy for ourselves
+                                DestroyImmediate(filteredObjects[i].physical);
+
+                                TODO: // This is flawed, idea is to only track most parent object, but what if we check here the most parent before having destroyed
+                                //       the children scripts, then none of the children get retracked, but theyre scripts will eventually be destroyed.
+                                // Only sync the top parent of items. The children will also get retracked as children
+                                if (hadNoParent)
+                                {
+                                    SyncTrackedObjects(go.transform, true, null, scene);
+                                }
                             }
-                        }
-                        else // Destroy entire object
-                        {
-                            // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
-                            // like we do now if we didn't do immediate because OnDestroy() gets called later
-                            // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                            DestroyImmediate(filteredObjects[i].physical.gameObject);
+                            else // Destroy entire object
+                            {
+                                // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
+                                // like we do now if we didn't do immediate because OnDestroy() gets called later
+                                // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
+                                DestroyImmediate(filteredObjects[i].physical.gameObject);
+                            }
                         }
                     }
                 }

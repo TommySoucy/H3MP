@@ -183,6 +183,7 @@ namespace H3MP.Networking
         MTUTest = 170,
         IDConfirm = 171,
         enforcePlayerModels = 172,
+        objectScene = 173
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -354,6 +355,7 @@ namespace H3MP.Networking
         reactiveSteelTargetDamage = 163,
         MTUTest = 164,
         IDConfirm = 165,
+        objectScene = 166
     }
 
     public class Packet : IDisposable

@@ -487,6 +487,7 @@ namespace H3MP.Networking
                 ServerHandle.ReactiveSteelTargetDamage,
                 ServerHandle.MTUTest,
                 ServerHandle.IDConfirm,
+                ServerHandle.ObjectScene,
             };
 
             objects = new TrackedObjectData[100];

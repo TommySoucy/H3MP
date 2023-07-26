@@ -1,7 +1,9 @@
 ﻿using H3MP.Networking;
+using H3MP.Patches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace H3MP.Tracking
 {
@@ -440,6 +442,16 @@ namespace H3MP.Tracking
                 }
                 TrackedObject.unknownParentTrackedIDs.Remove(localWaitingIndex);
             }
+            if (localTrackedID != -1 && TrackedObject.unknownSceneChange.TryGetValue(localWaitingIndex, out string newScene))
+            {
+                SetScene(newScene, true);
+                TrackedObject.unknownSceneChange.Remove(localWaitingIndex);
+            }
+            if (localTrackedID != -1 && TrackedObject.unknownInstanceChange.TryGetValue(localWaitingIndex, out int newInstance))
+            {
+                SetInstance(newInstance, true);
+                TrackedObject.unknownSceneChange.Remove(localWaitingIndex);
+            }
         }
 
         public virtual void OnTracked() { }
@@ -746,6 +758,234 @@ namespace H3MP.Tracking
             }
 
             GameManager.objectsByInstanceByScene[scene][instance].Remove(trackedID);
+        }
+
+        public void SetScene(string scene, bool send)
+        {
+            if (trackedID == -1)
+            {
+                // No tracked ID, add to unknown
+                if (TrackedObject.unknownSceneChange.ContainsKey(localWaitingIndex))
+                {
+                    TrackedObject.unknownSceneChange[localWaitingIndex] = scene;
+                }
+                else
+                {
+                    TrackedObject.unknownSceneChange.Add(localWaitingIndex, scene);
+                }
+            }
+            else // We have tracked ID, we can process
+            {
+                // Only want to process if scene is different
+                if (!scene.Equals(this.scene))
+                {
+                    // Manage dict
+                    // Remove from previous scene
+                    if (GameManager.objectsByInstanceByScene.TryGetValue(this.scene, out Dictionary<int, List<int>> instances))
+                    {
+                        if (instances.TryGetValue(instance, out List<int> objects))
+                        {
+                            objects.Remove(trackedID);
+
+                            if (objects.Count == 0)
+                            {
+                                instances.Remove(instance);
+                            }
+                        }
+                        else
+                        {
+                            Mod.LogError("Tracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetScene: from " + this.scene + " to " + scene + ", current instance "+instance+" missing from dict");
+                        }
+
+                        if (instances.Count == 0)
+                        {
+                            GameManager.objectsByInstanceByScene.Remove(this.scene);
+                        }
+                    }
+                    else
+                    {
+                        Mod.LogError("Tracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetScene: from " + this.scene + " to " + scene + ", current scene missing from dict");
+                    }
+
+                    // Add to new scene
+                    if (GameManager.objectsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> currentInstances))
+                    {
+                        if (currentInstances.TryGetValue(instance, out List<int> objects))
+                        {
+                            objects.Add(trackedID);
+                        }
+                        else
+                        {
+                            currentInstances.Add(instance, new List<int>() { trackedID });
+                        }
+                    }
+                    else
+                    {
+                        Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                        newInstances.Add(instance, new List<int>() { trackedID });
+                        GameManager.objectsByInstanceByScene.Add(scene, newInstances);
+                    }
+
+                    // Set scene
+                    this.scene = scene;
+                    
+                    // If we are not (or will not be when done loading) in this object's scene/instance, we want to get rid of its phys but not data
+                    if(!scene.Equals(GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene))
+                    {
+                        if(physical == null)
+                        {
+                            awaitingInstantiation = false;
+                        }
+                        else
+                        {
+                            removeFromListOnDestroy = false;
+                            physical.sendDestroy = false;
+                            physical.dontGiveControl = true;
+                            TrackedObject[] childrenTrackedObjects = physical.GetComponentsInChildren<TrackedObject>();
+                            for (int i = 0; i < childrenTrackedObjects.Length; ++i)
+                            {
+                                if (childrenTrackedObjects[i] != null)
+                                {
+                                    childrenTrackedObjects[i].sendDestroy = false;
+                                    childrenTrackedObjects[i].data.removeFromListOnDestroy = false;
+                                    childrenTrackedObjects[i].dontGiveControl = true;
+                                }
+                            }
+
+                            physical.SecondaryDestroy();
+
+                            GameObject.Destroy(physical.gameObject);
+                        }
+                    }
+
+                    // Send if we want
+                    if (send)
+                    {
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.ObjectScene(trackedID, scene);
+                        }
+                        else
+                        {
+                            ClientSend.ObjectScene(trackedID, scene);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void SetInstance(int instance, bool send)
+        {
+            if (trackedID == -1)
+            {
+                // No tracked ID, add to unknown
+                if (TrackedObject.unknownInstanceChange.ContainsKey(localWaitingIndex))
+                {
+                    TrackedObject.unknownInstanceChange[localWaitingIndex] = instance;
+                }
+                else
+                {
+                    TrackedObject.unknownInstanceChange.Add(localWaitingIndex, instance);
+                }
+            }
+            else // We have tracked ID, we can process
+            {
+                // Only want to process if scene is different
+                if (instance != this.instance)
+                {
+                    // Manage dict
+                    // Remove from previous instance
+                    if (GameManager.objectsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances))
+                    {
+                        if (instances.TryGetValue(this.instance, out List<int> objects))
+                        {
+                            objects.Remove(trackedID);
+
+                            if (objects.Count == 0)
+                            {
+                                instances.Remove(this.instance);
+                            }
+                        }
+                        else
+                        {
+                            Mod.LogError("Tracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetInstance: from " + this.instance + " to " + instance + ", current instance missing from dict");
+                        }
+
+                        if (instances.Count == 0)
+                        {
+                            GameManager.objectsByInstanceByScene.Remove(scene);
+                        }
+                    }
+                    else
+                    {
+                        Mod.LogError("Tracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetInstance: from " + this.instance + " to " + instance + ", current scene "+this.scene+" missing from dict");
+                    }
+
+                    // Add to new instance
+                    if (GameManager.objectsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> currentInstances))
+                    {
+                        if (currentInstances.TryGetValue(instance, out List<int> objects))
+                        {
+                            objects.Add(trackedID);
+                        }
+                        else
+                        {
+                            currentInstances.Add(instance, new List<int>() { trackedID });
+                        }
+                    }
+                    else
+                    {
+                        Dictionary<int, List<int>> newInstances = new Dictionary<int, List<int>>();
+                        newInstances.Add(instance, new List<int>() { trackedID });
+                        GameManager.objectsByInstanceByScene.Add(scene, newInstances);
+                    }
+
+                    // Set instance
+                    this.instance = instance;
+                    
+                    // If we are not in this object's scene/instance, we want to get rid of its phys but not data
+                    if(instance != GameManager.instance)
+                    {
+                        if(physical == null)
+                        {
+                            awaitingInstantiation = false;
+                        }
+                        else
+                        {
+                            removeFromListOnDestroy = false;
+                            physical.sendDestroy = false;
+                            physical.dontGiveControl = true;
+                            TrackedObject[] childrenTrackedObjects = physical.GetComponentsInChildren<TrackedObject>();
+                            for (int i = 0; i < childrenTrackedObjects.Length; ++i)
+                            {
+                                if (childrenTrackedObjects[i] != null)
+                                {
+                                    childrenTrackedObjects[i].sendDestroy = false;
+                                    childrenTrackedObjects[i].data.removeFromListOnDestroy = false;
+                                    childrenTrackedObjects[i].dontGiveControl = true;
+                                }
+                            }
+
+                            physical.SecondaryDestroy();
+
+                            GameObject.Destroy(physical.gameObject);
+                        }
+                    }
+
+                    // Send if we want
+                    if (send)
+                    {
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.ObjectInstance(trackedID, instance);
+                        }
+                        else
+                        {
+                            ClientSend.ObjectInstance(trackedID, instance);
+                        }
+                    }
+                }
+            }
         }
     }
 }
