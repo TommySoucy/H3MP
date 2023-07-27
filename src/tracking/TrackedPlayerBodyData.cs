@@ -151,5 +151,17 @@ namespace H3MP.Tracking
             // and their objects' control was ditributed, or something went very wrong
             GameObject.Destroy(physical.gameObject);
         }
+
+        public static bool IsControlled(Transform root)
+        {
+            // This will only be called upong initial tracking of the body
+            // Implying we are inherently in control
+            return true;
+        }
+
+        public override bool IsControlled()
+        {
+            return controller == GameManager.ID;
+        }
     }
 }

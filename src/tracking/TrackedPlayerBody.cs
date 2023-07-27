@@ -101,7 +101,7 @@ namespace H3MP.Tracking
             // If this is our body, need to track scene change
             if(playerBodyData.controller == GameManager.ID)
             {
-                td
+                TODO:
             }
         }
 
@@ -110,8 +110,7 @@ namespace H3MP.Tracking
             // If this is our body, need to track instance change
             if (playerBodyData.controller == GameManager.ID)
             {
-                td
-                    // review how we bring items with us when we switch instance
+                TODO: // Do we want to handle this on SetInstance, or here in the specific tracked objects
             }
         }
 

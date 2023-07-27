@@ -1305,8 +1305,12 @@ namespace H3MP
                         TODO: // We currently bring anything we are actively interacting with. We could add a virtual method to tracked object
                         //       that would check if we want to bring the object with us. Playerbody will invariably be true as long as we are the controller
                         //       while other objects will check if they are actively being interacted with
-                        //       CONSIDER THE FACT THAT  APLAYER BODY WILL BE DESTROYED BEFORE WE ARRIVE IN THE NEW SCENE, MEANING THIS WOULD HAVE TO BE DONE UPON
+                        //       CONSIDER THE FACT THAT A PLAYER BODY WILL BE DESTROYED BEFORE WE ARRIVE IN THE NEW SCENE, MEANING THIS WOULD HAVE TO BE DONE UPON
                         //       LEAVING THE SCENE, NOT UPON ARRIVING IN THE NEW ONE
+                        //       ANY OBJECT WE WANT TO BRING WITH US MUST BE IN DONTDESTROYONLOAD, PLAYERBODIES ARE THERE INHERENTLY, BUT NOT NECESSARILY OTHER TYPES OF OBJECTS
+                        //       When switching instance, DontDestroyOnLoad is not necessary because we never actually load, but when switching scene, this will be necessary.
+                        //       We must drop anything in hands, secure them, unslot anything in OUR QB SLOTS (There can be others in the world) and secure those too
+                        //       When new scene is loaded, put them back where they were if hand/slot, not occupied
                         if (filteredObjects[i].IsControlled())
                         {
                             // Tell everyone this object is changing instance
@@ -1320,11 +1324,9 @@ namespace H3MP
                                 GameObject go = filteredObjects[i].physical.gameObject;
                                 bool hadNoParent = filteredObjects[i].parent == -1;
 
-                                // Destroy just the tracked script because we want to make a copy for ourselves
-                                DestroyImmediate(filteredObjects[i].physical);
+                                // Destroy the phys tracked script and any children because we want to make a copy for ourselves
+                                DestroyTrackedScripts(filteredObjects[i]);
 
-                                TODO: // This is flawed, idea is to only track most parent object, but what if we check here the most parent before having destroyed
-                                //       the children scripts, then none of the children get retracked, but theyre scripts will eventually be destroyed.
                                 // Only sync the top parent of items. The children will also get retracked as children
                                 if (hadNoParent)
                                 {
@@ -1335,7 +1337,7 @@ namespace H3MP
                             {
                                 // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
                                 // like we do now if we didn't do immediate because OnDestroy() gets called later
-                                // TODO: Check wich is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
+                                // TODO: Check which is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
                                 DestroyImmediate(filteredObjects[i].physical.gameObject);
                             }
                         }
@@ -1408,6 +1410,20 @@ namespace H3MP
 
             // Set max health based on setting
             WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
+        }
+
+        public static void DestroyTrackedScripts(TrackedObjectData trackedObjectData)
+        {
+            // Recurse through children first
+            if(trackedObjectData.children != null)
+            {
+                for (int i = 0; i < trackedObjectData.children.Count; ++i)
+                {
+                    DestroyTrackedScripts(trackedObjectData.children[i]);
+                }
+            }
+
+            DestroyImmediate(trackedObjectData.physical);
         }
 
         public static void ReassignSpectatorHost(int clientID, List<int> debounce)

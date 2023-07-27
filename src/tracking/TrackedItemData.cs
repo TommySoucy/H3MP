@@ -689,14 +689,22 @@ namespace H3MP.Tracking
             FVRPhysicalObject physObj = root.GetComponent<FVRPhysicalObject>();
             if (physObj != null)
             {
-                return physObj.m_hand != null || physObj.QuickbeltSlot != null;
+                bool inPlayerQBS = physObj.QuickbeltSlot != null && GM.CurrentPlayerBody != null 
+                                   && (GM.CurrentPlayerBody.QBSlots_Internal.Contains(physObj.QuickbeltSlot) 
+                                       || GM.CurrentPlayerBody.QBSlots_Added.Contains(physObj.QuickbeltSlot));
+
+                return physObj.m_hand != null || inPlayerQBS;
             }
             return false;
         }
 
         public override bool IsControlled()
         {
-            return physicalItem.physicalItem.m_hand != null || physicalItem.physicalItem.QuickbeltSlot != null;
+            bool inPlayerQBS = physicalItem.physicalItem.QuickbeltSlot != null && GM.CurrentPlayerBody != null
+                               && (GM.CurrentPlayerBody.QBSlots_Internal.Contains(physicalItem.physicalItem.QuickbeltSlot)
+                                   || GM.CurrentPlayerBody.QBSlots_Added.Contains(physicalItem.physicalItem.QuickbeltSlot));
+
+            return physicalItem.physicalItem.m_hand != null || inPlayerQBS;
         }
 
         private bool DataEqual()
