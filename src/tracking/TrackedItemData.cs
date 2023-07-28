@@ -152,7 +152,7 @@ namespace H3MP.Tracking
                 data.rotation = trackedItem.transform.rotation;
             }
             data.SetItemIdentifyingInfo();
-            data.underActiveControl = data.IsControlled();
+            data.underActiveControl = data.IsControlled(out int interactionID);
 
             data.CollectExternalData();
 
@@ -672,7 +672,7 @@ namespace H3MP.Tracking
             }
 
             previousActiveControl = underActiveControl;
-            underActiveControl = IsControlled();
+            underActiveControl = IsControlled(out int interactionID);
 
             // Note: UpdateData() must be done first in this expression, otherwise, if active/position/rotation is different,
             // it will return true before making the call
@@ -698,11 +698,21 @@ namespace H3MP.Tracking
             return false;
         }
 
-        public override bool IsControlled()
+        public override bool IsControlled(out int interactionID)
         {
             bool inPlayerQBS = physicalItem.physicalItem.QuickbeltSlot != null && GM.CurrentPlayerBody != null
                                && (GM.CurrentPlayerBody.QBSlots_Internal.Contains(physicalItem.physicalItem.QuickbeltSlot)
                                    || GM.CurrentPlayerBody.QBSlots_Added.Contains(physicalItem.physicalItem.QuickbeltSlot));
+
+            interactionID = 0;
+            if (physicalItem.physicalItem.m_hand != null)
+            {
+                interactionID = 1;
+            }
+            else if (inPlayerQBS)
+            {
+                interactionID = 2;
+            }
 
             return physicalItem.physicalItem.m_hand != null || inPlayerQBS;
         }

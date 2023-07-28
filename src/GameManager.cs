@@ -172,7 +172,8 @@ namespace H3MP
         /// Delegate for the OnInstanceLeft event
         /// </summary>
         /// <param name="instance">The instance we left</param>
-        public delegate void OnInstanceLeftDelegate(int instance);
+        /// <param name="destination">The destination instance</param>
+        public delegate void OnInstanceLeftDelegate(int instance, int destination);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -185,7 +186,8 @@ namespace H3MP
         /// Delegate for the OnInstanceJoined event
         /// </summary>
         /// <param name="instance">The instance we joined</param>
-        public delegate void OnInstanceJoinedDelegate(int instance);
+        /// <param name="source">The source instance we come from</param>
+        public delegate void OnInstanceJoinedDelegate(int instance, int source);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -198,7 +200,8 @@ namespace H3MP
         /// Delegate for the OnSceneLeft event
         /// </summary>
         /// <param name="scene">The scene that we left</param>
-        public delegate void OnSceneLeftDelegate(string scene);
+        /// <param name="destination">The destination scene</param>
+        public delegate void OnSceneLeftDelegate(string scene, string destination);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -211,7 +214,8 @@ namespace H3MP
         /// Delegate for the OnSceneJoined event
         /// </summary>
         /// <param name="scene">The scene that we joined</param>
-        public delegate void OnSceneJoinedDelegate(string scene);
+        /// <param name="source">The source scene we come from</param>
+        public delegate void OnSceneJoinedDelegate(string scene, string source);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -1165,7 +1169,7 @@ namespace H3MP
             // Called instance left event
             if(OnInstanceLeft != null)
             {
-                OnInstanceLeft(GameManager.instance);
+                OnInstanceLeft(GameManager.instance, instance);
             }
 
             if (TNHInstances.TryGetValue(GameManager.instance, out TNHInstance currentInstance))
@@ -1226,6 +1230,7 @@ namespace H3MP
             }
 
             // Set locally
+            int previousInstance = GameManager.instance;
             GameManager.instance = instance;
 
             // Update instance dicts
@@ -1245,7 +1250,7 @@ namespace H3MP
             // Called instance joined event
             if (OnInstanceJoined != null)
             {
-                OnInstanceJoined(instance);
+                OnInstanceJoined(instance, previousInstance);
             }
 
             if (TNHInstances.ContainsKey(instance))
@@ -1276,6 +1281,7 @@ namespace H3MP
             bool bringItems = !GameManager.playersByInstanceByScene.TryGetValue(sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene, out Dictionary<int, List<int>> ci) ||
                               !ci.TryGetValue(instance, out List<int> op) || op.Count == 0;
 
+            TODO: // Review: not bringing objects on instance change while scene loading is correct, but still need to change the instance in the data
             if (sceneLoading)
             {
                 controlOverride = bringItems;
@@ -1311,7 +1317,7 @@ namespace H3MP
                         //       When switching instance, DontDestroyOnLoad is not necessary because we never actually load, but when switching scene, this will be necessary.
                         //       We must drop anything in hands, secure them, unslot anything in OUR QB SLOTS (There can be others in the world) and secure those too
                         //       When new scene is loaded, put them back where they were if hand/slot, not occupied
-                        if (filteredObjects[i].IsControlled())
+                        if (filteredObjects[i].IsControlled(out int interactionID))
                         {
                             // Tell everyone this object is changing instance
                             // If it is leaving theirs and it is physical, they will destroy it on their side but keep data
@@ -1319,12 +1325,14 @@ namespace H3MP
                         }
                         else // Not being interacted with, just destroy on our side and give control
                         {
-                            if (bringItems)
+                            if (bringItems) 
                             {
+                                // Bring item, but also want to leave it there for people in the instance we just left
+                                // So destroy just the script, giving control to anyone in the old instance,
+                                // then retrack to make a new copy of it in the new instance
                                 GameObject go = filteredObjects[i].physical.gameObject;
                                 bool hadNoParent = filteredObjects[i].parent == -1;
 
-                                // Destroy the phys tracked script and any children because we want to make a copy for ourselves
                                 DestroyTrackedScripts(filteredObjects[i]);
 
                                 // Only sync the top parent of items. The children will also get retracked as children
@@ -1670,7 +1678,7 @@ namespace H3MP
                 // Raise event
                 if(OnSceneLeft != null)
                 {
-                    OnSceneLeft(sceneAtSceneLoadStart);
+                    OnSceneLeft(sceneAtSceneLoadStart, LoadLevelBeginPatch.loadingLevel);
                 }
             }
             else // Finished loading
@@ -1834,7 +1842,7 @@ namespace H3MP
                 // Raise event
                 if (OnSceneLeft != null)
                 {
-                    OnSceneLeft(scene);
+                    OnSceneLeft(scene, sceneAtSceneLoadStart);
                 }
             }
         }

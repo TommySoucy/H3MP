@@ -159,8 +159,9 @@ namespace H3MP.Tracking
             return true;
         }
 
-        public override bool IsControlled()
+        public override bool IsControlled(out int interactionID)
         {
+            interactionID = 3;
             return controller == GameManager.ID;
         }
     }

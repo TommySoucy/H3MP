@@ -66,8 +66,14 @@ namespace H3MP.Tracking
             return root.GetComponent<AutoMeater>().PO.m_hand != null;
         }
 
-        public override bool IsControlled()
+        public override bool IsControlled(out int interactionID)
         {
+            interactionID = 0;
+            if (physicalAutoMeater.physicalAutoMeater.PO.m_hand != null)
+            {
+                interactionID = 1;
+            }
+
             return physicalAutoMeater.physicalAutoMeater.PO.m_hand != null;
         }
 

@@ -14,8 +14,6 @@ namespace H3MP.Tracking
         public virtual void Start()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
-            GameManager.OnSceneJoined += OnSceneJoined;
-            GameManager.OnInstanceJoined += OnInstanceJoined;
 
             physicalPlayerBody.handsToFollow = new Transform[2];
             if (playerBodyData.controller == GameManager.ID)
@@ -96,31 +94,33 @@ namespace H3MP.Tracking
             }
         }
 
-        private void OnSceneJoined(string scene)
-        {
-            // If this is our body, need to track scene change
-            if(playerBodyData.controller == GameManager.ID)
-            {
-                TODO:
-            }
-        }
-
-        private void OnInstanceJoined(int instance)
-        {
-            // If this is our body, need to track instance change
-            if (playerBodyData.controller == GameManager.ID)
-            {
-                TODO: // Do we want to handle this on SetInstance, or here in the specific tracked objects
-            }
-        }
-
         protected override void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
-            GameManager.OnSceneJoined -= OnSceneJoined;
-            GameManager.OnInstanceJoined -= OnInstanceJoined;
 
             base.OnDestroy();
+        }
+
+        protected override void OnSceneLeft(string scene, string destination) 
+        {
+            // We want to bring our body with us across scenes no matter what
+            // In SP, this is handled by simply having bodies in DontDestroyOnLoad
+            // In MP, we need to update data and let the network know of the change
+            if(data.controller == GameManager.ID)
+            {
+                data.SetScene(destination, true);
+            }
+        }
+
+        protected override void OnInstanceLeft(int instance, int destination)
+        {
+            // We want to bring our body with us across instances no matter what
+            // In SP, this is handled by simply having bodies in DontDestroyOnLoad
+            // In MP, we need to update data and let the network know of the change
+            if (data.controller == GameManager.ID)
+            {
+                data.SetInstance(destination, true);
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static RootMotion.FinalIK.InteractionTrigger.Range;
 
 namespace H3MP.Tracking
 {
@@ -194,14 +195,17 @@ namespace H3MP.Tracking
             return false;
         }
 
-        public override bool IsControlled()
+        public override bool IsControlled(out int interactionID)
         {
+
+            interactionID = 0;
             if (physicalSosig.physicalSosig != null && physicalSosig.physicalSosig.Links != null)
             {
                 for(int i=0; i< physicalSosig.physicalSosig.Links.Count; ++i)
                 {
                     if(physicalSosig.physicalSosig.Links[i] != null && physicalSosig.physicalSosig.Links[i].O.m_hand != null)
                     {
+                        interactionID = 1;
                         return true;
                     }
                 }

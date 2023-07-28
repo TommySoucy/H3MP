@@ -16,6 +16,9 @@ namespace H3MP.Tracking
         public static float interpolationSpeed = 12f;
         public static bool interpolated = true;
 
+        public static Dictionary<TrackedItem, int> secured = new Dictionary<TrackedItem, int>();
+        public static List<GameObject> retrack = new List<GameObject>();
+
         // Unknown tracked ID queues
         public static Dictionary<uint, byte> unknownCrateHolding = new Dictionary<uint, byte>();
         public static Dictionary<SosigWeapon, KeyValuePair<TrackedSosigData, int>> unknownSosigInventoryObjects = new Dictionary<SosigWeapon, KeyValuePair<TrackedSosigData, int>>();
@@ -11526,6 +11529,62 @@ namespace H3MP.Tracking
             }
 
             base.OnTransformParentChanged();
+        }
+
+        protected override void OnSceneLeft(string scene, string destination)
+        {
+            TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;
+            data.ShouldBring(true, ref bring);
+
+            // We might want to bring an item with us across scenes
+            if (data.IsControlled(out int interactionID))
+            {
+                if ((int)bring > 0)
+                {
+                    // Secure parent object
+                    if(data.parent == -1)
+                    {
+                        EnsureUncontrolled();
+                        transform.parent = null;
+                        DontDestroyOnLoad(gameObject);
+                        secured.Add(this, interactionID);
+                    }
+
+                    data.SetScene(destination, true);
+                }
+                // else, dont want to bring, destruction handled by scene change so no need to do it here
+            }
+            else if(bring == TrackedObjectData.ObjectBringType.Yes) // Not actively controlled, but want to secure object to make our own copy in the new scene
+            {
+                ++GameManager.giveControlOfDestroyed;
+                if(data.parent == -1)
+                {
+                    transform.parent = null;
+                    retrack.Add(gameObject);
+                    DontDestroyOnLoad(gameObject);
+                }
+                GameManager.DestroyTrackedScripts(data);
+                --GameManager.giveControlOfDestroyed;
+            }
+        }
+
+        protected override void OnSceneJoined(string scene, string source)
+        {
+            //SceneManager.MoveGameObjectToScene(TargetGo, SceneManager.GetActiveScene());
+            
+            TODO: // Unsecure items here or when player body is set? Should be when we have both: Done loading and have player body
+        }
+
+        protected override void OnInstanceLeft(int instance, int destination)
+        {
+            TODO: // Consider that we can change instance while loading into new scene, so need to recheck if we want to make a copy for the items we did that for in OnSceneLeft
+            // We want to bring our body with us across instances no matter what
+            // In SP, this is handled by simply having bodies in DontDestroyOnLoad
+            // In MP, we need to update data and let the network know of the change
+            if (data.controller == GameManager.ID)
+            {
+                data.SetInstance(destination, true);
+            }
         }
     }
 }

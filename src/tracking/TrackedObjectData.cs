@@ -54,6 +54,20 @@ namespace H3MP.Tracking
         public bool active; // Whether the object is active
         private bool previousActive;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnBringRequest event
+        /// </summary>
+        /// <param name="trackedObjectData">The TrackedObjectData we must make the decision for</param>
+        /// <param name="bring">Custom override for whether we want to bring the item with us or not</param>
+        public delegate void OnBringRequestDelegate(TrackedObjectData trackedObjectData, ref ObjectBringType bring);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we check whether we want to bring an item across scene/instance
+        /// </summary>
+        public static event OnBringRequestDelegate OnBringRequest;
+
         public TrackedObjectData()
         {
 
@@ -283,8 +297,9 @@ namespace H3MP.Tracking
             return true;
         }
 
-        public virtual bool IsControlled()
+        public virtual bool IsControlled(out int interactionID)
         {
+            interactionID = 0;
             return false;
         }
 
@@ -986,6 +1001,29 @@ namespace H3MP.Tracking
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Decides whether to bring certain objects across scene/instance depending on context
+        /// </summary>
+        /// <param name="scene">Whether we want to bring across scene or instance</param>
+        /// <param name="bring">Override for whether to bring or not</param>
+        public virtual void ShouldBring(bool scene, ref ObjectBringType bring)
+        {
+            TODO: // Review: We probably should always want to bring everything with us when changing instance if there are no other players in the new scene/instance
+            //       So should set a GameManager flag that we calculate when we change instance before we raise the event so we can just return that instead of 
+            //       rechecking for players every item
+            if(OnBringRequest != null)
+            {
+                OnBringRequest(this, ref bring);
+            }
+        }
+
+        public enum ObjectBringType
+        {
+            No = 0,
+            OnlyInteracted = 1,
+            Yes = 2
         }
     }
 }
