@@ -50,6 +50,7 @@ namespace H3MP
         public static List<int> playersAtLoadStart;
         public static Dictionary<string, Dictionary<int, List<int>>> playersByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
         public static Dictionary<string, Dictionary<int, List<int>>> objectsByInstanceByScene = new Dictionary<string, Dictionary<int, List<int>>>();
+        public static List<GameObject> retrack = new List<GameObject>();
         public static bool spectatorHost;
         public static List<int> spectatorHosts = new List<int>(); // List of all spectator hosts, not necessarily available 
         public static int controlledSpectatorHost = -1;

@@ -5,6 +5,7 @@ using H3MP.Scripts;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace H3MP.Tracking
 {
@@ -16,8 +17,9 @@ namespace H3MP.Tracking
         public static float interpolationSpeed = 12f;
         public static bool interpolated = true;
 
-        public static Dictionary<TrackedItem, int> secured = new Dictionary<TrackedItem, int>();
-        public static List<GameObject> retrack = new List<GameObject>();
+        // Scene/instance change
+        int securedCode = -1; // -1 means it was not secured
+        //public static Dictionary<TrackedItem, int> secured = new Dictionary<TrackedItem, int>();
 
         // Unknown tracked ID queues
         public static Dictionary<uint, byte> unknownCrateHolding = new Dictionary<uint, byte>();
@@ -113,6 +115,8 @@ namespace H3MP.Tracking
 
         public override void Awake()
         {
+            GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
+
             InitItemType();
 
             base.Awake();
@@ -11467,6 +11471,8 @@ namespace H3MP.Tracking
 
         protected override void OnDestroy()
         {
+            GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
+
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
             {
@@ -11531,6 +11537,16 @@ namespace H3MP.Tracking
             base.OnTransformParentChanged();
         }
 
+        private void OnPlayerBodyInit(FVRPlayerBody playerBody)
+        {
+            // Item may have wanted to unsecure but we arrived in the scene before CurrentPlayerBody was set
+            // so we must now do the check to unsecure
+            if (securedCode != -1 && !GameManager.sceneLoading)
+            {
+                Unsecure();
+            }
+        }
+
         protected override void OnSceneLeft(string scene, string destination)
         {
             TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;
@@ -11547,7 +11563,7 @@ namespace H3MP.Tracking
                         EnsureUncontrolled();
                         transform.parent = null;
                         DontDestroyOnLoad(gameObject);
-                        secured.Add(this, interactionID);
+                        securedCode = interactionID;
                     }
 
                     data.SetScene(destination, true);
@@ -11560,7 +11576,7 @@ namespace H3MP.Tracking
                 if(data.parent == -1)
                 {
                     transform.parent = null;
-                    retrack.Add(gameObject);
+                    GameManager.retrack.Add(gameObject);
                     DontDestroyOnLoad(gameObject);
                 }
                 GameManager.DestroyTrackedScripts(data);
@@ -11570,9 +11586,41 @@ namespace H3MP.Tracking
 
         protected override void OnSceneJoined(string scene, string source)
         {
-            //SceneManager.MoveGameObjectToScene(TargetGo, SceneManager.GetActiveScene());
-            
-            TODO: // Unsecure items here or when player body is set? Should be when we have both: Done loading and have player body
+            // Since items can be secured with a certain interaction that require the CurrentPlayerBody to be set, we need to wait for it
+            if(securedCode != -1 && GM.CurrentPlayerBody != null)
+            {
+                Unsecure();
+            }
+        }
+
+        private void Unsecure()
+        {
+            SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
+
+            if (securedCode == 1) // Left hand
+            {
+                GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().ForceSetInteractable(physicalItem);
+            }
+            else if (securedCode == 2) // Right hand
+            {
+                GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().ForceSetInteractable(physicalItem);
+            }
+            else if (securedCode >= 3 && securedCode <= 258) // Internal QBS, index = securedCode - 3
+            {
+                if (GM.CurrentPlayerBody.QBSlots_Internal.Count > securedCode - 3)
+                {
+                    physicalItem.SetQuickBeltSlot(GM.CurrentPlayerBody.QBSlots_Internal[securedCode - 3]);
+                }
+            }
+            else if (securedCode >= 259 && securedCode <= 514) // Added QBS, index = securedCode - 259
+            {
+                if (GM.CurrentPlayerBody.QBSlots_Added.Count > securedCode - 259)
+                {
+                    physicalItem.SetQuickBeltSlot(GM.CurrentPlayerBody.QBSlots_Added[securedCode - 259]);
+                }
+            }
+
+            securedCode = -1;
         }
 
         protected override void OnInstanceLeft(int instance, int destination)

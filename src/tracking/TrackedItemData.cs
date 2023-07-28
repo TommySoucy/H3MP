@@ -700,18 +700,42 @@ namespace H3MP.Tracking
 
         public override bool IsControlled(out int interactionID)
         {
-            bool inPlayerQBS = physicalItem.physicalItem.QuickbeltSlot != null && GM.CurrentPlayerBody != null
-                               && (GM.CurrentPlayerBody.QBSlots_Internal.Contains(physicalItem.physicalItem.QuickbeltSlot)
-                                   || GM.CurrentPlayerBody.QBSlots_Added.Contains(physicalItem.physicalItem.QuickbeltSlot));
+            interactionID = -1;
+            bool inQBS = physicalItem.physicalItem.QuickbeltSlot != null && GM.CurrentPlayerBody != null;
 
-            interactionID = 0;
-            if (physicalItem.physicalItem.m_hand != null)
+            bool inPlayerQBS = false;
+            if (inQBS)
             {
-                interactionID = 1;
+                for(int i=0; i< GM.CurrentPlayerBody.QBSlots_Internal.Count; ++i)
+                {
+                    if (GM.CurrentPlayerBody.QBSlots_Internal[i] == physicalItem.physicalItem.QuickbeltSlot)
+                    {
+                        interactionID = i + 3; // Internal QBS 3-258
+                        inPlayerQBS = true;
+                        break;
+                    }
+                }
+                for(int i=0; i< GM.CurrentPlayerBody.QBSlots_Added.Count; ++i)
+                {
+                    if (GM.CurrentPlayerBody.QBSlots_Added[i] == physicalItem.physicalItem.QuickbeltSlot)
+                    {
+                        interactionID = i + 259; // Added QBS 259-514
+                        inPlayerQBS = true;
+                        break;
+                    }
+                }
             }
-            else if (inPlayerQBS)
+
+            if (!inPlayerQBS && physicalItem.physicalItem.m_hand != null)
             {
-                interactionID = 2;
+                if (physicalItem.physicalItem.m_hand.IsThisTheRightHand)
+                {
+                    interactionID = 2; // Right hand
+                }
+                else
+                {
+                    interactionID = 1; // Left hand
+                }
             }
 
             return physicalItem.physicalItem.m_hand != null || inPlayerQBS;
