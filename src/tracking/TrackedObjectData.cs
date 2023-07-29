@@ -59,8 +59,9 @@ namespace H3MP.Tracking
         /// Delegate for the OnBringRequest event
         /// </summary>
         /// <param name="trackedObjectData">The TrackedObjectData we must make the decision for</param>
+        /// <param name="scene">Whether we want to bring across scene or instance</param>
         /// <param name="bring">Custom override for whether we want to bring the item with us or not</param>
-        public delegate void OnBringRequestDelegate(TrackedObjectData trackedObjectData, ref ObjectBringType bring);
+        public delegate void OnBringRequestDelegate(TrackedObjectData trackedObjectData, bool scene, ref ObjectBringType bring);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -1020,18 +1021,27 @@ namespace H3MP.Tracking
 
         /// <summary>
         /// Decides whether to bring certain objects across scene/instance depending on context
+        /// NOTE: This will be called for every tracked object upon changing scene/instance
+        ///       You should consider performance cost of how you check whether this object should be brought
+        ///       For example, as we do in the base ShouldBring implementation, you might want to bring an object across instances if there are no other players in the 
+        ///       destination instance. It would be unoptimal to find the scene/instance in the players dictionary
+        ///       for every object. You should instead store how many players there are at the destination once when you arrive in the instance
+        ///       using GameManager's.OnInstanceJoined and then used the stored value in here
+        /// NOTE: For H3MP based tracked types, for scene changes, the referenced Bring value will have a default of No.
+        ///       For instance changes, ShouldBring will by default set the value to Yes if there are no other players in the destination scene/instance
         /// </summary>
         /// <param name="scene">Whether we want to bring across scene or instance</param>
         /// <param name="bring">Override for whether to bring or not</param>
         public virtual void ShouldBring(bool scene, ref ObjectBringType bring)
         {
-            TODO: // Review: We probably should always want to bring everything with us when changing instance if there are no other players in the new scene/instance
-            //       So should set a GameManager flag that we calculate when we change instance before we raise the event so we can just return that instead of 
-            //       rechecking for players every item
-            TODO0: // We might want to pass the scene bool in the event as well
+            if (!scene && GameManager.instanceBringItems)
+            {
+                bring = ObjectBringType.Yes;
+            }
+
             if(OnBringRequest != null)
             {
-                OnBringRequest(this, ref bring);
+                OnBringRequest(this, scene, ref bring);
             }
         }
 

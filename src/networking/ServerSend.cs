@@ -4250,5 +4250,23 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void ObjectInstance(int trackedID, int instance, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.objectInstance))
+            {
+                packet.Write(trackedID);
+                packet.Write(instance);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

@@ -4329,5 +4329,16 @@ namespace H3MP.Networking
                 Client.objects[trackedID].SetScene(scene, false);
             }
         }
+
+        public static void ObjectInstance(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int instance = packet.ReadInt();
+
+            if (Client.objects[trackedID] != null)
+            {
+                Client.objects[trackedID].SetInstance(instance, false);
+            }
+        }
     }
 }

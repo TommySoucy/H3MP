@@ -4834,5 +4834,18 @@ namespace H3MP.Networking
                 ServerSend.ObjectScene(trackedID, scene, clientID);
             }
         }
+
+        public static void ObjectInstance(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int instance = packet.ReadInt();
+
+            if (Server.objects[trackedID] != null)
+            {
+                Server.objects[trackedID].SetInstance(instance, false);
+
+                ServerSend.ObjectInstance(trackedID, instance, clientID);
+            }
+        }
     }
 }

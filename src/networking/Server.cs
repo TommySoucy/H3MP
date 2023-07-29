@@ -488,6 +488,7 @@ namespace H3MP.Networking
                 ServerHandle.MTUTest,
                 ServerHandle.IDConfirm,
                 ServerHandle.ObjectScene,
+                ServerHandle.ObjectInstance,
             };
 
             objects = new TrackedObjectData[100];

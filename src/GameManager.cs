@@ -56,6 +56,7 @@ namespace H3MP
         public static int controlledSpectatorHost = -1;
         public static int spectatorHostControlledBy = -1;
         public static bool resetSpectatorHost;
+        public static bool instanceBringItems;
         public static long ping = -1;
 
         /// <summary>
@@ -843,8 +844,7 @@ namespace H3MP
 
         public static void SetPlayerPrefab(string prefabID)
         {
-            TODO: // Must make sure that a tracked player model can change its scene instance
-            TODOo: // Must handle case in which we do not have another player's body installed, so we have to instantiate a Default body instead
+            TODO: // Must handle case in which we do not have another player's body installed, so we have to instantiate a Default body instead
             // Note: If we are here, it is implied that the new prefabID is different than the current one
             string previous = playerPrefabID;
             if (playerPrefabs.ContainsKey(prefabID))
@@ -962,7 +962,6 @@ namespace H3MP
 
         public static void SyncTrackedObjects(Transform root, bool controlEverything, TrackedObjectData parent)
         {
-            TODO: // When tracking an object with children that are already tracked, make sure the children get added to the children list of the parent
             // Return right away if haven't received connect sync yet
             if (!ThreadManager.host && !Client.singleton.gotConnectSync)
             {
@@ -1016,10 +1015,9 @@ namespace H3MP
                         Destroy(root.gameObject);
                     }
                 }
-                else
+                else if (parent != null) // Already tracked but a parent was passed, add to parent's children list
                 {
-                    // It is already tracked, this is possible of we received new object from server before we sync
-                    return;
+                    parent.children.Add(currentTrackedObject.data);
                 }
             }
             else
@@ -1248,6 +1246,9 @@ namespace H3MP
                 ++activeInstances[instance];
             }
 
+            instanceBringItems = !GameManager.playersByInstanceByScene.TryGetValue(sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene, out Dictionary<int, List<int>> ci)
+                                 || !ci.TryGetValue(instance, out List<int> op) || op.Count == 0;
+
             // Called instance joined event
             if (OnInstanceJoined != null)
             {
@@ -1279,13 +1280,10 @@ namespace H3MP
 
             // If we switch instance while loading a new scene, we will want to update control override
             // because when we started loading the scene, we didn't necessarily know in which instance we would end up
-            bool bringItems = !GameManager.playersByInstanceByScene.TryGetValue(sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene, out Dictionary<int, List<int>> ci) ||
-                              !ci.TryGetValue(instance, out List<int> op) || op.Count == 0;
-
             if (sceneLoading)
             {
-                controlOverride = bringItems;
-                firstPlayerInSceneInstance = bringItems;
+                controlOverride = instanceBringItems;
+                firstPlayerInSceneInstance = instanceBringItems;
             }
 
             // Send update to other clients
