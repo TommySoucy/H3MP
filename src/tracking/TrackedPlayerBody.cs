@@ -23,7 +23,7 @@ namespace H3MP.Tracking
                     physicalPlayerBody.headToFollow = GM.CurrentPlayerBody.Head;
                     physicalPlayerBody.handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
                     physicalPlayerBody.handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
-                    if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                    if (physicalPlayerBody.headDisplayMode != PlayerBody.HeadDisplayMode.Physical)
                     {
                         physicalPlayerBody.SetHeadVisible(false);
                     }
@@ -42,7 +42,7 @@ namespace H3MP.Tracking
                 physicalPlayerBody.headToFollow = playerManager.head;
                 physicalPlayerBody.handsToFollow[0] = playerManager.leftHand;
                 physicalPlayerBody.handsToFollow[1] = playerManager.rightHand;
-                if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                if (physicalPlayerBody.headDisplayMode != PlayerBody.HeadDisplayMode.Physical)
                 {
                     physicalPlayerBody.SetHeadVisible(true);
                 }
@@ -71,7 +71,7 @@ namespace H3MP.Tracking
                 physicalPlayerBody.headToFollow = playerBody.Head;
                 physicalPlayerBody.handsToFollow[0] = playerBody.LeftHand;
                 physicalPlayerBody.handsToFollow[1] = playerBody.RightHand;
-                if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                if (physicalPlayerBody.headDisplayMode != PlayerBody.HeadDisplayMode.Physical)
                 {
                     physicalPlayerBody.SetHeadVisible(false);
                 }
@@ -92,7 +92,7 @@ namespace H3MP.Tracking
                     if (GM.CurrentPlayerBody != null)
                     {
                         physicalPlayerBody.headToFollow = GM.CurrentPlayerBody.Head;
-                        if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                        if (physicalPlayerBody.headDisplayMode != PlayerBody.HeadDisplayMode.Physical)
                         {
                             physicalPlayerBody.SetHeadVisible(false);
                         }
@@ -101,7 +101,7 @@ namespace H3MP.Tracking
                 else
                 {
                     physicalPlayerBody.headToFollow = GameManager.players[playerBodyData.controller].head;
-                    if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                    if (physicalPlayerBody.headDisplayMode != PlayerBody.HeadDisplayMode.Physical)
                     {
                         physicalPlayerBody.SetHeadVisible(true);
                     }
