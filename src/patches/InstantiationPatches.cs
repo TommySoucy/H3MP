@@ -104,7 +104,7 @@ namespace H3MP.Patches
         static bool track = false;
         static int incrementedSkip = 0;
 
-        static void Prefix(ref FVRFireArmChamber __instance, ref FVRFireArmRound ___m_round, bool ___SuppressCaselessDeletion, bool ForceCaseLessEject)
+        static void Prefix(ref FVRFireArmChamber __instance, ref FVRFireArmRound ___m_round, bool ForceCaseLessEject)
         {
             // Skip if not connected
             if (Mod.managerObject == null)
@@ -115,7 +115,7 @@ namespace H3MP.Patches
             incrementedSkip = 0;
 
             // Check if a round would be ejected
-            if (___m_round != null && (!___m_round.IsCaseless || ForceCaseLessEject || ___SuppressCaselessDeletion))
+            if (___m_round != null && (!___m_round.IsCaseless || ForceCaseLessEject || __instance.SuppressCaselessDeletion))
             {
                 if (__instance.IsSpent)
                 {

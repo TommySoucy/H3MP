@@ -2041,7 +2041,7 @@ namespace H3MP.Patches
             {
                 if (ThreadManager.host)
                 {
-                    if (trackedSosig.data.controller == 0)
+                    if (trackedSosig.data.controller == GameManager.ID)
                     {
                         return true;
                     }
@@ -2055,36 +2055,20 @@ namespace H3MP.Patches
                                 {
                                     if (__instance.L.m_wearables[j] == __instance)
                                     {
-                                        ServerSend.SosigWearableDamage(trackedSosig.sosigData, i, j, d);
+                                        if (ThreadManager.host)
+                                        {
+                                            ServerSend.SosigWearableDamage(trackedSosig.sosigData, i, j, d);
+                                        }
+                                        else
+                                        {
+                                            ClientSend.SosigWearableDamage(trackedSosig.data.trackedID, i, j, d);
+                                        }
                                         return false;
                                     }
                                 }
 
                                 break;
                             }
-                        }
-                    }
-                }
-                else if (trackedSosig.data.controller == Client.singleton.ID)
-                {
-                    return true;
-                }
-                else
-                {
-                    for (int i = 0; i < __instance.S.Links.Count; ++i)
-                    {
-                        if (__instance.S.Links[i] == __instance.L)
-                        {
-                            for (int j = 0; j < __instance.L.m_wearables.Count; ++j)
-                            {
-                                if (__instance.L.m_wearables[j] == __instance)
-                                {
-                                    ClientSend.SosigWearableDamage(trackedSosig.data.trackedID, i, j, d);
-                                    return false;
-                                }
-                            }
-
-                            break;
                         }
                     }
                 }
@@ -2097,16 +2081,13 @@ namespace H3MP.Patches
             --SosigLinkDamagePatch.skip;
 
             // If in control of the damaged sosig link, we want to send the damage results to other clients
-            if (trackedSosig != null)
+            if (trackedSosig != null && trackedSosig.data.controller == GameManager.ID)
             {
                 if (ThreadManager.host)
                 {
-                    if (trackedSosig.data.controller == 0)
-                    {
-                        ServerSend.SosigDamageData(trackedSosig);
-                    }
+                    ServerSend.SosigDamageData(trackedSosig);
                 }
-                else if (trackedSosig.data.controller == Client.singleton.ID)
+                else
                 {
                     ClientSend.SosigDamageData(trackedSosig);
                 }

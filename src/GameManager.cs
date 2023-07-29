@@ -844,7 +844,6 @@ namespace H3MP
 
         public static void SetPlayerPrefab(string prefabID)
         {
-            TODO: // Must handle case in which we do not have another player's body installed, so we have to instantiate a Default body instead
             // Note: If we are here, it is implied that the new prefabID is different than the current one
             string previous = playerPrefabID;
             if (playerPrefabs.ContainsKey(prefabID))
