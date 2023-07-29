@@ -167,7 +167,7 @@ namespace H3MP.Patches
             {
                 track = false;
 
-                GameManager.SyncTrackedObjects(__result.transform, true, null, GameManager.scene);
+                GameManager.SyncTrackedObjects(__result.transform, true, null);
             }
         }
     }
@@ -207,7 +207,7 @@ namespace H3MP.Patches
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
-                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null, GameManager.scene);
+                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null);
             }
         }
     }
@@ -284,7 +284,7 @@ namespace H3MP.Patches
             if (track)
             {
                 track = false;
-                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, parentData, GameManager.scene);
+                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, parentData);
             }
         }
     }
@@ -323,7 +323,7 @@ namespace H3MP.Patches
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
-                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null, GameManager.scene);
+                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null);
             }
         }
     }
@@ -401,7 +401,7 @@ namespace H3MP.Patches
             if (track)
             {
                 track = false;
-                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, parentData, GameManager.scene);
+                GameManager.SyncTrackedObjects((__result as GameObject).transform, true, parentData);
             }
         }
     }
@@ -574,7 +574,7 @@ namespace H3MP.Patches
             }
 
             // Try syncing
-            GameManager.SyncTrackedObjects(__instance.transform, true, null, GameManager.scene);
+            GameManager.SyncTrackedObjects(__instance.transform, true, null);
         }
     }
 

@@ -956,11 +956,11 @@ namespace H3MP
             GameObject[] roots = scene.GetRootGameObjects();
             foreach(GameObject root in roots)
             {
-                SyncTrackedObjects(root.transform, init ? inControl : controlOverride, null, GameManager.scene);
+                SyncTrackedObjects(root.transform, init ? inControl : controlOverride, null);
             }
         }
 
-        public static void SyncTrackedObjects(Transform root, bool controlEverything, TrackedObjectData parent, string scene)
+        public static void SyncTrackedObjects(Transform root, bool controlEverything, TrackedObjectData parent)
         {
             TODO: // When tracking an object with children that are already tracked, make sure the children get added to the children list of the parent
             // Return right away if haven't received connect sync yet
@@ -1007,7 +1007,7 @@ namespace H3MP
 
                             foreach (Transform child in root)
                             {
-                                SyncTrackedObjects(child, controlEverything, trackedObject.data, scene);
+                                SyncTrackedObjects(child, controlEverything, trackedObject.data);
                             }
                         }
                     }
@@ -1026,7 +1026,7 @@ namespace H3MP
             {
                 foreach (Transform child in root)
                 {
-                    SyncTrackedObjects(child, controlEverything, parent, scene);
+                    SyncTrackedObjects(child, controlEverything, parent);
                 }
             }
         }
@@ -1282,78 +1282,10 @@ namespace H3MP
             bool bringItems = !GameManager.playersByInstanceByScene.TryGetValue(sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene, out Dictionary<int, List<int>> ci) ||
                               !ci.TryGetValue(instance, out List<int> op) || op.Count == 0;
 
-            TODO: // Review: not bringing objects on instance change while scene loading is correct, but still need to change the instance in the data
             if (sceneLoading)
             {
                 controlOverride = bringItems;
                 firstPlayerInSceneInstance = bringItems;
-            }
-            else // Scene not currently loading, we don't want to manage items if we are loading into a new scene so only do it in this case
-            {
-                // Item we are interacting with: Send a destruction order to other clients but don't destroy it on our side, since we want to move with these to new instance
-                // Item we do not control: Destroy, giveControlOfDestroyed = true will ensure destruction does not get sent
-                // Item we control: Destroy, giveControlOfDestroyed = true will ensure item's control is passed on if necessary
-                ++giveControlOfDestroyed;
-
-                TrackedObjectData[] arrToUse = null;
-                if (ThreadManager.host)
-                {
-                    arrToUse = Server.objects;
-                }
-                else
-                {
-                    arrToUse = Client.objects;
-                }
-                List<TrackedObjectData> filteredObjects = new List<TrackedObjectData>();
-                for (int i = arrToUse.Length - 1; i >= 0; --i)
-                {
-                    if (arrToUse[i] != null && arrToUse[i].physical != null)
-                    {
-                        TODO: // We currently bring anything we are actively interacting with. We could add a virtual method to tracked object
-                        //       that would check if we want to bring the object with us. Playerbody will invariably be true as long as we are the controller
-                        //       while other objects will check if they are actively being interacted with
-                        //       CONSIDER THE FACT THAT A PLAYER BODY WILL BE DESTROYED BEFORE WE ARRIVE IN THE NEW SCENE, MEANING THIS WOULD HAVE TO BE DONE UPON
-                        //       LEAVING THE SCENE, NOT UPON ARRIVING IN THE NEW ONE
-                        //       ANY OBJECT WE WANT TO BRING WITH US MUST BE IN DONTDESTROYONLOAD, PLAYERBODIES ARE THERE INHERENTLY, BUT NOT NECESSARILY OTHER TYPES OF OBJECTS
-                        //       When switching instance, DontDestroyOnLoad is not necessary because we never actually load, but when switching scene, this will be necessary.
-                        //       We must drop anything in hands, secure them, unslot anything in OUR QB SLOTS (There can be others in the world) and secure those too
-                        //       When new scene is loaded, put them back where they were if hand/slot, not occupied
-                        if (filteredObjects[i].IsControlled(out int interactionID))
-                        {
-                            // Tell everyone this object is changing instance
-                            // If it is leaving theirs and it is physical, they will destroy it on their side but keep data
-                            filteredObjects[i].SetInstance(instance, true);
-                        }
-                        else // Not being interacted with, just destroy on our side and give control
-                        {
-                            if (bringItems) 
-                            {
-                                // Bring item, but also want to leave it there for people in the instance we just left
-                                // So destroy just the script, giving control to anyone in the old instance,
-                                // then retrack to make a new copy of it in the new instance
-                                GameObject go = filteredObjects[i].physical.gameObject;
-                                bool hadNoParent = filteredObjects[i].parent == -1;
-
-                                DestroyTrackedScripts(filteredObjects[i]);
-
-                                // Only sync the top parent of items. The children will also get retracked as children
-                                if (hadNoParent)
-                                {
-                                    SyncTrackedObjects(go.transform, true, null, scene);
-                                }
-                            }
-                            else // Destroy entire object
-                            {
-                                // Uses Immediate here because we need to giveControlOfDestroyed but we wouldn't be able to just wrap it
-                                // like we do now if we didn't do immediate because OnDestroy() gets called later
-                                // TODO: Check which is better, using immediate, or having an item specific giveControlOnDestroy that we can set for each individual item we destroy
-                                DestroyImmediate(filteredObjects[i].physical.gameObject);
-                            }
-                        }
-                    }
-                }
-
-                --giveControlOfDestroyed;
             }
 
             // Send update to other clients
@@ -1432,7 +1364,10 @@ namespace H3MP
                 }
             }
 
-            DestroyImmediate(trackedObjectData.physical);
+            if (trackedObjectData.physical != null)
+            {
+                DestroyImmediate(trackedObjectData.physical);
+            }
         }
 
         public static void ReassignSpectatorHost(int clientID, List<int> debounce)
@@ -1841,10 +1776,20 @@ namespace H3MP
                 }
 
                 // Raise event
-                if (OnSceneLeft != null)
+                if (OnSceneJoined != null)
                 {
-                    OnSceneLeft(scene, sceneAtSceneLoadStart);
+                    OnSceneJoined(scene, sceneAtSceneLoadStart);
                 }
+
+                // Process list of objects we want to retrack
+                for(int i=0; i < retrack.Count; ++i)
+                {
+                    if(retrack[i] != null)
+                    {
+                        SyncTrackedObjects(retrack[i].transform, true, null);
+                    }
+                }
+                retrack.Clear();
             }
         }
 

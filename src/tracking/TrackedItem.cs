@@ -11570,18 +11570,23 @@ namespace H3MP.Tracking
                 }
                 // else, dont want to bring, destruction handled by scene change so no need to do it here
             }
-            else if(bring == TrackedObjectData.ObjectBringType.Yes) // Not actively controlled, but want to secure object to make our own copy in the new scene
-            {
-                ++GameManager.giveControlOfDestroyed;
-                if(data.parent == -1)
-                {
-                    transform.parent = null;
-                    GameManager.retrack.Add(gameObject);
-                    DontDestroyOnLoad(gameObject);
-                }
-                GameManager.DestroyTrackedScripts(data);
-                --GameManager.giveControlOfDestroyed;
-            }
+
+            // NOTE: Don't want to do the following, because when we change scene, we don't want to bring along objects that
+            //       are just loose in the world. This is unlike an instance change, where we will want to, because despite the switch, scene remains the same
+            //       so loose objects are going to be at the same pos/rot as they were before
+
+            //else if(bring == TrackedObjectData.ObjectBringType.Yes) // Not actively controlled, but want to secure object to make our own copy in the new scene
+            //{
+            //    ++GameManager.giveControlOfDestroyed;
+            //    if(data.parent == -1)
+            //    {
+            //        transform.parent = null;
+            //        GameManager.retrack.Add(gameObject);
+            //        DontDestroyOnLoad(gameObject);
+            //    }
+            //    GameManager.DestroyTrackedScripts(data);
+            //    --GameManager.giveControlOfDestroyed;
+            //}
         }
 
         protected override void OnSceneJoined(string scene, string source)
@@ -11623,15 +11628,62 @@ namespace H3MP.Tracking
             securedCode = -1;
         }
 
-        protected override void OnInstanceLeft(int instance, int destination)
+        protected override void OnInstanceJoined(int instance, int source)
         {
-            TODO: // Consider that we can change instance while loading into new scene, so need to recheck if we want to make a copy for the items we did that for in OnSceneLeft
-            // We want to bring our body with us across instances no matter what
-            // In SP, this is handled by simply having bodies in DontDestroyOnLoad
-            // In MP, we need to update data and let the network know of the change
-            if (data.controller == GameManager.ID)
+            // An instance switch could happen during loading, at which point we want to change instance of wtv objects
+            // we decided to bring along with us during scene change
+            // Note: The new instancep rocessing is done in Joined() because if we put it in Left() and then data.SetInstance(instance),
+            //       the object would get destroyed because the new instance is not our current instance
+            if (GameManager.sceneLoading)
             {
-                data.SetInstance(destination, true);
+                if(securedCode != -1)
+                {
+                    data.SetInstance(instance, true);
+                }
+            }
+            else // Not in scene loading process, we can process the object ourselves
+            {
+                TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;
+                data.ShouldBring(false, ref bring);
+
+                ++GameManager.giveControlOfDestroyed;
+
+                if (bring == TrackedObjectData.ObjectBringType.Yes)
+                {
+                    // Want to bring everything with us
+                    // What we are interacting with, we will bring with us completely, destroying it on remote sides
+                    // Whet we do not interact with, we will make a copy of in the new instance
+                    if(data.IsControlled(out int interactionID))
+                    {
+                        data.SetInstance(instance, true);
+                    }
+                    else // Not interacting with
+                    {
+                        // Bring item, but also want to leave it there for people in the instance we just left
+                        // So destroy just the script, giving control to anyone in the old instance,
+                        // then retrack to make a new copy of it in the new instance
+                        bool hadNoParent = data.parent == -1;
+
+                        // Destroy all physical tracked scripts in the hierarchy recursively
+                        GameManager.DestroyTrackedScripts(data);
+
+                        // Only sync the top parent of items. The children will also get retracked as children
+                        if (hadNoParent)
+                        {
+                            GameManager.SyncTrackedObjects(transform, true, null);
+                        }
+                    }
+                }
+                else if(bring == TrackedObjectData.ObjectBringType.OnlyInteracted && data.IsControlled(out int interactionID))
+                {
+                    data.SetInstance(instance, true);
+                }
+                else // Don't want to bring, destroy
+                {
+                    DestroyImmediate(gameObject);
+                }
+
+                --GameManager.giveControlOfDestroyed;
             }
         }
     }

@@ -2899,7 +2899,7 @@ namespace H3MP.Patches
             Mod.LogInfo("Tracking "+ shards.Count+" shards");
             for (int i = 0; i < shards.Count; ++i) 
             {
-                GameManager.SyncTrackedObjects(shards[i].transform, true, null, GameManager.scene);
+                GameManager.SyncTrackedObjects(shards[i].transform, true, null);
             }
         }
 
