@@ -43,7 +43,7 @@ namespace H3MP
         public static JObject config;
         public GameObject TNHMenuPrefab;
         public static GameObject TNHStartEquipButtonPrefab;
-        public GameObject playerPrefab;
+        public static GameObject playerPrefab;
         public static Material reticleFriendlyContactArrowMat;
         public static Material reticleFriendlyContactIconMat;
         public static Dictionary<string, string> sosigWearableMap;

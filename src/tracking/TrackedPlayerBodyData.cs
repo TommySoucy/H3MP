@@ -87,9 +87,8 @@ namespace H3MP.Tracking
                     }
                     else
                     {
-                        Mod.LogError($"Attempted to instantiate player body \"{playerPrefabID}\" sent from {controller} but failed to get prefab.");
-                        awaitingInstantiation = false;
-                        yield break;
+                        Mod.LogWarning($"Attempted to instantiate player body \"{playerPrefabID}\" sent from {controller} but failed to get prefab. Using H3MP default player body instead");
+                        playerPrefab = Mod.playerPrefab;
                     }
                 }
                 else if(prefabObject is FVRObject)
@@ -106,14 +105,13 @@ namespace H3MP.Tracking
 
             if (playerPrefab == null)
             {
-                Mod.LogError($"Attempted to instantiate player body \"{playerPrefabID}\" sent from {controller} but failed to get prefab.");
-                awaitingInstantiation = false;
-                yield break;
+                Mod.LogWarning($"Attempted to instantiate player body \"{playerPrefabID}\" sent from {controller} but failed to get prefab. Using H3MP default player body instead");
+                playerPrefab = Mod.playerPrefab;
             }
 
             if (!awaitingInstantiation)
             {
-                // Could have cancelled an player body instantiation if received destruction order while we were waiting to get the prefab
+                // Could have cancelled a player body instantiation if received destruction order while we were waiting to get the prefab
                 yield break;
             }
 
