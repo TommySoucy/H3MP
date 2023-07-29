@@ -917,9 +917,9 @@ namespace H3MP
             }
 
             // Set option text
-            if (WristMenuSection.playerModelText != null)
+            if (WristMenuSection.playerBodyText != null)
             {
-                WristMenuSection.playerModelText.text = "Skin: " + playerPrefabID;
+                WristMenuSection.playerBodyText.text = "Body: " + playerPrefabID;
             }
         }
 

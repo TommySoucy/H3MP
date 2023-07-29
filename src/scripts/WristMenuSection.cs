@@ -23,7 +23,7 @@ namespace H3MP.Scripts
         public static Text radarModeText;
         public static Text radarColorText;
         public static Text maxHealthText;
-        public static Text playerModelText;
+        public static Text playerBodyText;
 
         public override void Enable()
         {
@@ -85,7 +85,7 @@ namespace H3MP.Scripts
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnHostStartHoldClicked, "Debug: Host start hold", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnPlayerModelClicked, "Body: None", out playerModelText);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnPlayerModelClicked, "Body: None", out playerBodyText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextPlayerModelClicked, ">", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousPlayerModelClicked, "<", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
@@ -901,7 +901,7 @@ namespace H3MP.Scripts
                 }
             }
 
-            ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex, textRef);
+            ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex, playerBodyText);
         }
 
         private void OnPreviousPlayerModelClicked(Text textRef)
@@ -916,7 +916,7 @@ namespace H3MP.Scripts
                 GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count - 1;
             }
 
-            ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex, textRef);
+            ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex, playerBodyText);
         }
 
         private void ProcessPlayerPrefabIndex(int index, Text text)
@@ -938,8 +938,6 @@ namespace H3MP.Scripts
             string newID = GameManager.playerPrefabIDs[GameManager.playerPrefabIndex];
             if (!GameManager.playerPrefabID.Equals(newID))
             {
-                GameManager.playerPrefabID = newID;
-
                 GameManager.SetPlayerPrefab(newID);
             }
         }

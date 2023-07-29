@@ -1044,9 +1044,9 @@ namespace H3MP
                 GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
                 DontDestroyOnLoad(GameManager.currentPlayerModel);
 
-                if (WristMenuSection.playerModelText != null)
+                if (WristMenuSection.playerBodyText != null)
                 {
-                    WristMenuSection.playerModelText.text = "Skin: Default";
+                    WristMenuSection.playerBodyText.text = "Body: Default";
                 }
             }
 
@@ -1099,9 +1099,9 @@ namespace H3MP
                 GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
                 DontDestroyOnLoad(GameManager.currentPlayerModel);
 
-                if (WristMenuSection.playerModelText != null)
+                if (WristMenuSection.playerBodyText != null)
                 {
-                    WristMenuSection.playerModelText.text = "Skin: Default";
+                    WristMenuSection.playerBodyText.text = "Body: Default";
                 }
             }
 
