@@ -23,7 +23,10 @@ namespace H3MP.Tracking
                     physicalPlayerBody.headToFollow = GM.CurrentPlayerBody.Head;
                     physicalPlayerBody.handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
                     physicalPlayerBody.handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
-                    physicalPlayerBody.SetHeadVisible(false);
+                    if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                    {
+                        physicalPlayerBody.SetHeadVisible(false);
+                    }
                     physicalPlayerBody.SetCollidersEnabled(false);
                     physicalPlayerBody.SetCanvasesEnabled(false);
                     physicalPlayerBody.SetEntitiesRegistered(false);
@@ -39,7 +42,10 @@ namespace H3MP.Tracking
                 physicalPlayerBody.headToFollow = playerManager.head;
                 physicalPlayerBody.handsToFollow[0] = playerManager.leftHand;
                 physicalPlayerBody.handsToFollow[1] = playerManager.rightHand;
-                physicalPlayerBody.SetHeadVisible(true);
+                if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                {
+                    physicalPlayerBody.SetHeadVisible(true);
+                }
                 physicalPlayerBody.SetCollidersEnabled(true);
                 physicalPlayerBody.SetCanvasesEnabled(true);
                 physicalPlayerBody.SetEntitiesRegistered(true);
@@ -65,7 +71,10 @@ namespace H3MP.Tracking
                 physicalPlayerBody.headToFollow = playerBody.Head;
                 physicalPlayerBody.handsToFollow[0] = playerBody.LeftHand;
                 physicalPlayerBody.handsToFollow[1] = playerBody.RightHand;
-                physicalPlayerBody.SetHeadVisible(false);
+                if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                {
+                    physicalPlayerBody.SetHeadVisible(false);
+                }
                 physicalPlayerBody.SetCollidersEnabled(false);
                 physicalPlayerBody.SetCanvasesEnabled(false);
                 physicalPlayerBody.SetEntitiesRegistered(false);
@@ -83,13 +92,19 @@ namespace H3MP.Tracking
                     if (GM.CurrentPlayerBody != null)
                     {
                         physicalPlayerBody.headToFollow = GM.CurrentPlayerBody.Head;
-                        physicalPlayerBody.SetHeadVisible(false);
+                        if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                        {
+                            physicalPlayerBody.SetHeadVisible(false);
+                        }
                     }
                 }
                 else
                 {
                     physicalPlayerBody.headToFollow = GameManager.players[playerBodyData.controller].head;
-                    physicalPlayerBody.SetHeadVisible(true);
+                    if (physicalPlayerBody.headDisplayMode != HeadDisplayMode.Physical)
+                    {
+                        physicalPlayerBody.SetHeadVisible(true);
+                    }
                 }
             }
         }

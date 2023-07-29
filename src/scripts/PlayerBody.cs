@@ -7,14 +7,26 @@ namespace H3MP.Scripts
 {
     public class PlayerBody : MonoBehaviour
     {
+        public enum HeadDisplayMode
+        {
+            RendererToggle,
+            LayerToggle,
+            Physical
+        }
+
         public string playerPrefabID;
 
         [Header("Head settings")]
-        public Vector3 headOffset;
         public Transform headTransform;
+        public Vector3 headOffset;
+        [Tooltip("RendererToggle: Head renderers will be toggled depending on whether the player body is yours or another player's.\n" +
+                 "LayerToggle: Head renderers' layers will be toggled between ExternalCamOnly and default depending on whether the player body is yours or another player's.\n" +
+                 "Physical: Will assume that head will be out of view of VR camera. You can do this using headOffset.")]
+        public HeadDisplayMode headDisplayMode;
+        [Tooltip("If headDisplayMode is set to Physical, headRenderers will not be used.")]
+        public Renderer[] headRenderers;
         [NonSerialized]
         public Transform headToFollow;
-        public Renderer[] headRenderers;
 
         [Header("Hand settings")]
         public Transform[] handTransforms;
@@ -22,14 +34,19 @@ namespace H3MP.Scripts
         public Transform[] handsToFollow; // Left, Right
 
         [Header("Other")]
+        [Tooltip("All physical colliders. These will be disabled if the body if yours, since the vanilla colliders and hitboxes should be used instead.")]
         public Collider[] colliders;
-        public Renderer[] controlRenderers;
+        [Tooltip("All AIEntities. These will be de/registered as necessary so remote players' bodies can be detected by AI.")]
         public AIEntity[] entities;
+        [Tooltip("All UI canvases. These will be disabled if the body is yours, since vanilla health UI for example should be used instead.")]
         public Canvas[] canvases;
 
         [Header("Optionals")]
+        [Tooltip("If set, will enable wristmenu option to toggle body.")]
         public Renderer[] bodyRenderers;
+        [Tooltip("If set, will enable wristmenu option to toggle hands.")]
         public Renderer[] handRenderers;
+        [Tooltip("All parts that you want to have change color with the color the player has set.")]
         public Renderer[] coloredParts;
         public Text usernameLabel;
         public Text healthLabel;
@@ -44,7 +61,10 @@ namespace H3MP.Scripts
                 handsToFollow = new Transform[2];
                 handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
                 handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
-                SetHeadVisible(false);
+                if (headDisplayMode != HeadDisplayMode.Physical)
+                {
+                    SetHeadVisible(false);
+                }
                 SetCollidersEnabled(false);
                 SetCanvasesEnabled(false);
                 SetEntitiesRegistered(false);
@@ -63,7 +83,10 @@ namespace H3MP.Scripts
                 handsToFollow = new Transform[2];
                 handsToFollow[0] = playerBody.LeftHand;
                 handsToFollow[1] = playerBody.RightHand;
-                SetHeadVisible(false);
+                if (headDisplayMode != HeadDisplayMode.Physical)
+                {
+                    SetHeadVisible(false);
+                }
                 SetCollidersEnabled(false);
                 SetCanvasesEnabled(false);
                 SetEntitiesRegistered(false);
@@ -108,7 +131,14 @@ namespace H3MP.Scripts
                 {
                     if (headRenderers[i] != null)
                     {
-                        headRenderers[i].enabled = visible;
+                        if (headDisplayMode == HeadDisplayMode.RendererToggle)
+                        {
+                            headRenderers[i].enabled = visible;
+                        }
+                        else // LayerToggle
+                        {
+                            headRenderers[i].gameObject.layer = visible ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("ExternalCamOnly");
+                        }
                     }
                 }
             }
