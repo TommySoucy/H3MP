@@ -85,9 +85,9 @@ namespace H3MP.Scripts
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnHostStartHoldClicked, "Debug: Host start hold", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnPlayerModelClicked, "Skin: Default", out playerModelText);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextPlayerModelClicked, ">", out playerModelText);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousPlayerModelClicked, "<", out playerModelText);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnPlayerModelClicked, "Body: None", out playerModelText);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextPlayerModelClicked, ">", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousPlayerModelClicked, "<", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
