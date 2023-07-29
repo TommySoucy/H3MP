@@ -68,10 +68,17 @@ namespace H3MP.Tracking
 
         public override bool IsControlled(out int interactionID)
         {
-            interactionID = 0;
+            interactionID = -1;
             if (physicalAutoMeater.physicalAutoMeater.PO.m_hand != null)
             {
-                interactionID = 1;
+                if (physicalAutoMeater.physicalAutoMeater.PO.m_hand.IsThisTheRightHand)
+                {
+                    interactionID = 2; // Right hand
+                }
+                else
+                {
+                    interactionID = 1; // Left hand
+                }
             }
 
             return physicalAutoMeater.physicalAutoMeater.PO.m_hand != null;

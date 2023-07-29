@@ -65,6 +65,7 @@ namespace H3MP.Tracking
         /// <summary>
         /// CUSTOMIZATION
         /// Event called when we check whether we want to bring an item across scene/instance
+        /// This is Opt-In: A mod needs to opt into bringing objects across scene/instance depending on their context
         /// </summary>
         public static event OnBringRequestDelegate OnBringRequest;
 
@@ -299,7 +300,7 @@ namespace H3MP.Tracking
 
         public virtual bool IsControlled(out int interactionID)
         {
-            interactionID = 0;
+            interactionID = -1;
             return false;
         }
 
@@ -1027,6 +1028,7 @@ namespace H3MP.Tracking
             TODO: // Review: We probably should always want to bring everything with us when changing instance if there are no other players in the new scene/instance
             //       So should set a GameManager flag that we calculate when we change instance before we raise the event so we can just return that instead of 
             //       rechecking for players every item
+            TODO0: // We might want to pass the scene bool in the event as well
             if(OnBringRequest != null)
             {
                 OnBringRequest(this, ref bring);

@@ -1,7 +1,5 @@
 ﻿using FistVR;
 using H3MP.Networking;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace H3MP.Tracking
 {
@@ -76,6 +74,45 @@ namespace H3MP.Tracking
 
                 // Update locally
                 data.RemoveFromLocal();
+            }
+        }
+
+        protected override void OnInstanceJoined(int instance, int source)
+        {
+            // Since AutoMeaters can't go across scenes, we only process an instance change if we are not currently loading into a new scene
+            if (!GameManager.sceneLoading)
+            {
+                TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;
+                data.ShouldBring(false, ref bring);
+
+                ++GameManager.giveControlOfDestroyed;
+
+                if (bring == TrackedObjectData.ObjectBringType.Yes)
+                {
+                    // Want to bring everything with us
+                    // What we are interacting with, we will bring with us completely, destroying it on remote sides
+                    // Whet we do not interact with, we will make a copy of in the new instance
+                    if (data.IsControlled(out int interactionID))
+                    {
+                        data.SetInstance(instance, true);
+                    }
+                    else // Not interacting with
+                    {
+                        DestroyImmediate(this);
+
+                        GameManager.SyncTrackedObjects(transform, true, null);
+                    }
+                }
+                else if (bring == TrackedObjectData.ObjectBringType.OnlyInteracted && data.IsControlled(out int interactionID))
+                {
+                    data.SetInstance(instance, true);
+                }
+                else // Don't want to bring, destroy
+                {
+                    DestroyImmediate(gameObject);
+                }
+
+                --GameManager.giveControlOfDestroyed;
             }
         }
     }

@@ -11527,6 +11527,7 @@ namespace H3MP.Tracking
                 Mod.SetKinematicRecursive(physical.transform, false);
             }
         }
+
         public override void OnTransformParentChanged()
         {
             if(parentChanged != null)
@@ -11643,6 +11644,7 @@ namespace H3MP.Tracking
             }
             else // Not in scene loading process, we can process the object ourselves
             {
+                TODO: // Should this be a yes by default in the gneral context of H3MP? If so need to go and adapt all code that uses in in OnInstanceJoined and adapt the customization comment in GameManager
                 TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;
                 data.ShouldBring(false, ref bring);
 

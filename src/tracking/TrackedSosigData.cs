@@ -197,15 +197,21 @@ namespace H3MP.Tracking
 
         public override bool IsControlled(out int interactionID)
         {
-
-            interactionID = 0;
+            interactionID = -1;
             if (physicalSosig.physicalSosig != null && physicalSosig.physicalSosig.Links != null)
             {
                 for(int i=0; i< physicalSosig.physicalSosig.Links.Count; ++i)
                 {
                     if(physicalSosig.physicalSosig.Links[i] != null && physicalSosig.physicalSosig.Links[i].O.m_hand != null)
                     {
-                        interactionID = 1;
+                        if (physicalSosig.physicalSosig.Links[i].O.m_hand.IsThisTheRightHand)
+                        {
+                            interactionID = 2; // Right hand
+                        }
+                        else
+                        {
+                            interactionID = 1; // Left hand
+                        }
                         return true;
                     }
                 }

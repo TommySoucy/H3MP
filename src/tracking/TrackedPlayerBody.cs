@@ -112,14 +112,14 @@ namespace H3MP.Tracking
             }
         }
 
-        protected override void OnInstanceLeft(int instance, int destination)
+        protected override void OnInstanceJoined(int instance, int source)
         {
             // We want to bring our body with us across instances no matter what
             // In SP, this is handled by simply having bodies in DontDestroyOnLoad
             // In MP, we need to update data and let the network know of the change
             if (data.controller == GameManager.ID)
             {
-                data.SetInstance(destination, true);
+                data.SetInstance(instance, true);
             }
         }
     }

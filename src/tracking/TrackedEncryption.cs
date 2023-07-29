@@ -89,5 +89,30 @@ namespace H3MP.Tracking
 
             base.OnDestroy();
         }
+
+        protected override void OnInstanceJoined(int instance, int source)
+        {
+            if (!GameManager.sceneLoading)
+            {
+                TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;
+                data.ShouldBring(false, ref bring);
+
+                ++GameManager.giveControlOfDestroyed;
+
+                // Note: Encryptions cannot be interacted with, so no need to check taht case with IsControlled
+                if (bring == TrackedObjectData.ObjectBringType.Yes)
+                {
+                    DestroyImmediate(this);
+
+                    GameManager.SyncTrackedObjects(transform, true, null);
+                }
+                else // Don't want to bring, destroy
+                {
+                    DestroyImmediate(gameObject);
+                }
+
+                --GameManager.giveControlOfDestroyed;
+            }
+        }
     }
 }
