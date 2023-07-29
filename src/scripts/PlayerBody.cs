@@ -53,6 +53,7 @@ namespace H3MP.Scripts
 
         public virtual void Awake()
         {
+            TODO0: // Add options: hand toggle, body toggle, host enforced body
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
 
             if(Mod.managerObject == null && GM.CurrentPlayerBody != null)

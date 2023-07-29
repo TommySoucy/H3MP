@@ -910,8 +910,8 @@ namespace H3MP.Scripts
 
             --GameManager.playerPrefabIndex;
 
-            if ((Mod.managerObject != null && GameManager.playerPrefabIndex <= 0)
-                || (Mod.managerObject == null && GameManager.playerPrefabIndex  == -1))
+            if ((Mod.managerObject != null && GameManager.playerPrefabIndex < 0)
+                || (Mod.managerObject == null && GameManager.playerPrefabIndex < -1))
             {
                 GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count - 1;
             }
@@ -930,7 +930,7 @@ namespace H3MP.Scripts
                     Destroy(GameManager.currentPlayerModel);
                 }
 
-                text.text = "None";
+                text.text = "Body: None";
 
                 return;
             }
