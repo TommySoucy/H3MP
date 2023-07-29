@@ -29,7 +29,9 @@ namespace H3MP.Scripts
         public Transform headToFollow;
 
         [Header("Hand settings")]
+        [Tooltip("0: Left, 1: Right.")]
         public Transform[] handTransforms;
+        public Vector3[] handOffsets;
         [NonSerialized]
         public Transform[] handsToFollow; // Left, Right
 
@@ -118,6 +120,7 @@ namespace H3MP.Scripts
                     if (handsToFollow[i] != null)
                     {
                         handTransforms[i].position = handsToFollow[i].position;
+                        handTransforms[i].localPosition += handOffsets[i];
                         handTransforms[i].rotation = handsToFollow[i].rotation;
                     }
                 }
