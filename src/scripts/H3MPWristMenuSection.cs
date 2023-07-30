@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace H3MP.Scripts
 {
-    public class WristMenuSection : FVRWristMenuSection
+    public class H3MPWristMenuSection : FVRWristMenuSection
     {
         public static bool init;
 
@@ -16,14 +16,12 @@ namespace H3MP.Scripts
         Dictionary<int, List<KeyValuePair<FVRPointableButton, Vector3>>> pages;
         int currentPage = -1;
 
-        public static Text colorText;
         public static Text colorByIFFText;
         public static Text IFFText;
         public static Text nameplateText;
         public static Text radarModeText;
         public static Text radarColorText;
         public static Text maxHealthText;
-        public static Text playerBodyText;
 
         public override void Enable()
         {
@@ -70,24 +68,18 @@ namespace H3MP.Scripts
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnReloadConfigClicked, "Reload config", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnTNHReviveClicked, "TNH revive", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnColorClicked, "Current color: " + GameManager.colorNames[GameManager.colorIndex], out colorText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextColorClicked, ">", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousColorClicked, "<", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out IFFText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextIFFClicked, ">", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousIFFClicked, "<", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnColorByIFFClicked, "Color by IFF ("+GameManager.colorByIFF+")", out colorByIFFText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnNameplatesClicked, "Nameplates ("+ (GameManager.nameplateMode == 0 ? "All" : (GameManager.nameplateMode == 1 ? "Friendly Only" : "None"))+ ")", out nameplateText);
-            
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out IFFText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextIFFClicked, ">", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousIFFClicked, "<", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnColorByIFFClicked, "Color by IFF ("+GameManager.colorByIFF+")", out colorByIFFText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnNameplatesClicked, "Nameplates ("+ (GameManager.nameplateMode == 0 ? "All" : (GameManager.nameplateMode == 1 ? "Friendly Only" : "None"))+ ")", out nameplateText);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnHostStartHoldClicked, "Debug: Host start hold", out textOut);
+
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarModeClicked, "Radar mode ("+ (GameManager.radarMode == 0 ? "All" : (GameManager.radarMode == 1 ? "Friendly Only" : "None"))+ ")", out radarModeText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarColorClicked, "Radar color IFF ("+ GameManager.radarColor + ")", out radarColorText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnMaxHealthClicked, "Max health: "+ (GameManager.maxHealthIndex == -1 ? "Not set" : GameManager.maxHealths[GameManager.maxHealthIndex].ToString()), out maxHealthText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnHostStartHoldClicked, "Debug: Host start hold", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnPlayerModelClicked, "Body: "+GameManager.playerPrefabID, out playerBodyText);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextPlayerModelClicked, ">", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, -50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousPlayerModelClicked, "<", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
@@ -167,9 +159,9 @@ namespace H3MP.Scripts
                 GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
                 DontDestroyOnLoad(GameManager.currentPlayerBody.gameObject);
 
-                if (WristMenuSection.playerBodyText != null)
+                if (BodyWristMenuSection.playerBodyText != null)
                 {
-                    WristMenuSection.playerBodyText.text = "Body: Default";
+                    BodyWristMenuSection.playerBodyText.text = "Body: Default";
                 }
             }
 
@@ -226,9 +218,9 @@ namespace H3MP.Scripts
                 GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
                 DontDestroyOnLoad(GameManager.currentPlayerBody.gameObject);
 
-                if (WristMenuSection.playerBodyText != null)
+                if (BodyWristMenuSection.playerBodyText != null)
                 {
-                    WristMenuSection.playerBodyText.text = "Body: Default";
+                    BodyWristMenuSection.playerBodyText.text = "Body: Default";
                 }
             }
 
@@ -317,54 +309,6 @@ namespace H3MP.Scripts
             else
             {
                 SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
-            }
-        }
-
-        private void OnColorClicked(Text textRef)
-        {
-            // Place holder
-        }
-
-        private void OnNextColorClicked(Text textRef)
-        {
-            if (GameManager.colorByIFF)
-            {
-                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
-            }
-            else
-            {
-                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
-
-                ++GameManager.colorIndex;
-                if (GameManager.colorIndex >= GameManager.colors.Length)
-                {
-                    GameManager.colorIndex = 0;
-                }
-
-                GameManager.SetPlayerColor(GameManager.ID, GameManager.colorIndex, false, 0);
-            }
-        }
-
-        private void OnPreviousColorClicked(Text textRef)
-        {
-            if (GameManager.colorByIFF)
-            {
-                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
-            }
-            else
-            {
-                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
-
-                if (!GameManager.colorByIFF && Mod.managerObject != null)
-                {
-                    --GameManager.colorIndex;
-                    if (GameManager.colorIndex < 0)
-                    {
-                        GameManager.colorIndex = GameManager.colors.Length - 1;
-                    }
-
-                    GameManager.SetPlayerColor(GameManager.ID, GameManager.colorIndex, false, 0);
-                }
             }
         }
 
@@ -493,7 +437,7 @@ namespace H3MP.Scripts
                 if (GameManager.colorByIFF)
                 {
                     GameManager.colorIndex = GM.CurrentPlayerBody.GetPlayerIFF() % GameManager.colors.Length;
-                    WristMenuSection.colorText.text = "Current color: " + GameManager.colorNames[GameManager.colorIndex];
+                    BodyWristMenuSection.colorText.text = "Current color: " + GameManager.colorNames[GameManager.colorIndex];
 
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
@@ -946,47 +890,6 @@ namespace H3MP.Scripts
                     }
                 }
             }
-        }
-
-        private void OnPlayerModelClicked(Text textRef)
-        {
-            // Place holder
-        }
-
-        private void OnNextPlayerModelClicked(Text textRef)
-        {
-            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
-
-            ++GameManager.playerPrefabIndex;
-
-            if(GameManager.playerPrefabIndex >= GameManager.playerPrefabIDs.Count)
-            {
-                if(Mod.managerObject == null)
-                {
-                    GameManager.playerPrefabIndex = -1;
-                }
-                else
-                {
-                    GameManager.playerPrefabIndex = 0;
-                }
-            }
-
-            ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex, playerBodyText);
-        }
-
-        private void OnPreviousPlayerModelClicked(Text textRef)
-        {
-            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
-
-            --GameManager.playerPrefabIndex;
-
-            if ((Mod.managerObject != null && GameManager.playerPrefabIndex < 0)
-                || (Mod.managerObject == null && GameManager.playerPrefabIndex < -1))
-            {
-                GameManager.playerPrefabIndex = GameManager.playerPrefabIDs.Count - 1;
-            }
-
-            ProcessPlayerPrefabIndex(GameManager.playerPrefabIndex, playerBodyText);
         }
 
         private void ProcessPlayerPrefabIndex(int index, Text text)

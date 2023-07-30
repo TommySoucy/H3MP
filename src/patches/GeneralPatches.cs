@@ -238,11 +238,11 @@ namespace H3MP.Patches
     {
         static void UpdatePrefix(FVRWristMenu2 __instance)
         {
-            if (!WristMenuSection.init)
+            if (!H3MPWristMenuSection.init)
             {
-                WristMenuSection.init = true;
+                H3MPWristMenuSection.init = true;
 
-                AddSection(__instance);
+                AddSections(__instance);
 
                 // Regenerate with our new section
                 __instance.RegenerateButtons();
@@ -251,10 +251,10 @@ namespace H3MP.Patches
 
         static void AwakePrefix(FVRWristMenu2 __instance)
         {
-            AddSection(__instance);
+            AddSections(__instance);
         }
 
-        private static void AddSection(FVRWristMenu2 __instance)
+        private static void AddSections(FVRWristMenu2 __instance)
         {
             GameObject section = new GameObject("Section_H3MP", typeof(RectTransform));
             section.transform.SetParent(__instance.MenuGO.transform);
@@ -262,8 +262,19 @@ namespace H3MP.Patches
             section.transform.localRotation = Quaternion.identity;
             section.transform.localScale = Vector3.one;
             section.GetComponent<RectTransform>().sizeDelta = new Vector2(350, 350);
-            FVRWristMenuSection sectionScript = section.AddComponent<WristMenuSection>();
+            FVRWristMenuSection sectionScript = section.AddComponent<H3MPWristMenuSection>();
             sectionScript.ButtonText = "H3MP";
+            __instance.Sections.Add(sectionScript);
+            section.SetActive(false);
+
+            section = new GameObject("Section_Body", typeof(RectTransform));
+            section.transform.SetParent(__instance.MenuGO.transform);
+            section.transform.localPosition = new Vector3(0, 300, 0);
+            section.transform.localRotation = Quaternion.identity;
+            section.transform.localScale = Vector3.one;
+            section.GetComponent<RectTransform>().sizeDelta = new Vector2(350, 350);
+            sectionScript = section.AddComponent<BodyWristMenuSection>();
+            sectionScript.ButtonText = "Body";
             __instance.Sections.Add(sectionScript);
             section.SetActive(false);
         }

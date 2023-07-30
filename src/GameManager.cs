@@ -100,6 +100,8 @@ namespace H3MP
         public static TrackedPlayerBody currentTrackedPlayerBody;
         public static bool playerModelAwaitingInstantiation = false;
         public static PlayerBody currentPlayerBody = null;
+        public static bool bodyVisible;
+        public static bool handsVisible;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -521,8 +523,14 @@ namespace H3MP
             player.leftHand.rotation = leftHandRot;
             player.rightHand.position = rightHandPos;
             player.rightHand.rotation = rightHandRot;
+            float previousHealth = player.health;
             player.health = health;
+            int previousMaxHealth = player.maxHealth;
             player.maxHealth = maxHealth;
+            if(player.playerBody != null && health != previousHealth || maxHealth != previousMaxHealth)
+            {
+                player.playerBody.UpdateHealthLabel();
+            }
 
             if((health <= 0 && player.visible) || (health > 0 && !player.visible))
             {
@@ -802,9 +810,9 @@ namespace H3MP
             if(Mod.managerObject == null)
             {
                 colorIndex = index;
-                if (WristMenuSection.colorText != null)
+                if (BodyWristMenuSection.colorText != null)
                 {
-                    WristMenuSection.colorText.text = "Current color: " + colorNames[colorIndex];
+                    BodyWristMenuSection.colorText.text = "Current color: " + colorNames[colorIndex];
                 }
 
                 return;
@@ -819,9 +827,9 @@ namespace H3MP
                     currentPlayerBody.SetColor(colors[colorIndex]);
                 }
 
-                if(WristMenuSection.colorText != null)
+                if(BodyWristMenuSection.colorText != null)
                 {
-                    WristMenuSection.colorText.text = "Current color: " + colorNames[colorIndex];
+                    BodyWristMenuSection.colorText.text = "Current color: " + colorNames[colorIndex];
                 }
             }
             else
@@ -922,9 +930,9 @@ namespace H3MP
             }
 
             // Set option text
-            if (WristMenuSection.playerBodyText != null)
+            if (BodyWristMenuSection.playerBodyText != null)
             {
-                WristMenuSection.playerBodyText.text = "Body: " + playerPrefabID;
+                BodyWristMenuSection.playerBodyText.text = "Body: " + playerPrefabID;
             }
         }
 
@@ -1362,7 +1370,7 @@ namespace H3MP
             }
 
             // Set max health based on setting
-            WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
+            H3MPWristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
         }
 
         public static void DestroyTrackedScripts(TrackedObjectData trackedObjectData)
@@ -1774,7 +1782,7 @@ namespace H3MP
                 }
 
                 // Set max health based on setting
-                WristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
+                H3MPWristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
 
                 // Spectator host stuff
                 if (resetSpectatorHost)

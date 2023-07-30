@@ -53,7 +53,6 @@ namespace H3MP.Scripts
 
         public virtual void Awake()
         {
-            TODO0: // Add options: hand toggle, body toggle, host enforced body
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
 
             if(Mod.managerObject == null && GM.CurrentPlayerBody != null)
@@ -100,6 +99,14 @@ namespace H3MP.Scripts
         public virtual void Init()
         {
             SetColor(GameManager.colors[GameManager.colorIndex]);
+            GameManager.bodyVisible = GameManager.currentPlayerBody.bodyRenderers != null
+                                      && GameManager.currentPlayerBody.bodyRenderers.Length > 0
+                                      && GameManager.currentPlayerBody.bodyRenderers[0].enabled;
+            SetBodyVisible(GameManager.bodyVisible);
+            GameManager.handsVisible = GameManager.currentPlayerBody.handRenderers != null
+                                       && GameManager.currentPlayerBody.handRenderers.Length > 0
+                                       && GameManager.currentPlayerBody.handRenderers[0].enabled;
+            SetHandsVisible(GameManager.handsVisible);
         }
 
         public virtual void Update()

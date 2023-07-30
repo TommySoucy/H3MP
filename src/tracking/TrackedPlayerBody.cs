@@ -60,7 +60,12 @@ namespace H3MP.Tracking
             physicalPlayerBody.SetColor(GameManager.colors[playerManager.colorIndex]);
 
             physicalPlayerBody.usernameLabel.text = playerManager.username;
-            physicalPlayerBody.healthLabel.text = playerManager.health+"/"+playerManager.maxHealth;
+            UpdateHealthLabel();
+        }
+
+        public void UpdateHealthLabel()
+        {
+            physicalPlayerBody.healthLabel.text = playerManager.health + "/" + playerManager.maxHealth;
         }
 
         private void OnPlayerBodyInit(FVRPlayerBody playerBody)

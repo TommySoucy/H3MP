@@ -47,7 +47,7 @@ namespace H3MP.Networking
                 Mod.CustomPacketHandlerReceivedInvoke(cutomPacketHandlerID, cutomPacketIndex);
             }
 
-            WristMenuSection.UpdateMaxHealth(GameManager.scene, GameManager.instance, -2, -1);
+            H3MPWristMenuSection.UpdateMaxHealth(GameManager.scene, GameManager.instance, -2, -1);
 
             Mod.LogInfo($"Message from server: {msg}", false);
 
@@ -3280,17 +3280,17 @@ namespace H3MP.Networking
         public static void ColorByIFF(Packet packet)
         {
             GameManager.colorByIFF = packet.ReadBool();
-            if (WristMenuSection.colorByIFFText != null)
+            if (H3MPWristMenuSection.colorByIFFText != null)
             {
-                WristMenuSection.colorByIFFText.text = "Color by IFF (" + GameManager.colorByIFF + ")";
+                H3MPWristMenuSection.colorByIFFText.text = "Color by IFF (" + GameManager.colorByIFF + ")";
             }
 
             if (GameManager.colorByIFF)
             {
                 GameManager.colorIndex = GM.CurrentPlayerBody.GetPlayerIFF() % GameManager.colors.Length;
-                if (WristMenuSection.colorText != null)
+                if (BodyWristMenuSection.colorText != null)
                 {
-                    WristMenuSection.colorText.text = "Current color: " + GameManager.colorNames[GameManager.colorIndex];
+                    BodyWristMenuSection.colorText.text = "Current color: " + GameManager.colorNames[GameManager.colorIndex];
                 }
 
                 foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
@@ -3314,9 +3314,9 @@ namespace H3MP.Networking
             switch (GameManager.nameplateMode)
             {
                 case 0:
-                    if (WristMenuSection.nameplateText != null)
+                    if (H3MPWristMenuSection.nameplateText != null)
                     {
-                        WristMenuSection.nameplateText.text = "Nameplates (All)";
+                        H3MPWristMenuSection.nameplateText.text = "Nameplates (All)";
                     }
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
@@ -3324,9 +3324,9 @@ namespace H3MP.Networking
                     }
                     break;
                 case 1:
-                    if (WristMenuSection.nameplateText != null)
+                    if (H3MPWristMenuSection.nameplateText != null)
                     {
-                        WristMenuSection.nameplateText.text = "Nameplates (Friendly only)";
+                        H3MPWristMenuSection.nameplateText.text = "Nameplates (Friendly only)";
                     }
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
@@ -3334,9 +3334,9 @@ namespace H3MP.Networking
                     }
                     break;
                 case 2:
-                    if (WristMenuSection.nameplateText != null)
+                    if (H3MPWristMenuSection.nameplateText != null)
                     {
-                        WristMenuSection.nameplateText.text = "Nameplates (None)";
+                        H3MPWristMenuSection.nameplateText.text = "Nameplates (None)";
                     }
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
@@ -3353,9 +3353,9 @@ namespace H3MP.Networking
             switch (GameManager.radarMode)
             {
                 case 0:
-                    if (WristMenuSection.radarModeText != null)
+                    if (H3MPWristMenuSection.radarModeText != null)
                     {
-                        WristMenuSection.radarModeText.text = "Radar mode (All)";
+                        H3MPWristMenuSection.radarModeText.text = "Radar mode (All)";
                     }
                     if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null)
                     {
@@ -3370,9 +3370,9 @@ namespace H3MP.Networking
                     }
                     break;
                 case 1:
-                    if (WristMenuSection.radarModeText != null)
+                    if (H3MPWristMenuSection.radarModeText != null)
                     {
-                        WristMenuSection.radarModeText.text = "Radar mode (Friendly only)";
+                        H3MPWristMenuSection.radarModeText.text = "Radar mode (Friendly only)";
                     }
                     if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null)
                     {
@@ -3404,9 +3404,9 @@ namespace H3MP.Networking
                     }
                     break;
                 case 2:
-                    if (WristMenuSection.radarModeText != null)
+                    if (H3MPWristMenuSection.radarModeText != null)
                     {
-                        WristMenuSection.radarModeText.text = "Radar mode (None)";
+                        H3MPWristMenuSection.radarModeText.text = "Radar mode (None)";
                     }
                     if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null)
                     {
@@ -3436,9 +3436,9 @@ namespace H3MP.Networking
         public static void RadarColor(Packet packet)
         {
             GameManager.radarColor = packet.ReadBool();
-            if (WristMenuSection.radarColorText != null)
+            if (H3MPWristMenuSection.radarColorText != null)
             {
-                WristMenuSection.radarColorText.text = "Radar color IFF (" + GameManager.radarColor + ")";
+                H3MPWristMenuSection.radarColorText.text = "Radar color IFF (" + GameManager.radarColor + ")";
             }
 
             // Set color of any active player contacts
@@ -3494,7 +3494,7 @@ namespace H3MP.Networking
             int index = packet.ReadInt();
             float original = packet.ReadFloat();
 
-            WristMenuSection.UpdateMaxHealth(scene, instance, index, original);
+            H3MPWristMenuSection.UpdateMaxHealth(scene, instance, index, original);
         }
 
         public static void FuseIgnite(Packet packet)
