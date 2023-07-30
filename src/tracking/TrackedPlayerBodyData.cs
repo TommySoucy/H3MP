@@ -120,7 +120,7 @@ namespace H3MP.Tracking
             try
             {
                 ++Mod.skipAllInstantiates;
-                GameObject playerBodyObject = GameObject.Instantiate(playerPrefab, GameManager.players[controller].head.position, GameManager.players[controller].head.rotation);
+                GameObject playerBodyObject = GameObject.Instantiate(playerPrefab);
                 --Mod.skipAllInstantiates;
                 awaitingInstantiation = false;
                 UnityEngine.Object.DontDestroyOnLoad(playerBodyObject);

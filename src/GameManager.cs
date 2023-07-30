@@ -393,8 +393,8 @@ namespace H3MP
 
             if (prefab == null)
             {
-                Mod.LogError("Attempted to instantiate player model \""+ playerPrefabID + "\" but failed to get prefab.");
-                yield break;
+                Mod.LogWarning("Attempted to instantiate player model \""+ playerPrefabID + "\" but failed to get prefab. Using Default instead.");
+                GameManager.playerPrefabID = "Default";
             }
 
             currentPlayerBody = Instantiate(prefab).GetComponent<PlayerBody>();
@@ -908,7 +908,7 @@ namespace H3MP
 
                 if (!gotPrefab)
                 {
-                    Mod.LogError("Attempt to set player prefab to \""+ playerPrefabID+"\" failed, could not obtain prefab, using default");
+                    Mod.LogWarning("Attempt to set player prefab to \""+ playerPrefabID+"\" failed, could not obtain prefab, using default");
                     playerPrefabID = "Default";
                     currentPlayerBody = Instantiate(playerPrefabs[playerPrefabID] as GameObject).GetComponent<PlayerBody>();
                     spawned = true;

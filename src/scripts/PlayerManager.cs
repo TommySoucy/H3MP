@@ -1,9 +1,7 @@
 ﻿using FistVR;
 using H3MP.Networking;
 using H3MP.Tracking;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace H3MP.Scripts
 {
@@ -28,20 +26,6 @@ namespace H3MP.Scripts
         public bool firstInSceneInstance;
 
         public bool visible;
-
-        /// <summary>
-        /// CUSTOMIZATION
-        /// Delegate for the OnSetPlayerColor event
-        /// </summary>
-        /// <param name="colorIndex">The index of the color we want to set this player to</param>
-        /// <param name="set">Custom override for whether color was set or not</param>
-        public delegate void OnSetPlayerColorDelegate(int colorIndex, ref bool set);
-
-        /// <summary>
-        /// CUSTOMIZATION
-        /// Event called when we set the player's color so you can set color for your own materials
-        /// </summary>
-        public static event OnSetPlayerColorDelegate OnSetPlayerColor;
 
         public void Init(int ID, string username, string scene, int instance)
         {
@@ -166,13 +150,7 @@ namespace H3MP.Scripts
 
         public void SetColor(int colorIndex)
         {
-            bool set = false;
-            if (OnSetPlayerColor != null)
-            {
-                OnSetPlayerColor(colorIndex, ref set);
-            }
-
-            if (!set && this.colorIndex != colorIndex)
+            if (this.colorIndex != colorIndex)
             {
                 this.colorIndex = Mathf.Abs(colorIndex % GameManager.colors.Length);
 
