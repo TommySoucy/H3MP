@@ -386,6 +386,10 @@ namespace H3MP.Scripts
 
             if (GM.CurrentPlayerBody.GetPlayerIFF() == 31)
             {
+                GM.CurrentPlayerBody.SetPlayerIFF(-3);
+            }
+            else if (GM.CurrentPlayerBody.GetPlayerIFF() == -3)
+            {
                 GM.CurrentPlayerBody.SetPlayerIFF(0);
             }
             else
