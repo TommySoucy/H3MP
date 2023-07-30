@@ -957,6 +957,16 @@ namespace H3MP
             {
                 SyncTrackedObjects(root.transform, init ? inControl : controlOverride, null);
             }
+
+            // Track anything in DontDestroyOnLoad
+            if (Mod.DDOLScene != null)
+            {
+                roots = Mod.DDOLScene.GetRootGameObjects();
+                foreach (GameObject root in roots)
+                {
+                    SyncTrackedObjects(root.transform, init ? inControl : controlOverride, null);
+                }
+            }
         }
 
         public static void SyncTrackedObjects(Transform root, bool controlEverything, TrackedObjectData parent)

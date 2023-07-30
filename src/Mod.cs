@@ -137,6 +137,7 @@ namespace H3MP
         public static bool spectatorHostWaitingForTNHInstance;
         public static bool spectatorHostWaitingForTNHSetup;
         public static bool waitingForTNHGameStart;
+        public static Scene DDOLScene;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -1770,6 +1771,8 @@ namespace H3MP
                 GameManager gameManager = managerObject.AddComponent<GameManager>();
 
                 DontDestroyOnLoad(managerObject);
+
+                DDOLScene = managerObject.scene;
             }
         }
 
