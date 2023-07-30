@@ -527,7 +527,7 @@ namespace H3MP
             player.health = health;
             int previousMaxHealth = player.maxHealth;
             player.maxHealth = maxHealth;
-            if(player.playerBody != null && health != previousHealth || maxHealth != previousMaxHealth)
+            if(player.playerBody != null && (health != previousHealth || maxHealth != previousMaxHealth))
             {
                 player.playerBody.UpdateHealthLabel();
             }

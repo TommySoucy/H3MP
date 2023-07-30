@@ -61,6 +61,18 @@ namespace H3MP.Tracking
 
             physicalPlayerBody.usernameLabel.text = playerManager.username;
             UpdateHealthLabel();
+
+            if (physicalPlayerBody.hitboxes != null) 
+            {
+                for (int i = 0; i < physicalPlayerBody.hitboxes.Length; ++i)
+                {
+                    if(physicalPlayerBody.hitboxes[i] != null)
+                    {
+                        physicalPlayerBody.hitboxes[i].manager = playerManager;
+                    }
+                    
+                }
+            }
         }
 
         public void UpdateHealthLabel()

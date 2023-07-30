@@ -40,6 +40,8 @@ namespace H3MP.Scripts
         public AIEntity[] entities;
         [Tooltip("All UI canvases. These will be disabled if the body is yours, since vanilla health UI for example should be used instead.")]
         public Canvas[] canvases;
+        [Tooltip("All hitboxes. These will have their playerManager intialized if this is another player's body.")]
+        public PlayerHitbox[] hitboxes;
 
         [Header("Optionals")]
         [Tooltip("If set, will enable wristmenu option to toggle body.")]
