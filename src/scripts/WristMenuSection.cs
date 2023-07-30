@@ -148,6 +148,30 @@ namespace H3MP.Scripts
             }
 
             GameManager.firstPlayerInSceneInstance = true;
+            
+            // Force player body to Default if don't have one yet
+            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
+                && GameManager.currentPlayerModel == null
+                && !GameManager.playerModelAwaitingInstantiation)
+            {
+                GameManager.playerPrefabID = "Default";
+                for (int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
+                {
+                    if (GameManager.playerPrefabIDs[i].Equals(GameManager.playerPrefabID))
+                    {
+                        GameManager.playerPrefabIndex = i;
+                        break;
+                    }
+                }
+
+                GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
+                DontDestroyOnLoad(GameManager.currentPlayerModel);
+
+                if (WristMenuSection.playerBodyText != null)
+                {
+                    WristMenuSection.playerBodyText.text = "Body: Default";
+                }
+            }
 
             // Switch page
             SetPage(1);
@@ -182,6 +206,30 @@ namespace H3MP.Scripts
             {
                 Mod.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 Mod.modInstance.InitTNHMenu();
+            }
+
+            // Force player body to Default if don't have one yet
+            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
+                && GameManager.currentPlayerModel == null
+                && !GameManager.playerModelAwaitingInstantiation)
+            {
+                GameManager.playerPrefabID = "Default";
+                for (int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
+                {
+                    if (GameManager.playerPrefabIDs[i].Equals(GameManager.playerPrefabID))
+                    {
+                        GameManager.playerPrefabIndex = i;
+                        break;
+                    }
+                }
+
+                GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
+                DontDestroyOnLoad(GameManager.currentPlayerModel);
+
+                if (WristMenuSection.playerBodyText != null)
+                {
+                    WristMenuSection.playerBodyText.text = "Body: Default";
+                }
             }
 
             // Switch page
