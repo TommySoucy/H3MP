@@ -18,7 +18,6 @@ namespace H3MP.Scripts
 
         [Header("Head settings")]
         public Transform headTransform;
-        public Vector3 headOffset;
         [Tooltip("RendererToggle: Head renderers will be toggled depending on whether the player body is yours or another player's.\n" +
                  "LayerToggle: Head renderers' layers will be toggled between ExternalCamOnly and default depending on whether the player body is yours or another player's.\n" +
                  "Physical: Will assume that head will be out of view of VR camera. You can do this using headOffset.")]
@@ -31,7 +30,6 @@ namespace H3MP.Scripts
         [Header("Hand settings")]
         [Tooltip("0: Left, 1: Right.")]
         public Transform[] handTransforms;
-        public Vector3[] handOffsets;
         [NonSerialized]
         public Transform[] handsToFollow; // Left, Right
 
@@ -110,7 +108,6 @@ namespace H3MP.Scripts
             if (headToFollow != null)
             {
                 headTransform.position = headToFollow.position;
-                headTransform.localPosition += headOffset;
                 headTransform.rotation = headToFollow.rotation;
             }
             if(handsToFollow != null)
@@ -120,7 +117,6 @@ namespace H3MP.Scripts
                     if (handsToFollow[i] != null)
                     {
                         handTransforms[i].position = handsToFollow[i].position;
-                        handTransforms[i].localPosition += handOffsets[i];
                         handTransforms[i].rotation = handsToFollow[i].rotation;
                     }
                 }
