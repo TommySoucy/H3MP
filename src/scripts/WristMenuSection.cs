@@ -393,6 +393,15 @@ namespace H3MP.Scripts
                 GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentPlayerBody.GetPlayerIFF() + 1);
             }
 
+            // Set canvases visible on all players depending on their IFF and nameplate mode
+            foreach(KeyValuePair<int, PlayerManager> entry in GameManager.players)
+            {
+                if(entry.Value.playerBody != null)
+                {
+                    entry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(entry.Value.visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == entry.Value.IFF)));
+                }
+            }
+
             if (ThreadManager.host)
             {
                 ServerSend.PlayerIFF(0, GM.CurrentPlayerBody.GetPlayerIFF());
@@ -432,6 +441,15 @@ namespace H3MP.Scripts
             else
             {
                 GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentPlayerBody.GetPlayerIFF() - 1);
+            }
+
+            // Set canvases visible on all players depending on their IFF and nameplate mode
+            foreach (KeyValuePair<int, PlayerManager> entry in GameManager.players)
+            {
+                if (entry.Value.playerBody != null)
+                {
+                    entry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(entry.Value.visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == entry.Value.IFF)));
+                }
             }
 
             if (ThreadManager.host)
