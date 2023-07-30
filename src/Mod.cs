@@ -1031,7 +1031,7 @@ namespace H3MP
 
             // Force Default player body
             if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
-                && GameManager.currentPlayerModel == null 
+                && GameManager.currentPlayerBody == null 
                 && !GameManager.playerModelAwaitingInstantiation)
             {
                 GameManager.playerPrefabID = "Default";
@@ -1044,8 +1044,8 @@ namespace H3MP
                     }
                 }
 
-                GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
-                DontDestroyOnLoad(GameManager.currentPlayerModel);
+                GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
+                DontDestroyOnLoad(GameManager.currentPlayerBody.gameObject);
 
                 if (WristMenuSection.playerBodyText != null)
                 {
@@ -1087,7 +1087,7 @@ namespace H3MP
             }
 
             // Force Default player body
-            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None")) && GameManager.currentPlayerModel == null && !GameManager.playerModelAwaitingInstantiation)
+            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None")) && GameManager.currentPlayerBody == null && !GameManager.playerModelAwaitingInstantiation)
             {
                 GameManager.playerPrefabID = "Default";
                 for (int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
@@ -1099,8 +1099,8 @@ namespace H3MP
                     }
                 }
 
-                GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
-                DontDestroyOnLoad(GameManager.currentPlayerModel);
+                GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
+                DontDestroyOnLoad(GameManager.currentPlayerBody.gameObject);
 
                 if (WristMenuSection.playerBodyText != null)
                 {

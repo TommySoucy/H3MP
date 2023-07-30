@@ -79,6 +79,7 @@ namespace H3MP.Tracking
         {
             // Full
             typeIdentifier = typeID;
+            initTracker = packet.ReadInt();
             controller = packet.ReadInt();
             parent = packet.ReadInt();
             localTrackedID = packet.ReadInt();
@@ -86,7 +87,6 @@ namespace H3MP.Tracking
             instance = packet.ReadInt();
             sceneInit = packet.ReadBool();
             localWaitingIndex = packet.ReadUInt();
-            initTracker = packet.ReadInt();
 
             // Update
             this.trackedID = trackedID;
@@ -101,6 +101,7 @@ namespace H3MP.Tracking
             {
                 packet.Write(trackedID);
                 packet.Write(typeIdentifier);
+                packet.Write(initTracker);
                 packet.Write(controller);
                 packet.Write(parent);
                 packet.Write(localTrackedID);
@@ -108,7 +109,6 @@ namespace H3MP.Tracking
                 packet.Write(instance);
                 packet.Write(sceneInit);
                 packet.Write(localWaitingIndex);
-                packet.Write(initTracker);
             }
             else
             {

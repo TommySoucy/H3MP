@@ -97,9 +97,9 @@ namespace H3MP
         public static Dictionary<string, Dictionary<int, KeyValuePair<float, int>>> maxHealthByInstanceByScene = new Dictionary<string, Dictionary<int, KeyValuePair<float, int>>>();
         public static string playerPrefabID = "None";
         public static int playerPrefabIndex = -1;
-        public static TrackedPlayerBody currentPlayerBody;
+        public static TrackedPlayerBody currentTrackedPlayerBody;
         public static bool playerModelAwaitingInstantiation = false;
-        public static GameObject currentPlayerModel = null;
+        public static PlayerBody currentPlayerBody = null;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -384,7 +384,7 @@ namespace H3MP
             }
         }
 
-        public static IEnumerator InstantiatePlayerModel(FVRObject playerModelFVRObject, string playerPrefabID)
+        public static IEnumerator InstantiatePlayerBody(FVRObject playerModelFVRObject, string playerPrefabID)
         {
             GameObject prefab = null;
 
@@ -397,9 +397,9 @@ namespace H3MP
                 yield break;
             }
 
-            currentPlayerModel = Instantiate(prefab);
+            currentPlayerBody = Instantiate(prefab).GetComponent<PlayerBody>();
             playerModelAwaitingInstantiation = false;
-            DontDestroyOnLoad(currentPlayerModel);
+            DontDestroyOnLoad(currentPlayerBody.gameObject);
         }
 
         public static void Reset()
@@ -814,6 +814,11 @@ namespace H3MP
             {
                 colorIndex = index;
 
+                if(currentPlayerBody != null)
+                {
+                    currentPlayerBody.SetColor(colors[colorIndex]);
+                }
+
                 if(WristMenuSection.colorText != null)
                 {
                     WristMenuSection.colorText.text = "Current color: " + colorNames[colorIndex];
@@ -867,15 +872,15 @@ namespace H3MP
                 return;
             }
 
-            if(currentPlayerModel != null)
+            if(currentPlayerBody != null)
             {
-                Destroy(currentPlayerModel);
+                Destroy(currentPlayerBody.gameObject);
             }
 
             bool spawned = false;
             if (playerPrefabID.Equals("Default"))
             {
-                currentPlayerModel = Instantiate(playerPrefabs["Default"] as GameObject);
+                currentPlayerBody = Instantiate(playerPrefabs["Default"] as GameObject).GetComponent<PlayerBody>();
                 spawned = true;
             }
             else // Not default
@@ -890,14 +895,14 @@ namespace H3MP
                         {
                             gotPrefab = true;
                             playerModelAwaitingInstantiation = true;
-                            AnvilManager.Run(InstantiatePlayerModel(prefabFVRObject, playerPrefabID));
+                            AnvilManager.Run(InstantiatePlayerBody(prefabFVRObject, playerPrefabID));
                         }
                     }
                     else if (prefabObject is FVRObject)
                     {
                         gotPrefab = true;
                         playerModelAwaitingInstantiation = true;
-                        AnvilManager.Run(InstantiatePlayerModel(prefabObject as FVRObject, playerPrefabID));
+                        AnvilManager.Run(InstantiatePlayerBody(prefabObject as FVRObject, playerPrefabID));
                     }
                 }
 
@@ -905,7 +910,7 @@ namespace H3MP
                 {
                     Mod.LogError("Attempt to set player prefab to \""+ playerPrefabID+"\" failed, could not obtain prefab, using default");
                     playerPrefabID = "Default";
-                    currentPlayerModel = Instantiate(playerPrefabs[playerPrefabID] as GameObject);
+                    currentPlayerBody = Instantiate(playerPrefabs[playerPrefabID] as GameObject).GetComponent<PlayerBody>();
                     spawned = true;
                 }
             }
@@ -913,7 +918,7 @@ namespace H3MP
             // If already spawned, set to dont destroy on load right away
             if (spawned)
             {
-                DontDestroyOnLoad(currentPlayerModel);
+                DontDestroyOnLoad(currentPlayerBody.gameObject);
             }
 
             // Set option text

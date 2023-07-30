@@ -86,7 +86,10 @@ namespace H3MP.Scripts
         {
             this.visible = visible;
 
-            playerBody.gameObject.SetActive(visible);
+            if (playerBody != null)
+            {
+                playerBody.gameObject.SetActive(visible);
+            }
 
             if (visible && reticleContact == null &&
                 Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager != null &&

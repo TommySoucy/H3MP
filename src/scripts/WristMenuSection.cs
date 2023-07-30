@@ -151,7 +151,7 @@ namespace H3MP.Scripts
             
             // Force player body to Default if don't have one yet
             if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
-                && GameManager.currentPlayerModel == null
+                && GameManager.currentPlayerBody == null
                 && !GameManager.playerModelAwaitingInstantiation)
             {
                 GameManager.playerPrefabID = "Default";
@@ -164,8 +164,8 @@ namespace H3MP.Scripts
                     }
                 }
 
-                GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
-                DontDestroyOnLoad(GameManager.currentPlayerModel);
+                GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
+                DontDestroyOnLoad(GameManager.currentPlayerBody.gameObject);
 
                 if (WristMenuSection.playerBodyText != null)
                 {
@@ -210,7 +210,7 @@ namespace H3MP.Scripts
 
             // Force player body to Default if don't have one yet
             if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
-                && GameManager.currentPlayerModel == null
+                && GameManager.currentPlayerBody == null
                 && !GameManager.playerModelAwaitingInstantiation)
             {
                 GameManager.playerPrefabID = "Default";
@@ -223,8 +223,8 @@ namespace H3MP.Scripts
                     }
                 }
 
-                GameManager.currentPlayerModel = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject);
-                DontDestroyOnLoad(GameManager.currentPlayerModel);
+                GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
+                DontDestroyOnLoad(GameManager.currentPlayerBody.gameObject);
 
                 if (WristMenuSection.playerBodyText != null)
                 {
@@ -973,9 +973,9 @@ namespace H3MP.Scripts
             {
                 GameManager.playerPrefabID = "None";
 
-                if(GameManager.currentPlayerModel != null)
+                if(GameManager.currentPlayerBody != null)
                 {
-                    Destroy(GameManager.currentPlayerModel);
+                    Destroy(GameManager.currentPlayerBody.gameObject);
                 }
 
                 text.text = "Body: None";

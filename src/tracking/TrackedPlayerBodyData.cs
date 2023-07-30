@@ -55,15 +55,17 @@ namespace H3MP.Tracking
             data.physicalPlayerBody.physicalPlayerBody = root.GetComponent<PlayerBody>();
             data.physical.physical = data.physicalPlayerBody.physicalPlayerBody;
 
+            data.playerPrefabID = data.physicalPlayerBody.physicalPlayerBody.playerPrefabID;
+
             data.typeIdentifier = "TrackedPlayerBodyData";
             data.active = trackedPlayerBody.gameObject.activeInHierarchy;
             data.scene = GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene;
             data.instance = GameManager.instance;
-            data.controller = GameManager.ID;
             data.initTracker = GameManager.ID;
+            data.controller = GameManager.ID;
             data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
 
-            GameManager.currentPlayerBody = trackedPlayerBody;
+            GameManager.currentTrackedPlayerBody = trackedPlayerBody;
             GameManager.trackedObjectByObject.Add(data.physicalPlayerBody.physicalPlayerBody, trackedPlayerBody);
 
             // Add to local list
@@ -129,7 +131,7 @@ namespace H3MP.Tracking
                 physicalPlayerBody.physicalPlayerBody = playerBodyObject.GetComponent<PlayerBody>();
                 physical.physical = physicalPlayerBody.physicalPlayerBody;
 
-                GameManager.currentPlayerBody = physicalPlayerBody;
+                GameManager.currentTrackedPlayerBody = physicalPlayerBody;
                 GameManager.trackedObjectByObject.Add(physicalPlayerBody.physicalPlayerBody, physicalPlayerBody);
 
                 // Initially set itself
@@ -141,13 +143,26 @@ namespace H3MP.Tracking
             }
         }
 
+        public override void WriteToPacket(Packet packet, bool incrementOrder, bool full)
+        {
+            base.WriteToPacket(packet, incrementOrder, full);
+
+            if (full)
+            {
+                packet.Write(playerPrefabID);
+            }
+        }
+
         public override void OnControlChanged(int newController)
         {
             base.OnControlChanged(newController);
 
-            // A player body should never have its controller changed. If it changes it is because a player disconnected
-            // and their objects' control was ditributed, or something went very wrong
-            GameObject.Destroy(physical.gameObject);
+            if (newController != initTracker)
+            {
+                // A player body should never have its controller changed. If it changes it is because a player disconnected
+                // and their objects' control was ditributed, or something went very wrong
+                GameObject.Destroy(physical.gameObject);
+            }
         }
 
         public static bool IsControlled(Transform root)
