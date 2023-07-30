@@ -20,7 +20,7 @@ namespace H3MP.Scripts
         public Transform headTransform;
         [Tooltip("RendererToggle: Head renderers will be toggled depending on whether the player body is yours or another player's.\n" +
                  "LayerToggle: Head renderers' layers will be toggled between ExternalCamOnly and default depending on whether the player body is yours or another player's.\n" +
-                 "Physical: Will assume that head will be out of view of VR camera. You can do this using headOffset.")]
+                 "Physical: Will assume that head will be out of view of VR camera.")]
         public HeadDisplayMode headDisplayMode;
         [Tooltip("If headDisplayMode is set to Physical, headRenderers will not be used.")]
         public Renderer[] headRenderers;
@@ -31,7 +31,7 @@ namespace H3MP.Scripts
         [Tooltip("0: Left, 1: Right.")]
         public Transform[] handTransforms;
         [NonSerialized]
-        public Transform[] handsToFollow; // Left, Right
+        public Transform[] handsToFollow;
 
         [Header("Other")]
         [Tooltip("All physical colliders. These will be disabled if the body if yours, since the vanilla colliders and hitboxes should be used instead.")]
@@ -40,7 +40,7 @@ namespace H3MP.Scripts
         public AIEntity[] entities;
         [Tooltip("All UI canvases. These will be disabled if the body is yours, since vanilla health UI for example should be used instead.")]
         public Canvas[] canvases;
-        [Tooltip("All hitboxes. These will have their playerManager intialized if this is another player's body.")]
+        [Tooltip("All hitboxes. These will have their manager intialized if this is another player's body.")]
         public PlayerHitbox[] hitboxes;
 
         [Header("Optionals")]

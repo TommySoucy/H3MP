@@ -59,7 +59,10 @@ namespace H3MP.Tracking
             physicalPlayerBody.SetIFF(playerManager.IFF);
             physicalPlayerBody.SetColor(GameManager.colors[playerManager.colorIndex]);
 
-            physicalPlayerBody.usernameLabel.text = playerManager.username;
+            if (physicalPlayerBody.usernameLabel != null)
+            {
+                physicalPlayerBody.usernameLabel.text = playerManager.username;
+            }
             UpdateHealthLabel();
 
             if (physicalPlayerBody.hitboxes != null) 
@@ -77,7 +80,10 @@ namespace H3MP.Tracking
 
         public void UpdateHealthLabel()
         {
-            physicalPlayerBody.healthLabel.text = playerManager.health + "/" + playerManager.maxHealth;
+            if (physicalPlayerBody.healthLabel != null)
+            {
+                physicalPlayerBody.healthLabel.text = playerManager.health + "/" + playerManager.maxHealth;
+            }
         }
 
         private void OnPlayerBodyInit(FVRPlayerBody playerBody)

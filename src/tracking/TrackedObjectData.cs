@@ -780,9 +780,12 @@ namespace H3MP.Tracking
         public void SetScene(string scene, bool send)
         {
             // Set scene of children first
-            for(int i=0; i < children.Count; ++i)
+            if (children != null)
             {
-                children[i].SetScene(scene, send);
+                for (int i = 0; i < children.Count; ++i)
+                {
+                    children[i].SetScene(scene, send);
+                }
             }
 
             // Set scene for this object
@@ -901,9 +904,12 @@ namespace H3MP.Tracking
         public void SetInstance(int instance, bool send)
         {
             // Set instance of children first
-            for (int i = 0; i < children.Count; ++i)
+            if (children != null)
             {
-                children[i].SetInstance(instance, send);
+                for (int i = 0; i < children.Count; ++i)
+                {
+                    children[i].SetInstance(instance, send);
+                }
             }
 
             // Set instance for this object
