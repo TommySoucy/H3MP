@@ -4319,6 +4319,11 @@ namespace H3MP.Networking
             ClientSend.IDConfirm(IDToConfirm);
         }
 
+        public static void EnforcePlayerModels(Packet packet)
+        {
+            // TODO
+        }
+
         public static void ObjectScene(Packet packet)
         {
             int trackedID = packet.ReadInt();

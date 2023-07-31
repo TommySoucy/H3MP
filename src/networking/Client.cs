@@ -581,7 +581,9 @@ namespace H3MP.Networking
                 ClientHandle.ReactiveSteelTargetDamage,
                 ClientHandle.MTUTest,
                 ClientHandle.IDConfirm,
+                ClientHandle.EnforcePlayerModels,
                 ClientHandle.ObjectScene,
+                ClientHandle.ObjectInstance,
             };
 
             // All vanilla scenes can be synced by default
