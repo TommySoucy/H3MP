@@ -19,7 +19,16 @@ namespace H3MP.Tracking
 
         public int trackedID = -1; // This object's unique ID to identify it across systems (index in global objects arrays)
         public int localTrackedID = -1; // This object's index in local objects list
-        public uint localWaitingIndex = uint.MaxValue; // The unique index this object had while waiting for its tracked ID
+        private uint _localWaitingIndex = uint.MaxValue; // The unique index this object had while waiting for its tracked ID
+        public uint localWaitingIndex
+        { 
+            get { return _localWaitingIndex; }
+            set
+            {
+                Mod.LogInfo("TrackedObjectData of type " + typeIdentifier + " with tracked ID " + trackedID + " is getting local waiting index set from " + _localWaitingIndex + " to " + value+":\n"+Environment.StackTrace);
+                _localWaitingIndex = value;
+            }
+        }
         public int initTracker; // The ID of the client who initially tracked this object
         private int _controller = 0; // Client controlling this object, 0 for host
         public int controller 
@@ -197,6 +206,7 @@ namespace H3MP.Tracking
             if (full)
             {
                 //typeIdentifier = updatedObject.typeIdentifier;
+                //initTracker = updatedObject.initTracker;
                 controller = updatedObject.controller;
                 parent = updatedObject.parent;
                 //localTrackedID = updatedObject.localTrackedID;
@@ -204,7 +214,6 @@ namespace H3MP.Tracking
                 instance = updatedObject.instance;
                 //sceneInit = updatedObject.sceneInit;
                 localWaitingIndex = updatedObject.localWaitingIndex;
-                //initTracker = updatedObject.initTracker;
             }
 
             order = updatedObject.order;
@@ -240,6 +249,7 @@ namespace H3MP.Tracking
                 //       If we do a full update, we would overwrite the local value, which we don't want to do
                 //       These have been left here for documentation
                 /*typeIdentifier =*/ packet.ReadString();
+                /*initTracker = packet.ReadInt();*/ packet.readPos += 4;
                 controller = packet.ReadInt();
                 parent = packet.ReadInt();
                 /*localTrackedID = packet.ReadInt();*/ packet.readPos += 4;
@@ -247,7 +257,6 @@ namespace H3MP.Tracking
                 instance = packet.ReadInt();
                 /*sceneInit = packet.ReadBool();*/ ++packet.readPos;
                 localWaitingIndex = packet.ReadUInt();
-                /*initTracker = packet.ReadInt();*/ packet.readPos += 4;
             }
 
             previousActive = active;
@@ -779,6 +788,8 @@ namespace H3MP.Tracking
 
         public void SetScene(string scene, bool send)
         {
+            Mod.LogInfo("Setting scene of object at "+trackedID+" with local waiting idex: "+localWaitingIndex+" from "+this.scene+" to "+scene);
+
             // Set scene of children first
             if (children != null)
             {
@@ -791,6 +802,7 @@ namespace H3MP.Tracking
             // Set scene for this object
             if (trackedID == -1)
             {
+                Mod.LogInfo("\tNo tracked ID, adding to unknown");
                 // No tracked ID, add to unknown
                 if (TrackedObject.unknownSceneChange.ContainsKey(localWaitingIndex))
                 {
@@ -803,9 +815,11 @@ namespace H3MP.Tracking
             }
             else // We have tracked ID, we can process
             {
+                Mod.LogInfo("\tGot tracked ID");
                 // Only want to process if scene is different
                 if (!scene.Equals(this.scene))
                 {
+                    Mod.LogInfo("\t\tScenes different");
                     // Manage dict
                     // Remove from previous scene
                     if (GameManager.objectsByInstanceByScene.TryGetValue(this.scene, out Dictionary<int, List<int>> instances))
@@ -821,7 +835,7 @@ namespace H3MP.Tracking
                         }
                         else
                         {
-                            Mod.LogError("Tracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetScene: from " + this.scene + " to " + scene + ", current instance "+instance+" missing from dict");
+                            Mod.LogError("\t\t\tTracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetScene: from " + this.scene + " to " + scene + ", current instance "+instance+" missing from dict");
                         }
 
                         if (instances.Count == 0)
@@ -831,7 +845,7 @@ namespace H3MP.Tracking
                     }
                     else
                     {
-                        Mod.LogError("Tracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetScene: from " + this.scene + " to " + scene + ", current scene missing from dict");
+                        Mod.LogError("\t\t\tTracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetScene: from " + this.scene + " to " + scene + ", current scene missing from dict");
                     }
 
                     // Add to new scene
@@ -903,6 +917,8 @@ namespace H3MP.Tracking
 
         public void SetInstance(int instance, bool send)
         {
+            Mod.LogInfo("Setting instance of object at " + trackedID + " with local waiting idex: " + localWaitingIndex + " from " + this.instance + " to " + instance);
+
             // Set instance of children first
             if (children != null)
             {
@@ -915,6 +931,7 @@ namespace H3MP.Tracking
             // Set instance for this object
             if (trackedID == -1)
             {
+                Mod.LogInfo("\tNo tracked ID, adding to unknown");
                 // No tracked ID, add to unknown
                 if (TrackedObject.unknownInstanceChange.ContainsKey(localWaitingIndex))
                 {
@@ -927,9 +944,11 @@ namespace H3MP.Tracking
             }
             else // We have tracked ID, we can process
             {
+                Mod.LogInfo("\tGot tracked ID");
                 // Only want to process if scene is different
                 if (instance != this.instance)
                 {
+                    Mod.LogInfo("\t\tScenes different");
                     // Manage dict
                     // Remove from previous instance
                     if (GameManager.objectsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances))
@@ -945,7 +964,7 @@ namespace H3MP.Tracking
                         }
                         else
                         {
-                            Mod.LogError("Tracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetInstance: from " + this.instance + " to " + instance + ", current instance missing from dict");
+                            Mod.LogError("\t\t\tTracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetInstance: from " + this.instance + " to " + instance + ", current instance missing from dict");
                         }
 
                         if (instances.Count == 0)
@@ -955,7 +974,7 @@ namespace H3MP.Tracking
                     }
                     else
                     {
-                        Mod.LogError("Tracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetInstance: from " + this.instance + " to " + instance + ", current scene "+this.scene+" missing from dict");
+                        Mod.LogError("\t\t\tTracked object " + trackedID + " with local waiting index: " + localWaitingIndex + ": SetInstance: from " + this.instance + " to " + instance + ", current scene "+this.scene+" missing from dict");
                     }
 
                     // Add to new instance
