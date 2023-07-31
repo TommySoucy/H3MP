@@ -45,6 +45,8 @@ namespace H3MP.Scripts
             GameObject rightHandObject = new GameObject("RightHand");
             rightHandObject.transform.parent = transform;
             rightHand = rightHandObject.transform;
+
+            GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
         }
 
         public void Damage(float damageMultiplier, bool head, Damage damage)
@@ -102,6 +104,13 @@ namespace H3MP.Scripts
             int preIFF = this.IFF;
             this.IFF = IFF;
 
+            // This process is dependent on GM.CurrentPlayerBody being set
+            // Will recall this when we set the current player
+            if(GM.CurrentPlayerBody == null)
+            {
+                return;
+            }
+
             playerBody.physicalPlayerBody.SetIFF(IFF);
 
             if (GameManager.colorByIFF && spawned)
@@ -122,8 +131,8 @@ namespace H3MP.Scripts
                     reticleContact = GM.TNH_Manager.TAHReticle.RegisterTrackedObject(head, (TAH_ReticleContact.ContactType)(GameManager.radarColor ? (IFF == GM.CurrentPlayerBody.GetPlayerIFF() ? -2 : -3) : colorIndex - 4));
                 }
                 else if(!visible ||
-                Mod.currentTNHInstance == null ||
-                Mod.currentTNHInstance.manager == null ||
+                        Mod.currentTNHInstance == null ||
+                        Mod.currentTNHInstance.manager == null ||
                         !Mod.currentTNHInstance.currentlyPlaying.Contains(ID) ||
                         reticleContact != null)
                 {
@@ -162,6 +171,16 @@ namespace H3MP.Scripts
                 reticleContact.R_Arrow.material.color = GameManager.colors[colorIndex];
                 reticleContact.R_Icon.material.color = GameManager.colors[colorIndex];
             }
+        }
+
+        private void OnPlayerBodyInit(FVRPlayerBody playerBody)
+        {
+            SetIFF(IFF);
+        }
+
+        private void OnDestroy()
+        {
+            GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
         }
     }
 }

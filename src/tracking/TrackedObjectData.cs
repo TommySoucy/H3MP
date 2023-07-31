@@ -19,16 +19,7 @@ namespace H3MP.Tracking
 
         public int trackedID = -1; // This object's unique ID to identify it across systems (index in global objects arrays)
         public int localTrackedID = -1; // This object's index in local objects list
-        private uint _localWaitingIndex = uint.MaxValue; // The unique index this object had while waiting for its tracked ID
-        public uint localWaitingIndex
-        { 
-            get { return _localWaitingIndex; }
-            set
-            {
-                Mod.LogInfo("TrackedObjectData of type " + typeIdentifier + " with tracked ID " + trackedID + " is getting local waiting index set from " + _localWaitingIndex + " to " + value+":\n"+Environment.StackTrace);
-                _localWaitingIndex = value;
-            }
-        }
+        public uint localWaitingIndex = uint.MaxValue; // The unique index this object had while waiting for its tracked ID
         public int initTracker; // The ID of the client who initially tracked this object
         private int _controller = 0; // Client controlling this object, 0 for host
         public int controller 
