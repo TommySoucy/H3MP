@@ -466,7 +466,7 @@ namespace H3MP.Patches
             {
                 // Note: If flag2, damageable != null
                 TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(damageable, out damageableObject) ? damageableObject : null;
-                if(!(damageable is PlayerHitbox) && damageableObject == null)
+                if(!(damageable is FVRPlayerHitbox) && damageableObject == null)
                 {
                     return true; // Damageable object client side (not tracked), apply damage
                 }
@@ -734,7 +734,7 @@ namespace H3MP.Patches
             if (original != null)
             {
                 TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(original, out damageableObject) ? damageableObject : null;
-                if (!(original is PlayerHitbox) && damageableObject == null)
+                if (!(original is FVRPlayerHitbox) && damageableObject == null)
                 {
                     return original; // Damageable object client side (not tracked), apply damage
                 }
