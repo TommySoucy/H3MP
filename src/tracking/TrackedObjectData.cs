@@ -312,7 +312,7 @@ namespace H3MP.Tracking
 
         public virtual void OnTrackedIDReceived(TrackedObjectData newData)
         {
-            Mod.LogInfo("Received trackedID " + trackedID + " for oobject with local waiting index: " + localWaitingIndex, false);
+            Mod.LogInfo("Received trackedID " + trackedID + " for object with local waiting index: " + localWaitingIndex, false);
             if (TrackedObject.unknownDestroyTrackedIDs.Contains(localWaitingIndex))
             {
                 ClientSend.DestroyObject(trackedID);
@@ -779,7 +779,7 @@ namespace H3MP.Tracking
 
         public void SetScene(string scene, bool send)
         {
-            Mod.LogInfo("Setting scene of object at "+trackedID+" with local waiting idex: "+localWaitingIndex+" from "+this.scene+" to "+scene);
+            Mod.LogInfo("Setting scene of object at "+trackedID+" with local waiting index: "+localWaitingIndex+" from "+this.scene+" to "+scene);
 
             // Set scene of children first
             if (children != null)
@@ -889,6 +889,14 @@ namespace H3MP.Tracking
                             GameObject.Destroy(physical.gameObject);
                         }
                     }
+                    else if (instance  == GameManager.instance) // If we are in this object's scene/instance, ensure its instantiation
+                    {
+                        if (physical == null && !awaitingInstantiation)
+                        {
+                            awaitingInstantiation = true;
+                            AnvilManager.Run(Instantiate());
+                        }
+                    }
 
                     // Send if we want
                     if (send)
@@ -908,7 +916,7 @@ namespace H3MP.Tracking
 
         public void SetInstance(int instance, bool send)
         {
-            Mod.LogInfo("Setting instance of object at " + trackedID + " with local waiting idex: " + localWaitingIndex + " from " + this.instance + " to " + instance);
+            Mod.LogInfo("Setting instance of object at " + trackedID + " with local waiting index: " + localWaitingIndex + " from " + this.instance + " to " + instance);
 
             // Set instance of children first
             if (children != null)
@@ -1016,6 +1024,14 @@ namespace H3MP.Tracking
                             physical.SecondaryDestroy();
 
                             GameObject.Destroy(physical.gameObject);
+                        }
+                    }
+                    else if (scene.Equals(GameManager.sceneLoading ? LoadLevelBeginPatch.loadingLevel : GameManager.scene)) // If we are/will be in this object's scene/instance, ensure its instantiation
+                    {
+                        if(physical == null && !awaitingInstantiation)
+                        {
+                            awaitingInstantiation = true;
+                            AnvilManager.Run(Instantiate());
                         }
                     }
 

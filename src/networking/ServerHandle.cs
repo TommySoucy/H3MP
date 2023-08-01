@@ -2262,12 +2262,16 @@ namespace H3MP.Networking
         public static void UpToDateObjects(int clientID, Packet packet)
         {
             // Reconstruct passed trackedObjects from packet
-            int count = packet.ReadShort();
             bool instantiate = packet.ReadBool();
-            for (int i = 0; i < count; ++i)
+            int trackedID = packet.ReadInt();
+            TrackedObjectData actualTrackedObject = Server.objects[trackedID];
+
+            if(actualTrackedObject == null)
             {
-                int trackedID = packet.ReadInt();
-                TrackedObjectData actualTrackedObject = Server.objects[trackedID];
+                Mod.LogWarning("Server received up to date object at "+trackedID+" but we do not have data.");
+            }
+            else
+            {
                 actualTrackedObject.UpdateFromPacket(packet, true);
 
                 // Although we only request up to date objects from our scene/instance, it might have changed since we made the request
