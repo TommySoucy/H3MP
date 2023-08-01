@@ -34,7 +34,6 @@ namespace MeatKit
 
             // Emit code to add entry to H3MP's player prefab IDs
             il.Emit(OpCodes.Ldstr, playerPrefabID);
-            Debug.LogWarning("plugin.Module null?: " + (plugin.Module == null));
             il.Emit(OpCodes.Call, plugin.Module.ImportReference(typeof(GameManager).GetMethod("AddPlayerPrefabID")));
 #endif
         }
