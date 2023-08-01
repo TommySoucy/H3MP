@@ -351,7 +351,7 @@ namespace H3MP.Patches
                 // Make sure players' AIEntities are registered
                 foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                 {
-                    if (playerEntry.Value.visible)
+                    if (playerEntry.Value.visible && playerEntry.Value.playerBody != null)
                     {
                         playerEntry.Value.playerBody.physicalPlayerBody.SetEntitiesRegistered(true);
                     }

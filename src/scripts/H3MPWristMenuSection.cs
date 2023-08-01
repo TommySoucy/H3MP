@@ -346,7 +346,7 @@ namespace H3MP.Scripts
             {
                 if(entry.Value.playerBody != null)
                 {
-                    entry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(entry.Value.visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == entry.Value.IFF)));
+                    entry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == entry.Value.IFF));
                 }
             }
 
@@ -396,7 +396,7 @@ namespace H3MP.Scripts
             {
                 if (entry.Value.playerBody != null)
                 {
-                    entry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(entry.Value.visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == entry.Value.IFF)));
+                    entry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == entry.Value.IFF));
                 }
             }
 
@@ -481,21 +481,30 @@ namespace H3MP.Scripts
                         textRef.text = "Nameplates (All)";
                         foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                         {
-                            playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(playerEntry.Value.visible);
+                            if (playerEntry.Value.playerBody != null)
+                            {
+                                playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(true);
+                            }
                         }
                         break;
                     case 1:
                         textRef.text = "Nameplates (Friendly only)";
                         foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                         {
-                            playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(playerEntry.Value.visible && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                            if (playerEntry.Value.playerBody != null)
+                            {
+                                playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                            }
                         }
                         break;
                     case 2:
                         textRef.text = "Nameplates (None)";
                         foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                         {
-                            playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(false);
+                            if (playerEntry.Value.playerBody != null)
+                            {
+                                playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(false);
+                            }
                         }
                         break;
                 }

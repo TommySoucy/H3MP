@@ -3320,7 +3320,10 @@ namespace H3MP.Networking
                     }
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
-                        playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(playerEntry.Value.visible);
+                        if (playerEntry.Value.playerBody != null)
+                        {
+                            playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(true);
+                        }
                     }
                     break;
                 case 1:
@@ -3328,9 +3331,15 @@ namespace H3MP.Networking
                     {
                         H3MPWristMenuSection.nameplateText.text = "Nameplates (Friendly only)";
                     }
-                    foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
+                    if (GM.CurrentPlayerBody != null)
                     {
-                        playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(playerEntry.Value.visible && GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                        foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
+                        {
+                            if (playerEntry.Value.playerBody != null)
+                            {
+                                playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(GM.CurrentPlayerBody.GetPlayerIFF() == playerEntry.Value.IFF);
+                            }
+                        }
                     }
                     break;
                 case 2:
@@ -3340,7 +3349,10 @@ namespace H3MP.Networking
                     }
                     foreach (KeyValuePair<int, PlayerManager> playerEntry in GameManager.players)
                     {
-                        playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(false);
+                        if (playerEntry.Value.playerBody != null)
+                        {
+                            playerEntry.Value.playerBody.physicalPlayerBody.SetCanvasesEnabled(false);
+                        }
                     }
                     break;
             }

@@ -106,7 +106,7 @@ namespace H3MP.Scripts
 
             // This process is dependent on GM.CurrentPlayerBody being set
             // Will recall this when we set the current player
-            if(GM.CurrentPlayerBody == null)
+            if(GM.CurrentPlayerBody == null || playerBody == null)
             {
                 return;
             }
@@ -118,7 +118,7 @@ namespace H3MP.Scripts
                 SetColor(IFF);
             }
 
-            playerBody.physicalPlayerBody.SetCanvasesEnabled(visible && (GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF)));
+            playerBody.physicalPlayerBody.SetCanvasesEnabled(GameManager.nameplateMode == 0 || (GameManager.nameplateMode == 1 && GM.CurrentPlayerBody.GetPlayerIFF() == IFF));
 
             if (GameManager.radarMode == 1)
             {
@@ -163,7 +163,10 @@ namespace H3MP.Scripts
             {
                 this.colorIndex = Mathf.Abs(colorIndex % GameManager.colors.Length);
 
-                playerBody.physicalPlayerBody.SetColor(GameManager.colors[colorIndex]);
+                if (playerBody != null)
+                {
+                    playerBody.physicalPlayerBody.SetColor(GameManager.colors[colorIndex]);
+                }
             }
 
             if (!GameManager.radarColor && reticleContact != null)

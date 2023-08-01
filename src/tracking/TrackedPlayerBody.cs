@@ -106,6 +106,10 @@ namespace H3MP.Tracking
 
                 physicalPlayerBody.Init();
             }
+            else if (playerManager != null)
+            {
+                playerManager.SetIFF(playerManager.IFF);
+            }
         }
 
         public virtual void Update()
