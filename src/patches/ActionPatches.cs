@@ -4596,14 +4596,8 @@ namespace H3MP.Patches
                 TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
                 if (trackedEncryption != null && trackedEncryption.data.controller == GameManager.ID)
                 {
-                    trackedEncryption.encryptionData.tendrilsActive[index] = true;
-                    trackedEncryption.encryptionData.growthPoints[index] = point;
-                    trackedEncryption.encryptionData.subTargsPos[index] = point;
                     trackedEncryption.encryptionData.subTargsActive[index] = true;
-                    trackedEncryption.encryptionData.tendrilFloats[index] = 1f;
                     Vector3 forward = point - trackedEncryption.physicalEncryption.Tendrils[index].transform.position;
-                    trackedEncryption.encryptionData.tendrilsRot[index] = Quaternion.LookRotation(forward);
-                    trackedEncryption.encryptionData.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
                     if (ThreadManager.host)
                     {
@@ -4652,11 +4646,7 @@ namespace H3MP.Patches
                 {
                     if (trackedEncryption.data.controller == GameManager.ID)
                     {
-                        trackedEncryption.encryptionData.growthPoints[index] = point;
-                        trackedEncryption.encryptionData.tendrilFloats[index] = 0;
                         Vector3 forward = point - __instance.Tendrils[index].transform.position;
-                        trackedEncryption.encryptionData.tendrilsRot[index] = Quaternion.LookRotation(forward);
-                        trackedEncryption.encryptionData.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
                         if (ThreadManager.host)
                         {

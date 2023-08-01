@@ -2709,17 +2709,11 @@ namespace H3MP.Networking
             TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
             {
-                trackedEncryption.tendrilsActive[index] = true;
-                trackedEncryption.growthPoints[index] = point;
-                trackedEncryption.subTargsPos[index] = point;
                 trackedEncryption.subTargsActive[index] = true;
-                trackedEncryption.tendrilFloats[index] = 1f;
 
                 if (trackedEncryption.physicalEncryption != null)
                 {
                     Vector3 forward = point - trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[index].transform.position;
-                    trackedEncryption.tendrilsRot[index] = Quaternion.LookRotation(forward);
-                    trackedEncryption.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
                     ++EncryptionSpawnGrowthPatch.skip;
                     trackedEncryption.physicalEncryption.physicalEncryption.SpawnGrowth(index, point);
@@ -2751,11 +2745,7 @@ namespace H3MP.Networking
                 {
                     for (int i = 0; i < indexCount; ++i)
                     {
-                        trackedEncryption.tendrilsActive[indices[i]] = true;
-                        trackedEncryption.growthPoints[indices[i]] = points[i];
-                        trackedEncryption.subTargsPos[indices[i]] = points[i];
                         trackedEncryption.subTargsActive[indices[i]] = true;
-                        trackedEncryption.tendrilFloats[indices[i]] = 1f;
                     }
 
                     if (trackedEncryption.physicalEncryption != null)
@@ -2799,13 +2789,9 @@ namespace H3MP.Networking
             TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
             {
-                trackedEncryption.growthPoints[index] = point;
-                trackedEncryption.tendrilFloats[index] = 0;
                 if (trackedEncryption.physicalEncryption != null)
                 {
                     Vector3 forward = point - trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[index].transform.position;
-                    trackedEncryption.tendrilsRot[index] = Quaternion.LookRotation(forward);
-                    trackedEncryption.tendrilsScale[index] = new Vector3(0.2f, 0.2f, forward.magnitude);
 
                     ++EncryptionResetGrowthPatch.skip;
                     trackedEncryption.physicalEncryption.physicalEncryption.ResetGrowth(index, point);

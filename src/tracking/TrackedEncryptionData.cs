@@ -12,18 +12,26 @@ namespace H3MP.Tracking
         public TrackedEncryption physicalEncryption;
 
         public TNH_EncryptionType type;
+        /*
+         * Static: Pos, Rot
+         * Hardened: Pos, Rot
+         * Swarm: Pos, Rot, Subtargs
+         * Recursive: Pos, Rot, Subtargs
+         * Stealth: Pos, Rot
+         * Agile: Pos, Rot, Pointer scale
+         * Regenerative: Pos, Rot, Subtargs
+         * Polymorphic: Pos, Rot, Subtargs, Pointer scale
+         * Cascading: Pos, Rot
+         * Orthagonal: Pos, Rot, Subtargs, isOrthagonalBeamFiring
+         * */
         public Vector3 previousPos;
         public Quaternion previousRot;
         public Vector3 position;
         public Quaternion rotation;
 
-        public bool[] tendrilsActive;
-        public Vector3[] growthPoints;
-        public Vector3[] subTargsPos;
         public bool[] subTargsActive;
-        public float[] tendrilFloats;
-        public Quaternion[] tendrilsRot;
-        public Vector3[] tendrilsScale;
+        public float agilePointerScale;
+        public bool isOrthagonalBeamFiring;
 
         public TrackedEncryptionData()
         {
@@ -34,36 +42,10 @@ namespace H3MP.Tracking
         {
             position = packet.ReadVector3();
             rotation = packet.ReadQuaternion();
+            agilePointerScale = packet.ReadFloat();
 
             type = (TNH_EncryptionType)packet.ReadByte();
             int length = packet.ReadInt();
-            if (length > 0)
-            {
-                tendrilsActive = new bool[length];
-                for (int i = 0; i < length; ++i)
-                {
-                    tendrilsActive[i] = packet.ReadBool();
-                }
-            }
-            length = packet.ReadInt();
-            if (length > 0)
-            {
-                growthPoints = new Vector3[length];
-                for (int i = 0; i < length; ++i)
-                {
-                    growthPoints[i] = packet.ReadVector3();
-                }
-            }
-            length = packet.ReadInt();
-            if (length > 0)
-            {
-                subTargsPos = new Vector3[length];
-                for (int i = 0; i < length; ++i)
-                {
-                    subTargsPos[i] = packet.ReadVector3();
-                }
-            }
-            length = packet.ReadInt();
             if (length > 0)
             {
                 subTargsActive = new bool[length];
@@ -72,33 +54,7 @@ namespace H3MP.Tracking
                     subTargsActive[i] = packet.ReadBool();
                 }
             }
-            length = packet.ReadInt();
-            if (length > 0)
-            {
-                tendrilFloats = new float[length];
-                for (int i = 0; i < length; ++i)
-                {
-                    tendrilFloats[i] = packet.ReadFloat();
-                }
-            }
-            length = packet.ReadInt();
-            if (length > 0)
-            {
-                tendrilsRot = new Quaternion[length];
-                for (int i = 0; i < length; ++i)
-                {
-                    tendrilsRot[i] = packet.ReadQuaternion();
-                }
-            }
-            length = packet.ReadInt();
-            if (length > 0)
-            {
-                tendrilsScale = new Vector3[length];
-                for (int i = 0; i < length; ++i)
-                {
-                    tendrilsScale[i] = packet.ReadVector3();
-                }
-            }
+            isOrthagonalBeamFiring = packet.ReadBool();
         }
 
         public static bool IsOfType(Transform t)
@@ -129,44 +85,17 @@ namespace H3MP.Tracking
             GameManager.trackedObjectByObject.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
             GameManager.trackedObjectByDamageable.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
 
-
             data.type = data.physicalEncryption.physicalEncryption.Type;
             data.position = trackedEncryption.transform.position;
             data.rotation = trackedEncryption.transform.rotation;
 
-            data.tendrilsActive = new bool[data.physicalEncryption.physicalEncryption.Tendrils.Count];
-            data.growthPoints = new Vector3[data.physicalEncryption.physicalEncryption.GrowthPoints.Count];
-            data.subTargsPos = new Vector3[data.physicalEncryption.physicalEncryption.SubTargs.Count];
             data.subTargsActive = new bool[data.physicalEncryption.physicalEncryption.SubTargs.Count];
-            data.tendrilFloats = new float[data.physicalEncryption.physicalEncryption.TendrilFloats.Count];
-            data.tendrilsRot = new Quaternion[data.physicalEncryption.physicalEncryption.Tendrils.Count];
-            data.tendrilsScale = new Vector3[data.physicalEncryption.physicalEncryption.Tendrils.Count];
-            if (data.physicalEncryption.physicalEncryption.UsesRegenerativeSubTarg)
+            for (int i = 0; i < data.physicalEncryption.physicalEncryption.SubTargs.Count; ++i)
             {
-                for (int i = 0; i < data.physicalEncryption.physicalEncryption.Tendrils.Count; ++i)
-                {
-                    if (data.physicalEncryption.physicalEncryption.Tendrils[i].activeSelf)
-                    {
-                        data.tendrilsActive[i] = true;
-                        data.growthPoints[i] = data.physicalEncryption.physicalEncryption.GrowthPoints[i];
-                        data.subTargsPos[i] = data.physicalEncryption.physicalEncryption.SubTargs[i].transform.position;
-                        data.subTargsActive[i] = data.physicalEncryption.physicalEncryption.SubTargs[i];
-                        data.tendrilFloats[i] = data.physicalEncryption.physicalEncryption.TendrilFloats[i];
-                        data.tendrilsRot[i] = data.physicalEncryption.physicalEncryption.Tendrils[i].transform.rotation;
-                        data.tendrilsScale[i] = data.physicalEncryption.physicalEncryption.Tendrils[i].transform.localScale;
-                    }
-                }
+                data.subTargsActive[i] = data.physicalEncryption.physicalEncryption.SubTargs[i].activeSelf;
             }
-            else if (data.physicalEncryption.physicalEncryption.UsesRecursiveSubTarg)
-            {
-                for (int i = 0; i < data.physicalEncryption.physicalEncryption.SubTargs.Count; ++i)
-                {
-                    if (data.physicalEncryption.physicalEncryption.SubTargs[i] != null && data.physicalEncryption.physicalEncryption.SubTargs[i].activeSelf)
-                    {
-                        data.subTargsActive[i] = data.physicalEncryption.physicalEncryption.SubTargs[i].activeSelf;
-                    }
-                }
-            }
+            data.agilePointerScale = data.physicalEncryption.physicalEncryption.AgilePointerScale;
+            data.isOrthagonalBeamFiring = data.physicalEncryption.physicalEncryption.isOrthagonalBeamFiring;
 
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
@@ -229,38 +158,6 @@ namespace H3MP.Tracking
                 GM.TNH_Manager.m_curHoldPoint.RegisterNewTarget(physicalEncryption.physicalEncryption);
             }
 
-            // Init growths
-            physicalEncryption.physicalEncryption.m_numSubTargsLeft = 0;
-            if (physicalEncryption.physicalEncryption.UsesRegenerativeSubTarg)
-            {
-                for (int i = 0; i < tendrilsActive.Length; ++i)
-                {
-                    if (tendrilsActive[i])
-                    {
-                        physicalEncryption.physicalEncryption.Tendrils[i].SetActive(true);
-                        physicalEncryption.physicalEncryption.GrowthPoints[i] = growthPoints[i];
-                        physicalEncryption.physicalEncryption.SubTargs[i].transform.position = subTargsPos[i];
-                        physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
-                        physicalEncryption.physicalEncryption.TendrilFloats[i] = 1f;
-                        physicalEncryption.physicalEncryption.Tendrils[i].transform.rotation = tendrilsRot[i];
-                        physicalEncryption.physicalEncryption.Tendrils[i].transform.localScale = tendrilsScale[i];
-                        physicalEncryption.physicalEncryption.SubTargs[i].transform.rotation = UnityEngine.Random.rotation;
-                        ++physicalEncryption.physicalEncryption.m_numSubTargsLeft;
-                    }
-                }
-            }
-            else if (physicalEncryption.physicalEncryption.UsesRecursiveSubTarg)
-            {
-                for (int i = 0; i < subTargsActive.Length; ++i)
-                {
-                    if (subTargsActive[i])
-                    {
-                        physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
-                        ++physicalEncryption.physicalEncryption.m_numSubTargsLeft;
-                    }
-                }
-            }
-
             // Initially set itself
             UpdateFromData(this);
         }
@@ -274,13 +171,7 @@ namespace H3MP.Tracking
             if (full)
             {
                 type = updatedEncryption.type;
-                tendrilsActive = updatedEncryption.tendrilsActive;
-                growthPoints = updatedEncryption.growthPoints;
-                subTargsPos = updatedEncryption.subTargsPos;
                 subTargsActive = updatedEncryption.subTargsActive;
-                tendrilFloats = updatedEncryption.tendrilFloats;
-                tendrilsRot = updatedEncryption.tendrilsRot;
-                tendrilsScale = updatedEncryption.tendrilsScale;
             }
 
             previousPos = position;
@@ -316,64 +207,10 @@ namespace H3MP.Tracking
                 int length = packet.ReadInt();
                 if (length > 0)
                 {
-                    tendrilsActive = new bool[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        tendrilsActive[i] = packet.ReadBool();
-                    }
-                }
-                length = packet.ReadInt();
-                if (length > 0)
-                {
-                    growthPoints = new Vector3[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        growthPoints[i] = packet.ReadVector3();
-                    }
-                }
-                length = packet.ReadInt();
-                if (length > 0)
-                {
-                    subTargsPos = new Vector3[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        subTargsPos[i] = packet.ReadVector3();
-                    }
-                }
-                length = packet.ReadInt();
-                if (length > 0)
-                {
                     subTargsActive = new bool[length];
                     for (int i = 0; i < length; ++i)
                     {
                         subTargsActive[i] = packet.ReadBool();
-                    }
-                }
-                length = packet.ReadInt();
-                if (length > 0)
-                {
-                    tendrilFloats = new float[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        tendrilFloats[i] = packet.ReadFloat();
-                    }
-                }
-                length = packet.ReadInt();
-                if (length > 0)
-                {
-                    tendrilsRot = new Quaternion[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        tendrilsRot[i] = packet.ReadQuaternion();
-                    }
-                }
-                length = packet.ReadInt();
-                if (length > 0)
-                {
-                    tendrilsScale = new Vector3[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        tendrilsScale[i] = packet.ReadVector3();
                     }
                 }
             }
@@ -433,42 +270,6 @@ namespace H3MP.Tracking
             if (full)
             {
                 packet.Write((byte)type);
-                if (tendrilsActive == null || tendrilsActive.Length == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(tendrilsActive.Length);
-                    for (int i = 0; i < tendrilsActive.Length; ++i)
-                    {
-                        packet.Write(tendrilsActive[i]);
-                    }
-                }
-                if (growthPoints == null || growthPoints.Length == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(growthPoints.Length);
-                    for (int i = 0; i < growthPoints.Length; ++i)
-                    {
-                        packet.Write(growthPoints[i]);
-                    }
-                }
-                if (subTargsPos == null || subTargsPos.Length == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(subTargsPos.Length);
-                    for (int i = 0; i < subTargsPos.Length; ++i)
-                    {
-                        packet.Write(subTargsPos[i]);
-                    }
-                }
                 if (subTargsActive == null || subTargsActive.Length == 0)
                 {
                     packet.Write(0);
@@ -479,42 +280,6 @@ namespace H3MP.Tracking
                     for (int i = 0; i < subTargsActive.Length; ++i)
                     {
                         packet.Write(subTargsActive[i]);
-                    }
-                }
-                if (tendrilFloats == null || tendrilFloats.Length == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(tendrilFloats.Length);
-                    for (int i = 0; i < tendrilFloats.Length; ++i)
-                    {
-                        packet.Write(tendrilFloats[i]);
-                    }
-                }
-                if (tendrilsRot == null || tendrilsRot.Length == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(tendrilsRot.Length);
-                    for (int i = 0; i < tendrilsRot.Length; ++i)
-                    {
-                        packet.Write(tendrilsRot[i]);
-                    }
-                }
-                if (tendrilsScale == null || tendrilsScale.Length == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(tendrilsScale.Length);
-                    for (int i = 0; i < tendrilsScale.Length; ++i)
-                    {
-                        packet.Write(tendrilsScale[i]);
                     }
                 }
             }
