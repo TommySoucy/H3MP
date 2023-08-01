@@ -142,6 +142,11 @@ namespace H3MP.Tracking
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
 
+            for (int i = 0; i < physicalPlayerBody.hitboxes.Length; ++i)
+            {
+                GameManager.trackedObjectByDamageable.Remove(physicalPlayerBody.hitboxes[i]);
+            }
+
             base.OnDestroy();
         }
 

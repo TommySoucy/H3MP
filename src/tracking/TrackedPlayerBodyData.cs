@@ -67,6 +67,10 @@ namespace H3MP.Tracking
 
             GameManager.currentTrackedPlayerBody = trackedPlayerBody;
             GameManager.trackedObjectByObject.Add(data.physicalPlayerBody.physicalPlayerBody, trackedPlayerBody);
+            for (int i = 0; i < data.physicalPlayerBody.physicalPlayerBody.hitboxes.Length; ++i)
+            {
+                GameManager.trackedObjectByDamageable.Add(data.physicalPlayerBody.physicalPlayerBody.hitboxes[i], trackedPlayerBody);
+            }
 
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
@@ -133,6 +137,10 @@ namespace H3MP.Tracking
 
                 GameManager.currentTrackedPlayerBody = physicalPlayerBody;
                 GameManager.trackedObjectByObject.Add(physicalPlayerBody.physicalPlayerBody, physicalPlayerBody);
+                for (int i = 0; i < physicalPlayerBody.physicalPlayerBody.hitboxes.Length; ++i)
+                {
+                    GameManager.trackedObjectByDamageable.Add(physicalPlayerBody.physicalPlayerBody.hitboxes[i], physicalPlayerBody);
+                }
 
                 // Initially set itself
                 UpdateFromData(this);
@@ -176,6 +184,24 @@ namespace H3MP.Tracking
         {
             interactionID = 1000; // Player body
             return controller == GameManager.ID;
+        }
+
+        public override void RemoveFromLocal()
+        {
+            base.RemoveFromLocal();
+
+            // Manage unknown lists
+            if (trackedID == -1)
+            {
+                // If not tracked, make sure we remove from tracked lists in case object was unawoken
+                if (physicalPlayerBody != null && physicalPlayerBody.physicalPlayerBody != null)
+                {
+                    for (int i = 0; i < physicalPlayerBody.physicalPlayerBody.hitboxes.Length; ++i)
+                    {
+                        GameManager.trackedObjectByDamageable.Remove(physicalPlayerBody.physicalPlayerBody.hitboxes[i]);
+                    }
+                }
+            }
         }
     }
 }

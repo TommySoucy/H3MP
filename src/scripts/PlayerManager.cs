@@ -27,12 +27,14 @@ namespace H3MP.Scripts
 
         public bool visible;
 
-        public void Init(int ID, string username, string scene, int instance)
+        public void Init(int ID, string username, string scene, int instance, int IFF, int colorIndex)
         {
             this.ID = ID;
             this.username = username;
             this.scene = scene;
             this.instance = instance;
+            this.IFF = IFF;
+            this.colorIndex = colorIndex;
 
             GameObject headObject = new GameObject("Head");
             headObject.transform.parent = transform;

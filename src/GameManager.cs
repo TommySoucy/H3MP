@@ -325,7 +325,7 @@ namespace H3MP
             GameObject playerRoot = new GameObject("PlayerRoot" + ID);
             DontDestroyOnLoad(playerRoot);
             PlayerManager playerManager = playerRoot.AddComponent<PlayerManager>();
-            playerManager.Init(ID, username, scene, instance);
+            playerManager.Init(ID, username, scene, instance, IFF, colorIndex);
             players.Add(ID, playerManager);
 
             // Add to scene/instance
