@@ -937,10 +937,10 @@ namespace H3MP
         }
 
         /// <summary>
-        /// Registers a new player model ID for H3MP to use
+        /// Registers a new player prefab ID for H3MP to use
         /// </summary>
         /// <param name="newPlayerPrefabID">The new ID to register</param>
-        public static void AddPlayerModelID(string newPlayerPrefabID)
+        public static void AddPlayerPrefabID(string newPlayerPrefabID)
         {
             if (newPlayerPrefabID.Equals("Default"))
             {

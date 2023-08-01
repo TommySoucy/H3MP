@@ -13,12 +13,12 @@ namespace MeatKit
     [CreateAssetMenu(menuName = "MeatKit/Build Items/H3MP Player Model", fileName = "New build item")]
     public class H3MPPlayerModelBuildItem : BuildItem
     {
-        // The item ID of the player model
-        public string playerModelID;
+        [Tooltip("The ID of your player body's prefab")]
+        public string playerPrefabID;
 
         public override IEnumerable<string> RequiredDependencies
         {
-            get { return new[] { "VIP-H3MP-1.6.7" }; }
+            get { return new[] { "VIP-H3MP-1.7.0" }; }
         }
 
         public override void GenerateLoadAssets(TypeDefinition plugin, ILProcessor il)
@@ -26,10 +26,10 @@ namespace MeatKit
 #if H3VR_IMPORTED
             EnsurePluginDependsOn(plugin, H3MP.Mod.pluginGuid, H3MP.Mod.pluginVersion);
 
-            // Emit code to add entry to H3MP's player model IDs
+            // Emit code to add entry to H3MP's player prefab IDs
             TypeReference gameManager = new TypeReference("H3MP", "GameManager", null, null);
-            il.Emit(OpCodes.Ldstr, playerModelID);
-            il.Emit(OpCodes.Call, gameManager.Module.ImportReference(typeof(GameManager).GetMethod("AddPlayerModelID")));
+            il.Emit(OpCodes.Ldstr, playerPrefabID);
+            il.Emit(OpCodes.Call, gameManager.Module.ImportReference(typeof(GameManager).GetMethod("AddPlayerPrefabID")));
 #endif
         }
     }
