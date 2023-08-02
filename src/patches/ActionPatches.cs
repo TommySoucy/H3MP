@@ -5306,6 +5306,7 @@ namespace H3MP.Patches
     // Patches TNH_EncryptionTarget to sync
     class EncryptionPatch
     {
+        public static int updateDisplaySkip;
         static TrackedEncryption trackedEncryption;
 
         // To prevent (Fixed)Update from happening
@@ -5411,7 +5412,7 @@ namespace H3MP.Patches
                         }
                     }
                 }
-                else if (__instance.Type == TNH_EncryptionType.Recursive)
+                else if (__instance.Type == TNH_EncryptionType.Recursive || __instance.Type == TNH_EncryptionType.Polymorphic)
                 {
                     indices = new List<int>();
                     for (int i = 0; i < __instance.SubTargs.Count; ++i)
@@ -5446,6 +5447,44 @@ namespace H3MP.Patches
                         {
                             ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, points);
                         }
+                    }
+                }
+            }
+        }
+
+        // To sync display update
+        static void UpdateDisplayPostfix(TNH_EncryptionTarget __instance)
+        {
+            if (updateDisplaySkip > 0 || Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.TryGetValue(__instance, out trackedEncryption) ? trackedEncryption : __instance.GetComponent<TrackedEncryption>();
+            if (trackedEncryption != null && trackedEncryption.data.controller != GameManager.ID)
+            {
+                trackedEncryption.encryptionData.numHitsLeft = __instance.m_numHitsLeft;
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.UpdateEncryptionDisplay(trackedEncryption.data.trackedID, __instance.m_numHitsLeft);
+                }
+                else
+                {
+                    if(trackedEncryption.data.trackedID == -1)
+                    {
+                        if (TrackedEncryption.unknownUpdateDisplay.ContainsKey(trackedEncryption.data.localWaitingIndex))
+                        {
+                            TrackedEncryption.unknownUpdateDisplay[trackedEncryption.data.localWaitingIndex] = __instance.m_numHitsLeft;
+                        }
+                        else
+                        {
+                            TrackedEncryption.unknownUpdateDisplay.Add(trackedEncryption.data.localWaitingIndex, __instance.m_numHitsLeft);
+                        }
+                    }
+                    else
+                    {
+                        ClientSend.UpdateEncryptionDisplay(trackedEncryption.data.trackedID, __instance.m_numHitsLeft);
                     }
                 }
             }

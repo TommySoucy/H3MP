@@ -462,6 +462,13 @@ namespace H3MP
                                 GameObject upperPrefab = IM.OD["AR15UpperM4FDE"].GetGameObject();
                                 Instantiate(upperPrefab, GM.CurrentPlayerBody.Head.position + GM.CurrentPlayerBody.Head.forward, Quaternion.identity);
                                 break;
+                            case 16: // Dump item IDs
+                                Mod.LogInfo("\tDebug: Dumping item IDs");
+                                foreach(KeyValuePair<string, FVRObject> entry in IM.OD)
+                                {
+                                    Mod.LogInfo(entry.Key);
+                                }
+                                break;
                         }
                     }
                 }

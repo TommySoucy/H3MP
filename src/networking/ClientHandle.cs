@@ -4343,5 +4343,25 @@ namespace H3MP.Networking
                 Client.objects[trackedID].SetInstance(instance, false);
             }
         }
+
+        public static void UpdateEncryptionDisplay(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int numHitsLeft = packet.ReadInt();
+
+            TrackedEncryptionData trackedEncryptionData = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryptionData != null)
+            {
+                trackedEncryptionData.numHitsLeft = numHitsLeft;
+
+                if (trackedEncryptionData.physicalEncryption)
+                {
+                    trackedEncryptionData.physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
+                    ++EncryptionPatch.updateDisplaySkip;
+                    trackedEncryptionData.physicalEncryption.physicalEncryption.UpdateDisplay();
+                    --EncryptionPatch.updateDisplaySkip;
+                }
+            }
+        }
     }
 }

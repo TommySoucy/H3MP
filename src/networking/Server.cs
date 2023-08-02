@@ -489,6 +489,7 @@ namespace H3MP.Networking
                 ServerHandle.IDConfirm,
                 ServerHandle.ObjectScene,
                 ServerHandle.ObjectInstance,
+                ServerHandle.UpdateEncryptionDisplay,
             };
 
             objects = new TrackedObjectData[100];

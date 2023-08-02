@@ -4268,5 +4268,23 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void UpdateEncryptionDisplay(int trackedID, int numHitsLeft, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.updateEncryptionDisplay))
+            {
+                packet.Write(trackedID);
+                packet.Write(numHitsLeft);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

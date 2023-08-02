@@ -184,7 +184,8 @@ namespace H3MP.Networking
         IDConfirm = 171,
         enforcePlayerModels = 172,
         objectScene = 173,
-        objectInstance = 174
+        objectInstance = 174,
+        updateEncryptionDisplay = 175
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -357,7 +358,8 @@ namespace H3MP.Networking
         MTUTest = 164,
         IDConfirm = 165,
         objectScene = 166,
-        objectInstance = 167
+        objectInstance = 167,
+        updateEncryptionDisplay = 168
     }
 
     public class Packet : IDisposable

@@ -280,7 +280,7 @@ namespace H3MP.Tracking
             {
                 return false;
             }
-
+            
             previousActive = active;
             active = physical.gameObject.activeInHierarchy;
 

@@ -584,6 +584,7 @@ namespace H3MP.Networking
                 ClientHandle.EnforcePlayerModels,
                 ClientHandle.ObjectScene,
                 ClientHandle.ObjectInstance,
+                ClientHandle.UpdateEncryptionDisplay,
             };
 
             // All vanilla scenes can be synced by default

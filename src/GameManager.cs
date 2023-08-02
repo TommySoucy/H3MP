@@ -498,6 +498,7 @@ namespace H3MP
             TrackedEncryption.unknownResetGrowth.Clear();
             TrackedEncryption.unknownSpawnGrowth.Clear();
             TrackedEncryption.unknownSpawnSubTarg.Clear();
+            TrackedEncryption.unknownUpdateDisplay.Clear();
         }
 
         public static void UpdatePlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,

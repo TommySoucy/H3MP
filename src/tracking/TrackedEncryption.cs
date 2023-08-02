@@ -16,10 +16,11 @@ namespace H3MP.Tracking
         public static Dictionary<uint, List<int>> unknownDisableSubTarg = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownSpawnGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
         public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownResetGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
+        public static Dictionary<uint, int> unknownUpdateDisplay = new Dictionary<uint, int>();
 
         // TrackedEncryptionReferences array
-        // Used by Encryptions who need to get access to their TrackedItem very often (On Update for example)
-        // This is used to bypass having to find the item in a datastructure too often
+        // Used by Encryptions who need to get access to their TrackedEncryption very often (On Update for example)
+        // This is used to bypass having to find the item in a slow datastructure too often
         public static TrackedEncryption[] trackedEncryptionReferences = new TrackedEncryption[100];
         public static List<int> availableTrackedEncryptionRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
                                                                                         10,11,12,13,14,15,16,17,18,19,
@@ -71,21 +72,28 @@ namespace H3MP.Tracking
                 return;
             }
 
-            // Type specific destruction
-            // In the case of encryptions we want to make sure the tendrils and subtargs are also destroyed because they usually are in TNH_EncryptionTarget.Destroy
-            // but this will not have been called if we are not the one to have destroyed it
-            if(data.controller != GameManager.ID && physicalEncryption.UsesRegenerativeSubTarg)
-            {
-                for (int i = 0; i < physicalEncryption.Tendrils.Count; i++)
-                {
-                    Destroy(physicalEncryption.Tendrils[i]);
-                    Destroy(physicalEncryption.SubTargs[i]);
-                }
-            }
-
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
             GameManager.trackedEncryptionByEncryption.Remove(physicalEncryption);
             GameManager.trackedObjectByDamageable.Remove(physicalEncryption);
+            for (int i = 0; i < physicalEncryption.SubTargs.Count; ++i)
+            {
+                IFVRDamageable damageable = physicalEncryption.SubTargs[i].GetComponent<IFVRDamageable>();
+                if (damageable != null)
+                {
+                    GameManager.trackedObjectByDamageable.Remove(damageable);
+                }
+            }
+
+            // Type specific destruction
+            // In the case of encryptions we want to make sure the tendrils and subtargs are also destroyed because they usually are in TNH_EncryptionTarget.Destroy
+            // but this will not have been called if we are not the one to have destroyed it
+            if (data.controller != GameManager.ID && physicalEncryption.UsesRegenerativeSubTarg)
+            {
+                for (int i = 0; i < physicalEncryption.SubTargs.Count; i++)
+                {
+                    Destroy(physicalEncryption.SubTargs[i]);
+                }
+            }
 
             base.OnDestroy();
         }
@@ -99,7 +107,7 @@ namespace H3MP.Tracking
 
                 ++GameManager.giveControlOfDestroyed;
 
-                // Note: Encryptions cannot be interacted with, so no need to check taht case with IsControlled
+                // Note: Encryptions cannot be interacted with, so no need to check that case with IsControlled
                 if (bring == TrackedObjectData.ObjectBringType.Yes)
                 {
                     DestroyImmediate(this);
