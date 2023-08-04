@@ -490,6 +490,7 @@ namespace H3MP.Networking
                 ServerHandle.ObjectScene,
                 ServerHandle.ObjectInstance,
                 ServerHandle.UpdateEncryptionDisplay,
+                ServerHandle.EncryptionRespawnSubTargGeo,
             };
 
             objects = new TrackedObjectData[100];

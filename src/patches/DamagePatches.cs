@@ -22,6 +22,13 @@ namespace H3MP.Patches
             PatchController.Verify(encryptionSubDamagePatchOriginal, harmony, true);
             harmony.Patch(encryptionSubDamagePatchOriginal, new HarmonyMethod(encryptionSubDamagePatchPrefix));
 
+            // EncryptionDamageablePatch
+            MethodInfo encryptionDamageablePatchFixedUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo encryptionDamageablePatchFixedUpdateTranspiler = typeof(EncryptionDamageablePatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(encryptionDamageablePatchFixedUpdateOriginal, harmony, true);
+            harmony.Patch(encryptionDamageablePatchFixedUpdateOriginal, null, null, new HarmonyMethod(encryptionDamageablePatchFixedUpdateTranspiler));
+
             // UberShatterableShatterPatch
             MethodInfo uberShatterableShatterPatchOriginal = typeof(UberShatterable).GetMethod("Shatter", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo uberShatterableShatterPatchPatchPrefix = typeof(UberShatterableShatterPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -2546,6 +2553,70 @@ namespace H3MP.Patches
                 }
             }
             return true;
+        }
+    }
+
+    // Patches TNH_EncryptionTarget to control damaged caused by encryptions
+    class EncryptionDamageablePatch
+    {
+        // This will only let the encryption do damage if we control it
+        public static bool GetActualFlag(TNH_EncryptionTarget encryption, IFVRDamageable damageable)
+        {
+            // Note: If this got called it is because demageable != null, so flag2 would usually be set to true
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
+            {
+                return true;
+            }
+
+            // Note: If flag2, damageable != null
+            TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(damageable, out damageableObject) ? damageableObject : null;
+            if (!(damageable is FVRPlayerHitbox) && damageableObject == null)
+            {
+                return true; // Damageable object client side (not tracked), apply damage
+            }
+            else // Damageable object tracked, only want to apply damage if encryption controller
+            {
+                TrackedEncryption trackedEncryption = TrackedEncryption.trackedEncryptionReferences[int.Parse(encryption.SpawnPoints[encryption.SpawnPoints.Count - 1].name)];
+                if (trackedEncryption == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    return trackedEncryption.data.controller == GameManager.ID;
+                }
+            }
+        }
+
+        static IEnumerable<CodeInstruction> FixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 76)); // Load damageable
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionDamageablePatch), "GetActualFlag"))); // Call our GetActualFlag
+
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("77"))
+                {
+                    if (found)
+                    {
+                        instructionList.RemoveAt(i - 1);
+                        instructionList.InsertRange(i - 1, toInsert0);
+                        break;
+                    }
+                    else
+                    {
+                        found = true;
+                    }
+                }
+            }
+            return instructionList;
         }
     }
 

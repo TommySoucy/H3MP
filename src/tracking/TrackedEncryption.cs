@@ -13,6 +13,7 @@ namespace H3MP.Tracking
         // Unknown tracked ID queues
         public static Dictionary<uint, KeyValuePair<List<int>, List<Vector3>>> unknownInit = new Dictionary<uint, KeyValuePair<List<int>, List<Vector3>>>();
         public static Dictionary<uint, List<int>> unknownSpawnSubTarg = new Dictionary<uint, List<int>>();
+        public static Dictionary<uint, List<int>> unknownSpawnSubTargGeo = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<int>> unknownDisableSubTarg = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownSpawnGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
         public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownResetGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
@@ -85,13 +86,30 @@ namespace H3MP.Tracking
             }
 
             // Type specific destruction
-            // In the case of encryptions we want to make sure the tendrils and subtargs are also destroyed because they usually are in TNH_EncryptionTarget.Destroy
-            // but this will not have been called if we are not the one to have destroyed it
-            if (data.controller != GameManager.ID && physicalEncryption.UsesRegenerativeSubTarg)
+            // In the case of encryptions, upon destruction, TNH_EncryptionTarget.Destroy gets called, doing some final things
+            // Destroy will not be called on non controller because action that call it only happen on controller side
+            // There are some things in Destroy that we still want to make surewe do on our side, this is what we do here
+            if (data.controller != GameManager.ID)
             {
-                for (int i = 0; i < physicalEncryption.SubTargs.Count; i++)
+                if (physicalEncryption.UsesRegenerativeSubTarg)
                 {
-                    Destroy(physicalEncryption.SubTargs[i]);
+                    for (int i = 0; i < physicalEncryption.Tendrils.Count; i++)
+                    {
+                        Destroy(physicalEncryption.Tendrils[i]);
+                        Destroy(physicalEncryption.SubTargs[i]);
+                    }
+                }
+                if (physicalEncryption.m_returnToSpawnLine != null)
+                {
+                    Destroy(physicalEncryption.m_returnToSpawnLine.gameObject);
+                }
+                if (physicalEncryption.FlashOnDestroy)
+                {
+                    FXM.InitiateMuzzleFlash(transform.position, Vector3.up, physicalEncryption.FlashIntensity, physicalEncryption.FlashColor, physicalEncryption.FlashRange);
+                }
+                if(physicalEncryption.m_point != null)
+                {
+                    physicalEncryption.m_point.m_activeTargets.Remove(physicalEncryption);
                 }
             }
 

@@ -229,7 +229,7 @@ namespace H3MP.Scripts
             }
         }
 
-        public void SetEntitiesRegistered(bool registered)
+        public virtual void SetEntitiesRegistered(bool registered)
         {
             if (GM.CurrentAIManager != null && entities != null)
             {
@@ -256,7 +256,7 @@ namespace H3MP.Scripts
             }
         }
 
-        public void SetIFF(int IFF)
+        public virtual void SetIFF(int IFF)
         {
             if (entities != null)
             {

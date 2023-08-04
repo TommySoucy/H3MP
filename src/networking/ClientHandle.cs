@@ -2700,6 +2700,26 @@ namespace H3MP.Networking
             }
         }
 
+        public static void EncryptionRespawnSubTargGeo(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+
+            TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryption != null)
+            {
+                trackedEncryption.subTargGeosActive[index] = true;
+                trackedEncryption.subTargsActive[index] = true;
+
+                if (trackedEncryption.physicalEncryption != null)
+                {
+                    trackedEncryption.physicalEncryption.physicalEncryption.SubTargGeo[index].gameObject.SetActive(true);
+                    trackedEncryption.physicalEncryption.physicalEncryption.SubTargs[index].SetActive(true);
+                    ++trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft;
+                }
+            }
+        }
+
         public static void EncryptionSpawnGrowth(Packet packet)
         {
             int trackedID = packet.ReadInt();
@@ -2737,6 +2757,7 @@ namespace H3MP.Networking
             {
                 points.Add(packet.ReadVector3());
             }
+            Vector3 initialPos = packet.ReadVector3();
 
             TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
@@ -2777,6 +2798,19 @@ namespace H3MP.Networking
                         trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft = indexCount;
                     }
                 }
+
+                trackedEncryption.initialPos = initialPos;
+                if (trackedEncryption.physical != null && trackedEncryption.physicalEncryption.physicalEncryption.UseReturnToSpawnForce)
+                {
+                    if (trackedEncryption.physicalEncryption.physicalEncryption.m_returnToSpawnLine != null)
+                    {
+                        GameObject.Destroy(trackedEncryption.physicalEncryption.physicalEncryption.m_returnToSpawnLine);
+                    }
+                    trackedEncryption.physicalEncryption.physicalEncryption.initialPos = initialPos;
+                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(trackedEncryption.physicalEncryption.physicalEncryption.ReturnToSpawnLineGO, trackedEncryption.physicalEncryption.transform.position, Quaternion.identity);
+                    trackedEncryption.physicalEncryption.physicalEncryption.m_returnToSpawnLine = gameObject.transform;
+                    trackedEncryption.physicalEncryption.physicalEncryption.UpdateLine();
+                }
             }
         }
 
@@ -2809,10 +2843,18 @@ namespace H3MP.Networking
             if (trackedEncryption != null)
             {
                 trackedEncryption.subTargsActive[index] = false;
+                if(trackedEncryption.subTargGeosActive != null)
+                {
+                    trackedEncryption.subTargGeosActive[index] = false;
+                }
 
                 if (trackedEncryption.physicalEncryption != null)
                 {
                     trackedEncryption.physicalEncryption.physicalEncryption.SubTargs[index].SetActive(false);
+                    if (trackedEncryption.physicalEncryption.physicalEncryption.UsesRegeneratingSubtargs)
+                    {
+                        trackedEncryption.physicalEncryption.physicalEncryption.SubTargGeo[index].gameObject.SetActive(false);
+                    }
                     --trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft;
                 }
             }

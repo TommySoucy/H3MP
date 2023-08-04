@@ -2947,6 +2947,24 @@ namespace H3MP.Networking
             }
         }
 
+        public static void EncryptionRespawnSubTargGeo(int instance, int index, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.encryptionRespawnSubTargGeo))
+            {
+                packet.Write(instance);
+                packet.Write(index);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
         public static void EncryptionSpawnGrowth(int instance, int index, Vector3 point, int clientID = 0)
         {
             using (Packet packet = new Packet((int)ServerPackets.encryptionSpawnGrowth))
@@ -2966,7 +2984,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void EncryptionInit(int clientID, int trackedID, List<int> indices, List<Vector3> points)
+        public static void EncryptionInit(int clientID, int trackedID, List<int> indices, List<Vector3> points, Vector3 initialPos)
         {
             using (Packet packet = new Packet((int)ServerPackets.encryptionInit))
             {
@@ -2995,6 +3013,7 @@ namespace H3MP.Networking
                         packet.Write(points[i]);
                     }
                 }
+                packet.Write(initialPos);
 
                 if (clientID == 0)
                 {

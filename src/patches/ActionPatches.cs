@@ -486,18 +486,28 @@ namespace H3MP.Patches
 
             // EncryptionPatch
             MethodInfo EncryptionPatchUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo EncryptionPatchFixedUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo EncryptionPatchUpdatePrefix = typeof(EncryptionPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchFixedUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo EncryptionPatchFixedUpdatePrefix = typeof(EncryptionPatch).GetMethod("FixedUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchUpdateTranspiler = typeof(EncryptionPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo EncryptionPatchStartOriginal = typeof(TNH_EncryptionTarget).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo EncryptionPatchStartPrefix = typeof(EncryptionPatch).GetMethod("StartPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo EncryptionPatchStartPostfix = typeof(EncryptionPatch).GetMethod("StartPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchUpdateDisplayOriginal = typeof(TNH_EncryptionTarget).GetMethod("UpdateDisplay", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo EncryptionPatchUpdateDisplayPostfix = typeof(EncryptionPatch).GetMethod("UpdateDisplayPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchDestroyOriginal = typeof(TNH_EncryptionTarget).GetMethod("Destroy", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo EncryptionPatchDestroyTranspiler = typeof(EncryptionPatch).GetMethod("DestroyTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(EncryptionPatchUpdateOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchFixedUpdateOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchStartOriginal, harmony, true);
-            harmony.Patch(EncryptionPatchUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix));
-            harmony.Patch(EncryptionPatchFixedUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix));
+            PatchController.Verify(EncryptionPatchUpdateDisplayOriginal, harmony, true);
+            PatchController.Verify(EncryptionPatchDestroyOriginal, harmony, true);
+            harmony.Patch(EncryptionPatchUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix), null, new HarmonyMethod(EncryptionPatchUpdateTranspiler));
+            harmony.Patch(EncryptionPatchFixedUpdateOriginal, new HarmonyMethod(EncryptionPatchFixedUpdatePrefix));
             harmony.Patch(EncryptionPatchStartOriginal, new HarmonyMethod(EncryptionPatchStartPrefix), new HarmonyMethod(EncryptionPatchStartPostfix));
+            harmony.Patch(EncryptionPatchUpdateDisplayOriginal, null, new HarmonyMethod(EncryptionPatchUpdateDisplayPostfix));
+            harmony.Patch(EncryptionPatchDestroyOriginal, null, null, new HarmonyMethod(EncryptionPatchDestroyTranspiler));
 
             // BangSnapPatch
             MethodInfo bangSnapPatchSplodeOriginal = typeof(BangSnap).GetMethod("Splode", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -4688,6 +4698,7 @@ namespace H3MP.Patches
     class EncryptionDisableSubtargPatch
     {
         static bool wasActive;
+        static bool geoWasActive;
         static TrackedEncryption trackedEncryption = null;
 
         static void Prefix(ref TNH_EncryptionTarget __instance, int i)
@@ -4698,6 +4709,10 @@ namespace H3MP.Patches
                 if (trackedEncryption != null)
                 {
                     wasActive = __instance.SubTargs[i].activeSelf;
+                    if (__instance.UsesRegeneratingSubtargs)
+                    {
+                        geoWasActive = __instance.SubTargGeo[i].gameObject.activeSelf;
+                    }
                 }
             }
         }
@@ -4705,32 +4720,45 @@ namespace H3MP.Patches
         static void Postfix(ref TNH_EncryptionTarget __instance, int i)
         {
             // Instance could be null if destroyed by the method, in which case we don't need to send anything, the destruction will be sent instead
-            if (Mod.managerObject != null && __instance != null && wasActive && !__instance.SubTargs[i].activeSelf)
+            if (Mod.managerObject != null && __instance != null)
             {
                 if (trackedEncryption != null)
                 {
-                    trackedEncryption.encryptionData.subTargsActive[i] = false;
-
-                    if (ThreadManager.host)
+                    bool switched = false;
+                    if(wasActive && !__instance.SubTargs[i].activeSelf)
                     {
-                        ServerSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                        trackedEncryption.encryptionData.subTargsActive[i] = false;
+                        switched = true;
                     }
-                    else
+                    if (__instance.UsesRegeneratingSubtargs && geoWasActive && !__instance.SubTargGeo[i].gameObject.activeSelf)
                     {
-                        if (trackedEncryption.data.trackedID == -1)
+                        trackedEncryption.encryptionData.subTargGeosActive[i] = false;
+                        switched = true;
+                    }
+
+                    if (switched)
+                    {
+                        if (ThreadManager.host)
                         {
-                            if (TrackedEncryption.unknownDisableSubTarg.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<int> l))
-                            {
-                                l.Add(i);
-                            }
-                            else
-                            {
-                                TrackedEncryption.unknownDisableSubTarg.Add(trackedEncryption.data.localWaitingIndex, new List<int>() { i });
-                            }
+                            ServerSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
                         }
                         else
                         {
-                            ClientSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                            if (trackedEncryption.data.trackedID == -1)
+                            {
+                                if (TrackedEncryption.unknownDisableSubTarg.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<int> l))
+                                {
+                                    l.Add(i);
+                                }
+                                else
+                                {
+                                    TrackedEncryption.unknownDisableSubTarg.Add(trackedEncryption.data.localWaitingIndex, new List<int>() { i });
+                                }
+                            }
+                            else
+                            {
+                                ClientSend.EncryptionDisableSubtarg(trackedEncryption.data.trackedID, i);
+                            }
                         }
                     }
                 }
@@ -5307,9 +5335,10 @@ namespace H3MP.Patches
     class EncryptionPatch
     {
         public static int updateDisplaySkip;
+        public static bool preActive = false;
         static TrackedEncryption trackedEncryption;
 
-        // To prevent (Fixed)Update from happening
+        // To prevent Update from happening
         static bool UpdatePrefix(TNH_EncryptionTarget __instance)
         {
             if (Mod.managerObject == null)
@@ -5326,6 +5355,168 @@ namespace H3MP.Patches
             }
 
             return true;
+        }
+
+        // To prevent FixedUpdate from happening
+        static bool FixedUpdatePrefix(TNH_EncryptionTarget __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (__instance.SpawnPoints != null && __instance.SpawnPoints.Count > 0 && int.TryParse(__instance.SpawnPoints[__instance.SpawnPoints.Count - 1].name, out int index))
+            {
+                // Return true (run original), index doesn't fit in references, reference null, or we control
+                if (TrackedEncryption.trackedEncryptionReferences.Length <= index ||
+                    TrackedEncryption.trackedEncryptionReferences[index] == null ||
+                    TrackedEncryption.trackedEncryptionReferences[index].data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    // Do update we don't want to prevent
+                    if (__instance.UseReturnToSpawnForce)
+                    {
+                        __instance.UpdateLine();
+                    }
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // To track subtargGeo and subtarg activation for new regenerative 
+        static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe subTarg/Geo GameObject
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "get_activeSelf"))); // Get activeSelf
+            toInsert.Add(new CodeInstruction(OpCodes.Stsfld, AccessTools.Field(typeof(EncryptionPatch), "preActive"))); // Set our preActive
+
+            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load i
+            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "ActivateSubTargGeo"))); // Call our ActivateSubTargGeo method
+
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load i
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "ActivateSubTarg"))); // Call our ActivateSubTarg method
+
+            bool found = false;
+            int foundCount = 0;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("SetActive"))
+                {
+                    if(found)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert1);
+                        break;
+
+                    }
+                    else
+                    {
+                        instructionList.InsertRange(i + 1, toInsert0);
+                    }
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_gameObject"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                }
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_Item"))
+                {
+                    ++foundCount;
+                    if(foundCount == 4)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert);
+                    }
+                }
+            }
+            return instructionList;
+        }
+
+        public static void ActivateSubTargGeo(TNH_EncryptionTarget encryption, int index)
+        {
+            if (Mod.managerObject != null && !preActive)
+            {
+                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.TryGetValue(encryption, out trackedEncryption) ? trackedEncryption : encryption.GetComponent<TrackedEncryption>();
+                if (trackedEncryption != null)
+                {
+                    // Note: Update not being prevented implies we are controller
+                    trackedEncryption.encryptionData.subTargGeosActive[index] = true;
+                    trackedEncryption.encryptionData.subTargsActive[index] = true;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.EncryptionRespawnSubTargGeo(trackedEncryption.data.trackedID, index);
+                    }
+                    else
+                    {
+                        if (trackedEncryption.data.trackedID == -1)
+                        {
+                            if (TrackedEncryption.unknownSpawnSubTargGeo.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<int> l))
+                            {
+                                l.Add(index);
+                            }
+                            else
+                            {
+                                TrackedEncryption.unknownSpawnSubTargGeo.Add(trackedEncryption.data.localWaitingIndex, new List<int>() { index });
+                            }
+                        }
+                        else
+                        {
+                            ClientSend.EncryptionRespawnSubTargGeo(trackedEncryption.data.trackedID, index);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void ActivateSubTarg(TNH_EncryptionTarget encryption, int index)
+        {
+            if(Mod.managerObject != null && !preActive)
+            {
+                TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.TryGetValue(encryption, out trackedEncryption) ? trackedEncryption : encryption.GetComponent<TrackedEncryption>();
+                if(trackedEncryption != null)
+                {
+                    // Note: Update not being prevented implies we are controller
+                    trackedEncryption.encryptionData.subTargsActive[index] = true;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
+                    }
+                    else
+                    {
+                        if (trackedEncryption.data.trackedID == -1)
+                        {
+                            if (TrackedEncryption.unknownSpawnSubTarg.TryGetValue(trackedEncryption.data.localWaitingIndex, out List<int> l))
+                            {
+                                l.Add(index);
+                            }
+                            else
+                            {
+                                TrackedEncryption.unknownSpawnSubTarg.Add(trackedEncryption.data.localWaitingIndex, new List<int>() { index });
+                            }
+                        }
+                        else
+                        {
+                            ClientSend.EncryptionRespawnSubTarg(trackedEncryption.data.trackedID, index);
+                        }
+                    }
+                }
+            }
         }
 
         // To prevent Start from overriding initial data we got from controller
@@ -5423,30 +5614,28 @@ namespace H3MP.Patches
                         }
                     }
                 }
+                trackedEncryption.encryptionData.initialPos = trackedEncryption.physicalEncryption.initialPos;
 
-                if (indices != null && indices.Count > 0)
+                if (ThreadManager.host)
                 {
-                    if (ThreadManager.host)
+                    ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, points, trackedEncryption.encryptionData.initialPos);
+                }
+                else
+                {
+                    if (trackedEncryption.data.trackedID == -1)
                     {
-                        ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, points);
-                    }
-                    else
-                    {
-                        if (trackedEncryption.data.trackedID == -1)
+                        if (TrackedEncryption.unknownInit.ContainsKey(trackedEncryption.data.localWaitingIndex))
                         {
-                            if (TrackedEncryption.unknownInit.ContainsKey(trackedEncryption.data.localWaitingIndex))
-                            {
-                                TrackedEncryption.unknownInit[trackedEncryption.data.localWaitingIndex] = new KeyValuePair<List<int>, List<Vector3>>(indices, points);
-                            }
-                            else
-                            {
-                                TrackedEncryption.unknownInit.Add(trackedEncryption.data.localWaitingIndex, new KeyValuePair<List<int>, List<Vector3>>(indices, points));
-                            }
+                            TrackedEncryption.unknownInit[trackedEncryption.data.localWaitingIndex] = new KeyValuePair<List<int>, List<Vector3>>(indices, points);
                         }
                         else
                         {
-                            ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, points);
+                            TrackedEncryption.unknownInit.Add(trackedEncryption.data.localWaitingIndex, new KeyValuePair<List<int>, List<Vector3>>(indices, points));
                         }
+                    }
+                    else
+                    {
+                        ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, points, trackedEncryption.encryptionData.initialPos);
                     }
                 }
             }
@@ -5488,6 +5677,35 @@ namespace H3MP.Patches
                     }
                 }
             }
+        }
+
+        // To track everything instantiated from SpawnOnDestruction
+        static IEnumerable<CodeInstruction> DestroyTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_2)); // Load the newly instantiated GameObject
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "get_transform"))); // Get transform
+            toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load int 1 (true)
+            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GameManager), "SyncTrackedObjects", new Type[] {typeof(Transform), typeof(bool), typeof(TrackedObjectData)}))); // Call sync
+
+            int foundCount = 0;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("set_velocity"))
+                {
+                    if(++foundCount == 3)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert);
+                        break;
+                    }
+                }
+            }
+            return instructionList;
         }
     }
 

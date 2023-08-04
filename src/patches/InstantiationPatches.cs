@@ -294,9 +294,19 @@ namespace H3MP.Patches
     {
         static void Postfix(ref UnityEngine.Object __result)
         {
+            if (__result.name.Contains("Cascading"))
+            {
+                Mod.LogInfo("Instantiate single pach for " + __result.name);
+            }
+
             if (Mod.skipAllInstantiates > 0)
             {
                 return;
+            }
+
+            if (__result.name.Contains("Cascading"))
+            {
+                Mod.LogInfo("\tNo skip");
             }
 
             // Skip if not connected
@@ -305,9 +315,19 @@ namespace H3MP.Patches
                 return;
             }
 
+            if (__result.name.Contains("Cascading"))
+            {
+                Mod.LogInfo("\tNo skip");
+            }
+
             // If we want to skip the instantiate because this is a scene load vault file being spawned
             if (SpawnVaultFileRoutinePatch.inSpawnVaultFileRoutineToSkip)
             {
+
+                if (__result.name.Contains("Cascading"))
+                {
+                    Mod.LogInfo("\t\tInvault file routine");
+                }
                 // If not for this the item would be spawned and then synced with other clients below
                 // The scene has presumably already been fully loaded, which means we already synced all items in the scene with other clients
                 // But this is still an item spawned by scene initialization, so if we are not the first one in the scene, we want to destroy this item
@@ -323,6 +343,10 @@ namespace H3MP.Patches
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
+                if (__result.name.Contains("Cascading"))
+                {
+                    Mod.LogInfo("\t\tIs game object");
+                }
                 GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null);
             }
         }

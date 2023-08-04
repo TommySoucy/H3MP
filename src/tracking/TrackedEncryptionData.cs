@@ -30,12 +30,14 @@ namespace H3MP.Tracking
         public Quaternion rotation;
 
         public bool[] subTargsActive;
+        public bool[] subTargGeosActive;
         public Vector3 previousAgilePointerScale;
         public Vector3 agilePointerScale;
         public bool previousIsOrthagonalBeamFiring;
         public bool isOrthagonalBeamFiring;
 
         public int numHitsLeft;
+        public Vector3 initialPos;
 
         public TrackedEncryptionData()
         {
@@ -59,6 +61,17 @@ namespace H3MP.Tracking
                     subTargsActive[i] = packet.ReadBool();
                 }
             }
+            length = packet.ReadInt();
+            if (length > 0)
+            {
+                subTargGeosActive = new bool[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    subTargGeosActive[i] = packet.ReadBool();
+                }
+            }
+            numHitsLeft = packet.ReadInt();
+            initialPos = packet.ReadVector3();
         }
 
         public static bool IsOfType(Transform t)
@@ -98,6 +111,7 @@ namespace H3MP.Tracking
             }
 
             data.subTargsActive = new bool[data.physicalEncryption.physicalEncryption.SubTargs.Count];
+            data.subTargGeosActive = new bool[data.physicalEncryption.physicalEncryption.SubTargGeo.Count];
 
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
@@ -219,7 +233,9 @@ namespace H3MP.Tracking
             {
                 type = updatedEncryption.type;
                 subTargsActive = updatedEncryption.subTargsActive;
+                subTargGeosActive = updatedEncryption.subTargGeosActive;
                 numHitsLeft = updatedEncryption.numHitsLeft;
+                initialPos = updatedEncryption.initialPos;
             }
 
             previousAgilePointerScale = agilePointerScale;
@@ -300,11 +316,33 @@ namespace H3MP.Tracking
                         }
                         physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
                     }
+                    if (subTargGeosActive.Length == physicalEncryption.physicalEncryption.SubTargGeo.Count)
+                    {
+                        for (int i = 0; i < subTargGeosActive.Length; ++i)
+                        {
+                            if (subTargGeosActive[i])
+                            {
+                                physicalEncryption.physicalEncryption.SubTargGeo[i].gameObject.SetActive(true);
+                            }
+                            else
+                            {
+                                physicalEncryption.physicalEncryption.SubTargGeo[i].gameObject.SetActive(false);
+                            }
+                        }
+                    }
 
                     physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
                     ++EncryptionPatch.updateDisplaySkip;
                     physicalEncryption.physicalEncryption.UpdateDisplay();
                     --EncryptionPatch.updateDisplaySkip;
+
+                    if (physicalEncryption.physicalEncryption.UseReturnToSpawnForce && physicalEncryption.physicalEncryption.m_returnToSpawnLine == null)
+                    {
+                        physicalEncryption.physicalEncryption.initialPos = initialPos;
+                        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(physicalEncryption.physicalEncryption.ReturnToSpawnLineGO, physicalEncryption.transform.position, Quaternion.identity);
+                        physicalEncryption.physicalEncryption.m_returnToSpawnLine = gameObject.transform;
+                        physicalEncryption.physicalEncryption.UpdateLine();
+                    }
                 }
             }
         }
@@ -334,7 +372,17 @@ namespace H3MP.Tracking
                         subTargsActive[i] = packet.ReadBool();
                     }
                 }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    subTargGeosActive = new bool[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        subTargGeosActive[i] = packet.ReadBool();
+                    }
+                }
                 numHitsLeft = packet.ReadInt();
+                initialPos = packet.ReadVector3();
             }
 
             if (physicalEncryption != null)
@@ -407,11 +455,33 @@ namespace H3MP.Tracking
                         }
                         physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
                     }
+                    if (subTargGeosActive.Length == physicalEncryption.physicalEncryption.SubTargGeo.Count)
+                    {
+                        for (int i = 0; i < subTargGeosActive.Length; ++i)
+                        {
+                            if (subTargGeosActive[i])
+                            {
+                                physicalEncryption.physicalEncryption.SubTargGeo[i].gameObject.SetActive(true);
+                            }
+                            else
+                            {
+                                physicalEncryption.physicalEncryption.SubTargGeo[i].gameObject.SetActive(false);
+                            }
+                        }
+                    }
 
                     physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
                     ++EncryptionPatch.updateDisplaySkip;
                     physicalEncryption.physicalEncryption.UpdateDisplay();
                     --EncryptionPatch.updateDisplaySkip;
+
+                    if (physicalEncryption.physicalEncryption.UseReturnToSpawnForce && physicalEncryption.physicalEncryption.m_returnToSpawnLine == null)
+                    {
+                        physicalEncryption.physicalEncryption.initialPos = initialPos;
+                        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(physicalEncryption.physicalEncryption.ReturnToSpawnLineGO, physicalEncryption.transform.position, Quaternion.identity);
+                        physicalEncryption.physicalEncryption.m_returnToSpawnLine = gameObject.transform;
+                        physicalEncryption.physicalEncryption.UpdateLine();
+                    }
                 }
             }
         }
@@ -443,11 +513,17 @@ namespace H3MP.Tracking
                     }
                 }
                 subTargsActive = new bool[physicalEncryption.physicalEncryption.SubTargs.Count];
+                subTargGeosActive = new bool[physicalEncryption.physicalEncryption.SubTargGeo.Count];
                 for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargs.Count; ++i)
                 {
                     subTargsActive[i] = physicalEncryption.physicalEncryption.SubTargs[i].activeSelf;
                 }
+                for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargGeo.Count; ++i)
+                {
+                    subTargGeosActive[i] = physicalEncryption.physicalEncryption.SubTargGeo[i].gameObject.activeSelf;
+                }
                 numHitsLeft = physicalEncryption.physicalEncryption.m_numHitsLeft;
+                initialPos = physicalEncryption.physicalEncryption.initialPos;
             }
 
             previousAgilePointerScale = agilePointerScale;
@@ -502,7 +578,20 @@ namespace H3MP.Tracking
                         packet.Write(subTargsActive[i]);
                     }
                 }
+                if (subTargGeosActive == null || subTargGeosActive.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(subTargGeosActive.Length);
+                    for (int i = 0; i < subTargGeosActive.Length; ++i)
+                    {
+                        packet.Write(subTargGeosActive[i]);
+                    }
+                }
                 packet.Write(numHitsLeft);
+                packet.Write(initialPos);
             }
         }
 
@@ -552,7 +641,7 @@ namespace H3MP.Tracking
                 List<int> indices = TrackedEncryption.unknownInit[localWaitingIndex].Key;
                 List<Vector3> points = TrackedEncryption.unknownInit[localWaitingIndex].Value;
 
-                ClientSend.EncryptionInit(trackedID, indices, points);
+                ClientSend.EncryptionInit(trackedID, indices, points, initialPos);
 
                 TrackedEncryption.unknownInit.Remove(localWaitingIndex);
             }
@@ -566,6 +655,17 @@ namespace H3MP.Tracking
                 }
 
                 TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
+            }
+            if (localTrackedID != -1 && TrackedEncryption.unknownSpawnSubTargGeo.ContainsKey(localWaitingIndex))
+            {
+                List<int> indices = TrackedEncryption.unknownSpawnSubTargGeo[localWaitingIndex];
+
+                for (int i = 0; i < indices.Count; ++i) 
+                {
+                    ClientSend.EncryptionRespawnSubTargGeo(trackedID, indices[i]);
+                }
+
+                TrackedEncryption.unknownSpawnSubTargGeo.Remove(localWaitingIndex);
             }
             if (localTrackedID != -1 && TrackedEncryption.unknownDisableSubTarg.ContainsKey(localWaitingIndex))
             {
@@ -619,6 +719,7 @@ namespace H3MP.Tracking
                 TrackedEncryption.unknownSpawnGrowth.Remove(localWaitingIndex);
                 TrackedEncryption.unknownResetGrowth.Remove(localWaitingIndex);
                 TrackedEncryption.unknownSpawnSubTarg.Remove(localWaitingIndex);
+                TrackedEncryption.unknownSpawnSubTargGeo.Remove(localWaitingIndex);
                 TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
                 TrackedEncryption.unknownUpdateDisplay.Remove(localWaitingIndex);
 
