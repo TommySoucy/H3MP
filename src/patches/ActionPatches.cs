@@ -5337,6 +5337,7 @@ namespace H3MP.Patches
         public static int updateDisplaySkip;
         public static bool preActive = false;
         public static int cascadingDestroyIndex;
+        public static int cascadingDestroyDepth;
         static TrackedEncryption trackedEncryption;
 
         // To prevent Update from happening
@@ -5378,7 +5379,7 @@ namespace H3MP.Patches
                 else
                 {
                     // Do update we don't want to prevent
-                    if (__instance.UseReturnToSpawnForce)
+                    if (__instance.UseReturnToSpawnForce && __instance.m_returnToSpawnLine != null)
                     {
                         __instance.UpdateLine();
                     }
@@ -5691,8 +5692,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_2)); // Load the newly instantiated GameObject
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "get_transform"))); // Get transform
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "EncryptionSpawnOnDestroy"))); // Call our method
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GameManager), "SyncTrackedObjects", new Type[] {typeof(Transform), typeof(bool), typeof(TrackedObjectData)}))); // Call sync
-
+            
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -5706,11 +5706,26 @@ namespace H3MP.Patches
             return instructionList;
         }
 
-        public static void DestroyTranspilerCalled(TNH_EncryptionTarget encryption, int index, Transform t)
+        public static void EncryptionSpawnOnDestroy(TNH_EncryptionTarget encryption, int index, Transform t)
         {
             cascadingDestroyIndex = index;
+            int strIndex = encryption.name.LastIndexOf("SubShard");
+            if (strIndex == -1) // This shard is product of destruction of Main
+            {
+                cascadingDestroyDepth = 1;
+            }
+            else // This shard is product of destruction of another subshard
+            {
+                // If source subshard is A, depth is 2, so the letter we get in the name after "SubShard" as an int - 'A' as an int, will give 0-based offset from A
+                // +2 will give the depth we want
+                // So if name has SubShardA, - 'A' will be 0, +2 will give depth of 2
+                cascadingDestroyDepth = 2 + encryption.name[strIndex + 8] - 'A';
+            }
 
             GameManager.SyncTrackedObjects(t, true, null);
+
+            cascadingDestroyIndex = 0;
+            cascadingDestroyDepth = 0;
         }
     }
 

@@ -38,7 +38,8 @@ namespace H3MP.Tracking
 
         public int numHitsLeft;
         public Vector3 initialPos;
-        public int cascadingIndex;
+        public byte cascadingIndex;
+        public byte cascadingDepth;
 
         public TrackedEncryptionData()
         {
@@ -73,7 +74,8 @@ namespace H3MP.Tracking
             }
             numHitsLeft = packet.ReadInt();
             initialPos = packet.ReadVector3();
-            cascadingIndex = packet.ReadInt();
+            cascadingIndex = packet.ReadByte();
+            cascadingDepth = packet.ReadByte();
         }
 
         public static bool IsOfType(Transform t)
@@ -130,18 +132,17 @@ namespace H3MP.Tracking
 
         public override IEnumerator Instantiate()
         {
-        TODO: // Use cascading index to instantiate, need to try and get the cascading prefab, to get shard prefab from. Should probably also keep track of depth in Destroy patch and then through a var in here to know where in the prefab to get the shard prefab
             GameObject prefab = null;
             // Handle new versions/types
-            if((int)type == 11)
+            if ((int)type == 11)
             {
                 SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
-                if(sosigSpawner != null)
+                if (sosigSpawner != null)
                 {
                     prefab = sosigSpawner.SpawnerGroups[18].Furnitures[1];
                 }
             }
-            else if((int)type == 12)
+            else if ((int)type == 12)
             {
                 SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
                 if (sosigSpawner != null)
@@ -184,6 +185,30 @@ namespace H3MP.Tracking
                 awaitingInstantiation = false;
                 yield break;
             }
+            else // Got prefab
+            {
+                // Handle getting correct cascading prefab
+                if (type == TNH_EncryptionType.Cascading)
+                {
+                    // Get corect prefab from depth if necessary
+                    for (int i = 0; i < cascadingDepth; ++i)
+                    {
+                        TNH_EncryptionTarget encryptionScript = prefab.GetComponent<TNH_EncryptionTarget>();
+                        if (encryptionScript == null)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            // This makes assumption that up to our depth, different subshard prefabs each have the same subshard prefabs in
+                            // their SpawnOnDestruction
+                            // Also makes assumption that subshard prefabs are before anything else in SpawnOnDestruction, guaranteeing that SpawnOnDestruction[0]
+                            // is actually a subshard prefab and not something else
+                            prefab = i == cascadingDepth - 1 ? encryptionScript.SpawnOnDestruction[cascadingIndex] : encryptionScript.SpawnOnDestruction[0];
+                        }
+                    }
+                }
+            }
 
             if (!awaitingInstantiation)
             {
@@ -223,7 +248,7 @@ namespace H3MP.Tracking
             }
 
             // Initially set itself
-            UpdateFromData(this);
+            UpdateFromData(this, true);
         }
 
         public override void UpdateFromData(TrackedObjectData updatedObject, bool full = false)
@@ -240,6 +265,7 @@ namespace H3MP.Tracking
                 numHitsLeft = updatedEncryption.numHitsLeft;
                 initialPos = updatedEncryption.initialPos;
                 cascadingIndex = updatedEncryption.cascadingIndex;
+                cascadingDepth = updatedEncryption.cascadingDepth;
             }
 
             previousAgilePointerScale = agilePointerScale;
@@ -387,7 +413,8 @@ namespace H3MP.Tracking
                 }
                 numHitsLeft = packet.ReadInt();
                 initialPos = packet.ReadVector3();
-                cascadingIndex = packet.ReadInt();
+                cascadingIndex = packet.ReadByte();
+                cascadingDepth = packet.ReadByte();
             }
 
             if (physicalEncryption != null)
@@ -529,7 +556,8 @@ namespace H3MP.Tracking
                 }
                 numHitsLeft = physicalEncryption.physicalEncryption.m_numHitsLeft;
                 initialPos = physicalEncryption.physicalEncryption.initialPos;
-                cascadingIndex = EncryptionPatch.cascadingDestroyIndex;
+                cascadingIndex = (byte)EncryptionPatch.cascadingDestroyIndex;
+                cascadingDepth = (byte)EncryptionPatch.cascadingDestroyDepth;
             }
 
             previousAgilePointerScale = agilePointerScale;
@@ -599,6 +627,7 @@ namespace H3MP.Tracking
                 packet.Write(numHitsLeft);
                 packet.Write(initialPos);
                 packet.Write(cascadingIndex);
+                packet.Write(cascadingDepth);
             }
         }
 
