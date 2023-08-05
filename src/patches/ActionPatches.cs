@@ -5617,10 +5617,11 @@ namespace H3MP.Patches
                     }
                 }
                 trackedEncryption.encryptionData.initialPos = trackedEncryption.physicalEncryption.initialPos;
+                trackedEncryption.encryptionData.numHitsLeft = trackedEncryption.physicalEncryption.m_numHitsLeft;
 
                 if (ThreadManager.host)
                 {
-                    ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, points, trackedEncryption.encryptionData.initialPos);
+                    ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, points, trackedEncryption.encryptionData.initialPos, trackedEncryption.encryptionData.numHitsLeft);
                 }
                 else
                 {
@@ -5637,7 +5638,7 @@ namespace H3MP.Patches
                     }
                     else
                     {
-                        ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, points, trackedEncryption.encryptionData.initialPos);
+                        ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, points, trackedEncryption.encryptionData.initialPos, trackedEncryption.encryptionData.numHitsLeft);
                     }
                 }
             }
@@ -5652,7 +5653,7 @@ namespace H3MP.Patches
             }
 
             TrackedEncryption trackedEncryption = GameManager.trackedEncryptionByEncryption.TryGetValue(__instance, out trackedEncryption) ? trackedEncryption : __instance.GetComponent<TrackedEncryption>();
-            if (trackedEncryption != null && trackedEncryption.data.controller != GameManager.ID)
+            if (trackedEncryption != null && trackedEncryption.data.controller == GameManager.ID)
             {
                 trackedEncryption.encryptionData.numHitsLeft = __instance.m_numHitsLeft;
 

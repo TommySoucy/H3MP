@@ -2758,6 +2758,7 @@ namespace H3MP.Networking
                 points.Add(packet.ReadVector3());
             }
             Vector3 initialPos = packet.ReadVector3();
+            int numHitsLeft = packet.ReadInt();
 
             TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
@@ -2811,6 +2812,11 @@ namespace H3MP.Networking
                     trackedEncryption.physicalEncryption.physicalEncryption.m_returnToSpawnLine = gameObject.transform;
                     trackedEncryption.physicalEncryption.physicalEncryption.UpdateLine();
                 }
+
+                trackedEncryption.numHitsLeft = numHitsLeft;
+                ++EncryptionPatch.updateDisplaySkip;
+                trackedEncryption.physicalEncryption.physicalEncryption.UpdateDisplay();
+                --EncryptionPatch.updateDisplaySkip;
             }
         }
 
@@ -4388,16 +4394,19 @@ namespace H3MP.Networking
 
         public static void UpdateEncryptionDisplay(Packet packet)
         {
+            Mod.LogInfo("Client handles encryption update display");
             int trackedID = packet.ReadInt();
             int numHitsLeft = packet.ReadInt();
 
             TrackedEncryptionData trackedEncryptionData = Client.objects[trackedID] as TrackedEncryptionData;
             if (trackedEncryptionData != null)
             {
+                Mod.LogInfo("\tGot data");
                 trackedEncryptionData.numHitsLeft = numHitsLeft;
 
                 if (trackedEncryptionData.physicalEncryption)
                 {
+                    Mod.LogInfo("\t\tGot phys, updating");
                     trackedEncryptionData.physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
                     ++EncryptionPatch.updateDisplaySkip;
                     trackedEncryptionData.physicalEncryption.physicalEncryption.UpdateDisplay();

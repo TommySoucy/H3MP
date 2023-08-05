@@ -1821,7 +1821,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void EncryptionInit(int trackedID, List<int> indices, List<Vector3> points, Vector3 initialPos)
+        public static void EncryptionInit(int trackedID, List<int> indices, List<Vector3> points, Vector3 initialPos, int numHitsLeft)
         {
             using (Packet packet = new Packet((int)ClientPackets.encryptionInit))
             {
@@ -1851,6 +1851,7 @@ namespace H3MP.Networking
                     }
                 }
                 packet.Write(initialPos);
+                packet.Write(numHitsLeft);
 
                 SendTCPData(packet);
             }

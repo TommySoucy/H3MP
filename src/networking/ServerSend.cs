@@ -2984,7 +2984,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void EncryptionInit(int clientID, int trackedID, List<int> indices, List<Vector3> points, Vector3 initialPos)
+        public static void EncryptionInit(int clientID, int trackedID, List<int> indices, List<Vector3> points, Vector3 initialPos, int numHitsLeft)
         {
             using (Packet packet = new Packet((int)ServerPackets.encryptionInit))
             {
@@ -3014,6 +3014,7 @@ namespace H3MP.Networking
                     }
                 }
                 packet.Write(initialPos);
+                packet.Write(numHitsLeft);
 
                 if (clientID == 0)
                 {

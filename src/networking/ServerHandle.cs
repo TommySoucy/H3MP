@@ -3283,6 +3283,7 @@ namespace H3MP.Networking
                 points.Add(packet.ReadVector3());
             }
             Vector3 initialPos = packet.ReadVector3();
+            int numHitsLeft = packet.ReadInt();
 
             TrackedEncryptionData trackedEncryption = Server.objects[trackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
@@ -3336,9 +3337,14 @@ namespace H3MP.Networking
                     trackedEncryption.physicalEncryption.physicalEncryption.m_returnToSpawnLine = gameObject.transform;
                     trackedEncryption.physicalEncryption.physicalEncryption.UpdateLine();
                 }
+
+                trackedEncryption.numHitsLeft = numHitsLeft;
+                ++EncryptionPatch.updateDisplaySkip;
+                trackedEncryption.physicalEncryption.physicalEncryption.UpdateDisplay();
+                --EncryptionPatch.updateDisplaySkip;
             }
 
-            ServerSend.EncryptionInit(clientID, trackedID, indices, points, initialPos);
+            ServerSend.EncryptionInit(clientID, trackedID, indices, points, initialPos, numHitsLeft);
         }
 
         public static void EncryptionResetGrowth(int clientID, Packet packet)
