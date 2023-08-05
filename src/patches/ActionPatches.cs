@@ -5336,6 +5336,7 @@ namespace H3MP.Patches
     {
         public static int updateDisplaySkip;
         public static bool preActive = false;
+        public static int cascadingDestroyIndex;
         static TrackedEncryption trackedEncryption;
 
         // To prevent Update from happening
@@ -5685,28 +5686,31 @@ namespace H3MP.Patches
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
 
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load j
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_2)); // Load the newly instantiated GameObject
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "get_transform"))); // Get transform
-            toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_1)); // Load int 1 (true)
-            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
+            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "get_transform"))); // Get transform
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "EncryptionSpawnOnDestroy"))); // Call our method
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GameManager), "SyncTrackedObjects", new Type[] {typeof(Transform), typeof(bool), typeof(TrackedObjectData)}))); // Call sync
 
-            int foundCount = 0;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("set_velocity"))
+                if (instruction.opcode == OpCodes.Stloc_2)
                 {
-                    if(++foundCount == 3)
-                    {
-                        TODO: // Despite this patch, cascading shrads still do not get tracked. Check if this patch is actually being applied
-                        instructionList.InsertRange(i + 1, toInsert);
-                        break;
-                    }
+                    instructionList.InsertRange(i + 1, toInsert);
+                    break;
                 }
             }
             return instructionList;
+        }
+
+        public static void DestroyTranspilerCalled(TNH_EncryptionTarget encryption, int index, Transform t)
+        {
+            cascadingDestroyIndex = index;
+
+            GameManager.SyncTrackedObjects(t, true, null);
         }
     }
 

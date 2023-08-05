@@ -38,6 +38,7 @@ namespace H3MP.Tracking
 
         public int numHitsLeft;
         public Vector3 initialPos;
+        public int cascadingIndex;
 
         public TrackedEncryptionData()
         {
@@ -72,6 +73,7 @@ namespace H3MP.Tracking
             }
             numHitsLeft = packet.ReadInt();
             initialPos = packet.ReadVector3();
+            cascadingIndex = packet.ReadInt();
         }
 
         public static bool IsOfType(Transform t)
@@ -128,6 +130,7 @@ namespace H3MP.Tracking
 
         public override IEnumerator Instantiate()
         {
+        TODO: // Use cascading index to instantiate, need to try and get the cascading prefab, to get shard prefab from. Should probably also keep track of depth in Destroy patch and then through a var in here to know where in the prefab to get the shard prefab
             GameObject prefab = null;
             // Handle new versions/types
             if((int)type == 11)
@@ -236,6 +239,7 @@ namespace H3MP.Tracking
                 subTargGeosActive = updatedEncryption.subTargGeosActive;
                 numHitsLeft = updatedEncryption.numHitsLeft;
                 initialPos = updatedEncryption.initialPos;
+                cascadingIndex = updatedEncryption.cascadingIndex;
             }
 
             previousAgilePointerScale = agilePointerScale;
@@ -383,6 +387,7 @@ namespace H3MP.Tracking
                 }
                 numHitsLeft = packet.ReadInt();
                 initialPos = packet.ReadVector3();
+                cascadingIndex = packet.ReadInt();
             }
 
             if (physicalEncryption != null)
@@ -524,6 +529,7 @@ namespace H3MP.Tracking
                 }
                 numHitsLeft = physicalEncryption.physicalEncryption.m_numHitsLeft;
                 initialPos = physicalEncryption.physicalEncryption.initialPos;
+                cascadingIndex = EncryptionPatch.cascadingDestroyIndex;
             }
 
             previousAgilePointerScale = agilePointerScale;
@@ -592,6 +598,7 @@ namespace H3MP.Tracking
                 }
                 packet.Write(numHitsLeft);
                 packet.Write(initialPos);
+                packet.Write(cascadingIndex);
             }
         }
 
