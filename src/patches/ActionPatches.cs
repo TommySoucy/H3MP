@@ -5700,6 +5700,7 @@ namespace H3MP.Patches
                 {
                     if(++foundCount == 3)
                     {
+                        TODO: // Despite this patch, cascading shrads still do not get tracked. Check if this patch is actually being applied
                         instructionList.InsertRange(i + 1, toInsert);
                         break;
                     }
