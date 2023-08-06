@@ -263,7 +263,6 @@ namespace H3MP.Tracking
                 cascadingIndex = updatedEncryption.cascadingIndex;
                 cascadingDepth = updatedEncryption.cascadingDepth;
             }
-            Mod.LogInfo("Encryption UpdateFromData");
 
             previousAgilePointerScale = agilePointerScale;
             agilePointerScale = updatedEncryption.agilePointerScale;
@@ -273,21 +272,16 @@ namespace H3MP.Tracking
             previousRot = rotation;
             position = updatedEncryption.position;
             rotation = updatedEncryption.rotation;
-            Mod.LogInfo("\t0");
             if (physicalEncryption != null)
             {
-                Mod.LogInfo("\t1");
                 physicalEncryption.physicalEncryption.AgilePointerScale = agilePointerScale.x;
                 if (physicalEncryption.physicalEncryption.AgilePointer != null)
                 {
-                    Mod.LogInfo("\t\t2");
                     physicalEncryption.physicalEncryption.AgilePointer.localScale = agilePointerScale;
                 }
 
-                Mod.LogInfo("\t1");
                 if (type == TNH_EncryptionType.Orthagonal && (full || previousIsOrthagonalBeamFiring != isOrthagonalBeamFiring))
                 {
-                    Mod.LogInfo("\t\t2");
                     if (isOrthagonalBeamFiring)
                     {
                         for (int i = 0; i < physicalEncryption.physicalEncryption.HitPoints.Count; i++)
@@ -304,7 +298,6 @@ namespace H3MP.Tracking
                     }
                     else
                     {
-                        Mod.LogInfo("\t\t\t3");
                         for (int i = 0; i < physicalEncryption.physicalEncryption.HitPoints.Count; i++)
                         {
                             physicalEncryption.physicalEncryption.HitPoints[i].Geo.SetActive(false);
@@ -317,10 +310,8 @@ namespace H3MP.Tracking
                         }
                         SM.PlayCoreSound(FVRPooledAudioType.Explosion, physicalEncryption.physicalEncryption.AudEvent_OrthagonalLaserEnd, physicalEncryption.transform.position);
                     }
-                    Mod.LogInfo("\t\t2");
                 }
 
-                Mod.LogInfo("\t1");
                 if (physicalEncryption.physicalEncryption.RB != null)
                 {
                     physicalEncryption.physicalEncryption.RB.position = position;
@@ -332,10 +323,8 @@ namespace H3MP.Tracking
                     physicalEncryption.physicalEncryption.transform.rotation = rotation;
                 }
 
-                Mod.LogInfo("\t1");
                 if (full)
                 {
-                    Mod.LogInfo("\t\t2");
                     if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
                     {
                         int subTargsLeft = 0;

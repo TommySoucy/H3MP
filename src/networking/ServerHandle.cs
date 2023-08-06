@@ -3339,7 +3339,8 @@ namespace H3MP.Networking
                 }
 
                 trackedEncryption.numHitsLeft = numHitsLeft; 
-                if (trackedEncryption.physicalEncryption.physicalEncryption.UsesMultipleDisplay
+                if (trackedEncryption.physical != null
+                    && trackedEncryption.physicalEncryption.physicalEncryption.UsesMultipleDisplay
                     && trackedEncryption.physicalEncryption.physicalEncryption.DisplayList.Count > numHitsLeft
                     && trackedEncryption.physicalEncryption.physicalEncryption.DisplayList[numHitsLeft] != null)
                 {
@@ -4903,7 +4904,7 @@ namespace H3MP.Networking
             {
                 trackedEncryptionData.numHitsLeft = numHitsLeft;
 
-                if (trackedEncryptionData.physicalEncryption)
+                if (trackedEncryptionData.physicalEncryption != null)
                 {
                     trackedEncryptionData.physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
                     if (trackedEncryptionData.physicalEncryption.physicalEncryption.UsesMultipleDisplay

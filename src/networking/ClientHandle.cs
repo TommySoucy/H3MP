@@ -2814,7 +2814,8 @@ namespace H3MP.Networking
                 }
 
                 trackedEncryption.numHitsLeft = numHitsLeft;
-                if (trackedEncryption.physicalEncryption.physicalEncryption.UsesMultipleDisplay
+                if (trackedEncryption.physical != null
+                    && trackedEncryption.physicalEncryption.physicalEncryption.UsesMultipleDisplay
                     && trackedEncryption.physicalEncryption.physicalEncryption.DisplayList.Count > numHitsLeft
                     && trackedEncryption.physicalEncryption.physicalEncryption.DisplayList[numHitsLeft] != null)
                 {
@@ -4399,19 +4400,16 @@ namespace H3MP.Networking
 
         public static void UpdateEncryptionDisplay(Packet packet)
         {
-            Mod.LogInfo("Client handles encryption update display");
             int trackedID = packet.ReadInt();
             int numHitsLeft = packet.ReadInt();
 
             TrackedEncryptionData trackedEncryptionData = Client.objects[trackedID] as TrackedEncryptionData;
             if (trackedEncryptionData != null)
             {
-                Mod.LogInfo("\tGot data");
                 trackedEncryptionData.numHitsLeft = numHitsLeft;
 
-                if (trackedEncryptionData.physicalEncryption)
+                if (trackedEncryptionData.physicalEncryption != null)
                 {
-                    Mod.LogInfo("\t\tGot phys, updating");
                     trackedEncryptionData.physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
                     if (trackedEncryptionData.physicalEncryption.physicalEncryption.UsesMultipleDisplay
                         && trackedEncryptionData.physicalEncryption.physicalEncryption.DisplayList.Count > numHitsLeft
