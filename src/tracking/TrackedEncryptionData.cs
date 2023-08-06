@@ -377,9 +377,12 @@ namespace H3MP.Tracking
                     }
 
                     physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
-                    ++EncryptionPatch.updateDisplaySkip;
-                    physicalEncryption.physicalEncryption.UpdateDisplay();
-                    --EncryptionPatch.updateDisplaySkip;
+                    if (physicalEncryption.physicalEncryption.UsesMultipleDisplay)
+                    {
+                        ++EncryptionPatch.updateDisplaySkip;
+                        physicalEncryption.physicalEncryption.UpdateDisplay();
+                        --EncryptionPatch.updateDisplaySkip;
+                    }
 
                     if (physicalEncryption.physicalEncryption.UseReturnToSpawnForce && physicalEncryption.physicalEncryption.m_returnToSpawnLine == null)
                     {
@@ -518,9 +521,12 @@ namespace H3MP.Tracking
                     }
 
                     physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
-                    ++EncryptionPatch.updateDisplaySkip;
-                    physicalEncryption.physicalEncryption.UpdateDisplay();
-                    --EncryptionPatch.updateDisplaySkip;
+                    if (physicalEncryption.physicalEncryption.UsesMultipleDisplay)
+                    {
+                        ++EncryptionPatch.updateDisplaySkip;
+                        physicalEncryption.physicalEncryption.UpdateDisplay();
+                        --EncryptionPatch.updateDisplaySkip;
+                    }
 
                     if (physicalEncryption.physicalEncryption.UseReturnToSpawnForce && physicalEncryption.physicalEncryption.m_returnToSpawnLine == null)
                     {

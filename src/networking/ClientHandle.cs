@@ -2814,9 +2814,12 @@ namespace H3MP.Networking
                 }
 
                 trackedEncryption.numHitsLeft = numHitsLeft;
-                ++EncryptionPatch.updateDisplaySkip;
-                trackedEncryption.physicalEncryption.physicalEncryption.UpdateDisplay();
-                --EncryptionPatch.updateDisplaySkip;
+                if (trackedEncryption.physicalEncryption.physicalEncryption.UsesMultipleDisplay)
+                {
+                    ++EncryptionPatch.updateDisplaySkip;
+                    trackedEncryption.physicalEncryption.physicalEncryption.UpdateDisplay();
+                    --EncryptionPatch.updateDisplaySkip;
+                }
             }
         }
 
@@ -4408,9 +4411,12 @@ namespace H3MP.Networking
                 {
                     Mod.LogInfo("\t\tGot phys, updating");
                     trackedEncryptionData.physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
-                    ++EncryptionPatch.updateDisplaySkip;
-                    trackedEncryptionData.physicalEncryption.physicalEncryption.UpdateDisplay();
-                    --EncryptionPatch.updateDisplaySkip;
+                    if (trackedEncryptionData.physicalEncryption.physicalEncryption.UsesMultipleDisplay)
+                    {
+                        ++EncryptionPatch.updateDisplaySkip;
+                        trackedEncryptionData.physicalEncryption.physicalEncryption.UpdateDisplay();
+                        --EncryptionPatch.updateDisplaySkip;
+                    }
                 }
             }
         }

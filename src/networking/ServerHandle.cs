@@ -3338,10 +3338,13 @@ namespace H3MP.Networking
                     trackedEncryption.physicalEncryption.physicalEncryption.UpdateLine();
                 }
 
-                trackedEncryption.numHitsLeft = numHitsLeft;
-                ++EncryptionPatch.updateDisplaySkip;
-                trackedEncryption.physicalEncryption.physicalEncryption.UpdateDisplay();
-                --EncryptionPatch.updateDisplaySkip;
+                trackedEncryption.numHitsLeft = numHitsLeft; 
+                if (trackedEncryption.physicalEncryption.physicalEncryption.UsesMultipleDisplay)
+                {
+                    ++EncryptionPatch.updateDisplaySkip;
+                    trackedEncryption.physicalEncryption.physicalEncryption.UpdateDisplay();
+                    --EncryptionPatch.updateDisplaySkip;
+                }
             }
 
             ServerSend.EncryptionInit(clientID, trackedID, indices, points, initialPos, numHitsLeft);
@@ -4901,9 +4904,12 @@ namespace H3MP.Networking
                 if (trackedEncryptionData.physicalEncryption)
                 {
                     trackedEncryptionData.physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
-                    ++EncryptionPatch.updateDisplaySkip;
-                    trackedEncryptionData.physicalEncryption.physicalEncryption.UpdateDisplay();
-                    --EncryptionPatch.updateDisplaySkip;
+                    if (trackedEncryptionData.physicalEncryption.physicalEncryption.UsesMultipleDisplay)
+                    {
+                        ++EncryptionPatch.updateDisplaySkip;
+                        trackedEncryptionData.physicalEncryption.physicalEncryption.UpdateDisplay();
+                        --EncryptionPatch.updateDisplaySkip;
+                    }
                 }
 
                 ServerSend.UpdateEncryptionDisplay(trackedID, numHitsLeft, clientID);
