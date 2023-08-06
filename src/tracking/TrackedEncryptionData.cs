@@ -134,15 +134,7 @@ namespace H3MP.Tracking
         {
             GameObject prefab = null;
             // Handle new versions/types
-            if ((int)type == 11)
-            {
-                SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
-                if (sosigSpawner != null)
-                {
-                    prefab = sosigSpawner.SpawnerGroups[18].Furnitures[1];
-                }
-            }
-            else if ((int)type == 12)
+            if ((int)type == 12)
             {
                 SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
                 if (sosigSpawner != null)
@@ -551,14 +543,7 @@ namespace H3MP.Tracking
             if (full)
             {
                 type = physicalEncryption.physicalEncryption.Type;
-                if(type == TNH_EncryptionType.Hardened)
-                {
-                    if (physicalEncryption.physicalEncryption.name.Contains("Encryption_Target_2_Hardened_V2"))
-                    {
-                        type = (TNH_EncryptionType)11;
-                    }
-                }
-                else if(type == TNH_EncryptionType.Regenerative)
+                if(type == TNH_EncryptionType.Regenerative)
                 {
                     if (physicalEncryption.physicalEncryption.name.Contains("Encryption_7_RegenerativeV2"))
                     {
