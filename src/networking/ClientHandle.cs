@@ -2810,7 +2810,7 @@ namespace H3MP.Networking
                 {
                     if (trackedEncryption.physicalEncryption.physicalEncryption.m_returnToSpawnLine != null)
                     {
-                        GameObject.Destroy(trackedEncryption.physicalEncryption.physicalEncryption.m_returnToSpawnLine);
+                        GameObject.Destroy(trackedEncryption.physicalEncryption.physicalEncryption.m_returnToSpawnLine.gameObject);
                     }
                     trackedEncryption.physicalEncryption.physicalEncryption.initialPos = initialPos;
                     GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(trackedEncryption.physicalEncryption.physicalEncryption.ReturnToSpawnLineGO, trackedEncryption.physicalEncryption.transform.position, Quaternion.identity);
@@ -2819,14 +2819,18 @@ namespace H3MP.Networking
                 }
 
                 trackedEncryption.numHitsLeft = numHitsLeft;
-                if (trackedEncryption.physical != null
-                    && trackedEncryption.physicalEncryption.physicalEncryption.UsesMultipleDisplay
-                    && trackedEncryption.physicalEncryption.physicalEncryption.DisplayList.Count > numHitsLeft
-                    && trackedEncryption.physicalEncryption.physicalEncryption.DisplayList[numHitsLeft] != null)
+                if (trackedEncryption.physical != null)
                 {
-                    ++EncryptionPatch.updateDisplaySkip;
-                    trackedEncryption.physicalEncryption.physicalEncryption.UpdateDisplay();
-                    --EncryptionPatch.updateDisplaySkip;
+                    trackedEncryption.physicalEncryption.physicalEncryption.m_numHitsLeft = numHitsLeft;
+
+                    if (trackedEncryption.physicalEncryption.physicalEncryption.UsesMultipleDisplay
+                        && trackedEncryption.physicalEncryption.physicalEncryption.DisplayList.Count > numHitsLeft
+                        && trackedEncryption.physicalEncryption.physicalEncryption.DisplayList[numHitsLeft] != null)
+                    {
+                        ++EncryptionPatch.updateDisplaySkip;
+                        trackedEncryption.physicalEncryption.physicalEncryption.UpdateDisplay();
+                        --EncryptionPatch.updateDisplaySkip;
+                    }
                 }
             }
         }

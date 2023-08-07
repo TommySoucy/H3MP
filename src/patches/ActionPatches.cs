@@ -5592,7 +5592,7 @@ namespace H3MP.Patches
             {
                 List<int> indices = null;
                 List<Vector3> points = null;
-                if (__instance.Type == TNH_EncryptionType.Regenerative)
+                if (__instance.Type == TNH_EncryptionType.Regenerative && __instance.UsesRegenerativeSubTarg)
                 {
                     indices = new List<int>();
                     points = new List<Vector3>();
