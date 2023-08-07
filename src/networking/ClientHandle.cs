@@ -2738,6 +2738,8 @@ namespace H3MP.Networking
                     ++EncryptionSpawnGrowthPatch.skip;
                     trackedEncryption.physicalEncryption.physicalEncryption.SpawnGrowth(index, point);
                     --EncryptionSpawnGrowthPatch.skip;
+
+                    trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[index].transform.localScale = new Vector3(0.2f, 0.2f, forward.magnitude * trackedEncryption.physicalEncryption.physicalEncryption.TendrilFloats[index]);
                 }
             }
         }
@@ -2768,6 +2770,7 @@ namespace H3MP.Networking
                     for (int i = 0; i < indexCount; ++i)
                     {
                         trackedEncryption.subTargsActive[indices[i]] = true;
+                        trackedEncryption.subTargPos[indices[i]] = points[i];
                     }
 
                     if (trackedEncryption.physicalEncryption != null)
@@ -2775,7 +2778,9 @@ namespace H3MP.Networking
                         ++EncryptionSpawnGrowthPatch.skip;
                         for (int i = 0; i < indexCount; ++i)
                         {
+                            Vector3 forward = points[i] - trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[indices[i]].transform.position;
                             trackedEncryption.physicalEncryption.physicalEncryption.SpawnGrowth(indices[i], points[i]);
+                            trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[indices[i]].transform.localScale = new Vector3(0.2f, 0.2f, forward.magnitude * trackedEncryption.physicalEncryption.physicalEncryption.TendrilFloats[indices[i]]);
                         }
                         --EncryptionSpawnGrowthPatch.skip;
                     }
@@ -2855,7 +2860,7 @@ namespace H3MP.Networking
             if (trackedEncryption != null)
             {
                 trackedEncryption.subTargsActive[index] = false;
-                if(trackedEncryption.subTargGeosActive != null)
+                if(trackedEncryption.subTargGeosActive != null && trackedEncryption.subTargGeosActive.Length > index)
                 {
                     trackedEncryption.subTargGeosActive[index] = false;
                 }
@@ -2866,6 +2871,11 @@ namespace H3MP.Networking
                     if (trackedEncryption.physicalEncryption.physicalEncryption.UsesRegeneratingSubtargs)
                     {
                         trackedEncryption.physicalEncryption.physicalEncryption.SubTargGeo[index].gameObject.SetActive(false);
+                    }
+                    if (trackedEncryption.physicalEncryption.physicalEncryption.Tendrils != null 
+                        && trackedEncryption.physicalEncryption.physicalEncryption.Tendrils.Count > index)
+                    {
+                        trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[index].SetActive(false);
                     }
                     --trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft;
                 }

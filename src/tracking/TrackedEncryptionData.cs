@@ -30,6 +30,7 @@ namespace H3MP.Tracking
         public Quaternion rotation;
 
         public bool[] subTargsActive;
+        public Vector3[] subTargPos;
         public bool[] subTargGeosActive;
         public Vector3 previousAgilePointerScale;
         public Vector3 agilePointerScale;
@@ -61,6 +62,15 @@ namespace H3MP.Tracking
                 for (int i = 0; i < length; ++i)
                 {
                     subTargsActive[i] = packet.ReadBool();
+                }
+            }
+            length = packet.ReadInt();
+            if (length > 0)
+            {
+                subTargPos = new Vector3[length];
+                for (int i = 0; i < length; ++i)
+                {
+                    subTargPos[i] = packet.ReadVector3();
                 }
             }
             length = packet.ReadInt();
@@ -240,8 +250,18 @@ namespace H3MP.Tracking
             }
 
             // Set defaults
-            subTargsActive = new bool[physicalEncryption.physicalEncryption.SubTargs.Count];
-            subTargGeosActive = new bool[physicalEncryption.physicalEncryption.SubTargGeo.Count];
+            if (subTargsActive == null)
+            {
+                subTargsActive = new bool[physicalEncryption.physicalEncryption.SubTargs.Count];
+            }
+            if(subTargPos == null)
+            {
+                subTargPos = new Vector3[physicalEncryption.physicalEncryption.GrowthPoints.Count];
+            }
+            if (subTargGeosActive == null)
+            {
+                subTargGeosActive = new bool[physicalEncryption.physicalEncryption.SubTargGeo.Count];
+            }
 
             // Initially set itself
             UpdateFromData(this, true);
@@ -257,6 +277,7 @@ namespace H3MP.Tracking
             {
                 type = updatedEncryption.type;
                 subTargsActive = updatedEncryption.subTargsActive;
+                subTargPos = updatedEncryption.subTargPos;
                 subTargGeosActive = updatedEncryption.subTargGeosActive;
                 numHitsLeft = updatedEncryption.numHitsLeft;
                 initialPos = updatedEncryption.initialPos;
@@ -325,22 +346,49 @@ namespace H3MP.Tracking
 
                 if (full)
                 {
-                    if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
+                    if (type == TNH_EncryptionType.Regenerative)
                     {
-                        int subTargsLeft = 0;
-                        for (int i = 0; i < subTargsActive.Length; ++i)
+                        if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
                         {
-                            if (subTargsActive[i])
+                            int subTargsLeft = 0;
+                            for (int i = 0; i < subTargsActive.Length; ++i)
                             {
-                                physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
-                                ++subTargsLeft;
+                                if (subTargsActive[i])
+                                {
+                                    Vector3 forward = subTargPos[i] - physicalEncryption.physicalEncryption.Tendrils[i].transform.position;
+                                    ++EncryptionSpawnGrowthPatch.skip;
+                                    physicalEncryption.physicalEncryption.SpawnGrowth(i, subTargPos[i]);
+                                    --EncryptionSpawnGrowthPatch.skip;
+                                    physicalEncryption.physicalEncryption.Tendrils[i].transform.localScale = new Vector3(0.2f, 0.2f, forward.magnitude * physicalEncryption.physicalEncryption.TendrilFloats[i]);
+                                    ++subTargsLeft;
+                                }
+                                else
+                                {
+                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
+                                }
                             }
-                            else
-                            {
-                                physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
-                            }
+                            physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
                         }
-                        physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
+                    }
+                    else
+                    {
+                        if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
+                        {
+                            int subTargsLeft = 0;
+                            for (int i = 0; i < subTargsActive.Length; ++i)
+                            {
+                                if (subTargsActive[i])
+                                {
+                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
+                                    ++subTargsLeft;
+                                }
+                                else
+                                {
+                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
+                                }
+                            }
+                            physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
+                        }
                     }
                     if (subTargGeosActive.Length == physicalEncryption.physicalEncryption.SubTargGeo.Count)
                     {
@@ -401,6 +449,15 @@ namespace H3MP.Tracking
                     for (int i = 0; i < length; ++i)
                     {
                         subTargsActive[i] = packet.ReadBool();
+                    }
+                }
+                length = packet.ReadInt();
+                if (length > 0)
+                {
+                    subTargPos = new Vector3[length];
+                    for (int i = 0; i < length; ++i)
+                    {
+                        subTargPos[i] = packet.ReadVector3();
                     }
                 }
                 length = packet.ReadInt();
@@ -471,22 +528,49 @@ namespace H3MP.Tracking
 
                 if (full)
                 {
-                    if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
+                    if (type == TNH_EncryptionType.Regenerative)
                     {
-                        int subTargsLeft = 0;
-                        for (int i = 0; i < subTargsActive.Length; ++i)
+                        if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
                         {
-                            if (subTargsActive[i])
+                            int subTargsLeft = 0;
+                            for (int i = 0; i < subTargsActive.Length; ++i)
                             {
-                                physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
-                                ++subTargsLeft;
+                                if (subTargsActive[i])
+                                {
+                                    Vector3 forward = subTargPos[i] - physicalEncryption.physicalEncryption.Tendrils[i].transform.position;
+                                    ++EncryptionSpawnGrowthPatch.skip;
+                                    physicalEncryption.physicalEncryption.SpawnGrowth(i, subTargPos[i]);
+                                    --EncryptionSpawnGrowthPatch.skip;
+                                    physicalEncryption.physicalEncryption.Tendrils[i].transform.localScale = new Vector3(0.2f, 0.2f, forward.magnitude * physicalEncryption.physicalEncryption.TendrilFloats[i]);
+                                    ++subTargsLeft;
+                                }
+                                else
+                                {
+                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
+                                }
                             }
-                            else
-                            {
-                                physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
-                            }
+                            physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
                         }
-                        physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
+                    }
+                    else
+                    {
+                        if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
+                        {
+                            int subTargsLeft = 0;
+                            for (int i = 0; i < subTargsActive.Length; ++i)
+                            {
+                                if (subTargsActive[i])
+                                {
+                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
+                                    ++subTargsLeft;
+                                }
+                                else
+                                {
+                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
+                                }
+                            }
+                            physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
+                        }
                     }
                     if (subTargGeosActive.Length == physicalEncryption.physicalEncryption.SubTargGeo.Count)
                     {
@@ -544,10 +628,15 @@ namespace H3MP.Tracking
                     }
                 }
                 subTargsActive = new bool[physicalEncryption.physicalEncryption.SubTargs.Count];
+                subTargPos = new Vector3[physicalEncryption.physicalEncryption.GrowthPoints.Count];
                 subTargGeosActive = new bool[physicalEncryption.physicalEncryption.SubTargGeo.Count];
                 for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargs.Count; ++i)
                 {
                     subTargsActive[i] = physicalEncryption.physicalEncryption.SubTargs[i].activeSelf;
+                }
+                for (int i = 0; i < physicalEncryption.physicalEncryption.GrowthPoints.Count; ++i)
+                {
+                    subTargPos[i] = physicalEncryption.physicalEncryption.GrowthPoints[i];
                 }
                 for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargGeo.Count; ++i)
                 {
@@ -609,6 +698,18 @@ namespace H3MP.Tracking
                     for (int i = 0; i < subTargsActive.Length; ++i)
                     {
                         packet.Write(subTargsActive[i]);
+                    }
+                }
+                if (subTargPos == null || subTargPos.Length == 0)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(subTargPos.Length);
+                    for (int i = 0; i < subTargPos.Length; ++i)
+                    {
+                        packet.Write(subTargPos[i]);
                     }
                 }
                 if (subTargGeosActive == null || subTargGeosActive.Length == 0)

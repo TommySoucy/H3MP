@@ -5600,6 +5600,8 @@ namespace H3MP.Patches
                     {
                         if (__instance.SubTargs[i].activeSelf)
                         {
+                            trackedEncryption.encryptionData.subTargsActive[i] = true;
+                            trackedEncryption.encryptionData.subTargPos[i] = __instance.GrowthPoints[i];
                             indices.Add(i);
                             points.Add(__instance.SubTargs[i].transform.position);
                         }
@@ -5612,6 +5614,7 @@ namespace H3MP.Patches
                     {
                         if (__instance.SubTargs[i].activeSelf)
                         {
+                            trackedEncryption.encryptionData.subTargsActive[i] = true;
                             indices.Add(i);
                         }
                     }
