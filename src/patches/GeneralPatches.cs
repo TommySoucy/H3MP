@@ -393,13 +393,13 @@ namespace H3MP.Patches
 
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, __instance.transform.position);
 
-            __instance.ResetConfirm();
             if (!__instance.askConfirm_CleanupEmpties)
             {
                 __instance.ResetConfirm();
                 __instance.AskConfirm_CleanupEmpties();
                 return false;
             }
+            __instance.ResetConfirm();
 
             FVRFireArmMagazine[] array = UnityEngine.Object.FindObjectsOfType<FVRFireArmMagazine>();
             for (int i = array.Length - 1; i >= 0; i--)
@@ -454,12 +454,12 @@ namespace H3MP.Patches
 
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, __instance.transform.position);
 
-            __instance.ResetConfirm();
             if (!__instance.askConfirm_CleanupAllMags)
             {
                 __instance.AskConfirm_CleanupAllMags();
                 return false;
             }
+            __instance.ResetConfirm();
 
             FVRFireArmMagazine[] array = UnityEngine.Object.FindObjectsOfType<FVRFireArmMagazine>();
             for (int i = array.Length - 1; i >= 0; i--)
@@ -514,12 +514,13 @@ namespace H3MP.Patches
 
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, __instance.transform.position);
 
-            __instance.ResetConfirm();
             if (!__instance.askConfirm_CleanupGuns)
             {
                 __instance.AskConfirm_CleanupGuns();
                 return false;
             }
+            __instance.ResetConfirm();
+
             FVRFireArm[] array = UnityEngine.Object.FindObjectsOfType<FVRFireArm>();
             for (int i = array.Length - 1; i >= 0; i--)
             {
