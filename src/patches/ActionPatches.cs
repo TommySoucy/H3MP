@@ -5383,6 +5383,21 @@ namespace H3MP.Patches
                     {
                         __instance.UpdateLine();
                     }
+                    if (__instance.Type == TNH_EncryptionType.Orthagonal && __instance.isOrthagonalBeamFiring)
+                    {
+                        for (int k = 0; k < __instance.BeamDirs.Count; k++)
+                        {
+                            Vector3 vector3 = __instance.transform.rotation * __instance.BeamDirs[k];
+                            float num16 = 200f;
+                            if (Physics.Raycast(__instance.RB.position, vector3, out __instance.m_hit, 200f, __instance.OrthagonalBeamLM, QueryTriggerInteraction.Collide))
+                            {
+                                num16 = __instance.m_hit.distance;
+                            }
+                            __instance.OrthagonalBeams[k].rotation = Quaternion.LookRotation(vector3);
+                            __instance.OrthagonalBeams[k].localScale = new Vector3(0.06f, 0.06f, num16);
+                            __instance.HitPoints[k].transform.position = __instance.transform.position + vector3 * num16;
+                        }
+                    }
 
                     return false;
                 }

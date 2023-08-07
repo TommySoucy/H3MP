@@ -12,18 +12,6 @@ namespace H3MP.Tracking
         public TrackedEncryption physicalEncryption;
 
         public TNH_EncryptionType type;
-        /*
-         * Static: Pos, Rot
-         * Hardened: Pos, Rot
-         * Swarm: Pos, Rot, Subtargs
-         * Recursive: Pos, Rot, Subtargs
-         * Stealth: Pos, Rot
-         * Agile: Pos, Rot, Pointer scale
-         * Regenerative: Pos, Rot, Subtargs
-         * Polymorphic: Pos, Rot, Subtargs, Pointer scale
-         * Cascading: Pos, Rot
-         * Orthagonal: Pos, Rot, Subtargs, isOrthagonalBeamFiring
-         * */
         public Vector3 previousPos;
         public Quaternion previousRot;
         public Vector3 position;
@@ -303,8 +291,13 @@ namespace H3MP.Tracking
 
                 if (type == TNH_EncryptionType.Orthagonal && (full || previousIsOrthagonalBeamFiring != isOrthagonalBeamFiring))
                 {
+                    physicalEncryption.physicalEncryption.isOrthagonalBeamFiring = isOrthagonalBeamFiring;
                     if (isOrthagonalBeamFiring)
                     {
+                        foreach (Transform transform in physicalEncryption.physicalEncryption.OrthagonalBeams)
+                        {
+                            transform.gameObject.SetActive(true);
+                        }
                         for (int i = 0; i < physicalEncryption.physicalEncryption.HitPoints.Count; i++)
                         {
                             physicalEncryption.physicalEncryption.HitPoints[i].Geo.SetActive(true);
@@ -319,6 +312,10 @@ namespace H3MP.Tracking
                     }
                     else
                     {
+                        foreach (Transform transform in physicalEncryption.physicalEncryption.OrthagonalBeams)
+                        {
+                            transform.gameObject.SetActive(false);
+                        }
                         for (int i = 0; i < physicalEncryption.physicalEncryption.HitPoints.Count; i++)
                         {
                             physicalEncryption.physicalEncryption.HitPoints[i].Geo.SetActive(false);
@@ -483,10 +480,15 @@ namespace H3MP.Tracking
                     physicalEncryption.physicalEncryption.AgilePointer.localScale = agilePointerScale;
                 }
 
-                if (full || previousIsOrthagonalBeamFiring != isOrthagonalBeamFiring)
+                if (type == TNH_EncryptionType.Orthagonal && (full || previousIsOrthagonalBeamFiring != isOrthagonalBeamFiring))
                 {
+                    physicalEncryption.physicalEncryption.isOrthagonalBeamFiring = isOrthagonalBeamFiring;
                     if (isOrthagonalBeamFiring)
                     {
+                        foreach (Transform transform in physicalEncryption.physicalEncryption.OrthagonalBeams)
+                        {
+                            transform.gameObject.SetActive(true);
+                        }
                         for (int i = 0; i < physicalEncryption.physicalEncryption.HitPoints.Count; i++)
                         {
                             physicalEncryption.physicalEncryption.HitPoints[i].Geo.SetActive(true);
@@ -501,6 +503,10 @@ namespace H3MP.Tracking
                     }
                     else
                     {
+                        foreach (Transform transform in physicalEncryption.physicalEncryption.OrthagonalBeams)
+                        {
+                            transform.gameObject.SetActive(false);
+                        }
                         for (int i = 0; i < physicalEncryption.physicalEncryption.HitPoints.Count; i++)
                         {
                             physicalEncryption.physicalEncryption.HitPoints[i].Geo.SetActive(false);
