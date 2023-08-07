@@ -111,6 +111,8 @@ namespace H3MP.Patches
             {
                 return;
             }
+            TODO: // We prevent instantiation of a full round if non controller of parent tracked item of the chamber
+            //       Must make sure that we can still eject a round in cases like the carl gustaf as a non controller
 
             incrementedSkip = 0;
 
@@ -168,6 +170,11 @@ namespace H3MP.Patches
                 track = false;
 
                 GameManager.SyncTrackedObjects(__result.transform, true, null);
+            }
+            else if(__result != null) // Don't want to track the round, make sure it is spent
+            {
+                __result.SetKillCounting(true);
+                __result.Fire();
             }
         }
     }
