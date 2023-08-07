@@ -9,6 +9,13 @@ namespace H3MP.Tracking
         public BreakableGlass physicalBreakableGlass;
         public TrackedBreakableGlassData breakableGlassData;
 
+        public override void Awake()
+        {
+            base.Awake();
+
+            GameManager.OnInstanceJoined += OnInstanceJoined;
+        }
+
         public void PlayerShatterAudio(int mode)
         {
             if(breakableGlassData.damager != null)
@@ -35,6 +42,8 @@ namespace H3MP.Tracking
 
         protected override void OnDestroy()
         {
+            GameManager.OnInstanceJoined -= OnInstanceJoined;
+
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
             {
@@ -49,7 +58,7 @@ namespace H3MP.Tracking
             base.OnDestroy();
         }
 
-        protected override void OnInstanceJoined(int instance, int source)
+        protected virtual void OnInstanceJoined(int instance, int source)
         {
             if (!GameManager.sceneLoading)
             {

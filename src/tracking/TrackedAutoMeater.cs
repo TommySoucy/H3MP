@@ -8,8 +8,17 @@ namespace H3MP.Tracking
         public AutoMeater physicalAutoMeater;
         public TrackedAutoMeaterData autoMeaterData;
 
+        public override void Awake()
+        {
+            base.Awake();
+
+            GameManager.OnInstanceJoined += OnInstanceJoined;
+        }
+
         protected override void OnDestroy()
         {
+            GameManager.OnInstanceJoined -= OnInstanceJoined;
+
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
             {
@@ -77,7 +86,7 @@ namespace H3MP.Tracking
             }
         }
 
-        protected override void OnInstanceJoined(int instance, int source)
+        protected virtual void OnInstanceJoined(int instance, int source)
         {
             // Since AutoMeaters can't go across scenes, we only process an instance change if we are not currently loading into a new scene
             if (!GameManager.sceneLoading)

@@ -38,6 +38,8 @@ namespace H3MP.Tracking
         {
             base.Awake();
 
+            GameManager.OnInstanceJoined += OnInstanceJoined;
+
             TNH_EncryptionTarget targetScript = GetComponent<TNH_EncryptionTarget>();
             if (targetScript.SpawnPoints == null)
             {
@@ -67,6 +69,8 @@ namespace H3MP.Tracking
 
         protected override void OnDestroy()
         {
+            GameManager.OnInstanceJoined -= OnInstanceJoined;
+
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
             {
@@ -116,7 +120,7 @@ namespace H3MP.Tracking
             base.OnDestroy();
         }
 
-        protected override void OnInstanceJoined(int instance, int source)
+        protected virtual void OnInstanceJoined(int instance, int source)
         {
             if (!GameManager.sceneLoading)
             {

@@ -28,11 +28,6 @@ namespace H3MP.Tracking
 
         public virtual void Awake()
         {
-            GameManager.OnSceneJoined += OnSceneJoined;
-            GameManager.OnSceneLeft += OnSceneLeft;
-            GameManager.OnInstanceJoined += OnInstanceJoined;
-            GameManager.OnInstanceLeft += OnInstanceLeft;
-
             if (data != null)
             {
                 data.Update(true);
@@ -204,11 +199,6 @@ namespace H3MP.Tracking
 
         protected virtual void OnDestroy()
         {
-            GameManager.OnSceneJoined -= OnSceneJoined;
-            GameManager.OnSceneLeft -= OnSceneLeft;
-            GameManager.OnInstanceJoined -= OnInstanceJoined;
-            GameManager.OnInstanceLeft -= OnInstanceLeft;
-
             Mod.LogInfo("OnDestroy for object at "+data.trackedID+" with local waiting index: "+data.localWaitingIndex, false);
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
@@ -360,13 +350,5 @@ namespace H3MP.Tracking
         public virtual void EndInteraction(FVRViveHand hand) { }
 
         public virtual void EnsureUncontrolled() { }
-
-        protected virtual void OnSceneJoined(string scene, string source) { }
-
-        protected virtual void OnSceneLeft(string scene, string destination) { }
-
-        protected virtual void OnInstanceJoined(int instance, int source) { }
-
-        protected virtual void OnInstanceLeft(int instance, int destination) { }
     }
 }

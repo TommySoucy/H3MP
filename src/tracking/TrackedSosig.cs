@@ -24,6 +24,13 @@ namespace H3MP.Tracking
         public static Dictionary<uint, SosigConfigTemplate> unknownConfiguration = new Dictionary<uint, SosigConfigTemplate>();
         public static Dictionary<uint, Dictionary<string, List<int>>> unknownWearable = new Dictionary<uint, Dictionary<string, List<int>>>();
 
+        public override void Awake()
+        {
+            base.Awake();
+
+            GameManager.OnInstanceJoined += OnInstanceJoined;
+        }
+
         private void FixedUpdate()
         {
             if (physicalSosig != null && physicalSosig.CoreRB != null && data.controller != GameManager.ID && sosigData.position != null && sosigData.rotation != null)
@@ -62,6 +69,8 @@ namespace H3MP.Tracking
 
         protected override void OnDestroy()
         {
+            GameManager.OnInstanceJoined -= OnInstanceJoined;
+
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
             if (skipFullDestroy)
             {
@@ -106,18 +115,6 @@ namespace H3MP.Tracking
 
         public override void BeginInteraction(FVRViveHand hand)
         {
-            //// Add link to All
-            //for (int i = 0; i < physicalSosig.Links.Count; ++i) 
-            //{
-            //    if (physicalSosig.Links[i].O.m_hand == hand)
-            //    {
-            //        physicalSosig.Links[i].O.m_index = FVRInteractiveObject.All.Count;
-            //        FVRInteractiveObject.All.Add(physicalSosig.Links[i].O);
-
-            //        break;
-            //    }
-            //}
-
             if (data.controller != GameManager.ID)
             {
                 if (ThreadManager.host)
@@ -139,20 +136,6 @@ namespace H3MP.Tracking
 
         public override void EndInteraction(FVRViveHand hand)
         {
-            //// Manage FVRInteractiveObject.All
-            //for (int i = 0; i < physicalSosig.Links.Count; i++)
-            //{
-            //    // Remove links from All if necessary
-            //    if (physicalSosig.Links[i].O.m_hand == null && physicalSosig.Links[i].O.m_index != -1)
-            //    {
-            //        FVRInteractiveObject.All[physicalSosig.Links[i].O.m_index] = FVRInteractiveObject.All[FVRInteractiveObject.All.Count - 1];
-            //        FVRInteractiveObject.All[physicalSosig.Links[i].O.m_index].m_index = physicalSosig.Links[i].O.m_index;
-            //        FVRInteractiveObject.All.RemoveAt(FVRInteractiveObject.All.Count - 1);
-
-            //        physicalSosig.Links[i].O.m_index = -1;
-            //    }
-            //}
-
             // Need to make sure that we give control of the sosig back to the controller of a the current TNH instance if there is one
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller != GameManager.ID)
             {
@@ -170,7 +153,7 @@ namespace H3MP.Tracking
             }
         }
 
-        protected override void OnInstanceJoined(int instance, int source)
+        protected virtual void OnInstanceJoined(int instance, int source)
         {
             // Since AutoMeaters can't go across scenes, we only process an instance change if we are not currently loading into a new scene
             if (!GameManager.sceneLoading)

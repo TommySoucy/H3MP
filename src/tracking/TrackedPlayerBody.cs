@@ -11,10 +11,17 @@ namespace H3MP.Tracking
 
         public PlayerManager playerManager;
 
+        public override void Awake()
+        {
+            base.Awake();
+
+            GameManager.OnSceneLeft += OnSceneLeft;
+            GameManager.OnInstanceJoined += OnInstanceJoined;
+            GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
+        }
+
         public virtual void Start()
         {
-            GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
-
             physicalPlayerBody.handsToFollow = new Transform[2];
             if (playerBodyData.controller == GameManager.ID)
             {
@@ -140,6 +147,8 @@ namespace H3MP.Tracking
 
         protected override void OnDestroy()
         {
+            GameManager.OnSceneLeft -= OnSceneLeft;
+            GameManager.OnInstanceJoined -= OnInstanceJoined;
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
 
             for (int i = 0; i < physicalPlayerBody.hitboxes.Length; ++i)
@@ -150,7 +159,7 @@ namespace H3MP.Tracking
             base.OnDestroy();
         }
 
-        protected override void OnSceneLeft(string scene, string destination) 
+        protected virtual void OnSceneLeft(string scene, string destination) 
         {
             // We want to bring our body with us across scenes no matter what
             // In SP, this is handled by simply having bodies in DontDestroyOnLoad
@@ -161,7 +170,7 @@ namespace H3MP.Tracking
             }
         }
 
-        protected override void OnInstanceJoined(int instance, int source)
+        protected virtual void OnInstanceJoined(int instance, int source)
         {
             // We want to bring our body with us across instances no matter what
             // In SP, this is handled by simply having bodies in DontDestroyOnLoad

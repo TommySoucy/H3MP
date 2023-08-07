@@ -120,6 +120,10 @@ namespace H3MP.Tracking
             InitItemType();
 
             base.Awake();
+
+            GameManager.OnSceneLeft += OnSceneLeft;
+            GameManager.OnSceneJoined += OnSceneJoined;
+            GameManager.OnInstanceJoined += OnInstanceJoined;
         }
 
         private void InitItemType()
@@ -11471,6 +11475,9 @@ namespace H3MP.Tracking
 
         protected override void OnDestroy()
         {
+            GameManager.OnSceneLeft -= OnSceneLeft;
+            GameManager.OnSceneJoined -= OnSceneJoined;
+            GameManager.OnInstanceJoined -= OnInstanceJoined;
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
 
             // A skip of the entire destruction process may be used if H3MP has become irrelevant, like in the case of disconnection
@@ -11548,7 +11555,7 @@ namespace H3MP.Tracking
             }
         }
 
-        protected override void OnSceneLeft(string scene, string destination)
+        protected virtual void OnSceneLeft(string scene, string destination)
         {
             TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;
             data.ShouldBring(true, ref bring);
@@ -11590,7 +11597,7 @@ namespace H3MP.Tracking
             //}
         }
 
-        protected override void OnSceneJoined(string scene, string source)
+        protected virtual void OnSceneJoined(string scene, string source)
         {
             // Since items can be secured with a certain interaction that require the CurrentPlayerBody to be set, we need to wait for it
             if(securedCode != -1 && GM.CurrentPlayerBody != null)
@@ -11629,7 +11636,7 @@ namespace H3MP.Tracking
             securedCode = -1;
         }
 
-        protected override void OnInstanceJoined(int instance, int source)
+        protected virtual void OnInstanceJoined(int instance, int source)
         {
             // An instance switch could happen during loading, at which point we want to change instance of wtv objects
             // we decided to bring along with us during scene change
