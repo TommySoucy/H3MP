@@ -97,10 +97,13 @@ namespace H3MP.Tracking
 
         private void OnPlayerBodyInit(FVRPlayerBody playerBody)
         {
-            physicalPlayerBody.handsToFollow = new Transform[2];
             if (playerBodyData.controller == GameManager.ID)
             {
                 physicalPlayerBody.headToFollow = playerBody.Head;
+                if(physicalPlayerBody.handsToFollow == null)
+                {
+                    physicalPlayerBody.handsToFollow = new Transform[2];
+                }
                 physicalPlayerBody.handsToFollow[0] = playerBody.LeftHand;
                 physicalPlayerBody.handsToFollow[1] = playerBody.RightHand;
                 if (physicalPlayerBody.headDisplayMode != PlayerBody.HeadDisplayMode.Physical)
