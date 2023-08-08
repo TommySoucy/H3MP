@@ -113,6 +113,13 @@ namespace H3MP.Patches
             }
             TODO: // We prevent instantiation of a full round if non controller of parent tracked item of the chamber
             //       Must make sure that we can still eject a round in cases like the carl gustaf as a non controller
+            //       When ejecting round from carl gustaf as non controller, we instantiate it on our side (now unspent), and never track it.
+            //       Controller still has a round loaded into the firearm's chamber, meaning it was also never unloaded across the network but only 
+            //       to the perspective of the non controller
+            //       Should add an override flag that can be set for something like the carl gustaf that will prevent the prevention of instantiation of a full round
+            //       and instead track the full round. This is so that a non controller, where possible, can eject a round from a non controlled chamber, and track the result
+            //       In that case we will also need to tell the controller that the round has been ejected. This can be done separately though, instead of throug the flag, like through a specific event
+            //       packet that will tell the controller to empty their chamber, as we currently do for other carl gustaf events.
 
             incrementedSkip = 0;
 
