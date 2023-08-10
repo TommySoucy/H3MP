@@ -101,6 +101,7 @@ namespace H3MP.Patches
     // Patches FVRFireArmChamber.EjectRound so we can keep track of when a round is ejected from a chamber
     class ChamberEjectRoundPatch
     {
+        public static int overrideFlag = 0;
         static bool track = false;
         static int incrementedSkip = 0;
 
@@ -150,11 +151,11 @@ namespace H3MP.Patches
                     }
 
                     // Check if we should control and sync it, if so do it in postfix
-                    if (trackedItem == null || trackedItem.data.controller == GameManager.ID)
+                    if (overrideFlag > 0 || trackedItem == null || trackedItem.data.controller == GameManager.ID)
                     {
                         track = true;
                     }
-                    else // Round was instantiated from chamber of an item that is controlled by other client
+                    else // Round was instantiated from chamber of an item that is controlled by other client nad not overriden
                     {
                         // Skip the instantiate on our side, the controller client will instantiate and sync it with us eventually
                         ++Mod.skipAllInstantiates;
