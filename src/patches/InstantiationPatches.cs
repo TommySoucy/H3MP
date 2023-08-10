@@ -1,5 +1,6 @@
 ﻿using Anvil;
 using FistVR;
+using H3MP.Networking;
 using H3MP.Tracking;
 using HarmonyLib;
 using System;
@@ -105,6 +106,8 @@ namespace H3MP.Patches
         static bool track = false;
         static int incrementedSkip = 0;
 
+        static TrackedItem chamberOwnerTrackedItem;
+
         static void Prefix(ref FVRFireArmChamber __instance, ref FVRFireArmRound ___m_round, bool ForceCaseLessEject)
         {
             // Skip if not connected
@@ -139,11 +142,11 @@ namespace H3MP.Patches
                     //       Because right now we just go up the hierarchy until we find the item, maybe its faster? will need to test, but considering the GetComponent overhead
                     //       we might want to do this differently
                     Transform currentParent = __instance.transform;
-                    TrackedItem trackedItem = null;
+                    chamberOwnerTrackedItem = null;
                     while (currentParent != null)
                     {
-                        trackedItem = currentParent.GetComponent<TrackedItem>();
-                        if (trackedItem != null)
+                        chamberOwnerTrackedItem = currentParent.GetComponent<TrackedItem>();
+                        if (chamberOwnerTrackedItem != null)
                         {
                             break;
                         }
@@ -151,7 +154,7 @@ namespace H3MP.Patches
                     }
 
                     // Check if we should control and sync it, if so do it in postfix
-                    if (overrideFlag > 0 || trackedItem == null || trackedItem.data.controller == GameManager.ID)
+                    if (overrideFlag > 0 || chamberOwnerTrackedItem == null || chamberOwnerTrackedItem.data.controller == GameManager.ID)
                     {
                         track = true;
                     }
@@ -165,7 +168,7 @@ namespace H3MP.Patches
             }
         }
 
-        static void Postfix(ref FVRFireArmRound __result)
+        static void Postfix(FVRFireArmChamber __instance, ref FVRFireArmRound __result)
         {
             if (incrementedSkip > 0)
             {
@@ -178,6 +181,24 @@ namespace H3MP.Patches
                 track = false;
 
                 GameManager.SyncTrackedObjects(__result.transform, true, null);
+
+                // If overriden it is because we want to control the ejection of this chamber
+                // Make sure the controller of the chamber knows this chamber is to be emptied
+                if(overrideFlag > 0)
+                {
+                    if(chamberOwnerTrackedItem != null && chamberOwnerTrackedItem.data.controller != GameManager.ID)
+                    {
+                        if (ThreadManager.host)
+                        {
+                            TODO: // Ensure -1 class here means we empty the chamber on the receiving side
+                            ServerSend.ChamberRound(chamberOwnerTrackedItem.data.trackedID, (FireArmRoundClass)(-1), chamberOwnerTrackedItem.getChamberIndex(__instance));
+                        }
+                        else // Note: If we are client non-controller, it implies we have tracked ID
+                        {
+                            ClientSend.ChamberRound(chamberOwnerTrackedItem.data.trackedID, (FireArmRoundClass)(-1), chamberOwnerTrackedItem.getChamberIndex(__instance));
+                        }
+                    }
+                }
             }
             else if(__result != null) // Don't want to track the round, make sure it is spent
             {
