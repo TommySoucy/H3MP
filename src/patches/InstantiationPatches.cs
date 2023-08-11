@@ -121,6 +121,21 @@ namespace H3MP.Patches
             // Check if a round would be ejected
             if (___m_round != null && (!___m_round.IsCaseless || ForceCaseLessEject || __instance.SuppressCaselessDeletion))
             {
+                // TODO: Optimization: Maybe have a dict trackedItemByChamber, in which we keep any item which have a chamber, which we would put in there in trackedItem awake
+                //       Because right now we just go up the hierarchy until we find the item, maybe its faster? will need to test, but considering the GetComponent overhead
+                //       we might want to do this differently
+                Transform currentParent = __instance.transform;
+                chamberOwnerTrackedItem = null;
+                while (currentParent != null)
+                {
+                    chamberOwnerTrackedItem = currentParent.GetComponent<TrackedItem>();
+                    if (chamberOwnerTrackedItem != null)
+                    {
+                        break;
+                    }
+                    currentParent = currentParent.parent;
+                }
+
                 if (__instance.IsSpent)
                 {
                     // Skip the instantiation of the casing because we don't want to sync these between clients
@@ -129,27 +144,12 @@ namespace H3MP.Patches
                 }
                 else // We are ejecting a whole round, we want the controller of the chamber's parent tracked item to control the round
                 {
-                    // TODO: Optimization: Maybe have a dict trackedItemByChamber, in which we keep any item which have a chamber, which we would put in there in trackedItem awake
-                    //       Because right now we just go up the hierarchy until we find the item, maybe its faster? will need to test, but considering the GetComponent overhead
-                    //       we might want to do this differently
-                    Transform currentParent = __instance.transform;
-                    chamberOwnerTrackedItem = null;
-                    while (currentParent != null)
-                    {
-                        chamberOwnerTrackedItem = currentParent.GetComponent<TrackedItem>();
-                        if (chamberOwnerTrackedItem != null)
-                        {
-                            break;
-                        }
-                        currentParent = currentParent.parent;
-                    }
-
                     // Check if we should control and sync it, if so do it in postfix
                     if (overrideFlag > 0 || chamberOwnerTrackedItem == null || chamberOwnerTrackedItem.data.controller == GameManager.ID)
                     {
                         track = true;
                     }
-                    else // Round was instantiated from chamber of an item that is controlled by other client nad not overriden
+                    else // Round was instantiated from chamber of an item that is controlled by other client and not overriden
                     {
                         // Skip the instantiate on our side, the controller client will instantiate and sync it with us eventually
                         ++Mod.skipAllInstantiates;
@@ -190,10 +190,26 @@ namespace H3MP.Patches
                     }
                 }
             }
-            else if(__result != null) // Don't want to track the round, make sure it is spent
+            else
             {
-                __result.SetKillCounting(true);
-                __result.Fire();
+                if (overrideFlag > 0 && chamberOwnerTrackedItem != null && chamberOwnerTrackedItem.data.controller != GameManager.ID)
+                {
+                    // Override flag means we want to empty a non controlled chamber of a spent round
+                    // Despite not wanting to track the spent round, we still want to send order to others to empty the chamber on their side as well
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.ChamberRound(chamberOwnerTrackedItem.data.trackedID, (FireArmRoundClass)(-1), chamberOwnerTrackedItem.getChamberIndex(__instance));
+                    }
+                    else // Note: If we are client non-controller, it implies we have tracked ID
+                    {
+                        ClientSend.ChamberRound(chamberOwnerTrackedItem.data.trackedID, (FireArmRoundClass)(-1), chamberOwnerTrackedItem.getChamberIndex(__instance));
+                    }
+                }
+                if (__result != null) // Don't want to track the round, make sure it is spent
+                {
+                    __result.SetKillCounting(true);
+                    __result.Fire();
+                }
             }
         }
     }
