@@ -1017,7 +1017,14 @@ namespace H3MP.Tracking
             FVRFireArm asFA = dataObject as FVRFireArm;
 
             ++ChamberPatch.chamberSkip;
-            asFA.GetChambers()[chamberIndex].SetRound(roundClass, asFA.GetChambers()[chamberIndex].transform.position, asFA.GetChambers()[chamberIndex].transform.rotation);
+            if (((int)roundClass) == -1)
+            {
+                asFA.GetChambers()[chamberIndex].SetRound(null);
+            }
+            else
+            {
+                asFA.GetChambers()[chamberIndex].SetRound(roundClass, asFA.GetChambers()[chamberIndex].transform.position, asFA.GetChambers()[chamberIndex].transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -2506,11 +2513,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == asRevolver.GetChambers().Count)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asRevolver.GetChambers()[chamberIndex].transform.position, asRevolver.GetChambers()[chamberIndex].transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asRevolver.GetChambers()[chamberIndex].transform.position, asRevolver.GetChambers()[chamberIndex].transform.rotation);
+                }
             }
             else
             {
-                asRevolver.GetChambers()[chamberIndex].SetRound(roundClass, asRevolver.GetChambers()[chamberIndex].transform.position, asRevolver.GetChambers()[chamberIndex].transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asRevolver.GetChambers()[chamberIndex].SetRound(null);
+                }
+                else
+                {
+                    asRevolver.GetChambers()[chamberIndex].SetRound(roundClass, asRevolver.GetChambers()[chamberIndex].transform.position, asRevolver.GetChambers()[chamberIndex].transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -3790,11 +3811,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == 1)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+                if(((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+                }
             }
             else
             {
-                asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asOBR.Chamber.SetRound(null);
+                }
+                else
+                {
+                    asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -4692,7 +4727,14 @@ namespace H3MP.Tracking
             CarlGustaf asCG = dataObject as CarlGustaf;
 
             ++ChamberPatch.chamberSkip;
-            asCG.Chamber.SetRound(roundClass, asCG.Chamber.transform.position, asCG.Chamber.transform.rotation);
+            if (((int)roundClass) == -1)
+            {
+                asCG.Chamber.SetRound(null);
+            }
+            else
+            {
+                asCG.Chamber.SetRound(roundClass, asCG.Chamber.transform.position, asCG.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -4972,19 +5014,40 @@ namespace H3MP.Tracking
             if (chamberIndex == 0)
             {
                 ++ChamberPatch.chamberSkip;
-                asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asLAF.Chamber.SetRound(null);
+                }
+                else
+                {
+                    asLAF.Chamber.SetRound(roundClass, asLAF.Chamber.transform.position, asLAF.Chamber.transform.rotation);
+                }
                 --ChamberPatch.chamberSkip;
             }
             else if (chamberIndex == 1)
             {
                 ++ChamberPatch.chamberSkip;
-                asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asLAF.Chamber2.SetRound(null);
+                }
+                else
+                {
+                    asLAF.Chamber2.SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                }
                 --ChamberPatch.chamberSkip;
             }
             else if (chamberIndex == 2)
             {
                 ++ChamberPatch.chamberSkip;
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asLAF.Chamber2.transform.position, asLAF.Chamber2.transform.rotation);
+                }
                 --ChamberPatch.chamberSkip;
             }
         }
@@ -5341,11 +5404,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == asBreakActionWeapon.Barrels.Length)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asBreakActionWeapon.GetChambers()[chamberIndex].transform.position, asBreakActionWeapon.GetChambers()[chamberIndex].transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asBreakActionWeapon.GetChambers()[chamberIndex].transform.position, asBreakActionWeapon.GetChambers()[chamberIndex].transform.rotation);
+                }
             }
             else
             {
-                asBreakActionWeapon.GetChambers()[chamberIndex].SetRound(roundClass, asBreakActionWeapon.GetChambers()[chamberIndex].transform.position, asBreakActionWeapon.GetChambers()[chamberIndex].transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asBreakActionWeapon.GetChambers()[chamberIndex].SetRound(null);
+                }
+                else
+                {
+                    asBreakActionWeapon.GetChambers()[chamberIndex].SetRound(roundClass, asBreakActionWeapon.GetChambers()[chamberIndex].transform.position, asBreakActionWeapon.GetChambers()[chamberIndex].transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -5562,11 +5639,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == 1)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+                }
             }
             else
             {
-                asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asBAP.Chamber.SetRound(null);
+                }
+                else
+                {
+                    asBAP.Chamber.SetRound(roundClass, asBAP.Chamber.transform.position, asBAP.Chamber.transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -5852,11 +5943,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == asRS.GetChambers().Count)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asRS.GetChambers()[chamberIndex].transform.position, asRS.GetChambers()[chamberIndex].transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asRS.GetChambers()[chamberIndex].transform.position, asRS.GetChambers()[chamberIndex].transform.rotation);
+                }
             }
             else
             {
-                asRS.GetChambers()[chamberIndex].SetRound(roundClass, asRS.GetChambers()[chamberIndex].transform.position, asRS.GetChambers()[chamberIndex].transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asRS.GetChambers()[chamberIndex].SetRound(null);
+                }
+                else
+                {
+                    asRS.GetChambers()[chamberIndex].SetRound(roundClass, asRS.GetChambers()[chamberIndex].transform.position, asRS.GetChambers()[chamberIndex].transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -6075,11 +6180,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == asRevolver.Chambers.Length)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asRevolver.Chambers[chamberIndex].transform.position, asRevolver.Chambers[chamberIndex].transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asRevolver.Chambers[chamberIndex].transform.position, asRevolver.Chambers[chamberIndex].transform.rotation);
+                }
             }
             else
             {
-                asRevolver.Chambers[chamberIndex].SetRound(roundClass, asRevolver.Chambers[chamberIndex].transform.position, asRevolver.Chambers[chamberIndex].transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asRevolver.Chambers[chamberIndex].SetRound(null);
+                }
+                else
+                {
+                    asRevolver.Chambers[chamberIndex].SetRound(roundClass, asRevolver.Chambers[chamberIndex].transform.position, asRevolver.Chambers[chamberIndex].transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -6408,12 +6527,21 @@ namespace H3MP.Tracking
             {
                 asM203 = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as M203;
             }
-            FireArmRoundType prevRoundType = asM203.Chamber.RoundType;
-            asM203.Chamber.RoundType = roundType;
-            ++ChamberPatch.chamberSkip;
-            asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
-            --ChamberPatch.chamberSkip;
-            asM203.Chamber.RoundType = prevRoundType;
+            if (((int)roundClass) == -1)
+            {
+                ++ChamberPatch.chamberSkip;
+                asM203.Chamber.SetRound(null);
+                --ChamberPatch.chamberSkip;
+            }
+            else
+            {
+                FireArmRoundType prevRoundType = asM203.Chamber.RoundType;
+                asM203.Chamber.RoundType = roundType;
+                ++ChamberPatch.chamberSkip;
+                asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
+                --ChamberPatch.chamberSkip;
+                asM203.Chamber.RoundType = prevRoundType;
+            }
         }
 
         private FVRFireArmChamber M203GetChamber()
@@ -6435,7 +6563,14 @@ namespace H3MP.Tracking
             M203 asM203 = dataObject as M203;
 
             ++ChamberPatch.chamberSkip;
-            asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
+            if (((int)roundClass) == -1)
+            {
+                asM203.Chamber.SetRound(null);
+            }
+            else
+            {
+                asM203.Chamber.SetRound(roundClass, asM203.Chamber.transform.position, asM203.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -6789,12 +6924,21 @@ namespace H3MP.Tracking
             {
                 asGP25 = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as GP25;
             }
-            FireArmRoundType prevRoundType = asGP25.Chamber.RoundType;
-            asGP25.Chamber.RoundType = roundType;
-            ++ChamberPatch.chamberSkip;
-            asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
-            --ChamberPatch.chamberSkip;
-            asGP25.Chamber.RoundType = prevRoundType;
+            if (((int)roundClass) == -1)
+            {
+                ++ChamberPatch.chamberSkip;
+                asGP25.Chamber.SetRound(null);
+                --ChamberPatch.chamberSkip;
+            }
+            else
+            {
+                FireArmRoundType prevRoundType = asGP25.Chamber.RoundType;
+                asGP25.Chamber.RoundType = roundType;
+                ++ChamberPatch.chamberSkip;
+                asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+                --ChamberPatch.chamberSkip;
+                asGP25.Chamber.RoundType = prevRoundType;
+            }
         }
 
         private FVRFireArmChamber GP25GetChamber()
@@ -6816,7 +6960,14 @@ namespace H3MP.Tracking
             GP25 asGP25 = dataObject as GP25;
 
             ++ChamberPatch.chamberSkip;
-            asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+            if (((int)roundClass) == -1)
+            {
+                asGP25.Chamber.SetRound(null);
+            }
+            else
+            {
+                asGP25.Chamber.SetRound(roundClass, asGP25.Chamber.transform.position, asGP25.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -7238,12 +7389,21 @@ namespace H3MP.Tracking
             {
                 asATF = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableTubeFed;
             }
-            FireArmRoundType prevRoundType = asATF.Chamber.RoundType;
-            asATF.Chamber.RoundType = roundType;
-            ++ChamberPatch.chamberSkip;
-            asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
-            --ChamberPatch.chamberSkip;
-            asATF.Chamber.RoundType = prevRoundType;
+            if (((int)roundClass) == -1)
+            {
+                ++ChamberPatch.chamberSkip;
+                asATF.Chamber.SetRound(null);
+                --ChamberPatch.chamberSkip;
+            }
+            else
+            {
+                FireArmRoundType prevRoundType = asATF.Chamber.RoundType;
+                asATF.Chamber.RoundType = roundType;
+                ++ChamberPatch.chamberSkip;
+                asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
+                --ChamberPatch.chamberSkip;
+                asATF.Chamber.RoundType = prevRoundType;
+            }
         }
 
         private FVRFireArmChamber AttachableTubeFedGetChamber()
@@ -7265,7 +7425,14 @@ namespace H3MP.Tracking
             AttachableTubeFed asATF = dataObject as AttachableTubeFed;
 
             ++ChamberPatch.chamberSkip;
-            asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
+            if (((int)roundClass) == -1)
+            {
+                asATF.Chamber.SetRound(null);
+            }
+            else
+            {
+                asATF.Chamber.SetRound(roundClass, asATF.Chamber.transform.position, asATF.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -7660,12 +7827,21 @@ namespace H3MP.Tracking
             {
                 asACBW = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableClosedBoltWeapon;
             }
-            FireArmRoundType prevRoundType = asACBW.Chamber.RoundType;
-            asACBW.Chamber.RoundType = roundType;
-            ++ChamberPatch.chamberSkip;
-            asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
-            --ChamberPatch.chamberSkip;
-            asACBW.Chamber.RoundType = prevRoundType;
+            if (((int)roundClass) == -1)
+            {
+                ++ChamberPatch.chamberSkip;
+                asACBW.Chamber.SetRound(null);
+                --ChamberPatch.chamberSkip;
+            }
+            else
+            {
+                FireArmRoundType prevRoundType = asACBW.Chamber.RoundType;
+                asACBW.Chamber.RoundType = roundType;
+                ++ChamberPatch.chamberSkip;
+                asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
+                --ChamberPatch.chamberSkip;
+                asACBW.Chamber.RoundType = prevRoundType;
+            }
         }
 
         private FVRFireArmChamber AttachableClosedBoltWeaponGetChamber()
@@ -7687,7 +7863,14 @@ namespace H3MP.Tracking
             AttachableClosedBoltWeapon asACBW = dataObject as AttachableClosedBoltWeapon;
 
             ++ChamberPatch.chamberSkip;
-            asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
+            if (((int)roundClass) == -1)
+            {
+                asACBW.Chamber.SetRound(null);
+            }
+            else
+            {
+                asACBW.Chamber.SetRound(roundClass, asACBW.Chamber.transform.position, asACBW.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -8033,12 +8216,21 @@ namespace H3MP.Tracking
             {
                 asABA = (dataObject as FVRFireArm).GetIntegratedAttachableFirearm() as AttachableBreakActions;
             }
-            FireArmRoundType prevRoundType = asABA.Chamber.RoundType;
-            asABA.Chamber.RoundType = roundType;
-            ++ChamberPatch.chamberSkip;
-            asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
-            --ChamberPatch.chamberSkip;
-            asABA.Chamber.RoundType = prevRoundType;
+            if(((int)roundClass) == -1)
+            {
+                ++ChamberPatch.chamberSkip;
+                asABA.Chamber.SetRound(null);
+                --ChamberPatch.chamberSkip;
+            }
+            else
+            {
+                FireArmRoundType prevRoundType = asABA.Chamber.RoundType;
+                asABA.Chamber.RoundType = roundType;
+                ++ChamberPatch.chamberSkip;
+                asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
+                --ChamberPatch.chamberSkip;
+                asABA.Chamber.RoundType = prevRoundType;
+            }
         }
 
         private FVRFireArmChamber AttachableBreakActionsGetChamber()
@@ -8060,7 +8252,14 @@ namespace H3MP.Tracking
             AttachableBreakActions asABA = dataObject as AttachableBreakActions;
 
             ++ChamberPatch.chamberSkip;
-            asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
+            if (((int)roundClass) == -1)
+            {
+                asABA.Chamber.SetRound(null);
+            }
+            else
+            {
+                asABA.Chamber.SetRound(roundClass, asABA.Chamber.transform.position, asABA.Chamber.transform.rotation);
+            }
             --ChamberPatch.chamberSkip;
         }
 
@@ -8897,11 +9096,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == 1)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+                }
             }
             else
             {
-                asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asCBW.Chamber.SetRound(null);
+                }
+                else
+                {
+                    asCBW.Chamber.SetRound(roundClass, asCBW.Chamber.transform.position, asCBW.Chamber.transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -9215,11 +9428,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == 1)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+                }
             }
             else
             {
-                asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asHandgun.Chamber.SetRound(null);
+                }
+                else
+                {
+                    asHandgun.Chamber.SetRound(roundClass, asHandgun.Chamber.transform.position, asHandgun.Chamber.transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -9498,11 +9725,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == 1)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                }
             }
             else
             {
-                asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asTFS.Chamber.SetRound(null);
+                }
+                else
+                {
+                    asTFS.Chamber.SetRound(roundClass, asTFS.Chamber.transform.position, asTFS.Chamber.transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
@@ -9772,11 +10013,25 @@ namespace H3MP.Tracking
             ++ChamberPatch.chamberSkip;
             if (chamberIndex == 1)
             {
-                attachableFirearmGetChamberFunc().SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    attachableFirearmGetChamberFunc().SetRound(null);
+                }
+                else
+                {
+                    attachableFirearmGetChamberFunc().SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
+                }
             }
             else
             {
-                asBar.Chamber.SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
+                if (((int)roundClass) == -1)
+                {
+                    asBar.Chamber.SetRound(null);
+                }
+                else
+                {
+                    asBar.Chamber.SetRound(roundClass, asBar.Chamber.transform.position, asBar.Chamber.transform.rotation);
+                }
             }
             --ChamberPatch.chamberSkip;
         }
