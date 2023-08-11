@@ -115,16 +115,7 @@ namespace H3MP.Patches
             {
                 return;
             }
-            TODO: // We prevent instantiation of a full round if non controller of parent tracked item of the chamber
-            //       Must make sure that we can still eject a round in cases like the carl gustaf as a non controller
-            //       When ejecting round from carl gustaf as non controller, we instantiate it on our side (now unspent), and never track it.
-            //       Controller still has a round loaded into the firearm's chamber, meaning it was also never unloaded across the network but only 
-            //       to the perspective of the non controller
-            //       Should add an override flag that can be set for something like the carl gustaf that will prevent the prevention of instantiation of a full round
-            //       and instead track the full round. This is so that a non controller, where possible, can eject a round from a non controlled chamber, and track the result
-            //       In that case we will also need to tell the controller that the round has been ejected. This can be done separately though, instead of throug the flag, like through a specific event
-            //       packet that will tell the controller to empty their chamber, as we currently do for other carl gustaf events.
-
+            
             incrementedSkip = 0;
 
             // Check if a round would be ejected
@@ -138,7 +129,7 @@ namespace H3MP.Patches
                 }
                 else // We are ejecting a whole round, we want the controller of the chamber's parent tracked item to control the round
                 {
-                    // TODO: Optimization: Maybe have a list trackedItemByChamber, in which we keep any item which have a chamber, which we would put in there in trackedItem awake
+                    // TODO: Optimization: Maybe have a dict trackedItemByChamber, in which we keep any item which have a chamber, which we would put in there in trackedItem awake
                     //       Because right now we just go up the hierarchy until we find the item, maybe its faster? will need to test, but considering the GetComponent overhead
                     //       we might want to do this differently
                     Transform currentParent = __instance.transform;
@@ -190,7 +181,6 @@ namespace H3MP.Patches
                     {
                         if (ThreadManager.host)
                         {
-                            TODO: // Ensure -1 class here means we empty the chamber on the receiving side
                             ServerSend.ChamberRound(chamberOwnerTrackedItem.data.trackedID, (FireArmRoundClass)(-1), chamberOwnerTrackedItem.getChamberIndex(__instance));
                         }
                         else // Note: If we are client non-controller, it implies we have tracked ID

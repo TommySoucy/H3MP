@@ -6938,7 +6938,7 @@ namespace H3MP.Patches
     {
         public static int skip;
 
-        // Patches FVRUpdate to keep track of events
+        // Patches FVRUpdate to keep track of events and set the flag for chamber eject round
         static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
@@ -6947,6 +6947,9 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load CarlGustafShellInsertEject instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0 (false)
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEjectPatch), "SetShellSlideState"))); // Call our method
+
+            CodeInstruction incInstruction = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEjectPatch), "IncShellSlideEjectFlag"));
+            CodeInstruction decInstruction = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEjectPatch), "DecShellSlideEjectFlag"));
 
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -6971,6 +6974,12 @@ namespace H3MP.Patches
                         break;
                     }
                 }
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("EjectRound"))
+                {
+                    instructionList.Insert(i, incInstruction);
+                    instructionList.Insert(i + 2, decInstruction);
+                    i += 2;
+                }
             }
             return instructionList;
         }
@@ -6994,6 +7003,16 @@ namespace H3MP.Patches
                     ClientSend.CarlGustafShellSlideSate(trackedItem.data.trackedID, slide.CSState);
                 }
             }
+        }
+
+        public static void IncShellSlideEjectFlag()
+        {
+            ++ChamberEjectRoundPatch.overrideFlag;
+        }
+
+        public static void DecShellSlideEjectFlag()
+        {
+            --ChamberEjectRoundPatch.overrideFlag;
         }
     }
 
