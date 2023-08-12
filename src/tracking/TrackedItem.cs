@@ -890,7 +890,7 @@ namespace H3MP.Tracking
                 preval2 = itemData.data[firstIndex + 2];
                 preval3 = itemData.data[firstIndex + 3];
 
-                if (asFA.GetChambers()[i].GetRound() == null || asFA.GetChambers()[i].GetRound().IsSpent)
+                if (asFA.GetChambers()[i].GetRound() == null || asFA.GetChambers()[i].IsSpent || asFA.GetChambers()[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
@@ -1477,7 +1477,7 @@ namespace H3MP.Tracking
             byte preval0 = itemData.data[2];
 
             // Write chambered round class
-            if (asAG.Chamber.GetRound() == null || asAG.Chamber.GetRound().IsSpent)
+            if (asAG.Chamber.GetRound() == null || asAG.Chamber.IsSpent || asAG.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 1);
             }
@@ -2154,7 +2154,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[3];
 
             // Write chambered round class
-            if (asMF2_RL.Chamber.GetRound() == null || asMF2_RL.Chamber.GetRound().IsSpent)
+            if (asMF2_RL.Chamber.GetRound() == null || asMF2_RL.Chamber.IsSpent || asMF2_RL.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
@@ -2322,7 +2322,7 @@ namespace H3MP.Tracking
                 preval2 = itemData.data[firstIndex + 2];
                 preval3 = itemData.data[firstIndex + 3];
 
-                if (asRevolver.Cylinder.Chambers[i].GetRound() == null || asRevolver.Cylinder.Chambers[i].GetRound().IsSpent)
+                if (asRevolver.Cylinder.Chambers[i].GetRound() == null || asRevolver.Cylinder.Chambers[i].IsSpent || asRevolver.Cylinder.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
@@ -2344,7 +2344,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, necessarySize + 2);
                 }
@@ -2560,7 +2560,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[4];
 
             // Write chambered round class
-            if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().IsSpent)
+            if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.IsSpent || asSimpleLauncher.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
@@ -2695,7 +2695,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[3];
 
             // Write chambered round class
-            if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.GetRound().IsSpent)
+            if (asSimpleLauncher.Chamber.GetRound() == null || asSimpleLauncher.Chamber.IsSpent || asSimpleLauncher.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
@@ -2800,7 +2800,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[4];
 
             // Write chambered round class
-            if (asRPG7.Chamber.GetRound() == null || asRPG7.Chamber.GetRound().IsSpent)
+            if (asRPG7.Chamber.GetRound() == null || asRPG7.Chamber.IsSpent || asRPG7.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
@@ -2923,7 +2923,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[4];
 
             // Write chambered round class
-            if (asRB.Chamber.GetRound() == null || asRB.Chamber.GetRound().IsSpent)
+            if (asRB.Chamber.GetRound() == null || asRB.Chamber.IsSpent || asRB.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
@@ -3039,7 +3039,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[3];
 
             // Write chambered round class
-            if (asRGM40.Chamber.GetRound() == null || asRGM40.Chamber.GetRound().IsSpent)
+            if (asRGM40.Chamber.GetRound() == null || asRGM40.Chamber.IsSpent || asRGM40.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
@@ -3625,7 +3625,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[5];
 
             // Write chambered round class
-            if (asOBR.Chamber.GetRound() == null || asOBR.Chamber.GetRound().IsSpent)
+            if (asOBR.Chamber.GetRound() == null || asOBR.Chamber.IsSpent || asOBR.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -3646,7 +3646,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 8);
                 }
@@ -3870,7 +3870,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[4];
             byte preval3 = itemData.data[5];
 
-            if (asHCB.Chamber.GetRound() == null || asHCB.Chamber.GetRound().IsSpent)
+            if (asHCB.Chamber.GetRound() == null || asHCB.Chamber.IsSpent || asHCB.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -3998,7 +3998,7 @@ namespace H3MP.Tracking
                 preval2 = itemData.data[firstIndex + 2];
                 preval3 = itemData.data[firstIndex + 3];
 
-                if (asGG.Chambers[i].GetRound() == null || asGG.Chambers[i].GetRound().IsSpent)
+                if (asGG.Chambers[i].GetRound() == null || asGG.Chambers[i].IsSpent || asGG.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
@@ -4337,7 +4337,7 @@ namespace H3MP.Tracking
             byte preval0 = itemData.data[2];
 
             // Write chambered round class
-            if (asFG.Chamber.GetRound() == null || asFG.Chamber.GetRound().IsSpent)
+            if (asFG.Chamber.GetRound() == null || asFG.Chamber.IsSpent || asFG.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
@@ -4497,7 +4497,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[8];
+                itemData.data = new byte[9];
                 modified = true;
             }
 
@@ -4506,8 +4506,9 @@ namespace H3MP.Tracking
             byte preval1 = itemData.data[1];
             byte preval2 = itemData.data[2];
             byte preval3 = itemData.data[3];
+            byte preval = itemData.data[8];
 
-            if (asCG.Chamber.GetRound() == null || asCG.Chamber.GetRound().IsSpent)
+            if (asCG.Chamber.GetRound() == null)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
@@ -4515,9 +4516,10 @@ namespace H3MP.Tracking
             {
                 BitConverter.GetBytes((short)asCG.Chamber.GetRound().RoundType).CopyTo(itemData.data, 0);
                 BitConverter.GetBytes((short)asCG.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 2);
+                itemData.data[8] = (asCG.Chamber.IsSpent || asCG.Chamber.GetRound().IsSpent) ? (byte)1 : (byte)0;
             }
 
-            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3]);
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3] || preval != itemData.data[8]);
 
             // Write charge handle state
             preval0 = itemData.data[4];
@@ -4590,6 +4592,11 @@ namespace H3MP.Tracking
                         asCG.Chamber.RoundType = prevRoundType;
                     }
                     modified = true;
+                }
+
+                if (newData[8] == 1 && (!asCG.Chamber.IsSpent))
+                {
+                    asCG.Chamber.Fire();
                 }
             }
 
@@ -4773,7 +4780,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[2];
             byte preval3 = itemData.data[3];
 
-            if (asLAF.Chamber.GetRound() == null || asLAF.Chamber.GetRound().IsSpent)
+            if (asLAF.Chamber.GetRound() == null || asLAF.Chamber.IsSpent || asLAF.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
             }
@@ -4800,7 +4807,7 @@ namespace H3MP.Tracking
                 preval2 = itemData.data[7];
                 preval3 = itemData.data[8];
 
-                if (asLAF.Chamber2.GetRound() == null || asLAF.Chamber2.GetRound().IsSpent)
+                if (asLAF.Chamber2.GetRound() == null || asLAF.Chamber2.IsSpent || asLAF.Chamber2.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 7);
                 }
@@ -4829,7 +4836,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 12);
                 }
@@ -5085,7 +5092,7 @@ namespace H3MP.Tracking
                 preval2 = itemData.data[firstIndex + 2];
                 preval3 = itemData.data[firstIndex + 3];
 
-                if (asDerringer.Barrels[i].Chamber.GetRound() == null || asDerringer.Barrels[i].Chamber.GetRound().IsSpent)
+                if (asDerringer.Barrels[i].Chamber.GetRound() == null || asDerringer.Barrels[i].Chamber.IsSpent || asDerringer.Barrels[i].Chamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
@@ -5230,7 +5237,7 @@ namespace H3MP.Tracking
                 preval2 = itemData.data[firstIndex + 2];
                 preval3 = itemData.data[firstIndex + 3];
 
-                if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null || asBreakActionWeapon.Barrels[i].Chamber.GetRound().IsSpent)
+                if (asBreakActionWeapon.Barrels[i].Chamber.GetRound() == null || asBreakActionWeapon.Barrels[i].Chamber.IsSpent || asBreakActionWeapon.Barrels[i].Chamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
@@ -5259,7 +5266,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, necessarySize + 2);
                 }
@@ -5458,7 +5465,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[5];
 
             // Write chambered round class
-            if (asBAP.Chamber.GetRound() == null || asBAP.Chamber.GetRound().IsSpent)
+            if (asBAP.Chamber.GetRound() == null || asBAP.Chamber.IsSpent || asBAP.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -5479,7 +5486,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 8);
                 }
@@ -5720,7 +5727,7 @@ namespace H3MP.Tracking
                 preval2 = itemData.data[firstIndex + 2];
                 preval3 = itemData.data[firstIndex + 3];
 
-                if (asRS.Chambers[i].GetRound() == null || asRS.Chambers[i].GetRound().IsSpent)
+                if (asRS.Chambers[i].GetRound() == null || asRS.Chambers[i].IsSpent || asRS.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
@@ -5742,7 +5749,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, necessarySize + 2);
                 }
@@ -5998,7 +6005,7 @@ namespace H3MP.Tracking
                 preval2 = itemData.data[firstIndex + 2];
                 preval3 = itemData.data[firstIndex + 3];
 
-                if (asRevolver.Chambers[i].GetRound() == null || asRevolver.Chambers[i].GetRound().IsSpent)
+                if (asRevolver.Chambers[i].GetRound() == null || asRevolver.Chambers[i].IsSpent || asRevolver.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
@@ -6020,7 +6027,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, necessarySize + 2);
                 }
@@ -6247,7 +6254,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[4];
 
             // Write chambered round class
-            if (asM203.Chamber.GetRound() == null || asM203.Chamber.GetRound().IsSpent)
+            if (asM203.Chamber.GetRound() == null || asM203.Chamber.IsSpent || asM203.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 3);
             }
@@ -6625,7 +6632,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[5];
 
             // Write chambered round class
-            if (asGP25.Chamber.GetRound() == null || asGP25.Chamber.GetRound().IsSpent)
+            if (asGP25.Chamber.GetRound() == null || asGP25.Chamber.IsSpent || asGP25.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -7029,7 +7036,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[6];
 
             // Write chambered round class
-            if (asATF.Chamber.GetRound() == null || asATF.Chamber.GetRound().IsSpent)
+            if (asATF.Chamber.GetRound() == null || asATF.Chamber.IsSpent || asATF.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 5);
             }
@@ -7501,7 +7508,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[7];
 
             // Write chambered round class
-            if (asACBW.Chamber.GetRound() == null || asACBW.Chamber.GetRound().IsSpent)
+            if (asACBW.Chamber.GetRound() == null || asACBW.Chamber.IsSpent || asACBW.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 6);
             }
@@ -7925,7 +7932,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[5];
 
             // Write chambered round class
-            if (asABA.Chamber.GetRound() == null || asABA.Chamber.GetRound().IsSpent)
+            if (asABA.Chamber.GetRound() == null || asABA.Chamber.IsSpent || asABA.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -8489,7 +8496,7 @@ namespace H3MP.Tracking
                 preval0 = itemData.data[firstIndex + 1];
                 preval1 = itemData.data[firstIndex + 2];
                 preval2 = itemData.data[firstIndex + 3];
-                if (asLAPD2019.Chambers[i].GetRound() == null || asLAPD2019.Chambers[i].GetRound().IsSpent)
+                if (asLAPD2019.Chambers[i].GetRound() == null || asLAPD2019.Chambers[i].IsSpent || asLAPD2019.Chambers[i].GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, firstIndex + 2);
                 }
@@ -8906,7 +8913,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[6];
 
             // Write chambered round class
-            if (asCBW.Chamber.GetRound() == null || asCBW.Chamber.GetRound().IsSpent)
+            if (asCBW.Chamber.GetRound() == null || asCBW.Chamber.IsSpent || asCBW.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 5);
             }
@@ -8927,7 +8934,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 9);
                 }
@@ -9176,7 +9183,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[6];
 
             // Write chambered round class
-            if (asHandgun.Chamber.GetRound() == null || asHandgun.Chamber.GetRound().IsSpent)
+            if (asHandgun.Chamber.GetRound() == null || asHandgun.Chamber.IsSpent || asHandgun.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 5);
             }
@@ -9197,7 +9204,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 9);
                 }
@@ -9487,7 +9494,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[5];
 
             // Write chambered round class
-            if (asTFS.Chamber.GetRound() == null || asTFS.Chamber.GetRound().IsSpent)
+            if (asTFS.Chamber.GetRound() == null || asTFS.Chamber.IsSpent || asTFS.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -9525,7 +9532,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || integratedChamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 10);
                 }
@@ -9784,7 +9791,7 @@ namespace H3MP.Tracking
             byte preval2 = itemData.data[5];
 
             // Write chambered round class
-            if (asBAR.Chamber.GetRound() == null || asBAR.Chamber.GetRound().IsSpent)
+            if (asBAR.Chamber.GetRound() == null || asBAR.Chamber.IsSpent || asBAR.Chamber.GetRound().IsSpent)
             {
                 BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
             }
@@ -9819,7 +9826,7 @@ namespace H3MP.Tracking
 
                 // Write chambered round class
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
-                if (integratedChamber.GetRound() == null || integratedChamber.GetRound().IsSpent)
+                if (integratedChamber.GetRound() == null || asBAR.Chamber.IsSpent || integratedChamber.GetRound().IsSpent)
                 {
                     BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 10);
                 }
