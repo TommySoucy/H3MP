@@ -738,7 +738,7 @@ namespace H3MP.Patches
             if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at firepatch prefix, setting to 1"); Mod.skipAllInstantiates = 1; }
 
             FVRFireArmRound round = chamber.GetRound();
-            if (round == null || chamber.IsSpent || round.IsSpent)
+            if (round == null)
             {
                 fireSuccessful = false;
             }
