@@ -4,6 +4,7 @@ using H3MP.Patches;
 using H3MP.Scripts;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace H3MP.Tracking
@@ -169,7 +170,76 @@ namespace H3MP.Tracking
             {
                 // A player body should never have its controller changed. If it changes it is because a player disconnected
                 // and their objects' control was ditributed, or something went very wrong
-                GameObject.Destroy(physical.gameObject);
+                if(physical == null)
+                {
+                    ServerSend.DestroyObject(trackedID);
+                    RemoveFromLocal();
+                    Server.objects[trackedID] = null;
+
+                    if (GameManager.objectsByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> currentInstances) &&
+                        currentInstances.TryGetValue(instance, out List<int> objectList))
+                    {
+                        objectList.Remove(trackedID);
+                    }
+                    awaitingInstantiation = false;
+
+
+                    if (Server.connectedClients.Count > 0)
+                    {
+                        if (Server.availableIndexBufferWaitingFor.TryGetValue(trackedID, out List<int> waitingForPlayers))
+                        {
+                            for (int j = 0; j < Server.connectedClients.Count; ++j)
+                            {
+                                if (!waitingForPlayers.Contains(Server.connectedClients[j]))
+                                {
+                                    waitingForPlayers.Add(Server.connectedClients[j]);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Server.availableIndexBufferWaitingFor.Add(trackedID, new List<int>(Server.connectedClients));
+                        }
+                        for (int j = 0; j < Server.connectedClients.Count; ++j)
+                        {
+                            if (Server.availableIndexBufferClients.TryGetValue(Server.connectedClients[j], out List<int> existingIndices))
+                            {
+                                // Already waiting for this client's confirmation for some index, just add it to existing list
+                                existingIndices.Add(trackedID);
+                            }
+                            else // Not yet waiting for this client's confirmation for an index, add entry to dict
+                            {
+                                Server.availableIndexBufferClients.Add(Server.connectedClients[j], new List<int>() { trackedID });
+                            }
+                        }
+
+                        // Add to dict of IDs to request
+                        if (Server.IDsToConfirm.TryGetValue(trackedID, out List<int> clientList))
+                        {
+                            for (int j = 0; j < Server.connectedClients.Count; ++j)
+                            {
+                                if (!clientList.Contains(Server.connectedClients[j]))
+                                {
+                                    clientList.Add(Server.connectedClients[j]);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Server.IDsToConfirm.Add(trackedID, new List<int>(Server.connectedClients));
+                        }
+
+                        Mod.LogInfo("Added " + trackedID + " to ID buffer");
+                    }
+                    else // No one to request ID availability from, can just readd directly
+                    {
+                        Server.availableObjectIndices.Add(trackedID);
+                    }
+                }
+                else
+                {
+                    GameObject.Destroy(physical.gameObject);
+                }
             }
         }
 
