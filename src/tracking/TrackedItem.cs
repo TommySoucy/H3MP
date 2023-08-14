@@ -4482,6 +4482,7 @@ namespace H3MP.Tracking
                 {
                     asFT.AudSource_FireLoop.Play();
                 }
+                asFT.m_isFiring = true;
                 modified = true;
             }
 
