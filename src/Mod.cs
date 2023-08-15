@@ -611,9 +611,21 @@ namespace H3MP
                     {
                         for(int i=0; i < hits.Length; ++i)
                         {
-                            if (hits[i].collider.GetComponent<FVRInteractiveObject>())
+                            FVRInteractiveObject interactive = hits[i].collider.GetComponent<FVRInteractiveObject>();
+                            if (interactive != null)
                             {
-
+                                if (leftClick)
+                                {
+                                    FVRViveHand leftHand = GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>();
+                                    interactive.BeginInteraction(leftHand);
+                                    leftHand.ForceSetInteractable(interactive);
+                                }
+                                else if (rightClick)
+                                {
+                                    FVRViveHand rightHand = GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>();
+                                    interactive.BeginInteraction(rightHand);
+                                    rightHand.ForceSetInteractable(interactive);
+                                }
                             }
                         }
                     }
