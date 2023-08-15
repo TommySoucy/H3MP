@@ -229,6 +229,12 @@ namespace H3MP
         public static bool waitingForDebugCode;
         public static string debugCode;
         public static Vector3 TNHSpawnPoint;
+        public static bool nullDriverControls;
+        public static Vector3 nullDriverMovement = Vector3.zero;
+        public static float defaultNullDriverMovementMultiplier = 0.2f;
+        public static float defaultNullDriverRotationMultiplier = 0.2f;
+        public static float nullDriverVerticalRot = 90;
+        public static float nullDriverHorzontalRot = 0;
 
         private void Start()
         {
@@ -469,6 +475,146 @@ namespace H3MP
                                     Mod.LogInfo(entry.Key);
                                 }
                                 break;
+                            case 17: // Toggle null driver debug controls
+                                nullDriverControls = !nullDriverControls;
+                                Mod.LogInfo("\tDebug: Null driver controls: "+nullDriverControls);
+                                if (nullDriverControls)
+                                {
+                                    nullDriverVerticalRot = 90;
+                                    nullDriverHorzontalRot = 0;
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            if (nullDriverControls)
+            {
+                nullDriverMovement = Vector3.zero;
+                if (Input.GetKey(KeyCode.W))
+                {
+                    nullDriverMovement += GM.CurrentPlayerBody.Head.forward * Time.deltaTime;
+                }
+                if (Input.GetKey(KeyCode.S))
+                {
+                    nullDriverMovement -= GM.CurrentPlayerBody.Head.forward * Time.deltaTime;
+                }
+                if (Input.GetKey(KeyCode.D))
+                {
+                    nullDriverMovement += GM.CurrentPlayerBody.Head.right * Time.deltaTime;
+                }
+                if (Input.GetKey(KeyCode.A))
+                {
+                    nullDriverMovement -= GM.CurrentPlayerBody.Head.right * Time.deltaTime;
+                }
+                if (Input.GetKey(KeyCode.Space))
+                {
+                    nullDriverMovement += GM.CurrentPlayerBody.Head.up * Time.deltaTime;
+                }
+                if (Input.GetKey(KeyCode.LeftControl))
+                {
+                    nullDriverMovement -= GM.CurrentPlayerBody.Head.up * Time.deltaTime;
+                }
+                nullDriverMovement.Normalize();
+
+                nullDriverMovement *= defaultNullDriverMovementMultiplier;
+                float nullDriverRotationMultiplier = defaultNullDriverRotationMultiplier;
+                if (Input.GetKey(KeyCode.LeftShift))
+                {
+                    nullDriverMovement *= 5;
+                    nullDriverRotationMultiplier = 2;
+                }
+
+                if (Input.GetKey(KeyCode.Keypad8))
+                {
+                    nullDriverVerticalRot -= 90 * Time.deltaTime * nullDriverRotationMultiplier;
+                    if(nullDriverVerticalRot < -90)
+                    {
+                        nullDriverVerticalRot = -90;
+                    }
+                }
+                else if (Input.GetKey(KeyCode.Keypad2))
+                {
+                    nullDriverVerticalRot += 90 * Time.deltaTime * nullDriverRotationMultiplier;
+                    if (nullDriverVerticalRot > 90)
+                    {
+                        nullDriverVerticalRot = 90;
+                    }
+                }
+                if (Input.GetKey(KeyCode.Keypad6))
+                {
+                    nullDriverHorzontalRot += 90 * Time.deltaTime * nullDriverRotationMultiplier;
+                }
+                if (Input.GetKey(KeyCode.Keypad4))
+                {
+                    nullDriverHorzontalRot -= 90 * Time.deltaTime * nullDriverRotationMultiplier;
+                }
+                GM.CurrentPlayerBody.transform.rotation = Quaternion.Euler(nullDriverVerticalRot, nullDriverHorzontalRot, 0);
+
+                GM.CurrentPlayerBody.transform.position += nullDriverMovement;
+
+                bool leftClick = Input.GetMouseButtonDown(0);
+                bool rightClick = Input.GetMouseButtonDown(1);
+                bool processed = false;
+                if (leftClick)
+                {
+                    FVRViveHand leftHand = GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>();
+                    if (leftHand.CurrentInteractable != null)
+                    {
+                        TrackedItem trackedItem = leftHand.CurrentInteractable.GetComponent<TrackedItem>();
+                        if(trackedItem == null)
+                        {
+                            leftHand.CurrentInteractable.ForceBreakInteraction();
+                        }
+                        else
+                        {
+                            if(trackedItem.fireFunc != null)
+                            {
+                                trackedItem.fireFunc(0);
+                            }
+                            else
+                            {
+                                leftHand.CurrentInteractable.ForceBreakInteraction();
+                            }
+                        }
+                    }
+                    processed = true;
+                }
+                if (rightClick)
+                {
+                    FVRViveHand rightHand = GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>();
+                    if (rightHand.CurrentInteractable != null)
+                    {
+                        TrackedItem trackedItem = rightHand.CurrentInteractable.GetComponent<TrackedItem>();
+                        if(trackedItem == null)
+                        {
+                            rightHand.CurrentInteractable.ForceBreakInteraction();
+                        }
+                        else
+                        {
+                            if(trackedItem.fireFunc != null)
+                            {
+                                trackedItem.fireFunc(0);
+                            }
+                            else
+                            {
+                                rightHand.CurrentInteractable.ForceBreakInteraction();
+                            }
+                        }
+                    }
+                    processed = true;
+                }
+                if (!processed && (leftClick || rightClick))
+                {
+                    RaycastHit[] hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 10);
+                    if (hits != null && hits.Length > 0)
+                    {
+                        for(int i=0; i < hits.Length; ++i)
+                        {
+                            if (hits[i].collider.GetComponent<FVRInteractiveObject>())
+                            {
+
+                            }
                         }
                     }
                 }
