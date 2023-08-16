@@ -348,6 +348,31 @@ namespace H3MP.Tracking
                     updateFunc = UpdateFlameThrower;
                     updateGivenFunc = UpdateGivenFlameThrower;
                     dataObject = physObj as FlameThrower;
+
+                    if (availableTrackedItemRefIndices.Count == 0)
+                    {
+                        GameObject[] tempRefs = trackedItemRefObjects;
+                        trackedItemRefObjects = new GameObject[tempRefs.Length + 100];
+                        for (int i = 0; i < tempRefs.Length; ++i)
+                        {
+                            trackedItemRefObjects[i] = tempRefs[i];
+                        }
+                        TrackedItem[] tempItems = trackedItemReferences;
+                        trackedItemReferences = new TrackedItem[tempItems.Length + 100];
+                        for (int i = 0; i < tempItems.Length; ++i)
+                        {
+                            trackedItemReferences[i] = tempItems[i];
+                        }
+                        for (int i = tempItems.Length; i < trackedItemReferences.Length; ++i)
+                        {
+                            availableTrackedItemRefIndices.Add(i);
+                        }
+                    }
+                    int refIndex = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
+                    availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
+                    trackedItemRefObjects[refIndex] = gameObject;
+                    trackedItemReferences[refIndex] = this;
+                    gameObject.hideFlags = (HideFlags)(refIndex + 1 << 6); // 1 based and offset by 6 so as to not have any bit in the range used by HideFlags
                 }
                 else if (asFA is sblp)
                 {

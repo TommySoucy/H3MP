@@ -695,6 +695,13 @@ namespace H3MP.Patches
 
             PatchController.Verify(steelPopTargetStartOriginal, harmony, false);
             harmony.Patch(steelPopTargetStartOriginal, null, new HarmonyMethod(steelPopTargetStartPostfix));
+
+            // FlameThrowerPatch
+            MethodInfo flameThrowerUpdateControlsOriginal = typeof(FlameThrower).GetMethod("UpdateControls", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo flameThrowerUpdateControlsPrefix = typeof(FlameThrowerPatch).GetMethod("UpdateControlsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(flameThrowerUpdateControlsOriginal, harmony, false);
+            harmony.Patch(flameThrowerUpdateControlsOriginal, new HarmonyMethod(flameThrowerUpdateControlsPrefix));
         }
     }
 
@@ -7376,6 +7383,27 @@ namespace H3MP.Patches
         // Postfixes start to set joint rots correctly if got data from controller
         static void StartPostfix(SteelPopTarget __instance)
         {
+            if (Mod.managerObject != null)
+            {
+                TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+                if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+                {
+                    for (int i = 0; i < __instance.Joints.Count; ++i)
+                    {
+                        __instance.Joints[i].transform.localEulerAngles = new Vector3(BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 1), BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 5), BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 9));
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches FlameThrower
+    class FlameThrowerPatch
+    {
+        // Patches UpdateControls to prevent on non controller
+        static void UpdateControlsPrefix(SteelPopTarget __instance)
+        {
+            TODO:
             if (Mod.managerObject != null)
             {
                 TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
