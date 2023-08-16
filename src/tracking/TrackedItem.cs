@@ -349,6 +349,9 @@ namespace H3MP.Tracking
                     updateGivenFunc = UpdateGivenFlameThrower;
                     dataObject = physObj as FlameThrower;
 
+                    GameObject trackedItemRef = new GameObject();
+                    trackedItemRef.transform.parent = transform;
+                    trackedItemRef.SetActive(false);
                     if (availableTrackedItemRefIndices.Count == 0)
                     {
                         GameObject[] tempRefs = trackedItemRefObjects;
@@ -370,9 +373,10 @@ namespace H3MP.Tracking
                     }
                     int refIndex = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
                     availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
-                    trackedItemRefObjects[refIndex] = gameObject;
+                    trackedItemRefObjects[refIndex] = trackedItemRef;
                     trackedItemReferences[refIndex] = this;
-                    gameObject.hideFlags = (HideFlags)(refIndex + 1 << 6); // 1 based and offset by 6 so as to not have any bit in the range used by HideFlags
+                    trackedItemRef.name = refIndex.ToString();
+                    asFA.BeltBoxMountPos = trackedItemRef.transform;
                 }
                 else if (asFA is sblp)
                 {

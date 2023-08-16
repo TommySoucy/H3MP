@@ -1,4 +1,5 @@
-﻿using H3MP.Tracking;
+﻿using FFmpeg.AutoGen;
+using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -346,6 +347,12 @@ namespace H3MP.Networking
                     int packetLength = packet.ReadInt();
                     data = packet.ReadBytes(packetLength);
                 }
+#if DEBUG
+                if (Input.GetKey(KeyCode.PageDown))
+                {
+                    Mod.LogInfo("\tHandling UDP data");
+                }
+#endif
 
                 ThreadManager.ExecuteOnMainThread(() =>
                 {

@@ -889,8 +889,9 @@ namespace H3MP.Tracking
                             GameObject.Destroy(physical.gameObject);
                         }
                     }
-                    else if (instance  == GameManager.instance) // If we are in this object's scene/instance, ensure its instantiation
+                    else if (instance == GameManager.instance) // If we are in this object's scene/instance, ensure its instantiation
                     {
+                        Mod.LogInfo("\t\tWe are/will be in scene/instance of object, instantiating");
                         if (physical == null && !awaitingInstantiation)
                         {
                             awaitingInstantiation = true;
@@ -901,6 +902,7 @@ namespace H3MP.Tracking
                     // Send if we want
                     if (send)
                     {
+                        Mod.LogInfo("\t\tSending new scene of " + trackedID);
                         if (ThreadManager.host)
                         {
                             ServerSend.ObjectScene(this);

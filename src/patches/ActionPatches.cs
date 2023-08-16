@@ -7403,17 +7403,11 @@ namespace H3MP.Patches
         // Patches UpdateControls to prevent on non controller
         static bool UpdateControlsPrefix(FlameThrower __instance)
         {
-            if(Mod.managerObject != null)
+            if(Mod.managerObject != null && __instance.BeltBoxMountPos != null && int.TryParse(__instance.BeltBoxMountPos.name, out int parsed))
             {
-                TODO: // Test if hideflags is actually usable to store an index, otherwise, find another method, can probably hijack something in FVRFireArm instead of FlameThrower
-                int intHideFlags = (int)__instance.gameObject.hideFlags;
-                if(intHideFlags > 63) // Implies we have ref index encoded in the hideFlags
-                {
-                    intHideFlags = (intHideFlags >> 6) - 1;
-                    return TrackedItem.trackedItemReferences.Length <= intHideFlags
-                           || TrackedItem.trackedItemReferences[intHideFlags] == null
-                           || TrackedItem.trackedItemReferences[intHideFlags].data.controller == GameManager.ID;
-                }
+                return TrackedItem.trackedItemReferences.Length <= parsed
+                           || TrackedItem.trackedItemReferences[parsed] == null
+                           || TrackedItem.trackedItemReferences[parsed].data.controller == GameManager.ID;
             }
 
             return true;
