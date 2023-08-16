@@ -4253,13 +4253,12 @@ namespace H3MP.Networking
             }
         }
 
-        public static void ObjectScene(int trackedID, string scene, int clientID = 0)
+        public static void ObjectScene(TrackedObjectData trackedObjectData, int clientID = 0)
         {
             using (Packet packet = new Packet((int)ServerPackets.objectScene))
             {
-                packet.Write(trackedID);
-                packet.Write(scene);
-
+                trackedObjectData.WriteToPacket(packet, false, true);
+                
                 if(clientID == 0)
                 {
                     SendTCPDataToAll(packet);
@@ -4271,14 +4270,13 @@ namespace H3MP.Networking
             }
         }
 
-        public static void ObjectInstance(int trackedID, int instance, int clientID = 0)
+        public static void ObjectInstance(TrackedObjectData trackedObjectData, int clientID = 0)
         {
             using (Packet packet = new Packet((int)ServerPackets.objectInstance))
             {
-                packet.Write(trackedID);
-                packet.Write(instance);
+                trackedObjectData.WriteToPacket(packet, false, true);
 
-                if(clientID == 0)
+                if (clientID == 0)
                 {
                     SendTCPDataToAll(packet);
                 }

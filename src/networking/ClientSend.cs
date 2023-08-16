@@ -2541,23 +2541,21 @@ namespace H3MP.Networking
             }
         }
 
-        public static void ObjectScene(int trackedID, string scene)
+        public static void ObjectScene(TrackedObjectData trackedObjectData)
         {
             using (Packet packet = new Packet((int)ClientPackets.objectScene))
             {
-                packet.Write(trackedID);
-                packet.Write(scene);
+                trackedObjectData.WriteToPacket(packet, false, true);
 
                 SendTCPData(packet);
             }
         }
 
-        public static void ObjectInstance(int trackedID, int instance)
+        public static void ObjectInstance(TrackedObjectData trackedObjectData)
         {
             using (Packet packet = new Packet((int)ClientPackets.objectInstance))
             {
-                packet.Write(trackedID);
-                packet.Write(instance);
+                trackedObjectData.WriteToPacket(packet, false, true);
 
                 SendTCPData(packet);
             }

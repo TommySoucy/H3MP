@@ -4885,27 +4885,31 @@ namespace H3MP.Networking
         public static void ObjectScene(int clientID, Packet packet)
         {
             int trackedID = packet.ReadInt();
-            string scene = packet.ReadString();
+            string typeID = packet.ReadString();
+            TrackedObjectData trackedObjectData = (TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypesByName[typeID], packet, typeID, trackedID);
 
             if (Server.objects[trackedID] != null)
             {
-                Server.objects[trackedID].SetScene(scene, false);
+                Server.objects[trackedID].SetScene(trackedObjectData.scene, false);
 
-                ServerSend.ObjectScene(trackedID, scene, clientID);
+                ServerSend.ObjectScene(trackedObjectData, clientID);
             }
+            //else // Don't have object data yet, note that this is server though, meaning this should never be the case
         }
 
         public static void ObjectInstance(int clientID, Packet packet)
         {
             int trackedID = packet.ReadInt();
-            int instance = packet.ReadInt();
+            string typeID = packet.ReadString();
+            TrackedObjectData trackedObjectData = (TrackedObjectData)Activator.CreateInstance(Mod.trackedObjectTypesByName[typeID], packet, typeID, trackedID);
 
             if (Server.objects[trackedID] != null)
             {
-                Server.objects[trackedID].SetInstance(instance, false);
+                Server.objects[trackedID].SetInstance(trackedObjectData.instance, false);
 
-                ServerSend.ObjectInstance(trackedID, instance, clientID);
+                ServerSend.ObjectInstance(trackedObjectData, clientID);
             }
+            //else // Don't have object data yet, note that this is server though, meaning this should never be the case
         }
 
         public static void UpdateEncryptionDisplay(int clientID, Packet packet)

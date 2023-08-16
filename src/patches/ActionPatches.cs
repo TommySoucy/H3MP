@@ -7401,20 +7401,22 @@ namespace H3MP.Patches
     class FlameThrowerPatch
     {
         // Patches UpdateControls to prevent on non controller
-        static void UpdateControlsPrefix(SteelPopTarget __instance)
+        static bool UpdateControlsPrefix(FlameThrower __instance)
         {
-            TODO:
-            if (Mod.managerObject != null)
+            if(Mod.managerObject != null)
             {
-                TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
-                if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
+                TODO: // Test if hideflags is actually usable to store an index, otherwise, find another method, can probably hijack something in FVRFireArm instead of FlameThrower
+                int intHideFlags = (int)__instance.gameObject.hideFlags;
+                if(intHideFlags > 63) // Implies we have ref index encoded in the hideFlags
                 {
-                    for (int i = 0; i < __instance.Joints.Count; ++i)
-                    {
-                        __instance.Joints[i].transform.localEulerAngles = new Vector3(BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 1), BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 5), BitConverter.ToSingle(trackedItem.itemData.data, i * 12 + 9));
-                    }
+                    intHideFlags = (intHideFlags >> 6) - 1;
+                    return TrackedItem.trackedItemReferences.Length <= intHideFlags
+                           || TrackedItem.trackedItemReferences[intHideFlags] == null
+                           || TrackedItem.trackedItemReferences[intHideFlags].data.controller == GameManager.ID;
                 }
             }
+
+            return true;
         }
     }
 }

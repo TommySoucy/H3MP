@@ -903,11 +903,11 @@ namespace H3MP.Tracking
                     {
                         if (ThreadManager.host)
                         {
-                            ServerSend.ObjectScene(trackedID, scene);
+                            ServerSend.ObjectScene(this);
                         }
                         else
                         {
-                            ClientSend.ObjectScene(trackedID, scene);
+                            ClientSend.ObjectScene(this);
                         }
                     }
                 }
@@ -1040,11 +1040,11 @@ namespace H3MP.Tracking
                     {
                         if (ThreadManager.host)
                         {
-                            ServerSend.ObjectInstance(trackedID, instance);
+                            ServerSend.ObjectInstance(this);
                         }
                         else
                         {
-                            ClientSend.ObjectInstance(trackedID, instance);
+                            ClientSend.ObjectInstance(this);
                         }
                     }
                 }

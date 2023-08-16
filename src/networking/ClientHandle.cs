@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace H3MP.Networking
@@ -4393,22 +4394,38 @@ namespace H3MP.Networking
         public static void ObjectScene(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            string scene = packet.ReadString();
-
-            if (Client.objects[trackedID] != null)
+            string typeID = packet.ReadString();
+            if (Mod.trackedObjectTypesByName.TryGetValue(typeID, out Type trackedObjectType))
             {
-                Client.objects[trackedID].SetScene(scene, false);
+                TrackedObjectData trackedObjectData = (TrackedObjectData)Activator.CreateInstance(trackedObjectType, packet, typeID, trackedID);
+
+                if (Client.objects[trackedID] != null)
+                {
+                    Client.objects[trackedID].SetScene(trackedObjectData.scene, false);
+                }
+                else // Don't have object data yet
+                {
+                    Client.AddTrackedObject(trackedObjectData);
+                }
             }
         }
 
         public static void ObjectInstance(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            int instance = packet.ReadInt();
-
-            if (Client.objects[trackedID] != null)
+            string typeID = packet.ReadString();
+            if (Mod.trackedObjectTypesByName.TryGetValue(typeID, out Type trackedObjectType))
             {
-                Client.objects[trackedID].SetInstance(instance, false);
+                TrackedObjectData trackedObjectData = (TrackedObjectData)Activator.CreateInstance(trackedObjectType, packet, typeID, trackedID);
+
+                if (Client.objects[trackedID] != null)
+                {
+                    Client.objects[trackedID].SetInstance(trackedObjectData.instance, false);
+                }
+                else // Don't have object data yet
+                {
+                    Client.AddTrackedObject(trackedObjectData);
+                }
             }
         }
 
