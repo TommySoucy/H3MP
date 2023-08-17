@@ -1521,7 +1521,7 @@ namespace H3MP.Patches
                     Mod.currentTNHInstance.phase != TNH_Phase.StartUp && !hadInit &&
                     Mod.currentTNHInstance.manager.m_hasInit && Mod.currentTNHInstance.manager.AIManager.HasInit)
                 {
-                    Mod.LogInfo("TNH_Manager update, we were waiting for init and jsut got it, initing with data");
+                    Mod.LogInfo("TNH_Manager update, we were waiting for init and just got it, initing with data");
                     InitJoinTNH();
                 }
 
@@ -1917,78 +1917,68 @@ namespace H3MP.Patches
             }
         }
 
-        // Patches ObjectCleanupInHold
-        static IEnumerable<CodeInstruction> ObjectCleanupInHoldTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        // Patches ObjectCleanupInHold to prevent destruction of objects we do not control
+        static bool ObjectCleanupInHoldPrefix(TNH_Manager __instance)
         {
-            // (3) Declare local for the tracked item
-            LocalBuilder localTrackedItem = il.DeclareLocal(typeof(TrackedItem));
-            localTrackedItem.SetLocalSymInfo("trackedItem");
-
-            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
-
-            List<CodeInstruction> toInsert = new List<CodeInstruction>();
-            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Mod), "managerObject"))); // Load managerObject
-            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Inequality"))); // Compare for inequality (true if connected) ***
-            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
-            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Init trackedItem to null
-            toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe inequality call result on stack (true if connected)
-            Label afterGettingTrackedItemLabel = il.DefineLabel();
-            toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemLabel)); // If false (not connected) skip trying to get a tracked item
-
-            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "trackedItemByItem"))); // Load trackedItemByItem
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load physical object
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloca_S, 3)); // Load trackedItem address
-            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<FVRPhysicalObject, TrackedItem>), "TryGetValue"))); // Call TryGetValue trackedItemByItem
-            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, afterGettingTrackedItemLabel)); // If true (found physical object in trackedItemByItem) skip trying to get a tracked item component directly
-
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load physical object
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "GetComponent", null, new Type[] { typeof(TrackedItem) }))); // Get TrackedItem component directly from physical object
-            toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set trackedItem
-
-            Label startActionLabel = il.DefineLabel();
-            CodeInstruction afterGettingTrackedItem = new CodeInstruction(OpCodes.Brfalse_S, startActionLabel); // If false (not connected) (see *** above), skip to start of destruction
-            afterGettingTrackedItem.labels.Add(afterGettingTrackedItemLabel);
-            toInsert.Add(afterGettingTrackedItem);
-
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
-            toInsert.Add(new CodeInstruction(OpCodes.Ldnull)); // Load null
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Object), "op_Equality"))); // Compare for equality (true if dont have trackedItem)
-            toInsert.Add(new CodeInstruction(OpCodes.Brtrue_S, startActionLabel)); // If true (trackedItem is null), goto start of destruction
-
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(TrackedItem), "data"))); // Load trackedItem data
-            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(TrackedItemData), "get_controller"))); // Load trackedItem's controller index
-            toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "ID"))); // Load our ID
-            toInsert.Add(new CodeInstruction(OpCodes.Beq, startActionLabel)); // Compare our ID with controller, if we are controller goto start of destruction
-
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load trackedItem
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(TrackedItem), "data"))); // Load trackedItem data
-            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(TrackedItemData), "underActiveControl"))); // Load underActiveControl
-            Label afterActionLabel = il.DefineLabel();
-            toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterActionLabel)); // If true (underActiveControl), skip destruction
-
-            bool retFound = false;
-            for (int i = 0; i < instructionList.Count; ++i)
+            TODO: // Check where we set item underactivecontrol, maybe we werent setting it properly
+            if (Mod.managerObject == null)
             {
-                CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Ret)
+                return true;
+            }
+
+            if (__instance.m_knownObjs.Count <= 0)
+            {
+                return false;
+            }
+            __instance.knownObjectCheckIndex++;
+            if (__instance.knownObjectCheckIndex >= __instance.m_knownObjs.Count)
+            {
+                __instance.knownObjectCheckIndex = 0;
+            }
+            if (__instance.m_knownObjs[__instance.knownObjectCheckIndex] == null)
+            {
+                __instance.m_knownObjsHash.Remove(__instance.m_knownObjs[__instance.knownObjectCheckIndex]);
+                __instance.m_knownObjs.RemoveAt(__instance.knownObjectCheckIndex);
+            }
+            else
+            {
+                FVRPhysicalObject fvrphysicalObject = __instance.m_knownObjs[__instance.knownObjectCheckIndex];
+                Vector3 position = fvrphysicalObject.transform.position;
+                if (!__instance.m_curHoldPoint.IsPointInBounds(position))
                 {
-                    if (retFound)
+                    float num = Vector3.Distance(position, GM.CurrentPlayerBody.transform.position);
+                    if (num > 10f)
                     {
-                        instruction.labels.Add(afterActionLabel);
-                        break;
-                    }
-                    else
-                    {
-                        instructionList[i + 1].labels.Add(startActionLabel);
-                        instructionList.InsertRange(i + 1, toInsert);
-                        i += toInsert.Count;
-                        retFound = true;
+                        if (fvrphysicalObject is PinnedGrenade 
+                            || fvrphysicalObject is FVRGrenade 
+                            || fvrphysicalObject is FVRCappedGrenade 
+                            || fvrphysicalObject is Camcorder 
+                            || fvrphysicalObject is SLAM 
+                            || fvrphysicalObject is FVRPivotLocker 
+                            || (fvrphysicalObject is SosigWeaponPlayerInterface 
+                                && (fvrphysicalObject as SosigWeaponPlayerInterface).W.Type == SosigWeapon.SosigWeaponType.Grenade))
+                        {
+                            return false;
+                        }
+
+                        // Will prevent destruction if not controller and if within 10m of controller
+                        TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(fvrphysicalObject, out trackedItem) ? trackedItem : fvrphysicalObject.GetComponent<TrackedItem>();
+                        if (trackedItem != null
+                            && trackedItem.data.controller != GameManager.ID
+                            && (!GameManager.players.TryGetValue(trackedItem.data.controller, out PlayerManager playerManager) 
+                                || Vector3.Distance(position, playerManager.head.position) <= 10f))
+                        {
+                            return false;
+                        }
+
+                        __instance.m_knownObjsHash.Remove(__instance.m_knownObjs[__instance.knownObjectCheckIndex]);
+                        UnityEngine.Object.Destroy(__instance.m_knownObjs[__instance.knownObjectCheckIndex].gameObject);
+                        __instance.m_knownObjs.RemoveAt(__instance.knownObjectCheckIndex);
                     }
                 }
             }
-            return instructionList;
+
+            return false;
         }
     }
 
