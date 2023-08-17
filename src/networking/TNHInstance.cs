@@ -296,16 +296,20 @@ namespace H3MP.Networking
             if (ID == GameManager.ID)
             {
                 Mod.TNHSpectating = false;
+                GM.CurrentPlayerBody.EnableHands();
 
-                if (Mod.TNHStartEquipButton == null)
+                if(manager != null)
                 {
-                    Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
-                    Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
-                }
+                    if (Mod.TNHStartEquipButton == null)
+                    {
+                        Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
+                        Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
+                    }
 
-                if (received && manager != null)
-                {
-                    manager.InitPlayerPosition();
+                    if (received)
+                    {
+                        manager.InitPlayerPosition();
+                    }
                 }
 
                 if (ThreadManager.host)
@@ -321,7 +325,7 @@ namespace H3MP.Networking
             {
                 GameManager.UpdatePlayerHidden(GameManager.players[ID]);
 
-                if (ThreadManager.host)
+                if (!received && ThreadManager.host)
                 {
                     ServerSend.ReviveTNHPlayer(ID, instance, 0);
                 }
@@ -353,6 +357,7 @@ namespace H3MP.Networking
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)
             {
                 Mod.TNHSpectating = false;
+                GM.CurrentPlayerBody.EnableHands();
             }
         }
 

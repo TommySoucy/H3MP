@@ -252,6 +252,7 @@ namespace H3MP
             TNHMenuLPJ = true;
             TNHOnDeathSpectate = true;
             TNHSpectating = false;
+            GM.CurrentPlayerBody.EnableHands();
             setLatestInstance = false;
             currentTNHInstance = null;
             currentlyPlayingTNH = false;
@@ -845,18 +846,57 @@ namespace H3MP
             currentButton.MaxPointingRange = 5;
             currentButton.Button.onClick.AddListener(OnTNHRequestHostWaitingCancelClicked);
 
-            // Set option defaults
-            TNHMenuLPJ = true;
-            TNHOnDeathSpectate = true;
-
             // Get ref to the UI Manager
             Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
             Mod.currentTNHSceneLoader = GameObject.FindObjectOfType<SceneLoader>();
 
-            // If already in a TNH isntance, which could be the case if we are coming back from being in game
+            // If already in a TNH instance, which could be the case if we are coming back from being in game
             if (currentTNHInstance != null)
             {
+                // Set vanilla TNH settings corresponding to TNH instance's
                 InitTNHUIManager(currentTNHInstance);
+
+                // Set our TNH menu accordingly
+                // Set instance page
+                TNHMenuPages[0].SetActive(false);
+                TNHMenuPages[1].SetActive(false);
+                TNHMenuPages[2].SetActive(false);
+                TNHMenuPages[3].SetActive(false);
+                TNHMenuPages[4].SetActive(true);
+
+                // Set details
+                if (currentTNHInstance.playerIDs[0] == GameManager.ID)
+                {
+                    TNHStatusText.text = "Hosting TNH instance";
+                }
+                else
+                {
+                    TNHStatusText.text = "Client in TNH game";
+                }
+                TNHStatusText.color = Color.green;
+
+                // Populate player list
+                for (int i = 0; i < currentTNHInstance.playerIDs.Count; ++i)
+                {
+                    GameObject newPlayer = Instantiate<GameObject>(TNHPlayerPrefab, TNHPlayerList.transform);
+                    if (GameManager.players.ContainsKey(currentTNHInstance.playerIDs[i]))
+                    {
+                        newPlayer.transform.GetChild(0).GetComponent<Text>().text = GameManager.players[currentTNHInstance.playerIDs[i]].username + (i == 0 ? " (Host)" : "");
+                    }
+                    else
+                    {
+                        newPlayer.transform.GetChild(0).GetComponent<Text>().text = config["Username"].ToString() + (i == 0 ? " (Host)" : "");
+                    }
+                    newPlayer.SetActive(true);
+
+                    currentTNHInstancePlayers.Add(currentTNHInstance.playerIDs[i], newPlayer);
+                }
+            }
+            else
+            {
+                // Set option defaults
+                TNHMenuLPJ = true;
+                TNHOnDeathSpectate = true;
             }
         }
 
@@ -896,7 +936,6 @@ namespace H3MP
                     Mod.currentTNHUIManager.CurLevelID = instance.levelID;
                     Mod.currentTNHUIManager.UpdateLevelSelectDisplayAndLoader();
                     Mod.currentTNHUIManager.UpdateTableBasedOnOptions();
-                    Mod.currentTNHUIManager.PlayButtonSound(2);
                     Mod.currentTNHSceneLoader.gameObject.SetActive(true);
                     break;
                 }
@@ -1471,6 +1510,7 @@ namespace H3MP
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
+            GM.CurrentPlayerBody.EnableHands();
 
             TNHStatusText.text = "Solo";
             TNHStatusText.color = Color.red;
@@ -2220,6 +2260,7 @@ namespace H3MP
                     if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
                     {
                         Mod.TNHSpectating = false;
+                        GM.CurrentPlayerBody.EnableHands();
                     }
                 }
                 else

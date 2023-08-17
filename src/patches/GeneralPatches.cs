@@ -619,6 +619,12 @@ namespace H3MP.Patches
     {
         static void Postfix(FVRPlayerBody __instance)
         {
+            // TNH
+            if (Mod.TNHSpectating)
+            {
+                __instance.DisableHands();
+            }
+
             GameManager.RaisePlayerBodyInit(__instance);
         }
     }

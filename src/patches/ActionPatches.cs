@@ -7406,8 +7406,8 @@ namespace H3MP.Patches
             if(Mod.managerObject != null && __instance.BeltBoxMountPos != null && int.TryParse(__instance.BeltBoxMountPos.name, out int parsed))
             {
                 return TrackedItem.trackedItemReferences.Length <= parsed
-                           || TrackedItem.trackedItemReferences[parsed] == null
-                           || TrackedItem.trackedItemReferences[parsed].data.controller == GameManager.ID;
+                       || TrackedItem.trackedItemReferences[parsed] == null
+                       || TrackedItem.trackedItemReferences[parsed].data.controller == GameManager.ID;
             }
 
             return true;

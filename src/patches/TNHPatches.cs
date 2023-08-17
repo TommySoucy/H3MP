@@ -954,6 +954,7 @@ namespace H3MP.Patches
                         {
                             Mod.TNHSpectating = true;
                             Mod.DropAllItems();
+                            GM.CurrentPlayerBody.DisableHands();
                         }
 
                         Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);

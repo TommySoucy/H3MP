@@ -1,4 +1,5 @@
 ﻿using FFmpeg.AutoGen;
+using FistVR;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -892,6 +893,7 @@ namespace H3MP.Networking
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
+            GM.CurrentPlayerBody.EnableHands();
             Mod.currentTNHInstancePlayers = null;
             Mod.joinTNHInstances = null;
             if(Mod.TNHMenu != null)

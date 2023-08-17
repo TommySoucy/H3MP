@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Collections.Generic;
 using H3MP.Tracking;
+using FistVR;
 
 namespace H3MP.Networking
 {
@@ -104,6 +105,7 @@ namespace H3MP.Networking
         {
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
+            GM.CurrentPlayerBody.EnableHands();
             Mod.currentlyPlayingTNH = false;
             Mod.currentTNHInstancePlayers = null;
             Mod.joinTNHInstances = null;

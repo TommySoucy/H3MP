@@ -110,13 +110,6 @@ namespace H3MP.Patches
             {
                 if (preObject != ___m_currentInteractable)
                 {
-                    // If spectating we are just going to force break the interaction
-                    if (Mod.TNHSpectating)
-                    {
-                        ___m_currentInteractable.ForceBreakInteraction();
-                        return;
-                    }
-
                     if(GameManager.trackedObjectByInteractive.TryGetValue(___m_currentInteractable, out TrackedObject trackedObject))
                     {
                         trackedObject.BeginInteraction(__instance);
@@ -127,10 +120,6 @@ namespace H3MP.Patches
             {
                 if (preObject != null) // Dropped preObject
                 {
-                    // TODO: Future: Maybe track every tracked object with an FVRInteractiveObject in a TrackedObjectByInteractiveObject dict
-                    //               So we can then access any tracked object genericly through that instead of trying to GetComponent for each type
-                    //               Then make sure TrackedObject has a virtual EndInteraction() that we would call from here
-
                     if (GameManager.trackedObjectByInteractive.TryGetValue(preObject, out TrackedObject trackedObject))
                     {
                         trackedObject.EndInteraction(__instance);
@@ -152,12 +141,6 @@ namespace H3MP.Patches
 
             if (slot != null)
             {
-                // If spectating we don't want to be able to put things in slots
-                if (Mod.TNHSpectating)
-                {
-                    __instance.ClearQuickbeltState();
-                }
-
                 // Just put this item in a slot
                 TrackedItem trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
                 if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
@@ -486,12 +469,6 @@ namespace H3MP.Patches
             if (Mod.managerObject == null)
             {
                 return true;
-            }
-
-            // If spectating we prevent the flick entirely
-            if (Mod.TNHSpectating)
-            {
-                return false;
             }
 
             TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(o, out TrackedItem currentItem) ? currentItem : o.GetComponent<TrackedItem>();
