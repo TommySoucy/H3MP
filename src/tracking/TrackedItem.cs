@@ -10498,23 +10498,19 @@ namespace H3MP.Tracking
                 currentMountIndex = 255;
                 modified = true;
             }
-            Mod.LogInfo("UpdateGivenAttachment on " + name + " at "+data.trackedID+", mount index: "+ newData[0]);
 
             byte preMountIndex = currentMountIndex;
             if (newData[0] == 255)
             {
-                Mod.LogInfo("\tNo mount index");
                 // Check if were waiting for mount object
                 if (mountObjectID != -1 && toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                 {
-                    Mod.LogInfo("\t\tWe were waiting for mount object, removing");
                     list.Remove(this);
                 }
 
                 // Should not be mounted, check if currently is
                 if (asAttachment.curMount != null)
                 {
-                    Mod.LogInfo("\t\tWe have mount, detaching");
                     asAttachment.Sensor.m_storedScaleMagnified = 1f;
                     asAttachment.transform.localScale = new Vector3(1, 1, 1);
                     ++data.ignoreParentChanged;
@@ -10533,11 +10529,9 @@ namespace H3MP.Tracking
             {
                 mountObjectID = BitConverter.ToInt32(newData, 1);
                 mountObjectScale = new Vector3(BitConverter.ToSingle(newData, 5), BitConverter.ToSingle(newData, 9), BitConverter.ToSingle(newData, 13));
-                Mod.LogInfo("\tHave mount index, object ID: "+mountObjectID+", scale: "+mountObjectScale.ToString());
                 if (mountObjectID == -1)
                 {
                     // We have mount index but no mount object ID
-                    Mod.LogInfo("\t\tWe have mount index but no mount object yet");
                     // Detach from any mount we are still on
                     if (asAttachment.curMount != null)
                     {
@@ -10554,7 +10548,6 @@ namespace H3MP.Tracking
                 }
                 else // We have mount object ID and mount index, must attach
                 {
-                    Mod.LogInfo("\t\tHave mount index and mount object ID");
                     // Find mount object by mount object ID
                     FVRFireArmAttachmentMount mount = null;
                     TrackedItemData parentTrackedItemData = null;
@@ -10570,17 +10563,14 @@ namespace H3MP.Tracking
                     // Find mount instance we want to be mounted to
                     if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null)
                     {
-                        Mod.LogInfo("\t\t\tGot mount object "+ parentTrackedItemData.physicalItem.name);
                         // We want to be mounted, we have a parent
                         if (parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts.Count > newData[0])
                         {
-                            Mod.LogInfo("\t\t\t\tMount index fits");
                             mount = parentTrackedItemData.physicalItem.physicalItem.AttachmentMounts[newData[0]];
                         }
                     }
                     else
                     {
-                        Mod.LogInfo("\t\t\tDont yet have mount object, adding to toAttachByMountObjectID");
                         if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                         {
                             list.Add(this);
@@ -10594,10 +10584,8 @@ namespace H3MP.Tracking
                     // Mount could be null if the mount index corresponds to a parent we have yet to receive a change to
                     if (mount != null && mount != asAttachment.curMount)
                     {
-                        Mod.LogInfo("\t\t\tGot mount and is different: "+mount.name);
                         if (asAttachment.curMount != null)
                         {
-                            Mod.LogInfo("\t\t\t\tDetaching from old mount first");
                             asAttachment.Sensor.m_storedScaleMagnified = 1f;
                             asAttachment.transform.localScale = new Vector3(1, 1, 1);
                             asAttachment.DetachFromMount();
@@ -10605,7 +10593,6 @@ namespace H3MP.Tracking
 
                         if (CanAttachToMount(asAttachment, mount))
                         {
-                            Mod.LogInfo("\t\t\tCan attach");
                             // Apply mount object scale
                             if (mount.GetRootMount().ParentToThis)
                             {
@@ -10618,7 +10605,6 @@ namespace H3MP.Tracking
 
                             if (asAttachment.CanScaleToMount && mount.CanThisRescale())
                             {
-                                Mod.LogInfo("\t\t\t\tRescaling first");
                                 asAttachment.ScaleToMount(mount);
                             }
                             asAttachment.AttachToMount(mount, true);
@@ -10626,12 +10612,10 @@ namespace H3MP.Tracking
                             // Check if there were any children attachments waiting for us
                             if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
                             {
-                                Mod.LogInfo("\t\t\tChildren attachment waiting for us, updating them");
                                 for (int i = 0; i < list.Count; ++i)
                                 {
                                     if (list[i] != null)
                                     {
-                                        Mod.LogInfo("\t\t\t\tUpdating "+ list[i].name+" at "+ list[i].data.trackedID);
                                         list[i].data.UpdateFromData(list[i].data);
                                     }
                                 }
@@ -10641,7 +10625,6 @@ namespace H3MP.Tracking
                         }
                         else // Can't attach to mount yet, probably because parent is unattached attachment, but will need to eventually
                         {
-                            Mod.LogInfo("\t\t\tcan't mount " + name + " on " + mount.name + " yet, adding to toAttachByMountObjectID");
                             if (toAttachByMountObjectID.TryGetValue(mountObjectID, out List<TrackedItem> list))
                             {
                                 list.Add(this);
