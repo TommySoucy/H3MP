@@ -372,6 +372,7 @@ namespace H3MP
                                 Dictionary<string, string> map = new Dictionary<string, string>();
                                 foreach (KeyValuePair<string, FVRObject> o in IM.OD)
                                 {
+                                    Mod.LogInfo("Checking " + o.Key);
                                     GameObject prefab = null;
                                     try
                                     {
@@ -404,8 +405,10 @@ namespace H3MP
                                         continue;
                                     }
                                 }
+                                Mod.LogInfo("\tGot wearables, writing...");
                                 JObject jDict = JObject.FromObject(map);
                                 File.WriteAllText(H3MPPath + "/Debug/SosigWearableMap.json", jDict.ToString());
+                                Mod.LogInfo("\tNew wearables map written");
                                 break;
                             case 7: // Load to TNH lobby
                                 Mod.LogInfo("\tDebug: Load to TNH lobby");
