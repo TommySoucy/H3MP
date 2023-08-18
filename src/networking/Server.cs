@@ -198,7 +198,7 @@ namespace H3MP.Networking
 
         public static void AddTrackedObject(TrackedObjectData trackedObject, int clientID)
         {
-            Mod.LogInfo("Server adding new tracked object with waiting local index: "+trackedObject.localWaitingIndex+" from client: "+clientID + " with type ID: " + trackedObject.typeIdentifier, false);
+            Mod.LogInfo("Server adding new tracked object with waiting local index: "+trackedObject.localWaitingIndex+" from client: "+clientID + " with type ID: " + trackedObject.typeIdentifier+" in "+trackedObject.scene+"/"+trackedObject.instance, false);
             // If this is a sceneInit object received from client that we haven't tracked yet
             // And if the controller is not the first player in scene/instance
             if (trackedObject.trackedID == -1 && trackedObject.controller != 0 && trackedObject.sceneInit && !clients[trackedObject.controller].player.firstInSceneInstance)
@@ -290,6 +290,12 @@ namespace H3MP.Networking
                         toClients.Add(players[i]);
                     }
                 }
+            }
+
+            Mod.LogInfo("\tSending to players:", false);
+            for (int i = 0; i < toClients.Count; ++i) 
+            {
+                Mod.LogInfo("\t\t"+ toClients[i], false);
             }
             ServerSend.TrackedObject(trackedObject, toClients);
 
