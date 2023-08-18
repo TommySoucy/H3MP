@@ -137,7 +137,7 @@ namespace H3MP.Patches
             MethodInfo TNH_ManagerDelayedInitPrefix = typeof(TNH_ManagerPatch).GetMethod("DelayedInitPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerDelayedInitPostfix = typeof(TNH_ManagerPatch).GetMethod("DelayedInitPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerObjectCleanupInHoldOriginal = typeof(TNH_Manager).GetMethod("ObjectCleanupInHold", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo TNH_ManagerObjectCleanupInHoldTranspiler = typeof(TNH_ManagerPatch).GetMethod("ObjectCleanupInHoldTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerObjectCleanupInHoldPrefix = typeof(TNH_ManagerPatch).GetMethod("ObjectCleanupInHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(TNH_ManagerPatchPlayerDiedOriginal, harmony, true);
             PatchController.Verify(TNH_ManagerPatchAddTokensOriginal, harmony, true);
@@ -172,7 +172,7 @@ namespace H3MP.Patches
             harmony.Patch(TNH_ManagerGenerateSentryPatrolOriginal, new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPrefix), new HarmonyMethod(TNH_ManagerGenerateSentryPatrolPostfix));
             harmony.Patch(TNH_ManagerGeneratePatrolOriginal, new HarmonyMethod(TNH_ManagerGeneratePatrolPrefix), new HarmonyMethod(TNH_ManagerGeneratePatrolPostfix));
             harmony.Patch(TNH_ManagerDelayedInitOriginal, new HarmonyMethod(TNH_ManagerDelayedInitPrefix), new HarmonyMethod(TNH_ManagerDelayedInitPostfix));
-            harmony.Patch(TNH_ManagerObjectCleanupInHoldOriginal, null, null, new HarmonyMethod(TNH_ManagerObjectCleanupInHoldTranspiler));
+            harmony.Patch(TNH_ManagerObjectCleanupInHoldOriginal, new HarmonyMethod(TNH_ManagerObjectCleanupInHoldPrefix));
 
             // TNHSupplyPointPatch
             if (PatchController.TNHTweakerAsmIdx > -1)

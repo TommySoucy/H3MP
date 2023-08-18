@@ -7,6 +7,7 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -487,6 +488,9 @@ namespace H3MP
                                     nullDriverVerticalRot = 90;
                                     nullDriverHorzontalRot = 0;
                                 }
+                                break;
+                            case 18: // Resolve sub domain
+                                Mod.LogInfo("\tDebug: Sub domain h3mp.tommysoucy.vip resolved to: "+ Dns.GetHostAddresses(config["IP"].ToString())[0].ToString());
                                 break;
                         }
                     }
