@@ -1920,7 +1920,6 @@ namespace H3MP.Patches
         // Patches ObjectCleanupInHold to prevent destruction of objects we do not control
         static bool ObjectCleanupInHoldPrefix(TNH_Manager __instance)
         {
-            TODO: // Check where we set item underactivecontrol, maybe we werent setting it properly
             if (Mod.managerObject == null)
             {
                 return true;
