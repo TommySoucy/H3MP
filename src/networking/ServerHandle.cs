@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 
 namespace H3MP.Networking
 {
-    internal class ServerHandle
+    public class ServerHandle
     {
         public static void WelcomeReceived(int clientID, Packet packet)
         {

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace H3MP.Networking
 {
-    internal class ClientSend
+    public class ClientSend
     {
         private static void ConvertToCustomID(Packet packet)
         {

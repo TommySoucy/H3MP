@@ -11,7 +11,7 @@ using UnityEngine.UI;
 
 namespace H3MP.Networking
 {
-    internal class ClientHandle
+    public class ClientHandle
     {
         public static void Welcome(Packet packet)
         {

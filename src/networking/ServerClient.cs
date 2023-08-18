@@ -9,7 +9,7 @@ using H3MP.Tracking;
 
 namespace H3MP.Networking
 {
-    internal class ServerClient
+    public class ServerClient
     {
         public static int dataBufferSize = 4096;
 

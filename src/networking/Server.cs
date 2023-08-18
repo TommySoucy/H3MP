@@ -8,7 +8,7 @@ using FistVR;
 
 namespace H3MP.Networking
 {
-    internal class Server
+    public class Server
     {
         public static ushort port;
         public static ushort maxClientCount;

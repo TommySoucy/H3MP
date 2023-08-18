@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace H3MP.Networking
 {
-    internal class ThreadManager : MonoBehaviour
+    public class ThreadManager : MonoBehaviour
     {
         public static bool host; // Whether this thread manager is the host's
 

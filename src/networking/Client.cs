@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace H3MP.Networking
 {
-    internal class Client : MonoBehaviour
+    public class Client : MonoBehaviour
     {
         private static Client _singleton;
         public static Client singleton
