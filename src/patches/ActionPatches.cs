@@ -162,6 +162,17 @@ namespace H3MP.Patches
             PatchController.Verify(fireHCBPatchOriginal, harmony, false);
             harmony.Patch(fireHCBPatchOriginal, new HarmonyMethod(fireHCBPatchPrefix), new HarmonyMethod(fireHCBPatchPostfix));
 
+            // SimpleLauncherPatch
+            MethodInfo simpleLauncherCollisionOriginal = typeof(SimpleLauncher).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo simpleLauncherCollisionTranspiler = typeof(SimpleLauncherPatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo simpleLauncherDamageOriginal = typeof(SimpleLauncherFireOnDamage).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo simpleLauncherDamagePrefix = typeof(SimpleLauncherPatch).GetMethod("DamagePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(simpleLauncherCollisionOriginal, harmony, false);
+            PatchController.Verify(simpleLauncherDamageOriginal, harmony, false);
+            harmony.Patch(simpleLauncherCollisionOriginal, null, null, new HarmonyMethod(simpleLauncherCollisionTranspiler));
+            harmony.Patch(simpleLauncherDamageOriginal, new HarmonyMethod(simpleLauncherDamagePrefix));
+
             // FireStingerLauncherPatch
             MethodInfo fireStingerLauncherOriginal = typeof(StingerLauncher).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { }, null);
             MethodInfo fireStingerLauncherPrefix = typeof(FireStingerLauncherPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -2765,6 +2776,57 @@ namespace H3MP.Patches
             --Mod.skipAllInstantiates;
 
             overriden = false;
+        }
+    }
+
+    // Patches SimpleLauncher and SimpleLauncherFireOnDamage to prevent firing for non controller
+    class SimpleLauncherPatch
+    {
+        static bool DamagePrefix(SimpleLauncher __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            return trackedItem == null || trackedItem.data.controller == GameManager.ID;
+        }
+
+        static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("Fire"))
+                {
+                    instructionList.RemoveAt(i - 1);
+                    instructionList.RemoveAt(i - 1);
+                    instructionList.Insert(i - 1, new CodeInstruction(OpCodes.Ldarg_0));
+                    instructionList.Insert(i - 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SimpleLauncherPatch), "ConditionalFire")));
+                    break;
+                }
+            }
+            return instructionList;
+        }
+
+        public static void ConditionalFire(SimpleLauncher simpleLauncher)
+        {
+            if(Mod.managerObject == null)
+            {
+                simpleLauncher.Fire();
+            }
+            else
+            {
+                TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(simpleLauncher, out trackedItem) ? trackedItem : simpleLauncher.GetComponent<TrackedItem>();
+                if(trackedItem==null || trackedItem.data.controller == GameManager.ID)
+                {
+                    simpleLauncher.Fire();
+                }
+            }
         }
     }
 
