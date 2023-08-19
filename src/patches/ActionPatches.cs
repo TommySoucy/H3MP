@@ -5794,6 +5794,11 @@ namespace H3MP.Patches
 
         public static void EncryptionSpawnOnDestroy(TNH_EncryptionTarget encryption, int index, Transform t)
         {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
             cascadingDestroyIndex = index;
             int strIndex = encryption.name.LastIndexOf("SubShard");
             if (strIndex == -1) // This shard is product of destruction of Main
