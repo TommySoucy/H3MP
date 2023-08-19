@@ -4868,7 +4868,7 @@ namespace H3MP.Tracking
                 }
                 else
                 {
-                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(itemData.data, 5);
+                    BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundType).CopyTo(itemData.data, 5);
                     BitConverter.GetBytes((short)asLAF.Chamber2.GetRound().RoundClass).CopyTo(itemData.data, 7);
                 }
 
