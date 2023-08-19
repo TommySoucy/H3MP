@@ -152,6 +152,12 @@ namespace H3MP.Tracking
                 updateGivenFunc = UpdateGivenSBLPCell;
                 dataObject = physObj as sblpCell;
             }
+            else if (physObj is MinigunBox)
+            {
+                updateFunc = UpdateMinigunBox;
+                updateGivenFunc = UpdateGivenMinigunBox;
+                dataObject = physObj as MinigunBox;
+            }
             else if (physObj is FVRFireArmMagazine)
             {
                 updateFunc = UpdateMagazine;
@@ -3412,19 +3418,22 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[4];
+                itemData.data = new byte[5];
                 modified = true;
             }
 
+            // Write motor rate
             byte preval0 = itemData.data[0];
             byte preval1 = itemData.data[1];
             byte preval2 = itemData.data[2];
             byte preval3 = itemData.data[3];
-
-            // Write heat
             BitConverter.GetBytes(asMinigun.m_motorRate).CopyTo(itemData.data, 0);
-
             modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3]);
+
+            // Write triggerEngaged
+            preval0 = itemData.data[4];
+            itemData.data[4] = asMinigun.m_isTriggerEngaged ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[4];
 
             return modified;
         }
@@ -3447,11 +3456,17 @@ namespace H3MP.Tracking
                 if (itemData.data[0] != newData[0] || itemData.data[1] != newData[1] || itemData.data[2] != newData[2] || itemData.data[3] != newData[3])
                 {
                     // Set motorrate
-                    asMinigun.m_motorRate = BitConverter.ToSingle(newData, 0);
-                    asMinigun.m_tarMotorRate = asMinigun.m_motorRate;
                     modified = true;
                 }
+
+                // We are setting this outside of the check because non controller will still update and will stop the motor
+                // so need to keep overriding, despite there being no difference
+                asMinigun.m_motorRate = BitConverter.ToSingle(newData, 0);
+                asMinigun.m_tarMotorRate = asMinigun.m_motorRate;
             }
+
+            // Set trigger engaged
+            asMinigun.m_isTriggerEngaged = newData[4] == 1;
 
             itemData.data = newData;
 
@@ -11519,6 +11534,359 @@ namespace H3MP.Tracking
             asMag.FuelAmountLeft = BitConverter.ToSingle(newData, newData.Length - 4);
 
             modified |= preAmount != asMag.FuelAmountLeft;
+
+            itemData.data = newData;
+
+            return modified;
+        }
+
+        private bool UpdateMinigunBox()
+        {
+            bool modified = false;
+            MinigunBox asMinigunBox = dataObject as MinigunBox;
+
+            if (itemData.data == null)
+            {
+                itemData.data = new byte[8];
+                modified = true;
+            }
+
+            // Write bullet count
+            byte preval0 = itemData.data[0];
+            byte preval1 = itemData.data[1];
+            BitConverter.GetBytes((short)asMinigunBox.NumBulletsLeft).CopyTo(itemData.data, 0);
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1]);
+
+            // Write loaded into firearm
+            preval0 = itemData.data[2];
+            itemData.data[2] = asMinigunBox.FireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[2];
+
+            // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
+            // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
+            preval0 = itemData.data[3];
+            if (asMinigunBox.FireArm == null)
+            {
+                itemData.data[3] = (byte)255;
+            }
+            else
+            {
+                bool found = false;
+                for (int i = 0; i < asMinigunBox.FireArm.SecondaryMagazineSlots.Length; ++i)
+                {
+                    if (asMinigunBox.FireArm.SecondaryMagazineSlots[i].Magazine == asMinigunBox)
+                    {
+                        found = true;
+                        itemData.data[3] = (byte)i;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    itemData.data[3] = (byte)255;
+                }
+            }
+            modified |= preval0 != itemData.data[3];
+
+            // Write loaded into AttachableFirearm
+            preval0 = itemData.data[4];
+            itemData.data[4] = asMinigunBox.AttachableFireArm != null ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[4];
+
+            // Write secondary slot index, TODO: Having to look through each secondary slot for equality every update is obviously not optimal
+            // We might want to look into patching (Attachable)Firearm's LoadMagIntoSecondary and eject from secondary to keep track of this instead
+            preval0 = itemData.data[5];
+            if (asMinigunBox.AttachableFireArm == null)
+            {
+                itemData.data[5] = (byte)255;
+            }
+            else
+            {
+                bool found = false;
+                for (int i = 0; i < asMinigunBox.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                {
+                    if (asMinigunBox.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMinigunBox)
+                    {
+                        itemData.data[5] = (byte)i;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    itemData.data[5] = (byte)255;
+                }
+            }
+            modified |= preval0 != itemData.data[5];
+
+            return modified;
+        }
+
+        private bool UpdateGivenMinigunBox(byte[] newData)
+        {
+            bool modified = false;
+            MinigunBox asMinigunBox = dataObject as MinigunBox;
+
+            if (itemData.data == null || itemData.data.Length != newData.Length)
+            {
+                modified = true;
+            }
+
+            // Set bullet count
+            int preRoundCount = asMinigunBox.NumBulletsLeft;
+            asMinigunBox.NumBulletsLeft = BitConverter.ToInt16(newData, 0);
+            modified |= preRoundCount != asMinigunBox.NumBulletsLeft;
+
+            // Load into firearm if necessary
+            if (newData[2] == 1)
+            {
+                if (data.parent != -1)
+                {
+                    TrackedItemData parentTrackedItemData = null;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    }
+
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is FVRFireArm)
+                    {
+                        // We want to be loaded in a firearm, we have a parent, it is a firearm
+                        if (asMinigunBox.FireArm != null)
+                        {
+                            if (asMinigunBox.FireArm != parentTrackedItemData.physicalItem.dataObject)
+                            {
+                                // Unload from current, load into new firearm
+                                if (asMinigunBox.FireArm.Magazine == asMinigunBox)
+                                {
+                                    asMinigunBox.FireArm.EjectMag(true);
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < asMinigunBox.FireArm.SecondaryMagazineSlots.Length; ++i)
+                                    {
+                                        if (asMinigunBox.FireArm.SecondaryMagazineSlots[i].Magazine == asMinigunBox)
+                                        {
+                                            asMinigunBox.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (newData[3] == 255)
+                                {
+                                    ++MagazinePatch.loadSkip;
+                                    asMinigunBox.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                    --MagazinePatch.loadSkip;
+                                }
+                                else
+                                {
+                                    ++MagazinePatch.loadSkip;
+                                    asMinigunBox.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[3]);
+                                    --MagazinePatch.loadSkip;
+                                }
+                                modified = true;
+                            }
+                        }
+                        else if (asMinigunBox.AttachableFireArm != null)
+                        {
+                            // Unload from current, load into new firearm
+                            if (asMinigunBox.AttachableFireArm.Magazine == asMinigunBox)
+                            {
+                                asMinigunBox.AttachableFireArm.EjectMag(true);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < asMinigunBox.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                                {
+                                    if (asMinigunBox.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMinigunBox)
+                                    {
+                                        // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                        //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (newData[3] == 255)
+                            {
+                                ++MagazinePatch.loadSkip;
+                                asMinigunBox.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                --MagazinePatch.loadSkip;
+                            }
+                            else
+                            {
+                                ++MagazinePatch.loadSkip;
+                                asMinigunBox.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[3]);
+                                --MagazinePatch.loadSkip;
+                            }
+                            modified = true;
+                        }
+                        else
+                        {
+                            // Load into firearm
+                            if (newData[3] == 255)
+                            {
+                                ++MagazinePatch.loadSkip;
+                                asMinigunBox.Load(parentTrackedItemData.physicalItem.dataObject as FVRFireArm);
+                                --MagazinePatch.loadSkip;
+                            }
+                            else
+                            {
+                                ++MagazinePatch.loadSkip;
+                                asMinigunBox.LoadIntoSecondary(parentTrackedItemData.physicalItem.dataObject as FVRFireArm, newData[3]);
+                                --MagazinePatch.loadSkip;
+                            }
+                            modified = true;
+                        }
+                    }
+                }
+            }
+            else if (newData[4] == 1)
+            {
+                if (data.parent != -1)
+                {
+                    TrackedItemData parentTrackedItemData = null;
+                    if (ThreadManager.host)
+                    {
+                        parentTrackedItemData = Server.objects[data.parent] as TrackedItemData;
+                    }
+                    else
+                    {
+                        parentTrackedItemData = Client.objects[data.parent] as TrackedItemData;
+                    }
+
+                    if (parentTrackedItemData != null && parentTrackedItemData.physicalItem != null && parentTrackedItemData.physicalItem.dataObject is AttachableFirearmPhysicalObject)
+                    {
+                        // We want to be loaded in a AttachableFireArm, we have a parent, it is a AttachableFireArm
+                        if (asMinigunBox.AttachableFireArm != null)
+                        {
+                            if (asMinigunBox.AttachableFireArm != (parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA)
+                            {
+                                // Unload from current, load into new AttachableFireArm
+                                if (asMinigunBox.AttachableFireArm.Magazine == asMinigunBox)
+                                {
+                                    asMinigunBox.AttachableFireArm.EjectMag(true);
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < asMinigunBox.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                                    {
+                                        if (asMinigunBox.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMinigunBox)
+                                        {
+                                            // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                            //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (newData[5] == 255)
+                                {
+                                    ++MagazinePatch.loadSkip;
+                                    asMinigunBox.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                    --MagazinePatch.loadSkip;
+                                }
+                                else
+                                {
+                                    // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                    //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                                }
+                                modified = true;
+                            }
+                        }
+                        else if (asMinigunBox.FireArm != null)
+                        {
+                            // Unload from current firearm, load into new AttachableFireArm
+                            if (asMinigunBox.FireArm.Magazine == asMinigunBox)
+                            {
+                                asMinigunBox.FireArm.EjectMag(true);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < asMinigunBox.FireArm.SecondaryMagazineSlots.Length; ++i)
+                                {
+                                    if (asMinigunBox.FireArm.SecondaryMagazineSlots[i].Magazine == asMinigunBox)
+                                    {
+                                        asMinigunBox.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                        break;
+                                    }
+                                }
+                            }
+                            if (newData[5] == 255)
+                            {
+                                ++MagazinePatch.loadSkip;
+                                asMinigunBox.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                --MagazinePatch.loadSkip;
+                            }
+                            else
+                            {
+                                // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                            }
+                            modified = true;
+                        }
+                        else
+                        {
+                            // Load into AttachableFireArm
+                            if (newData[5] == 255)
+                            {
+                                ++MagazinePatch.loadSkip;
+                                asMinigunBox.Load((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA);
+                                --MagazinePatch.loadSkip;
+                            }
+                            else
+                            {
+                                // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.LoadIntoSecondary((parentTrackedItemData.physicalItem.dataObject as AttachableFirearmPhysicalObject).FA, newData[newData.Length - 1]);
+                            }
+                            modified = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (asMinigunBox.FireArm != null)
+                {
+                    // Don't want to be loaded, but we are loaded, unload
+                    if (asMinigunBox.FireArm.Magazine == asMinigunBox)
+                    {
+                        asMinigunBox.FireArm.EjectMag(true);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < asMinigunBox.FireArm.SecondaryMagazineSlots.Length; ++i)
+                        {
+                            if (asMinigunBox.FireArm.SecondaryMagazineSlots[i].Magazine == asMinigunBox)
+                            {
+                                asMinigunBox.FireArm.EjectSecondaryMagFromSlot(i, true);
+                                break;
+                            }
+                        }
+                    }
+                    modified = true;
+                }
+                else if (asMinigunBox.AttachableFireArm != null)
+                {
+                    if (asMinigunBox.AttachableFireArm.Magazine == asMinigunBox)
+                    {
+                        asMinigunBox.AttachableFireArm.EjectMag(true);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < asMinigunBox.AttachableFireArm.SecondaryMagazineSlots.Length; ++i)
+                        {
+                            if (asMinigunBox.AttachableFireArm.SecondaryMagazineSlots[i].Magazine == asMinigunBox)
+                            {
+                                // TODO: Future: When H3 adds support for secondary slots on attachable firearm uncomment the following:
+                                //asMag.AttachableFireArm.EjectSecondaryMagFromSlot(i, true);
+                                break;
+                            }
+                        }
+                    }
+                    modified = true;
+                }
+            }
 
             itemData.data = newData;
 
