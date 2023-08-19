@@ -3412,7 +3412,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[8];
+                itemData.data = new byte[4];
                 modified = true;
             }
 
@@ -3422,19 +3422,9 @@ namespace H3MP.Tracking
             byte preval3 = itemData.data[3];
 
             // Write heat
-            BitConverter.GetBytes(asMinigun.m_heat).CopyTo(itemData.data, 0);
+            BitConverter.GetBytes(asMinigun.m_motorRate).CopyTo(itemData.data, 0);
 
             modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3]);
-
-            preval0 = itemData.data[4];
-            preval1 = itemData.data[5];
-            preval2 = itemData.data[6];
-            preval3 = itemData.data[7];
-
-            // Write heat
-            BitConverter.GetBytes(asMinigun.m_motorRate).CopyTo(itemData.data, 4);
-
-            modified |= (preval0 != itemData.data[4] || preval1 != itemData.data[5] || preval2 != itemData.data[6] || preval3 != itemData.data[7]);
 
             return modified;
         }
@@ -3448,24 +3438,17 @@ namespace H3MP.Tracking
             {
                 modified = true;
 
-                // Set heat
-                asMinigun.m_heat = BitConverter.ToSingle(newData, 0);
-
                 // Set motorrate
-                asMinigun.m_motorRate = BitConverter.ToSingle(newData, 4);
+                asMinigun.m_motorRate = BitConverter.ToSingle(newData, 0);
+                asMinigun.m_tarMotorRate = asMinigun.m_motorRate;
             }
             else
             {
                 if (itemData.data[0] != newData[0] || itemData.data[1] != newData[1] || itemData.data[2] != newData[2] || itemData.data[3] != newData[3])
                 {
-                    // Set heat
-                    asMinigun.m_heat = BitConverter.ToSingle(newData, 0);
-                    modified = true;
-                }
-                if (itemData.data[4] != newData[4] || itemData.data[5] != newData[5] || itemData.data[6] != newData[6] || itemData.data[7] != newData[7])
-                {
                     // Set motorrate
-                    asMinigun.m_motorRate = BitConverter.ToSingle(newData, 4);
+                    asMinigun.m_motorRate = BitConverter.ToSingle(newData, 0);
+                    asMinigun.m_tarMotorRate = asMinigun.m_motorRate;
                     modified = true;
                 }
             }

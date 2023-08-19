@@ -159,7 +159,7 @@ namespace H3MP.Tracking
             }
             else
             {
-                if (Server.objects.Length < trackedID)
+                if (Client.objects.Length < trackedID)
                 {
                     return;
                 }

@@ -42,14 +42,14 @@ namespace H3MP.Patches
             PatchController.Verify(fireLAPD2019PatchOriginal, harmony, false);
             harmony.Patch(fireLAPD2019PatchOriginal, new HarmonyMethod(fireLAPD2019PatchPrefix), new HarmonyMethod(fireLAPD2019PatchPostfix), new HarmonyMethod(fireLAPD2019PatchTranspiler));
 
-            // FireMinigunPatch
-            MethodInfo fireMinigunPatchOriginal = typeof(Minigun).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo fireMinigunPatchPrefix = typeof(FireMinigunPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireMinigunPatchTranspiler = typeof(FireMinigunPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo fireMinigunPatchPostfix = typeof(FireMinigunPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            //// FireMinigunPatch
+            //MethodInfo fireMinigunPatchOriginal = typeof(Minigun).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
+            //MethodInfo fireMinigunPatchPrefix = typeof(FireMinigunPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            //MethodInfo fireMinigunPatchTranspiler = typeof(FireMinigunPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+            //MethodInfo fireMinigunPatchPostfix = typeof(FireMinigunPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchController.Verify(fireMinigunPatchOriginal, harmony, false);
-            harmony.Patch(fireMinigunPatchOriginal, new HarmonyMethod(fireMinigunPatchPrefix), new HarmonyMethod(fireMinigunPatchPostfix), new HarmonyMethod(fireMinigunPatchTranspiler));
+            //PatchController.Verify(fireMinigunPatchOriginal, harmony, false);
+            //harmony.Patch(fireMinigunPatchOriginal, new HarmonyMethod(fireMinigunPatchPrefix), new HarmonyMethod(fireMinigunPatchPostfix), new HarmonyMethod(fireMinigunPatchTranspiler));
 
             // FireAttachableFirearmPatch
             MethodInfo fireAttachableFirearmPatchOriginal = typeof(AttachableFirearm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
@@ -1391,202 +1391,204 @@ namespace H3MP.Patches
         }
     }
 
-    // Patches Minigun.Fire so we can keep track of when an LAPD2019 is fired
-    class FireMinigunPatch
-    {
-        public static bool overriden;
-        public static List<Vector3> positions;
-        public static List<Vector3> directions;
+    //// Patches Minigun.Fire so we can keep track of when an LAPD2019 is fired
+    //class FireMinigunPatch
+    //{
+    //    public static bool overriden;
+    //    public static List<Vector3> positions;
+    //    public static List<Vector3> directions;
 
-        static Minigun currentMinigun;
-        static TrackedItem trackedItem;
+    //    static Minigun currentMinigun;
+    //    static TrackedItem trackedItem;
 
-        // Update override data
-        static bool fireSucessful;
-        static FireArmRoundClass roundClass;
+    //    // Update override data
+    //    static bool fireSucessful;
+    //    static FireArmRoundClass roundClass;
 
-        static bool Prefix(ref Minigun __instance, int ___m_numBullets)
-        {
-            // Make sure we skip projectile instantiation
-            // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
-            ++Mod.skipAllInstantiates;
-            if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireMinigunPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
+    //    static bool Prefix(ref Minigun __instance, int ___m_numBullets)
+    //    {
+    //        // Make sure we skip projectile instantiation
+    //        // Do this before skip checks because we want to skip instantiate patch for projectiles regardless
+    //        ++Mod.skipAllInstantiates;
+    //        if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at FireMinigunPatch, setting to 1"); Mod.skipAllInstantiates = 1; }
 
-            fireSucessful = ___m_numBullets > 0;
-            if (__instance != currentMinigun)
-            {
-                currentMinigun = __instance;
-                trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
-            }
-            if (trackedItem != null && !overriden && trackedItem.data.controller != GameManager.ID)
-            {
-                fireSucessful = false;
-                return false;
-            }
-            roundClass = __instance.LoadedRounds[0].LR_Class;
+    //        fireSucessful = ___m_numBullets > 0;
+    //        if (__instance != currentMinigun)
+    //        {
+    //            currentMinigun = __instance;
+    //            trackedItem = GameManager.trackedItemByItem.ContainsKey(__instance) ? GameManager.trackedItemByItem[__instance] : __instance.GetComponent<TrackedItem>();
+    //        }
+    //        if (trackedItem != null && !overriden && trackedItem.data.controller != GameManager.ID)
+    //        {
+    //            fireSucessful = false;
+    //            return false;
+    //        }
+    //        roundClass = __instance.LoadedRounds[0].LR_Class;
 
-            return true;
-        }
+    //        return true;
+    //    }
 
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+    //    static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+    //    {
+    //        List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
 
-            // To get correct pos considering potential override
-            List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
-            toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
-            toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireMinigunPatch), "GetPosition"))); // Call our GetPosition method
+    //        // To get correct pos considering potential override
+    //        List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
+    //        toInsert0.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+    //        toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireMinigunPatch), "GetPosition"))); // Call our GetPosition method
 
-            // To get correct dir considering potential override
-            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
-            toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
-            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load gameObject
-            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireMinigunPatch), "GetDirection"))); // Call our GetDirection method
+    //        // To get correct dir considering potential override
+    //        List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+    //        toInsert1.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0
+    //        toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load gameObject
+    //        toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireMinigunPatch), "GetDirection"))); // Call our GetDirection method
 
-            for (int i = 0; i < instructionList.Count; ++i)
-            {
-                CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Ldloc_0)
-                {
-                    instructionList.InsertRange(i + 1, toInsert0);
-                }
+    //        for (int i = 0; i < instructionList.Count; ++i)
+    //        {
+    //            CodeInstruction instruction = instructionList[i];
+    //            if (instruction.opcode == OpCodes.Ldloc_0)
+    //            {
+    //                instructionList.InsertRange(i + 1, toInsert0);
+    //            }
 
-                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
-                    instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
-                {
-                    instructionList.InsertRange(i + 2, toInsert1);
-                    break;
-                }
-            }
-            return instructionList;
-        }
+    //            if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
+    //                instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+    //            {
+    //                instructionList.InsertRange(i + 2, toInsert1);
+    //                break;
+    //            }
+    //        }
+    //        return instructionList;
+    //    }
 
-        public static Vector3 GetPosition(Vector3 position, int index)
-        {
-            if (overriden)
-            {
-                if (positions != null && positions.Count > index)
-                {
-                    return positions[index];
-                }
-                else
-                {
-                    return position;
-                }
-            }
-            else
-            {
-                AddFirePos(position);
-                return position;
-            }
-        }
+    //    public static Vector3 GetPosition(Vector3 position, int index)
+    //    {
+    //        if (overriden)
+    //        {
+    //            if (positions != null && positions.Count > index)
+    //            {
+    //                return positions[index];
+    //            }
+    //            else
+    //            {
+    //                return position;
+    //            }
+    //        }
+    //        else
+    //        {
+    //            AddFirePos(position);
+    //            return position;
+    //        }
+    //    }
 
-        public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
-        {
-            if (overriden)
-            {
-                if (directions != null && directions.Count > index)
-                {
-                    gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
-                    return directions[index];
-                }
-                else
-                {
-                    return direction;
-                }
-            }
-            else
-            {
-                AddFireDir(direction);
-                return direction;
-            }
-        }
+    //    public static Vector3 GetDirection(Vector3 direction, int index, GameObject gameObject)
+    //    {
+    //        if (overriden)
+    //        {
+    //            if (directions != null && directions.Count > index)
+    //            {
+    //                gameObject.transform.rotation = Quaternion.LookRotation(directions[index]);
+    //                return directions[index];
+    //            }
+    //            else
+    //            {
+    //                return direction;
+    //            }
+    //        }
+    //        else
+    //        {
+    //            AddFireDir(direction);
+    //            return direction;
+    //        }
+    //    }
 
-        static void AddFirePos(Vector3 pos)
-        {
-            if (Mod.skipNextFires > 0)
-            {
-                return;
-            }
+    //    static void AddFirePos(Vector3 pos)
+    //    {
+    //        if (Mod.skipNextFires > 0)
+    //        {
+    //            return;
+    //        }
 
-            // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
-            {
-                return;
-            }
+    //        // Skip if not connected or no one to send data to
+    //        if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
+    //        {
+    //            return;
+    //        }
 
-            if (positions == null)
-            {
-                positions = new List<Vector3>();
-                directions = new List<Vector3>();
-            }
+    //        if (positions == null)
+    //        {
+    //            positions = new List<Vector3>();
+    //            directions = new List<Vector3>();
+    //        }
 
-            positions.Add(pos);
-        }
+    //        positions.Add(pos);
+    //    }
 
-        static void AddFireDir(Vector3 dir)
-        {
+    //    static void AddFireDir(Vector3 dir)
+    //    {
 
-            if (Mod.skipNextFires > 0)
-            {
-                return;
-            }
+    //        if (Mod.skipNextFires > 0)
+    //        {
+    //            return;
+    //        }
 
-            // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
-            {
-                return;
-            }
+    //        // Skip if not connected or no one to send data to
+    //        if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
+    //        {
+    //            return;
+    //        }
 
-            if (positions == null)
-            {
-                positions = new List<Vector3>();
-                directions = new List<Vector3>();
-            }
+    //        if (positions == null)
+    //        {
+    //            positions = new List<Vector3>();
+    //            directions = new List<Vector3>();
+    //        }
 
-            directions.Add(dir);
-        }
+    //        directions.Add(dir);
+    //    }
 
-        static void Postfix(ref Minigun __instance)
-        {
-            --Mod.skipAllInstantiates;
+    //    static void Postfix(ref Minigun __instance)
+    //    {
+    //        --Mod.skipAllInstantiates;
 
-            overriden = false;
+    //        overriden = false;
 
-            if (Mod.skipNextFires > 0)
-            {
-                --Mod.skipNextFires;
-                positions = null;
-                directions = null;
-                return;
-            }
+    //        if (Mod.skipNextFires > 0)
+    //        {
+    //            --Mod.skipNextFires;
+    //            positions = null;
+    //            directions = null;
+    //            return;
+    //        }
 
-            // Skip if not connected or no one to send data to
-            if (fireSucessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
-            {
-                positions = null;
-                directions = null;
-                return;
-            }
+    //        // Skip if not connected or no one to send data to
+    //        if (fireSucessful || Mod.managerObject == null || GameManager.playersPresent.Count == 0)
+    //        {
+    //            positions = null;
+    //            directions = null;
+    //            return;
+    //        }
 
-            // Get tracked item
-            if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
-            {
-                // Send the fire action to other clients only if we control it
-                if (ThreadManager.host)
-                {
-                    ServerSend.MinigunFire(0, trackedItem.data.trackedID, positions, directions);
-                }
-                else
-                {
-                    ClientSend.MinigunFire(trackedItem.data.trackedID, positions, directions);
-                }
-            }
+    //        // Get tracked item
+    //        if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
+    //        {
+    //            TODO: // Test with this debug output to see if we are even sending the order
+    //            Mod.LogInfo("Sending minigun fire");
+    //            // Send the fire action to other clients only if we control it
+    //            if (ThreadManager.host)
+    //            {
+    //                ServerSend.MinigunFire(0, trackedItem.data.trackedID, positions, directions);
+    //            }
+    //            else
+    //            {
+    //                ClientSend.MinigunFire(trackedItem.data.trackedID, positions, directions);
+    //            }
+    //        }
 
-            positions = null;
-            directions = null;
-        }
-    }
+    //        positions = null;
+    //        directions = null;
+    //    }
+    //}
 
     // Patches AttachableFirearm.Fire so we can keep track of when an AttachableFirearm is fired
     class FireAttachableFirearmPatch

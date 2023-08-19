@@ -721,22 +721,22 @@ namespace H3MP.Networking
 
         public static void MinigunFire(int trackedID, List<Vector3> positions, List<Vector3> directions)
         {
-            using (Packet packet = new Packet((int)ClientPackets.minigunFire))
-            {
-                packet.Write(trackedID);
-                if (positions == null || positions.Count == 0)
-                {
-                    packet.Write((byte)0);
-                }
-                else
-                {
-                    packet.Write((byte)1);
-                    packet.Write(positions[0]);
-                    packet.Write(directions[0]);
-                }
+            //using (Packet packet = new Packet((int)ClientPackets.minigunFire))
+            //{
+            //    packet.Write(trackedID);
+            //    if (positions == null || positions.Count == 0)
+            //    {
+            //        packet.Write((byte)0);
+            //    }
+            //    else
+            //    {
+            //        packet.Write((byte)1);
+            //        packet.Write(positions[0]);
+            //        packet.Write(directions[0]);
+            //    }
 
-                SendTCPData(packet);
-            }
+            //    SendTCPData(packet);
+            //}
         }
 
         public static void AttachableFirearmFire(int trackedID, FireArmRoundType roundType, FireArmRoundClass roundClass, bool firedFromInterface, List<Vector3> positions, List<Vector3> directions)

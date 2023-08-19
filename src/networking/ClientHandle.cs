@@ -937,25 +937,25 @@ namespace H3MP.Networking
         
         public static void MinigunFire(Packet packet)
         {
-            int trackedID = packet.ReadInt();
+            //int trackedID = packet.ReadInt();
 
-            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
-            if (trackedItem != null && trackedItem.physicalItem != null)
-            {
-                FireMinigunPatch.positions = new List<Vector3>();
-                FireMinigunPatch.directions = new List<Vector3>();
-                byte count = packet.ReadByte();
-                for (int i = 0; i < count; ++i)
-                {
-                    FireMinigunPatch.positions.Add(packet.ReadVector3());
-                    FireMinigunPatch.directions.Add(packet.ReadVector3());
-                }
-                FireMinigunPatch.overriden = true;
+            //TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+            //if (trackedItem != null && trackedItem.physicalItem != null)
+            //{
+            //    FireMinigunPatch.positions = new List<Vector3>();
+            //    FireMinigunPatch.directions = new List<Vector3>();
+            //    byte count = packet.ReadByte();
+            //    for (int i = 0; i < count; ++i)
+            //    {
+            //        FireMinigunPatch.positions.Add(packet.ReadVector3());
+            //        FireMinigunPatch.directions.Add(packet.ReadVector3());
+            //    }
+            //    FireMinigunPatch.overriden = true;
 
-                // Make sure we skip next fire so we don't have a firing feedback loop between clients
-                ++Mod.skipNextFires;
-                ((LAPD2019)trackedItem.physicalItem.physicalItem).Fire();
-            }
+            //    // Make sure we skip next fire so we don't have a firing feedback loop between clients
+            //    ++Mod.skipNextFires;
+            //    ((LAPD2019)trackedItem.physicalItem.physicalItem).Fire();
+            //}
         }
         
         public static void AttachableFirearmFire(Packet packet)
