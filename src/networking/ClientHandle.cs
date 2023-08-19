@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace H3MP.Networking
@@ -164,8 +163,10 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
             string typeID = packet.ReadString();
+            Mod.LogInfo("Client received tracked object " + trackedID + " with type: " + typeID, false);
             if (Mod.trackedObjectTypesByName.TryGetValue(typeID, out Type trackedObjectType))
             {
+                Mod.LogInfo("\tGot type, adding", false);
                 Client.AddTrackedObject((TrackedObjectData)Activator.CreateInstance(trackedObjectType, packet, typeID, trackedID));
             }
         }

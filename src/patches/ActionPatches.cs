@@ -1570,17 +1570,14 @@ namespace H3MP.Patches
             }
 
             // Get tracked item
-            if (trackedItem != null)
+            if (trackedItem != null && trackedItem.data.controller == GameManager.ID)
             {
                 // Send the fire action to other clients only if we control it
                 if (ThreadManager.host)
                 {
-                    if (trackedItem.data.controller == 0)
-                    {
-                        ServerSend.MinigunFire(0, trackedItem.data.trackedID, positions, directions);
-                    }
+                    ServerSend.MinigunFire(0, trackedItem.data.trackedID, positions, directions);
                 }
-                else if (trackedItem.data.controller == Client.singleton.ID)
+                else
                 {
                     ClientSend.MinigunFire(trackedItem.data.trackedID, positions, directions);
                 }
