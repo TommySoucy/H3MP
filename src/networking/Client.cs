@@ -506,7 +506,7 @@ namespace H3MP.Networking
                 ClientHandle.LAPD2019Fire,
                 ClientHandle.LAPD2019LoadBattery,
                 ClientHandle.LAPD2019ExtractBattery,
-                ClientHandle.MinigunFire,
+                null,
                 ClientHandle.AttachableFirearmFire,
                 ClientHandle.BreakActionWeaponFire,
                 ClientHandle.PlayerIFF,

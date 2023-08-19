@@ -437,7 +437,7 @@ namespace H3MP.Networking
                 ServerHandle.LAPD2019Fire,
                 ServerHandle.LAPD2019LoadBattery,
                 ServerHandle.LAPD2019ExtractBattery,
-                ServerHandle.MinigunFire,
+                null,
                 ServerHandle.AttachableFirearmFire,
                 ServerHandle.BreakActionWeaponFire,
                 ServerHandle.PlayerIFF,

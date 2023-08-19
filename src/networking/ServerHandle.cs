@@ -1217,33 +1217,6 @@ namespace H3MP.Networking
             ServerSend.SosigWeaponFire(clientID, packet);
         }
 
-        public static void MinigunFire(int clientID, Packet packet)
-        {
-            //int trackedID = packet.ReadInt();
-            
-            //// Update locally
-            //if (Server.objects[trackedID].physical != null)
-            //{
-            //    FireMinigunPatch.positions = new List<Vector3>();
-            //    FireMinigunPatch.directions = new List<Vector3>();
-            //    byte count = packet.ReadByte();
-            //    for (int i = 0; i < count; ++i)
-            //    {
-            //        FireMinigunPatch.positions.Add(packet.ReadVector3());
-            //        FireMinigunPatch.directions.Add(packet.ReadVector3());
-            //    }
-            //    FireSosigWeaponPatch.overriden = true;
-
-            //    // Make sure we skip next fire so we don't have a firing feedback loop between clients
-            //    ++Mod.skipNextFires;
-            //    Minigun asMinigun = (Minigun)Server.objects[trackedID].physical.physical;
-            //    asMinigun.Fire();
-            //}
-
-            //// Send to other clients
-            //ServerSend.MinigunFire(clientID, packet);
-        }
-
         public static void AttachableFirearmFire(int clientID, Packet packet)
         {
             int trackedID = packet.ReadInt();
