@@ -1012,12 +1012,21 @@ namespace H3MP.Networking
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients
                 ++FireHCBPatch.releaseSledSkip;
                 HCB asHCB = Server.objects[trackedID].physical.physical as HCB;
-                asHCB.m_cookedAmount = cookedAmount;
-                if (!asHCB.Chamber.IsFull)
+                if(cookedAmount == -1)
                 {
                     ++ChamberPatch.chamberSkip;
-                    asHCB.Chamber.SetRound(FireArmRoundClass.FMJ, asHCB.Chamber.transform.position, asHCB.Chamber.transform.rotation);
+                    asHCB.Chamber.SetRound(null);
                     --ChamberPatch.chamberSkip;
+                }
+                else
+                {
+                    asHCB.m_cookedAmount = cookedAmount;
+                    if (!asHCB.Chamber.IsFull)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        asHCB.Chamber.SetRound(FireArmRoundClass.FMJ, asHCB.Chamber.transform.position, asHCB.Chamber.transform.rotation);
+                        --ChamberPatch.chamberSkip;
+                    }
                 }
                 asHCB.ReleaseSled();
                 --FireHCBPatch.releaseSledSkip;

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static FistVR.sblpCell;
 
 namespace H3MP.Tracking
 {
@@ -76,6 +77,8 @@ namespace H3MP.Tracking
         public StingerMissile stingerMissile;
 
         // Integrated laser specific
+        // Note: Implemented for specific types only. If a type of weapon can have an integrated LAPD2019Laser
+        //       the state of the laser must be added to the update packet for that type. Currently only implemented for Handgun and Derringer
         public LAPD2019Laser integratedLaser;
         public bool usesAutoToggle;
 
@@ -4351,7 +4354,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null)
             {
-                itemData.data = new byte[5];
+                itemData.data = new byte[6];
                 modified = true;
             }
 
@@ -4378,6 +4381,11 @@ namespace H3MP.Tracking
 
             modified |= (preval != itemData.data[1] || preval0 != itemData.data[2]);
 
+            // Write hingeState
+            preval = itemData.data[5];
+            itemData.data[5] = (byte)asFG.m_hingeState;
+            modified |= preval != itemData.data[5];
+
             return modified;
         }
 
@@ -4388,9 +4396,7 @@ namespace H3MP.Tracking
 
             // Set hammer state
             bool preVal = asFG.m_isHammerCocked;
-
             asFG.SetHammerCocked(newData[0] == 1);
-
             modified |= preVal ^ (newData[0] == 1);
 
             // Set chamber
@@ -4429,6 +4435,27 @@ namespace H3MP.Tracking
                     }
                     modified = true;
                 }
+            }
+
+            // Set hingeState
+            Flaregun.HingeState newHingeState = (Flaregun.HingeState)newData[5];
+            if (asFG.m_hingeState == Flaregun.HingeState.Open
+                && (newHingeState == Flaregun.HingeState.Closing || newHingeState == Flaregun.HingeState.Closed))
+            {
+                asFG.Latch();
+                asFG.m_hingeState = Flaregun.HingeState.Closed;
+                asFG.m_hingeLerp = 0;
+                asFG.SetAnimatedComponent(asFG.Hinge, Mathf.Lerp(0f, asFG.RotOut, asFG.m_hingeLerp), FVRPhysicalObject.InterpStyle.Rotation, asFG.HingeAxis);
+                modified = true;
+            }
+            else if (asFG.m_hingeState == Flaregun.HingeState.Closed
+                     && (newHingeState == Flaregun.HingeState.Opening || newHingeState == Flaregun.HingeState.Open))
+            {
+                asFG.Unlatch();
+                asFG.m_hingeState = Flaregun.HingeState.Open;
+                asFG.m_hingeLerp = 1;
+                asFG.SetAnimatedComponent(asFG.Hinge, Mathf.Lerp(0f, asFG.RotOut, asFG.m_hingeLerp), FVRPhysicalObject.InterpStyle.Rotation, asFG.HingeAxis);
+                modified = true;
             }
 
             itemData.data = newData;
@@ -5094,7 +5121,7 @@ namespace H3MP.Tracking
             Derringer asDerringer = dataObject as Derringer;
             bool modified = false;
 
-            int necessarySize = asDerringer.Barrels.Count * 4 + 1;
+            int necessarySize = asDerringer.Barrels.Count * 4 + 3;
 
             if (itemData.data == null)
             {
@@ -5109,6 +5136,18 @@ namespace H3MP.Tracking
 
             modified |= preval0 != itemData.data[0];
 
+            // Write hingeState
+            preval0 = itemData.data[1];
+            itemData.data[1] = (byte)asDerringer.m_hingeState;
+            modified |= preval0 != itemData.data[1];
+
+            if (integratedLaser != null)
+            {
+                preval0 = itemData.data[2];
+                itemData.data[2] = integratedLaser.m_isOn ? (byte)1 : (byte)0;
+                modified |= preval0 != itemData.data[2];
+            }
+
             // Write chambered rounds
             byte preval1;
             byte preval2;
@@ -5116,7 +5155,7 @@ namespace H3MP.Tracking
             for (int i = 0; i < asDerringer.Barrels.Count; ++i)
             {
                 // Write chambered round
-                int firstIndex = i * 4 + 1;
+                int firstIndex = i * 4 + 3;
                 preval0 = itemData.data[firstIndex];
                 preval1 = itemData.data[firstIndex + 1];
                 preval2 = itemData.data[firstIndex + 2];
@@ -5172,10 +5211,64 @@ namespace H3MP.Tracking
                 }
             }
 
+            // Set hingeState
+            Derringer.HingeState newHingeState = (Derringer.HingeState)newData[1];
+            if (asDerringer.m_hingeState == Derringer.HingeState.Open
+                && (newHingeState == Derringer.HingeState.Closing || newHingeState == Derringer.HingeState.Closed))
+            {
+                asDerringer.Latch();
+                asDerringer.m_hingeState = Derringer.HingeState.Closed;
+                asDerringer.m_hingeLerp = 0;
+                asDerringer.PlayAudioEvent(FirearmAudioEventType.BreachClose);
+                asDerringer.SetAnimatedComponent(asDerringer.Hinge, Mathf.Lerp(asDerringer.HingeValues.x, asDerringer.HingeValues.y, asDerringer.m_hingeLerp), asDerringer.Hinge_InterpStyle, asDerringer.Hinge_Axis);
+                if (asDerringer.HasLatchPiece)
+                {
+                    asDerringer.SetAnimatedComponent(asDerringer.LatchPiece, Mathf.Lerp(asDerringer.LatchValues.x, asDerringer.LatchValues.y, asDerringer.m_hingeLerp), asDerringer.Latch_InterpStyle, asDerringer.Latch_Axis);
+                }
+                if (asDerringer.HasExtractor)
+                {
+                    asDerringer.SetAnimatedComponent(asDerringer.Extractor, Mathf.Lerp(asDerringer.Extractor_Values.x, asDerringer.Extractor_Values.y, asDerringer.m_hingeLerp), asDerringer.Extractor_InterpStyle, asDerringer.Extractor_Axis);
+                }
+                modified = true;
+            }
+            else if (asDerringer.m_hingeState == Derringer.HingeState.Closed
+                     && (newHingeState == Derringer.HingeState.Opening || newHingeState == Derringer.HingeState.Open))
+            {
+                asDerringer.Unlatch();
+                asDerringer.m_hingeState = Derringer.HingeState.Open;
+                asDerringer.m_hingeLerp = 1;
+                for (int j = 0; j < asDerringer.Barrels.Count; j++)
+                {
+                    asDerringer.Barrels[j].Chamber.IsAccessible = true;
+                }
+                asDerringer.SetAnimatedComponent(asDerringer.Hinge, Mathf.Lerp(asDerringer.HingeValues.x, asDerringer.HingeValues.y, asDerringer.m_hingeLerp), asDerringer.Hinge_InterpStyle, asDerringer.Hinge_Axis);
+                if (asDerringer.HasLatchPiece)
+                {
+                    asDerringer.SetAnimatedComponent(asDerringer.LatchPiece, Mathf.Lerp(asDerringer.LatchValues.x, asDerringer.LatchValues.y, asDerringer.m_hingeLerp), asDerringer.Latch_InterpStyle, asDerringer.Latch_Axis);
+                }
+                if (asDerringer.HasExtractor)
+                {
+                    asDerringer.SetAnimatedComponent(asDerringer.Extractor, Mathf.Lerp(asDerringer.Extractor_Values.x, asDerringer.Extractor_Values.y, asDerringer.m_hingeLerp), asDerringer.Extractor_InterpStyle, asDerringer.Extractor_Axis);
+                }
+                modified = true;
+            }
+
+            if (integratedLaser != null)
+            {
+                if (newData[2] == 1 && !integratedLaser.m_isOn)
+                {
+                    integratedLaser.TurnOn();
+                }
+                else if (newData[2] == 0 && integratedLaser.m_isOn)
+                {
+                    integratedLaser.TurnOff();
+                }
+            }
+
             // Set barrels
             for (int i = 0; i < asDerringer.Barrels.Count; ++i)
             {
-                int firstIndex = i * 4 + 1;
+                int firstIndex = i * 4 + 3;
                 short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
                 short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
@@ -5245,7 +5338,7 @@ namespace H3MP.Tracking
             BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
             bool modified = false;
 
-            int necessarySize = asBreakActionWeapon.Barrels.Length * 5;
+            int necessarySize = asBreakActionWeapon.Barrels.Length * 5 + 5;
 
             if (itemData.data == null)
             {
@@ -5253,15 +5346,24 @@ namespace H3MP.Tracking
                 modified = true;
             }
 
+            // Write latched
+            byte preval0 = itemData.data[0];
+            itemData.data[0] = asBreakActionWeapon.IsLatched ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[0];
+
+            // Write latchRot
+            preval0 = itemData.data[1];
+            byte preval1 = itemData.data[2];
+            byte preval2 = itemData.data[3];
+            byte preval3 = itemData.data[4];
+            BitConverter.GetBytes(asBreakActionWeapon.m_latchRot).CopyTo(itemData.data, 1);
+            modified |= (preval0 != itemData.data[1] || preval1 != itemData.data[2] || preval2 != itemData.data[3] || preval3 != itemData.data[4]);
+
             // Write chambered rounds
-            byte preval0;
-            byte preval1;
-            byte preval2;
-            byte preval3;
             for (int i = 0; i < asBreakActionWeapon.Barrels.Length; ++i)
             {
                 // Write chambered round
-                int firstIndex = i * 5;
+                int firstIndex = i * 5 + 5;
                 preval0 = itemData.data[firstIndex];
                 preval1 = itemData.data[firstIndex + 1];
                 preval2 = itemData.data[firstIndex + 2];
@@ -5317,10 +5419,25 @@ namespace H3MP.Tracking
             bool modified = false;
             BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
 
+            // Set Latch
+            if (asBreakActionWeapon.m_hasLatch)
+            {
+                if ((asBreakActionWeapon.IsLatched && newData[0] == 0)
+                     || (!asBreakActionWeapon.IsLatched && newData[0] == 1))
+                {
+                    asBreakActionWeapon.m_isLatched = newData[0] == 1;
+                    modified = true;
+                }
+                float preLatchRot = asBreakActionWeapon.m_latchRot;
+                asBreakActionWeapon.m_latchRot = BitConverter.ToSingle(newData, 1);
+                modified |= preLatchRot != asBreakActionWeapon.m_latchRot;
+                asBreakActionWeapon.Latch.localEulerAngles = new Vector3(0f, asBreakActionWeapon.m_latchRot, 0f);
+            }
+
             // Set barrels
             for (int i = 0; i < asBreakActionWeapon.Barrels.Length; ++i)
             {
-                int firstIndex = i * 5;
+                int firstIndex = i * 5 + 5;
                 short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
                 short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
@@ -9190,16 +9307,12 @@ namespace H3MP.Tracking
 
             // Write fire mode index
             itemData.data[0] = (byte)asHandgun.FireSelectorModeIndex;
-
             modified |= preval != itemData.data[0];
-
             preval = itemData.data[1];
 
             // Write camBurst
             itemData.data[1] = (byte)asHandgun.m_CamBurst;
-
             modified |= preval != itemData.data[1];
-
             preval = itemData.data[2];
 
             // Write hammer state
@@ -9249,9 +9362,7 @@ namespace H3MP.Tracking
                 if (integratedLaser != null)
                 {
                     preval = itemData.data[11];
-
                     itemData.data[11] = integratedLaser.m_isOn ? (byte)1 : (byte)0;
-
                     modified |= preval != itemData.data[11];
                 }
             }
@@ -9260,9 +9371,7 @@ namespace H3MP.Tracking
                 if (integratedLaser != null)
                 {
                     preval = itemData.data[7];
-
                     itemData.data[7] = integratedLaser.m_isOn ? (byte)1 : (byte)0;
-
                     modified |= preval != itemData.data[7];
                 }
             }

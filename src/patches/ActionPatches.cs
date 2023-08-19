@@ -2718,7 +2718,6 @@ namespace H3MP.Patches
                 component.SetCookedAmount(___m_cookedAmount);
                 __instance.Chamber.SetRound(null, false);
             }
-            ___m_cookedAmount = 0;
             __instance.PlayAudioAsHandling(__instance.AudEvent_Fire, __instance.Sled.transform.position);
 
             if (releaseSledSkip == 0)
@@ -2732,15 +2731,17 @@ namespace H3MP.Patches
                     {
                         if (trackedItem.data.controller == 0)
                         {
-                            ServerSend.HCBReleaseSled(0, trackedItem.data.trackedID, ___m_cookedAmount, position, direction);
+                            ServerSend.HCBReleaseSled(0, trackedItem.data.trackedID, __instance.Chamber.IsFull ? ___m_cookedAmount : -1, position, direction);
                         }
                     }
                     else if (trackedItem.data.controller == Client.singleton.ID)
                     {
-                        ClientSend.HCBReleaseSled(trackedItem.data.trackedID, ___m_cookedAmount, position, direction);
+                        ClientSend.HCBReleaseSled(trackedItem.data.trackedID, __instance.Chamber.IsFull ? ___m_cookedAmount : -1, position, direction);
                     }
                 }
             }
+
+            ___m_cookedAmount = 0;
 
             return false;
         }
