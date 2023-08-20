@@ -42,7 +42,11 @@ namespace H3MP.Tracking
 
         public override bool IsIdentifiable()
         {
-            return GameManager.playerPrefabs.ContainsKey(playerPrefabID);
+            // Note: It might not actually be identifiable if this is a custom body that we don't have the mod for installed
+            //       But we always want a player body to be instantiated
+            //       In MP, a missing player body should instead be a default one, so we still want to call Instantiate
+            //       and in there we will handle the case of missing body and will instead instantiate Default
+            return true;
         }
 
         public static TrackedPlayerBody MakeTracked(Transform root, TrackedObjectData parent)
