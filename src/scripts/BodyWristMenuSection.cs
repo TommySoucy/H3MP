@@ -122,16 +122,13 @@ namespace H3MP.Scripts
             {
                 SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
-                if (!GameManager.colorByIFF && Mod.managerObject != null)
+                --GameManager.colorIndex;
+                if (GameManager.colorIndex < 0)
                 {
-                    --GameManager.colorIndex;
-                    if (GameManager.colorIndex < 0)
-                    {
-                        GameManager.colorIndex = GameManager.colors.Length - 1;
-                    }
-
-                    GameManager.SetPlayerColor(GameManager.ID, GameManager.colorIndex, false, 0);
+                    GameManager.colorIndex = GameManager.colors.Length - 1;
                 }
+
+                GameManager.SetPlayerColor(GameManager.ID, GameManager.colorIndex, false, 0);
             }
         }
 
