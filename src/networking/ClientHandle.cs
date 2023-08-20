@@ -57,6 +57,12 @@ namespace H3MP.Networking
             ClientSend.WelcomeReceived();
 
             Client.singleton.udp.Connect(((IPEndPoint)Client.singleton.tcp.socket.Client.LocalEndPoint).Port);
+
+            if (GameManager.reconnectionInstance != -1)
+            {
+                GameManager.SetInstance(GameManager.reconnectionInstance);
+                GameManager.reconnectionInstance = -1;
+            }
         }
 
         public static void Ping(Packet packet)
@@ -2884,7 +2890,7 @@ namespace H3MP.Networking
                     FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
                     instanceButton.SetButton();
                     instanceButton.MaxPointingRange = 5;
-                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(TNHInstance.instance); });
+                    instanceButton.Button.onClick.AddListener(() => { Mod.OnTNHInstanceClicked(TNHInstance.instance); });
 
                     Mod.joinTNHInstances.Add(TNHInstance.instance, newInstance);
                 }

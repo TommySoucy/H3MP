@@ -42,7 +42,7 @@ namespace H3MP
 
         // Assets
         public static JObject config;
-        public GameObject TNHMenuPrefab;
+        public static GameObject TNHMenuPrefab;
         public static GameObject TNHStartEquipButtonPrefab;
         public static GameObject playerPrefab;
         public static Material reticleFriendlyContactArrowMat;
@@ -688,7 +688,7 @@ namespace H3MP
             Logger.LogInfo("Config loaded");
         }
 
-        public void InitTNHMenu()
+        public static void InitTNHMenu()
         {
             TNHMenu = Instantiate(TNHMenuPrefab, new Vector3(-2.4418f, 1.04f, 6.2977f), Quaternion.Euler(0, 270, 0));
 
@@ -1217,16 +1217,12 @@ namespace H3MP
             }
         }
 
-        private void OnHostClicked()
+        public static void OnHostClicked()
         {
             if(managerObject != null)
             {
                 return;
             }
-
-            Logger.LogInfo("Host button clicked");
-            //hostButton.GetComponent<BoxCollider>().enabled = false;
-            //hostButton.transform.GetChild(0).GetComponent<Text>().color = Color.gray;
 
             //Server.IP = config["IP"].ToString();
             CreateManagerObject(true);
@@ -1236,7 +1232,7 @@ namespace H3MP
             // TODO: Customization: Should probably have an event for connection so other mods can do things like we do below
             if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
-                Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
+                LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 InitTNHMenu();
             }
 
@@ -1269,16 +1265,16 @@ namespace H3MP
             //mainStatusText.color = Color.white;
         }
 
-        private void OnConnectClicked()
+        public static void OnConnectClicked()
         {
             if (managerObject != null)
             {
                 return;
             }
 
-            if (Mod.config["IP"].ToString().Equals(""))
+            if (config["IP"].ToString().Equals(""))
             {
-                Mod.LogError("Attempted to connect to server but no IP set in config!");
+                LogError("Attempted to connect to server but no IP set in config!");
                 return;
             }
 
@@ -1292,7 +1288,7 @@ namespace H3MP
 
             if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
-                Logger.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
+                LogInfo("Just connected in TNH lobby, initializing H3MP menu");
                 InitTNHMenu();
             }
 
@@ -1329,7 +1325,7 @@ namespace H3MP
             TNHStatusText.color = Color.blue;
         }
 
-        private void OnTNHJoinClicked()
+        private static void OnTNHJoinClicked()
         {
             TNHMenuPages[0].SetActive(false);
             TNHMenuPages[2].SetActive(true);
@@ -1337,14 +1333,14 @@ namespace H3MP
             TNHStatusText.color = Color.blue;
         }
 
-        private void OnTNHLPJCheckClicked()
+        private static void OnTNHLPJCheckClicked()
         {
             TNHLPJCheckMark.SetActive(!TNHLPJCheckMark.activeSelf);
 
             TNHMenuLPJ = TNHLPJCheckMark.activeSelf;
         }
 
-        private void OnTNHHostOnDeathSpectateClicked()
+        private static void OnTNHHostOnDeathSpectateClicked()
         {
             TNHHostOnDeathSpectateCheckMark.SetActive(!TNHHostOnDeathSpectateCheckMark.activeSelf);
             TNHHostOnDeathLeaveCheckMark.SetActive(!TNHHostOnDeathSpectateCheckMark.activeSelf);
@@ -1352,7 +1348,7 @@ namespace H3MP
             TNHOnDeathSpectate = TNHHostOnDeathSpectateCheckMark.activeSelf;
         }
 
-        private void OnTNHHostOnDeathLeaveClicked()
+        private static void OnTNHHostOnDeathLeaveClicked()
         {
             TNHHostOnDeathLeaveCheckMark.SetActive(!TNHHostOnDeathLeaveCheckMark.activeSelf);
             TNHHostOnDeathSpectateCheckMark.SetActive(!TNHHostOnDeathLeaveCheckMark.activeSelf);
@@ -1381,7 +1377,7 @@ namespace H3MP
             TNHStatusText.color = Color.green;
         }
 
-        private void OnTNHHostCancelClicked()
+        private static void OnTNHHostCancelClicked()
         {
             TNHMenuPages[0].SetActive(true);
             TNHMenuPages[1].SetActive(false);
@@ -1390,7 +1386,7 @@ namespace H3MP
             TNHStatusText.color = Color.red;
         }
 
-        private void OnTNHJoinCancelClicked()
+        private static void OnTNHJoinCancelClicked()
         {
             TNHMenuPages[0].SetActive(true);
             TNHMenuPages[2].SetActive(false);
@@ -1400,7 +1396,7 @@ namespace H3MP
             TNHStatusText.color = Color.red;
         }
 
-        private void OnTNHJoinOnDeathSpectateClicked()
+        private static void OnTNHJoinOnDeathSpectateClicked()
         {
             TNHJoinOnDeathSpectateCheckMark.SetActive(!TNHJoinOnDeathSpectateCheckMark.activeSelf);
             TNHJoinOnDeathLeaveCheckMark.SetActive(!TNHJoinOnDeathSpectateCheckMark.activeSelf);
@@ -1408,7 +1404,7 @@ namespace H3MP
             TNHOnDeathSpectate = TNHJoinOnDeathSpectateCheckMark.activeSelf;
         }
 
-        private void OnTNHJoinOnDeathLeaveClicked()
+        private static void OnTNHJoinOnDeathLeaveClicked()
         {
             TNHJoinOnDeathLeaveCheckMark.SetActive(!TNHJoinOnDeathLeaveCheckMark.activeSelf);
             TNHJoinOnDeathSpectateCheckMark.SetActive(!TNHJoinOnDeathLeaveCheckMark.activeSelf);
@@ -1416,7 +1412,7 @@ namespace H3MP
             TNHOnDeathSpectate = TNHJoinOnDeathSpectateCheckMark.activeSelf;
         }
 
-        private void OnTNHJoinConfirmClicked()
+        private static void OnTNHJoinConfirmClicked()
         {
             if (waitingForTNHHost)
             {
@@ -1450,7 +1446,7 @@ namespace H3MP
             }
         }
 
-        private void PopulateInstancesList()
+        private static void PopulateInstancesList()
         {
             if (joinTNHInstances == null)
             {
@@ -1485,7 +1481,7 @@ namespace H3MP
             }
         }
 
-        public void OnTNHInstanceClicked(int instance)
+        public static void OnTNHInstanceClicked(int instance)
         {
             // Handle joining instance success/fail
             if (SetTNHInstance(GameManager.TNHInstances[instance]))
@@ -1502,7 +1498,7 @@ namespace H3MP
             }
         }
 
-        private void OnTNHDisconnectClicked()
+        private static void OnTNHDisconnectClicked()
         {
             TNHMenuPages[4].SetActive(false);
             TNHMenuPages[0].SetActive(true);
@@ -1521,7 +1517,7 @@ namespace H3MP
             TNHStatusText.color = Color.red;
         }
 
-        private void OnTNHRequestHostClicked()
+        private static void OnTNHRequestHostClicked()
         {
             TNHMenuPages[0].SetActive(false);
             TNHMenuPages[5].SetActive(true);
@@ -1529,7 +1525,7 @@ namespace H3MP
             TNHStatusText.color = Color.blue;
         }
 
-        private void OnTNHRequestHostOnDeathSpectateClicked()
+        private static void OnTNHRequestHostOnDeathSpectateClicked()
         {
             TNHRequestHostOnDeathSpectateCheckMark.SetActive(!TNHRequestHostOnDeathSpectateCheckMark.activeSelf);
             TNHRequestHostOnDeathLeaveCheckMark.SetActive(!TNHRequestHostOnDeathSpectateCheckMark.activeSelf);
@@ -1537,7 +1533,7 @@ namespace H3MP
             TNHRequestHostOnDeathSpectate = TNHRequestHostOnDeathSpectateCheckMark.activeSelf;
         }
 
-        private void OnTNHRequestHostOnDeathLeaveClicked()
+        private static void OnTNHRequestHostOnDeathLeaveClicked()
         {
             TNHRequestHostOnDeathLeaveCheckMark.SetActive(!TNHRequestHostOnDeathLeaveCheckMark.activeSelf);
             TNHRequestHostOnDeathSpectateCheckMark.SetActive(!TNHRequestHostOnDeathLeaveCheckMark.activeSelf);
@@ -1545,7 +1541,7 @@ namespace H3MP
             TNHRequestHostOnDeathSpectate = TNHRequestHostOnDeathSpectateCheckMark.activeSelf;
         }
 
-        private void OnTNHRequestHostConfirmClicked()
+        private static void OnTNHRequestHostConfirmClicked()
         {
             TNHMenuPages[5].SetActive(false);
             TNHMenuPages[6].SetActive(true);
@@ -1584,7 +1580,7 @@ namespace H3MP
             }
         }
 
-        private void OnReceiveTNHHost(int host, ref bool confirmed)
+        private static void OnReceiveTNHHost(int host, ref bool confirmed)
         {
             if (confirmed)
             {
@@ -1603,7 +1599,7 @@ namespace H3MP
             }
         }
 
-        private void OnSpectatorHostGiveUpOrdered()
+        private static void OnSpectatorHostGiveUpOrdered()
         {
             if (waitingForTNHHost)
             {
@@ -1652,7 +1648,7 @@ namespace H3MP
             GameManager.controlledSpectatorHost = -1;
         }
 
-        private void OnTNHRequestHostCancelClicked()
+        private static void OnTNHRequestHostCancelClicked()
         {
             TNHMenuPages[0].SetActive(true);
             TNHMenuPages[5].SetActive(false);
@@ -1661,7 +1657,7 @@ namespace H3MP
             TNHStatusText.color = Color.red;
         }
 
-        private void OnTNHRequestHostWaitingCancelClicked()
+        private static void OnTNHRequestHostWaitingCancelClicked()
         {
             if (waitingForTNHHost)
             {
@@ -1890,7 +1886,7 @@ namespace H3MP
             }
         }
 
-        private bool SetTNHInstance(TNHInstance instance)
+        private static bool SetTNHInstance(TNHInstance instance)
         {
             if (currentTNHUIManager != null)
             {
@@ -1969,7 +1965,7 @@ namespace H3MP
             return true;
         }
 
-        public void CreateManagerObject(bool host = false)
+        public static void CreateManagerObject(bool host = false)
         {
             if (managerObject == null)
             {

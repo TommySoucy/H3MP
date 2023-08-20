@@ -128,41 +128,7 @@ namespace H3MP.Scripts
 
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
-            Mod.modInstance.CreateManagerObject(true);
-
-            //Server.IP = Mod.config["IP"].ToString();
-            Server.Start((ushort)Mod.config["MaxClientCount"], (ushort)Mod.config["Port"]);
-
-            if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
-            {
-                Mod.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
-                Mod.modInstance.InitTNHMenu();
-            }
-
-            GameManager.firstPlayerInSceneInstance = true;
-            
-            // Force player body to Default if don't have one yet
-            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
-                && GameManager.currentPlayerBody == null
-                && !GameManager.playerModelAwaitingInstantiation)
-            {
-                GameManager.playerPrefabID = "Default";
-                for (int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
-                {
-                    if (GameManager.playerPrefabIDs[i].Equals(GameManager.playerPrefabID))
-                    {
-                        GameManager.playerPrefabIndex = i;
-                        break;
-                    }
-                }
-
-                GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
-
-                if (BodyWristMenuSection.playerBodyText != null)
-                {
-                    BodyWristMenuSection.playerBodyText.text = "Body: Default";
-                }
-            }
+            Mod.OnHostClicked();
 
             // Switch page
             SetPage(1);
@@ -179,48 +145,7 @@ namespace H3MP.Scripts
 
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
-            if (Mod.config["IP"].ToString().Equals(""))
-            {
-                Mod.LogError("Attempted to connect to server but no IP set in config!");
-                return;
-            }
-
-            Mod.modInstance.CreateManagerObject();
-
-            Client client = Mod.managerObject.AddComponent<Client>();
-            client.IP = Mod.config["IP"].ToString();
-            client.port = (ushort)Mod.config["Port"];
-
-            client.ConnectToServer();
-
-            if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
-            {
-                Mod.LogInfo("Just connected in TNH lobby, initializing H3MP menu");
-                Mod.modInstance.InitTNHMenu();
-            }
-
-            // Force player body to Default if don't have one yet
-            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
-                && GameManager.currentPlayerBody == null
-                && !GameManager.playerModelAwaitingInstantiation)
-            {
-                GameManager.playerPrefabID = "Default";
-                for (int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
-                {
-                    if (GameManager.playerPrefabIDs[i].Equals(GameManager.playerPrefabID))
-                    {
-                        GameManager.playerPrefabIndex = i;
-                        break;
-                    }
-                }
-
-                GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
-
-                if (BodyWristMenuSection.playerBodyText != null)
-                {
-                    BodyWristMenuSection.playerBodyText.text = "Body: Default";
-                }
-            }
+            Mod.OnConnectClicked();
 
             // Switch page
             SetPage(2);

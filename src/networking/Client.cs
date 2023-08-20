@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -824,19 +825,27 @@ namespace H3MP.Networking
             {
                 isConnected = false;
 
+                bool reconnect = false;
+                GameManager.reconnectionInstance = -1;
                 switch (code)
                 {
                     case 0:
-                        Mod.LogInfo("Disconnecting from server.", false);
+                        Mod.LogWarning("Disconnecting from server.");
                         break;
                     case 1:
-                        Mod.LogInfo("Disconnecting from server, end of stream.", false);
+                        Mod.LogWarning("Connection to server lost, end of stream. Attempting to reconnect...");
+                        GameManager.reconnectionInstance = GameManager.instance;
+                        reconnect = true;
                         break;
                     case 2:
-                        Mod.LogInfo("Disconnecting from server, TCP forced.", false);
+                        Mod.LogWarning("Connection to server lost, TCP forced. Attempting to reconnect...");
+                        GameManager.reconnectionInstance = GameManager.instance;
+                        reconnect = true;
                         break;
                     case 3:
-                        Mod.LogInfo("Disconnecting from server, UDP forced.", false);
+                        Mod.LogWarning("Connection to server lost, UDP forced. Attempting to reconnect...");
+                        GameManager.reconnectionInstance = GameManager.instance;
+                        reconnect = true;
                         break;
                     case 4:
                         Mod.LogWarning("Connection to server failed, timed out.");
@@ -881,6 +890,11 @@ namespace H3MP.Networking
                     OnDisconnect();
                 }
                 Mod.Reset();
+
+                if (reconnect)
+                {
+                    Mod.OnConnectClicked();
+                }
             }
         }
 

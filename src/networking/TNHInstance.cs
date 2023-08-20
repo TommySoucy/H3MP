@@ -172,7 +172,7 @@ namespace H3MP.Networking
                 FVRPointableButton instanceButton = newInstance.AddComponent<FVRPointableButton>();
                 instanceButton.SetButton();
                 instanceButton.MaxPointingRange = 5;
-                instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance); });
+                instanceButton.Button.onClick.AddListener(() => { Mod.OnTNHInstanceClicked(instance); });
 
                 Mod.joinTNHInstances.Add(instance, newInstance);
             }

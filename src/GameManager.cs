@@ -58,6 +58,7 @@ namespace H3MP
         public static bool resetSpectatorHost;
         public static bool instanceBringItems;
         public static long ping = -1;
+        public static int reconnectionInstance;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -1082,7 +1083,7 @@ namespace H3MP
                     FVRPointableButton instanceButton = newInstanceElement.AddComponent<FVRPointableButton>();
                     instanceButton.SetButton();
                     instanceButton.MaxPointingRange = 5;
-                    instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(freeInstance); });
+                    instanceButton.Button.onClick.AddListener(() => { Mod.OnTNHInstanceClicked(freeInstance); });
 
                     Mod.joinTNHInstances.Add(freeInstance, newInstanceElement);
                 }
@@ -1147,7 +1148,7 @@ namespace H3MP
                 FVRPointableButton instanceButton = newInstanceElement.AddComponent<FVRPointableButton>();
                 instanceButton.SetButton();
                 instanceButton.MaxPointingRange = 5;
-                instanceButton.Button.onClick.AddListener(() => { Mod.modInstance.OnTNHInstanceClicked(instance.instance); });
+                instanceButton.Button.onClick.AddListener(() => { Mod.OnTNHInstanceClicked(instance.instance); });
 
                 Mod.joinTNHInstances.Add(instance.instance, newInstanceElement);
             }
