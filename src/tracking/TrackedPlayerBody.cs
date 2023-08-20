@@ -15,8 +15,6 @@ namespace H3MP.Tracking
         {
             base.Awake();
 
-            GameManager.OnSceneLeft += OnSceneLeft;
-            GameManager.OnInstanceJoined += OnInstanceJoined;
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
         }
 
@@ -150,8 +148,6 @@ namespace H3MP.Tracking
 
         protected override void OnDestroy()
         {
-            GameManager.OnSceneLeft -= OnSceneLeft;
-            GameManager.OnInstanceJoined -= OnInstanceJoined;
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
 
             for (int i = 0; i < physicalPlayerBody.hitboxes.Length; ++i)
@@ -160,24 +156,6 @@ namespace H3MP.Tracking
             }
 
             base.OnDestroy();
-        }
-
-        protected virtual void OnSceneLeft(string scene, string destination) 
-        {
-            // We want to bring our body with us across scenes no matter what
-            if(data.controller == GameManager.ID)
-            {
-                data.SetScene(destination, true);
-            }
-        }
-
-        protected virtual void OnInstanceJoined(int instance, int source)
-        {
-            // We want to bring our body with us across instances no matter what
-            if (data.controller == GameManager.ID)
-            {
-                data.SetInstance(instance, true);
-            }
         }
     }
 }

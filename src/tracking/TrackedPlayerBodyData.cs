@@ -167,8 +167,9 @@ namespace H3MP.Tracking
 
             if (newController != initTracker)
             {
-                // A player body should never have its controller changed. If it changes it is because a player disconnected
-                // and their objects' control was ditributed, or something went very wrong
+                // A player body should never have its controller changed
+                // H3MP can attempt a change if controller changes scene, destroying the body with give control set to true for example
+                // We just want to destroy it
                 if(physical == null)
                 {
                     ServerSend.DestroyObject(trackedID);
