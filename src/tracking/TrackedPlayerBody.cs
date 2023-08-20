@@ -165,8 +165,6 @@ namespace H3MP.Tracking
         protected virtual void OnSceneLeft(string scene, string destination) 
         {
             // We want to bring our body with us across scenes no matter what
-            // In SP, this is handled by simply having bodies in DontDestroyOnLoad
-            // In MP, we need to update data and let the network know of the change
             if(data.controller == GameManager.ID)
             {
                 data.SetScene(destination, true);
@@ -176,8 +174,6 @@ namespace H3MP.Tracking
         protected virtual void OnInstanceJoined(int instance, int source)
         {
             // We want to bring our body with us across instances no matter what
-            // In SP, this is handled by simply having bodies in DontDestroyOnLoad
-            // In MP, we need to update data and let the network know of the change
             if (data.controller == GameManager.ID)
             {
                 data.SetInstance(instance, true);

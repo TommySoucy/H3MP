@@ -1256,7 +1256,6 @@ namespace H3MP
                 }
 
                 GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
-                DontDestroyOnLoad(GameManager.currentPlayerBody.gameObject);
 
                 if (BodyWristMenuSection.playerBodyText != null)
                 {
@@ -1311,7 +1310,6 @@ namespace H3MP
                 }
 
                 GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
-                DontDestroyOnLoad(GameManager.currentPlayerBody.gameObject);
 
                 if (BodyWristMenuSection.playerBodyText != null)
                 {

@@ -401,7 +401,6 @@ namespace H3MP
 
             currentPlayerBody = Instantiate(prefab).GetComponent<PlayerBody>();
             playerModelAwaitingInstantiation = false;
-            DontDestroyOnLoad(currentPlayerBody.gameObject);
         }
 
         public static void Reset()
@@ -878,7 +877,7 @@ namespace H3MP
                 }
             }
 
-            if (previous.Equals(playerPrefabID))
+            if (previous.Equals(playerPrefabID) && currentPlayerBody != null)
             {
                 return;
             }
@@ -888,11 +887,14 @@ namespace H3MP
                 Destroy(currentPlayerBody.gameObject);
             }
 
-            bool spawned = false;
+            if (playerPrefabID.Equals("None"))
+            {
+                return;
+            }
+
             if (playerPrefabID.Equals("Default"))
             {
                 currentPlayerBody = Instantiate(playerPrefabs["Default"] as GameObject).GetComponent<PlayerBody>();
-                spawned = true;
             }
             else // Not default
             {
@@ -922,14 +924,7 @@ namespace H3MP
                     Mod.LogWarning("Attempt to set player prefab to \""+ playerPrefabID+"\" failed, could not obtain prefab, using default");
                     playerPrefabID = "Default";
                     currentPlayerBody = Instantiate(playerPrefabs[playerPrefabID] as GameObject).GetComponent<PlayerBody>();
-                    spawned = true;
                 }
-            }
-
-            // If already spawned, set to dont destroy on load right away
-            if (spawned)
-            {
-                DontDestroyOnLoad(currentPlayerBody.gameObject);
             }
 
             // Set option text
@@ -1547,10 +1542,10 @@ namespace H3MP
 
         public static void OnSceneLoadedVR(bool loading)
         {
-            // Return right away if we don't have server or client running
-            if(Mod.managerObject == null)
+            if (loading) // Just started loading
             {
-                if (loading)
+                Mod.LogInfo("Switching scene, from " + GameManager.scene + " to " + LoadLevelBeginPatch.loadingLevel, false);
+                if (Mod.managerObject == null)
                 {
                     sceneLoading = true;
                     instanceAtSceneLoadStart = instance;
@@ -1559,267 +1554,273 @@ namespace H3MP
                 }
                 else
                 {
-                    GameManager.scene = LoadLevelBeginPatch.loadingLevel;
-                    sceneLoading = false;
-                }
-                return;
-            }
+                    sceneLoading = true;
+                    instanceAtSceneLoadStart = instance;
+                    sceneAtSceneLoadStart = GameManager.scene;
+                    connectedAtLoadStart = true;
 
-            if (loading) // Just started loading
-            {
-                Mod.LogInfo("Switching scene, from " + GameManager.scene + " to " + LoadLevelBeginPatch.loadingLevel, false);
-                sceneLoading = true;
-                instanceAtSceneLoadStart = instance;
-                sceneAtSceneLoadStart = GameManager.scene;
-                connectedAtLoadStart = true;
+                    ++giveControlOfDestroyed;
 
-                ++giveControlOfDestroyed;
+                    ++Mod.skipAllInstantiates;
 
-                ++Mod.skipAllInstantiates;
-
-                if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
-                {
-                    if (relevantInstances0.TryGetValue(instance, out List<int> relevantPlayers))
+                    if (playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> relevantInstances0))
                     {
-                        playersAtLoadStart = relevantPlayers;
+                        if (relevantInstances0.TryGetValue(instance, out List<int> relevantPlayers))
+                        {
+                            playersAtLoadStart = relevantPlayers;
+                        }
+                        else
+                        {
+                            playersAtLoadStart = null;
+                        }
                     }
                     else
                     {
                         playersAtLoadStart = null;
                     }
-                }
-                else
-                {
-                    playersAtLoadStart = null;
-                }
 
-                // Get out of TNH instance 
-                // This makes assumption that player must go through main menu to leave TNH game or lobby
-                // They cannot go from TNH game or lobby to a scene other than main menu
-                //TODO: If this is not always true, will have to handle by "if we leave a TNH scene" instead of "if we go into main menu"
-                if (LoadLevelBeginPatch.loadingLevel.Equals("MainMenu3") && Mod.currentTNHInstance != null) 
-                {
-                    // The destruction of items as we leave the level with giveControlOfDestroyed to true will handle the handover of 
-                    // item and sosig control. SetInstance will handle the update of activeInstances and TNHInstances
-                    SetInstance(0);
-                    if (Mod.currentlyPlayingTNH)
+                    // Get out of TNH instance 
+                    // This makes assumption that player must go through main menu to leave TNH game or lobby
+                    // They cannot go from TNH game or lobby to a scene other than main menu
+                    //TODO: If this is not always true, will have to handle by "if we leave a TNH scene" instead of "if we go into main menu"
+                    if (LoadLevelBeginPatch.loadingLevel.Equals("MainMenu3") && Mod.currentTNHInstance != null)
                     {
-                        Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID, ThreadManager.host);
+                        // The destruction of items as we leave the level with giveControlOfDestroyed to true will handle the handover of 
+                        // item and sosig control. SetInstance will handle the update of activeInstances and TNHInstances
+                        SetInstance(0);
+                        if (Mod.currentlyPlayingTNH)
+                        {
+                            Mod.currentTNHInstance.RemoveCurrentlyPlaying(true, ID, ThreadManager.host);
+                            Mod.currentlyPlayingTNH = false;
+                        }
+                        Mod.currentTNHInstance = null;
+                        Mod.TNHSpectating = false;
+                        GM.CurrentPlayerBody.EnableHands();
                         Mod.currentlyPlayingTNH = false;
                     }
-                    Mod.currentTNHInstance = null;
-                    Mod.TNHSpectating = false;
-                    GM.CurrentPlayerBody.EnableHands();
-                    Mod.currentlyPlayingTNH = false;
-                }
-                if (LoadLevelBeginPatch.loadingLevel.Equals("TakeAndHold_Lobby_2") && Mod.currentTNHInstance != null) 
-                {
-                    Mod.TNHSpectating = false;
-                    GM.CurrentPlayerBody.EnableHands();
-                }
-
-                // Check if there are other players where we are going to prevent things like prefab spawns
-                if (playersByInstanceByScene.TryGetValue(LoadLevelBeginPatch.loadingLevel, out Dictionary<int, List<int>> relevantInstances))
-                {
-                    if (relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
+                    if (LoadLevelBeginPatch.loadingLevel.Equals("TakeAndHold_Lobby_2") && Mod.currentTNHInstance != null)
                     {
-                        controlOverride = relevantPlayers.Count == 0;
-                        firstPlayerInSceneInstance = controlOverride;
+                        Mod.TNHSpectating = false;
+                        GM.CurrentPlayerBody.EnableHands();
+                    }
+
+                    // Check if there are other players where we are going to prevent things like prefab spawns
+                    if (playersByInstanceByScene.TryGetValue(LoadLevelBeginPatch.loadingLevel, out Dictionary<int, List<int>> relevantInstances))
+                    {
+                        if (relevantInstances.TryGetValue(instance, out List<int> relevantPlayers))
+                        {
+                            controlOverride = relevantPlayers.Count == 0;
+                            firstPlayerInSceneInstance = controlOverride;
+                        }
+                        else
+                        {
+                            controlOverride = true;
+                            firstPlayerInSceneInstance = true;
+                        }
                     }
                     else
                     {
                         controlOverride = true;
                         firstPlayerInSceneInstance = true;
                     }
-                }
-                else
-                {
-                    controlOverride = true;
-                    firstPlayerInSceneInstance = true;
-                }
 
-                // Clear any of our tracked items that have not awoken in the previous scene
-                ClearUnawoken();
+                    // Clear any of our tracked items that have not awoken in the previous scene
+                    ClearUnawoken();
 
-                // Raise event
-                if(OnSceneLeft != null)
-                {
-                    OnSceneLeft(sceneAtSceneLoadStart, LoadLevelBeginPatch.loadingLevel);
+                    // Raise event
+                    if (OnSceneLeft != null)
+                    {
+                        OnSceneLeft(sceneAtSceneLoadStart, LoadLevelBeginPatch.loadingLevel);
+                    }
                 }
             }
             else // Finished loading
             {
-                scene = LoadLevelBeginPatch.loadingLevel;
                 Mod.LogInfo("Arrived in scene: " + scene, false);
-                sceneLoading = false;
-
-                // Send an update to let others know we changed scene
-                if (ThreadManager.host)
+                if (Mod.managerObject == null)
                 {
-                    // Send the host's scene to clients
-                    ServerSend.PlayerScene(0, LoadLevelBeginPatch.loadingLevel);
+                    sceneLoading = true;
+                    instanceAtSceneLoadStart = instance;
+                    sceneAtSceneLoadStart = GameManager.scene;
+                    connectedAtLoadStart = false;
                 }
                 else
                 {
-                    // Send to server, host will update and then send to all other clients
-                    ClientSend.PlayerScene(LoadLevelBeginPatch.loadingLevel);
-                }
+                    scene = LoadLevelBeginPatch.loadingLevel;
+                    sceneLoading = false;
 
-                if (connectedAtLoadStart)
-                {
-                    --Mod.skipAllInstantiates;
-
-                    --giveControlOfDestroyed;
-                }
-
-                // Update players' active state depending on which are in the same scene/instance
-                playersPresent.Clear();
-                if (!nonSynchronizedScenes.ContainsKey(scene))
-                {
-                    controlOverride = true;
-                    firstPlayerInSceneInstance = true;
-                    foreach (KeyValuePair<int, PlayerManager> player in players)
+                    // Send an update to let others know we changed scene
+                    if (ThreadManager.host)
                     {
-                        if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
-                        {
-                            playersPresent.Add(player.Key);
-
-                            // NOTE: Calculating control override when we finish loading here is necessary
-                            // Consider the server loading into a scene. When they started loading, they thought they would be the first in the scene, controlOverride = true.
-                            // Another client, loads into that scene, track their items, the server accepts them since that client was the first in scene.
-                            // Then server arrives, tracks their own init scene items and sends to clients. Reinitializing the scene, causing double instantiation.
-                            // Unless we calculate it here again, at which point the server will know someone else is in their new scene, preventing to track their own items.
-
-                            // NOTE: See note above, this also means that scenes that base their initialization on some other criteria will be required to wait 
-                            // until we are done loading before spawning any tracked objects, as they will otherwise be destroyed if they did not have control override.
-                            // This is the case for TNH, see TNH_ManagerPatch.DelayedInitPrefix, where we prevent it until done loading, even if in control of the TNH instance.
-                            controlOverride = false;
-                            firstPlayerInSceneInstance = false;
-
-                            if (ThreadManager.host)
-                            {
-                                // Request most up to date objects from the client
-                                // We do this because we may not have the most up to date version of objects since
-                                // clients only send updated data when there are others in their scene
-                                // But we need the most of to date data to instantiate the object
-
-                                if (Server.clientsWaitingUpDate.TryGetValue(player.Key, out List<int> waitingClients))
-                                {
-                                    waitingClients.Add(0);
-                                }
-                                else
-                                {
-                                    Server.clientsWaitingUpDate.Add(player.Key, new List<int> { 0 });
-                                }
-                                if (Server.loadingClientsWaitingFrom.TryGetValue(0, out List<int> waitingFor))
-                                {
-                                    waitingFor.Add(player.Key);
-                                }
-                                else
-                                {
-                                    Server.loadingClientsWaitingFrom.Add(0, new List<int>() { player.Key });
-                                }
-                                ServerSend.RequestUpToDateObjects(player.Key, true, 0);
-                            }
-                        }
-
-                        UpdatePlayerHidden(player.Value);
+                        // Send the host's scene to clients
+                        ServerSend.PlayerScene(0, LoadLevelBeginPatch.loadingLevel);
+                    }
+                    else
+                    {
+                        // Send to server, host will update and then send to all other clients
+                        ClientSend.PlayerScene(LoadLevelBeginPatch.loadingLevel);
                     }
 
-                    // Only ever want to track objects if we were connected before we started loading
-                    controlOverride &= connectedAtLoadStart;
-                    firstPlayerInSceneInstance &= connectedAtLoadStart;
-
-                    // Just arrived in syncable scene, sync items with server/clients
-                    // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
-                    inPostSceneLoadTrack = true;
-                    SyncTrackedObjects();
-                    inPostSceneLoadTrack = false;
-
-                    controlOverride = false;
-
-                    // Instantiate any object we control that we have not yet instantiated
-                    // This could happen if we are given control of an objects while loading
-                    for (int i = 0; i < objects.Count; ++i)
+                    if (connectedAtLoadStart)
                     {
-                        if (objects[i].physical == null && !objects[i].awaitingInstantiation)
-                        {
-                            objects[i].awaitingInstantiation = true;
-                            AnvilManager.Run(objects[i].Instantiate());
-                        }
+                        --Mod.skipAllInstantiates;
+
+                        --giveControlOfDestroyed;
                     }
 
-                    if (Mod.spectatorHostWaitingForTNHSetup)
+                    // Update players' active state depending on which are in the same scene/instance
+                    playersPresent.Clear();
+                    if (!nonSynchronizedScenes.ContainsKey(scene))
                     {
-                        if (scene.Equals("TakeAndHold_Lobby_2"))
+                        controlOverride = true;
+                        firstPlayerInSceneInstance = true;
+                        foreach (KeyValuePair<int, PlayerManager> player in players)
                         {
-                            if (spectatorHostControlledBy != -1)
+                            if (player.Value.scene.Equals(scene) && player.Value.instance == instance)
                             {
-                                Mod.OnTNHHostClicked();
-                                Mod.TNHOnDeathSpectate = Mod.TNHRequestHostOnDeathSpectate;
-                                Mod.OnTNHHostConfirmClicked();
+                                playersPresent.Add(player.Key);
+
+                                // NOTE: Calculating control override when we finish loading here is necessary
+                                // Consider the server loading into a scene. When they started loading, they thought they would be the first in the scene, controlOverride = true.
+                                // Another client, loads into that scene, track their items, the server accepts them since that client was the first in scene.
+                                // Then server arrives, tracks their own init scene items and sends to clients. Reinitializing the scene, causing double instantiation.
+                                // Unless we calculate it here again, at which point the server will know someone else is in their new scene, preventing to track their own items.
+
+                                // NOTE: See note above, this also means that scenes that base their initialization on some other criteria will be required to wait 
+                                // until we are done loading before spawning any tracked objects, as they will otherwise be destroyed if they did not have control override.
+                                // This is the case for TNH, see TNH_ManagerPatch.DelayedInitPrefix, where we prevent it until done loading, even if in control of the TNH instance.
+                                controlOverride = false;
+                                firstPlayerInSceneInstance = false;
 
                                 if (ThreadManager.host)
                                 {
-                                    ServerSend.TNHSpectatorHostReady(spectatorHostControlledBy, instance);
-                                }
-                                else
-                                {
-                                    Mod.spectatorHostWaitingForTNHInstance = true;
+                                    // Request most up to date objects from the client
+                                    // We do this because we may not have the most up to date version of objects since
+                                    // clients only send updated data when there are others in their scene
+                                    // But we need the most of to date data to instantiate the object
+
+                                    if (Server.clientsWaitingUpDate.TryGetValue(player.Key, out List<int> waitingClients))
+                                    {
+                                        waitingClients.Add(0);
+                                    }
+                                    else
+                                    {
+                                        Server.clientsWaitingUpDate.Add(player.Key, new List<int> { 0 });
+                                    }
+                                    if (Server.loadingClientsWaitingFrom.TryGetValue(0, out List<int> waitingFor))
+                                    {
+                                        waitingFor.Add(player.Key);
+                                    }
+                                    else
+                                    {
+                                        Server.loadingClientsWaitingFrom.Add(0, new List<int>() { player.Key });
+                                    }
+                                    ServerSend.RequestUpToDateObjects(player.Key, true, 0);
                                 }
                             }
 
-                            Mod.spectatorHostWaitingForTNHSetup = false;
+                            UpdatePlayerHidden(player.Value);
                         }
-                        else if (scene.Equals("MainMenu3"))
+
+                        // Only ever want to track objects if we were connected before we started loading
+                        controlOverride &= connectedAtLoadStart;
+                        firstPlayerInSceneInstance &= connectedAtLoadStart;
+
+                        // Just arrived in syncable scene, sync items with server/clients
+                        // NOTE THAT THIS IS DEPENDENT ON US HAVING UPDATED WHICH OTHER PLAYERS ARE VISIBLE LIKE WE DO IN THE ABOVE LOOP
+                        inPostSceneLoadTrack = true;
+                        SyncTrackedObjects();
+                        inPostSceneLoadTrack = false;
+
+                        controlOverride = false;
+
+                        // Instantiate any object we control that we have not yet instantiated
+                        // This could happen if we are given control of an objects while loading
+                        for (int i = 0; i < objects.Count; ++i)
                         {
-                            SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
-                            Mod.spectatorHostWaitingForTNHSetup = true;
+                            if (objects[i].physical == null && !objects[i].awaitingInstantiation)
+                            {
+                                objects[i].awaitingInstantiation = true;
+                                AnvilManager.Run(objects[i].Instantiate());
+                            }
                         }
-                        else
+
+                        if (Mod.spectatorHostWaitingForTNHSetup)
+                        {
+                            if (scene.Equals("TakeAndHold_Lobby_2"))
+                            {
+                                if (spectatorHostControlledBy != -1)
+                                {
+                                    Mod.OnTNHHostClicked();
+                                    Mod.TNHOnDeathSpectate = Mod.TNHRequestHostOnDeathSpectate;
+                                    Mod.OnTNHHostConfirmClicked();
+
+                                    if (ThreadManager.host)
+                                    {
+                                        ServerSend.TNHSpectatorHostReady(spectatorHostControlledBy, instance);
+                                    }
+                                    else
+                                    {
+                                        Mod.spectatorHostWaitingForTNHInstance = true;
+                                    }
+                                }
+
+                                Mod.spectatorHostWaitingForTNHSetup = false;
+                            }
+                            else if (scene.Equals("MainMenu3"))
+                            {
+                                SteamVR_LoadLevel.Begin("TakeAndHold_Lobby_2", false, 0.5f, 0f, 0f, 0f, 1f);
+                                Mod.spectatorHostWaitingForTNHSetup = true;
+                            }
+                            else
+                            {
+                                SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
+                                Mod.spectatorHostWaitingForTNHSetup = true;
+                            }
+                        }
+                    }
+                    else // New scene not syncable, ensure all players are disabled regardless of scene
+                    {
+                        foreach (KeyValuePair<int, PlayerManager> player in players)
+                        {
+                            UpdatePlayerHidden(player.Value);
+                        }
+                    }
+
+                    // Set max health based on setting
+                    H3MPWristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
+
+                    // Spectator host stuff
+                    if (resetSpectatorHost)
+                    {
+                        if (!GameManager.scene.Equals("MainMenu3"))
                         {
                             SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
-                            Mod.spectatorHostWaitingForTNHSetup = true;
+                        }
+
+                        resetSpectatorHost = false;
+                    }
+
+                    // Raise event
+                    if (OnSceneJoined != null)
+                    {
+                        OnSceneJoined(scene, sceneAtSceneLoadStart);
+                    }
+
+                    // Process list of objects we want to retrack
+                    for (int i = 0; i < retrack.Count; ++i)
+                    {
+                        if (retrack[i] != null)
+                        {
+                            SyncTrackedObjects(retrack[i].transform, true, null);
                         }
                     }
-                }
-                else // New scene not syncable, ensure all players are disabled regardless of scene
-                {
-                    foreach (KeyValuePair<int, PlayerManager> player in players)
-                    {
-                        UpdatePlayerHidden(player.Value);
-                    }
+                    retrack.Clear();
                 }
 
-                // Set max health based on setting
-                H3MPWristMenuSection.UpdateMaxHealth(scene, instance, -2, -1);
-
-                // Spectator host stuff
-                if (resetSpectatorHost)
-                {
-                    if (!GameManager.scene.Equals("MainMenu3"))
-                    {
-                        SteamVR_LoadLevel.Begin("MainMenu3", false, 0.5f, 0f, 0f, 0f, 1f);
-                    }
-
-                    resetSpectatorHost = false;
-                }
-
-                // Raise event
-                if (OnSceneJoined != null)
-                {
-                    OnSceneJoined(scene, sceneAtSceneLoadStart);
-                }
-
-                // Process list of objects we want to retrack
-                for(int i=0; i < retrack.Count; ++i)
-                {
-                    if(retrack[i] != null)
-                    {
-                        SyncTrackedObjects(retrack[i].transform, true, null);
-                    }
-                }
-                retrack.Clear();
+                Mod.LogInfo("Setting player prefab to " + playerPrefabID);
+                // Connected or not, upon arriving in the new scene, we want to set playerbody to selected option
+                SetPlayerPrefab(playerPrefabID);
             }
         }
 

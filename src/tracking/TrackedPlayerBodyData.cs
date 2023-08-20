@@ -128,7 +128,6 @@ namespace H3MP.Tracking
                 GameObject playerBodyObject = GameObject.Instantiate(playerPrefab);
                 --Mod.skipAllInstantiates;
                 awaitingInstantiation = false;
-                UnityEngine.Object.DontDestroyOnLoad(playerBodyObject);
                 physicalPlayerBody = playerBodyObject.AddComponent<TrackedPlayerBody>();
                 physical = physicalPlayerBody;
                 physicalPlayerBody.playerBodyData = this;
