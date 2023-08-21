@@ -2964,18 +2964,20 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TODO: // Use entry in buffsystems to check if controller or not
-            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
-            if (trackedSosig != null)
+            if(__instance.BuffSystems.Length >= 15 && __instance.BuffSystems[14] != null && int.TryParse(__instance.BuffSystems[14].name, out int parsed))
             {
-                bool runOriginal = trackedSosig.data.controller == GameManager.ID;
-                if (!runOriginal)
+                TrackedSosig trackedSosig = (TrackedSosig)TrackedObject.trackedReferences[parsed];
+                if (trackedSosig != null)
                 {
-                    // Call Sosig update methods we don't want to skip
-                    __instance.VaporizeUpdate();
-                    __instance.HeadIconUpdate();
+                    bool runOriginal = trackedSosig.data.controller == GameManager.ID;
+                    if (!runOriginal)
+                    {
+                        // Call Sosig update methods we don't want to skip
+                        __instance.VaporizeUpdate();
+                        __instance.HeadIconUpdate();
+                    }
+                    return runOriginal;
                 }
-                return runOriginal;
             }
             return true;
         }
@@ -2988,10 +2990,13 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
-            if (trackedSosig != null)
+            if (__instance.BuffSystems.Length >= 15 && __instance.BuffSystems[14] != null && int.TryParse(__instance.BuffSystems[14].name, out int parsed))
             {
-                return trackedSosig.data.controller == GameManager.ID;
+                TrackedSosig trackedSosig = (TrackedSosig)TrackedObject.trackedReferences[parsed];
+                if (trackedSosig != null)
+                {
+                    return trackedSosig.data.controller == GameManager.ID;
+                }
             }
             return true;
         }
@@ -3008,10 +3013,13 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
-            if (trackedSosig != null)
+            if (__instance.S.BuffSystems.Length >= 15 && __instance.S.BuffSystems[14] != null && int.TryParse(__instance.S.BuffSystems[14].name, out int parsed))
             {
-                return trackedSosig.data.controller == GameManager.ID;
+                TrackedSosig trackedSosig = (TrackedSosig)TrackedObject.trackedReferences[parsed];
+                if (trackedSosig != null)
+                {
+                    return trackedSosig.data.controller == GameManager.ID;
+                }
             }
             return true;
         }
@@ -3188,16 +3196,19 @@ namespace H3MP.Patches
                 return;
             }
 
-            TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(sosig) ? GameManager.trackedSosigBySosig[sosig] : sosig.GetComponent<TrackedSosig>();
-            if (trackedSosig != null)
+            if (sosig.BuffSystems.Length >= 15 && sosig.BuffSystems[14] != null && int.TryParse(sosig.BuffSystems[14].name, out int parsed))
             {
-                if (ThreadManager.host)
+                TrackedSosig trackedSosig = (TrackedSosig)TrackedObject.trackedReferences[parsed];
+                if (trackedSosig != null)
                 {
-                    ServerSend.PlaySosigFootStepSound(trackedSosig.data.trackedID, audioType, position, vol, pitch, delay);
-                }
-                else
-                {
-                    ClientSend.PlaySosigFootStepSound(trackedSosig.data.trackedID, audioType, position, vol, pitch, delay);
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.PlaySosigFootStepSound(trackedSosig.data.trackedID, audioType, position, vol, pitch, delay);
+                    }
+                    else
+                    {
+                        ClientSend.PlaySosigFootStepSound(trackedSosig.data.trackedID, audioType, position, vol, pitch, delay);
+                    }
                 }
             }
         }
