@@ -2458,7 +2458,7 @@ namespace H3MP.Tracking
             if (asRevolver.GetIntegratedAttachableFirearm() != null)
             {
                 short chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
-                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 2);
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
@@ -4984,7 +4984,7 @@ namespace H3MP.Tracking
             if (asLAF.GetIntegratedAttachableFirearm() != null)
             {
                 chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
-                chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 2);
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
@@ -5439,7 +5439,7 @@ namespace H3MP.Tracking
             if (asBreakActionWeapon.GetIntegratedAttachableFirearm() != null)
             {
                 short chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
-                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 2);
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
@@ -5688,7 +5688,7 @@ namespace H3MP.Tracking
             if (asBAP.GetIntegratedAttachableFirearm() != null)
             {
                 chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
-                chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 2);
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
@@ -5978,7 +5978,7 @@ namespace H3MP.Tracking
             if (asRS.GetIntegratedAttachableFirearm() != null)
             {
                 short chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
-                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 2);
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
@@ -6215,7 +6215,7 @@ namespace H3MP.Tracking
             if (asRevolver.GetIntegratedAttachableFirearm() != null)
             {
                 short chamberTypeIndex = BitConverter.ToInt16(newData, newData.Length - 4);
-                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 1);
+                short chamberClassIndex = BitConverter.ToInt16(newData, newData.Length - 2);
                 FVRFireArmChamber integratedChamber = attachableFirearmGetChamberFunc();
                 if (chamberClassIndex == -1) // We don't want round in chamber
                 {
