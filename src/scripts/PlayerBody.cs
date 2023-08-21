@@ -34,7 +34,7 @@ namespace H3MP.Scripts
         public Transform[] handsToFollow;
 
         [Header("Other")]
-        [Tooltip("All physical colliders. These will be disabled if the body if yours, since the vanilla colliders and hitboxes should be used instead.")]
+        [Tooltip("All physical colliders. These will be disabled if the body is yours, since the vanilla colliders and hitboxes should be used instead.")]
         public Collider[] colliders;
         [Tooltip("All AIEntities. These will be de/registered as necessary so remote players' bodies can be detected by AI.")]
         public AIEntity[] entities;
@@ -57,6 +57,8 @@ namespace H3MP.Scripts
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
 
+            Verify();
+
             if(Mod.managerObject == null && GM.CurrentPlayerBody != null)
             {
                 headToFollow = GM.CurrentPlayerBody.Head.transform;
@@ -75,6 +77,169 @@ namespace H3MP.Scripts
             }
             //else Connected, let TrackedPlayerBody handle what transform to follow based on controller
             //     OR not connected but no current player body. Setting these will be handled when a player body is initialized
+        }
+
+        public virtual void Verify()
+        {
+            bool correct = true;
+
+            if(headTransform == null)
+            {
+                Debug.LogError("PlayerBody " + playerPrefabID+": missing head transform");
+                correct = false;
+            }
+            if(handTransforms == null || handTransforms.Length < 2 || handTransforms[0] == null || handTransforms[1] == null)
+            {
+                Debug.LogError("PlayerBody " + playerPrefabID+": missing hand transforms");
+                correct = false;
+            }
+
+            Collider[] colliders = GetComponentsInChildren<Collider>();
+            if(this.colliders != null && this.colliders.Length > 0)
+            {
+                for (int i = 0; i < colliders.Length; ++i)
+                {
+                    bool found = false;
+                    for (int j = 0; j < this.colliders.Length; ++j)
+                    {
+                        if (colliders[i] == this.colliders[j])
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        Debug.LogError("PlayerBody " + playerPrefabID + ": Collider " + colliders[i].name + " was not added to colliders array");
+                        correct = false;
+                    }
+                }
+            }
+            else // No colliders array set yet, set it ourselves
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": Colliders array set automatically");
+                this.colliders = colliders;
+                correct = false;
+            }
+
+            AIEntity[] entities = GetComponentsInChildren<AIEntity>();
+            if(this.entities != null && this.entities.Length > 0)
+            {
+                for (int i = 0; i < entities.Length; ++i)
+                {
+                    bool found = false;
+                    for (int j = 0; j < this.entities.Length; ++j)
+                    {
+                        if (entities[i] == this.entities[j])
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        Debug.LogError("PlayerBody " + playerPrefabID + ": AIEntity " + entities[i].name + " was not added to entities array");
+                        correct = false;
+                    }
+                }
+            }
+            else // No entities array set yet, set it ourselves
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": Entities array set automatically");
+                this.entities = entities;
+                correct = false;
+            }
+
+            Canvas[] canvases = GetComponentsInChildren<Canvas>();
+            if(this.canvases != null && this.canvases.Length > 0)
+            {
+                for (int i = 0; i < canvases.Length; ++i)
+                {
+                    bool found = false;
+                    for (int j = 0; j < this.canvases.Length; ++j)
+                    {
+                        if (canvases[i] == this.canvases[j])
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        Debug.LogError("PlayerBody " + playerPrefabID + ": Canvas " + canvases[i].name + " was not added to canvases array");
+                        correct = false;
+                    }
+                }
+            }
+            else // No canvases array set yet, set it ourselves
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": Canvases array set automatically");
+                this.canvases = canvases;
+                correct = false;
+            }
+
+            PlayerHitbox[] hitboxes = GetComponentsInChildren<PlayerHitbox>();
+            if(this.hitboxes != null && this.hitboxes.Length > 0)
+            {
+                for (int i = 0; i < hitboxes.Length; ++i)
+                {
+                    bool found = false;
+                    for (int j = 0; j < this.hitboxes.Length; ++j)
+                    {
+                        if (hitboxes[i] == this.hitboxes[j])
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        Debug.LogError("PlayerBody " + playerPrefabID + ": Hitbox " + hitboxes[i].name + " was not added to hitboxes array");
+                        correct = false;
+                    }
+                }
+            }
+            else // No hitboxes array set yet, set it ourselves
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": Hitboxes array set automatically");
+                this.hitboxes = hitboxes;
+                correct = false;
+            }
+
+            if (bodyRenderers == null || bodyRenderers.Length == 0)
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": BodyRenderers array was not set. Player will not be able to toggle body visibility.");
+                correct = false;
+            }
+
+            if (handRenderers == null || handRenderers.Length == 0)
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": HandRenderers array was not set. Player will not be able to toggle hand visibility.");
+                correct = false;
+            }
+
+            if (coloredParts == null || coloredParts.Length == 0)
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": ColoredParts array was not set. Player will not be able to set their color.");
+                correct = false;
+            }
+
+            if (usernameLabel == null)
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": UsernameLabel was not set. Other players will not be able to see this player's name.");
+                correct = false;
+            }
+
+            if (healthLabel == null)
+            {
+                Debug.LogWarning("PlayerBody " + playerPrefabID + ": HealthLabel was not set. Other players will not be able to see this player's health.");
+                correct = false;
+            }
+
+            if (correct)
+            {
+                Debug.Log("PlayerBody " + playerPrefabID + " verified and is setup properly.");
+            }
         }
 
         public virtual void OnPlayerBodyInit(FVRPlayerBody playerBody)

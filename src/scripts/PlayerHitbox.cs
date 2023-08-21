@@ -14,7 +14,14 @@ namespace H3MP.Scripts
 
         public void Damage(Damage dam)
         {
-            manager.Damage(damageMultiplier, isHead, dam);
+            if(manager == null)
+            {
+                Mod.LogError("PlayerHitbox "+name+" was damaged but is missing ref to manager.");
+            }
+            else
+            {
+                manager.Damage(damageMultiplier, isHead, dam);
+            }
         }
     }
 }
