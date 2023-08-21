@@ -2694,7 +2694,7 @@ namespace H3MP.Patches
             if (trackedItem != null)
             {
                 trackedItem.stingerMissile = missile;
-                Scripts.TrackedObjectReference reference = missile.gameObject.AddComponent<Scripts.TrackedObjectReference>();
+                TrackedObjectReference reference = missile.gameObject.AddComponent<TrackedObjectReference>();
                 reference.trackedRef = trackedItem;
             }
         }

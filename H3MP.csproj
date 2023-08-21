@@ -58,10 +58,10 @@
     <Compile Include="src\networking\Packet.cs" />
     <Compile Include="src\networking\ServerSend.cs" />
     <Compile Include="src\scripts\PlayerBody.cs" />
-    <Compile Include="src\scripts\TrackedItemReference.cs" />
     <Compile Include="src\networking\ThreadManager.cs" />
     <Compile Include="src\scripts\TimerDestroyer.cs" />
     <Compile Include="src\networking\TNHInstance.cs" />
+    <Compile Include="src\scripts\TrackedObjectReference.cs" />
     <Compile Include="src\tracking\TrackedAutoMeater.cs" />
     <Compile Include="src\tracking\TrackedAutoMeaterData.cs" />
     <Compile Include="src\tracking\TrackedBreakableGlass.cs" />
