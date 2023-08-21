@@ -42,7 +42,7 @@ namespace H3MP.Tracking
                     trackedReferenceObjects[i] = tempRefs[i];
                 }
                 TrackedObject[] tempObjects = trackedReferences;
-                trackedReferences = new TrackedItem[tempObjects.Length + 100];
+                trackedReferences = new TrackedObject[tempObjects.Length + 100];
                 for (int i = 0; i < tempObjects.Length; ++i)
                 {
                     trackedReferences[i] = tempObjects[i];

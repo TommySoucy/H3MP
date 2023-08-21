@@ -4869,11 +4869,11 @@ namespace H3MP.Patches
                     {
                         if (ThreadManager.host)
                         {
-                            ServerSend.PinnedGrenadePullPin(TrackedItem.trackedReferences[index].data.trackedID);
+                            ServerSend.PinnedGrenadePullPin(TrackedObject.trackedReferences[index].data.trackedID);
                         }
                         else
                         {
-                            ClientSend.PinnedGrenadePullPin(TrackedItem.trackedReferences[index].data.trackedID);
+                            ClientSend.PinnedGrenadePullPin(TrackedObject.trackedReferences[index].data.trackedID);
                         }
                     }
 
