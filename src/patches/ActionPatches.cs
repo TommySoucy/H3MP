@@ -2694,8 +2694,8 @@ namespace H3MP.Patches
             if (trackedItem != null)
             {
                 trackedItem.stingerMissile = missile;
-                TrackedItemReference reference = missile.gameObject.AddComponent<TrackedItemReference>();
-                reference.trackedItemRef = trackedItem;
+                Scripts.TrackedReference reference = missile.gameObject.AddComponent<Scripts.TrackedReference>();
+                reference.trackedRef = trackedItem;
             }
         }
 
@@ -2831,19 +2831,19 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TrackedItem trackedItem = __instance.GetComponent<TrackedItemReference>().trackedItemRef;
-            if (trackedItem != null)
+            TrackedObject trackedObject = __instance.GetComponent<Scripts.TrackedReference>().trackedRef;
+            if (trackedObject != null)
             {
-                if (trackedItem.data.controller == GameManager.ID)
+                if (trackedObject.data.controller == GameManager.ID)
                 {
                     // Send to other clients
                     if (ThreadManager.host)
                     {
-                        ServerSend.StingerMissileExplode(0, trackedItem.data.trackedID, __instance.transform.position);
+                        ServerSend.StingerMissileExplode(0, trackedObject.data.trackedID, __instance.transform.position);
                     }
                     else
                     {
-                        ClientSend.StingerMissileExplode(trackedItem.data.trackedID, __instance.transform.position);
+                        ClientSend.StingerMissileExplode(trackedObject.data.trackedID, __instance.transform.position);
                     }
                 }
                 else
@@ -2964,6 +2964,7 @@ namespace H3MP.Patches
                 return true;
             }
 
+            TODO: // Use entry in buffsystems to check if controller or not
             TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
             if (trackedSosig != null)
             {
@@ -4823,9 +4824,9 @@ namespace H3MP.Patches
                 int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int index))
             {
                 // Return true (run original), index doesn't fit in references, reference null, or we control
-                if (TrackedItem.trackedItemReferences.Length <= index ||
-                    TrackedItem.trackedItemReferences[index] == null ||
-                    TrackedItem.trackedItemReferences[index].data.controller == GameManager.ID)
+                if (TrackedObject.trackedReferences.Length <= index ||
+                    TrackedObject.trackedReferences[index] == null ||
+                    TrackedObject.trackedReferences[index].data.controller == GameManager.ID)
                 {
                     return true;
                 }
@@ -4851,11 +4852,11 @@ namespace H3MP.Patches
                     {
                         if (ThreadManager.host)
                         {
-                            ServerSend.PinnedGrenadePullPin(TrackedItem.trackedItemReferences[index].data.trackedID);
+                            ServerSend.PinnedGrenadePullPin(TrackedItem.trackedReferences[index].data.trackedID);
                         }
                         else
                         {
-                            ClientSend.PinnedGrenadePullPin(TrackedItem.trackedItemReferences[index].data.trackedID);
+                            ClientSend.PinnedGrenadePullPin(TrackedItem.trackedReferences[index].data.trackedID);
                         }
                     }
 
@@ -5011,9 +5012,9 @@ namespace H3MP.Patches
                 int.TryParse(grenade.SpawnOnSplode[grenade.SpawnOnSplode.Count - 1].name, out int index))
             {
                 // Return true (controlled), index fits in references, reference not null, and we control
-                return TrackedItem.trackedItemReferences.Length <= index &&
-                       TrackedItem.trackedItemReferences[index] != null &&
-                       TrackedItem.trackedItemReferences[index].data.controller == GameManager.ID;
+                return TrackedObject.trackedReferences.Length <= index &&
+                       TrackedObject.trackedReferences[index] != null &&
+                       TrackedObject.trackedReferences[index].data.controller == GameManager.ID;
             }
 
             return true;
@@ -5633,9 +5634,9 @@ namespace H3MP.Patches
                 // Return true (run original), if dont have an index, index doesn't fit in references (shouldn't happen?), reference null (shouldn't happen), or we control
                 int index = (int)indexFloat;
                 return index <= 0 ||
-                       TrackedItem.trackedItemReferences.Length <= index ||
-                       TrackedItem.trackedItemReferences[index] == null ||
-                       TrackedItem.trackedItemReferences[index].data.controller == GameManager.ID;
+                       TrackedObject.trackedReferences.Length <= index ||
+                       TrackedObject.trackedReferences[index] == null ||
+                       TrackedObject.trackedReferences[index].data.controller == GameManager.ID;
             }
 
             return true;
@@ -7263,9 +7264,9 @@ namespace H3MP.Patches
         {
             if(Mod.managerObject != null && __instance.BeltBoxMountPos != null && int.TryParse(__instance.BeltBoxMountPos.name, out int parsed))
             {
-                return TrackedItem.trackedItemReferences.Length <= parsed
-                       || TrackedItem.trackedItemReferences[parsed] == null
-                       || TrackedItem.trackedItemReferences[parsed].data.controller == GameManager.ID;
+                return TrackedObject.trackedReferences.Length <= parsed
+                       || TrackedObject.trackedReferences[parsed] == null
+                       || TrackedObject.trackedReferences[parsed].data.controller == GameManager.ID;
             }
 
             return true;

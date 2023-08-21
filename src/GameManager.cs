@@ -453,16 +453,16 @@ namespace H3MP
             spectatorHostControlledBy = -1;
             controlledSpectatorHost = -1;
 
-            for (int i=0; i< TrackedItem.trackedItemRefObjects.Length; ++i)
+            for (int i=0; i< TrackedObject.trackedReferenceObjects.Length; ++i)
             {
-                if (TrackedItem.trackedItemRefObjects[i] != null)
+                if (TrackedObject.trackedReferenceObjects[i] != null)
                 {
-                    Destroy(TrackedItem.trackedItemRefObjects[i]);
+                    Destroy(TrackedObject.trackedReferenceObjects[i]);
                 }
             }
-            TrackedItem.trackedItemRefObjects = new GameObject[100];
-            TrackedItem.trackedItemReferences = new TrackedItem[100];
-            TrackedItem.availableTrackedItemRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
+            TrackedObject.trackedReferenceObjects = new GameObject[100];
+            TrackedObject.trackedReferences = new TrackedItem[100];
+            TrackedObject.availableTrackedRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
                                                                             10,11,12,13,14,15,16,17,18,19,
                                                                             20,21,22,23,24,25,26,27,28,29,
                                                                             30,31,32,33,34,35,36,37,38,39,

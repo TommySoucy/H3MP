@@ -85,22 +85,6 @@ namespace H3MP.Tracking
         // Attachment specific
         public static Dictionary<int, List<TrackedItem>> toAttachByMountObjectID = new Dictionary<int, List<TrackedItem>>();
 
-        // TrackedItemReferences array
-        // Used by certain item subtypes who need to get access to their TrackedItem very often (On Update for example)
-        // This is used to bypass having to find the item in a datastructure too often
-        public static GameObject[] trackedItemRefObjects = new GameObject[100];
-        public static TrackedItem[] trackedItemReferences = new TrackedItem[100];
-        public static List<int> availableTrackedItemRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
-                                                                                    10,11,12,13,14,15,16,17,18,19,
-                                                                                    20,21,22,23,24,25,26,27,28,29,
-                                                                                    30,31,32,33,34,35,36,37,38,39,
-                                                                                    40,41,42,43,44,45,46,47,48,49,
-                                                                                    50,51,52,53,54,55,56,57,58,59,
-                                                                                    60,61,62,63,64,65,66,67,68,69,
-                                                                                    70,71,72,73,74,75,76,77,78,79,
-                                                                                    80,81,82,83,84,85,86,87,88,89,
-                                                                                    90,91,92,93,94,95,96,97,98,99};
-
         /// <summary>
         /// CUSTOMIZATION
         /// Delegate for the OnInitItemType event
@@ -361,29 +345,29 @@ namespace H3MP.Tracking
                     GameObject trackedItemRef = new GameObject();
                     trackedItemRef.transform.parent = transform;
                     trackedItemRef.SetActive(false);
-                    if (availableTrackedItemRefIndices.Count == 0)
+                    if (availableTrackedRefIndices.Count == 0)
                     {
-                        GameObject[] tempRefs = trackedItemRefObjects;
-                        trackedItemRefObjects = new GameObject[tempRefs.Length + 100];
+                        GameObject[] tempRefs = trackedReferenceObjects;
+                        trackedReferenceObjects = new GameObject[tempRefs.Length + 100];
                         for (int i = 0; i < tempRefs.Length; ++i)
                         {
-                            trackedItemRefObjects[i] = tempRefs[i];
+                            trackedReferenceObjects[i] = tempRefs[i];
                         }
-                        TrackedItem[] tempItems = trackedItemReferences;
-                        trackedItemReferences = new TrackedItem[tempItems.Length + 100];
+                        TrackedItem[] tempItems = trackedReferences;
+                        trackedReferences = new TrackedItem[tempItems.Length + 100];
                         for (int i = 0; i < tempItems.Length; ++i)
                         {
-                            trackedItemReferences[i] = tempItems[i];
+                            trackedReferences[i] = tempItems[i];
                         }
-                        for (int i = tempItems.Length; i < trackedItemReferences.Length; ++i)
+                        for (int i = tempItems.Length; i < trackedReferences.Length; ++i)
                         {
-                            availableTrackedItemRefIndices.Add(i);
+                            availableTrackedRefIndices.Add(i);
                         }
                     }
-                    int refIndex = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
-                    availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
-                    trackedItemRefObjects[refIndex] = trackedItemRef;
-                    trackedItemReferences[refIndex] = this;
+                    int refIndex = availableTrackedRefIndices[availableTrackedRefIndices.Count - 1];
+                    availableTrackedRefIndices.RemoveAt(availableTrackedRefIndices.Count - 1);
+                    trackedReferenceObjects[refIndex] = trackedItemRef;
+                    trackedReferences[refIndex] = this;
                     trackedItemRef.name = refIndex.ToString();
                     asFA.BeltBoxMountPos = trackedItemRef.transform;
                 }
@@ -597,31 +581,31 @@ namespace H3MP.Tracking
                     asPG.SpawnOnSplode = new List<GameObject>();
                 }
                 GameObject trackedItemRef = new GameObject();
-                TrackedItemReference refScript = trackedItemRef.AddComponent<TrackedItemReference>();
+                Scripts.TrackedReference refScript = trackedItemRef.AddComponent<Scripts.TrackedReference>();
                 trackedItemRef.SetActive(false);
-                if (availableTrackedItemRefIndices.Count == 0)
+                if (availableTrackedRefIndices.Count == 0)
                 {
-                    GameObject[] tempRefs = trackedItemRefObjects;
-                    trackedItemRefObjects = new GameObject[tempRefs.Length + 100];
+                    GameObject[] tempRefs = trackedReferenceObjects;
+                    trackedReferenceObjects = new GameObject[tempRefs.Length + 100];
                     for (int i = 0; i < tempRefs.Length; ++i)
                     {
-                        trackedItemRefObjects[i] = tempRefs[i];
+                        trackedReferenceObjects[i] = tempRefs[i];
                     }
-                    TrackedItem[] tempItems = trackedItemReferences;
-                    trackedItemReferences = new TrackedItem[tempItems.Length + 100];
+                    TrackedItem[] tempItems = trackedReferences;
+                    trackedReferences = new TrackedItem[tempItems.Length + 100];
                     for (int i = 0; i < tempItems.Length; ++i)
                     {
-                        trackedItemReferences[i] = tempItems[i];
+                        trackedReferences[i] = tempItems[i];
                     }
-                    for (int i = tempItems.Length; i < trackedItemReferences.Length; ++i)
+                    for (int i = tempItems.Length; i < trackedReferences.Length; ++i)
                     {
-                        availableTrackedItemRefIndices.Add(i);
+                        availableTrackedRefIndices.Add(i);
                     }
                 }
-                int refIndex = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
-                availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
-                trackedItemRefObjects[refIndex] = trackedItemRef;
-                trackedItemReferences[refIndex] = this;
+                int refIndex = availableTrackedRefIndices[availableTrackedRefIndices.Count - 1];
+                availableTrackedRefIndices.RemoveAt(availableTrackedRefIndices.Count - 1);
+                trackedReferenceObjects[refIndex] = trackedItemRef;
+                trackedReferences[refIndex] = this;
                 trackedItemRef.name = refIndex.ToString();
                 refScript.refIndex = refIndex;
                 asPG.SpawnOnSplode.Add(trackedItemRef);
@@ -636,33 +620,33 @@ namespace H3MP.Tracking
                 {
                     asGrenade.FuseTimings = new Dictionary<int, float>();
                 }
-                if (availableTrackedItemRefIndices.Count == 0)
+                if (availableTrackedRefIndices.Count == 0)
                 {
-                    GameObject[] tempRefs = trackedItemRefObjects;
-                    trackedItemRefObjects = new GameObject[tempRefs.Length + 100];
+                    GameObject[] tempRefs = trackedReferenceObjects;
+                    trackedReferenceObjects = new GameObject[tempRefs.Length + 100];
                     for (int i = 0; i < tempRefs.Length; ++i)
                     {
-                        trackedItemRefObjects[i] = tempRefs[i];
+                        trackedReferenceObjects[i] = tempRefs[i];
                     }
-                    TrackedItem[] tempItems = trackedItemReferences;
-                    trackedItemReferences = new TrackedItem[tempItems.Length + 100];
+                    TrackedItem[] tempItems = trackedReferences;
+                    trackedReferences = new TrackedItem[tempItems.Length + 100];
                     for (int i = 0; i < tempItems.Length; ++i)
                     {
-                        trackedItemReferences[i] = tempItems[i];
+                        trackedReferences[i] = tempItems[i];
                     }
-                    for (int i = tempItems.Length; i < trackedItemReferences.Length; ++i)
+                    for (int i = tempItems.Length; i < trackedReferences.Length; ++i)
                     {
-                        availableTrackedItemRefIndices.Add(i);
+                        availableTrackedRefIndices.Add(i);
                     }
                 }
-                int refIndex = availableTrackedItemRefIndices[availableTrackedItemRefIndices.Count - 1];
-                availableTrackedItemRefIndices.RemoveAt(availableTrackedItemRefIndices.Count - 1);
+                int refIndex = availableTrackedRefIndices[availableTrackedRefIndices.Count - 1];
+                availableTrackedRefIndices.RemoveAt(availableTrackedRefIndices.Count - 1);
                 asGrenade.FuseTimings.Add(-1, refIndex);
-                trackedItemReferences[refIndex] = this;
+                trackedReferences[refIndex] = this;
 
-                // Just make an object that will handle readding ref index to available list when it gets destroyed by scene change
+                // Just make an object that will handle re-adding ref index to available list when it gets destroyed by scene change
                 GameObject trackedItemRef = new GameObject("GrenadeRefIndex");
-                TrackedItemReference refScript = trackedItemRef.AddComponent<TrackedItemReference>();
+                Scripts.TrackedReference refScript = trackedItemRef.AddComponent<Scripts.TrackedReference>();
                 refScript.refIndex = refIndex;
                 trackedItemRef.SetActive(false);
             }

@@ -2737,29 +2737,29 @@ namespace H3MP.Patches
             }
 
             // If in control of the damaged StingerMissile, we want to process the damage
-            TrackedItem trackedItem = __instance.GetComponent<TrackedItemReference>().trackedItemRef;
-            if (trackedItem != null)
+            TrackedObject trackedObject = __instance.GetComponent<Scripts.TrackedReference>().trackedRef;
+            if (trackedObject != null)
             {
                 if (ThreadManager.host)
                 {
-                    if (trackedItem.data.controller == 0)
+                    if (trackedObject.data.controller == 0)
                     {
                         return true;
                     }
                     else
                     {
                         // Not in control, we want to send the damage to the controller for them to process it and return the result
-                        ServerSend.StingerMissileDamage(trackedItem.itemData, d);
+                        ServerSend.StingerMissileDamage(((TrackedItem)trackedObject).itemData, d);
                         return false;
                     }
                 }
-                else if (trackedItem.data.controller == Client.singleton.ID)
+                else if (trackedObject.data.controller == Client.singleton.ID)
                 {
                     return true;
                 }
                 else
                 {
-                    ClientSend.StingerMissileDamage(trackedItem.data.trackedID, d);
+                    ClientSend.StingerMissileDamage(trackedObject.data.trackedID, d);
                     return false;
                 }
             }
