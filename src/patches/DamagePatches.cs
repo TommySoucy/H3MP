@@ -2737,7 +2737,7 @@ namespace H3MP.Patches
             }
 
             // If in control of the damaged StingerMissile, we want to process the damage
-            TrackedObject trackedObject = __instance.GetComponent<Scripts.TrackedReference>().trackedRef;
+            TrackedObject trackedObject = __instance.GetComponent<Scripts.TrackedObjectReference>().trackedRef;
             if (trackedObject != null)
             {
                 if (ThreadManager.host)

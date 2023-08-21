@@ -2694,7 +2694,7 @@ namespace H3MP.Patches
             if (trackedItem != null)
             {
                 trackedItem.stingerMissile = missile;
-                Scripts.TrackedReference reference = missile.gameObject.AddComponent<Scripts.TrackedReference>();
+                Scripts.TrackedObjectReference reference = missile.gameObject.AddComponent<Scripts.TrackedObjectReference>();
                 reference.trackedRef = trackedItem;
             }
         }
@@ -2831,7 +2831,7 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TrackedObject trackedObject = __instance.GetComponent<Scripts.TrackedReference>().trackedRef;
+            TrackedObject trackedObject = __instance.GetComponent<Scripts.TrackedObjectReference>().trackedRef;
             if (trackedObject != null)
             {
                 if (trackedObject.data.controller == GameManager.ID)

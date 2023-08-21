@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static FistVR.sblpCell;
 
 namespace H3MP.Tracking
 {
@@ -303,7 +302,6 @@ namespace H3MP.Tracking
                 }
                 else if (asFA is BreakActionWeapon)
                 {
-                    TODO:// Latchrot is not the rotation of the barrel, need to sync barrel rotation
                     updateFunc = UpdateBreakActionWeapon;
                     updateGivenFunc = UpdateGivenBreakActionWeapon;
                     dataObject = physObj as BreakActionWeapon;
@@ -582,7 +580,7 @@ namespace H3MP.Tracking
                     asPG.SpawnOnSplode = new List<GameObject>();
                 }
                 GameObject trackedItemRef = new GameObject();
-                Scripts.TrackedReference refScript = trackedItemRef.AddComponent<Scripts.TrackedReference>();
+                TrackedObjectReference refScript = trackedItemRef.AddComponent<TrackedObjectReference>();
                 trackedItemRef.SetActive(false);
                 if (availableTrackedRefIndices.Count == 0)
                 {
@@ -647,7 +645,7 @@ namespace H3MP.Tracking
 
                 // Just make an object that will handle re-adding ref index to available list when it gets destroyed by scene change
                 GameObject trackedItemRef = new GameObject("GrenadeRefIndex");
-                Scripts.TrackedReference refScript = trackedItemRef.AddComponent<Scripts.TrackedReference>();
+                Scripts.TrackedObjectReference refScript = trackedItemRef.AddComponent<Scripts.TrackedObjectReference>();
                 refScript.refIndex = refIndex;
                 trackedItemRef.SetActive(false);
             }

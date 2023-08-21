@@ -31,7 +31,7 @@ namespace H3MP.Tracking
             GameManager.OnInstanceJoined += OnInstanceJoined;
 
             GameObject trackedSosigRef = new GameObject();
-            Scripts.TrackedReference refScript = trackedSosigRef.AddComponent<Scripts.TrackedReference>();
+            Scripts.TrackedObjectReference refScript = trackedSosigRef.AddComponent<Scripts.TrackedObjectReference>();
             trackedSosigRef.SetActive(false);
             if (availableTrackedRefIndices.Count == 0)
             {

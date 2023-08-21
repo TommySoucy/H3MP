@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace H3MP.Scripts
 {
-    public class TrackedReference : MonoBehaviour
+    public class TrackedObjectReference : MonoBehaviour
     {
         public TrackedObject trackedRef;
         public int refIndex = -1;
