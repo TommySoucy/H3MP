@@ -303,6 +303,7 @@ namespace H3MP.Tracking
                 }
                 else if (asFA is BreakActionWeapon)
                 {
+                    TODO:// Latchrot is not the rotation of the barrel, need to sync barrel rotation
                     updateFunc = UpdateBreakActionWeapon;
                     updateGivenFunc = UpdateGivenBreakActionWeapon;
                     dataObject = physObj as BreakActionWeapon;
@@ -5320,7 +5321,7 @@ namespace H3MP.Tracking
             BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
             bool modified = false;
 
-            int necessarySize = asBreakActionWeapon.Barrels.Length * 5 + 5;
+            int necessarySize = asBreakActionWeapon.Barrels.Length * 5;
 
             if (itemData.data == null)
             {
@@ -5328,24 +5329,15 @@ namespace H3MP.Tracking
                 modified = true;
             }
 
-            // Write latched
-            byte preval0 = itemData.data[0];
-            itemData.data[0] = asBreakActionWeapon.IsLatched ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[0];
-
-            // Write latchRot
-            preval0 = itemData.data[1];
-            byte preval1 = itemData.data[2];
-            byte preval2 = itemData.data[3];
-            byte preval3 = itemData.data[4];
-            BitConverter.GetBytes(asBreakActionWeapon.m_latchRot).CopyTo(itemData.data, 1);
-            modified |= (preval0 != itemData.data[1] || preval1 != itemData.data[2] || preval2 != itemData.data[3] || preval3 != itemData.data[4]);
-
             // Write chambered rounds
+            byte preval0;
+            byte preval1;
+            byte preval2;
+            byte preval3;
             for (int i = 0; i < asBreakActionWeapon.Barrels.Length; ++i)
             {
                 // Write chambered round
-                int firstIndex = i * 5 + 5;
+                int firstIndex = i * 5;
                 preval0 = itemData.data[firstIndex];
                 preval1 = itemData.data[firstIndex + 1];
                 preval2 = itemData.data[firstIndex + 2];
@@ -5401,25 +5393,10 @@ namespace H3MP.Tracking
             bool modified = false;
             BreakActionWeapon asBreakActionWeapon = dataObject as BreakActionWeapon;
 
-            // Set Latch
-            if (asBreakActionWeapon.m_hasLatch)
-            {
-                if ((asBreakActionWeapon.IsLatched && newData[0] == 0)
-                     || (!asBreakActionWeapon.IsLatched && newData[0] == 1))
-                {
-                    asBreakActionWeapon.m_isLatched = newData[0] == 1;
-                    modified = true;
-                }
-                float preLatchRot = asBreakActionWeapon.m_latchRot;
-                asBreakActionWeapon.m_latchRot = BitConverter.ToSingle(newData, 1);
-                modified |= preLatchRot != asBreakActionWeapon.m_latchRot;
-                asBreakActionWeapon.Latch.localEulerAngles = new Vector3(0f, asBreakActionWeapon.m_latchRot, 0f);
-            }
-
             // Set barrels
             for (int i = 0; i < asBreakActionWeapon.Barrels.Length; ++i)
             {
-                int firstIndex = i * 5 + 5;
+                int firstIndex = i * 5;
                 short chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
                 short chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
