@@ -58,6 +58,7 @@ namespace H3MP.Tracking
             trackedReferences[refIndex] = this;
             trackedSosigRef.name = refIndex.ToString();
             refScript.refIndex = refIndex;
+            physicalSosig = GetComponent<Sosig>();
             GameObject[] temp = physicalSosig.BuffSystems;
             physicalSosig.BuffSystems = new GameObject[temp.Length + 1];
             for(int i=0; i < temp.Length; ++i)

@@ -492,6 +492,10 @@ namespace H3MP
                             case 18: // Resolve sub domain
                                 Mod.LogInfo("\tDebug: Sub domain h3mp.tommysoucy.vip resolved to: "+ Dns.GetHostAddresses(config["IP"].ToString())[0].ToString());
                                 break;
+                            case 19: // Load to grillhouse
+                                Mod.LogInfo("\tDebug: Load to grillhouse");
+                                SteamVR_LoadLevel.Begin("Grillhouse_2Story", false, 0.5f, 0f, 0f, 0f, 1f);
+                                break;
                         }
                     }
                 }

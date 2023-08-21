@@ -139,6 +139,12 @@ namespace H3MP.Scripts
 
         private void OnNextPlayerBodyClicked(Text textRef)
         {
+            if (GameManager.playerModelAwaitingInstantiation)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+                return;
+            }
+
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             ++GameManager.playerPrefabIndex;
@@ -160,6 +166,12 @@ namespace H3MP.Scripts
 
         private void OnPreviousPlayerBodyClicked(Text textRef)
         {
+            if (GameManager.playerModelAwaitingInstantiation)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+                return;
+            }
+
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             --GameManager.playerPrefabIndex;
