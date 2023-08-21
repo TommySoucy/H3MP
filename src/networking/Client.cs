@@ -163,9 +163,8 @@ namespace H3MP.Networking
                     receivedData.Reset(HandleData(data));
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Mod.LogError("Client TCP ReceiveCallback: " + ex.Message + ":\n" + ex.StackTrace);
                     Disconnect(2);
                 }
             }
@@ -334,9 +333,8 @@ namespace H3MP.Networking
 
                         HandleData(data);
                     }
-                    catch(Exception ex)
+                    catch(Exception)
                     {
-                        Mod.LogError("Client UDP ReceiveCallback: " + ex.Message + ":\n" + ex.StackTrace);
                         Disconnect(2);
                     }
                 }

@@ -438,14 +438,13 @@ namespace H3MP.Networking
             switch (code)
             {
                 case 0:
-                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected, end of stream.", false);
+                    Mod.LogWarning("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected, end of stream.");
                     break;
                 case 1:
-                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.", false);
-                    Mod.LogWarning("Exception: " + ex.Message + "\n" + ex);
+                    Mod.LogWarning("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " forcibly disconnected.");
                     break;
                 case 2:
-                    Mod.LogInfo("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.", false);
+                    Mod.LogWarning("Client "+ID+" : " + tcp.socket.Client.RemoteEndPoint + " disconnected.");
                     break;
             }
 

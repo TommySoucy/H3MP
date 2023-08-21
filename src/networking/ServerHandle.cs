@@ -2,11 +2,9 @@
 using H3MP.Patches;
 using H3MP.Scripts;
 using H3MP.Tracking;
-using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace H3MP.Networking
 {

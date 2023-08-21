@@ -91,7 +91,7 @@ namespace H3MP.Networking
                         ++Client.singleton.pingAttemptCounter;
                         if(Client.singleton.pingAttemptCounter >= 10)
                         {
-                            Mod.LogInfo("Have not received server welcome for " + Client.singleton.pingAttemptCounter + " seconds, timing out at 30", false);
+                            Mod.LogWarning("Have not received server welcome for " + Client.singleton.pingAttemptCounter + " seconds, timing out at 30");
                         }
                         if(Client.singleton.pingAttemptCounter >= 30)
                         {
