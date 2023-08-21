@@ -21,7 +21,7 @@ namespace H3MP.Tracking
         // Used by certain objects who need to get access to their TrackedObjects very often (On Update for example)
         // This is used to bypass having to find the objects in a datastructure too often
         public static GameObject[] trackedReferenceObjects = new GameObject[100];
-        public static TrackedItem[] trackedReferences = new TrackedItem[100];
+        public static TrackedObject[] trackedReferences = new TrackedObject[100];
         public static List<int> availableTrackedRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
                                                                                 10,11,12,13,14,15,16,17,18,19,
                                                                                 20,21,22,23,24,25,26,27,28,29,

@@ -29,6 +29,42 @@ namespace H3MP.Tracking
             base.Awake();
 
             GameManager.OnInstanceJoined += OnInstanceJoined;
+
+            GameObject trackedSosigRef = new GameObject();
+            Scripts.TrackedReference refScript = trackedSosigRef.AddComponent<Scripts.TrackedReference>();
+            trackedSosigRef.SetActive(false);
+            if (availableTrackedRefIndices.Count == 0)
+            {
+                GameObject[] tempRefs = trackedReferenceObjects;
+                trackedReferenceObjects = new GameObject[tempRefs.Length + 100];
+                for (int i = 0; i < tempRefs.Length; ++i)
+                {
+                    trackedReferenceObjects[i] = tempRefs[i];
+                }
+                TrackedObject[] tempObjects = trackedReferences;
+                trackedReferences = new TrackedItem[tempObjects.Length + 100];
+                for (int i = 0; i < tempObjects.Length; ++i)
+                {
+                    trackedReferences[i] = tempObjects[i];
+                }
+                for (int i = tempObjects.Length; i < trackedReferences.Length; ++i)
+                {
+                    availableTrackedRefIndices.Add(i);
+                }
+            }
+            int refIndex = availableTrackedRefIndices[availableTrackedRefIndices.Count - 1];
+            availableTrackedRefIndices.RemoveAt(availableTrackedRefIndices.Count - 1);
+            trackedReferenceObjects[refIndex] = trackedSosigRef;
+            trackedReferences[refIndex] = this;
+            trackedSosigRef.name = refIndex.ToString();
+            refScript.refIndex = refIndex;
+            GameObject[] temp = physicalSosig.BuffSystems;
+            physicalSosig.BuffSystems = new GameObject[temp.Length + 1];
+            for(int i=0; i < temp.Length; ++i)
+            {
+                physicalSosig.BuffSystems[i] = temp[i];
+            }
+            physicalSosig.BuffSystems[physicalSosig.BuffSystems.Length - 1] = trackedSosigRef;
         }
 
         private void FixedUpdate()

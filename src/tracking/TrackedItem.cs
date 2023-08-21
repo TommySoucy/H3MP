@@ -353,8 +353,8 @@ namespace H3MP.Tracking
                         {
                             trackedReferenceObjects[i] = tempRefs[i];
                         }
-                        TrackedItem[] tempItems = trackedReferences;
-                        trackedReferences = new TrackedItem[tempItems.Length + 100];
+                        TrackedObject[] tempItems = trackedReferences;
+                        trackedReferences = new TrackedObject[tempItems.Length + 100];
                         for (int i = 0; i < tempItems.Length; ++i)
                         {
                             trackedReferences[i] = tempItems[i];
@@ -591,8 +591,8 @@ namespace H3MP.Tracking
                     {
                         trackedReferenceObjects[i] = tempRefs[i];
                     }
-                    TrackedItem[] tempItems = trackedReferences;
-                    trackedReferences = new TrackedItem[tempItems.Length + 100];
+                    TrackedObject[] tempItems = trackedReferences;
+                    trackedReferences = new TrackedObject[tempItems.Length + 100];
                     for (int i = 0; i < tempItems.Length; ++i)
                     {
                         trackedReferences[i] = tempItems[i];
@@ -628,8 +628,8 @@ namespace H3MP.Tracking
                     {
                         trackedReferenceObjects[i] = tempRefs[i];
                     }
-                    TrackedItem[] tempItems = trackedReferences;
-                    trackedReferences = new TrackedItem[tempItems.Length + 100];
+                    TrackedObject[] tempItems = trackedReferences;
+                    trackedReferences = new TrackedObject[tempItems.Length + 100];
                     for (int i = 0; i < tempItems.Length; ++i)
                     {
                         trackedReferences[i] = tempItems[i];
