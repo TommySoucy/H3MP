@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
+using UnityEngine.Networking.Types;
 
 namespace H3MP.Patches
 {
@@ -22,7 +23,14 @@ namespace H3MP.Patches
             MethodInfo firePatchPostfix = typeof(FirePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(firePatchOriginal, harmony, true);
-            harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix), new HarmonyMethod(firePatchTranspiler));
+            try
+            {
+                harmony.Patch(firePatchOriginal, new HarmonyMethod(firePatchPrefix), new HarmonyMethod(firePatchPostfix), new HarmonyMethod(firePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.FirePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // FireSosigWeaponPatch
             MethodInfo fireSosigWeaponPatchOriginal = typeof(SosigWeapon).GetMethod("FireGun", BindingFlags.Public | BindingFlags.Instance);
@@ -40,7 +48,14 @@ namespace H3MP.Patches
             MethodInfo fireLAPD2019PatchPostfix = typeof(FireLAPD2019Patch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(fireLAPD2019PatchOriginal, harmony, false);
-            harmony.Patch(fireLAPD2019PatchOriginal, new HarmonyMethod(fireLAPD2019PatchPrefix), new HarmonyMethod(fireLAPD2019PatchPostfix), new HarmonyMethod(fireLAPD2019PatchTranspiler));
+            try
+            {
+                harmony.Patch(fireLAPD2019PatchOriginal, new HarmonyMethod(fireLAPD2019PatchPrefix), new HarmonyMethod(fireLAPD2019PatchPostfix), new HarmonyMethod(fireLAPD2019PatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.FireLAPD2019Patch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // FireAttachableFirearmPatch
             MethodInfo fireAttachableFirearmPatchOriginal = typeof(AttachableFirearm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
@@ -67,7 +82,14 @@ namespace H3MP.Patches
             PatchController.Verify(fireAttachableTubeFedPatchOriginal, harmony, false);
             PatchController.Verify(fireGP25PatchOriginal, harmony, false);
             PatchController.Verify(fireM203PatchOriginal, harmony, false);
-            harmony.Patch(fireAttachableFirearmPatchOriginal, null, null, new HarmonyMethod(fireAttachableFirearmPatchTranspiler));
+            try 
+            { 
+                harmony.Patch(fireAttachableFirearmPatchOriginal, null, null, new HarmonyMethod(fireAttachableFirearmPatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.FireAttachableFirearmPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(fireAttachableBreakActionsPatchOriginal, new HarmonyMethod(fireAttachableBreakActionsPatchPrefix), new HarmonyMethod(fireAttachableBreakActionsPatchPostfix));
             harmony.Patch(fireAttachableClosedBoltWeaponPatchOriginal, new HarmonyMethod(fireAttachableClosedBoltWeaponPatchPrefix), new HarmonyMethod(fireAttachableClosedBoltWeaponPatchPostfix));
             harmony.Patch(fireAttachableTubeFedPatchOriginal, new HarmonyMethod(fireAttachableTubeFedPatchPrefix), new HarmonyMethod(fireAttachableTubeFedPatchPostfix));
@@ -142,8 +164,22 @@ namespace H3MP.Patches
 
             PatchController.Verify(fireFlintlockWeaponPatchBurnOffOuterOriginal, harmony, false);
             PatchController.Verify(fireFlintlockWeaponFireOriginal, harmony, false);
-            harmony.Patch(fireFlintlockWeaponPatchBurnOffOuterOriginal, new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPrefix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPostfix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterTranspiler));
-            harmony.Patch(fireFlintlockWeaponFireOriginal, new HarmonyMethod(fireFlintlockWeaponFirePrefix), new HarmonyMethod(fireFlintlockWeaponFirePostfix), new HarmonyMethod(fireFlintlockWeaponFireTranspiler));
+            try
+            {
+                harmony.Patch(fireFlintlockWeaponPatchBurnOffOuterOriginal, new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPrefix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterPostfix), new HarmonyMethod(fireFlintlockWeaponPatchBurnOffOuterTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.FireFlintlockWeaponPatch to fireFlintlockWeaponPatchBurnOffOuterOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try 
+            { 
+                harmony.Patch(fireFlintlockWeaponFireOriginal, new HarmonyMethod(fireFlintlockWeaponFirePrefix), new HarmonyMethod(fireFlintlockWeaponFirePostfix), new HarmonyMethod(fireFlintlockWeaponFireTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.FireFlintlockWeaponPatch to fireFlintlockWeaponFireOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // FireHCBPatch
             MethodInfo fireHCBPatchOriginal = typeof(HCB).GetMethod("ReleaseSled", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -161,7 +197,14 @@ namespace H3MP.Patches
 
             PatchController.Verify(simpleLauncherCollisionOriginal, harmony, false);
             PatchController.Verify(simpleLauncherDamageOriginal, harmony, false);
-            harmony.Patch(simpleLauncherCollisionOriginal, null, null, new HarmonyMethod(simpleLauncherCollisionTranspiler));
+            try 
+            { 
+                harmony.Patch(simpleLauncherCollisionOriginal, null, null, new HarmonyMethod(simpleLauncherCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.SimpleLauncherPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(simpleLauncherDamageOriginal, new HarmonyMethod(simpleLauncherDamagePrefix));
 
             // FireStingerLauncherPatch
@@ -174,7 +217,14 @@ namespace H3MP.Patches
 
             PatchController.Verify(fireStingerLauncherOriginal, harmony, false);
             PatchController.Verify(fireStingerMissileOriginal, harmony, false);
-            harmony.Patch(fireStingerLauncherOriginal, new HarmonyMethod(fireStingerLauncherPrefix), new HarmonyMethod(fireStingerLauncherPostfix), new HarmonyMethod(fireStingerLauncherTranspiler));
+            try 
+            { 
+                harmony.Patch(fireStingerLauncherOriginal, new HarmonyMethod(fireStingerLauncherPrefix), new HarmonyMethod(fireStingerLauncherPostfix), new HarmonyMethod(fireStingerLauncherTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.FireStingerLauncherPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(fireStingerMissileOriginal, new HarmonyMethod(fireStingerMissilePrefix));
 
             // RemoteMissileDetonatePatch
@@ -270,8 +320,22 @@ namespace H3MP.Patches
             PatchController.Verify(sosigProcessColOriginal, harmony, false);
             harmony.Patch(sosigDiesPatchOriginal, new HarmonyMethod(sosigDiesPatchPrefix), new HarmonyMethod(sosigDiesPatchPosfix));
             harmony.Patch(sosigBodyStatePatchOriginal, new HarmonyMethod(sosigBodyStatePatchPrefix));
-            harmony.Patch(sosigBodyUpdatePatchOriginal, null, null, new HarmonyMethod(sosigBodyUpdatePatchTranspiler));
-            harmony.Patch(sosigSpeechUpdatePatchOriginal, null, null, new HarmonyMethod(sosigSpeechUpdatePatchTranspiler));
+            try 
+            { 
+                harmony.Patch(sosigBodyUpdatePatchOriginal, null, null, new HarmonyMethod(sosigBodyUpdatePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.SosigActionPatch to sosigBodyUpdatePatchOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try
+            {
+                harmony.Patch(sosigSpeechUpdatePatchOriginal, null, null, new HarmonyMethod(sosigSpeechUpdatePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.SosigActionPatch to sosigSpeechUpdatePatchOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(sosigSetCurrentOrderPatchOriginal, new HarmonyMethod(sosigSetCurrentOrderPatchPrefix));
             //harmony.Patch(sosigVaporizePatchOriginal, new HarmonyMethod(sosigVaporizePatchPrefix), new HarmonyMethod(sosigVaporizePatchPostfix));
             harmony.Patch(sosigRequestHitDecalPatchOriginal, new HarmonyMethod(sosigRequestHitDecalPatchPrefix));
@@ -371,7 +435,14 @@ namespace H3MP.Patches
             MethodInfo autoMeaterUpdateFlightPatchTranspiler = typeof(AutoMeaterUpdateFlightPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(autoMeaterUpdateFlightPatchOriginal, harmony, false);
-            harmony.Patch(autoMeaterUpdateFlightPatchOriginal, new HarmonyMethod(autoMeaterUpdateFlightPatchPrefix), null, new HarmonyMethod(autoMeaterUpdateFlightPatchTranspiler));
+            try
+            { 
+                harmony.Patch(autoMeaterUpdateFlightPatchOriginal, new HarmonyMethod(autoMeaterUpdateFlightPatchPrefix), null, new HarmonyMethod(autoMeaterUpdateFlightPatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.AutoMeaterUpdateFlightPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // AutoMeaterFirearmFireShotPatch
             MethodInfo autoMeaterFirearmFireShotPatchOriginal = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -380,7 +451,14 @@ namespace H3MP.Patches
             MethodInfo autoMeaterFirearmFireShotPatchTranspiler = typeof(AutoMeaterFirearmFireShotPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(autoMeaterFirearmFireShotPatchOriginal, harmony, false);
-            harmony.Patch(autoMeaterFirearmFireShotPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireShotPatchPrefix), new HarmonyMethod(autoMeaterFirearmFireShotPatchPostfix), new HarmonyMethod(autoMeaterFirearmFireShotPatchTranspiler));
+            try 
+            { 
+                harmony.Patch(autoMeaterFirearmFireShotPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireShotPatchPrefix), new HarmonyMethod(autoMeaterFirearmFireShotPatchPostfix), new HarmonyMethod(autoMeaterFirearmFireShotPatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.AutoMeaterFirearmFireShotPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // AutoMeaterFirearmFireAtWillPatch
             MethodInfo autoMeaterFirearmFireAtWillPatchOriginal = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("SetFireAtWill", BindingFlags.Public | BindingFlags.Instance);
@@ -394,7 +472,14 @@ namespace H3MP.Patches
             MethodInfo encryptionRespawnRandSubPatchTranspiler = typeof(EncryptionRespawnRandSubPatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(encryptionRespawnRandSubPatchOriginal, harmony, false);
-            harmony.Patch(encryptionRespawnRandSubPatchOriginal, null, null, new HarmonyMethod(encryptionRespawnRandSubPatchTranspiler));
+            try 
+            { 
+                harmony.Patch(encryptionRespawnRandSubPatchOriginal, null, null, new HarmonyMethod(encryptionRespawnRandSubPatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.EncryptionRespawnRandSubPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // EncryptionResetGrowthPatch
             MethodInfo encryptionResetGrowthPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("ResetGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -452,9 +537,23 @@ namespace H3MP.Patches
             PatchController.Verify(pinnedGrenadePatchUpdateOriginal, harmony, false);
             PatchController.Verify(pinnedGrenadePatchFixedUpdateOriginal, harmony, false);
             PatchController.Verify(pinnedGrenadePatchCollisionOriginal, harmony, false);
-            harmony.Patch(pinnedGrenadePatchUpdateOriginal, new HarmonyMethod(pinnedGrenadePatchUpdatePrefix), new HarmonyMethod(pinnedGrenadePatchUpdatePostfix), new HarmonyMethod(pinnedGrenadePatchUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(pinnedGrenadePatchUpdateOriginal, new HarmonyMethod(pinnedGrenadePatchUpdatePrefix), new HarmonyMethod(pinnedGrenadePatchUpdatePostfix), new HarmonyMethod(pinnedGrenadePatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.PinnedGrenadePatch on pinnedGrenadePatchUpdateOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(pinnedGrenadePatchFixedUpdateOriginal, new HarmonyMethod(pinnedGrenadePatchUpdatePrefix));
-            harmony.Patch(pinnedGrenadePatchCollisionOriginal, null, null, new HarmonyMethod(pinnedGrenadePatchCollisionTranspiler));
+            try 
+            { 
+                harmony.Patch(pinnedGrenadePatchCollisionOriginal, null, null, new HarmonyMethod(pinnedGrenadePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.PinnedGrenadePatch on pinnedGrenadePatchCollisionOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // FVRGrenadePatch
             MethodInfo FVRGrenadePatchUpdateOriginal = typeof(FVRGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -505,11 +604,25 @@ namespace H3MP.Patches
             PatchController.Verify(EncryptionPatchStartOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchUpdateDisplayOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchDestroyOriginal, harmony, true);
-            harmony.Patch(EncryptionPatchUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix), null, new HarmonyMethod(EncryptionPatchUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(EncryptionPatchUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix), null, new HarmonyMethod(EncryptionPatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.EncryptionPatch on EncryptionPatchUpdateOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(EncryptionPatchFixedUpdateOriginal, new HarmonyMethod(EncryptionPatchFixedUpdatePrefix));
             harmony.Patch(EncryptionPatchStartOriginal, new HarmonyMethod(EncryptionPatchStartPrefix), new HarmonyMethod(EncryptionPatchStartPostfix));
             harmony.Patch(EncryptionPatchUpdateDisplayOriginal, null, new HarmonyMethod(EncryptionPatchUpdateDisplayPostfix));
-            harmony.Patch(EncryptionPatchDestroyOriginal, null, null, new HarmonyMethod(EncryptionPatchDestroyTranspiler));
+            try 
+            { 
+                harmony.Patch(EncryptionPatchDestroyOriginal, null, null, new HarmonyMethod(EncryptionPatchDestroyTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.EncryptionPatch on EncryptionPatchDestroyOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // BangSnapPatch
             MethodInfo bangSnapPatchSplodeOriginal = typeof(BangSnap).GetMethod("Splode", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -520,7 +633,14 @@ namespace H3MP.Patches
             PatchController.Verify(bangSnapPatchSplodeOriginal, harmony, false);
             PatchController.Verify(bangSnapPatchCollisionOriginal, harmony, false);
             harmony.Patch(bangSnapPatchSplodeOriginal, new HarmonyMethod(bangSnapPatchSplodePrefix));
-            harmony.Patch(bangSnapPatchCollisionOriginal, null, null, new HarmonyMethod(bangSnapPatchCollisionTranspiler));
+            try 
+            { 
+                harmony.Patch(bangSnapPatchCollisionOriginal, null, null, new HarmonyMethod(bangSnapPatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.BangSnapPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // C4DetonatePatch
             MethodInfo C4DetonatePatchOriginal = typeof(C4).GetMethod("Detonate", BindingFlags.Public | BindingFlags.Instance);
@@ -548,7 +668,14 @@ namespace H3MP.Patches
             MethodInfo roundPatchFixedUpdateTranspiler = typeof(RoundPatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(roundPatchFixedUpdateOriginal, harmony, false);
-            harmony.Patch(roundPatchFixedUpdateOriginal, null, null, new HarmonyMethod(roundPatchFixedUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(roundPatchFixedUpdateOriginal, null, null, new HarmonyMethod(roundPatchFixedUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.RoundPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // MagazinePatch
             MethodInfo magAddRoundClassOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
@@ -567,8 +694,22 @@ namespace H3MP.Patches
             PatchController.Verify(magLoadFireArmOriginal, harmony, false);
             PatchController.Verify(magLoadIntoSecondaryOriginal, harmony, false);
             PatchController.Verify(magLoadAttachableOriginal, harmony, false);
-            harmony.Patch(magAddRoundClassOriginal, null, null, new HarmonyMethod(magAddRoundClassTranspiler));
-            harmony.Patch(magAddRoundRoundOriginal, null, null, new HarmonyMethod(magAddRoundRoundTranspiler));
+            try 
+            { 
+                harmony.Patch(magAddRoundClassOriginal, null, null, new HarmonyMethod(magAddRoundClassTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.MagazinePatch on magAddRoundClassOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try
+            { 
+                harmony.Patch(magAddRoundRoundOriginal, null, null, new HarmonyMethod(magAddRoundRoundTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.MagazinePatch on magAddRoundRoundOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(magLoadFireArmOriginal, new HarmonyMethod(magLoadFireArmPrefix));
             harmony.Patch(magLoadIntoSecondaryOriginal, new HarmonyMethod(magLoadIntoSecondaryPrefix));
             harmony.Patch(magLoadAttachableOriginal, new HarmonyMethod(magLoadAttachablePrefix));
@@ -584,8 +725,22 @@ namespace H3MP.Patches
             PatchController.Verify(clipAddRoundClassOriginal, harmony, false);
             PatchController.Verify(clipAddRoundRoundOriginal, harmony, false);
             PatchController.Verify(clipLoadOriginal, harmony, false);
-            harmony.Patch(clipAddRoundClassOriginal, null, null, new HarmonyMethod(clipAddRoundClassTranspiler));
-            harmony.Patch(clipAddRoundRoundOriginal, null, null, new HarmonyMethod(clipAddRoundRoundTranspiler));
+            try 
+            { 
+                harmony.Patch(clipAddRoundClassOriginal, null, null, new HarmonyMethod(clipAddRoundClassTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.ClipPatch on clipAddRoundClassOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try 
+            { 
+                harmony.Patch(clipAddRoundRoundOriginal, null, null, new HarmonyMethod(clipAddRoundRoundTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.ClipPatch on clipAddRoundRoundOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(clipLoadOriginal, new HarmonyMethod(clipLoadPrefix));
 
             // SpeedloaderChamberPatch
@@ -624,8 +779,22 @@ namespace H3MP.Patches
 
             PatchController.Verify(speedLoaderFixedUpdateOriginal, harmony, false);
             PatchController.Verify(speedLoaderUpdateOriginal, harmony, false);
-            harmony.Patch(speedLoaderFixedUpdateOriginal, null, null, new HarmonyMethod(speedLoaderFixedUpdateTranspiler));
-            harmony.Patch(speedLoaderUpdateOriginal, null, null, new HarmonyMethod(speedLoaderUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(speedLoaderFixedUpdateOriginal, null, null, new HarmonyMethod(speedLoaderFixedUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.SpeedloaderPatch on speedLoaderFixedUpdateOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try
+            {
+                harmony.Patch(speedLoaderUpdateOriginal, null, null, new HarmonyMethod(speedLoaderUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.SpeedloaderPatch on speedLoaderUpdateOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // RevolverCylinderPatch
             MethodInfo revolverCylinderLoadOriginal = typeof(RevolverCylinder).GetMethod("LoadFromSpeedLoader", BindingFlags.Public | BindingFlags.Instance);
@@ -653,21 +822,42 @@ namespace H3MP.Patches
             MethodInfo carlGustafLatchUpdateTranspiler = typeof(CarlGustafLatchPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(carlGustafLatchUpdateOriginal, harmony, false);
-            harmony.Patch(carlGustafLatchUpdateOriginal, null, null, new HarmonyMethod(carlGustafLatchUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(carlGustafLatchUpdateOriginal, null, null, new HarmonyMethod(carlGustafLatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.CarlGustafLatchPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // CarlGustafShellInsertEjectPatch
             MethodInfo carlGustafShellSlideUpdateOriginal = typeof(CarlGustafShellInsertEject).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo carlGustafShellSlideUpdateTranspiler = typeof(CarlGustafShellInsertEjectPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(carlGustafShellSlideUpdateOriginal, harmony, false);
-            harmony.Patch(carlGustafShellSlideUpdateOriginal, null, null, new HarmonyMethod(carlGustafShellSlideUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(carlGustafShellSlideUpdateOriginal, null, null, new HarmonyMethod(carlGustafShellSlideUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.CarlGustafShellInsertEjectPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // GrappleThrowablePatch
             MethodInfo grappleThrowableCollisionOriginal = typeof(GrappleThrowable).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo grappleThrowableCollisionTranspiler = typeof(GrappleThrowablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(grappleThrowableCollisionOriginal, harmony, false);
-            harmony.Patch(grappleThrowableCollisionOriginal, null, null, new HarmonyMethod(grappleThrowableCollisionTranspiler));
+            try
+            { 
+                harmony.Patch(grappleThrowableCollisionOriginal, null, null, new HarmonyMethod(grappleThrowableCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.GrappleThrowablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // EncryptionSpawnGrowthPatch
             MethodInfo encryptionSpawnGrowthOriginal = typeof(TNH_EncryptionTarget).GetMethod("SpawnGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -774,6 +964,8 @@ namespace H3MP.Patches
             toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load gameObject
             toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FirePatch), "GetDirection"))); // Call our GetDirection method
 
+            bool applied0 = false;
+            bool applied1 = false;
             bool skippedFirstDir = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -781,6 +973,7 @@ namespace H3MP.Patches
                 if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("op_Subtraction"))
                 {
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied0 = true;
                 }
 
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
@@ -788,6 +981,7 @@ namespace H3MP.Patches
                     if (skippedFirstDir)
                     {
                         instructionList.InsertRange(i + 1, toInsert1);
+                        applied1 = true;
                     }
                     else
                     {
@@ -795,6 +989,12 @@ namespace H3MP.Patches
                     }
                 }
             }
+
+            if(!applied0 || !applied1)
+            {
+                Mod.LogError("FirePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -1214,6 +1414,10 @@ namespace H3MP.Patches
             toInsert3.Add(new CodeInstruction(OpCodes.Ldloc_S, 15)); // Load gameObject
             toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireLAPD2019Patch), "GetDirection"))); // Call our GetDirection method
 
+            bool applied0 = false;
+            bool applied1 = false;
+            bool applied2 = false;
+            bool applied3 = false;
             bool foundFirstPos = false;
             bool foundFirstDir = false;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -1225,10 +1429,12 @@ namespace H3MP.Patches
                     if (foundFirstPos)
                     {
                         instructionList.InsertRange(i + 2, toInsert2);
+                        applied1 = true;
                     }
                     else
                     {
                         instructionList.InsertRange(i + 2, toInsert0);
+                        applied0 = true;
                         foundFirstPos = true;
                     }
                 }
@@ -1239,15 +1445,23 @@ namespace H3MP.Patches
                     if (foundFirstDir)
                     {
                         instructionList.InsertRange(i + 2, toInsert3);
+                        applied3 = true;
                         break;
                     }
                     else
                     {
                         instructionList.InsertRange(i + 2, toInsert1);
+                        applied2 = true;
                         foundFirstDir = true;
                     }
                 }
             }
+
+            if (!applied0 || !applied1 || !applied2 || !applied3)
+            {
+                Mod.LogError("FireLAPD2019Patch Transpiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -1408,6 +1622,8 @@ namespace H3MP.Patches
             toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load gameObject
             toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireAttachableFirearmPatch), "GetDirection"))); // Call our GetDirection method
 
+            bool applied0 = false;
+            bool applied1 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -1419,15 +1635,23 @@ namespace H3MP.Patches
                 if (instruction.operand.ToString().Contains("op_Subtraction"))
                 {
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied0 = true;
                 }
 
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
                     instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 2, toInsert1);
+                    applied1 = true;
                     break;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("FireAttachableFirearmPatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -2103,6 +2327,7 @@ namespace H3MP.Patches
             toInsert4.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetNum2"))); // Call our GetNum2
             toInsert4.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set num2
 
+            bool[] applied = new bool[5];
             bool foundFirstPos = false;
             bool skippedSecondDir = false;
             bool foundFirstDir = false;
@@ -2113,6 +2338,7 @@ namespace H3MP.Patches
                 if (!foundNum2 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("System.Single (4)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert4);
+                    applied[0] = true;
                     foundNum2 = true;
                     continue;
                 }
@@ -2120,18 +2346,21 @@ namespace H3MP.Patches
                 if (!foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied[1] = true;
                     foundFirstPos = true;
                     continue;
                 }
                 if (foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 1, toInsert2);
+                    applied[2] = true;
                     continue;
                 }
 
                 if (!foundFirstDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 1, toInsert1);
+                    applied[3] = true;
                     foundFirstDir = true;
                     continue;
                 }
@@ -2143,9 +2372,20 @@ namespace H3MP.Patches
                 if (foundFirstDir && skippedSecondDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 1, toInsert3);
+                    applied[4] = true;
                     break;
                 }
             }
+
+            for(int i=0; i < applied.Length; ++i)
+            {
+                if (!applied[i])
+                {
+                    Mod.LogError("FireFlintlockWeaponPatch BurnOffOuterTranspiler not applied!");
+                    break;
+                }
+            }
+
             return instructionList;
         }
 
@@ -2375,6 +2615,7 @@ namespace H3MP.Patches
             toInsert6.Add(new CodeInstruction(OpCodes.Ldloc_S, 22)); // Load gameObject
             toInsert6.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireFlintlockWeaponPatch), "GetDirection"))); // Call our GetDirection method
 
+            bool[] applied = new bool[7];
             bool foundFirstPos = false;
             bool foundFirstDir = false;
             bool foundNum5 = false;
@@ -2385,6 +2626,7 @@ namespace H3MP.Patches
                 if (!foundNum5 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.Single (9)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert4);
+                    applied[0] = true;
                     foundNum5 = true;
                     continue;
                 }
@@ -2393,17 +2635,20 @@ namespace H3MP.Patches
                     instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 2, toInsert0);
+                    applied[1] = true;
                     foundFirstPos = true;
                     continue;
                 }
                 if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.Vector3 (13)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert2);
+                    applied[2] = true;
                     continue;
                 }
                 if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.Vector3 (21)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert5);
+                    applied[3] = true;
                     continue;
                 }
 
@@ -2412,6 +2657,7 @@ namespace H3MP.Patches
                     instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 2, toInsert1);
+                    applied[4] = true;
                     foundFirstDir = true;
                     continue;
                 }
@@ -2420,6 +2666,7 @@ namespace H3MP.Patches
                     instructionList[i + 2].opcode == OpCodes.Callvirt && instructionList[i + 2].operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 3, toInsert3);
+                    applied[5] = true;
                     continue;
                 }
                 if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (22)") &&
@@ -2427,9 +2674,20 @@ namespace H3MP.Patches
                     instructionList[i + 2].opcode == OpCodes.Callvirt && instructionList[i + 2].operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 3, toInsert6);
-                    break; ;
+                    applied[6] = true;
+                    break;
                 }
             }
+
+            for (int i = 0; i < applied.Length; ++i)
+            {
+                if (!applied[i])
+                {
+                    Mod.LogError("FireFlintlockWeaponPatch FireTranspiler not applied!");
+                    break;
+                }
+            }
+
             return instructionList;
         }
 
@@ -2586,27 +2844,29 @@ namespace H3MP.Patches
 
         static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
-            Mod.LogInfo("CollisionTranspiler");
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if(instruction.opcode != null && instruction.operand != null)
-                {
-                    Mod.LogInfo("\t"+ instruction.opcode.ToString()+" : "+ instruction.operand.ToString());
-                }
                 if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("Fire"))
                 {
-                    Mod.LogInfo("\t\tApplied CollisionTranspiler");
                     instructionList.RemoveAt(i - 1);
                     instructionList.RemoveAt(i - 1);
                     instructionList.Insert(i - 1, new CodeInstruction(OpCodes.Ldarg_0));
                     instructionList.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SimpleLauncherPatch), "ConditionalFire")));
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SimpleLauncherPatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -2670,6 +2930,7 @@ namespace H3MP.Patches
             toInsert2.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load StingerMissile
             toInsert2.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "SetStingerMissile"))); // Call our SetStingerMissile method
 
+            bool[] applied = new bool[3];
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -2677,21 +2938,34 @@ namespace H3MP.Patches
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied[0] = true;
                     continue;
                 }
 
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_rotation"))
                 {
                     instructionList.InsertRange(i + 1, toInsert1);
+                    applied[1] = true;
                     continue;
                 }
 
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Fire"))
                 {
                     instructionList.InsertRange(i + 1, toInsert2);
+                    applied[2] = true;
                     break;
                 }
             }
+
+            for (int i = 0; i < applied.Length; ++i)
+            {
+                if (!applied[i])
+                {
+                    Mod.LogError("FireStingerLauncherPatch Transpiler not applied!");
+                    break;
+                }
+            }
+
             return instructionList;
         }
 
@@ -3184,14 +3458,22 @@ namespace H3MP.Patches
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load delay
             toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendFootStepSound"))); // Call our own method
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("PlayCoreSoundDelayedOverrides"))
                 {
                     instructionList.InsertRange(i + 1, toInsertSecond);
+                    applied = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SosigActionPatch FootStepTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -3230,14 +3512,22 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Sosig), "m_speakingSource"))); // Load m_speakingSource
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendSpeakState"))); // Call our own method
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("Speak_State"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SosigActionPatch SpeechUpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -4226,6 +4516,7 @@ namespace H3MP.Patches
             toInsertActive.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load false
             toInsertActive.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterUpdateFlightPatch), "SetAutoMeaterBladesActive"))); // Call SetAutoMeaterBladesActive
 
+            bool applied = false;
             bool active = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -4233,9 +4524,16 @@ namespace H3MP.Patches
                 if (instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("UsesBlades"))
                 {
                     instructionList.InsertRange(i + 2, active ? toInsertActive : toInsertInactive);
+                    applied = true;
                     active = !active;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("AutoMeaterUpdateFlightPatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -4332,15 +4630,23 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AutoMeaterFirearmFireShotPatch), "GetMuzzleAngles"))); // Call GetMuzzleAngles
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Transform), "set_localEulerAngles"))); // Set angles
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("set_localEulerAngles"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("AutoMeaterFirearmFireShotPatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -4415,6 +4721,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load index
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionRespawnRandSubPatch), "RespawnSubTarg"))); // Call RespawnSubTarg
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -4423,10 +4730,17 @@ namespace H3MP.Patches
                     if (instruction.operand.ToString().Contains("get_activeSelf"))
                     {
                         instructionList.InsertRange(i + 2, toInsert);
+                        applied = true;
                         break;
                     }
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("EncryptionRespawnRandSubPatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -4925,25 +5239,35 @@ namespace H3MP.Patches
             CodeInstruction breakToLoopHead = new CodeInstruction(OpCodes.Br);
             toInsert0.Add(breakToLoopHead); // Break to loop head, where we will check index j against SpawnOnSplode.Count and break out of loop
 
-            bool applied = false;
+            bool applied0 = false;
+            bool applied1 = false;
+            bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if (!applied && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("SpawnOnSplode"))
+                if (!found && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("SpawnOnSplode"))
                 {
                     breakToLoopHead.operand = instructionList[i - 2].operand;
                     instructionList[i - 1].labels.Add(loopStartLabel);
                     instructionList.InsertRange(i - 1, toInsert0);
-                    applied = true;
+                    found = true;
+                    applied0 = true;
                 }
 
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (5)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied1 = true;
                     break;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("PinnedGrenadePatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -4999,6 +5323,8 @@ namespace H3MP.Patches
 
             toInsert0.Add(new CodeInstruction(OpCodes.Ret)); // If not controlled return right away
 
+            bool applied0 = false;
+            bool applied1 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -5007,14 +5333,22 @@ namespace H3MP.Patches
                 {
                     instructionList[i + 1].labels.Add(l);
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied0 = true;
                 }
 
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied1 = true;
                     break;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("PinnedGrenadePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -5304,6 +5638,7 @@ namespace H3MP.Patches
             toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load i
             toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "ActivateSubTarg"))); // Call our ActivateSubTarg method
 
+            bool[] applied = new bool[4];
             bool found = false;
             int foundCount = 0;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -5315,18 +5650,21 @@ namespace H3MP.Patches
                     if(found)
                     {
                         instructionList.InsertRange(i + 1, toInsert1);
+                        applied[0] = true;
                         break;
 
                     }
                     else
                     {
                         instructionList.InsertRange(i + 1, toInsert0);
+                        applied[1] = true;
                     }
                 }
 
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_gameObject"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied[2] = true;
                 }
 
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_Item"))
@@ -5335,9 +5673,20 @@ namespace H3MP.Patches
                     if(foundCount == 4)
                     {
                         instructionList.InsertRange(i + 1, toInsert);
+                        applied[3] = true;
                     }
                 }
             }
+
+            for (int i = 0; i < applied.Length; ++i)
+            {
+                if (!applied[i])
+                {
+                    Mod.LogError("EncryptionPatch UpdateTranspiler not applied!");
+                    break;
+                }
+            }
+
             return instructionList;
         }
 
@@ -5589,7 +5938,8 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_2)); // Load the newly instantiated GameObject
             toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "get_transform"))); // Get transform
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "EncryptionSpawnOnDestroy"))); // Call our method
-            
+
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -5597,9 +5947,16 @@ namespace H3MP.Patches
                 if (instruction.opcode == OpCodes.Stloc_2)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("EncryptionPatch DestroyTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -5771,6 +6128,7 @@ namespace H3MP.Patches
 
             toInsert0.Add(new CodeInstruction(OpCodes.Ret)); // If not controlled return right away
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -5779,9 +6137,16 @@ namespace H3MP.Patches
                 {
                     instructionList[i + 1].labels.Add(l);
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("BangSnapPatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -5953,6 +6318,7 @@ namespace H3MP.Patches
             // Define final return label
             Label returnLabel = il.DefineLabel();
 
+            bool[] applied = new bool[5];
             bool doubleInstanceFound = false;
             bool chamberEndFound = false;
             int getCountFound = 0;
@@ -5965,6 +6331,7 @@ namespace H3MP.Patches
                     {
                         instruction.labels.Add(startLoadChamberLabel);
                         instructionList.InsertRange(i, toInsert);
+                        applied[0] = true;
                         i += toInsert.Count;
 
                         doubleInstanceFound = true;
@@ -6000,6 +6367,7 @@ namespace H3MP.Patches
                         instructionList[i - 2].labels.Add(startLoadClipLabel);
                         instructionList.InsertRange(i - 2, toInsert);
                         i += toInsert.Count;
+                        applied[1] = true;
 
                         // Set labels for SL Chamber
                         Label afterGettingTrackedItemSLChamberLabel = il.DefineLabel();
@@ -6020,6 +6388,7 @@ namespace H3MP.Patches
                         instructionList[i - 2].labels.Add(startLoadSLChamberLabel);
                         instructionList.InsertRange(i - 2, toInsert);
                         i += toInsert.Count;
+                        applied[2] = true;
 
                         // Set labels for RemoteGun
                         Label afterGettingTrackedItemRemoteGunLabel = il.DefineLabel();
@@ -6040,6 +6409,7 @@ namespace H3MP.Patches
                         instructionList[i - 2].labels.Add(startLoadRemoteGunLabel);
                         instructionList.InsertRange(i - 2, toInsert);
                         i += toInsert.Count;
+                        applied[3] = true;
 
                         // Set labels for Mag
                         Label afterGettingTrackedItemMagLabel = il.DefineLabel();
@@ -6059,6 +6429,7 @@ namespace H3MP.Patches
                     {
                         instructionList[i - 2].labels.Add(startLoadMagLabel);
                         instructionList.InsertRange(i - 2, toInsert);
+                        applied[4] = true;
                         i += toInsert.Count;
                     }
                     ++getCountFound;
@@ -6069,6 +6440,16 @@ namespace H3MP.Patches
                     break;
                 }
             }
+
+            for (int i = 0; i < applied.Length; ++i)
+            {
+                if (!applied[i])
+                {
+                    Mod.LogError("RoundPatch FixedUpdateTranspiler not applied!");
+                    break;
+                }
+            }
+
             return instructionList;
         }
     }
@@ -6089,15 +6470,23 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load rClass
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MagazinePatch), "AddRound"))); // Call our AddRound method
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Bge)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MagazinePatch AddRoundClassTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -6112,15 +6501,23 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRFireArmRound), "RoundClass"))); // Load round class
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MagazinePatch), "AddRound"))); // Call our AddRound method
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Bge)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MagazinePatch AddRoundRoundTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -6244,15 +6641,23 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_1)); // Load rClass
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ClipPatch), "AddRound"))); // Call our AddRound method
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Bge)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("ClipPatch AddRoundClassTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -6267,15 +6672,23 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(FVRFireArmRound), "RoundClass"))); // Load round class
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ClipPatch), "AddRound"))); // Call our AddRound method
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Bge)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("ClipPatch AddRoundClassTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -6547,6 +6960,7 @@ namespace H3MP.Patches
             Label afterLoadLabel = il.DefineLabel();
             toInsert.Add(new CodeInstruction(OpCodes.Bne_Un, afterLoadLabel)); // Compare our ID with controller, if we are not controller skip load into cylinder
 
+            bool applied = false;
             bool startFound = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -6558,6 +6972,7 @@ namespace H3MP.Patches
                         instructionList[i + 1].labels.Add(startLoadLabel);
                         instructionList.InsertRange(i + 1, toInsert);
                         i += toInsert.Count;
+                        applied = true;
 
                         startFound = true;
                     }
@@ -6568,6 +6983,12 @@ namespace H3MP.Patches
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SpeedloaderPatch FixedUpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -6626,6 +7047,8 @@ namespace H3MP.Patches
             Label afterGettingGrapplingTrackedItemLabel = il.DefineLabel();
             Label startGrapplingLoadLabel = il.DefineLabel();
 
+            bool applied0 = false;
+            bool applied1 = false;
             bool firstStartFound = false;
             bool secondStartFound = false;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -6638,6 +7061,7 @@ namespace H3MP.Patches
                         instructionList[i - 4].labels.Add(startLoadLabel);
                         instructionList.InsertRange(i - 4, toInsert);
                         i += toInsert.Count;
+                        applied0 = true;
 
                         firstStartFound = true;
 
@@ -6653,6 +7077,7 @@ namespace H3MP.Patches
                         instructionList[i - 4].labels.Add(startGrapplingLoadLabel);
                         instructionList.InsertRange(i - 4, toInsert);
                         i += toInsert.Count;
+                        applied1 = true;
 
                         secondStartFound = true;
                     }
@@ -6662,6 +7087,11 @@ namespace H3MP.Patches
                     instruction.labels.Add(afterLoadLabel);
                     break;
                 }
+            }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("SpeedloaderPatch UpdateTranspiler not applied!");
             }
 
             return instructionList;
@@ -6767,6 +7197,8 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldc_I4_0)); // Load 0 (false)
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafLatchPatch), "SetLatchState"))); // Call our method
 
+            bool applied0 = false;
+            bool applied1 = false;
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -6777,6 +7209,7 @@ namespace H3MP.Patches
                     {
                         instructionList.InsertRange(i, toInsert);
                         i += toInsert.Count;
+                        applied0 = true;
 
                         found = true;
 
@@ -6786,11 +7219,18 @@ namespace H3MP.Patches
                     else
                     {
                         instructionList.InsertRange(i, toInsert);
+                        applied1 = true;
 
                         break;
                     }
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("CarlGustafLatchPatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -6834,6 +7274,7 @@ namespace H3MP.Patches
             CodeInstruction incInstruction = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEjectPatch), "IncShellSlideEjectFlag"));
             CodeInstruction decInstruction = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CarlGustafShellInsertEjectPatch), "DecShellSlideEjectFlag"));
 
+            bool[] applied = new bool[3];
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -6844,6 +7285,7 @@ namespace H3MP.Patches
                     {
                         instructionList.InsertRange(i, toInsert);
                         i += toInsert.Count;
+                        applied[0] = true;
 
                         found = true;
 
@@ -6853,6 +7295,7 @@ namespace H3MP.Patches
                     else
                     {
                         instructionList.InsertRange(i, toInsert);
+                        applied[1] = true;
 
                         break;
                     }
@@ -6862,8 +7305,19 @@ namespace H3MP.Patches
                     instructionList.Insert(i, incInstruction);
                     instructionList.Insert(i + 2, decInstruction);
                     i += 2;
+                    applied[2] = true;
                 }
             }
+
+            for (int i = 0; i < applied.Length; ++i)
+            {
+                if (!applied[i])
+                {
+                    Mod.LogError("CarlGustafShellInsertEjectPatch UpdateTranspiler not applied!");
+                    break;
+                }
+            }
+
             return instructionList;
         }
 
@@ -6916,6 +7370,8 @@ namespace H3MP.Patches
             toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load GrappleThrowable instance
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GrappleThrowablePatch), "CheckController"))); // Call our method
 
+            bool applied0 = false;
+            bool applied1 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -6923,13 +7379,21 @@ namespace H3MP.Patches
                 {
                     toInsert0.Add(instructionList[i + 3]);
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied0 = true;
                 }
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("SetActive"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied1 = true;
                     break;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("GrappleThrowablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
