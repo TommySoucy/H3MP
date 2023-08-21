@@ -1546,18 +1546,16 @@ namespace H3MP
             if (loading) // Just started loading
             {
                 Mod.LogInfo("Switching scene, from " + GameManager.scene + " to " + LoadLevelBeginPatch.loadingLevel, false);
+                sceneLoading = true;
+                instanceAtSceneLoadStart = instance;
+                sceneAtSceneLoadStart = GameManager.scene;
+
                 if (Mod.managerObject == null)
                 {
-                    sceneLoading = true;
-                    instanceAtSceneLoadStart = instance;
-                    sceneAtSceneLoadStart = GameManager.scene;
                     connectedAtLoadStart = false;
                 }
                 else
                 {
-                    sceneLoading = true;
-                    instanceAtSceneLoadStart = instance;
-                    sceneAtSceneLoadStart = GameManager.scene;
                     connectedAtLoadStart = true;
 
                     ++giveControlOfDestroyed;
@@ -1637,19 +1635,12 @@ namespace H3MP
             }
             else // Finished loading
             {
+                scene = LoadLevelBeginPatch.loadingLevel;
+                sceneLoading = false;
                 Mod.LogInfo("Arrived in scene: " + scene, false);
-                if (Mod.managerObject == null)
-                {
-                    sceneLoading = true;
-                    instanceAtSceneLoadStart = instance;
-                    sceneAtSceneLoadStart = GameManager.scene;
-                    connectedAtLoadStart = false;
-                }
-                else
-                {
-                    scene = LoadLevelBeginPatch.loadingLevel;
-                    sceneLoading = false;
 
+                if (Mod.managerObject != null)
+                {
                     // Send an update to let others know we changed scene
                     if (ThreadManager.host)
                     {
