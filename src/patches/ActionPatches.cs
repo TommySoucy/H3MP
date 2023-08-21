@@ -2586,18 +2586,24 @@ namespace H3MP.Patches
 
         static IEnumerable<CodeInstruction> CollisionTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
+            Mod.LogInfo("CollisionTranspiler");
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
 
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
 
+                if(instruction.opcode != null && instruction.operand != null)
+                {
+                    Mod.LogInfo("\t"+ instruction.opcode.ToString()+" : "+ instruction.operand.ToString());
+                }
                 if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("Fire"))
                 {
+                    Mod.LogInfo("\t\tApplied CollisionTranspiler");
                     instructionList.RemoveAt(i - 1);
                     instructionList.RemoveAt(i - 1);
                     instructionList.Insert(i - 1, new CodeInstruction(OpCodes.Ldarg_0));
-                    instructionList.Insert(i - 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SimpleLauncherPatch), "ConditionalFire")));
+                    instructionList.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SimpleLauncherPatch), "ConditionalFire")));
                     break;
                 }
             }
