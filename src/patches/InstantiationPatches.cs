@@ -80,7 +80,14 @@ namespace H3MP.Patches
 
             PatchController.Verify(spawnVaultFileRoutinePatchOriginal, harmony, false);
             PatchController.Verify(spawnVaultFileRoutinePatchMoveNext, harmony, false);
-            harmony.Patch(spawnVaultFileRoutinePatchMoveNext, new HarmonyMethod(spawnVaultFileRoutinePatchPrefix), new HarmonyMethod(spawnVaultFileRoutinePatchPostfix), new HarmonyMethod(spawnVaultFileRoutinePatchTranspiler));
+            try 
+            { 
+                harmony.Patch(spawnVaultFileRoutinePatchMoveNext, new HarmonyMethod(spawnVaultFileRoutinePatchPrefix), new HarmonyMethod(spawnVaultFileRoutinePatchPostfix), new HarmonyMethod(spawnVaultFileRoutinePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying InstantiationPatches.SpawnVaultFileRoutinePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // IDSpawnedFromPatch
             MethodInfo IDSpawnedFromPatchOriginal = typeof(FVRPhysicalObject).GetMethod("set_IDSpawnedFrom", BindingFlags.Public | BindingFlags.Instance);
@@ -607,6 +614,7 @@ namespace H3MP.Patches
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
             CodeInstruction toInsert = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SpawnVaultFileRoutinePatch), "FinishedRoutine"));
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -614,10 +622,16 @@ namespace H3MP.Patches
                     instructionList[i + 1].opcode == OpCodes.Ldc_I4_0 && instructionList[i + 2].opcode == OpCodes.Ret)
                 {
                     instructionList.Insert(i + 1, toInsert);
-
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SpawnVaultFileRoutinePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
 
