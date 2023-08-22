@@ -27,7 +27,14 @@ namespace H3MP.Patches
             MethodInfo encryptionDamageablePatchFixedUpdateTranspiler = typeof(EncryptionDamageablePatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(encryptionDamageablePatchFixedUpdateOriginal, harmony, true);
-            harmony.Patch(encryptionDamageablePatchFixedUpdateOriginal, null, null, new HarmonyMethod(encryptionDamageablePatchFixedUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(encryptionDamageablePatchFixedUpdateOriginal, null, null, new HarmonyMethod(encryptionDamageablePatchFixedUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.EncryptionDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // UberShatterableShatterPatch
             MethodInfo uberShatterableShatterPatchOriginal = typeof(UberShatterable).GetMethod("Shatter", BindingFlags.Public | BindingFlags.Instance);
@@ -71,56 +78,112 @@ namespace H3MP.Patches
             MethodInfo projectileFirePatchTranspiler = typeof(ProjectileFirePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(projectileFirePatchOriginal, harmony, true);
-            harmony.Patch(projectileFirePatchOriginal, new HarmonyMethod(projectileFirePatchPostfix), null, new HarmonyMethod(projectileFirePatchTranspiler));
+            try
+            { 
+                harmony.Patch(projectileFirePatchOriginal, new HarmonyMethod(projectileFirePatchPostfix), null, new HarmonyMethod(projectileFirePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.ProjectileFirePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // ProjectileDamageablePatch
             MethodInfo ballisticProjectileDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo ballisticProjectileDamageablePatchTranspiler = typeof(BallisticProjectileDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(ballisticProjectileDamageablePatchOriginal, harmony, true);
-            harmony.Patch(ballisticProjectileDamageablePatchOriginal, null, null, new HarmonyMethod(ballisticProjectileDamageablePatchTranspiler));
+            try
+            { 
+                harmony.Patch(ballisticProjectileDamageablePatchOriginal, null, null, new HarmonyMethod(ballisticProjectileDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.BallisticProjectileDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // SubMunitionsDamageablePatch
             MethodInfo subMunitionsDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("FireSubmunitions", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo subMunitionsDamageablePatchTranspiler = typeof(SubMunitionsDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(subMunitionsDamageablePatchOriginal, harmony, false);
-            harmony.Patch(subMunitionsDamageablePatchOriginal, null, null, new HarmonyMethod(subMunitionsDamageablePatchTranspiler));
+            try 
+            { 
+                harmony.Patch(subMunitionsDamageablePatchOriginal, null, null, new HarmonyMethod(subMunitionsDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.SubMunitionsDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // ExplosionDamageablePatch
             MethodInfo explosionDamageablePatchOriginal = typeof(Explosion).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo explosionDamageablePatchTranspiler = typeof(ExplosionDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(explosionDamageablePatchOriginal, harmony, false);
-            harmony.Patch(explosionDamageablePatchOriginal, null, null, new HarmonyMethod(explosionDamageablePatchTranspiler));
+            try 
+            { 
+                harmony.Patch(explosionDamageablePatchOriginal, null, null, new HarmonyMethod(explosionDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.ExplosionDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // GrenadeExplosionDamageablePatch
             MethodInfo grenadeExplosionDamageablePatchOriginal = typeof(GrenadeExplosion).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo grenadeExplosionDamageablePatchTranspiler = typeof(GrenadeExplosionDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(grenadeExplosionDamageablePatchOriginal, harmony, false);
-            harmony.Patch(grenadeExplosionDamageablePatchOriginal, null, null, new HarmonyMethod(grenadeExplosionDamageablePatchTranspiler));
+            try 
+            { 
+                harmony.Patch(grenadeExplosionDamageablePatchOriginal, null, null, new HarmonyMethod(grenadeExplosionDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.GrenadeExplosionDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // FlameThrowerDamageablePatch
             MethodInfo flameThrowerDamageablePatchOriginal = typeof(FlameThrower).GetMethod("AirBlast", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo flameThrowerDamageablePatchTranspiler = typeof(FlameThrowerDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(flameThrowerDamageablePatchOriginal, harmony, false);
-            harmony.Patch(flameThrowerDamageablePatchOriginal, null, null, new HarmonyMethod(flameThrowerDamageablePatchTranspiler));
+            try
+            { 
+                harmony.Patch(flameThrowerDamageablePatchOriginal, null, null, new HarmonyMethod(flameThrowerDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.FlameThrowerDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // GrenadeDamageablePatch
             MethodInfo grenadeDamageablePatchOriginal = typeof(FVRGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo grenadeDamageablePatchTranspiler = typeof(GrenadeDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(grenadeDamageablePatchOriginal, harmony, false);
-            harmony.Patch(grenadeDamageablePatchOriginal, null, null, new HarmonyMethod(grenadeDamageablePatchTranspiler));
+            try 
+            { 
+                harmony.Patch(grenadeDamageablePatchOriginal, null, null, new HarmonyMethod(grenadeDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.GrenadeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // DemonadeDamageablePatch
             MethodInfo demonadeDamageablePatchOriginal = typeof(MF2_Demonade).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo demonadeDamageablePatchTranspiler = typeof(DemonadeDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(demonadeDamageablePatchOriginal, harmony, false);
-            harmony.Patch(demonadeDamageablePatchOriginal, null, null, new HarmonyMethod(demonadeDamageablePatchTranspiler));
+            try 
+            { 
+                harmony.Patch(demonadeDamageablePatchOriginal, null, null, new HarmonyMethod(demonadeDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.DemonadeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // SosigWeaponDamageablePatch
             MethodInfo sosigWeaponDamageablePatchOriginal = typeof(SosigWeapon).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -133,9 +196,30 @@ namespace H3MP.Patches
             PatchController.Verify(sosigWeaponDamageablePatchOriginal, harmony, true);
             PatchController.Verify(sosigWeaponDamageablePatchCollisionOriginal, harmony, true);
             PatchController.Verify(sosigWeaponDamageablePatchUpdateOriginal, harmony, true);
-            harmony.Patch(sosigWeaponDamageablePatchOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchTranspiler));
-            harmony.Patch(sosigWeaponDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchCollisionTranspiler));
-            harmony.Patch(sosigWeaponDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(sosigWeaponDamageablePatchOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.SosigWeaponDamageablePatch on sosigWeaponDamageablePatchOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try
+            { 
+                harmony.Patch(sosigWeaponDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.SosigWeaponDamageablePatch on sosigWeaponDamageablePatchCollisionOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try
+            { 
+                harmony.Patch(sosigWeaponDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(sosigWeaponDamageablePatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.SosigWeaponDamageablePatch on sosigWeaponDamageablePatchUpdateOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // MeleeParamsDamageablePatch
             MethodInfo meleeParamsDamageablePatchStabOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("DoStabDamage", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -152,101 +236,220 @@ namespace H3MP.Patches
             PatchController.Verify(meleeParamsDamageablePatchTearOriginal, harmony, true);
             PatchController.Verify(meleeParamsDamageablePatchUpdateOriginal, harmony, true);
             PatchController.Verify(meleeParamsDamageablePatchCollisionOriginal, harmony, true);
-            harmony.Patch(meleeParamsDamageablePatchStabOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchStabTranspiler));
-            harmony.Patch(meleeParamsDamageablePatchTearOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchTearTranspiler));
-            harmony.Patch(meleeParamsDamageablePatchUpdateOriginal, new HarmonyMethod(meleeParamsDamageablePatchUpdatePrefix), null, new HarmonyMethod(meleeParamsDamageablePatchUpdateTranspiler));
-            harmony.Patch(meleeParamsDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchCollisionTranspiler));
+            try
+            { 
+                harmony.Patch(meleeParamsDamageablePatchStabOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchStabTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MeleeParamsDamageablePatch on meleeParamsDamageablePatchStabOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try
+            { 
+                harmony.Patch(meleeParamsDamageablePatchTearOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchTearTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MeleeParamsDamageablePatch on meleeParamsDamageablePatchTearOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try
+            { 
+                harmony.Patch(meleeParamsDamageablePatchUpdateOriginal, new HarmonyMethod(meleeParamsDamageablePatchUpdatePrefix), null, new HarmonyMethod(meleeParamsDamageablePatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MeleeParamsDamageablePatch on meleeParamsDamageablePatchUpdateOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try 
+            { 
+                harmony.Patch(meleeParamsDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MeleeParamsDamageablePatch on meleeParamsDamageablePatchCollisionOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // AIMeleeDamageablePatch
             MethodInfo meleeParamsDamageablePatchFireOriginal = typeof(AIMeleeWeapon).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo meleeParamsDamageablePatchFireTranspiler = typeof(AIMeleeDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(meleeParamsDamageablePatchFireOriginal, harmony, true);
-            harmony.Patch(meleeParamsDamageablePatchFireOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchFireTranspiler));
+            try
+            { 
+                harmony.Patch(meleeParamsDamageablePatchFireOriginal, null, null, new HarmonyMethod(meleeParamsDamageablePatchFireTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.AIMeleeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // AutoMeaterBladeDamageablePatch
             MethodInfo autoMeaterBladeDamageablePatchCollisionOriginal = typeof(AutoMeaterBlade).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo autoMeaterBladeDamageablePatchCollisionTranspiler = typeof(AutoMeaterBladeDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(autoMeaterBladeDamageablePatchCollisionOriginal, harmony, false);
-            harmony.Patch(autoMeaterBladeDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(autoMeaterBladeDamageablePatchCollisionTranspiler));
+            try
+            { 
+                harmony.Patch(autoMeaterBladeDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(autoMeaterBladeDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.AutoMeaterBladeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // BangSnapDamageablePatch
             MethodInfo bangSnapDamageablePatchCollisionOriginal = typeof(BangSnap).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo bangSnapDamageablePatchCollisionTranspiler = typeof(BangSnapDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(bangSnapDamageablePatchCollisionOriginal, harmony, false);
-            harmony.Patch(bangSnapDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(bangSnapDamageablePatchCollisionTranspiler));
+            try
+            { 
+                harmony.Patch(bangSnapDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(bangSnapDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.BangSnapDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // BearTrapDamageablePatch
             MethodInfo bearTrapDamageablePatchSnapOriginal = typeof(BearTrapInteractiblePiece).GetMethod("SnapShut", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo bearTrapDamageablePatchSnapTranspiler = typeof(BearTrapDamageablePatch).GetMethod("SnapTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(bearTrapDamageablePatchSnapOriginal, harmony, false);
-            harmony.Patch(bearTrapDamageablePatchSnapOriginal, null, null, new HarmonyMethod(bearTrapDamageablePatchSnapTranspiler));
+            try 
+            { 
+                harmony.Patch(bearTrapDamageablePatchSnapOriginal, null, null, new HarmonyMethod(bearTrapDamageablePatchSnapTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.BearTrapDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // ChainsawDamageablePatch
             MethodInfo chainsawDamageablePatchCollisionOriginal = typeof(Chainsaw).GetMethod("OnCollisionStay", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo chainsawDamageablePatchCollisionTranspiler = typeof(ChainsawDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(chainsawDamageablePatchCollisionOriginal, harmony, false);
-            harmony.Patch(chainsawDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(chainsawDamageablePatchCollisionTranspiler));
+            try 
+            { 
+                harmony.Patch(chainsawDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(chainsawDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.ChainsawDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // DrillDamageablePatch
             MethodInfo drillDamageablePatchCollisionOriginal = typeof(Drill).GetMethod("OnCollisionStay", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo drillDamageablePatchCollisionTranspiler = typeof(DrillDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(drillDamageablePatchCollisionOriginal, harmony, false);
-            harmony.Patch(drillDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(drillDamageablePatchCollisionTranspiler));
+            try
+            { 
+                harmony.Patch(drillDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(drillDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.DrillDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // DropTrapDamageablePatch
             MethodInfo dropTrapDamageablePatchCollisionOriginal = typeof(DropTrapLogs).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo dropTrapDamageablePatchCollisionTranspiler = typeof(DropTrapDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(dropTrapDamageablePatchCollisionOriginal, harmony, false);
-            harmony.Patch(dropTrapDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(dropTrapDamageablePatchCollisionTranspiler));
+            try
+            { 
+                harmony.Patch(dropTrapDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(dropTrapDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.DropTrapDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // FlipzoDamageablePatch
             MethodInfo flipzoDamageablePatchUpdateOriginal = typeof(Flipzo).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo flipzoDamageablePatchUpdateTranspiler = typeof(FlipzoDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(flipzoDamageablePatchUpdateOriginal, harmony, false);
-            harmony.Patch(flipzoDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(flipzoDamageablePatchUpdateTranspiler));
+            try
+            { 
+                harmony.Patch(flipzoDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(flipzoDamageablePatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.FlipzoDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // IgnitableDamageablePatch
             MethodInfo ignitableDamageablePatchStartOriginal = typeof(FVRIgnitable).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo ignitableDamageablePatchStartTranspiler = typeof(IgnitableDamageablePatch).GetMethod("StartTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(ignitableDamageablePatchStartOriginal, harmony, false);
-            harmony.Patch(ignitableDamageablePatchStartOriginal, null, null, new HarmonyMethod(ignitableDamageablePatchStartTranspiler));
+            try
+            { 
+                harmony.Patch(ignitableDamageablePatchStartOriginal, null, null, new HarmonyMethod(ignitableDamageablePatchStartTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.IgnitableDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // SparklerDamageablePatch
             MethodInfo sparklerDamageablePatchCollisionOriginal = typeof(FVRSparkler).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo sparklerDamageablePatchCollisionTranspiler = typeof(SparklerDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sparklerDamageablePatchCollisionOriginal, harmony, false);
-            harmony.Patch(sparklerDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(sparklerDamageablePatchCollisionTranspiler));
+            try
+            { 
+                harmony.Patch(sparklerDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(sparklerDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.SparklerDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // MatchDamageablePatch
             MethodInfo matchDamageablePatchCollisionOriginal = typeof(FVRStrikeAnyWhereMatch).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo matchDamageablePatchCollisionTranspiler = typeof(MatchDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(matchDamageablePatchCollisionOriginal, harmony, false);
-            harmony.Patch(matchDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(matchDamageablePatchCollisionTranspiler));
+            try 
+            { 
+                harmony.Patch(matchDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(matchDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MatchDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // HCBBoltDamageablePatch
             MethodInfo HCBBoltDamageablePatchDamageOriginal = typeof(HCBBolt).GetMethod("DamageOtherThing", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo HCBBoltDamageablePatchDamageTranspiler = typeof(HCBBoltDamageablePatch).GetMethod("DamageOtherTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(HCBBoltDamageablePatchDamageOriginal, harmony, false);
-            harmony.Patch(HCBBoltDamageablePatchDamageOriginal, null, null, new HarmonyMethod(HCBBoltDamageablePatchDamageTranspiler));
+            try 
+            { 
+                harmony.Patch(HCBBoltDamageablePatchDamageOriginal, null, null, new HarmonyMethod(HCBBoltDamageablePatchDamageTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.HCBBoltDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // KabotDamageablePatch
             MethodInfo kabotDamageablePatchTickOriginal = typeof(Kabot.KSpike).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo kabotDamageablePatchTickTranspiler = typeof(KabotDamageablePatch).GetMethod("TickTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(kabotDamageablePatchTickOriginal, harmony, false);
-            harmony.Patch(kabotDamageablePatchTickOriginal, null, null, new HarmonyMethod(kabotDamageablePatchTickTranspiler));
+            try 
+            { 
+                harmony.Patch(kabotDamageablePatchTickOriginal, null, null, new HarmonyMethod(kabotDamageablePatchTickTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.KabotDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // MeatCrabDamageablePatch
             MethodInfo meatCrabDamageablePatchLungingOriginal = typeof(MeatCrab).GetMethod("Crabdate_Lunging", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -256,78 +459,162 @@ namespace H3MP.Patches
 
             PatchController.Verify(meatCrabDamageablePatchLungingOriginal, harmony, false);
             PatchController.Verify(meatCrabDamageablePatchAttachedOriginal, harmony, false);
-            harmony.Patch(meatCrabDamageablePatchLungingOriginal, null, null, new HarmonyMethod(meatCrabDamageablePatchLungingTranspiler));
-            harmony.Patch(meatCrabDamageablePatchAttachedOriginal, null, null, new HarmonyMethod(meatCrabDamageablePatchAttachedTranspiler));
+            try
+            { 
+                harmony.Patch(meatCrabDamageablePatchLungingOriginal, null, null, new HarmonyMethod(meatCrabDamageablePatchLungingTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MeatCrabDamageablePatch on meatCrabDamageablePatchLungingOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+            try
+            { 
+                harmony.Patch(meatCrabDamageablePatchAttachedOriginal, null, null, new HarmonyMethod(meatCrabDamageablePatchAttachedTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MeatCrabDamageablePatch on meatCrabDamageablePatchAttachedOriginal: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // MF2_BearTrapDamageablePatch
             MethodInfo MF2_BearTrapDamageablePatchSnapOriginal = typeof(MF2_BearTrapInteractionZone).GetMethod("SnapShut", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo MF2_BearTrapDamageablePatchSnapTranspiler = typeof(MF2_BearTrapDamageablePatch).GetMethod("SnapTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(MF2_BearTrapDamageablePatchSnapOriginal, harmony, false);
-            harmony.Patch(MF2_BearTrapDamageablePatchSnapOriginal, null, null, new HarmonyMethod(MF2_BearTrapDamageablePatchSnapTranspiler));
+            try 
+            { 
+                harmony.Patch(MF2_BearTrapDamageablePatchSnapOriginal, null, null, new HarmonyMethod(MF2_BearTrapDamageablePatchSnapTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MF2_BearTrapDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // MG_SwarmDamageablePatch
             MethodInfo MG_SwarmDamageablePatchFireOriginal = typeof(MG_FlyingHotDogSwarm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo MG_SwarmDamageablePatchFireTranspiler = typeof(MG_SwarmDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(MG_SwarmDamageablePatchFireOriginal, harmony, false);
-            harmony.Patch(MG_SwarmDamageablePatchFireOriginal, null, null, new HarmonyMethod(MG_SwarmDamageablePatchFireTranspiler));
+            try 
+            { 
+                harmony.Patch(MG_SwarmDamageablePatchFireOriginal, null, null, new HarmonyMethod(MG_SwarmDamageablePatchFireTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MG_SwarmDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // MG_JerryDamageablePatch
             MethodInfo MG_JerryDamageablePatchFireOriginal = typeof(MG_JerryTheLemon).GetMethod("FireBolt", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo MG_JerryDamageablePatchFireTranspiler = typeof(MG_JerryDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(MG_JerryDamageablePatchFireOriginal, harmony, false);
-            harmony.Patch(MG_JerryDamageablePatchFireOriginal, null, null, new HarmonyMethod(MG_JerryDamageablePatchFireTranspiler));
+            try
+            { 
+                harmony.Patch(MG_JerryDamageablePatchFireOriginal, null, null, new HarmonyMethod(MG_JerryDamageablePatchFireTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MG_JerryDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // MicrotorchDamageablePatch
             MethodInfo microtorchDamageablePatchUpdateOriginal = typeof(Microtorch).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo microtorchDamageablePatchUpdateTranspiler = typeof(MicrotorchDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(microtorchDamageablePatchUpdateOriginal, harmony, false);
-            harmony.Patch(microtorchDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(microtorchDamageablePatchUpdateTranspiler));
+            try
+            { 
+                harmony.Patch(microtorchDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(microtorchDamageablePatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.MicrotorchDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // CyclopsDamageablePatch
             MethodInfo cyclopsDamageablePatchUpdateOriginal = typeof(PowerUp_Cyclops).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo cyclopsDamageablePatchUpdateTranspiler = typeof(CyclopsDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(cyclopsDamageablePatchUpdateOriginal, harmony, false);
-            harmony.Patch(cyclopsDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(cyclopsDamageablePatchUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(cyclopsDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(cyclopsDamageablePatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.CyclopsDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // LaserSwordDamageablePatch
             MethodInfo laserSwordDamageablePatchUpdateOriginal = typeof(RealisticLaserSword).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo laserSwordDamageablePatchUpdateTranspiler = typeof(LaserSwordDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(laserSwordDamageablePatchUpdateOriginal, harmony, false);
-            harmony.Patch(laserSwordDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(laserSwordDamageablePatchUpdateTranspiler));
+            try 
+            { 
+                harmony.Patch(laserSwordDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(laserSwordDamageablePatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.LaserSwordDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // CharcoalDamageablePatch
             MethodInfo charcoalDamageablePatchCharcoalOriginal = typeof(RotrwCharcoal).GetMethod("DamageBubble", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo charcoalDamageablePatchCharcoalTranspiler = typeof(CharcoalDamageablePatch).GetMethod("BubbleTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(charcoalDamageablePatchCharcoalOriginal, harmony, false);
-            harmony.Patch(charcoalDamageablePatchCharcoalOriginal, null, null, new HarmonyMethod(charcoalDamageablePatchCharcoalTranspiler));
+            try
+            { 
+                harmony.Patch(charcoalDamageablePatchCharcoalOriginal, null, null, new HarmonyMethod(charcoalDamageablePatchCharcoalTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.CharcoalDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // SlicerDamageablePatch
             MethodInfo slicerDamageablePatchUpdateOriginal = typeof(SlicerBladeMaster).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo slicerDamageablePatchUpdateTranspiler = typeof(SlicerDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(slicerDamageablePatchUpdateOriginal, harmony, false);
-            harmony.Patch(slicerDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(slicerDamageablePatchUpdateTranspiler));
+            try
+            {
+                harmony.Patch(slicerDamageablePatchUpdateOriginal, null, null, new HarmonyMethod(slicerDamageablePatchUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.SlicerDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // SpinningBladeDamageablePatch
             MethodInfo spinningBladeDamageablePatchCollisionOriginal = typeof(SpinningBladeTrapBase).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo spinningBladeDamageablePatchCollisionTranspiler = typeof(SpinningBladeDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(spinningBladeDamageablePatchCollisionOriginal, harmony, false);
-            harmony.Patch(spinningBladeDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(spinningBladeDamageablePatchCollisionTranspiler));
+            try 
+            { 
+                harmony.Patch(spinningBladeDamageablePatchCollisionOriginal, null, null, new HarmonyMethod(spinningBladeDamageablePatchCollisionTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.SpinningBladeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // ProjectileDamageablePatch
             MethodInfo projectileDamageablePatchOriginal = typeof(FVRProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo projectileBladeDamageablePatchTranspiler = typeof(ProjectileDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(projectileDamageablePatchOriginal, harmony, true);
-            harmony.Patch(projectileDamageablePatchOriginal, null, null, new HarmonyMethod(projectileBladeDamageablePatchTranspiler));
+            try 
+            { 
+                harmony.Patch(projectileDamageablePatchOriginal, null, null, new HarmonyMethod(projectileBladeDamageablePatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.ProjectileDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // SosigLinkDamagePatch
             MethodInfo sosigLinkDamagePatchOriginal = typeof(SosigLink).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -403,7 +690,14 @@ namespace H3MP.Patches
             PatchController.Verify(BreakableGlassDamagerColOriginal, harmony, false);
             harmony.Patch(BreakableGlassDamagerDamageOriginal, new HarmonyMethod(BreakableGlassDamagerDamagePrefix));
             harmony.Patch(BreakableGlassDamagerColOriginal, new HarmonyMethod(BreakableGlassDamagerColPrefix));
-            harmony.Patch(BreakableGlassDamagerShatterOriginal, new HarmonyMethod(BreakableGlassDamagerShatterPrefix), new HarmonyMethod(BreakableGlassDamagerShatterPostfix), new HarmonyMethod(BreakableGlassDamagerShatterTranspiler));
+            try 
+            { 
+                harmony.Patch(BreakableGlassDamagerShatterOriginal, new HarmonyMethod(BreakableGlassDamagerShatterPrefix), new HarmonyMethod(BreakableGlassDamagerShatterPostfix), new HarmonyMethod(BreakableGlassDamagerShatterTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.BreakableGlassDamagerPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             // ReactiveSteelTargetDamagePatch
             MethodInfo ReactiveSteelTargetDamageOriginal = typeof(ReactiveSteelTarget).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -439,6 +733,7 @@ namespace H3MP.Patches
             Label skipLabel = il.DefineLabel();
             toInsert.Add(new CodeInstruction(OpCodes.Bgt_S, skipLabel)); // Goto label if skipBlast > 0
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -446,9 +741,16 @@ namespace H3MP.Patches
                 {
                     instructionList[i + 7].labels.Add(skipLabel);
                     instructionList.InsertRange(i, toInsert);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("ProjectileFirePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -512,6 +814,8 @@ namespace H3MP.Patches
             toInsertFirst.Add(new CodeInstruction(OpCodes.Ldloc_S, 13)); // Load IFVRDamageable
             toInsertFirst.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BallisticProjectileDamageablePatch), "GetActualFlag"))); // Call GetActualFlag, put return val on stack
             toInsertFirst.Add(new CodeInstruction(OpCodes.Stloc_S, 14)); // Set flag2
+
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -519,8 +823,15 @@ namespace H3MP.Patches
                     instructionList[i + 1].opcode == OpCodes.Stloc_S && instructionList[i + 1].operand.ToString().Equals("System.Boolean (14)"))
                 {
                     instructionList.InsertRange(i + 2, toInsertFirst);
+                    applied = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("BallisticProjectileDamageablePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -537,6 +848,7 @@ namespace H3MP.Patches
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BallisticProjectile), "tempFA"))); // Load tempFA from instance
             toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -544,8 +856,15 @@ namespace H3MP.Patches
                     instructionList[i + 1].opcode == OpCodes.Ldarg_0)
                 {
                     instructionList.InsertRange(i, toInsertSecond);
+                    applied = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SubMunitionsDamageablePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -561,6 +880,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load flamethrower instance
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -568,8 +888,15 @@ namespace H3MP.Patches
                     instructionList[i + 1].opcode == OpCodes.Ldloc_0)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("FlameThrowerDamageablePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -589,18 +916,28 @@ namespace H3MP.Patches
             toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load grenade instance
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
 
+            bool applied0 = false;
+            bool applied1 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied0 = true;
                 }
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (4)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied1 = true;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("GrenadeDamageablePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -616,14 +953,22 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load MF2_Demonade instance
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("DemonadeDamageablePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -640,14 +985,22 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load SosigWeapon instance
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SosigWeaponDamageablePatch ExplosionTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -661,6 +1014,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool applied = false;
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -675,10 +1029,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SosigWeaponDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -692,16 +1053,24 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_0)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SosigWeaponDamageablePatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -782,16 +1151,23 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 16)); // Set damageable
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (16)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
-
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("ExplosionDamageablePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -808,6 +1184,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 19)); // Set damageable
 
+            bool applied = false;
             bool firstSkip = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -821,10 +1198,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("GrenadeExplosionDamageablePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -843,6 +1227,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 9)); // Set damageable
 
+            bool applied = false;
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -857,10 +1242,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MeleeParamsDamageablePatch StabTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -875,16 +1267,24 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 6)); // Set damageable
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (6)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MeleeParamsDamageablePatch TearOutTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -915,6 +1315,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 14)); // Set damageable
 
+            bool applied = false;
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -929,10 +1330,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MeleeParamsDamageablePatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -947,6 +1355,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 18)); // Set damageable
 
+            bool applied = false;
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -961,10 +1370,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MeleeParamsDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1035,6 +1451,8 @@ namespace H3MP.Patches
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AIMeleeDamageablePatch), "GetActualReceiveDamageable"))); // Call GetActualDamageable
             toInsert0.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set receivedamageable
 
+            bool applied0 = false;
+            bool applied1 = false;
             bool skipNext3 = false;
             bool skipNext4 = false;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -1050,6 +1468,7 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied0 = true;
 
                     skipNext3 = true;
                 }
@@ -1062,10 +1481,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied1 = true;
 
                     skipNext4 = true;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("AIMeleeDamageablePatch FireTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1083,6 +1509,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(AIMeleeDamageablePatch), "GetActualReceiveDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set receivedamageable
 
+            bool applied = false;
             bool skipNext3 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1097,10 +1524,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext3 = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("ProjectileDamageablePatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1118,6 +1552,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 10)); // Set damageable
 
+            bool applied = false;
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1132,10 +1567,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("AutoMeaterBladeDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1153,16 +1595,24 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_1)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("BangSnapDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1180,16 +1630,24 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 5)); // Set damageable
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("BearTrapDamageablePatch SnapTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1207,6 +1665,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_2)); // Set damageable
 
+            bool applied = false;
             bool skipNext2 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1221,10 +1680,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext2 = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("ChainsawDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1242,6 +1708,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_2)); // Set damageable
 
+            bool applied = false;
             bool skipNext2 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1256,10 +1723,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext2 = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("DrillDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1277,16 +1751,24 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 5)); // Set damageable
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("DropTrapDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1304,6 +1786,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 7)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1318,10 +1801,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("FlipzoDamageablePatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1339,6 +1829,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1353,10 +1844,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("IgnitableDamageablePatch StartTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1374,6 +1872,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1388,10 +1887,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SparklerDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1408,7 +1914,8 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load damageable
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
-
+            
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1423,10 +1930,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MatchDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1444,6 +1958,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_0)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1458,10 +1973,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("HCBBoltDamageablePatch DamageOtherTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1480,6 +2002,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1494,10 +2017,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("KabotDamageablePatch TickTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1515,6 +2045,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1529,10 +2060,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MeatCrabDamageablePatch AttachedTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -1546,6 +2084,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 5)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1560,10 +2099,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MeatCrabDamageablePatch LungingTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1581,16 +2127,23 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 5)); // Set damageable
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (5)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
-
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MF2_BearTrapDamageablePatch SnapTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1608,6 +2161,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1622,10 +2176,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MG_SwarmDamageablePatch FireTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1643,6 +2204,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1657,10 +2219,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MG_JerryDamageablePatch FireTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1678,6 +2247,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool applied = false;
             bool skipNext = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1692,10 +2262,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("MicrotorchDamageablePatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1726,6 +2303,8 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
 
+            bool applied0 = false;
+            bool applied1 = false;
             bool foundBreak = false;
             int popIndex = 0;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -1735,6 +2314,7 @@ namespace H3MP.Patches
                 {
                     popIndex = i;
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied0 = true;
                 }
 
                 if (instruction.opcode == OpCodes.Brfalse)
@@ -1751,10 +2331,17 @@ namespace H3MP.Patches
 
                     // Load damageable
                     instructionList.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_3));
+                    applied1 = true;
 
                     break;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("CyclopsDamageablePatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1783,6 +2370,8 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 8)); // Set damageable
 
+            bool applied0 = false;
+            bool applied1 = false;
             int foundBreak = 0;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1790,6 +2379,7 @@ namespace H3MP.Patches
                 if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Emit"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied0 = true;
                 }
 
                 if (instruction.opcode == OpCodes.Brfalse)
@@ -1806,10 +2396,17 @@ namespace H3MP.Patches
 
                     // Load damageable
                     instructionList.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_S, 8));
+                    applied1 = true;
 
                     break;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("LaserSwordDamageablePatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1827,16 +2424,24 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set damageable
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
                 if (instruction.opcode == OpCodes.Stloc_3)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("CharcoalDamageablePatch BubbleTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1859,6 +2464,8 @@ namespace H3MP.Patches
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert0.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set damageable
 
+            bool applied0 = false;
+            bool applied1 = false;
             bool skipNext1 = false;
             bool skipNext4 = false;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -1874,6 +2481,7 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied0 = true;
 
                     skipNext1 = true;
                 }
@@ -1887,10 +2495,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied1 = true;
 
                     skipNext4 = true;
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("SlicerDamageablePatch UpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -1908,6 +2523,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_1)); // Set damageable
 
+            bool applied = false;
             bool skipNext1 = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -1922,10 +2538,17 @@ namespace H3MP.Patches
                     }
 
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
 
                     skipNext1 = true;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("SpinningBladeDamageablePatch CollisionTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -2598,6 +3221,7 @@ namespace H3MP.Patches
             toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 76)); // Load damageable
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionDamageablePatch), "GetActualFlag"))); // Call our GetActualFlag
 
+            bool applied = false;
             bool found = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -2608,6 +3232,7 @@ namespace H3MP.Patches
                     {
                         instructionList.RemoveAt(i - 1);
                         instructionList.InsertRange(i - 1, toInsert0);
+                        applied = true;
                         break;
                     }
                     else
@@ -2616,6 +3241,12 @@ namespace H3MP.Patches
                     }
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("EncryptionDamageablePatch FixedUpdateTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
@@ -2885,6 +3516,7 @@ namespace H3MP.Patches
             toInsert3.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BreakableGlassDamager), "m_shards"))); // Load shards
             toInsert3.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BreakableGlassDamagerPatch), "TrackShards"))); // Call our TrackShards
 
+            bool[] applied = new bool[4];
             int found = 0;
             for (int i = 0; i < instructionList.Count; ++i)
             {
@@ -2895,16 +3527,19 @@ namespace H3MP.Patches
                     {
                         instructionList.InsertRange(i + 1, toInsert0);
                         i += toInsert0.Count;
+                        applied[0] = true;
                     }
                     else if(found == 2)
                     {
                         instructionList.InsertRange(i + 1, toInsert1);
                         i += toInsert1.Count;
+                        applied[1] = true;
                     }
                     else if(found == 4)
                     {
                         instructionList.InsertRange(i + 1, toInsert2);
                         i += toInsert2.Count;
+                        applied[2] = true;
                     }
 
                     ++found;
@@ -2912,9 +3547,20 @@ namespace H3MP.Patches
                 else if(instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Clear"))
                 {
                     instructionList.InsertRange(i - 2, toInsert3);
+                    applied[3] = true;
                     break;
                 }
             }
+
+            for (int i = 0; i < applied.Length; ++i)
+            {
+                if (!applied[i])
+                {
+                    Mod.LogError("BreakableGlassDamagerPatch ShatterGlassTranspiler not applied!");
+                    break;
+                }
+            }
+
             return instructionList;
         }
 
