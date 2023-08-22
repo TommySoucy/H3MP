@@ -1423,8 +1423,8 @@ namespace H3MP.Patches
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("GetMuzzle") &&
-                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
+                if ((instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("GetMuzzle") &&
+                    (instructionList[i + 1].opcode == OpCodes.Callvirt || instructionList[i + 1].opcode == OpCodes.Call) && instructionList[i + 1].operand.ToString().Contains("get_position"))
                 {
                     if (foundFirstPos)
                     {
@@ -1439,8 +1439,8 @@ namespace H3MP.Patches
                     }
                 }
 
-                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_transform") &&
-                    instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                if ((instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("get_transform") &&
+                    (instructionList[i + 1].opcode == OpCodes.Callvirt || instructionList[i + 1].opcode == OpCodes.Call) && instructionList[i + 1].operand.ToString().Contains("get_forward"))
                 {
                     if (foundFirstDir)
                     {
@@ -2335,7 +2335,7 @@ namespace H3MP.Patches
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (!foundNum2 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("System.Single (4)"))
+                if (!foundNum2 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("4"))
                 {
                     instructionList.InsertRange(i + 1, toInsert4);
                     applied[0] = true;
@@ -2343,33 +2343,33 @@ namespace H3MP.Patches
                     continue;
                 }
 
-                if (!foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                if (!foundFirstPos && (instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 1, toInsert0);
                     applied[1] = true;
                     foundFirstPos = true;
                     continue;
                 }
-                if (foundFirstPos && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_position"))
+                if (foundFirstPos && (instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 1, toInsert2);
                     applied[2] = true;
                     continue;
                 }
 
-                if (!foundFirstDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                if (!foundFirstDir && (instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 1, toInsert1);
                     applied[3] = true;
                     foundFirstDir = true;
                     continue;
                 }
-                if (foundFirstDir && !skippedSecondDir)
+                if (foundFirstDir && !skippedSecondDir && (instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("get_forward"))
                 {
                     skippedSecondDir = true;
                     continue;
                 }
-                if (foundFirstDir && skippedSecondDir && instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_forward"))
+                if (foundFirstDir && skippedSecondDir && (instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 1, toInsert3);
                     applied[4] = true;
@@ -2623,7 +2623,7 @@ namespace H3MP.Patches
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if (!foundNum5 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("UnityEngine.Single (9)"))
+                if (!foundNum5 && instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("System.Single (9)"))
                 {
                     instructionList.InsertRange(i + 1, toInsert4);
                     applied[0] = true;
@@ -2632,7 +2632,7 @@ namespace H3MP.Patches
                 }
 
                 if (!foundFirstPos && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("Muzzle") &&
-                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_position"))
+                    (instructionList[i + 1].opcode == OpCodes.Callvirt || instructionList[i + 1].opcode == OpCodes.Call) && instructionList[i + 1].operand.ToString().Contains("get_position"))
                 {
                     instructionList.InsertRange(i + 2, toInsert0);
                     applied[1] = true;
@@ -2654,7 +2654,7 @@ namespace H3MP.Patches
 
 
                 if (!foundFirstDir && instruction.opcode == OpCodes.Ldfld && instruction.operand.ToString().Contains("Muzzle") &&
-                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_forward"))
+                    (instructionList[i + 1].opcode == OpCodes.Callvirt || instructionList[i + 1].opcode == OpCodes.Call) && instructionList[i + 1].operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 2, toInsert1);
                     applied[4] = true;
@@ -2662,16 +2662,16 @@ namespace H3MP.Patches
                     continue;
                 }
                 if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (15)") &&
-                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_transform") &&
-                    instructionList[i + 2].opcode == OpCodes.Callvirt && instructionList[i + 2].operand.ToString().Contains("get_forward"))
+                    (instructionList[i + 1].opcode == OpCodes.Callvirt || instructionList[i + 1].opcode == OpCodes.Call) && instructionList[i + 1].operand.ToString().Contains("get_transform") &&
+                    (instructionList[i + 2].opcode == OpCodes.Callvirt || instructionList[i + 2].opcode == OpCodes.Call) && instructionList[i + 2].operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 3, toInsert3);
                     applied[5] = true;
                     continue;
                 }
                 if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("UnityEngine.GameObject (22)") &&
-                    instructionList[i + 1].opcode == OpCodes.Callvirt && instructionList[i + 1].operand.ToString().Contains("get_transform") &&
-                    instructionList[i + 2].opcode == OpCodes.Callvirt && instructionList[i + 2].operand.ToString().Contains("get_forward"))
+                    (instructionList[i + 1].opcode == OpCodes.Callvirt || instructionList[i + 1].opcode == OpCodes.Call) && instructionList[i + 1].operand.ToString().Contains("get_transform") &&
+                    (instructionList[i + 2].opcode == OpCodes.Callvirt || instructionList[i + 2].opcode == OpCodes.Call) && instructionList[i + 2].operand.ToString().Contains("get_forward"))
                 {
                     instructionList.InsertRange(i + 3, toInsert6);
                     applied[6] = true;
@@ -2851,7 +2851,7 @@ namespace H3MP.Patches
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("Fire"))
+                if ((instruction.opcode == OpCodes.Call || instruction.opcode == OpCodes.Callvirt) && instruction.operand.ToString().Contains("Fire"))
                 {
                     instructionList.RemoveAt(i - 1);
                     instructionList.RemoveAt(i - 1);
@@ -3516,7 +3516,7 @@ namespace H3MP.Patches
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Call && instruction.operand.ToString().Contains("Speak_State"))
+                if ((instruction.opcode == OpCodes.Call || instruction.opcode == OpCodes.Callvirt) && instruction.operand.ToString().Contains("Speak_State"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
                     applied = true;
@@ -5645,9 +5645,9 @@ namespace H3MP.Patches
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("SetActive"))
+                if ((instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("SetActive"))
                 {
-                    if(found)
+                    if (found)
                     {
                         instructionList.InsertRange(i + 1, toInsert1);
                         applied[0] = true;
@@ -5658,16 +5658,17 @@ namespace H3MP.Patches
                     {
                         instructionList.InsertRange(i + 1, toInsert0);
                         applied[1] = true;
+                        found = true;
                     }
                 }
 
-                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_gameObject"))
+                if ((instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("get_gameObject"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
                     applied[2] = true;
                 }
 
-                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("get_Item"))
+                if ((instruction.opcode == OpCodes.Callvirt || instruction.opcode == OpCodes.Call) && instruction.operand.ToString().Contains("get_Item"))
                 {
                     ++foundCount;
                     if(foundCount == 4)

@@ -843,7 +843,7 @@ namespace H3MP.Patches
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
             List<CodeInstruction> toInsertSecond = new List<CodeInstruction>();
-            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load explosion gameobject
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 13)); // Load explosion gameobject
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load projectile instance
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BallisticProjectile), "tempFA"))); // Load tempFA from instance
             toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
@@ -852,11 +852,11 @@ namespace H3MP.Patches
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Equals("FistVR.Explosion (11)") &&
-                    instructionList[i + 1].opcode == OpCodes.Ldarg_0)
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.Explosion (13)"))
                 {
                     instructionList.InsertRange(i, toInsertSecond);
                     applied = true;
+                    break;
                 }
             }
 
@@ -1081,7 +1081,7 @@ namespace H3MP.Patches
         public static void AddControllerReference(GameObject dest, Component src = null)
         {
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0 || dest == null)
             {
                 return;
             }
