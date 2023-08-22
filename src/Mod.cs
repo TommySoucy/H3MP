@@ -253,7 +253,10 @@ namespace H3MP
             TNHMenuLPJ = true;
             TNHOnDeathSpectate = true;
             TNHSpectating = false;
-            GM.CurrentPlayerBody.EnableHands();
+            if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+            {
+                GM.CurrentPlayerBody.EnableHands();
+            }
             setLatestInstance = false;
             currentTNHInstance = null;
             currentlyPlayingTNH = false;
@@ -1515,7 +1518,10 @@ namespace H3MP
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
-            GM.CurrentPlayerBody.EnableHands();
+            if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+            {
+                GM.CurrentPlayerBody.EnableHands();
+            }
 
             TNHStatusText.text = "Solo";
             TNHStatusText.color = Color.red;
@@ -2268,7 +2274,10 @@ namespace H3MP
                     if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
                     {
                         Mod.TNHSpectating = false;
-                        GM.CurrentPlayerBody.EnableHands();
+                        if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                        {
+                            GM.CurrentPlayerBody.EnableHands();
+                        }
                     }
                 }
                 else

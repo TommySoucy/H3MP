@@ -703,7 +703,10 @@ namespace H3MP
                     if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
                     {
                         Mod.TNHSpectating = false;
-                        GM.CurrentPlayerBody.EnableHands();
+                        if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                        {
+                            GM.CurrentPlayerBody.EnableHands();
+                        }
                     }
                 }
                 else
@@ -1207,7 +1210,10 @@ namespace H3MP
                     }
 
                     Mod.TNHSpectating = false;
-                    GM.CurrentPlayerBody.EnableHands();
+                    if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                    {
+                        GM.CurrentPlayerBody.EnableHands();
+                    }
                 }
 
                 // Remove from currently playing and dead if necessary
@@ -1594,13 +1600,19 @@ namespace H3MP
                         }
                         Mod.currentTNHInstance = null;
                         Mod.TNHSpectating = false;
-                        GM.CurrentPlayerBody.EnableHands();
+                        if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                        {
+                            GM.CurrentPlayerBody.EnableHands();
+                        }
                         Mod.currentlyPlayingTNH = false;
                     }
                     if (LoadLevelBeginPatch.loadingLevel.Equals("TakeAndHold_Lobby_2") && Mod.currentTNHInstance != null)
                     {
                         Mod.TNHSpectating = false;
-                        GM.CurrentPlayerBody.EnableHands();
+                        if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                        {
+                            GM.CurrentPlayerBody.EnableHands();
+                        }
                     }
 
                     // Check if there are other players where we are going to prevent things like prefab spawns

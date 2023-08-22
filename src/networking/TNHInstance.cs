@@ -296,9 +296,12 @@ namespace H3MP.Networking
             if (ID == GameManager.ID)
             {
                 Mod.TNHSpectating = false;
-                GM.CurrentPlayerBody.EnableHands();
+                if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                {
+                    GM.CurrentPlayerBody.EnableHands();
+                }
 
-                if(manager != null)
+                if (manager != null)
                 {
                     if (Mod.TNHStartEquipButton == null)
                     {
@@ -357,7 +360,13 @@ namespace H3MP.Networking
             if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance)
             {
                 Mod.TNHSpectating = false;
-                GM.CurrentPlayerBody.EnableHands();
+
+                // We make the following checks because we could be resetting because we are changing scene, meaning the vanilla playerbody 
+                // may have been destroyed
+                if(GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                {
+                    GM.CurrentPlayerBody.EnableHands();
+                }
             }
         }
 

@@ -105,7 +105,10 @@ namespace H3MP.Networking
         {
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
-            GM.CurrentPlayerBody.EnableHands();
+            if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+            {
+                GM.CurrentPlayerBody.EnableHands();
+            }
             Mod.currentlyPlayingTNH = false;
             Mod.currentTNHInstancePlayers = null;
             Mod.joinTNHInstances = null;
