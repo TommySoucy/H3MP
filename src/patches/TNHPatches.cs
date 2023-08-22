@@ -219,7 +219,14 @@ namespace H3MP.Patches
             MethodInfo TAHReticleContactPatchSetContactTypePrefix = typeof(TAHReticleContactPatch).GetMethod("SetContactTypePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(TAHReticleContactPatchTickOriginal, harmony, false);
-            harmony.Patch(TAHReticleContactPatchTickOriginal, null, null, new HarmonyMethod(TAHReticleContactPatchTickTranspiler));
+            try
+            { 
+                harmony.Patch(TAHReticleContactPatchTickOriginal, null, null, new HarmonyMethod(TAHReticleContactPatchTickTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying TNHPatches.TAHReticleContactPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
             harmony.Patch(TAHReticleContactPatchSetContactTypeOriginal, new HarmonyMethod(TAHReticleContactPatchSetContactTypePrefix));
 
             // TNH_HoldPointPatch
@@ -2819,6 +2826,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Component), "get_gameObject"))); // Get the GameObject
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GameObject), "get_activeInHierarchy"))); // Get activeInHierarchy
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -2831,9 +2839,16 @@ namespace H3MP.Patches
                 if (instruction.opcode == OpCodes.Ret)
                 {
                     instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("TAHReticleContactPatch TickTranspiler not applied!");
+            }
+
             return instructionList;
         }
     }
