@@ -2,6 +2,7 @@
 using H3MP.Networking;
 using H3MP.Tracking;
 using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -80,7 +81,14 @@ namespace H3MP.Patches
             PatchController.Verify(GBeamerPatchObjectSearchOriginal, harmony, false);
             PatchController.Verify(GBeamerPatchWideShuntOriginal, harmony, false);
             harmony.Patch(GBeamerPatchObjectSearchOriginal, new HarmonyMethod(GBeamerPatchObjectSearchPrefix), new HarmonyMethod(GBeamerPatchObjectSearchPostfix));
-            harmony.Patch(GBeamerPatchWideShuntOriginal, null, null, new HarmonyMethod(GBeamerPatchWideShuntTranspiler));
+            try 
+            { 
+                harmony.Patch(GBeamerPatchWideShuntOriginal, null, null, new HarmonyMethod(GBeamerPatchWideShuntTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying InteractionPatches.GBeamerPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
         }
     }
 
@@ -599,6 +607,7 @@ namespace H3MP.Patches
             toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load the current physical object
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GBeamerPatch), "TakeControl"))); // Call our TakeControl method
 
+            bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
@@ -606,9 +615,16 @@ namespace H3MP.Patches
                 if (instruction.opcode == OpCodes.Ldloc_3)
                 {
                     instructionList.InsertRange(i + 1, toInsert0);
+                    applied = true;
                     break;
                 }
             }
+
+            if (!applied)
+            {
+                Mod.LogError("GBeamerPatch WideShuntTranspiler not applied!");
+            }
+
             return instructionList;
         }
 
