@@ -1704,7 +1704,10 @@ namespace H3MP
             {
                 if (GM.TNH_Manager != null)
                 {
-                    Mod.currentTNHInstance.spawnedStartEquip = true;
+                    if (Mod.managerObject != null)
+                    {
+                        Mod.currentTNHInstance.spawnedStartEquip = true;
+                    }
                     TNH_Manager M = GM.TNH_Manager;
                     TNH_CharacterDef C = M.C;
                     Vector3 target = GM.CurrentPlayerBody.Head.position + Vector3.down * 0.5f;
