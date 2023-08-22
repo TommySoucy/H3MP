@@ -791,7 +791,14 @@ namespace H3MP.Tracking
                     TrackedItemData asTrackedItem = arrToUse[inventory[i]] as TrackedItemData;
                     if (asTrackedItem == null)
                     {
-                        Mod.LogError("Sosig instantiation: inventory[" + i + "] = "+ inventory[i] + " is missing item data!");
+                        if (ThreadManager.host)
+                        {
+                            Mod.LogError("Sosig instantiation: inventory[" + i + "] = " + inventory[i] + " is missing item data!");
+                        }
+                        else
+                        {
+                            Mod.LogWarning("Sosig instantiation: inventory[" + i + "] = " + inventory[i] + " is missing item data!");
+                        }
                     }
                     else if(asTrackedItem.physicalItem == null)
                     {
