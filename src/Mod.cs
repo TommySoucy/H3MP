@@ -38,7 +38,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.7.5";
+        public const string pluginVersion = "1.7.6";
 
         // Assets
         public static JObject config;
