@@ -1055,7 +1055,7 @@ namespace H3MP
 
         private static TrackedObject MakeObjectTracked(Transform root, TrackedObjectData parent, Type trackedObjectType)
         {
-            Mod.LogInfo("Making tracked object from "+root.name);
+            Mod.LogInfo("Making tracked object from "+root.name, false);
             return (TrackedObject)trackedObjectType.GetMethod("MakeTracked", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).Invoke(null, new object[] { root, parent });
         }
 
