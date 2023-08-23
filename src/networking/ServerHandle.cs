@@ -2159,7 +2159,9 @@ namespace H3MP.Networking
                         }
                         break;
                     default:
+                        ++SosigActionPatch.sosigSetCurrentOrderSkip;
                         trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
+                        --SosigActionPatch.sosigSetCurrentOrderSkip;
                         break;
                 }
 

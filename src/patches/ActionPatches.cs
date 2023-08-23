@@ -3554,12 +3554,7 @@ namespace H3MP.Patches
 
         static void SetCurrentOrderPrefix(ref Sosig __instance, Sosig.SosigOrder o)
         {
-            if (sosigSetCurrentOrderSkip > 0)
-            {
-                return;
-            }
-
-            if (Mod.managerObject == null)
+            if (Mod.managerObject == null || sosigSetCurrentOrderSkip > 0 || __instance == null)
             {
                 return;
             }
