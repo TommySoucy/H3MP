@@ -99,6 +99,10 @@ namespace H3MP.Scripts
             {
                 for (int i = 0; i < colliders.Length; ++i)
                 {
+                    if (!colliders[i].enabled)
+                    {
+                        continue;
+                    }
                     bool found = false;
                     for (int j = 0; j < this.colliders.Length; ++j)
                     {
@@ -127,6 +131,10 @@ namespace H3MP.Scripts
             {
                 for (int i = 0; i < entities.Length; ++i)
                 {
+                    if (!entities[i].enabled)
+                    {
+                        continue;
+                    }
                     bool found = false;
                     for (int j = 0; j < this.entities.Length; ++j)
                     {
@@ -155,6 +163,10 @@ namespace H3MP.Scripts
             {
                 for (int i = 0; i < canvases.Length; ++i)
                 {
+                    if (!canvases[i].enabled)
+                    {
+                        continue;
+                    }
                     bool found = false;
                     for (int j = 0; j < this.canvases.Length; ++j)
                     {
@@ -183,6 +195,10 @@ namespace H3MP.Scripts
             {
                 for (int i = 0; i < hitboxes.Length; ++i)
                 {
+                    if (!hitboxes[i].enabled)
+                    {
+                        continue;
+                    }
                     bool found = false;
                     for (int j = 0; j < this.hitboxes.Length; ++j)
                     {
