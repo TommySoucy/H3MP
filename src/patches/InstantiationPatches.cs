@@ -174,6 +174,12 @@ namespace H3MP.Patches
                 incrementedSkip = 0;
             }
 
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
             if (track)
             {
                 track = false;
