@@ -10,7 +10,7 @@ namespace H3MP.Scripts
 
         private void OnDestroy()
         {
-            if(refIndex != -1 && Mod.managerObject != null)
+            if(refIndex != -1 && Mod.managerObject != null && TrackedObject.trackedReferences.Length > refIndex)
             {
                 TrackedObject.trackedReferences[refIndex] = null;
                 TrackedObject.trackedReferenceObjects[refIndex] = null;
