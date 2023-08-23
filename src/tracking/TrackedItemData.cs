@@ -108,6 +108,7 @@ namespace H3MP.Tracking
 
         public static TrackedItem MakeTracked(Transform root, TrackedObjectData parent)
         {
+            Mod.LogInfo("Making item tracked", false);
             TrackedItem trackedItem = root.gameObject.AddComponent<TrackedItem>();
             TrackedItemData data = new TrackedItemData();
             trackedItem.data = data;
@@ -152,6 +153,7 @@ namespace H3MP.Tracking
                 data.rotation = trackedItem.transform.rotation;
             }
             data.SetItemIdentifyingInfo();
+            Mod.LogInfo("\tItemID: "+data.itemID, false);
             data.underActiveControl = data.IsControlled(out int interactionID);
 
             data.CollectExternalData();
@@ -316,6 +318,7 @@ namespace H3MP.Tracking
 
             try
             {
+                Mod.LogInfo("Instantiating item at "+trackedID+": "+itemID, false);
                 ++Mod.skipAllInstantiates;
                 if (Mod.skipAllInstantiates <= 0) { Mod.LogError("SkipAllInstantiates negative or 0 at item instantiation, setting to 1"); Mod.skipAllInstantiates = 1; }
                 GameObject itemObject = GameObject.Instantiate(itemPrefab, position, rotation);
