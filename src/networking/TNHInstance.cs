@@ -12,7 +12,7 @@ namespace H3MP.Networking
     {
         public int instance = -1;
         private int _controller = -1;
-        public int controller { set { Mod.LogInfo("TNH instance at "+instance+" controller being set to "+value+":\n"+Environment.StackTrace); _controller = value; } get { return _controller; } }
+        public int controller { set { Mod.LogInfo("TNH instance at "+instance+" controller being set to "+value+":\n"+Environment.StackTrace, false); _controller = value; } get { return _controller; } }
         public TNH_Manager manager;
         public List<int> playerIDs; // Players in this instance
         public List<int> currentlyPlaying; // Players in-game

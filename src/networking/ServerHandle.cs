@@ -2860,7 +2860,7 @@ namespace H3MP.Networking
                 }
 
                 // Pass it on
-                Mod.LogInfo("\tRelaying to all");
+                Mod.LogInfo("\tRelaying to all", false);
                 ServerSend.TNHHoldBeginChallenge(instance, true, true, clientID);
             }
             else if(GameManager.TNHInstances.TryGetValue(instance, out TNHInstance actualInstance))
@@ -2883,7 +2883,7 @@ namespace H3MP.Networking
                 else // We are not controller
                 {
                     // Relay to controller
-                    Mod.LogInfo("\tRelaying to controller: "+ actualInstance.controller);
+                    Mod.LogInfo("\tRelaying to controller: "+ actualInstance.controller, false);
                     ServerSend.TNHHoldBeginChallenge(instance, false, false, actualInstance.controller);
                 }
             }
