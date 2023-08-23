@@ -674,6 +674,7 @@ namespace H3MP.Tracking
 
         public override IEnumerator Instantiate()
         {
+            Mod.LogInfo("Instantiating sosig at "+trackedID, false);
             yield return IM.OD["SosigBody_Default"].GetGameObjectAsync();
             GameObject sosigPrefab = IM.OD["SosigBody_Default"].GetGameObject();
             if (sosigPrefab == null)
@@ -734,6 +735,7 @@ namespace H3MP.Tracking
             physicalSosig.physicalSosig.Priority.IFFChart = IFFChart;
 
             // Initially set order
+            ++SosigActionPatch.sosigSetCurrentOrderSkip;
             switch (currentOrder)
             {
                 case Sosig.SosigOrder.GuardPoint:
@@ -776,6 +778,7 @@ namespace H3MP.Tracking
                     break;
             }
             physicalSosig.physicalSosig.FallbackOrder = fallbackOrder;
+            --SosigActionPatch.sosigSetCurrentOrderSkip;
 
             // Setup inventory
             // Make sure sosig hands and inventory are initialized first
