@@ -1992,6 +1992,7 @@ namespace H3MP.Networking
             int ID = packet.ReadInt();
             int instance = packet.ReadInt();
 
+            Mod.LogInfo("ClientHandle: Received AddTNHCurrentlyPlaying for instance: " + instance + " to add " + ID, false);
             if (GameManager.TNHInstances == null || !GameManager.TNHInstances.ContainsKey(instance))
             {
                 Mod.LogError("ClientHandle: Received AddTNHCurrentlyPlaying packet with missing instance");
@@ -2241,6 +2242,7 @@ namespace H3MP.Networking
             int instance = packet.ReadInt();
             int newController = packet.ReadInt();
 
+            Mod.LogInfo("Client received order to set TNH instance: " + instance + " controller to: " + newController, false);
             // The instance may not exist anymore if we were the last one in there and we left between
             // server sending us order to set TNH controller and receiving it
             if (GameManager.TNHInstances.TryGetValue(instance, out TNHInstance i))

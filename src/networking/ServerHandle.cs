@@ -2366,7 +2366,8 @@ namespace H3MP.Networking
         {
             int instance = packet.ReadInt();
 
-            if(GameManager.TNHInstances == null || !GameManager.TNHInstances.ContainsKey(instance))
+            Mod.LogInfo("ServerHandle: Received AddTNHCurrentlyPlaying for instance: "+instance+" to add "+clientID, false);
+            if (GameManager.TNHInstances == null || !GameManager.TNHInstances.ContainsKey(instance))
             {
                 Mod.LogError("ServerHandle: Received AddTNHCurrentlyPlaying packet with missing instance");
             }
@@ -2638,6 +2639,7 @@ namespace H3MP.Networking
             int instance = packet.ReadInt();
             int newController = packet.ReadInt();
 
+            Mod.LogInfo("Server received order to set TNH instance: " + instance + " controller to: " + newController, false);
             GameManager.TNHInstances[instance].controller = newController;
 
             ServerSend.SetTNHController(instance, newController, clientID);
@@ -2832,7 +2834,7 @@ namespace H3MP.Networking
         {
             int instance = packet.ReadInt();
             bool fromController = packet.ReadBool();
-            Mod.LogInfo("TNHHoldBeginChallenge server handle", false);
+            Mod.LogInfo("TNHHoldBeginChallenge server handle from "+clientID+" which is controller?: "+fromController+", for instance: "+instance, false);
             if (fromController)
             {
                 if (GameManager.TNHInstances.TryGetValue(instance, out TNHInstance actualInstance))
@@ -2858,6 +2860,7 @@ namespace H3MP.Networking
                 }
 
                 // Pass it on
+                Mod.LogInfo("\tRelaying to all");
                 ServerSend.TNHHoldBeginChallenge(instance, true, true, clientID);
             }
             else if(GameManager.TNHInstances.TryGetValue(instance, out TNHInstance actualInstance))
@@ -2880,6 +2883,7 @@ namespace H3MP.Networking
                 else // We are not controller
                 {
                     // Relay to controller
+                    Mod.LogInfo("\tRelaying to controller: "+ actualInstance.controller);
                     ServerSend.TNHHoldBeginChallenge(instance, false, false, actualInstance.controller);
                 }
             }

@@ -2672,6 +2672,7 @@ namespace H3MP.Networking
                 }
                 else
                 {
+                    Mod.LogInfo("\tSpecifically to controller: "+clientID, false);
                     SendTCPData(clientID, packet);
                 }
             }

@@ -1,6 +1,7 @@
 ﻿using FistVR;
 using H3MP.Patches;
 using H3MP.Tracking;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,7 +11,8 @@ namespace H3MP.Networking
     public class TNHInstance
     {
         public int instance = -1;
-        public int controller = -1;
+        private int _controller = -1;
+        public int controller { set { Mod.LogInfo("TNH instance at "+instance+" controller being set to "+value+":\n"+Environment.StackTrace); _controller = value; } get { return _controller; } }
         public TNH_Manager manager;
         public List<int> playerIDs; // Players in this instance
         public List<int> currentlyPlaying; // Players in-game
@@ -86,7 +88,7 @@ namespace H3MP.Networking
 
         public void AddCurrentlyPlaying(bool send, int ID, bool fromServer = false)
         {
-            Mod.LogInfo("Adding "+ID+" to TNH instance "+instance+" currently playing");
+            Mod.LogInfo("Adding "+ID+" to TNH instance "+instance+" currently playing", false);
             if (!letPeopleJoin && currentlyPlaying.Count == 0 &&
                 Mod.TNHInstanceList != null && Mod.joinTNHInstances.ContainsKey(instance))
             {
@@ -113,33 +115,33 @@ namespace H3MP.Networking
 
             if (fromServer) // Only manage controller if server made this call
             {
-                Mod.LogInfo("\tServer");
+                Mod.LogInfo("\tServer", false);
                 if (ID == playerIDs[0])
                 {
-                    Mod.LogInfo("\t\tNew player is host");
+                    Mod.LogInfo("\t\tNew player is host", false);
                     // If new controller is different, distribute sosigs/automeaters/encryptions because those should be controlled by TNH controller
                     if (ID != controller)
                     {
-                        Mod.LogInfo("\t\t\tbut not controller, distributing control");
+                        Mod.LogInfo("\t\t\tbut not controller, distributing control", false);
                         GameManager.DistributeAllControl(controller, ID, new List<System.Type>() { typeof(TrackedSosigData), typeof(TrackedAutoMeaterData), typeof(TrackedEncryptionData) });
                     }
-                    Mod.LogInfo("\t\tSending");
+                    Mod.LogInfo("\t\tSending", false);
                     controller = ID;
                     ServerSend.SetTNHController(instance, ID);
                 }
                 else // The player who got added is not instance host
                 {
-                    Mod.LogInfo("\t\tNew player is not host");
+                    Mod.LogInfo("\t\tNew player is not host", false);
                     if (currentlyPlaying.Count == 1)
                     {
-                        Mod.LogInfo("\t\t\tOnly player");
+                        Mod.LogInfo("\t\t\tOnly player", false);
                         // If new controller is different, distribute sosigs/automeaters/encryptions because those should be controlled by TNH controller
                         if (ID != controller)
                         {
-                            Mod.LogInfo("\t\t\t\tNot yet controller, distributing control");
+                            Mod.LogInfo("\t\t\t\tNot yet controller, distributing control", false);
                             GameManager.DistributeAllControl(controller, ID, new List<System.Type>() { typeof(TrackedSosigData), typeof(TrackedAutoMeaterData), typeof(TrackedEncryptionData) });
                         }
-                        Mod.LogInfo("\t\t\tSending");
+                        Mod.LogInfo("\t\t\tSending", false);
                         controller = ID;
                         ServerSend.SetTNHController(instance, ID);
                     }
