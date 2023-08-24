@@ -184,6 +184,8 @@ namespace H3MP.Patches
             {
                 track = false;
 
+                Mod.OnInstantiationTrackInvoke(__result.gameObject);
+
                 GameManager.SyncTrackedObjects(__result.transform, true, null);
 
                 // If overriden it is because we want to control the ejection of this chamber
@@ -262,6 +264,8 @@ namespace H3MP.Patches
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
+                Mod.OnInstantiationTrackInvoke(__result as GameObject);
+
                 GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null);
             }
         }
@@ -338,6 +342,7 @@ namespace H3MP.Patches
 
             if (track)
             {
+                Mod.OnInstantiationTrackInvoke(__result as GameObject);
                 track = false;
                 GameManager.SyncTrackedObjects((__result as GameObject).transform, true, parentData);
             }
@@ -398,10 +403,7 @@ namespace H3MP.Patches
             // If this is a game object check and sync all physical objects if necessary
             if (__result is GameObject)
             {
-                if (__result.name.Contains("Cascading"))
-                {
-                    Mod.LogInfo("\t\tIs game object");
-                }
+                Mod.OnInstantiationTrackInvoke(__result as GameObject);
                 GameManager.SyncTrackedObjects((__result as GameObject).transform, true, null);
             }
         }
@@ -479,6 +481,7 @@ namespace H3MP.Patches
 
             if (track)
             {
+                Mod.OnInstantiationTrackInvoke(__result as GameObject);
                 track = false;
                 GameManager.SyncTrackedObjects((__result as GameObject).transform, true, parentData);
             }

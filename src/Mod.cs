@@ -219,12 +219,25 @@ namespace H3MP
         /// Delegate for the OnSpectatorHostGiveUp event
         /// </summary>
         public delegate void OnSpectatorHostGiveUpDelegate();
-
+        
         /// <summary>
         /// CUSTOMIZATION
         /// Event called when we receive order to give up current spectator host
         /// </summary>
         public static event OnSpectatorHostGiveUpDelegate OnSpectatorHostGiveUp;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnInstantiationTrack event
+        /// </summary>
+        /// <param name="gameObject">The GameObject we are about to attempt tracking</param>
+        public delegate void OnInstantiationTrackDelegate(GameObject gameObject);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called right before we track an object upon instantiation
+        /// </summary>
+        public static event OnInstantiationTrackDelegate OnInstantiationTrack;
 
         // Debug
         public static bool waitingForDebugCode;
@@ -673,6 +686,14 @@ namespace H3MP
             if (GenericCustomPacketReceived != null)
             {
                 GenericCustomPacketReceived(clientID, ID, packet);
+            }
+        }
+
+        public static void OnInstantiationTrackInvoke(GameObject gameObject)
+        {
+            if (OnInstantiationTrack != null)
+            {
+                OnInstantiationTrack(gameObject);
             }
         }
 
@@ -1706,10 +1727,12 @@ namespace H3MP
 
         public static void OnTNHSpawnStartEquipClicked()
         {
+            int debugStep = 0;
             try
             {
                 if (GM.TNH_Manager != null)
                 {
+                    ++debugStep;
                     if (Mod.managerObject != null)
                     {
                         Mod.currentTNHInstance.spawnedStartEquip = true;
@@ -1728,6 +1751,7 @@ namespace H3MP
                         M.ItemSpawner.transform.rotation = Quaternion.LookRotation(-projectedForward, Vector3.up);
                         M.ItemSpawner.SetActive(true);
                     }
+                    ++debugStep;
                     if (C.Has_Weapon_Primary)
                     {
                         TNH_CharacterDef.LoadoutEntry weapon_Primary = C.Weapon_Primary;
@@ -1751,6 +1775,7 @@ namespace H3MP
                         gameObject.GetComponent<TNH_WeaponCrate>().M = M;
                         gameObject.AddComponent<TimerDestroyer>();
                     }
+                    ++debugStep;
                     if (C.Has_Weapon_Secondary)
                     {
                         TNH_CharacterDef.LoadoutEntry weapon_Secondary = C.Weapon_Secondary;
@@ -1773,6 +1798,7 @@ namespace H3MP
                         GameObject gameObject2 = M.SpawnWeaponCase(M.Prefab_WeaponCaseSmall, smallCaseSpawnPos, -projectedRight, weapon2, weapon_Secondary.Num_Mags_SL_Clips, weapon_Secondary.Num_Rounds, minAmmo2, maxAmmo2, weapon_Secondary.AmmoObjectOverride);
                         gameObject2.GetComponent<TNH_WeaponCrate>().M = M;
                     }
+                    ++debugStep;
                     if (C.Has_Weapon_Tertiary)
                     {
                         TNH_CharacterDef.LoadoutEntry weapon_Tertiary = C.Weapon_Tertiary;
@@ -1791,6 +1817,7 @@ namespace H3MP
                         GameObject g = UnityEngine.Object.Instantiate<GameObject>(fvrobject.GetGameObject(), smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
                         M.AddObjectToTrackedList(g);
                     }
+                    ++debugStep;
                     if (C.Has_Item_Primary)
                     {
                         TNH_CharacterDef.LoadoutEntry item_Primary = C.Item_Primary;
@@ -1809,6 +1836,7 @@ namespace H3MP
                         GameObject g2 = UnityEngine.Object.Instantiate<GameObject>(fvrobject2.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f + Vector3.left * 0.3f, UnityEngine.Random.rotation);
                         M.AddObjectToTrackedList(g2);
                     }
+                    ++debugStep;
                     if (C.Has_Item_Secondary)
                     {
                         TNH_CharacterDef.LoadoutEntry item_Secondary = C.Item_Secondary;
@@ -1827,6 +1855,7 @@ namespace H3MP
                         GameObject g3 = UnityEngine.Object.Instantiate<GameObject>(fvrobject3.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f + Vector3.right * 0.3f, UnityEngine.Random.rotation);
                         M.AddObjectToTrackedList(g3);
                     }
+                    ++debugStep;
                     if (C.Has_Item_Tertiary)
                     {
                         TNH_CharacterDef.LoadoutEntry item_Tertiary = C.Item_Tertiary;
@@ -1845,6 +1874,7 @@ namespace H3MP
                         GameObject g4 = UnityEngine.Object.Instantiate<GameObject>(fvrobject4.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f, UnityEngine.Random.rotation);
                         M.AddObjectToTrackedList(g4);
                     }
+                    ++debugStep;
                     if (C.Has_Item_Shield)
                     {
                         TNH_CharacterDef.LoadoutEntry item_Shield = C.Item_Shield;
@@ -1863,11 +1893,12 @@ namespace H3MP
                         GameObject g5 = UnityEngine.Object.Instantiate<GameObject>(fvrobject5.GetGameObject(), shieldSpawnPos, Quaternion.Euler(Vector3.up));
                         M.AddObjectToTrackedList(g5);
                     }
+                    ++debugStep;
                 }
             }
             catch(Exception ex)
             {
-                Mod.LogError("Error spawning initial equipment: " + ex.Message + ":\n" + ex.StackTrace);
+                Mod.LogError("Error spawning initial equipment at step "+debugStep+": " + ex.Message + ":\n" + ex.StackTrace);
             }
             Destroy(TNHStartEquipButton);
             TNHStartEquipButton = null;
