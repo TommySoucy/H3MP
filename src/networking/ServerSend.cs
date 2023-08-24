@@ -4278,5 +4278,16 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void RoundDamage(int trackedID, Damage damage, int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.roundDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(damage);
+
+                SendTCPData(clientID, packet);
+            }
+        }
     }
 }

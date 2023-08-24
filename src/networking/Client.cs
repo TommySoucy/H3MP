@@ -593,6 +593,7 @@ namespace H3MP.Networking
                 ClientHandle.ObjectInstance,
                 ClientHandle.UpdateEncryptionDisplay,
                 ClientHandle.EncryptionRespawnSubTargGeo,
+                ClientHandle.RoundDamage,
             };
 
             // All vanilla scenes can be synced by default

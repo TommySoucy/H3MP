@@ -4924,5 +4924,27 @@ namespace H3MP.Networking
                 ServerSend.UpdateEncryptionDisplay(trackedID, numHitsLeft, clientID);
             }
         }
+
+        public static void RoundDamage(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            TrackedItemData trackedItemData = Server.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                if(trackedItemData.controller == GameManager.ID)
+                {
+                    if(trackedItemData.physical != null)
+                    {
+                        (trackedItemData.physicalItem.physicalItem as FVRFireArmRound).Damage(damage);
+                    }
+                }
+                else
+                {
+                    ServerSend.RoundDamage(trackedID, damage, trackedItemData.controller);
+                }
+            }
+        }
     }
 }

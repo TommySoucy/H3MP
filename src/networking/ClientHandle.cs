@@ -4441,5 +4441,27 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void RoundDamage(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Damage damage = packet.ReadDamage();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                if (trackedItemData.controller == GameManager.ID)
+                {
+                    if (trackedItemData.physical != null)
+                    {
+                        (trackedItemData.physicalItem.physicalItem as FVRFireArmRound).Damage(damage);
+                    }
+                }
+                else
+                {
+                    ClientSend.RoundDamage(trackedID, damage);
+                }
+            }
+        }
     }
 }

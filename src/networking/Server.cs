@@ -502,6 +502,7 @@ namespace H3MP.Networking
                 ServerHandle.ObjectInstance,
                 ServerHandle.UpdateEncryptionDisplay,
                 ServerHandle.EncryptionRespawnSubTargGeo,
+                ServerHandle.RoundDamage,
             };
 
             objects = new TrackedObjectData[100];

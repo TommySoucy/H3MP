@@ -706,6 +706,13 @@ namespace H3MP.Patches
 
             PatchController.Verify(ReactiveSteelTargetDamageOriginal, harmony, false);
             harmony.Patch(ReactiveSteelTargetDamageOriginal, new HarmonyMethod(ReactiveSteelTargetDamagePrefix), new HarmonyMethod(ReactiveSteelTargetDamagePostfix));
+
+            // RoundDamagePatch
+            MethodInfo roundDamageOriginal = typeof(FVRFireArmRound).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo roundDamagePrefix = typeof(RoundDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(roundDamageOriginal, harmony, false);
+            harmony.Patch(roundDamageOriginal, new HarmonyMethod(roundDamagePrefix));
         }
     }
 
@@ -3731,6 +3738,43 @@ namespace H3MP.Patches
                     }
                 }
             }
+        }
+    }
+
+    // Patches FVRFireArmRound.Damage to keep track of damage taken by a round
+    class RoundDamagePatch
+    {
+        static bool Prefix(FVRFireArmRound __instance, Damage d)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control, apply damage, send to everyone else
+            // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
+            TrackedObject trackedObject = GameManager.trackedObjectByDamageable.TryGetValue(__instance, out trackedObject) ? trackedObject : null;
+            if (trackedObject != null)
+            { 
+                if(trackedObject.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else // Not controller, do everything apart from adding force to RB
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.RoundDamage(trackedObject.data.trackedID, d, trackedObject.data.controller);
+                    }
+                    else
+                    {
+                        ClientSend.RoundDamage(trackedObject.data.trackedID, d);
+                    }
+
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

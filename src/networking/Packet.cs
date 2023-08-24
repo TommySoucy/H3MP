@@ -186,7 +186,8 @@ namespace H3MP.Networking
         objectScene = 173,
         objectInstance = 174,
         updateEncryptionDisplay = 175,
-        encryptionRespawnSubTargGeo = 176
+        encryptionRespawnSubTargGeo = 176,
+        roundDamage = 177
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -361,7 +362,8 @@ namespace H3MP.Networking
         objectScene = 166,
         objectInstance = 167,
         updateEncryptionDisplay = 168,
-        encryptionRespawnSubTargGeo = 169
+        encryptionRespawnSubTargGeo = 169,
+        roundDamage = 170
     }
 
     public class Packet : IDisposable
