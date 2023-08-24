@@ -321,13 +321,7 @@ namespace H3MP.Scripts
         public virtual void Init()
         {
             SetColor(GameManager.colors[GameManager.colorIndex]);
-            GameManager.bodyVisible = bodyRenderers != null
-                                      && bodyRenderers.Length > 0
-                                      && bodyRenderers[0].enabled;
             SetBodyVisible(GameManager.bodyVisible);
-            GameManager.handsVisible = handRenderers != null
-                                       && handRenderers.Length > 0
-                                       && handRenderers[0].enabled;
             SetHandsVisible(GameManager.handsVisible);
         }
 

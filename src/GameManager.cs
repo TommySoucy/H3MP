@@ -101,8 +101,8 @@ namespace H3MP
         public static TrackedPlayerBody currentTrackedPlayerBody;
         public static bool playerModelAwaitingInstantiation = false;
         public static PlayerBody currentPlayerBody = null;
-        public static bool bodyVisible;
-        public static bool handsVisible;
+        public static bool bodyVisible = true;
+        public static bool handsVisible = true;
 
         /// <summary>
         /// CUSTOMIZATION
