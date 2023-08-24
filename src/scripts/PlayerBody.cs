@@ -34,8 +34,15 @@ namespace H3MP.Scripts
         public Transform[] handsToFollow;
 
         [Header("Other")]
-        [Tooltip("All physical colliders. These will be disabled if the body is yours, since the vanilla colliders and hitboxes should be used instead.")]
+        [Tooltip("All colliders. These will be disabled if the body is yours, since the vanilla colliders and hitboxes should be used instead.")]
         public Collider[] colliders;
+        [Tooltip("See colliders tooltip above. Put in this array colliders you want to have enabled when the body is yours, and disabled when it isn't. " +
+                 "For example, a trigger collider that acts as a toggle for some custom functionality with your body. You would want that enabled when the " +
+                 "body is the player's because you want them to be able to toggle that functionality on their own body. On the other hand, you want it disabled " +
+                 "when the body is another player's because you don't want other players to be able to toggle the functionality everyone else's bodies.")]
+        public Collider[] negativeColliders;
+        [Tooltip("All colliders you want to have ignored. See colliders tooltip above. Put in this array any collider that you want to have ignored.")]
+        public Collider[] ignoredColliders;
         [Tooltip("All AIEntities. These will be de/registered as necessary so remote players' bodies can be detected by AI.")]
         public AIEntity[] entities;
         [Tooltip("All UI canvases. These will be disabled if the body is yours, since vanilla health UI for example should be used instead.")]
@@ -103,27 +110,59 @@ namespace H3MP.Scripts
                     {
                         continue;
                     }
-                    bool found = false;
+                    bool[] found = new bool[3];
+                    int foundCount = 0;
                     for (int j = 0; j < this.colliders.Length; ++j)
                     {
                         if (colliders[i] == this.colliders[j])
                         {
-                            found = true;
+                            found[0] = true;
+                            ++foundCount;
                             break;
                         }
                     }
-                    if (!found)
+                    for (int j = 0; j < negativeColliders.Length; ++j)
                     {
-                        Debug.LogError("PlayerBody " + playerPrefabID + ": Collider " + colliders[i].name + " was not added to colliders array");
+                        if (colliders[i] == negativeColliders[j])
+                        {
+                            found[1] = true;
+                            ++foundCount;
+                            break;
+                        }
+                    }
+                    for (int j = 0; j < ignoredColliders.Length; ++j)
+                    {
+                        if (colliders[i] == ignoredColliders[j])
+                        {
+                            found[3] = true;
+                            ++foundCount;
+                            break;
+                        }
+                    }
+                    if(foundCount > 1)
+                    {
+                        string arrayNames = "";
+                        if (found[0])
+                        {
+                            arrayNames += "colliders, ";
+                        }
+                        if (found[1])
+                        {
+                            arrayNames += "negativeColliders, ";
+                        }
+                        if (found[2])
+                        {
+                            arrayNames += "ignoredColliders";
+                        }
+                        Debug.LogError("PlayerBody " + playerPrefabID + ": Collider " + colliders[i].name + " was found in multiple colliders arrays: "+ arrayNames);
+                        correct = false;
+                    }
+                    else if (foundCount == 0)
+                    {
+                        Debug.LogError("PlayerBody " + playerPrefabID + ": Collider " + colliders[i].name + " was not added to any colliders array");
                         correct = false;
                     }
                 }
-            }
-            else // No colliders array set yet, set it ourselves
-            {
-                Debug.LogWarning("PlayerBody " + playerPrefabID + ": Colliders array set automatically");
-                this.colliders = colliders;
-                correct = false;
             }
 
             AIEntity[] entities = GetComponentsInChildren<AIEntity>();
@@ -391,6 +430,16 @@ namespace H3MP.Scripts
                     if (colliders[i] != null)
                     {
                         colliders[i].enabled = enabled;
+                    }
+                }
+            }
+            if(negativeColliders != null)
+            {
+                for(int i=0; i < negativeColliders.Length; ++i)
+                {
+                    if (negativeColliders[i] != null)
+                    {
+                        negativeColliders[i].enabled = !enabled;
                     }
                 }
             }
