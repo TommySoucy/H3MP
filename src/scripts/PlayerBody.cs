@@ -39,7 +39,7 @@ namespace H3MP.Scripts
         [Tooltip("See colliders tooltip above. Put in this array colliders you want to have enabled when the body is yours, and disabled when it isn't. " +
                  "For example, a trigger collider that acts as a toggle for some custom functionality with your body. You would want that enabled when the " +
                  "body is the player's because you want them to be able to toggle that functionality on their own body. On the other hand, you want it disabled " +
-                 "when the body is another player's because you don't want other players to be able to toggle the functionality everyone else's bodies.")]
+                 "when the body is another player's because you don't want other players to be able to toggle the functionality on everyone else's bodies.")]
         public Collider[] negativeColliders;
         [Tooltip("All colliders you want to have ignored. See colliders tooltip above. Put in this array any collider that you want to have ignored.")]
         public Collider[] ignoredColliders;
