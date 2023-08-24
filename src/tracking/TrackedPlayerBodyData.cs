@@ -139,7 +139,6 @@ namespace H3MP.Tracking
                 physicalPlayerBody.physicalPlayerBody = playerBodyObject.GetComponent<PlayerBody>();
                 physical.physical = physicalPlayerBody.physicalPlayerBody;
 
-                GameManager.currentTrackedPlayerBody = physicalPlayerBody;
                 GameManager.trackedObjectByObject.Add(physicalPlayerBody.physicalPlayerBody, physicalPlayerBody);
                 for (int i = 0; i < physicalPlayerBody.physicalPlayerBody.hitboxes.Length; ++i)
                 {

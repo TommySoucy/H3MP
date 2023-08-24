@@ -16,6 +16,7 @@ namespace H3MP.Tracking
             base.Awake();
 
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
+            GameManager.OnInstanceJoined += OnInstanceJoined;
         }
 
         public virtual void Start()
@@ -146,9 +147,19 @@ namespace H3MP.Tracking
             }
         }
 
+        protected virtual void OnInstanceJoined(int instance, int source)
+        {
+            // We want to bring our player body with us across instances no matter what
+            if(data.controller == GameManager.ID)
+            {
+                data.SetInstance(instance, true);
+            }
+        }
+
         protected override void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
+            GameManager.OnInstanceJoined += OnInstanceJoined;
 
             for (int i = 0; i < physicalPlayerBody.hitboxes.Length; ++i)
             {

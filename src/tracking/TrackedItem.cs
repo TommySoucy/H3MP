@@ -12334,7 +12334,7 @@ namespace H3MP.Tracking
         {
             // An instance switch could happen during loading, at which point we want to change instance of wtv objects
             // we decided to bring along with us during scene change
-            // Note: The new instancep rocessing is done in Joined() because if we put it in Left() and then data.SetInstance(instance),
+            // Note: The new instance processing is done in Joined() because if we put it in Left() and then data.SetInstance(instance),
             //       the object would get destroyed because the new instance is not our current instance
             if (GameManager.sceneLoading)
             {
