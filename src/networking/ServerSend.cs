@@ -4289,5 +4289,24 @@ namespace H3MP.Networking
                 SendTCPData(clientID, packet);
             }
         }
+
+        public static void RoundSplode(int trackedID, float velMultiplier, bool isRandomDir, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.roundSplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(velMultiplier);
+                packet.Write(isRandomDir);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

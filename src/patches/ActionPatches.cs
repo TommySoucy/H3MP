@@ -3,6 +3,7 @@ using H3MP.Networking;
 using H3MP.Scripts;
 using H3MP.Tracking;
 using HarmonyLib;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -666,8 +667,11 @@ namespace H3MP.Patches
             // RoundPatch
             MethodInfo roundPatchFixedUpdateOriginal = typeof(FVRFireArmRound).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo roundPatchFixedUpdateTranspiler = typeof(RoundPatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo roundPatchSplodeOriginal = typeof(FVRFireArmRound).GetMethod("Splode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo roundPatchSplodePrefix = typeof(RoundPatch).GetMethod("SplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(roundPatchFixedUpdateOriginal, harmony, false);
+            PatchController.Verify(roundPatchSplodeOriginal, harmony, false);
             try 
             { 
                 harmony.Patch(roundPatchFixedUpdateOriginal, null, null, new HarmonyMethod(roundPatchFixedUpdateTranspiler));
@@ -676,6 +680,7 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying ActionPatches.RoundPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+            harmony.Patch(roundPatchSplodeOriginal, new HarmonyMethod(roundPatchSplodePrefix));
 
             // MagazinePatch
             MethodInfo magAddRoundClassOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
@@ -6247,6 +6252,8 @@ namespace H3MP.Patches
     // Patches FVRFireArmRound
     class RoundPatch
     {
+        public static int splodeSkip = 0;
+
         // Patches FVRFixedUpdate to prevent insertion into ammo container if we are not round controller
         static IEnumerable<CodeInstruction> FixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
@@ -6447,6 +6454,27 @@ namespace H3MP.Patches
             }
 
             return instructionList;
+        }
+
+        static void SplodePrefix(FVRFireArmRound __instance, float velMultiplier, bool isRandomDir)
+        {
+            if(Mod.managerObject == null || splodeSkip > 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
+            if(trackedItem != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.RoundSplode(trackedItem.data.trackedID, velMultiplier, isRandomDir);
+                }
+                else if(trackedItem.data.trackedID != -1)
+                {
+                    ClientSend.RoundSplode(trackedItem.data.trackedID, velMultiplier, isRandomDir);
+                }
+            }
         }
     }
 

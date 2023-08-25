@@ -4463,5 +4463,24 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void RoundSplode(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                if (trackedItemData.physical != null)
+                {
+                    float velMultiplier = packet.ReadFloat();
+                    bool isRandomDir = packet.ReadBool();
+
+                    ++RoundPatch.splodeSkip;
+                    (trackedItemData.physicalItem.physicalItem as FVRFireArmRound).Splode(velMultiplier, isRandomDir, false);
+                    --RoundPatch.splodeSkip;
+                }
+            }
+        }
     }
 }
