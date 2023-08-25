@@ -6253,6 +6253,7 @@ namespace H3MP.Patches
     class RoundPatch
     {
         public static int splodeSkip = 0;
+        public static int splodeInDamage = 0;
 
         // Patches FVRFixedUpdate to prevent insertion into ammo container if we are not round controller
         static IEnumerable<CodeInstruction> FixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -6456,16 +6457,31 @@ namespace H3MP.Patches
             return instructionList;
         }
 
-        static void SplodePrefix(FVRFireArmRound __instance, float velMultiplier, bool isRandomDir)
+        static bool SplodePrefix(FVRFireArmRound __instance, float velMultiplier, bool isRandomDir)
         {
             if(Mod.managerObject == null || splodeSkip > 0)
             {
-                return;
+                return true;
             }
 
             TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance, out trackedItem) ? trackedItem : __instance.GetComponent<TrackedItem>();
             if(trackedItem != null)
             {
+                // A player cannot trigger the splode of a round in their own belt,
+                // so if we Splode while splodeInDamage, it means that the Splode was called 
+                // from a damage order received by another player, at which point we only want to
+                // actually go through with the Splode iff the round is not in a QBS
+                // Note: A remote player cannot trigger a Splode directly in Damage on a non controlled round
+                //       because Damage() calls are sent to controller for processing
+                if (trackedItem.data.controller == GameManager.ID && splodeInDamage > 0)
+                {
+                    trackedItem.data.IsControlled(out int interactID);
+                    if(interactID > 2 && interactID < 515)
+                    {
+                        return false;
+                    }
+                }
+
                 if (ThreadManager.host)
                 {
                     ServerSend.RoundSplode(trackedItem.data.trackedID, velMultiplier, isRandomDir);
@@ -6475,6 +6491,8 @@ namespace H3MP.Patches
                     ClientSend.RoundSplode(trackedItem.data.trackedID, velMultiplier, isRandomDir);
                 }
             }
+
+            return true;
         }
     }
 
