@@ -1,11 +1,9 @@
-﻿using FFmpeg.AutoGen;
-using FistVR;
+﻿using FistVR;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -39,6 +37,7 @@ namespace H3MP.Networking
         public UDP udp;
 
         private bool isConnected = false;
+        public static bool isFullyConnected = false;
         public bool gotWelcome = false;
         public bool gotConnectSync = false;
         public int pingAttemptCounter = 0;
@@ -595,6 +594,7 @@ namespace H3MP.Networking
                 ClientHandle.EncryptionRespawnSubTargGeo,
                 ClientHandle.RoundDamage,
                 ClientHandle.RoundSplode,
+                ClientHandle.ConnectionComplete,
             };
 
             // All vanilla scenes can be synced by default
@@ -890,6 +890,8 @@ namespace H3MP.Networking
                     OnDisconnect();
                 }
                 Mod.Reset();
+
+                isFullyConnected = false;
 
                 if (reconnect)
                 {

@@ -30,6 +30,9 @@ namespace H3MP.Networking
             Server.clients[clientID].SendIntoGame(username, scene, instance, IFF, colorIndex);
 
             Server.connectedClients.Add(clientID);
+
+            // Tell the client connection is complete
+            ServerSend.ConnectionComplete(clientID);
         }
 
         public static void Ping(int clientID, Packet packet)

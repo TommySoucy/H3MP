@@ -4308,5 +4308,13 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void ConnectionComplete(int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.connectionComplete))
+            {
+                SendTCPData(clientID, packet);
+            }
+        }
     }
 }

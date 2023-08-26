@@ -188,7 +188,8 @@ namespace H3MP.Networking
         updateEncryptionDisplay = 175,
         encryptionRespawnSubTargGeo = 176,
         roundDamage = 177,
-        roundSplode = 178
+        roundSplode = 178,
+        connectionComplete = 179
     }
 
     /// <summary>Sent from client to server.</summary>

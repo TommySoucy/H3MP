@@ -2392,7 +2392,6 @@ namespace H3MP.Networking
             TrackedAutoMeaterData trackedAutoMeater = Client.objects[trackedID] as TrackedAutoMeaterData;
             if (trackedAutoMeater != null && trackedAutoMeater.physicalAutoMeater != null)
             {
-                Mod.LogInfo("\tFirearms count: "+ trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.FireControl.Firearms.Count, false);
                 ++AutoMeaterFirearmFireAtWillPatch.skip;
                 trackedAutoMeater.physicalAutoMeater.physicalAutoMeater.FireControl.Firearms[firearmIndex].SetFireAtWill(fireAtWill, dist);
                 --AutoMeaterFirearmFireAtWillPatch.skip;
@@ -4483,6 +4482,13 @@ namespace H3MP.Networking
                     --RoundPatch.splodeSkip;
                 }
             }
+        }
+
+        public static void ConnectionComplete(Packet packet)
+        {
+            Client.isFullyConnected = true;
+
+            Mod.OnConnectionInvoke();
         }
     }
 }

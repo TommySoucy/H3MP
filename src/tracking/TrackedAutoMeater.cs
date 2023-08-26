@@ -27,7 +27,11 @@ namespace H3MP.Tracking
 
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore
             GameManager.trackedAutoMeaterByAutoMeater.Remove(physicalAutoMeater);
-            GameManager.trackedObjectByInteractive.Remove(physicalAutoMeater.PO);
+            FVRPhysicalObject[] pos = GetComponentsInChildren<FVRPhysicalObject>();
+            for (int i = 0; i < pos.Length; ++i)
+            {
+                GameManager.trackedObjectByInteractive.Remove(pos[i]);
+            }
             AutoMeaterHitZone[] tempHitZones = physicalAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
             for (int i = 0; i < tempHitZones.Length; ++i)
             {

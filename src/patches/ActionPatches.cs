@@ -4664,7 +4664,7 @@ namespace H3MP.Patches
             }
 
             // Skip if not connected or no one to send data to
-            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0 || __instance.m_fireAtWill == b)
             {
                 return;
             }
@@ -4673,36 +4673,24 @@ namespace H3MP.Patches
             TrackedAutoMeater trackedAutoMeater = GameManager.trackedAutoMeaterByAutoMeater.ContainsKey(__instance.M) ? GameManager.trackedAutoMeaterByAutoMeater[__instance.M] : __instance.M.GetComponent<TrackedAutoMeater>();
             if (trackedAutoMeater != null)
             {
-                // Send the fire at will setting action to other clients only if we control it
-                if (ThreadManager.host)
+                if (trackedAutoMeater.data.controller == GameManager.ID)
                 {
-                    if (trackedAutoMeater.data.controller == 0)
+                    int firearmIndex = -1;
+                    for (int i = 0; i < trackedAutoMeater.physicalAutoMeater.FireControl.Firearms.Count; ++i)
                     {
-                        int firearmIndex = -1;
-                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeater.FireControl.Firearms.Count; ++i)
+                        if (trackedAutoMeater.physicalAutoMeater.FireControl.Firearms[i] == __instance)
                         {
-                            if (trackedAutoMeater.physicalAutoMeater.FireControl.Firearms[i] == __instance)
-                            {
-                                firearmIndex = i;
-                                break;
-                            }
+                            firearmIndex = i;
+                            break;
                         }
+                    }
+
+                    if (ThreadManager.host)
+                    {
                         ServerSend.AutoMeaterFirearmFireAtWill(trackedAutoMeater.data.trackedID, firearmIndex, b, d);
                     }
-                }
-                else if (trackedAutoMeater.data.controller == Client.singleton.ID)
-                {
-                    if (trackedAutoMeater.data.trackedID != -1)
+                    else
                     {
-                        int firearmIndex = -1;
-                        for (int i = 0; i < trackedAutoMeater.physicalAutoMeater.FireControl.Firearms.Count; ++i)
-                        {
-                            if (trackedAutoMeater.physicalAutoMeater.FireControl.Firearms[i] == __instance)
-                            {
-                                firearmIndex = i;
-                                break;
-                            }
-                        }
                         ClientSend.AutoMeaterFirearmFireAtWill(trackedAutoMeater.data.trackedID, firearmIndex, b, d);
                     }
                 }

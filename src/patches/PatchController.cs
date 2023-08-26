@@ -51,6 +51,7 @@ namespace H3MP.Patches
             {
                 if (assemblies[i].GetName().Name.Equals("TakeAndHoldTweaker"))
                 {
+                    Mod.LogInfo("Found TNH tweaker assembly at " + i);
                     TNHTweakerAsmIdx = i;
                     TNHTweaker_TNHPatches = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.Patches.TNHPatches");
                     TNHTweaker_TNHPatches_ConfigureSupplyPoint = TNHTweaker_TNHPatches.GetMethod("ConfigureSupplyPoint", BindingFlags.Public | BindingFlags.Static);

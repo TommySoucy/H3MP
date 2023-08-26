@@ -92,6 +92,7 @@ namespace H3MP.Patches
             if (PatchController.TNHTweakerAsmIdx > -1)
             {
                 TNH_ManagerPatchSetPhaseTakeOriginal = PatchController.TNHTweaker_TNHPatches.GetMethod("SetPhase_Take_Replacement", BindingFlags.Public | BindingFlags.Static);
+                Mod.LogInfo("About to patch TNH tweaker SetPhase_Take_Replacement, null?: " + (TNH_ManagerPatchSetPhaseTakeOriginal == null));
                 TNH_ManagerGeneratePatrolOriginal = PatchController.TNHTweaker_PatrolPatches.GetMethod("GeneratePatrol", BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(TNH_Manager), PatchController.TNHTweaker_Patrol, typeof(List<Vector3>), typeof(List<Vector3>), typeof(List<Vector3>), typeof(int) }, null);
             }
             else

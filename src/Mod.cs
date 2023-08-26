@@ -239,6 +239,18 @@ namespace H3MP
         /// </summary>
         public static event OnInstantiationTrackDelegate OnInstantiationTrack;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnConnection event
+        /// </summary>
+        public delegate void OnConnectionDelegate();
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when H3MP connection/hosting starts
+        /// </summary>
+        public static event OnConnectionDelegate OnConnection;
+
         // Debug
         public static bool waitingForDebugCode;
         public static string debugCode;
@@ -261,6 +273,7 @@ namespace H3MP
 
         public static void Reset()
         {
+            Mod.LogInfo("Mod reset called", false);
             skipNextFires = 0;
             skipAllInstantiates = 0;
             TNHMenuLPJ = true;
@@ -277,7 +290,8 @@ namespace H3MP
             registeredCustomPacketIDs.Clear();
             spectatorHostWaitingForTNHSetup = false;
 
-            Destroy(Mod.managerObject);
+            DestroyImmediate(Mod.managerObject);
+            Mod.managerObject = null;
         }
 
         private void Update()
@@ -512,6 +526,10 @@ namespace H3MP
                                 Mod.LogInfo("\tDebug: Load to grillhouse");
                                 SteamVR_LoadLevel.Begin("Grillhouse_2Story", false, 0.5f, 0f, 0f, 0f, 1f);
                                 break;
+                            case 20: // Spawn SMG AutoMeater
+                                Mod.LogInfo("\tDebug: Spawn SMG AutoMeater");
+                                SpawnItem("Turburgert_SMG");
+                                break;
                         }
                     }
                 }
@@ -694,6 +712,14 @@ namespace H3MP
             if (OnInstantiationTrack != null)
             {
                 OnInstantiationTrack(gameObject);
+            }
+        }
+
+        public static void OnConnectionInvoke()
+        {
+            if (OnConnection != null)
+            {
+                OnConnection();
             }
         }
 
@@ -1287,7 +1313,12 @@ namespace H3MP
                 }
             }
 
-            GameManager.firstPlayerInSceneInstance = true;
+            GameManager.firstPlayerInSceneInstance = true; 
+            
+            if(OnConnection != null)
+            {
+                OnConnection();
+            }
 
             //mainStatusText.text = "Starting...";
             //mainStatusText.color = Color.white;

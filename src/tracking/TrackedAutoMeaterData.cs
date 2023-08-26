@@ -17,14 +17,10 @@ namespace H3MP.Tracking
         public Quaternion previousRot;
         public Vector3 position;
         public Quaternion rotation;
+        public float previousMotorHingeSpringTarget;
+        public float motorHingeSpringTarget;
         public Quaternion previousSideToSideRotation;
         public Quaternion sideToSideRotation;
-        public float previousHingeTargetPos;
-        public float hingeTargetPos;
-        public Quaternion previousUpDownMotorRotation;
-        public Quaternion upDownMotorRotation;
-        public float previousUpDownJointTargetPos;
-        public float upDownJointTargetPos;
         public byte previousIFF;
         public byte IFF;
         public byte[] data;
@@ -42,10 +38,8 @@ namespace H3MP.Tracking
             position = packet.ReadVector3();
             rotation = packet.ReadQuaternion();
             IFF = packet.ReadByte();
+            motorHingeSpringTarget = packet.ReadFloat();
             sideToSideRotation = packet.ReadQuaternion();
-            hingeTargetPos = packet.ReadFloat();
-            upDownMotorRotation = packet.ReadQuaternion();
-            upDownJointTargetPos = packet.ReadFloat();
 
             // Full
             ID = packet.ReadByte();
@@ -106,15 +100,19 @@ namespace H3MP.Tracking
 
             GameManager.trackedAutoMeaterByAutoMeater.Add(autoMeaterScript, trackedAutoMeater);
             GameManager.trackedObjectByObject.Add(autoMeaterScript, trackedAutoMeater);
-            GameManager.trackedObjectByInteractive.Add(autoMeaterScript.PO, trackedAutoMeater);
+            FVRPhysicalObject[] pos = autoMeaterScript.GetComponentsInChildren<FVRPhysicalObject>();
+            for(int i=0; i < pos.Length; ++i)
+            {
+                GameManager.trackedObjectByInteractive.Add(pos[i], trackedAutoMeater);
+            }
             AutoMeaterHitZone[] hitZones = autoMeaterScript.GetComponentsInChildren<AutoMeaterHitZone>();
             for(int i = 0; i < hitZones.Length; ++i)
             {
                 GameManager.trackedObjectByDamageable.Add(hitZones[i], trackedAutoMeater);
             }
 
-            data.position = autoMeaterScript.RB.position;
-            data.rotation = autoMeaterScript.RB.rotation;
+            data.position = autoMeaterScript.transform.position;
+            data.rotation = autoMeaterScript.transform.rotation;
             data.IFF = (byte)autoMeaterScript.E.IFFCode;
             if (autoMeaterScript.name.Contains("SMG"))
             {
@@ -149,10 +147,12 @@ namespace H3MP.Tracking
                 Mod.LogWarning("Unsupported AutoMeater type tracked");
                 data.ID = 7;
             }
-            data.sideToSideRotation = autoMeaterScript.SideToSideTransform.localRotation;
-            data.hingeTargetPos = autoMeaterScript.SideToSideHinge.spring.targetPosition;
-            data.upDownMotorRotation = autoMeaterScript.UpDownTransform.localRotation;
-            data.upDownJointTargetPos = autoMeaterScript.UpDownHinge.spring.targetPosition;
+
+            if (autoMeaterScript.m_hasMotor)
+            {
+                data.motorHingeSpringTarget = autoMeaterScript.Motor.m_hingeJoint.spring.targetPosition;
+                data.sideToSideRotation = autoMeaterScript.Motor.m_sideToSideTransform.rotation;
+            }
 
             // Get hitzones
             AutoMeaterHitZone[] hitZoneArr = trackedAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
@@ -218,7 +218,11 @@ namespace H3MP.Tracking
 
             GameManager.trackedAutoMeaterByAutoMeater.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);
             GameManager.trackedObjectByObject.Add(physicalAutoMeater.physicalAutoMeater, physicalAutoMeater);
-            GameManager.trackedObjectByInteractive.Add(physicalAutoMeater.physicalAutoMeater.PO, physicalAutoMeater);
+            FVRPhysicalObject[] pos = physicalAutoMeater.physicalAutoMeater.GetComponentsInChildren<FVRPhysicalObject>();
+            for (int i = 0; i < pos.Length; ++i)
+            {
+                GameManager.trackedObjectByInteractive.Add(pos[i], physicalAutoMeater);
+            }
             AutoMeaterHitZone[] tempHitZones = physicalAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
             for (int i = 0; i < tempHitZones.Length; ++i)
             {
@@ -233,7 +237,11 @@ namespace H3MP.Tracking
                 {
                     GM.CurrentAIManager.DeRegisterAIEntity(physicalAutoMeater.physicalAutoMeater.E);
                 }
-                physicalAutoMeater.physicalAutoMeater.RB.isKinematic = true;
+                Rigidbody[] rbs = physicalAutoMeater.GetComponentsInChildren<Rigidbody>();
+                for(int i=0; i < rbs.Length; ++i)
+                {
+                    rbs[i].isKinematic = true;
+                }
             }
 
             // Initially set IFF
@@ -310,31 +318,24 @@ namespace H3MP.Tracking
             rotation = updatedAutoMeater.rotation;
             previousIFF = IFF;
             IFF = updatedAutoMeater.IFF;
+            previousMotorHingeSpringTarget = motorHingeSpringTarget;
+            motorHingeSpringTarget = updatedAutoMeater.motorHingeSpringTarget;
             previousSideToSideRotation = sideToSideRotation;
             sideToSideRotation = updatedAutoMeater.sideToSideRotation;
-            previousHingeTargetPos = hingeTargetPos;
-            hingeTargetPos = updatedAutoMeater.hingeTargetPos;
-            previousUpDownMotorRotation = upDownMotorRotation;
-            upDownMotorRotation = updatedAutoMeater.upDownMotorRotation;
-            previousUpDownJointTargetPos = upDownJointTargetPos;
-            upDownJointTargetPos = updatedAutoMeater.upDownJointTargetPos;
 
             // Set physically
             if (physicalAutoMeater != null)
             {
-                physicalAutoMeater.physicalAutoMeater.RB.position = position;
-                physicalAutoMeater.physicalAutoMeater.RB.rotation = rotation;
+                physicalAutoMeater.physicalAutoMeater.transform.position = position;
+                physicalAutoMeater.physicalAutoMeater.transform.rotation = rotation;
                 physicalAutoMeater.physicalAutoMeater.E.IFFCode = IFF;
-                physicalAutoMeater.physicalAutoMeater.SideToSideTransform.localRotation = sideToSideRotation;
-                HingeJoint hingeJoint = physicalAutoMeater.physicalAutoMeater.SideToSideHinge;
-                JointSpring spring = hingeJoint.spring;
-                spring.targetPosition = hingeTargetPos;
-                hingeJoint.spring = spring;
-                physicalAutoMeater.physicalAutoMeater.UpDownTransform.localRotation = upDownMotorRotation;
-                HingeJoint upDownHingeJoint = physicalAutoMeater.physicalAutoMeater.UpDownHinge;
-                spring = upDownHingeJoint.spring;
-                spring.targetPosition = upDownJointTargetPos;
-                upDownHingeJoint.spring = spring;
+                if (physicalAutoMeater.physicalAutoMeater.m_hasMotor)
+                {
+                    JointSpring spring = physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring;
+                    spring.targetPosition = motorHingeSpringTarget;
+                    physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring = spring;
+                    physicalAutoMeater.physicalAutoMeater.Motor.m_sideToSideTransform.rotation = Quaternion.LookRotation(physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.transform.forward, physicalAutoMeater.physicalAutoMeater.Motor.m_base.up);
+                }
             }
         }
 
@@ -343,13 +344,16 @@ namespace H3MP.Tracking
         {
             base.UpdateFromPacket(packet, full);
 
+            previousPos = position;
+            previousRot = rotation;
             position = packet.ReadVector3();
             rotation = packet.ReadQuaternion();
+            previousIFF = IFF;
             IFF = packet.ReadByte();
+            previousMotorHingeSpringTarget = motorHingeSpringTarget;
+            motorHingeSpringTarget = packet.ReadFloat();
+            previousSideToSideRotation = sideToSideRotation;
             sideToSideRotation = packet.ReadQuaternion();
-            hingeTargetPos = packet.ReadFloat();
-            upDownMotorRotation = packet.ReadQuaternion();
-            upDownJointTargetPos = packet.ReadFloat();
 
             if (full)
             {
@@ -368,19 +372,16 @@ namespace H3MP.Tracking
             // Set physically
             if (physicalAutoMeater != null)
             {
-                physicalAutoMeater.physicalAutoMeater.RB.position = position;
-                physicalAutoMeater.physicalAutoMeater.RB.rotation = rotation;
+                physicalAutoMeater.physicalAutoMeater.transform.position = position;
+                physicalAutoMeater.physicalAutoMeater.transform.rotation = rotation;
                 physicalAutoMeater.physicalAutoMeater.E.IFFCode = IFF;
-                physicalAutoMeater.physicalAutoMeater.SideToSideTransform.localRotation = sideToSideRotation;
-                HingeJoint hingeJoint = physicalAutoMeater.physicalAutoMeater.SideToSideHinge;
-                JointSpring spring = hingeJoint.spring;
-                spring.targetPosition = hingeTargetPos;
-                hingeJoint.spring = spring;
-                physicalAutoMeater.physicalAutoMeater.UpDownTransform.localRotation = upDownMotorRotation;
-                HingeJoint upDownHingeJoint = physicalAutoMeater.physicalAutoMeater.UpDownHinge;
-                spring = upDownHingeJoint.spring;
-                spring.targetPosition = upDownJointTargetPos;
-                upDownHingeJoint.spring = spring;
+                if (physicalAutoMeater.physicalAutoMeater.m_hasMotor)
+                {
+                    JointSpring spring = physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring;
+                    spring.targetPosition = motorHingeSpringTarget;
+                    physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring = spring;
+                    physicalAutoMeater.physicalAutoMeater.Motor.m_sideToSideTransform.rotation = Quaternion.LookRotation(physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.transform.forward, physicalAutoMeater.physicalAutoMeater.Motor.m_base.up);
+                }
             }
         }
 
@@ -395,28 +396,27 @@ namespace H3MP.Tracking
 
             previousPos = position;
             previousRot = rotation;
-            position = physicalAutoMeater.physicalAutoMeater.RB.position;
-            rotation = physicalAutoMeater.physicalAutoMeater.RB.rotation;
+            position = physicalAutoMeater.physicalAutoMeater.transform.position;
+            rotation = physicalAutoMeater.physicalAutoMeater.transform.rotation;
 
             previousIFF = IFF;
             IFF = (byte)physicalAutoMeater.physicalAutoMeater.E.IFFCode;
 
-            previousSideToSideRotation = sideToSideRotation;
-            previousHingeTargetPos = hingeTargetPos;
-            previousUpDownMotorRotation = upDownMotorRotation;
-            previousUpDownJointTargetPos = upDownJointTargetPos;
-            sideToSideRotation = physicalAutoMeater.physicalAutoMeater.SideToSideTransform.localRotation;
-            hingeTargetPos = physicalAutoMeater.physicalAutoMeater.SideToSideHinge.spring.targetPosition;
-            upDownMotorRotation = physicalAutoMeater.physicalAutoMeater.UpDownTransform.localRotation;
-            upDownJointTargetPos = physicalAutoMeater.physicalAutoMeater.UpDownHinge.spring.targetPosition;
+            if (physicalAutoMeater.physicalAutoMeater.m_hasMotor)
+            {
+                previousMotorHingeSpringTarget = motorHingeSpringTarget;
+                motorHingeSpringTarget = physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring.targetPosition;
+                previousSideToSideRotation = sideToSideRotation;
+                sideToSideRotation = physicalAutoMeater.physicalAutoMeater.Motor.m_sideToSideTransform.rotation;
+            }
 
             return NeedsUpdate();
         }
 
         public override bool NeedsUpdate()
         {
-            return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || !previousSideToSideRotation.Equals(sideToSideRotation) ||
-                   !previousUpDownMotorRotation.Equals(upDownMotorRotation) || previousHingeTargetPos != hingeTargetPos || previousUpDownJointTargetPos != upDownJointTargetPos;
+            return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousMotorHingeSpringTarget != motorHingeSpringTarget 
+                   || !previousSideToSideRotation.Equals(sideToSideRotation);
         }
 
         public override void OnControlChanged(int newController)
@@ -432,9 +432,10 @@ namespace H3MP.Tracking
                     {
                         GM.CurrentAIManager.RegisterAIEntity(physicalAutoMeater.physicalAutoMeater.E);
                     }
-                    if (physicalAutoMeater.physicalAutoMeater.RB != null)
+                    Rigidbody[] rbs = physicalAutoMeater.GetComponentsInChildren<Rigidbody>();
+                    for (int i = 0; i < rbs.Length; ++i)
                     {
-                        physicalAutoMeater.physicalAutoMeater.RB.isKinematic = false;
+                        rbs[i].isKinematic = false;
                     }
                 }
             }
@@ -448,9 +449,10 @@ namespace H3MP.Tracking
                     {
                         GM.CurrentAIManager.DeRegisterAIEntity(physicalAutoMeater.physicalAutoMeater.E);
                     }
-                    if (physicalAutoMeater.physicalAutoMeater.RB != null)
+                    Rigidbody[] rbs = physicalAutoMeater.GetComponentsInChildren<Rigidbody>();
+                    for (int i = 0; i < rbs.Length; ++i)
                     {
-                        physicalAutoMeater.physicalAutoMeater.RB.isKinematic = true;
+                        rbs[i].isKinematic = true;
                     }
                 }
             }
@@ -463,13 +465,12 @@ namespace H3MP.Tracking
             packet.Write(position);
             packet.Write(rotation);
             packet.Write(IFF);
+            packet.Write(motorHingeSpringTarget);
             packet.Write(sideToSideRotation);
-            packet.Write(hingeTargetPos);
-            packet.Write(upDownMotorRotation);
-            packet.Write(upDownJointTargetPos);
 
             if (full)
             {
+                packet.Write(ID);
                 if (data == null || data.Length == 0)
                 {
                     packet.Write(0);
@@ -493,7 +494,11 @@ namespace H3MP.Tracking
                 if (physicalAutoMeater != null && physicalAutoMeater.physicalAutoMeater != null)
                 {
                     GameManager.trackedAutoMeaterByAutoMeater.Remove(physicalAutoMeater.physicalAutoMeater);
-                    GameManager.trackedObjectByInteractive.Remove(physicalAutoMeater.physicalAutoMeater.PO);
+                    FVRPhysicalObject[] pos = physicalAutoMeater.GetComponentsInChildren<FVRPhysicalObject>();
+                    for (int i = 0; i < pos.Length; ++i)
+                    {
+                        GameManager.trackedObjectByInteractive.Remove(pos[i]);
+                    }
                     AutoMeaterHitZone[] tempHitZones = physicalAutoMeater.GetComponentsInChildren<AutoMeaterHitZone>();
                     for (int i = 0; i < tempHitZones.Length; ++i)
                     {
