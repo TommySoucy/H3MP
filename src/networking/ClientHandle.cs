@@ -63,6 +63,9 @@ namespace H3MP.Networking
                 GameManager.SetInstance(GameManager.reconnectionInstance);
                 GameManager.reconnectionInstance = -1;
             }
+
+            // Ensure the player has a body
+            Mod.ForceDefaultPlayerBody();
         }
 
         public static void Ping(Packet packet)

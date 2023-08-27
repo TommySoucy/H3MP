@@ -530,6 +530,30 @@ namespace H3MP
                                 Mod.LogInfo("\tDebug: Spawn SMG AutoMeater");
                                 SpawnItem("Turburgert_SMG");
                                 break;
+                            case 21: // Spawn Flak AutoMeater
+                                Mod.LogInfo("\tDebug: Spawn Flak AutoMeater");
+                                SpawnItem("Turburgert_Flak");
+                                break;
+                            case 22: // Spawn Flamethrower AutoMeater
+                                Mod.LogInfo("\tDebug: Spawn Flamethrower AutoMeater");
+                                SpawnItem("Turburgert_Flamethrower");
+                                break;
+                            case 23: // Spawn MachineGun AutoMeater
+                                Mod.LogInfo("\tDebug: Spawn MachineGun AutoMeater");
+                                SpawnItem("Turburgert_MachineGun");
+                                break;
+                            case 24: // Spawn Suppression AutoMeater
+                                Mod.LogInfo("\tDebug: Spawn Suppression AutoMeater");
+                                SpawnItem("Turburgert_Suppression");
+                                break;
+                            case 25: // Spawn blue MF AutoMeater
+                                Mod.LogInfo("\tDebug: Spawn blue MF AutoMeater");
+                                SpawnItem("TurburgertMFBlue");
+                                break;
+                            case 26: // Spawn red MF AutoMeater
+                                Mod.LogInfo("\tDebug: Spawn red MF AutoMeater");
+                                SpawnItem("TurburgertMFRed");
+                                break;
                         }
                     }
                 }
@@ -1290,28 +1314,7 @@ namespace H3MP
                 InitTNHMenu();
             }
 
-            // Force Default player body
-            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
-                && GameManager.currentPlayerBody == null 
-                && !GameManager.playerModelAwaitingInstantiation)
-            {
-                GameManager.playerPrefabID = "Default";
-                for(int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
-                {
-                    if (GameManager.playerPrefabIDs[i].Equals(GameManager.playerPrefabID))
-                    {
-                        GameManager.playerPrefabIndex = i;
-                        break;
-                    }
-                }
-
-                GameManager.currentPlayerBody = Instantiate(GameManager.playerPrefabs[GameManager.playerPrefabID] as GameObject).GetComponent<PlayerBody>();
-
-                if (BodyWristMenuSection.playerBodyText != null)
-                {
-                    BodyWristMenuSection.playerBodyText.text = "Body: Default";
-                }
-            }
+            ForceDefaultPlayerBody();
 
             GameManager.firstPlayerInSceneInstance = true; 
             
@@ -1351,8 +1354,15 @@ namespace H3MP
                 InitTNHMenu();
             }
 
-            // Force Default player body
-            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None")) && GameManager.currentPlayerBody == null && !GameManager.playerModelAwaitingInstantiation)
+            //mainStatusText.text = "Connecting...";
+            //mainStatusText.color = Color.white;
+        }
+
+        public static void ForceDefaultPlayerBody()
+        {
+            if ((GameManager.playerPrefabIndex == -1 || GameManager.playerPrefabID.Equals("None"))
+                && GameManager.currentPlayerBody == null
+                && !GameManager.playerModelAwaitingInstantiation)
             {
                 GameManager.playerPrefabID = "Default";
                 for (int i = 0; i < GameManager.playerPrefabIDs.Count; ++i)
@@ -1371,9 +1381,6 @@ namespace H3MP
                     BodyWristMenuSection.playerBodyText.text = "Body: Default";
                 }
             }
-
-            //mainStatusText.text = "Connecting...";
-            //mainStatusText.color = Color.white;
         }
 
         public static void OnTNHHostClicked()
