@@ -4316,5 +4316,43 @@ namespace H3MP.Networking
                 SendTCPData(clientID, packet);
             }
         }
+
+        public static void SightFlipperState(int trackedID, int index, bool large, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.sightFlipperState))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write(large);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void SightRaiserState(int trackedID, int index, AR15HandleSightRaiser.SightHeights height, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.sightRaiserState))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write((byte)height);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

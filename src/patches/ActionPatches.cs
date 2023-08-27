@@ -899,6 +899,20 @@ namespace H3MP.Patches
 
             PatchController.Verify(flameThrowerUpdateControlsOriginal, harmony, false);
             harmony.Patch(flameThrowerUpdateControlsOriginal, new HarmonyMethod(flameThrowerUpdateControlsPrefix));
+
+            // AR15SightFlipperPatch
+            MethodInfo AR15SightFlipperInteractOriginal = typeof(AR15HandleSightFlipper).GetMethod("SimpleInteraction", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo AR15SightFlipperInteractPostfix = typeof(AR15SightFlipperPatch).GetMethod("InteractPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(AR15SightFlipperInteractOriginal, harmony, false);
+            harmony.Patch(AR15SightFlipperInteractOriginal, null, new HarmonyMethod(AR15SightFlipperInteractPostfix));
+
+            // AR15SightRaiserPatch
+            MethodInfo AR15SightRaiserInteractOriginal = typeof(AR15HandleSightRaiser).GetMethod("SimpleInteraction", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo AR15SightRaiserInteractPostfix = typeof(AR15SightRaiserPatch).GetMethod("InteractPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(AR15SightRaiserInteractOriginal, harmony, false);
+            harmony.Patch(AR15SightRaiserInteractOriginal, null, new HarmonyMethod(AR15SightRaiserInteractPostfix));
         }
     }
 
@@ -7798,6 +7812,126 @@ namespace H3MP.Patches
             }
 
             return true;
+        }
+    }
+
+    // Patches AR15HandleSightFlipper
+    class AR15SightFlipperPatch
+    {
+        // TODO: Future: Tracking only the event and not storing the state in TrackedItem means that if a sight is flipped
+        //               and then another player instantiates the sight, it will not be flippied, because no data they have
+        //               dictates it should be flipped. Idea would be that upon InitItemType
+        //               of specific types that may have this flipper on them, build an array of all ComponentsInChildren<Flipper>
+        //               and their current state. This way we could refer to them by index and the item could init itself with its
+        //               flipper's set properly. Do the same for Raiser
+        // Patches SimpleInteraction to track event
+        static void InteractPostfix(AR15HandleSightFlipper __instance)
+        {
+            if(Mod.managerObject != null)
+            {
+                // Check if this flipper has a TrackedObject above it
+                Transform t = __instance.transform;
+                TrackedObject trackedObject = null;
+                while(t != null)
+                {
+                    trackedObject = t.GetComponent<TrackedObject>();
+                    if(trackedObject != null)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        t = t.parent;
+                    }
+                }
+
+                if(trackedObject != null)
+                {
+                    int index = 0;
+                    AR15HandleSightFlipper[] flippers = trackedObject.GetComponentsInChildren<AR15HandleSightFlipper>();
+                    if(flippers != null && flippers.Length != 0)
+                    {
+                        if (flippers.Length > 1)
+                        {
+                            for(int i=0; i < flippers.Length; ++i)
+                            {
+                                if (flippers[i] == __instance)
+                                {
+                                    index = i;
+                                    break;
+                                }
+                            }
+                        }
+                        // else, length is 1,, index will remain to default of 0
+
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.SightFlipperState(trackedObject.data.trackedID, index, __instance.m_isLargeAperture);
+                        }
+                        else if(trackedObject.data.trackedID != -1)
+                        {
+                            ClientSend.SightFlipperState(trackedObject.data.trackedID, index, __instance.m_isLargeAperture);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches AR15HandleSightRaiser
+    class AR15SightRaiserPatch
+    {
+        // Patches SimpleInteraction to track event
+        static void InteractPostfix(AR15HandleSightRaiser __instance)
+        {
+            if(Mod.managerObject != null)
+            {
+                // Check if this raiser has a TrackedObject above it
+                Transform t = __instance.transform;
+                TrackedObject trackedObject = null;
+                while(t != null)
+                {
+                    trackedObject = t.GetComponent<TrackedObject>();
+                    if(trackedObject != null)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        t = t.parent;
+                    }
+                }
+
+                if(trackedObject != null)
+                {
+                    int index = 0;
+                    AR15HandleSightRaiser[] raisers = trackedObject.GetComponentsInChildren<AR15HandleSightRaiser>();
+                    if(raisers != null && raisers.Length != 0)
+                    {
+                        if (raisers.Length > 1)
+                        {
+                            for(int i=0; i < raisers.Length; ++i)
+                            {
+                                if (raisers[i] == __instance)
+                                {
+                                    index = i;
+                                    break;
+                                }
+                            }
+                        }
+                        // else, length is 1,, index will remain to default of 0
+
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.SightRaiserState(trackedObject.data.trackedID, index, __instance.height);
+                        }
+                        else if (trackedObject.data.trackedID != -1)
+                        {
+                            ClientSend.SightRaiserState(trackedObject.data.trackedID, index, __instance.height);
+                        }
+                    }
+                }
+            }
         }
     }
 }

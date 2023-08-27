@@ -10879,7 +10879,7 @@ namespace H3MP.Tracking
         {
             if (data.controller == GameManager.ID)
             {
-                FVRFireArmAttachment asAttachment = dataObject as FVRFireArmAttachment;
+                FVRFireArmAttachment asAttachment = dataObject is AttachableFirearm ? (dataObject as AttachableFirearm).Attachment : dataObject as FVRFireArmAttachment;
 
                 if (asAttachment.curMount == null)
                 {

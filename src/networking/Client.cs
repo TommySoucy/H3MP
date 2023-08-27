@@ -595,6 +595,8 @@ namespace H3MP.Networking
                 ClientHandle.RoundDamage,
                 ClientHandle.RoundSplode,
                 ClientHandle.ConnectionComplete,
+                ClientHandle.SightFlipperState,
+                ClientHandle.SightRaiserState,
             };
 
             // All vanilla scenes can be synced by default

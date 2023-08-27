@@ -189,7 +189,9 @@ namespace H3MP.Networking
         encryptionRespawnSubTargGeo = 176,
         roundDamage = 177,
         roundSplode = 178,
-        connectionComplete = 179
+        connectionComplete = 179,
+        sightFlipperState = 180,
+        sightRaiserState = 181
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -366,7 +368,9 @@ namespace H3MP.Networking
         updateEncryptionDisplay = 168,
         encryptionRespawnSubTargGeo = 169,
         roundDamage = 170,
-        roundSplode = 171
+        roundSplode = 171,
+        sightFlipperState = 172,
+        sightRaiserState = 173
     }
 
     public class Packet : IDisposable

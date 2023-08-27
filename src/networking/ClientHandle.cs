@@ -4493,5 +4493,65 @@ namespace H3MP.Networking
 
             Mod.OnConnectionInvoke();
         }
+
+        public static void SightFlipperState(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedObjectData trackedObjectData = Client.objects[trackedID];
+            if (trackedObjectData != null)
+            {
+                if (trackedObjectData.physical)
+                {
+                    int index = packet.ReadInt();
+                    AR15HandleSightFlipper[] flippers = trackedObjectData.physical.GetComponentsInChildren<AR15HandleSightFlipper>();
+                    if (flippers.Length > index)
+                    {
+                        flippers[index].m_isLargeAperture = packet.ReadBool();
+                    }
+                }
+            }
+        }
+
+        public static void SightRaiserState(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedObjectData trackedObjectData = Client.objects[trackedID];
+            if (trackedObjectData != null)
+            {
+                if (trackedObjectData.physical)
+                {
+                    int index = packet.ReadInt();
+                    AR15HandleSightRaiser[] raisers = trackedObjectData.physical.GetComponentsInChildren<AR15HandleSightRaiser>();
+                    if (raisers.Length > index)
+                    {
+                        switch ((AR15HandleSightRaiser.SightHeights)packet.ReadByte())
+                        {
+                            case AR15HandleSightRaiser.SightHeights.Low:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.Low;
+                                raisers[index].m_sightHeight = 0.25f;
+                                break;
+                            case AR15HandleSightRaiser.SightHeights.Mid:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.Mid;
+                                raisers[index].m_sightHeight = 0.5f;
+                                break;
+                            case AR15HandleSightRaiser.SightHeights.High:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.High;
+                                raisers[index].m_sightHeight = 0.75f;
+                                break;
+                            case AR15HandleSightRaiser.SightHeights.Highest:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.Highest;
+                                raisers[index].m_sightHeight = 1f;
+                                break;
+                            case AR15HandleSightRaiser.SightHeights.Lowest:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.Lowest;
+                                raisers[index].m_sightHeight = 0f;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

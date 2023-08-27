@@ -4972,5 +4972,71 @@ namespace H3MP.Networking
                 ServerSend.RoundSplode(trackedID, velMultiplier, isRandomDir, clientID);
             }
         }
+
+        public static void SightFlipperState(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+            bool large = packet.ReadBool();
+
+            TrackedObjectData trackedObjectData = Server.objects[trackedID];
+            if (trackedObjectData != null)
+            {
+                if (trackedObjectData.physical)
+                {
+                    AR15HandleSightFlipper[] flippers = trackedObjectData.physical.GetComponentsInChildren<AR15HandleSightFlipper>();
+                    if(flippers.Length > index)
+                    {
+                        flippers[index].m_isLargeAperture = large;
+                    }
+                }
+
+                ServerSend.SightFlipperState(trackedID, index, large, clientID);
+            }
+        }
+
+        public static void SightRaiserState(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            int index = packet.ReadInt();
+            AR15HandleSightRaiser.SightHeights height = (AR15HandleSightRaiser.SightHeights)packet.ReadByte();
+
+            TrackedObjectData trackedObjectData = Server.objects[trackedID];
+            if (trackedObjectData != null)
+            {
+                if (trackedObjectData.physical)
+                {
+                    AR15HandleSightRaiser[] raisers = trackedObjectData.physical.GetComponentsInChildren<AR15HandleSightRaiser>();
+                    if(raisers.Length > index)
+                    {
+                        switch (height)
+                        {
+                            case AR15HandleSightRaiser.SightHeights.Low:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.Low;
+                                raisers[index].m_sightHeight = 0.25f;
+                                break;
+                            case AR15HandleSightRaiser.SightHeights.Mid:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.Mid;
+                                raisers[index].m_sightHeight = 0.5f;
+                                break;
+                            case AR15HandleSightRaiser.SightHeights.High:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.High;
+                                raisers[index].m_sightHeight = 0.75f;
+                                break;
+                            case AR15HandleSightRaiser.SightHeights.Highest:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.Highest;
+                                raisers[index].m_sightHeight = 1f;
+                                break;
+                            case AR15HandleSightRaiser.SightHeights.Lowest:
+                                raisers[index].height = AR15HandleSightRaiser.SightHeights.Lowest;
+                                raisers[index].m_sightHeight = 0f;
+                                break;
+                        }
+                    }
+                }
+
+                ServerSend.SightRaiserState(trackedID, index, height, clientID);
+            }
+        }
     }
 }

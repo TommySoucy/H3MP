@@ -2574,5 +2574,29 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void SightFlipperState(int trackedID, int index, bool large)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.sightFlipperState))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write(large);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SightRaiserState(int trackedID, int index, AR15HandleSightRaiser.SightHeights height)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.sightRaiserState))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write((byte)height);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }
