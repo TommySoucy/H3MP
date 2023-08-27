@@ -554,6 +554,10 @@ namespace H3MP
                                 Mod.LogInfo("\tDebug: Spawn red MF AutoMeater");
                                 SpawnItem("TurburgertMFRed");
                                 break;
+                            case 27: // Load to SamplerPlatter
+                                Mod.LogInfo("\tDebug: Load to SamplerPlatter");
+                                SteamVR_LoadLevel.Begin("SamplerPlatter", false, 0.5f, 0f, 0f, 0f, 1f);
+                                break;
                         }
                     }
                 }
