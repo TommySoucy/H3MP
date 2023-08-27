@@ -90,7 +90,7 @@ namespace H3MP.Tracking
         {
             if (physicalPlayerBody.healthLabel != null)
             {
-                physicalPlayerBody.healthLabel.text = playerManager.health + "/" + playerManager.maxHealth;
+                physicalPlayerBody.healthLabel.text = ((int)playerManager.health) + "/" + playerManager.maxHealth;
             }
         }
 
