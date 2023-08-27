@@ -21,6 +21,10 @@ namespace H3MP.Tracking
         public float motorHingeSpringTarget;
         public Quaternion previousSideToSideRotation;
         public Quaternion sideToSideRotation;
+        public float previousMotorUpDownTarget;
+        public float motorUpDownTarget;
+        public Quaternion previousUpDownMotorRotation;
+        public Quaternion upDownMotorRotation;
         public byte previousIFF;
         public byte IFF;
         public byte[] data;
@@ -40,6 +44,8 @@ namespace H3MP.Tracking
             IFF = packet.ReadByte();
             motorHingeSpringTarget = packet.ReadFloat();
             sideToSideRotation = packet.ReadQuaternion();
+            motorUpDownTarget = packet.ReadFloat();
+            upDownMotorRotation = packet.ReadQuaternion();
 
             // Full
             ID = packet.ReadByte();
@@ -152,6 +158,14 @@ namespace H3MP.Tracking
             {
                 data.motorHingeSpringTarget = autoMeaterScript.Motor.m_hingeJoint.spring.targetPosition;
                 data.sideToSideRotation = autoMeaterScript.Motor.m_sideToSideTransform.rotation;
+                if (autoMeaterScript.m_usesUpDownTransform)
+                {
+                    if (autoMeaterScript.Motor.usesUpDownHinger)
+                    {
+                        data.motorUpDownTarget = autoMeaterScript.Motor.m_upDownJoint.spring.targetPosition;
+                    }
+                    data.upDownMotorRotation = autoMeaterScript.Motor.m_upAndDownMotor.rotation;
+                }
             }
 
             // Get hitzones
@@ -322,6 +336,10 @@ namespace H3MP.Tracking
             motorHingeSpringTarget = updatedAutoMeater.motorHingeSpringTarget;
             previousSideToSideRotation = sideToSideRotation;
             sideToSideRotation = updatedAutoMeater.sideToSideRotation;
+            previousMotorUpDownTarget = motorUpDownTarget;
+            motorUpDownTarget = updatedAutoMeater.motorUpDownTarget;
+            previousUpDownMotorRotation = upDownMotorRotation;
+            upDownMotorRotation = updatedAutoMeater.upDownMotorRotation;
 
             // Set physically
             if (physicalAutoMeater != null)
@@ -334,7 +352,17 @@ namespace H3MP.Tracking
                     JointSpring spring = physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring;
                     spring.targetPosition = motorHingeSpringTarget;
                     physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring = spring;
-                    physicalAutoMeater.physicalAutoMeater.Motor.m_sideToSideTransform.rotation = Quaternion.LookRotation(physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.transform.forward, physicalAutoMeater.physicalAutoMeater.Motor.m_base.up);
+                    physicalAutoMeater.physicalAutoMeater.Motor.m_sideToSideTransform.rotation = sideToSideRotation;
+                    if (physicalAutoMeater.physicalAutoMeater.m_usesUpDownTransform)
+                    {
+                        if (physicalAutoMeater.physicalAutoMeater.Motor.usesUpDownHinger)
+                        {
+                            JointSpring spring0 = physicalAutoMeater.physicalAutoMeater.Motor.m_upDownJoint.spring;
+                            spring0.targetPosition = motorUpDownTarget;
+                            physicalAutoMeater.physicalAutoMeater.Motor.m_upDownJoint.spring = spring0;
+                        }
+                        physicalAutoMeater.physicalAutoMeater.Motor.m_upAndDownMotor.rotation = upDownMotorRotation;
+                    }
                 }
             }
         }
@@ -354,6 +382,10 @@ namespace H3MP.Tracking
             motorHingeSpringTarget = packet.ReadFloat();
             previousSideToSideRotation = sideToSideRotation;
             sideToSideRotation = packet.ReadQuaternion();
+            previousMotorUpDownTarget = motorUpDownTarget;
+            motorUpDownTarget = packet.ReadFloat();
+            previousUpDownMotorRotation = upDownMotorRotation;
+            upDownMotorRotation = packet.ReadQuaternion();
 
             if (full)
             {
@@ -380,7 +412,17 @@ namespace H3MP.Tracking
                     JointSpring spring = physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring;
                     spring.targetPosition = motorHingeSpringTarget;
                     physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring = spring;
-                    physicalAutoMeater.physicalAutoMeater.Motor.m_sideToSideTransform.rotation = Quaternion.LookRotation(physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.transform.forward, physicalAutoMeater.physicalAutoMeater.Motor.m_base.up);
+                    physicalAutoMeater.physicalAutoMeater.Motor.m_sideToSideTransform.rotation = sideToSideRotation;
+                    if (physicalAutoMeater.physicalAutoMeater.m_usesUpDownTransform)
+                    {
+                        if (physicalAutoMeater.physicalAutoMeater.Motor.usesUpDownHinger)
+                        {
+                            JointSpring spring0 = physicalAutoMeater.physicalAutoMeater.Motor.m_upDownJoint.spring;
+                            spring0.targetPosition = motorUpDownTarget;
+                            physicalAutoMeater.physicalAutoMeater.Motor.m_upDownJoint.spring = spring0;
+                        }
+                        physicalAutoMeater.physicalAutoMeater.Motor.m_upAndDownMotor.rotation = upDownMotorRotation;
+                    }
                 }
             }
         }
@@ -408,6 +450,16 @@ namespace H3MP.Tracking
                 motorHingeSpringTarget = physicalAutoMeater.physicalAutoMeater.Motor.m_hingeJoint.spring.targetPosition;
                 previousSideToSideRotation = sideToSideRotation;
                 sideToSideRotation = physicalAutoMeater.physicalAutoMeater.Motor.m_sideToSideTransform.rotation;
+                if (physicalAutoMeater.physicalAutoMeater.m_usesUpDownTransform)
+                {
+                    if (physicalAutoMeater.physicalAutoMeater.Motor.usesUpDownHinger)
+                    {
+                        previousMotorUpDownTarget = motorUpDownTarget;
+                        motorUpDownTarget = physicalAutoMeater.physicalAutoMeater.Motor.m_upDownJoint.spring.targetPosition;
+                    }
+                    previousUpDownMotorRotation = upDownMotorRotation;
+                    upDownMotorRotation = physicalAutoMeater.physicalAutoMeater.Motor.m_upAndDownMotor.rotation;
+                }
             }
 
             return NeedsUpdate();
@@ -416,7 +468,8 @@ namespace H3MP.Tracking
         public override bool NeedsUpdate()
         {
             return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousMotorHingeSpringTarget != motorHingeSpringTarget 
-                   || !previousSideToSideRotation.Equals(sideToSideRotation);
+                   || !previousSideToSideRotation.Equals(sideToSideRotation)|| previousMotorUpDownTarget != motorUpDownTarget 
+                   || !previousUpDownMotorRotation.Equals(upDownMotorRotation);
         }
 
         public override void OnControlChanged(int newController)
@@ -467,6 +520,8 @@ namespace H3MP.Tracking
             packet.Write(IFF);
             packet.Write(motorHingeSpringTarget);
             packet.Write(sideToSideRotation);
+            packet.Write(motorUpDownTarget);
+            packet.Write(upDownMotorRotation);
 
             if (full)
             {

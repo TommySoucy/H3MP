@@ -124,6 +124,12 @@ namespace H3MP.Patches
             //MethodInfo destroyPatchPrefix = typeof(DestroyPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             //harmony.Patch(destroyPatchOriginal, new HarmonyMethod(destroyPatchPrefix));
+
+            //// AIEntityCheckPatch
+            //MethodInfo destroyPatchOriginal = typeof(AIManager).GetMethod("EntityCheck", BindingFlags.NonPublic | BindingFlags.Instance);
+            //MethodInfo destroyPatchPrefix = typeof(AIEntityCheckPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            //harmony.Patch(destroyPatchOriginal, new HarmonyMethod(destroyPatchPrefix));
         }
     }
 
@@ -656,6 +662,89 @@ namespace H3MP.Patches
         static void Prefix(UnityEngine.Object obj)
         {
             Mod.LogInfo("Destroying " + obj + ":\n" + Environment.StackTrace);
+        }
+    }
+
+    // DEBUG PATCH Patches AIManager.EntityCheck to debug why AutoMeater does not detect remote Sosigs
+    class AIEntityCheckPatch
+    {
+        static bool Prefix(AIManager __instance, AIEntity e)
+        {
+            e.ResetTick();
+            if (e.ReceivesEvent_Visual)
+            {
+                Vector3 pos = e.GetPos();
+                Vector3 vector = pos;
+                Vector3 forward = e.SensoryFrame.forward;
+                if (!e.IsVisualCheckOmni)
+                {
+                    vector += forward * e.MaximumSightRange;
+                }
+                Collider[] array = Physics.OverlapSphere(vector, e.MaximumSightRange, __instance.LM_Entity, QueryTriggerInteraction.Collide);
+                if (array.Length > 0)
+                {
+                    Mod.LogInfo("EntityCheck on " + e.name+" with parent: "+(e.transform.parent == null ? "null" : e.transform.parent.name)+", got "+array.Length+" entities");
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        Mod.LogInfo("\tChecking "+i+" " + array[i].name + " with parent: " + (array[i].transform.parent == null ? "null" : array[i].transform.parent.name));
+                        AIEntity component = array[i].GetComponent<AIEntity>();
+                        if (!(component == null))
+                        {
+                            Mod.LogInfo("\t\tHas AIEntity");
+                            if (!(component == e))
+                            {
+                                Mod.LogInfo("\t\t\tNot current AIEntity");
+                                if (component.IFFCode >= -1)
+                                {
+                                    Mod.LogInfo("\t\t\t\tGot valid IFF: "+ component.IFFCode);
+                                    if (!component.IsPassiveEntity || e.PerceivesPassiveEntities)
+                                    {
+                                        Vector3 pos2 = component.GetPos();
+                                        Vector3 to = pos2 - pos;
+                                        float num = to.magnitude;
+                                        float dist = num;
+                                        float num2 = e.MaximumSightRange;
+                                        Mod.LogInfo("\t\t\t\t\tNot passive or we perceive, num = "+num+" from "+to.magnitude+", from pos2: "+pos2+" and pos: "+pos+ ", while num2 = "+num2);
+                                        if (num <= component.MaxDistanceVisibleFrom)
+                                        {
+                                            Mod.LogInfo("\t\t\t\t\t\t"+ num+" <= max dist vis from: "+ component.MaxDistanceVisibleFrom);
+                                            if (component.VisibilityMultiplier <= 2f)
+                                            {
+                                                if (component.VisibilityMultiplier > 1f)
+                                                {
+                                                    num = Mathf.Lerp(num, num2, component.VisibilityMultiplier - 1f);
+                                                }
+                                                else
+                                                {
+                                                    num = Mathf.Lerp(0f, num, component.VisibilityMultiplier);
+                                                }
+                                                if (!e.IsVisualCheckOmni)
+                                                {
+                                                    float num3 = Vector3.Angle(forward, to);
+                                                    num2 = e.MaximumSightRange * e.SightDistanceByFOVMultiplier.Evaluate(num3 / e.MaximumSightFOV);
+                                                }
+                                                Mod.LogInfo("\t\t\t\t\t\t\tGot valid vis mult, num: "+ num+", num2: "+ num2);
+                                                if (num <= num2)
+                                                {
+                                                    Mod.LogInfo("\t\t\t\t\t\t\t\tValid");
+                                                    if (!Physics.Linecast(pos, pos2, e.LM_VisualOcclusionCheck, QueryTriggerInteraction.Collide))
+                                                    {
+                                                        Mod.LogInfo("\t\t\t\t\t\t\t\t\tGot line of sight, sending event receive for visual event");
+                                                        float v = num / e.MaximumSightRange * component.DangerMultiplier;
+                                                        AIEvent e2 = new AIEvent(component, AIEvent.AIEType.Visual, v, dist);
+                                                        e.OnAIEventReceive(e2);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
         }
     }
 }
