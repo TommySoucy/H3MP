@@ -679,7 +679,7 @@ namespace H3MP.Tracking
 
             // Note: UpdateData() must be done first in this expression, otherwise, if active/position/rotation is different,
             // it will return true before making the call
-            return updated || UpdateData() || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+            return UpdateData() || updated || previousActiveControl != underActiveControl || !previousPos.Equals(position) || !previousRot.Equals(rotation);
         }
 
         public override bool NeedsUpdate()
