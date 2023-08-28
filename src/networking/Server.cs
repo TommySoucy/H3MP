@@ -506,6 +506,7 @@ namespace H3MP.Networking
                 ServerHandle.RoundSplode,
                 ServerHandle.SightFlipperState,
                 ServerHandle.SightRaiserState,
+                ServerHandle.GatlingGunFire,
             };
 
             objects = new TrackedObjectData[100];

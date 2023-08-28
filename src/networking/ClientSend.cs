@@ -2598,5 +2598,18 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void GatlingGunFire(int trackedID, Vector3 pos, Quaternion rot, Vector3 dir)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.gatlingGunFire))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+                packet.Write(rot);
+                packet.Write(dir);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

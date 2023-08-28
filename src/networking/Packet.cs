@@ -191,7 +191,8 @@ namespace H3MP.Networking
         roundSplode = 178,
         connectionComplete = 179,
         sightFlipperState = 180,
-        sightRaiserState = 181
+        sightRaiserState = 181,
+        gatlingGunFire = 182
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -370,7 +371,8 @@ namespace H3MP.Networking
         roundDamage = 170,
         roundSplode = 171,
         sightFlipperState = 172,
-        sightRaiserState = 173
+        sightRaiserState = 173,
+        gatlingGunFire = 174
     }
 
     public class Packet : IDisposable

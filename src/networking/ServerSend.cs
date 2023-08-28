@@ -4354,5 +4354,25 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void GatlingGunFire(int trackedID, Vector3 pos, Quaternion rot, Vector3 dir, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.gatlingGunFire))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+                packet.Write(rot);
+                packet.Write(dir);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

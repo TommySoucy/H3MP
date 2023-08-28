@@ -10,6 +10,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static RootMotion.FinalIK.GrounderQuadruped;
 
 namespace H3MP
 {
@@ -45,6 +46,7 @@ namespace H3MP
         public static Dictionary<TNH_EncryptionTarget, TrackedEncryption> trackedEncryptionByEncryption = new Dictionary<TNH_EncryptionTarget, TrackedEncryption>();
         public static Dictionary<BreakableGlass, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlass = new Dictionary<BreakableGlass, TrackedBreakableGlass>();
         public static Dictionary<BreakableGlassDamager, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlassDamager = new Dictionary<BreakableGlassDamager, TrackedBreakableGlass>();
+        public static Dictionary<wwGatlingGun, TrackedGatlingGun> trackedGatlingGunByGatlingGun = new Dictionary<wwGatlingGun, TrackedGatlingGun>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, TNHInstance> TNHInstances = new Dictionary<int, TNHInstance>();
         public static List<int> playersAtLoadStart;
@@ -1034,8 +1036,9 @@ namespace H3MP
                             }
                         }
                     }
-                    else // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
-                    {
+                    else if(TrackSkipped(root, trackedObjectType))
+                    { 
+                        // Item will not be controlled by us but is an item that should be tracked by system, so destroy it
                         Destroy(root.gameObject);
                     }
                 }
@@ -1547,6 +1550,17 @@ namespace H3MP
             return false;
         }
 
+        public static bool TrackSkipped(Transform root, Type trackedObjectType)
+        {
+            MethodInfo method = trackedObjectType.GetMethod("TrackSkipped", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (method != null && method.ReturnType == typeof(bool) && method.GetParameters()[0].ParameterType == typeof(Transform))
+            {
+                return (bool)method.Invoke(null, new object[] { root });
+            }
+
+            return true;
+        }
+
         public static void OnSceneLoadedVR(bool loading)
         {
             if (loading) // Just started loading
@@ -1810,6 +1824,9 @@ namespace H3MP
                     {
                         OnSceneJoined(scene, sceneAtSceneLoadStart);
                     }
+
+                    // Do our own stuff, this is uaually what a mod would do when OnSceneJoined event is raised
+                    TrackedGatlingGunData.firstInScene = true;
 
                     // Process list of objects we want to retrack
                     for (int i = 0; i < retrack.Count; ++i)

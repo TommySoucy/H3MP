@@ -597,6 +597,7 @@ namespace H3MP.Networking
                 ClientHandle.ConnectionComplete,
                 ClientHandle.SightFlipperState,
                 ClientHandle.SightRaiserState,
+                ClientHandle.GatlingGunFire,
             };
 
             // All vanilla scenes can be synced by default

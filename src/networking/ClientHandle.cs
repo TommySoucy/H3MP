@@ -4553,5 +4553,32 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void GatlingGunFire(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Vector3 pos = packet.ReadVector3();
+            Quaternion rot = packet.ReadQuaternion();
+            Vector3 dir = packet.ReadVector3();
+
+            TrackedObjectData trackedObjectData = Client.objects[trackedID];
+            if (trackedObjectData != null)
+            {
+                if (trackedObjectData.physical)
+                {
+                    wwGatlingGun instance = (trackedObjectData as TrackedGatlingGunData).physicalGatlingGun.physicalGatlingGun;
+                    wwGatlingGun.MuzzleFireType muzzleFireType = instance.MuzzleFX[instance.AmmoType];
+                    for (int i = 0; i < muzzleFireType.MuzzleFires.Length; i++)
+                    {
+                        muzzleFireType.MuzzleFires[i].Emit(muzzleFireType.MuzzleFireAmounts[i]);
+                    }
+                    instance.m_pool_shot.PlayClip(instance.AudioClipSet.Shots_Main, instance.MuzzlePos.position, null);
+                    instance.m_pool_mechanics.PlayClip(instance.AudioClipSet.HammerHit, instance.MuzzlePos.position, null);
+                    instance.m_pool_tail.PlayClipPitchOverride(SM.GetTailSet(instance.TailClass, GM.CurrentPlayerBody.GetCurrentSoundEnvironment()), instance.MuzzlePos.position, instance.AudioClipSet.TailPitchMod_Main, null);
+                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(muzzleFireType.ProjectilePrefab, pos, rot);
+                    gameObject.GetComponent<BallisticProjectile>().Fire(dir, null);
+                }
+            }
+        }
     }
 }

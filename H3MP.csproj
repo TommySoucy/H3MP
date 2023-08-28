@@ -68,6 +68,8 @@
     <Compile Include="src\tracking\TrackedBreakableGlassData.cs" />
     <Compile Include="src\tracking\TrackedEncryption.cs" />
     <Compile Include="src\tracking\TrackedEncryptionData.cs" />
+    <Compile Include="src\tracking\TrackedGatlingGun.cs" />
+    <Compile Include="src\tracking\TrackedGatlingGunData.cs" />
     <Compile Include="src\tracking\TrackedItem.cs" />
     <Compile Include="src\tracking\TrackedItemData.cs" />
     <Compile Include="src\tracking\TrackedObject.cs" />

@@ -913,6 +913,13 @@ namespace H3MP.Patches
 
             PatchController.Verify(AR15SightRaiserInteractOriginal, harmony, false);
             harmony.Patch(AR15SightRaiserInteractOriginal, null, new HarmonyMethod(AR15SightRaiserInteractPostfix));
+
+            // GatlingGunPatch
+            MethodInfo gatlingGunFireShotOriginal = typeof(wwGatlingGun).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo gatlingGunFireShotPostfix = typeof(GatlingGunPatch).GetMethod("FireShotPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(gatlingGunFireShotOriginal, harmony, false);
+            harmony.Patch(gatlingGunFireShotOriginal, null, new HarmonyMethod(gatlingGunFireShotPostfix));
         }
     }
 
@@ -7930,6 +7937,32 @@ namespace H3MP.Patches
                             ClientSend.SightRaiserState(trackedObject.data.trackedID, index, __instance.height);
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // Patches wwGatlingGun
+    class GatlingGunPatch
+    {
+        // Patches FireShot to track event
+        static void FireShotPostfix(wwGatlingGun __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return;
+            }
+
+            TrackedGatlingGun trackedGatlingGun = GameManager.trackedGatlingGunByGatlingGun.TryGetValue(__instance, out trackedGatlingGun) ? trackedGatlingGun : __instance.GetComponent<TrackedGatlingGun>();
+            if(trackedGatlingGun != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.GatlingGunFire(trackedGatlingGun.data.trackedID, __instance.MuzzlePos.position, __instance.MuzzlePos.rotation, __instance.MuzzlePos.forward);
+                }
+                else
+                {
+                    ClientSend.GatlingGunFire(trackedGatlingGun.data.trackedID, __instance.MuzzlePos.position, __instance.MuzzlePos.rotation, __instance.MuzzlePos.forward);
                 }
             }
         }
