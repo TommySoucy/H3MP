@@ -1046,7 +1046,7 @@ namespace H3MP.Networking
             {
                 FireStingerLauncherPatch.targetPos = packet.ReadVector3();
                 FireStingerLauncherPatch.position = packet.ReadVector3();
-                FireStingerLauncherPatch.direction = packet.ReadVector3();
+                FireStingerLauncherPatch.rotation = packet.ReadQuaternion();
                 FireStingerLauncherPatch.overriden = true;
 
                 // Make sure we skip next fire so we don't have a firing feedback loop between clients

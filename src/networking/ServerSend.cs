@@ -1100,14 +1100,14 @@ namespace H3MP.Networking
             }
         }
 
-        public static void StingerLauncherFire(int clientID, int trackedID, Vector3 targetPos, Vector3 position, Vector3 direction)
+        public static void StingerLauncherFire(int clientID, int trackedID, Vector3 targetPos, Vector3 position, Quaternion rotation)
         {
             using (Packet packet = new Packet((int)ServerPackets.stingerLauncherFire))
             {
                 packet.Write(trackedID);
                 packet.Write(targetPos);
                 packet.Write(position);
-                packet.Write(direction);
+                packet.Write(rotation);
 
                 if (clientID == 0)
                 {

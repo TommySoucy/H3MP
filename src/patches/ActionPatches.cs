@@ -2919,7 +2919,7 @@ namespace H3MP.Patches
         public static bool overriden;
         public static Vector3 targetPos;
         public static Vector3 position;
-        public static Vector3 direction;
+        public static Quaternion rotation;
         static TrackedItem trackedItem;
         public static int skip;
 
@@ -2948,8 +2948,7 @@ namespace H3MP.Patches
 
             // To get correct dir considering potential override
             List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
-            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load gameObject
-            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "GetDirection"))); // Call our GetDirection method
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireStingerLauncherPatch), "GetRotation"))); // Call our GetRotation method
 
             // To set missle ref in trackedItem
             List<CodeInstruction> toInsert2 = new List<CodeInstruction>();
@@ -2997,11 +2996,17 @@ namespace H3MP.Patches
 
         public static void SetStingerMissile(StingerMissile missile)
         {
+            Mod.LogInfo("Setting stinger missile");
             if (trackedItem != null)
             {
+                Mod.LogInfo("\tGot trackedItem");
                 trackedItem.stingerMissile = missile;
                 TrackedObjectReference reference = missile.gameObject.AddComponent<TrackedObjectReference>();
                 reference.trackedRef = trackedItem;
+            }
+            else
+            {
+                Mod.LogInfo("\tNO trackedItem");
             }
         }
 
@@ -3018,17 +3023,16 @@ namespace H3MP.Patches
             }
         }
 
-        public static Vector3 GetDirection(Vector3 direction, GameObject gameObject)
+        public static Quaternion GetRotation(Quaternion rotation)
         {
             if (overriden)
             {
-                gameObject.transform.rotation = Quaternion.LookRotation(FireStingerLauncherPatch.direction);
-                return FireStingerLauncherPatch.direction;
+                return FireStingerLauncherPatch.rotation;
             }
             else
             {
-                FireStingerLauncherPatch.direction = direction;
-                return direction;
+                FireStingerLauncherPatch.rotation = rotation;
+                return rotation;
             }
         }
 
@@ -3057,12 +3061,12 @@ namespace H3MP.Patches
                 {
                     if (trackedItem.data.controller == 0)
                     {
-                        ServerSend.StingerLauncherFire(0, trackedItem.data.trackedID, targetPos, position, direction);
+                        ServerSend.StingerLauncherFire(0, trackedItem.data.trackedID, targetPos, position, rotation);
                     }
                 }
                 else if (trackedItem.data.controller == Client.singleton.ID)
                 {
-                    ClientSend.StingerLauncherFire(trackedItem.data.trackedID, targetPos, position, direction);
+                    ClientSend.StingerLauncherFire(trackedItem.data.trackedID, targetPos, position, rotation);
                 }
             }
         }
