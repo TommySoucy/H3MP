@@ -22,6 +22,19 @@ namespace H3MP.Networking
 
         /// <summary>
         /// CUSTOMIZATION
+        /// Delegate for the OnSendPostWelcomData event
+        /// </summary>
+        /// <param name="clientID">The client we need to send the data to</param>
+        public delegate void OnSendPostWelcomDataDelegate(int clientID);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when client tells server is has received its welcome and is now ready to receive additional data
+        /// </summary>
+        public static event OnSendPostWelcomDataDelegate OnSendPostWelcomeData;
+
+        /// <summary>
+        /// CUSTOMIZATION
         /// Delegate for the OnClientDisconnect event
         /// </summary>
         public delegate void OnClientDisconnectDelegate();
@@ -393,6 +406,13 @@ namespace H3MP.Networking
 
                 // Tell the client to sync its items
                 ServerSend.ConnectSync(ID, inControl);
+            }
+
+            // Call event to send data to this client after we have welcomed it
+            // This is where one would send things like the TNH instances below
+            if(OnSendPostWelcomeData != null)
+            {
+                OnSendPostWelcomeData(ID);
             }
 
             // Also send TNH instances

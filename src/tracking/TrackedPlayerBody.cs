@@ -159,7 +159,7 @@ namespace H3MP.Tracking
         protected override void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
-            GameManager.OnInstanceJoined += OnInstanceJoined;
+            GameManager.OnInstanceJoined -= OnInstanceJoined;
 
             for (int i = 0; i < physicalPlayerBody.hitboxes.Length; ++i)
             {
