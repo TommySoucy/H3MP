@@ -262,6 +262,7 @@ namespace H3MP
         public static float defaultNullDriverRotationMultiplier = 0.2f;
         public static float nullDriverVerticalRot = 90;
         public static float nullDriverHorzontalRot = 0;
+        public static int testCustomPacketID;
 
         private void Start()
         {
@@ -289,6 +290,7 @@ namespace H3MP
             currentlyPlayingTNH = false;
             customPacketHandlers = new CustomPacketHandler[10];
             registeredCustomPacketIDs.Clear();
+            availableCustomPacketIndices = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             spectatorHostWaitingForTNHSetup = false;
 
             DestroyImmediate(Mod.managerObject);
@@ -559,6 +561,51 @@ namespace H3MP
                                 Mod.LogInfo("\tDebug: Load to SamplerPlatter");
                                 SteamVR_LoadLevel.Begin("SamplerPlatter", false, 0.5f, 0f, 0f, 0f, 1f);
                                 break;
+                            case 28: // Register test custom packet
+                                Mod.LogInfo("\tDebug: Register test custom packet");
+                                if (ThreadManager.host)
+                                {
+                                    if(Mod.registeredCustomPacketIDs.TryGetValue("TestCustomPacketID", out int customPacketID))
+                                    {
+                                        testCustomPacketID = customPacketID;
+                                    }
+                                    else
+                                    {
+                                        testCustomPacketID = Server.RegisterCustomPacketType("TestCustomPacketID");
+                                    }
+                                    Mod.customPacketHandlers[testCustomPacketID] = TestCustomPacketIDServerHandler;
+                                }
+                                else
+                                {
+                                    if (Mod.registeredCustomPacketIDs.TryGetValue("TestCustomPacketID", out int customPacketID))
+                                    {
+                                        testCustomPacketID = customPacketID;
+                                        Mod.customPacketHandlers[testCustomPacketID] = TestCustomPacketIDClientHandler;
+                                    }
+                                    else
+                                    {
+                                        ClientSend.RegisterCustomPacketType("TestCustomPacketID");
+                                        Mod.CustomPacketHandlerReceived += TestCustomPacketIDReceived;
+                                    }
+                                }
+                                break;
+                            case 29: // Send test custom packet
+                                Mod.LogInfo("\tDebug: Send test custom packet");
+                                if (ThreadManager.host)
+                                {
+                                    using (Packet packet = new Packet(testCustomPacketID))
+                                    {
+                                        ServerSend.SendTCPDataToAll(packet, true);
+                                    }
+                                }
+                                else
+                                {
+                                    using (Packet packet = new Packet(testCustomPacketID))
+                                    {
+                                        ClientSend.SendTCPData(packet, true);
+                                    }
+                                }
+                                break;
                         }
                     }
                 }
@@ -710,6 +757,27 @@ namespace H3MP
         }
 
 #if DEBUG
+        public static void TestCustomPacketIDServerHandler(int clientID, Packet packet)
+        {
+            Mod.LogInfo("Custom packet received from client " + clientID);
+        }
+
+        public static void TestCustomPacketIDClientHandler(int clientID, Packet packet)
+        {
+            Mod.LogInfo("Custom packet received from server");
+        }
+
+        public static void TestCustomPacketIDReceived(string identifier, int ID)
+        {
+            Mod.LogInfo("Client received ID " + ID + " for custom packet ID " + identifier);
+            if (identifier.Equals("TestCustomPacketID"))
+            {
+                testCustomPacketID = ID;
+                Mod.customPacketHandlers[testCustomPacketID] = TestCustomPacketIDClientHandler;
+                Mod.CustomPacketHandlerReceived -= TestCustomPacketIDReceived;
+            }
+        }
+
         public GameObject SpawnItem(string itemID)
         {
             if(IM.OD.TryGetValue(itemID, out FVRObject obj))
@@ -1969,6 +2037,7 @@ namespace H3MP
                             }
                         }
 
+                        TODO: // Continue from tertiary
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasSecondaryWeapon.GetValue(character))
                         {
                             object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_SecondaryWeapon.GetValue(character));
@@ -1988,8 +2057,6 @@ namespace H3MP
                                 weaponCase.AddComponent<TimerDestroyer>();
                             }
                         }
-
-                        TODO: // Continue from tertiary
                     }
                 }
             }
