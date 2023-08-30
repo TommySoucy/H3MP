@@ -10,7 +10,6 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static RootMotion.FinalIK.GrounderQuadruped;
 
 namespace H3MP
 {

@@ -5,6 +5,7 @@ using H3MP.Patches;
 using H3MP.Scripts;
 using H3MP.Tracking;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -1779,163 +1780,217 @@ namespace H3MP
                     {
                         Mod.currentTNHInstance.spawnedStartEquip = true;
                     }
+
                     TNH_Manager M = GM.TNH_Manager;
                     TNH_CharacterDef C = M.C;
-                    Vector3 target = GM.CurrentPlayerBody.Head.position + Vector3.down * 0.5f;
                     Vector3 projectedForward = Vector3.ProjectOnPlane(GM.CurrentPlayerBody.Head.forward, Vector3.up);
-                    Vector3 projectedRight = Vector3.ProjectOnPlane(GM.CurrentPlayerBody.Head.right, Vector3.up);
-                    Vector3 largeCaseSpawnPos = target + projectedForward * 0.8f;
-                    Vector3 smallCaseSpawnPos = target + projectedRight * 0.8f;
-                    Vector3 shieldSpawnPos = target - projectedRight * 0.8f;
                     if (M.ItemSpawnerMode == TNH_ItemSpawnerMode.On)
                     {
                         M.ItemSpawner.transform.position = GM.CurrentPlayerBody.Head.position + projectedForward.normalized * 2;
                         M.ItemSpawner.transform.rotation = Quaternion.LookRotation(-projectedForward, Vector3.up);
                         M.ItemSpawner.SetActive(true);
                     }
-                    ++debugStep;
-                    if (C.Has_Weapon_Primary)
+                    Vector3 target = GM.CurrentPlayerBody.Head.position + Vector3.down * 0.5f;
+                    Vector3 projectedRight = Vector3.ProjectOnPlane(GM.CurrentPlayerBody.Head.right, Vector3.up);
+                    Vector3 largeCaseSpawnPos = target + projectedForward * 0.8f;
+                    Vector3 smallCaseSpawnPos = target + projectedRight * 0.8f;
+                    Vector3 shieldSpawnPos = target - projectedRight * 0.8f;
+
+                    if (PatchController.TNHTweakerAsmIdx == -1)
                     {
-                        TNH_CharacterDef.LoadoutEntry weapon_Primary = C.Weapon_Primary;
-                        int minAmmo = -1;
-                        int maxAmmo = -1;
-                        FVRObject weapon;
-                        if (weapon_Primary.ListOverride.Count > 0)
+                        ++debugStep;
+                        if (C.Has_Weapon_Primary)
                         {
-                            weapon = weapon_Primary.ListOverride[UnityEngine.Random.Range(0, weapon_Primary.ListOverride.Count)];
+                            TNH_CharacterDef.LoadoutEntry weapon_Primary = C.Weapon_Primary;
+                            int minAmmo = -1;
+                            int maxAmmo = -1;
+                            FVRObject weapon;
+                            if (weapon_Primary.ListOverride != null && weapon_Primary.ListOverride.Count > 0)
+                            {
+                                weapon = weapon_Primary.ListOverride[UnityEngine.Random.Range(0, weapon_Primary.ListOverride.Count)];
+                            }
+                            else
+                            {
+                                ObjectTableDef objectTableDef = weapon_Primary.TableDefs[UnityEngine.Random.Range(0, weapon_Primary.TableDefs.Count)];
+                                ObjectTable objectTable = new ObjectTable();
+                                objectTable.Initialize(objectTableDef);
+                                Mod.LogInfo("Initialized object table for character: " + C.name + ", objectTable.objs null?: " + (objectTable.Objs == null));
+                                weapon = objectTable.GetRandomObject();
+                                minAmmo = objectTableDef.MinAmmoCapacity;
+                                maxAmmo = objectTableDef.MaxAmmoCapacity;
+                            }
+                            Mod.LogInfo("Instantiating weapon case, prefab null?: " + (M.Prefab_WeaponCaseLarge == null) + ", weapon null?: " + (weapon == null));
+                            GameObject gameObject = M.SpawnWeaponCase(M.Prefab_WeaponCaseLarge, largeCaseSpawnPos, -projectedForward, weapon, weapon_Primary.Num_Mags_SL_Clips, weapon_Primary.Num_Rounds, minAmmo, maxAmmo, weapon_Primary.AmmoObjectOverride);
+                            gameObject.GetComponent<TNH_WeaponCrate>().M = M;
+                            gameObject.AddComponent<TimerDestroyer>();
                         }
-                        else
+                        ++debugStep;
+                        if (C.Has_Weapon_Secondary)
                         {
-                            ObjectTableDef objectTableDef = weapon_Primary.TableDefs[UnityEngine.Random.Range(0, weapon_Primary.TableDefs.Count)];
-                            ObjectTable objectTable = new ObjectTable();
-                            objectTable.Initialize(objectTableDef);
-                            weapon = objectTable.GetRandomObject();
-                            minAmmo = objectTableDef.MinAmmoCapacity;
-                            maxAmmo = objectTableDef.MaxAmmoCapacity;
+                            TNH_CharacterDef.LoadoutEntry weapon_Secondary = C.Weapon_Secondary;
+                            int minAmmo2 = -1;
+                            int maxAmmo2 = -1;
+                            FVRObject weapon2;
+                            if (weapon_Secondary.ListOverride != null && weapon_Secondary.ListOverride.Count > 0)
+                            {
+                                weapon2 = weapon_Secondary.ListOverride[UnityEngine.Random.Range(0, weapon_Secondary.ListOverride.Count)];
+                            }
+                            else
+                            {
+                                ObjectTableDef objectTableDef2 = weapon_Secondary.TableDefs[UnityEngine.Random.Range(0, weapon_Secondary.TableDefs.Count)];
+                                ObjectTable objectTable2 = new ObjectTable();
+                                objectTable2.Initialize(objectTableDef2);
+                                weapon2 = objectTable2.GetRandomObject();
+                                minAmmo2 = objectTableDef2.MinAmmoCapacity;
+                                maxAmmo2 = objectTableDef2.MaxAmmoCapacity;
+                            }
+                            GameObject gameObject2 = M.SpawnWeaponCase(M.Prefab_WeaponCaseSmall, smallCaseSpawnPos, -projectedRight, weapon2, weapon_Secondary.Num_Mags_SL_Clips, weapon_Secondary.Num_Rounds, minAmmo2, maxAmmo2, weapon_Secondary.AmmoObjectOverride);
+                            gameObject2.GetComponent<TNH_WeaponCrate>().M = M;
+                            gameObject2.AddComponent<TimerDestroyer>();
                         }
-                        GameObject gameObject = M.SpawnWeaponCase(M.Prefab_WeaponCaseLarge, largeCaseSpawnPos, -projectedForward, weapon, weapon_Primary.Num_Mags_SL_Clips, weapon_Primary.Num_Rounds, minAmmo, maxAmmo, weapon_Primary.AmmoObjectOverride);
-                        gameObject.GetComponent<TNH_WeaponCrate>().M = M;
-                        gameObject.AddComponent<TimerDestroyer>();
+                        ++debugStep;
+                        if (C.Has_Weapon_Tertiary)
+                        {
+                            TNH_CharacterDef.LoadoutEntry weapon_Tertiary = C.Weapon_Tertiary;
+                            FVRObject fvrobject;
+                            if (weapon_Tertiary.ListOverride != null && weapon_Tertiary.ListOverride.Count > 0)
+                            {
+                                fvrobject = weapon_Tertiary.ListOverride[UnityEngine.Random.Range(0, weapon_Tertiary.ListOverride.Count)];
+                            }
+                            else
+                            {
+                                ObjectTableDef d = weapon_Tertiary.TableDefs[UnityEngine.Random.Range(0, weapon_Tertiary.TableDefs.Count)];
+                                ObjectTable objectTable3 = new ObjectTable();
+                                objectTable3.Initialize(d);
+                                fvrobject = objectTable3.GetRandomObject();
+                            }
+                            GameObject g = UnityEngine.Object.Instantiate<GameObject>(fvrobject.GetGameObject(), smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
+                            M.AddObjectToTrackedList(g);
+                        }
+                        ++debugStep;
+                        if (C.Has_Item_Primary)
+                        {
+                            TNH_CharacterDef.LoadoutEntry item_Primary = C.Item_Primary;
+                            FVRObject fvrobject2;
+                            if (item_Primary.ListOverride != null && item_Primary.ListOverride.Count > 0)
+                            {
+                                fvrobject2 = item_Primary.ListOverride[UnityEngine.Random.Range(0, item_Primary.ListOverride.Count)];
+                            }
+                            else
+                            {
+                                ObjectTableDef d2 = item_Primary.TableDefs[UnityEngine.Random.Range(0, item_Primary.TableDefs.Count)];
+                                ObjectTable objectTable4 = new ObjectTable();
+                                objectTable4.Initialize(d2);
+                                fvrobject2 = objectTable4.GetRandomObject();
+                            }
+                            GameObject g2 = UnityEngine.Object.Instantiate<GameObject>(fvrobject2.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f + Vector3.left * 0.3f, UnityEngine.Random.rotation);
+                            M.AddObjectToTrackedList(g2);
+                        }
+                        ++debugStep;
+                        if (C.Has_Item_Secondary)
+                        {
+                            TNH_CharacterDef.LoadoutEntry item_Secondary = C.Item_Secondary;
+                            FVRObject fvrobject3;
+                            if (item_Secondary.ListOverride != null && item_Secondary.ListOverride.Count > 0)
+                            {
+                                fvrobject3 = item_Secondary.ListOverride[UnityEngine.Random.Range(0, item_Secondary.ListOverride.Count)];
+                            }
+                            else
+                            {
+                                ObjectTableDef d3 = item_Secondary.TableDefs[UnityEngine.Random.Range(0, item_Secondary.TableDefs.Count)];
+                                ObjectTable objectTable5 = new ObjectTable();
+                                objectTable5.Initialize(d3);
+                                fvrobject3 = objectTable5.GetRandomObject();
+                            }
+                            GameObject g3 = UnityEngine.Object.Instantiate<GameObject>(fvrobject3.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f + Vector3.right * 0.3f, UnityEngine.Random.rotation);
+                            M.AddObjectToTrackedList(g3);
+                        }
+                        ++debugStep;
+                        if (C.Has_Item_Tertiary)
+                        {
+                            TNH_CharacterDef.LoadoutEntry item_Tertiary = C.Item_Tertiary;
+                            FVRObject fvrobject4;
+                            if (item_Tertiary.ListOverride != null && item_Tertiary.ListOverride.Count > 0)
+                            {
+                                fvrobject4 = item_Tertiary.ListOverride[UnityEngine.Random.Range(0, item_Tertiary.ListOverride.Count)];
+                            }
+                            else
+                            {
+                                ObjectTableDef d4 = item_Tertiary.TableDefs[UnityEngine.Random.Range(0, item_Tertiary.TableDefs.Count)];
+                                ObjectTable objectTable6 = new ObjectTable();
+                                objectTable6.Initialize(d4);
+                                fvrobject4 = objectTable6.GetRandomObject();
+                            }
+                            GameObject g4 = UnityEngine.Object.Instantiate<GameObject>(fvrobject4.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f, UnityEngine.Random.rotation);
+                            M.AddObjectToTrackedList(g4);
+                        }
+                        ++debugStep;
+                        if (C.Has_Item_Shield)
+                        {
+                            TNH_CharacterDef.LoadoutEntry item_Shield = C.Item_Shield;
+                            FVRObject fvrobject5;
+                            if (item_Shield.ListOverride != null && item_Shield.ListOverride.Count > 0)
+                            {
+                                fvrobject5 = item_Shield.ListOverride[UnityEngine.Random.Range(0, item_Shield.ListOverride.Count)];
+                            }
+                            else
+                            {
+                                ObjectTableDef d5 = item_Shield.TableDefs[UnityEngine.Random.Range(0, item_Shield.TableDefs.Count)];
+                                ObjectTable objectTable7 = new ObjectTable();
+                                objectTable7.Initialize(d5);
+                                fvrobject5 = objectTable7.GetRandomObject();
+                            }
+                            GameObject g5 = UnityEngine.Object.Instantiate<GameObject>(fvrobject5.GetGameObject(), shieldSpawnPos, Quaternion.Euler(Vector3.up));
+                            M.AddObjectToTrackedList(g5);
+                        }
+                        ++debugStep;
                     }
-                    ++debugStep;
-                    if (C.Has_Weapon_Secondary)
+                    else // Got TNH tweaker, must spawn init equip from custom character instead
                     {
-                        TNH_CharacterDef.LoadoutEntry weapon_Secondary = C.Weapon_Secondary;
-                        int minAmmo2 = -1;
-                        int maxAmmo2 = -1;
-                        FVRObject weapon2;
-                        if (weapon_Secondary.ListOverride.Count > 0)
+                        object character = ((IDictionary)PatchController.TNHTweaker_LoadedTemplateManager_LoadedCharactersDict.GetValue(PatchController.TNHTweaker_LoadedTemplateManager))[C];
+
+                        if ((bool)PatchController.TNHTweaker_CustomCharacter_HasPrimaryWeapon.GetValue(character))
                         {
-                            weapon2 = weapon_Secondary.ListOverride[UnityEngine.Random.Range(0, weapon_Secondary.ListOverride.Count)];
+                            object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_PrimaryWeapon.GetValue(character));
+                            if (selectedGroup == null)
+                            {
+                                selectedGroup = PatchController.TNHTweaker_LoadoutEntry_BackupGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_PrimaryWeapon.GetValue(character));
+                            }
+
+                            if (selectedGroup != null)
+                            {
+                                IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
+                                selectedGroup = list[UnityEngine.Random.Range(0, list.Count)];
+                                list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
+                                FVRObject selectedItem = IM.OD[(string)list[UnityEngine.Random.Range(0, list.Count)]];
+                                GameObject weaponCase = M.SpawnWeaponCase(M.Prefab_WeaponCaseLarge, largeCaseSpawnPos, -projectedForward, selectedItem, (int)PatchController.TNHTweaker_EquipmentGroup_NumMagsSpawned.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_NumRoundsSpawned.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_MinAmmoCapacity.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_MaxAmmoCapacity.GetValue(selectedGroup));
+                                weaponCase.GetComponent<TNH_WeaponCrate>().M = M;
+                                weaponCase.AddComponent<TimerDestroyer>();
+                            }
                         }
-                        else
+
+                        if ((bool)PatchController.TNHTweaker_CustomCharacter_HasSecondaryWeapon.GetValue(character))
                         {
-                            ObjectTableDef objectTableDef2 = weapon_Secondary.TableDefs[UnityEngine.Random.Range(0, weapon_Secondary.TableDefs.Count)];
-                            ObjectTable objectTable2 = new ObjectTable();
-                            objectTable2.Initialize(objectTableDef2);
-                            weapon2 = objectTable2.GetRandomObject();
-                            minAmmo2 = objectTableDef2.MinAmmoCapacity;
-                            maxAmmo2 = objectTableDef2.MaxAmmoCapacity;
+                            object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_SecondaryWeapon.GetValue(character));
+                            if (selectedGroup == null)
+                            {
+                                selectedGroup = PatchController.TNHTweaker_LoadoutEntry_BackupGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_SecondaryWeapon.GetValue(character));
+                            }
+
+                            if (selectedGroup != null)
+                            {
+                                IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
+                                selectedGroup = list[UnityEngine.Random.Range(0, list.Count)];
+                                list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
+                                FVRObject selectedItem = IM.OD[(string)list[UnityEngine.Random.Range(0, list.Count)]];
+                                GameObject weaponCase = M.SpawnWeaponCase(M.Prefab_WeaponCaseLarge, smallCaseSpawnPos, -projectedForward, selectedItem, (int)PatchController.TNHTweaker_EquipmentGroup_NumMagsSpawned.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_NumRoundsSpawned.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_MinAmmoCapacity.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_MaxAmmoCapacity.GetValue(selectedGroup));
+                                weaponCase.GetComponent<TNH_WeaponCrate>().M = M;
+                                weaponCase.AddComponent<TimerDestroyer>();
+                            }
                         }
-                        GameObject gameObject2 = M.SpawnWeaponCase(M.Prefab_WeaponCaseSmall, smallCaseSpawnPos, -projectedRight, weapon2, weapon_Secondary.Num_Mags_SL_Clips, weapon_Secondary.Num_Rounds, minAmmo2, maxAmmo2, weapon_Secondary.AmmoObjectOverride);
-                        gameObject2.GetComponent<TNH_WeaponCrate>().M = M;
+
+                        TODO: // Continue from tertiary
                     }
-                    ++debugStep;
-                    if (C.Has_Weapon_Tertiary)
-                    {
-                        TNH_CharacterDef.LoadoutEntry weapon_Tertiary = C.Weapon_Tertiary;
-                        FVRObject fvrobject;
-                        if (weapon_Tertiary.ListOverride.Count > 0)
-                        {
-                            fvrobject = weapon_Tertiary.ListOverride[UnityEngine.Random.Range(0, weapon_Tertiary.ListOverride.Count)];
-                        }
-                        else
-                        {
-                            ObjectTableDef d = weapon_Tertiary.TableDefs[UnityEngine.Random.Range(0, weapon_Tertiary.TableDefs.Count)];
-                            ObjectTable objectTable3 = new ObjectTable();
-                            objectTable3.Initialize(d);
-                            fvrobject = objectTable3.GetRandomObject();
-                        }
-                        GameObject g = UnityEngine.Object.Instantiate<GameObject>(fvrobject.GetGameObject(), smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
-                        M.AddObjectToTrackedList(g);
-                    }
-                    ++debugStep;
-                    if (C.Has_Item_Primary)
-                    {
-                        TNH_CharacterDef.LoadoutEntry item_Primary = C.Item_Primary;
-                        FVRObject fvrobject2;
-                        if (item_Primary.ListOverride.Count > 0)
-                        {
-                            fvrobject2 = item_Primary.ListOverride[UnityEngine.Random.Range(0, item_Primary.ListOverride.Count)];
-                        }
-                        else
-                        {
-                            ObjectTableDef d2 = item_Primary.TableDefs[UnityEngine.Random.Range(0, item_Primary.TableDefs.Count)];
-                            ObjectTable objectTable4 = new ObjectTable();
-                            objectTable4.Initialize(d2);
-                            fvrobject2 = objectTable4.GetRandomObject();
-                        }
-                        GameObject g2 = UnityEngine.Object.Instantiate<GameObject>(fvrobject2.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f + Vector3.left * 0.3f, UnityEngine.Random.rotation);
-                        M.AddObjectToTrackedList(g2);
-                    }
-                    ++debugStep;
-                    if (C.Has_Item_Secondary)
-                    {
-                        TNH_CharacterDef.LoadoutEntry item_Secondary = C.Item_Secondary;
-                        FVRObject fvrobject3;
-                        if (item_Secondary.ListOverride.Count > 0)
-                        {
-                            fvrobject3 = item_Secondary.ListOverride[UnityEngine.Random.Range(0, item_Secondary.ListOverride.Count)];
-                        }
-                        else
-                        {
-                            ObjectTableDef d3 = item_Secondary.TableDefs[UnityEngine.Random.Range(0, item_Secondary.TableDefs.Count)];
-                            ObjectTable objectTable5 = new ObjectTable();
-                            objectTable5.Initialize(d3);
-                            fvrobject3 = objectTable5.GetRandomObject();
-                        }
-                        GameObject g3 = UnityEngine.Object.Instantiate<GameObject>(fvrobject3.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f + Vector3.right * 0.3f, UnityEngine.Random.rotation);
-                        M.AddObjectToTrackedList(g3);
-                    }
-                    ++debugStep;
-                    if (C.Has_Item_Tertiary)
-                    {
-                        TNH_CharacterDef.LoadoutEntry item_Tertiary = C.Item_Tertiary;
-                        FVRObject fvrobject4;
-                        if (item_Tertiary.ListOverride.Count > 0)
-                        {
-                            fvrobject4 = item_Tertiary.ListOverride[UnityEngine.Random.Range(0, item_Tertiary.ListOverride.Count)];
-                        }
-                        else
-                        {
-                            ObjectTableDef d4 = item_Tertiary.TableDefs[UnityEngine.Random.Range(0, item_Tertiary.TableDefs.Count)];
-                            ObjectTable objectTable6 = new ObjectTable();
-                            objectTable6.Initialize(d4);
-                            fvrobject4 = objectTable6.GetRandomObject();
-                        }
-                        GameObject g4 = UnityEngine.Object.Instantiate<GameObject>(fvrobject4.GetGameObject(), largeCaseSpawnPos + Vector3.up * 0.3f, UnityEngine.Random.rotation);
-                        M.AddObjectToTrackedList(g4);
-                    }
-                    ++debugStep;
-                    if (C.Has_Item_Shield)
-                    {
-                        TNH_CharacterDef.LoadoutEntry item_Shield = C.Item_Shield;
-                        FVRObject fvrobject5;
-                        if (item_Shield.ListOverride.Count > 0)
-                        {
-                            fvrobject5 = item_Shield.ListOverride[UnityEngine.Random.Range(0, item_Shield.ListOverride.Count)];
-                        }
-                        else
-                        {
-                            ObjectTableDef d5 = item_Shield.TableDefs[UnityEngine.Random.Range(0, item_Shield.TableDefs.Count)];
-                            ObjectTable objectTable7 = new ObjectTable();
-                            objectTable7.Initialize(d5);
-                            fvrobject5 = objectTable7.GetRandomObject();
-                        }
-                        GameObject g5 = UnityEngine.Object.Instantiate<GameObject>(fvrobject5.GetGameObject(), shieldSpawnPos, Quaternion.Euler(Vector3.up));
-                        M.AddObjectToTrackedList(g5);
-                    }
-                    ++debugStep;
                 }
             }
             catch(Exception ex)
