@@ -2037,7 +2037,6 @@ namespace H3MP
                             }
                         }
 
-                        TODO: // Continue from tertiary
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasSecondaryWeapon.GetValue(character))
                         {
                             object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_SecondaryWeapon.GetValue(character));
@@ -2055,6 +2054,166 @@ namespace H3MP
                                 GameObject weaponCase = M.SpawnWeaponCase(M.Prefab_WeaponCaseLarge, smallCaseSpawnPos, -projectedForward, selectedItem, (int)PatchController.TNHTweaker_EquipmentGroup_NumMagsSpawned.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_NumRoundsSpawned.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_MinAmmoCapacity.GetValue(selectedGroup), (int)PatchController.TNHTweaker_EquipmentGroup_MaxAmmoCapacity.GetValue(selectedGroup));
                                 weaponCase.GetComponent<TNH_WeaponCrate>().M = M;
                                 weaponCase.AddComponent<TimerDestroyer>();
+                            }
+                        }
+
+                        if ((bool)PatchController.TNHTweaker_CustomCharacter_HasTertiaryWeapon.GetValue(character))
+                        {
+                            object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_TertiaryWeapon.GetValue(character));
+                            if (selectedGroup == null)
+                            {
+                                selectedGroup = PatchController.TNHTweaker_LoadoutEntry_BackupGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_TertiaryWeapon.GetValue(character));
+                            }
+
+                            if (selectedGroup != null)
+                            {
+                                // This is usually a coroutine that uses a callback to get spawnedObject
+                                IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
+                                for(int j=0; j < list.Count; ++j)
+                                {
+                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < otherList.Count; i++)
+                                    {
+                                        FVRObject selectedFVR;
+                                        IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
+                                        string randomObject = (string)finalList[UnityEngine.Random.Range(0, finalList.Count)];
+                                        if (IM.OD.TryGetValue(randomObject, out selectedFVR))
+                                        {
+                                            GameObject gameObject = selectedFVR.GetGameObject();
+
+                                            GameObject spawnedObject = UnityEngine.GameObject.Instantiate(gameObject, smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
+                                            M.AddObjectToTrackedList(spawnedObject);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ((bool)PatchController.TNHTweaker_CustomCharacter_HasPrimaryItem.GetValue(character))
+                        {
+                            object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_PrimaryItem.GetValue(character));
+                            if (selectedGroup == null)
+                            {
+                                selectedGroup = PatchController.TNHTweaker_LoadoutEntry_BackupGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_PrimaryItem.GetValue(character));
+                            }
+
+                            if (selectedGroup != null)
+                            {
+                                // This is usually a coroutine that uses a callback to get spawnedObject
+                                IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
+                                for(int j=0; j < list.Count; ++j)
+                                {
+                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < otherList.Count; i++)
+                                    {
+                                        FVRObject selectedFVR;
+                                        IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
+                                        string randomObject = (string)finalList[UnityEngine.Random.Range(0, finalList.Count)];
+                                        if (IM.OD.TryGetValue(randomObject, out selectedFVR))
+                                        {
+                                            GameObject gameObject = selectedFVR.GetGameObject();
+
+                                            GameObject spawnedObject = UnityEngine.GameObject.Instantiate(gameObject, smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
+                                            M.AddObjectToTrackedList(spawnedObject);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ((bool)PatchController.TNHTweaker_CustomCharacter_HasSecondaryItem.GetValue(character))
+                        {
+                            object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_SecondaryItem.GetValue(character));
+                            if (selectedGroup == null)
+                            {
+                                selectedGroup = PatchController.TNHTweaker_LoadoutEntry_BackupGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_SecondaryItem.GetValue(character));
+                            }
+
+                            if (selectedGroup != null)
+                            {
+                                // This is usually a coroutine that uses a callback to get spawnedObject
+                                IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
+                                for(int j=0; j < list.Count; ++j)
+                                {
+                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < otherList.Count; i++)
+                                    {
+                                        FVRObject selectedFVR;
+                                        IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
+                                        string randomObject = (string)finalList[UnityEngine.Random.Range(0, finalList.Count)];
+                                        if (IM.OD.TryGetValue(randomObject, out selectedFVR))
+                                        {
+                                            GameObject gameObject = selectedFVR.GetGameObject();
+
+                                            GameObject spawnedObject = UnityEngine.GameObject.Instantiate(gameObject, smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
+                                            M.AddObjectToTrackedList(spawnedObject);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ((bool)PatchController.TNHTweaker_CustomCharacter_HasTertiaryItem.GetValue(character))
+                        {
+                            object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_TertiaryItem.GetValue(character));
+                            if (selectedGroup == null)
+                            {
+                                selectedGroup = PatchController.TNHTweaker_LoadoutEntry_BackupGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_TertiaryItem.GetValue(character));
+                            }
+
+                            if (selectedGroup != null)
+                            {
+                                // This is usually a coroutine that uses a callback to get spawnedObject
+                                IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
+                                for(int j=0; j < list.Count; ++j)
+                                {
+                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < otherList.Count; i++)
+                                    {
+                                        FVRObject selectedFVR;
+                                        IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
+                                        string randomObject = (string)finalList[UnityEngine.Random.Range(0, finalList.Count)];
+                                        if (IM.OD.TryGetValue(randomObject, out selectedFVR))
+                                        {
+                                            GameObject gameObject = selectedFVR.GetGameObject();
+
+                                            GameObject spawnedObject = UnityEngine.GameObject.Instantiate(gameObject, smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
+                                            M.AddObjectToTrackedList(spawnedObject);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ((bool)PatchController.TNHTweaker_CustomCharacter_HasShield.GetValue(character))
+                        {
+                            object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_Shield.GetValue(character));
+                            if (selectedGroup == null)
+                            {
+                                selectedGroup = PatchController.TNHTweaker_LoadoutEntry_BackupGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_Shield.GetValue(character));
+                            }
+
+                            if (selectedGroup != null)
+                            {
+                                // This is usually a coroutine that uses a callback to get spawnedObject
+                                IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
+                                for(int j=0; j < list.Count; ++j)
+                                {
+                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < otherList.Count; i++)
+                                    {
+                                        FVRObject selectedFVR;
+                                        IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
+                                        string randomObject = (string)finalList[UnityEngine.Random.Range(0, finalList.Count)];
+                                        if (IM.OD.TryGetValue(randomObject, out selectedFVR))
+                                        {
+                                            GameObject gameObject = selectedFVR.GetGameObject();
+
+                                            GameObject spawnedObject = UnityEngine.GameObject.Instantiate(gameObject, smallCaseSpawnPos + Vector3.up * 0.5f, UnityEngine.Random.rotation);
+                                            M.AddObjectToTrackedList(spawnedObject);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

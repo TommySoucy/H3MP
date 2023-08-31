@@ -45,6 +45,16 @@ namespace H3MP.Patches
         public static FieldInfo TNHTweaker_CustomCharacter_PrimaryWeapon;
         public static FieldInfo TNHTweaker_CustomCharacter_HasSecondaryWeapon;
         public static FieldInfo TNHTweaker_CustomCharacter_SecondaryWeapon;
+        public static FieldInfo TNHTweaker_CustomCharacter_HasTertiaryWeapon;
+        public static FieldInfo TNHTweaker_CustomCharacter_TertiaryWeapon;
+        public static FieldInfo TNHTweaker_CustomCharacter_HasPrimaryItem;
+        public static FieldInfo TNHTweaker_CustomCharacter_PrimaryItem;
+        public static FieldInfo TNHTweaker_CustomCharacter_HasSecondaryItem;
+        public static FieldInfo TNHTweaker_CustomCharacter_SecondaryItem;
+        public static FieldInfo TNHTweaker_CustomCharacter_HasTertiaryItem;
+        public static FieldInfo TNHTweaker_CustomCharacter_TertiaryItem;
+        public static FieldInfo TNHTweaker_CustomCharacter_HasShield;
+        public static FieldInfo TNHTweaker_CustomCharacter_Shield;
         public static Type TNHTweaker_EquipmentGroup;
         public static MethodInfo TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups;
         public static MethodInfo TNHTweaker_EquipmentGroup_GetObjects;
@@ -52,9 +62,12 @@ namespace H3MP.Patches
         public static FieldInfo TNHTweaker_EquipmentGroup_NumRoundsSpawned;
         public static FieldInfo TNHTweaker_EquipmentGroup_MinAmmoCapacity;
         public static FieldInfo TNHTweaker_EquipmentGroup_MaxAmmoCapacity;
+        public static FieldInfo TNHTweaker_EquipmentGroup_ItemsToSpawn;
         public static Type TNHTweaker_LoadoutEntry;
         public static FieldInfo TNHTweaker_LoadoutEntry_PrimaryGroup;
         public static FieldInfo TNHTweaker_LoadoutEntry_BackupGroup;
+        public static Type TNHTweaker_TNHTweakerUtils;
+        public static MethodInfo TNHTweaker_TNHTweakerUtils_InstantiateFromEquipmentGroup;
 
         // Collects fields/types relevant to mod compatibility patches
         private static void GetCompatibilityData()
@@ -80,6 +93,16 @@ namespace H3MP.Patches
                     TNHTweaker_CustomCharacter_PrimaryWeapon = TNHTweaker_CustomCharacter.GetField("PrimaryWeapon", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_CustomCharacter_HasSecondaryWeapon = TNHTweaker_CustomCharacter.GetField("HasSecondaryWeapon", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_CustomCharacter_SecondaryWeapon = TNHTweaker_CustomCharacter.GetField("SecondaryWeapon", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_HasTertiaryWeapon = TNHTweaker_CustomCharacter.GetField("HasTertiaryWeapon", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_TertiaryWeapon = TNHTweaker_CustomCharacter.GetField("TertiaryWeapon", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_HasPrimaryItem = TNHTweaker_CustomCharacter.GetField("HasPrimaryItem", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_PrimaryItem = TNHTweaker_CustomCharacter.GetField("PrimaryItem", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_HasSecondaryItem = TNHTweaker_CustomCharacter.GetField("HasSecondaryItem", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_SecondaryItem = TNHTweaker_CustomCharacter.GetField("SecondaryItem", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_HasTertiaryItem = TNHTweaker_CustomCharacter.GetField("HasTertiaryItem", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_TertiaryItem = TNHTweaker_CustomCharacter.GetField("TertiaryItem", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_HasShield = TNHTweaker_CustomCharacter.GetField("HasShield", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_CustomCharacter_Shield = TNHTweaker_CustomCharacter.GetField("Shield", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_EquipmentGroup = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.ObjectTemplates.EquipmentGroup");
                     TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups = TNHTweaker_EquipmentGroup.GetMethod("GetSpawnedEquipmentGroups", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_EquipmentGroup_GetObjects = TNHTweaker_EquipmentGroup.GetMethod("GetObjects", BindingFlags.Public | BindingFlags.Instance);
@@ -87,12 +110,15 @@ namespace H3MP.Patches
                     TNHTweaker_EquipmentGroup_NumRoundsSpawned = TNHTweaker_EquipmentGroup.GetField("NumRoundsSpawned", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_EquipmentGroup_MinAmmoCapacity = TNHTweaker_EquipmentGroup.GetField("MinAmmoCapacity", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_EquipmentGroup_MaxAmmoCapacity = TNHTweaker_EquipmentGroup.GetField("MaxAmmoCapacity", BindingFlags.Public | BindingFlags.Instance);
+                    TNHTweaker_EquipmentGroup_ItemsToSpawn = TNHTweaker_EquipmentGroup.GetField("ItemsToSpawn", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_LoadoutEntry = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.ObjectTemplates.LoadoutEntry");
                     TNHTweaker_LoadoutEntry_PrimaryGroup = TNHTweaker_LoadoutEntry.GetField("PrimaryGroup", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_LoadoutEntry_BackupGroup = TNHTweaker_LoadoutEntry.GetField("BackupGroup", BindingFlags.Public | BindingFlags.Instance);
                     TNHTweaker_TNHTweaker = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.TNHTweaker");
                     TNHTweaker_TNHTweaker_SpawnedBossIndexes = TNHTweaker_TNHTweaker.GetField("SpawnedBossIndexes", BindingFlags.Public | BindingFlags.Static);
                     TNHTweaker_TNHTweaker_PreventOutfitFunctionality = TNHTweaker_TNHTweaker.GetField("PreventOutfitFunctionality", BindingFlags.Public | BindingFlags.Static);
+                    TNHTweaker_TNHTweakerUtils = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.Utilities.TNHTweakerUtils");
+                    TNHTweaker_TNHTweakerUtils_InstantiateFromEquipmentGroup = TNHTweaker_TNHTweaker.GetMethod("InstantiateFromEquipmentGroup", BindingFlags.Public | BindingFlags.Static);
                 }
             }
         }
