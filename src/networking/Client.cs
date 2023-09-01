@@ -230,7 +230,7 @@ namespace H3MP.Networking
 #if DEBUG
                                             if (Input.GetKey(KeyCode.PageDown))
                                             {
-                                                Mod.LogInfo("\tHandling TCP packet: " + packetID);
+                                                Mod.LogInfo("\tHandling TCP packet: " + packetID + ", length: " + packet.buffer.Count);
                                             }
 #endif
                                             packetHandlers[packetID](packet);
@@ -346,12 +346,6 @@ namespace H3MP.Networking
                     int packetLength = packet.ReadInt();
                     data = packet.ReadBytes(packetLength);
                 }
-#if DEBUG
-                if (Input.GetKey(KeyCode.PageDown))
-                {
-                    Mod.LogInfo("\tHandling UDP data");
-                }
-#endif
 
                 ThreadManager.ExecuteOnMainThread(() =>
                 {
