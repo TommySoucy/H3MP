@@ -450,14 +450,20 @@ namespace H3MP
                                 break;
                             case 8: // Join first TNH instance
                                 Mod.LogInfo("\tDebug: Join first TNH instance");
-                                OnTNHJoinClicked();
-                                OnTNHJoinConfirmClicked();
-                                OnTNHInstanceClicked(1);
+                                if (Mod.currentTNHInstance == null)
+                                {
+                                    OnTNHJoinClicked();
+                                    OnTNHJoinConfirmClicked();
+                                    OnTNHInstanceClicked(1);
+                                }
                                 break;
                             case 9: // Create new TNH instance
                                 Mod.LogInfo("\tDebug: Create new TNH instance");
-                                OnTNHHostClicked();
-                                OnTNHHostConfirmClicked();
+                                if (Mod.currentTNHInstance == null)
+                                {
+                                    OnTNHHostClicked();
+                                    OnTNHHostConfirmClicked();
+                                }
                                 break;
                             case 10: // Begin TNH hold
                                 Mod.LogInfo("\tDebug: Begin TNH hold");
@@ -1838,6 +1844,7 @@ namespace H3MP
 
         public static void OnTNHSpawnStartEquipClicked()
         {
+            Mod.LogInfo("OnTNHSpawnStartEquipClicked, TNHTweakerASM = " + PatchController.TNHTweakerAsmIdx, false);
             int debugStep = 0;
             try
             {
@@ -2015,8 +2022,11 @@ namespace H3MP
                     }
                     else // Got TNH tweaker, must spawn init equip from custom character instead
                     {
+                        ++debugStep; // 2
+                        Mod.LogInfo("\tSpawning init equip as TNH tweaker char", false);
                         object character = ((IDictionary)PatchController.TNHTweaker_LoadedTemplateManager_LoadedCharactersDict.GetValue(PatchController.TNHTweaker_LoadedTemplateManager))[C];
 
+                        ++debugStep;
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasPrimaryWeapon.GetValue(character))
                         {
                             object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_PrimaryWeapon.GetValue(character));
@@ -2036,6 +2046,7 @@ namespace H3MP
                                 weaponCase.AddComponent<TimerDestroyer>();
                             }
                         }
+                        ++debugStep;
 
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasSecondaryWeapon.GetValue(character))
                         {
@@ -2057,6 +2068,7 @@ namespace H3MP
                             }
                         }
 
+                        ++debugStep; // 5
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasTertiaryWeapon.GetValue(character))
                         {
                             object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_TertiaryWeapon.GetValue(character));
@@ -2071,8 +2083,8 @@ namespace H3MP
                                 IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
                                 for(int j=0; j < list.Count; ++j)
                                 {
-                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
-                                    for (int i = 0; i < otherList.Count; i++)
+                                    int itemsToSpawn = (int)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < itemsToSpawn; i++)
                                     {
                                         FVRObject selectedFVR;
                                         IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
@@ -2089,6 +2101,7 @@ namespace H3MP
                             }
                         }
 
+                        ++debugStep;
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasPrimaryItem.GetValue(character))
                         {
                             object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_PrimaryItem.GetValue(character));
@@ -2103,8 +2116,8 @@ namespace H3MP
                                 IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
                                 for(int j=0; j < list.Count; ++j)
                                 {
-                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
-                                    for (int i = 0; i < otherList.Count; i++)
+                                    int itemsToSpawn = (int)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < itemsToSpawn; i++)
                                     {
                                         FVRObject selectedFVR;
                                         IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
@@ -2121,6 +2134,7 @@ namespace H3MP
                             }
                         }
 
+                        ++debugStep;
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasSecondaryItem.GetValue(character))
                         {
                             object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_SecondaryItem.GetValue(character));
@@ -2135,8 +2149,8 @@ namespace H3MP
                                 IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
                                 for(int j=0; j < list.Count; ++j)
                                 {
-                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
-                                    for (int i = 0; i < otherList.Count; i++)
+                                    int itemsToSpawn = (int)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < itemsToSpawn; i++)
                                     {
                                         FVRObject selectedFVR;
                                         IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
@@ -2153,6 +2167,7 @@ namespace H3MP
                             }
                         }
 
+                        ++debugStep;
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasTertiaryItem.GetValue(character))
                         {
                             object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_TertiaryItem.GetValue(character));
@@ -2167,8 +2182,8 @@ namespace H3MP
                                 IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
                                 for(int j=0; j < list.Count; ++j)
                                 {
-                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
-                                    for (int i = 0; i < otherList.Count; i++)
+                                    int itemsToSpawn = (int)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < itemsToSpawn; i++)
                                     {
                                         FVRObject selectedFVR;
                                         IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
@@ -2185,6 +2200,7 @@ namespace H3MP
                             }
                         }
 
+                        ++debugStep;
                         if ((bool)PatchController.TNHTweaker_CustomCharacter_HasShield.GetValue(character))
                         {
                             object selectedGroup = PatchController.TNHTweaker_LoadoutEntry_PrimaryGroup.GetValue(PatchController.TNHTweaker_CustomCharacter_Shield.GetValue(character));
@@ -2199,8 +2215,8 @@ namespace H3MP
                                 IList list = (IList)PatchController.TNHTweaker_EquipmentGroup_GetSpawnedEquipmentGroups.Invoke(selectedGroup, null);
                                 for(int j=0; j < list.Count; ++j)
                                 {
-                                    IList otherList = (IList)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
-                                    for (int i = 0; i < otherList.Count; i++)
+                                    int itemsToSpawn = (int)PatchController.TNHTweaker_EquipmentGroup_ItemsToSpawn.GetValue(selectedGroup);
+                                    for (int i = 0; i < itemsToSpawn; i++)
                                     {
                                         FVRObject selectedFVR;
                                         IList finalList = (IList)PatchController.TNHTweaker_EquipmentGroup_GetObjects.Invoke(selectedGroup, null);
