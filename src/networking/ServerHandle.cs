@@ -1958,9 +1958,9 @@ namespace H3MP.Networking
                 {
                     byte damClass = packet.ReadByte();
                     byte deathType = packet.ReadByte();
-                    ++SosigActionPatch.sosigDiesSkip;
+                    ++SosigPatch.sosigDiesSkip;
                     trackedSosig.physicalSosig.physicalSosig.SosigDies((Damage.DamageClass)damClass, (Sosig.SosigDeathType)deathType);
-                    --SosigActionPatch.sosigDiesSkip;
+                    --SosigPatch.sosigDiesSkip;
                 }
             }
 
@@ -1976,9 +1976,9 @@ namespace H3MP.Networking
             {
                 if(trackedSosig.physicalSosig != null)
                 {
-                    ++SosigActionPatch.sosigClearSkip;
+                    ++SosigPatch.sosigClearSkip;
                     trackedSosig.physicalSosig.physicalSosig.ClearSosig();
-                    --SosigActionPatch.sosigClearSkip;
+                    --SosigPatch.sosigClearSkip;
                 }
             }
 
@@ -1995,9 +1995,9 @@ namespace H3MP.Networking
             {
                 if(trackedSosig.physicalSosig != null)
                 {
-                    ++SosigActionPatch.sosigSetBodyStateSkip;
+                    ++SosigPatch.sosigSetBodyStateSkip;
                     trackedSosig.physicalSosig.physicalSosig.SetBodyState(bodyState);
-                    --SosigActionPatch.sosigSetBodyStateSkip;
+                    --SosigPatch.sosigSetBodyStateSkip;
                 }
             }
 
@@ -2079,9 +2079,9 @@ namespace H3MP.Networking
                         trackedSosig.hardGuard = packet.ReadBool();
                         if (trackedSosig.physicalSosig != null)
                         {
-                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            ++SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.CommandGuardPoint(trackedSosig.guardPoint, trackedSosig.hardGuard);
-                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            --SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.m_guardDominantDirection = trackedSosig.guardDir;
                         }
                         break;
@@ -2092,9 +2092,9 @@ namespace H3MP.Networking
                         trackedSosig.faceTowards = packet.ReadVector3();
                         if (trackedSosig.physicalSosig != null)
                         {
-                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            ++SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
-                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            --SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.m_skirmishPoint = trackedSosig.skirmishPoint;
                             trackedSosig.physicalSosig.physicalSosig.m_pathToPoint = trackedSosig.pathToPoint;
                             trackedSosig.physicalSosig.physicalSosig.m_assaultPoint = trackedSosig.assaultPoint;
@@ -2107,9 +2107,9 @@ namespace H3MP.Networking
                         trackedSosig.faceTowards = packet.ReadVector3();
                         if (trackedSosig.physicalSosig != null)
                         {
-                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            ++SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
-                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            --SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.UpdateGuardPoint(trackedSosig.guardPoint);
                             trackedSosig.physicalSosig.physicalSosig.m_hardGuard = trackedSosig.hardGuard;
                             trackedSosig.physicalSosig.physicalSosig.m_faceTowards = trackedSosig.faceTowards;
@@ -2120,9 +2120,9 @@ namespace H3MP.Networking
                         trackedSosig.wanderPoint = packet.ReadVector3();
                         if (trackedSosig.physicalSosig != null)
                         {
-                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            ++SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
-                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            --SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.m_wanderPoint = trackedSosig.wanderPoint;
                         }
                         break;
@@ -2132,9 +2132,9 @@ namespace H3MP.Networking
                         trackedSosig.faceTowards = packet.ReadVector3();
                         if (trackedSosig.physicalSosig != null)
                         {
-                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            ++SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.CommandAssaultPoint(trackedSosig.assaultPoint);
-                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            --SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.m_faceTowards = trackedSosig.faceTowards;
                             trackedSosig.physicalSosig.physicalSosig.SetAssaultSpeed(trackedSosig.assaultSpeed);
                         }
@@ -2144,9 +2144,9 @@ namespace H3MP.Networking
                         trackedSosig.idleDominantDir = packet.ReadVector3();
                         if (trackedSosig.physicalSosig != null)
                         {
-                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            ++SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.CommandIdle(trackedSosig.idleToPoint, trackedSosig.idleDominantDir);
-                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            --SosigPatch.sosigSetCurrentOrderSkip;
                         }
                         break;
                     case Sosig.SosigOrder.PathTo:
@@ -2154,17 +2154,17 @@ namespace H3MP.Networking
                         trackedSosig.pathToLookDir = packet.ReadVector3();
                         if (trackedSosig.physicalSosig != null)
                         {
-                            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                            ++SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
-                            --SosigActionPatch.sosigSetCurrentOrderSkip;
+                            --SosigPatch.sosigSetCurrentOrderSkip;
                             trackedSosig.physicalSosig.physicalSosig.m_pathToPoint = trackedSosig.pathToPoint;
                             trackedSosig.physicalSosig.physicalSosig.m_pathToLookDir = trackedSosig.pathToLookDir;
                         }
                         break;
                     default:
-                        ++SosigActionPatch.sosigSetCurrentOrderSkip;
+                        ++SosigPatch.sosigSetCurrentOrderSkip;
                         trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
-                        --SosigActionPatch.sosigSetCurrentOrderSkip;
+                        --SosigPatch.sosigSetCurrentOrderSkip;
                         break;
                 }
 
@@ -2180,9 +2180,9 @@ namespace H3MP.Networking
             TrackedSosigData trackedSosig = Server.objects[sosigTrackedID] as TrackedSosigData;
             if (trackedSosig != null && trackedSosig.physicalSosig != null)
             {
-                ++SosigActionPatch.sosigVaporizeSkip;
+                ++SosigPatch.sosigVaporizeSkip;
                 trackedSosig.physicalSosig.physicalSosig.Vaporize(trackedSosig.physicalSosig.physicalSosig.DamageFX_Vaporize, iff);
-                --SosigActionPatch.sosigVaporizeSkip;
+                --SosigPatch.sosigVaporizeSkip;
             }
 
             ServerSend.SosigVaporize(sosigTrackedID, iff, clientID);
@@ -2200,9 +2200,9 @@ namespace H3MP.Networking
                 Vector3 edgeNormal = packet.ReadVector3();
                 float scale = packet.ReadFloat();
                 byte linkIndex = packet.ReadByte();
-                ++SosigActionPatch.sosigRequestHitDecalSkip;
+                ++SosigPatch.sosigRequestHitDecalSkip;
                 trackedSosig.physicalSosig.physicalSosig.RequestHitDecal(point, normal, edgeNormal, scale, trackedSosig.physicalSosig.physicalSosig.Links[linkIndex]);
-                --SosigActionPatch.sosigRequestHitDecalSkip;
+                --SosigPatch.sosigRequestHitDecalSkip;
             }
 
             ServerSend.SosigRequestHitDecal(packet, clientID);

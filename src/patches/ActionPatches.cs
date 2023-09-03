@@ -273,39 +273,39 @@ namespace H3MP.Patches
             PatchController.Verify(sosigInvUpdatePatchOriginal, harmony, false);
             harmony.Patch(sosigInvUpdatePatchOriginal, new HarmonyMethod(sosigInvUpdatePatchPrefix));
 
-            // SosigActionPatch
+            // SosigPatch
             MethodInfo sosigDiesPatchOriginal = typeof(Sosig).GetMethod("SosigDies", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo sosigDiesPatchPrefix = typeof(SosigActionPatch).GetMethod("SosigDiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo sosigDiesPatchPosfix = typeof(SosigActionPatch).GetMethod("SosigDiesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigDiesPatchPrefix = typeof(SosigPatch).GetMethod("SosigDiesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigDiesPatchPosfix = typeof(SosigPatch).GetMethod("SosigDiesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigBodyStatePatchOriginal = typeof(Sosig).GetMethod("SetBodyState", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo sosigBodyStatePatchPrefix = typeof(SosigActionPatch).GetMethod("SetBodyStatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigBodyStatePatchPrefix = typeof(SosigPatch).GetMethod("SetBodyStatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigBodyUpdatePatchOriginal = typeof(Sosig).GetMethod("BodyUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo sosigBodyUpdatePatchTranspiler = typeof(SosigActionPatch).GetMethod("FootStepTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigBodyUpdatePatchTranspiler = typeof(SosigPatch).GetMethod("FootStepTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigSpeechUpdatePatchOriginal = typeof(Sosig).GetMethod("SpeechUpdate_State", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo sosigSpeechUpdatePatchTranspiler = typeof(SosigActionPatch).GetMethod("SpeechUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigSpeechUpdatePatchTranspiler = typeof(SosigPatch).GetMethod("SpeechUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigSetCurrentOrderPatchOriginal = typeof(Sosig).GetMethod("SetCurrentOrder", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo sosigSetCurrentOrderPatchPrefix = typeof(SosigActionPatch).GetMethod("SetCurrentOrderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigSetCurrentOrderPatchPrefix = typeof(SosigPatch).GetMethod("SetCurrentOrderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigVaporizePatchOriginal = typeof(Sosig).GetMethod("Vaporize", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo sosigVaporizePatchPrefix = typeof(SosigActionPatch).GetMethod("SosigVaporizePrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo sosigVaporizePatchPostfix = typeof(SosigActionPatch).GetMethod("SosigVaporizePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigVaporizePatchPrefix = typeof(SosigPatch).GetMethod("SosigVaporizePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigVaporizePatchPostfix = typeof(SosigPatch).GetMethod("SosigVaporizePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigRequestHitDecalPatchOriginal = typeof(Sosig).GetMethod("RequestHitDecal", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(float), typeof(SosigLink) }, null);
-            MethodInfo sosigRequestHitDecalPatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigRequestHitDecalPatchPrefix = typeof(SosigPatch).GetMethod("RequestHitDecalPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigRequestHitDecalEdgePatchOriginal = typeof(Sosig).GetMethod("RequestHitDecal", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(SosigLink) }, null);
-            MethodInfo sosigRequestHitDecalEdgePatchPrefix = typeof(SosigActionPatch).GetMethod("RequestHitDecalEdgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigRequestHitDecalEdgePatchPrefix = typeof(SosigPatch).GetMethod("RequestHitDecalEdgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigCommandGuardPointPatchOriginal = typeof(Sosig).GetMethod("CommandGuardPoint", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo sosigCommandGuardPointPatchPrefix = typeof(SosigActionPatch).GetMethod("CommandGuardPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo sosigCommandGuardPointPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandGuardPointPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandGuardPointPatchPrefix = typeof(SosigPatch).GetMethod("CommandGuardPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandGuardPointPatchPostfix = typeof(SosigPatch).GetMethod("CommandGuardPointPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigCommandAssaultPatchOriginal = typeof(Sosig).GetMethod("CommandAssaultPoint", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo sosigCommandAssaultPatchPrefix = typeof(SosigActionPatch).GetMethod("CommandAssaultPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo sosigCommandAssaultPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandAssaultPointPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandAssaultPatchPrefix = typeof(SosigPatch).GetMethod("CommandAssaultPointPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandAssaultPatchPostfix = typeof(SosigPatch).GetMethod("CommandAssaultPointPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigCommandIdlePatchOriginal = typeof(Sosig).GetMethod("CommandIdle", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo sosigCommandIdlePatchPrefix = typeof(SosigActionPatch).GetMethod("CommandIdlePrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo sosigCommandIdlePatchPostfix = typeof(SosigActionPatch).GetMethod("CommandIdlePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandIdlePatchPrefix = typeof(SosigPatch).GetMethod("CommandIdlePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandIdlePatchPostfix = typeof(SosigPatch).GetMethod("CommandIdlePostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigCommandPathToPatchOriginalTransform = typeof(Sosig).GetMethod("CommandPathTo", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(List<Transform>), typeof(float), typeof(Vector2), typeof(float), typeof(Sosig.SosigMoveSpeed), typeof(Sosig.PathLoopType), typeof(List<Sosig>), typeof(float), typeof(float), typeof(bool), typeof(float) }, null);
             MethodInfo sosigCommandPathToPatchOriginalVector = typeof(Sosig).GetMethod("CommandPathTo", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(List<Vector3>), typeof(List<Vector3>), typeof(float), typeof(Vector2), typeof(float), typeof(Sosig.SosigMoveSpeed), typeof(Sosig.PathLoopType), typeof(List<Sosig>), typeof(float), typeof(float), typeof(bool), typeof(float) }, null);
-            MethodInfo sosigCommandPathToPatchPostfix = typeof(SosigActionPatch).GetMethod("CommandPathToPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigCommandPathToPatchPostfix = typeof(SosigPatch).GetMethod("CommandPathToPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo sosigProcessColOriginal = typeof(Sosig).GetMethod("ProcessCollision", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo sosigProcessColPrefix = typeof(SosigActionPatch).GetMethod("ProcessCollisionPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sosigProcessColPrefix = typeof(SosigPatch).GetMethod("ProcessCollisionPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sosigDiesPatchOriginal, harmony, false);
             PatchController.Verify(sosigBodyStatePatchOriginal, harmony, false);
@@ -3353,7 +3353,7 @@ namespace H3MP.Patches
     }
 
     // Patches Sosig to keep track of all actions taken on a sosig
-    class SosigActionPatch
+    class SosigPatch
     {
         public static int sosigDiesSkip;
         public static int sosigClearSkip;
@@ -3367,7 +3367,7 @@ namespace H3MP.Patches
         {
             ++SosigHandDropPatch.skip;
             ++SosigSlotDetachPatch.skip;
-            ++SosigActionPatch.sosigSetBodyStateSkip;
+            ++SosigPatch.sosigSetBodyStateSkip;
 
             if (sosigDiesSkip > 0)
             {
@@ -3398,14 +3398,14 @@ namespace H3MP.Patches
         {
             --SosigHandDropPatch.skip;
             --SosigSlotDetachPatch.skip;
-            --SosigActionPatch.sosigSetBodyStateSkip;
+            --SosigPatch.sosigSetBodyStateSkip;
         }
 
         static void SosigClearPrefix(ref Sosig __instance)
         {
             ++SosigHandDropPatch.skip;
             ++SosigSlotDetachPatch.skip;
-            ++SosigActionPatch.sosigSetBodyStateSkip;
+            ++SosigPatch.sosigSetBodyStateSkip;
             ++SosigLinkActionPatch.skipLinkExplodes;
 
             if (sosigClearSkip > 0)
@@ -3438,7 +3438,7 @@ namespace H3MP.Patches
         {
             --SosigHandDropPatch.skip;
             --SosigSlotDetachPatch.skip;
-            --SosigActionPatch.sosigSetBodyStateSkip;
+            --SosigPatch.sosigSetBodyStateSkip;
             --SosigLinkActionPatch.skipLinkExplodes;
         }
 
@@ -3503,7 +3503,7 @@ namespace H3MP.Patches
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldc_R4, 1.05f)); // Load 4 byte real literal 1.05
             toInsertSecond.Add(new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(Vector2), new Type[] { typeof(float), typeof(float) }))); // Create new Vector2
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load delay
-            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendFootStepSound"))); // Call our own method
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigPatch), "SendFootStepSound"))); // Call our own method
 
             bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -3557,7 +3557,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Sosig), "CurrentOrder"))); // Load CurrentOrder
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load Sosig instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Sosig), "m_speakingSource"))); // Load m_speakingSource
-            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigActionPatch), "SendSpeakState"))); // Call our own method
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(SosigPatch), "SendSpeakState"))); // Call our own method
 
             bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -4116,10 +4116,10 @@ namespace H3MP.Patches
 
         static void LinkExplodesPrefix(ref SosigLink __instance, Damage.DamageClass damClass)
         {
-            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigPatch.sosigDiesSkip;
             ++SosigHandDropPatch.skip;
             ++SosigSlotDetachPatch.skip;
-            ++SosigActionPatch.sosigSetBodyStateSkip;
+            ++SosigPatch.sosigSetBodyStateSkip;
 
             if (skipLinkExplodes > 0)
             {
@@ -4168,18 +4168,18 @@ namespace H3MP.Patches
 
         static void LinkExplodesPostfix()
         {
-            --SosigActionPatch.sosigDiesSkip;
+            --SosigPatch.sosigDiesSkip;
             --SosigHandDropPatch.skip;
             --SosigSlotDetachPatch.skip;
-            --SosigActionPatch.sosigSetBodyStateSkip;
+            --SosigPatch.sosigSetBodyStateSkip;
         }
 
         static bool LinkBreakPrefix(ref SosigLink __instance, bool isStart, Damage.DamageClass damClass)
         {
-            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigPatch.sosigDiesSkip;
             ++SosigHandDropPatch.skip;
             ++SosigSlotDetachPatch.skip;
-            ++SosigActionPatch.sosigSetBodyStateSkip;
+            ++SosigPatch.sosigSetBodyStateSkip;
 
             if (sosigLinkBreakSkip > 0)
             {
@@ -4235,18 +4235,18 @@ namespace H3MP.Patches
 
         static void LinkBreakPostfix()
         {
-            --SosigActionPatch.sosigDiesSkip;
+            --SosigPatch.sosigDiesSkip;
             --SosigHandDropPatch.skip;
             --SosigSlotDetachPatch.skip;
-            --SosigActionPatch.sosigSetBodyStateSkip;
+            --SosigPatch.sosigSetBodyStateSkip;
         }
 
         static void LinkSeverPrefix(ref SosigLink __instance, Damage.DamageClass damClass, bool isPullApart)
         {
-            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigPatch.sosigDiesSkip;
             ++SosigHandDropPatch.skip;
             ++SosigSlotDetachPatch.skip;
-            ++SosigActionPatch.sosigSetBodyStateSkip;
+            ++SosigPatch.sosigSetBodyStateSkip;
 
             if (sosigLinkSeverSkip > 0)
             {
@@ -4295,18 +4295,18 @@ namespace H3MP.Patches
 
         static void LinkSeverPostfix()
         {
-            --SosigActionPatch.sosigDiesSkip;
+            --SosigPatch.sosigDiesSkip;
             --SosigHandDropPatch.skip;
             --SosigSlotDetachPatch.skip;
-            --SosigActionPatch.sosigSetBodyStateSkip;
+            --SosigPatch.sosigSetBodyStateSkip;
         }
 
         static void LinkVaporizePrefix(ref SosigLink __instance, int IFF)
         {
-            ++SosigActionPatch.sosigDiesSkip;
+            ++SosigPatch.sosigDiesSkip;
             ++SosigHandDropPatch.skip;
             ++SosigSlotDetachPatch.skip;
-            ++SosigActionPatch.sosigSetBodyStateSkip;
+            ++SosigPatch.sosigSetBodyStateSkip;
 
             // Skip if not connected
             if (Mod.managerObject == null)
@@ -4333,10 +4333,10 @@ namespace H3MP.Patches
 
         static void LinkVaporizePostfix()
         {
-            --SosigActionPatch.sosigDiesSkip;
+            --SosigPatch.sosigDiesSkip;
             --SosigHandDropPatch.skip;
             --SosigSlotDetachPatch.skip;
-            --SosigActionPatch.sosigSetBodyStateSkip;
+            --SosigPatch.sosigSetBodyStateSkip;
         }
     }
 

@@ -120,9 +120,9 @@ namespace H3MP.Tracking
             if (!GameManager.sceneLoading)
             {
                 // Set sosig as dead before destroying so it gets processed properly
-                ++SosigActionPatch.sosigDiesSkip;
+                ++SosigPatch.sosigDiesSkip;
                 physicalSosig.SosigDies(Damage.DamageClass.Abstract, Sosig.SosigDeathType.Unknown);
-                --SosigActionPatch.sosigDiesSkip;
+                --SosigPatch.sosigDiesSkip;
             }
 
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the phyiscalObject anymore

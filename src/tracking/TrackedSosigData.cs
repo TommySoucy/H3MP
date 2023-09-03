@@ -735,7 +735,7 @@ namespace H3MP.Tracking
             physicalSosig.physicalSosig.Priority.IFFChart = IFFChart;
 
             // Initially set order
-            ++SosigActionPatch.sosigSetCurrentOrderSkip;
+            ++SosigPatch.sosigSetCurrentOrderSkip;
             switch (currentOrder)
             {
                 case Sosig.SosigOrder.GuardPoint:
@@ -778,7 +778,7 @@ namespace H3MP.Tracking
                     break;
             }
             physicalSosig.physicalSosig.FallbackOrder = fallbackOrder;
-            --SosigActionPatch.sosigSetCurrentOrderSkip;
+            --SosigPatch.sosigSetCurrentOrderSkip;
 
             // Setup inventory
             // Make sure sosig hands and inventory are initialized first
