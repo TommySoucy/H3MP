@@ -179,6 +179,7 @@ namespace H3MP.Tracking
                 // Here we consider the update out of order if it is within 128 iterations before the latest
                 if (trackedObjectData.controller != GameManager.ID && (full || (order > trackedObjectData.order || trackedObjectData.order - order > 128)))
                 {
+                    trackedObjectData.order = order;
                     trackedObjectData.UpdateFromPacket(packet, full);
                     return;
                 }
@@ -207,11 +208,11 @@ namespace H3MP.Tracking
                 localWaitingIndex = updatedObject.localWaitingIndex;
             }
 
+            previousActive = active;
+            active = updatedObject.active;
             order = updatedObject.order;
             if (physical != null)
             {
-                previousActive = active;
-                active = updatedObject.active;
                 if (active)
                 {
                     if (!physical.gameObject.activeSelf)
@@ -252,7 +253,6 @@ namespace H3MP.Tracking
 
             previousActive = active;
             active = packet.ReadBool();
-
             if (physical != null)
             {
                 if (active)
