@@ -3,13 +3,11 @@ using H3MP.Networking;
 using H3MP.Scripts;
 using H3MP.Tracking;
 using HarmonyLib;
-using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
-using UnityEngine.Networking.Types;
 
 namespace H3MP.Patches
 {
