@@ -260,7 +260,7 @@ namespace H3MP
         public static Vector3 nullDriverMovement = Vector3.zero;
         public static float defaultNullDriverMovementMultiplier = 0.2f;
         public static float defaultNullDriverRotationMultiplier = 0.2f;
-        public static float nullDriverVerticalRot = 90;
+        public static float nullDriverVerticalRot = 0;
         public static float nullDriverHorzontalRot = 0;
         public static int testCustomPacketID;
 

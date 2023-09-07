@@ -5,6 +5,7 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -56,7 +57,16 @@ namespace H3MP.Networking
             GameManager.ID = ID;
             ClientSend.WelcomeReceived();
 
-            Client.singleton.udp.Connect(((IPEndPoint)Client.singleton.tcp.socket.Client.LocalEndPoint).Port);
+            try
+            {
+                Client.singleton.udp.Connect(((IPEndPoint)Client.singleton.tcp.socket.Client.LocalEndPoint).Port);
+            }
+            catch (SocketException)
+            {
+                Mod.LogError("SocketException caught trying to make UDP connection to server, disconnecting. A game restart should be enough to fix this.");
+                Client.singleton.Disconnect(true, 0);
+                return;
+            }
 
             if (GameManager.reconnectionInstance != -1)
             {

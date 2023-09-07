@@ -2589,37 +2589,25 @@ namespace H3MP.Patches
             trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
             if (trackedSosig != null)
             {
-                if (ThreadManager.host)
-                {
-                    if (trackedSosig.data.controller == 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        // Not in control, we want to send the damage to the controller for them to precess it and return the result
-                        for (int i = 0; i < __instance.S.Links.Count; ++i)
-                        {
-                            if (__instance.S.Links[i] == __instance)
-                            {
-                                ServerSend.SosigLinkDamage(trackedSosig.sosigData, i, d);
-                                break;
-                            }
-                        }
-                        return false;
-                    }
-                }
-                else if (trackedSosig.data.controller == Client.singleton.ID)
+                if(trackedSosig.data.controller == GameManager.ID)
                 {
                     return true;
                 }
                 else
                 {
+                    // Not in control, we want to send the damage to the controller for them to process it and return the result
                     for (int i = 0; i < __instance.S.Links.Count; ++i)
                     {
                         if (__instance.S.Links[i] == __instance)
                         {
-                            ClientSend.SosigLinkDamage(trackedSosig.data.trackedID, i, d);
+                            if (ThreadManager.host)
+                            {
+                                ServerSend.SosigLinkDamage(trackedSosig.sosigData, i, d);
+                            }
+                            else
+                            {
+                                ClientSend.SosigLinkDamage(trackedSosig.data.trackedID, i, d);
+                            }
                             break;
                         }
                     }
@@ -2676,36 +2664,33 @@ namespace H3MP.Patches
             trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance.S) ? GameManager.trackedSosigBySosig[__instance.S] : __instance.S.GetComponent<TrackedSosig>();
             if (trackedSosig != null)
             {
-                if (ThreadManager.host)
+                if (trackedSosig.data.controller == GameManager.ID)
                 {
-                    if (trackedSosig.data.controller == GameManager.ID)
+                    return true;
+                }
+                else
+                {
+                    for (int i = 0; i < __instance.S.Links.Count; ++i)
                     {
-                        return true;
-                    }
-                    else
-                    {
-                        for (int i = 0; i < __instance.S.Links.Count; ++i)
+                        if (__instance.S.Links[i] == __instance.L)
                         {
-                            if (__instance.S.Links[i] == __instance.L)
+                            for (int j = 0; j < __instance.L.m_wearables.Count; ++j)
                             {
-                                for (int j = 0; j < __instance.L.m_wearables.Count; ++j)
+                                if (__instance.L.m_wearables[j] == __instance)
                                 {
-                                    if (__instance.L.m_wearables[j] == __instance)
+                                    if (ThreadManager.host)
                                     {
-                                        if (ThreadManager.host)
-                                        {
-                                            ServerSend.SosigWearableDamage(trackedSosig.sosigData, i, j, d);
-                                        }
-                                        else
-                                        {
-                                            ClientSend.SosigWearableDamage(trackedSosig.data.trackedID, i, j, d);
-                                        }
-                                        return false;
+                                        ServerSend.SosigWearableDamage(trackedSosig.sosigData, i, j, d);
                                     }
+                                    else
+                                    {
+                                        ClientSend.SosigWearableDamage(trackedSosig.data.trackedID, i, j, d);
+                                    }
+                                    return false;
                                 }
-
-                                break;
                             }
+
+                            break;
                         }
                     }
                 }
