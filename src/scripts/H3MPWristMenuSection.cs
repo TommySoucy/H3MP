@@ -80,6 +80,7 @@ namespace H3MP.Scripts
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnMaxHealthClicked, "Max health: "+ (GameManager.maxHealthIndex == -1 ? "Not set" : GameManager.maxHealths[GameManager.maxHealthIndex].ToString()), out maxHealthText);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnSetRespawnPointClicked, "Set respawn point", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
@@ -821,6 +822,26 @@ namespace H3MP.Scripts
                         --SetHealthThresholdPatch.skip;
                     }
                 }
+            }
+        }
+
+        private void OnSetRespawnPointClicked(Text textRef)
+        {
+            if (GM.CurrentSceneSettings != null && GM.CurrentPlayerBody != null)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+                Transform deathResetPoint = GM.CurrentSceneSettings.DeathResetPoint;
+                if (deathResetPoint == null)
+                {
+                    deathResetPoint = new GameObject("DeathResetPoint").transform;
+                    GM.CurrentSceneSettings.DeathResetPoint = deathResetPoint;
+                }
+                deathResetPoint.position = GM.CurrentPlayerBody.transform.position;
+                deathResetPoint.rotation = GM.CurrentPlayerBody.transform.rotation;
+            }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
             }
         }
 
