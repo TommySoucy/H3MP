@@ -117,7 +117,11 @@ namespace H3MP.Networking
                     data = new byte[byteLength];
                     Array.Copy(receiveBuffer, data, byteLength);
 
-                    receivedData.Reset(HandleData(data));
+                    int handleCode = HandleData(data);
+                    if(handleCode > 0)
+                    {
+                        receivedData.Reset(handleCode == 2);
+                    }
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
                 catch (Exception ex)
@@ -136,23 +140,26 @@ namespace H3MP.Networking
                 }
             }
 
-            private bool HandleData(byte[] data)
+            private int HandleData(byte[] data)
             {
                 int packetLength = 0;
+                bool readLength = false;
 
                 receivedData.SetBytes(data);
 
                 if (receivedData.UnreadLength() >= 4)
                 {
                     packetLength = receivedData.ReadInt();
+                    readLength = true;
                     if (packetLength <= 0)
                     {
-                        return true;
+                        return 2;
                     }
                 }
 
                 while (packetLength > 0 && packetLength <= receivedData.UnreadLength())
                 {
+                    readLength = false;
                     byte[] packetBytes = receivedData.ReadBytes(packetLength);
                     ThreadManager.ExecuteOnMainThread(() =>
                     {
@@ -215,19 +222,20 @@ namespace H3MP.Networking
                     if (receivedData.UnreadLength() >= 4)
                     {
                         packetLength = receivedData.ReadInt();
+                        readLength = true;
                         if (packetLength <= 0)
                         {
-                            return true;
+                            return 2;
                         }
                     }
                 }
 
-                if (packetLength <= 1)
+                if (packetLength == 0 && receivedData.UnreadLength() == 0)
                 {
-                    return true;
+                    return 2;
                 }
 
-                return false;
+                return readLength ? 1 : 0;
             }
 
             public void Disconnect()

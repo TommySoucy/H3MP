@@ -147,8 +147,10 @@ namespace H3MP.Networking
 
             private void ReceiveCallback(IAsyncResult result)
             {
+                // We received bytes through stream
                 try
                 {
+                    // Read how many, if none, disconnect
                     int byteLength = stream.EndRead(result);
                     if (byteLength == 0)
                     {
@@ -156,10 +158,15 @@ namespace H3MP.Networking
                         return;
                     }
 
+                    // If we received some data prepare a data array and fill it up with the data
                     byte[] data = new byte[byteLength];
                     Array.Copy(receiveBuffer, data, byteLength);
 
-                    receivedData.Reset(HandleData(data));
+                    int handleCode = HandleData(data);
+                    if (handleCode > 0)
+                    {
+                        receivedData.Reset(handleCode == 2);
+                    }
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
                 catch (Exception)
@@ -168,30 +175,40 @@ namespace H3MP.Networking
                 }
             }
 
-            private bool HandleData(byte[] data)
+            private int HandleData(byte[] data)
             {
                 int packetLength = 0;
+                bool readLength = false;
 
                 receivedData.SetBytes(data);
 
+                // Handle receiving empty packet, we return true so that receivedData packet gets reset
                 if (receivedData.UnreadLength() >= 4)
                 {
                     packetLength = receivedData.ReadInt();
-                    if(packetLength <= 0)
+                    readLength = true;
+                    if (packetLength <= 0)
                     {
-                        return true;
+                        return 2;
                     }
                 }
 
+                // If we have enough data to read packet length and we got here, it means we have at least some data for a packet
+                // This might not be the entire packet, so we check if the length written to packet is less than the data received
+                // If so, it means we have enough data to build a packet we can process
                 while(packetLength > 0 && packetLength <= receivedData.UnreadLength())
                 {
+                    readLength = false;
+                    // So here we take all the data for that new packet
                     byte[] packetBytes = receivedData.ReadBytes(packetLength);
                     ThreadManager.ExecuteOnMainThread(() =>
                     {
                         if (singleton.isConnected)
                         {
+                            // Build a packet from it
                             using (Packet packet = new Packet(packetBytes))
                             {
+                                // Read its ID, and process it
                                 int packetID = packet.ReadInt();
 
                                 try
@@ -239,7 +256,7 @@ namespace H3MP.Networking
                                 }
                                 catch(IndexOutOfRangeException ex)
                                 {
-                                    Mod.LogError("Client TCP received packet with ID: "+packetID+ " as ServerPackets: " + ((ServerPackets)packetID).ToString()+":\n"+ ex.StackTrace);
+                                    Mod.LogError("Client TCP received packet with ID: "+packetID+ " as ServerPackets: " + ((ServerPackets)packetID).ToString()+" with packetLength: "+ packetLength + ":\n"+ ex.StackTrace);
                                 }
                             }
                         }
@@ -247,22 +264,30 @@ namespace H3MP.Networking
 
                     packetLength = 0;
 
+                    // Check again if we have empty packet, if we do, return true to reset the receivedData
                     if (receivedData.UnreadLength() >= 4)
                     {
                         packetLength = receivedData.ReadInt();
+                        readLength = true;
                         if (packetLength <= 0)
                         {
-                            return true;
+                            return 2;
                         }
                     }
                 }
 
-                if(packetLength <= 1)
+                // If there is no data left to read, means we processed the last byte of data we had as part of the last packet we handled
+                // so we can reset the receivedData completely
+                if (packetLength == 0 && receivedData.UnreadLength() == 0)
                 {
-                    return true;
+                    return 2;
                 }
 
-                return false;
+                // If we get here, it is because we have data left to read
+                // If we read the length of the packet we didnt end up handling because we are still missing data
+                // we want to undo reading 4 bytes, so return 1
+                // Otherwise we return 0 indicating we don't want to reset anything, we just want to keep building up data
+                return readLength ? 1 : 0;
             }
 
             private void Disconnect(int code)
@@ -826,6 +851,9 @@ namespace H3MP.Networking
                 GameManager.reconnectionInstance = -1;
                 switch (code)
                 {
+                    case -1:
+                        Mod.LogWarning("Disconnecting from server due to application quit.");
+                        break;
                     case 0:
                         Mod.LogWarning("Disconnecting from server.");
                         break;
