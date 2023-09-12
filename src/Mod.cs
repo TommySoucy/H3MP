@@ -2436,9 +2436,7 @@ namespace H3MP
                         // Going through each like this, we will go through the host of the instance before any other
                         foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
                         {
-                            if ((playerID == GameManager.ID ||
-                                 GameManager.players.ContainsKey(playerID)) &&
-                                (!hasWhiteList || whiteList.Contains(playerID)))
+                            if (!hasWhiteList || whiteList.Contains(playerID))
                             {
                                 return playerID;
                             }
