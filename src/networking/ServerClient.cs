@@ -341,7 +341,7 @@ namespace H3MP.Networking
             {
                 if(client.player != null && client.ID != ID)
                 {
-                    ServerSend.SpawnPlayer(ID, client.player, scene, instance, IFF, colorIndex);
+                    ServerSend.SpawnPlayer(ID, client.player, client.player.scene, client.player.instance, IFF, colorIndex);
                 }
             }
 
@@ -354,7 +354,7 @@ namespace H3MP.Networking
             {
                 if(client.player != null && client.ID != ID)
                 {
-                    ServerSend.SpawnPlayer(client.ID, player, client.player.scene, client.player.instance, IFF, colorIndex, true);
+                    ServerSend.SpawnPlayer(client.ID, player, scene, instance, IFF, colorIndex, true);
                     inControl &= !scene.Equals(client.player.scene);
                 }
             }
