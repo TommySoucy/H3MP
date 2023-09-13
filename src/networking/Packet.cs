@@ -726,7 +726,6 @@ namespace H3MP.Networking
                 Write(instance.playerIDs.Count);
                 for (int i = 0; i < instance.playerIDs.Count; ++i)
                 {
-                    Mod.LogInfo("\t"+ instance.playerIDs[i]);
                     Write(instance.playerIDs[i]);
                 }
             }
