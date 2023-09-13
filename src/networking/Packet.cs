@@ -726,6 +726,7 @@ namespace H3MP.Networking
                 Write(instance.playerIDs.Count);
                 for (int i = 0; i < instance.playerIDs.Count; ++i)
                 {
+                    Mod.LogInfo("\t"+ instance.playerIDs[i]);
                     Write(instance.playerIDs[i]);
                 }
             }
@@ -1245,7 +1246,7 @@ namespace H3MP.Networking
                                                              progressionTypeSetting, healthModeSetting, equipmentModeSetting,
                                                              targetModeSetting, AIDifficultyModifier, radarModeModifier,
                                                              itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
-            for (int i=1; i < playerCount; ++i)
+            for (int i = 1; i < playerCount; ++i) 
             {
                 int newPlayerID = ReadInt();
 
@@ -1255,7 +1256,7 @@ namespace H3MP.Networking
                     continue;
                 }
 
-                instance.playerIDs.Add(ReadInt());
+                instance.playerIDs.Add(newPlayerID);
             }
 
             instance.initializer = ReadInt();
