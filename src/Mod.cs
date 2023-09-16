@@ -2434,9 +2434,10 @@ namespace H3MP
                     if (currentController == -1) // This means the potential host could also be us
                     {
                         // Going through each like this, we will go through the host of the instance before any other
-                        foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
+                        foreach (int playerID in Mod.currentTNHInstance.playerIDs)
                         {
-                            if (!hasWhiteList || whiteList.Contains(playerID))
+                            if (Mod.currentTNHInstance.currentlyPlaying.Contains(playerID) &&
+                                (!hasWhiteList || whiteList.Contains(playerID)))
                             {
                                 return playerID;
                             }
@@ -2445,9 +2446,10 @@ namespace H3MP
                     else
                     {
                         // Going through each like this, we will go through the host of the instance before any other
-                        foreach (int playerID in Mod.currentTNHInstance.currentlyPlaying)
+                        foreach (int playerID in Mod.currentTNHInstance.playerIDs)
                         {
-                            if (playerID != currentController &&
+                            if (playerID != currentController && 
+                                Mod.currentTNHInstance.currentlyPlaying.Contains(playerID) &&
                                 (!hasWhiteList || whiteList.Contains(playerID)))
                             {
                                 return playerID;
