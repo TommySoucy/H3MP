@@ -46,6 +46,8 @@ namespace H3MP
         public static GameObject TNHMenuPrefab;
         public static GameObject TNHStartEquipButtonPrefab;
         public static GameObject playerPrefab;
+        public static GameObject keyboardPrefab;
+        public static GameObject serverListPrefab;
         public static Material reticleFriendlyContactArrowMat;
         public static Material reticleFriendlyContactIconMat;
         public static Dictionary<string, string> sosigWearableMap;
@@ -1118,6 +1120,8 @@ namespace H3MP
             TNHMenuPrefab = assetBundle.LoadAsset<GameObject>("TNHMenu");
             reticleFriendlyContactArrowMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactArrowMat");
             reticleFriendlyContactIconMat = assetBundle.LoadAsset<Material>("ReticleFriendlyContactIconMat");
+            keyboardPrefab = assetBundle.LoadAsset<GameObject>("KeyBoard");
+            serverListPrefab = assetBundle.LoadAsset<GameObject>("ServerList");
 
             playerPrefab = assetBundle.LoadAsset<GameObject>("Player");
             GameManager.playerPrefabs.Add("Default", playerPrefab);

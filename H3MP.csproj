@@ -39,6 +39,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="src\networking\indexServer\ISClient.cs" />
+    <Compile Include="src\networking\indexServer\ISClientHandle.cs" />
+    <Compile Include="src\networking\indexServer\ISClientSend.cs" />
     <Compile Include="src\scripts\Billboard.cs" />
     <Compile Include="src\networking\Client.cs" />
     <Compile Include="src\networking\ClientHandle.cs" />
@@ -47,6 +50,7 @@
     <Compile Include="src\scripts\ControllerReference.cs" />
     <Compile Include="src\GameManager.cs" />
     <Compile Include="src\scripts\HoverScroll.cs" />
+    <Compile Include="src\scripts\Keyboard.cs" />
     <Compile Include="src\scripts\KinematicMarker.cs" />
     <Compile Include="src\networking\Player.cs" />
     <Compile Include="src\scripts\OffsetFollower.cs" />
@@ -59,6 +63,8 @@
     <Compile Include="src\networking\ServerSend.cs" />
     <Compile Include="src\scripts\PlayerBody.cs" />
     <Compile Include="src\networking\ThreadManager.cs" />
+    <Compile Include="src\scripts\ServerListController.cs" />
+    <Compile Include="src\scripts\TextField.cs" />
     <Compile Include="src\scripts\TimerDestroyer.cs" />
     <Compile Include="src\networking\TNHInstance.cs" />
     <Compile Include="src\scripts\TrackedObjectReference.cs" />

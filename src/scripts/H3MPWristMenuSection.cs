@@ -57,7 +57,7 @@ namespace H3MP.Scripts
             Image background = gameObject.AddComponent<Image>();
             background.rectTransform.sizeDelta = new Vector2(500, 350);
             background.color = new Color(0.1f, 0.1f, 0.1f, 1);
-
+            TODO: // Modify pages, we want to have first page display "Server list" button and "Direct connection" button
             Text textOut = null;
             InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnHostClicked, "Host", out textOut);
             InitButton(new List<int>() { 0 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), new Vector2(140, 70), OnConnectClicked, "Join", out textOut);
