@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using System;
 using System.Net;
+using UnityEngine;
 
 namespace H3MP.Networking
 {
@@ -11,6 +12,8 @@ namespace H3MP.Networking
             welcome = 0,
             ping = 1,
         }
+
+        public static GameObject managerObject;
 
         public static int dataBufferSize = 4096;
 
@@ -30,14 +33,27 @@ namespace H3MP.Networking
         public static Packet receivedData;
         public static byte[] receiveBuffer;
 
-        public static bool host;
+        public static bool wantListed;
+        public static bool listed;
 
         public static void Connect()
         {
+
+            if (managerObject == null)
+            {
+                managerObject = new GameObject("ISManagerObject");
+
+                ISThreadManager threadManager = managerObject.AddComponent<ISThreadManager>();
+
+                GameObject.DontDestroyOnLoad(managerObject);
+            }
+
             InitializeClientData();
 
             isConnected = true;
-            host = false;
+            gotWelcome = false;
+            wantListed = false;
+            listed = false;
 
             socket = new TcpClient
             {
@@ -150,7 +166,7 @@ namespace H3MP.Networking
                 readLength = false;
                 // So here we take all the data for that new packet
                 byte[] packetBytes = receivedData.ReadBytes(packetLength);
-                ThreadManager.ExecuteOnMainThread(() =>
+                ISThreadManager.ExecuteOnMainThread(() =>
                 {
                     if (isConnected)
                     {
@@ -265,6 +281,7 @@ namespace H3MP.Networking
                 stream = null;
                 receiveBuffer = null;
                 receivedData = null;
+                GameObject.Destroy(managerObject);
 
                 ID = -1;
 

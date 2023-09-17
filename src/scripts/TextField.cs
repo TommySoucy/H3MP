@@ -11,6 +11,7 @@ namespace H3MP.Scripts
         public bool digitsOnly;
 
         public Text text;
+        public GameObject clearButton;
 
         private Keyboard keyboard;
 
@@ -30,6 +31,12 @@ namespace H3MP.Scripts
             keyboard.field = this;
 
             selected = this;
+        }
+
+        public void Clear()
+        {
+            text.text = "";
+            clearButton.SetActive(false);
         }
 
         private void OnDisable()

@@ -36,11 +36,11 @@ namespace H3MP.Scripts
             {
                 if (ThreadManager.host)
                 {
-                    SetPage(1);
+                    SetPage(2);
                 }
                 else
                 {
-                    SetPage(2);
+                    SetPage(3);
                 }
             }
         }
@@ -57,32 +57,34 @@ namespace H3MP.Scripts
             Image background = gameObject.AddComponent<Image>();
             background.rectTransform.sizeDelta = new Vector2(500, 350);
             background.color = new Color(0.1f, 0.1f, 0.1f, 1);
-            TODO: // Modify pages, we want to have first page display "Server list" button and "Direct connection" button
-            Text textOut = null;
-            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnHostClicked, "Host", out textOut);
-            InitButton(new List<int>() { 0 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), new Vector2(140, 70), OnConnectClicked, "Join", out textOut);
-            InitButton(new List<int>() { 0, 1, 2 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnOptionsClicked, "Options", out textOut);
-            InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnCloseClicked, "Close\nserver", out textOut);
-            InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnDisconnectClicked, "Disconnect", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-215, 140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnBackClicked, "Back", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnReloadConfigClicked, "Reload config", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnTNHReviveClicked, "TNH revive", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out IFFText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextIFFClicked, ">", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(-155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousIFFClicked, "<", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnColorByIFFClicked, "Color by IFF ("+GameManager.colorByIFF+")", out colorByIFFText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnNameplatesClicked, "Nameplates ("+ (GameManager.nameplateMode == 0 ? "All" : (GameManager.nameplateMode == 1 ? "Friendly Only" : "None"))+ ")", out nameplateText);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnHostStartHoldClicked, "Debug: Host start hold", out textOut);
 
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarModeClicked, "Radar mode ("+ (GameManager.radarMode == 0 ? "All" : (GameManager.radarMode == 1 ? "Friendly Only" : "None"))+ ")", out radarModeText);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarColorClicked, "Radar color IFF ("+ GameManager.radarColor + ")", out radarColorText);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnMaxHealthClicked, "Max health: "+ (GameManager.maxHealthIndex == -1 ? "Not set" : GameManager.maxHealths[GameManager.maxHealthIndex].ToString()), out maxHealthText);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnSetRespawnPointClicked, "Set respawn point", out textOut);
-            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
+            Text textOut = null;
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(1000, 150), new Vector2(140, 70), OnServerListClicked, "Server list", out textOut);
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(140, 70), OnDirectConnectionClicked, "Direct connection", out textOut);
+            InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnHostClicked, "Host", out textOut);
+            InitButton(new List<int>() { 1 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), new Vector2(140, 70), OnConnectClicked, "Join", out textOut);
+            InitButton(new List<int>() { 0, 1, 2, 3 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 150), new Vector2(140, 70), OnOptionsClicked, "Options", out textOut);
+            InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnCloseClicked, "Close\nserver", out textOut);
+            InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnDisconnectClicked, "Disconnect", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, 140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnBackClicked, "Back", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnReloadConfigClicked, "Reload config", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnTNHReviveClicked, "TNH revive", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnIFFClicked, "Current IFF: "+GM.CurrentPlayerBody.GetPlayerIFF(), out IFFText);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextIFFClicked, ">", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-155, 0, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousIFFClicked, "<", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnColorByIFFClicked, "Color by IFF ("+GameManager.colorByIFF+")", out colorByIFFText);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnNameplatesClicked, "Nameplates ("+ (GameManager.nameplateMode == 0 ? "All" : (GameManager.nameplateMode == 1 ? "Friendly Only" : "None"))+ ")", out nameplateText);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnHostStartHoldClicked, "Debug: Host start hold", out textOut);
+
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarModeClicked, "Radar mode ("+ (GameManager.radarMode == 0 ? "All" : (GameManager.radarMode == 1 ? "Friendly Only" : "None"))+ ")", out radarModeText);
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTNHRadarColorClicked, "Radar color IFF ("+ GameManager.radarColor + ")", out radarColorText);
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnMaxHealthClicked, "Max health: "+ (GameManager.maxHealthIndex == -1 ? "Not set" : GameManager.maxHealths[GameManager.maxHealthIndex].ToString()), out maxHealthText);
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnSetRespawnPointClicked, "Set respawn point", out textOut);
+            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
 
         private void InitButton(List<int> pageIndices, List<Vector3> positions, Vector2 sizeDelta, Vector2 boxSize, ButtonClick clickMethod, string defaultText, out Text textOut)
@@ -118,6 +120,28 @@ namespace H3MP.Scripts
             }
         }
 
+        private void OnServerListClicked(Text textRef)
+        {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+
+            if(ServerListController.instance == null)
+            {
+                Instantiate(Mod.serverListPrefab);
+                Vector3 forwardFlat = Vector3.ProjectOnPlane(GM.CurrentPlayerBody.Head.forward, Vector3.up);
+                ServerListController.instance.transform.position = GM.CurrentPlayerBody.Head.position + 2 * forwardFlat;
+                ServerListController.instance.transform.rotation = Quaternion.LookRotation(forwardFlat);
+            }
+            else
+            {
+                Destroy(ServerListController.instance.gameObject);
+            }
+        }
+
+        private void OnDirectConnectionClicked(Text textRef)
+        {
+            SetPage(1);
+        }
+
         private void OnHostClicked(Text textRef)
         {
             if (Mod.managerObject != null)
@@ -132,7 +156,7 @@ namespace H3MP.Scripts
             Mod.OnHostClicked();
 
             // Switch page
-            SetPage(1);
+            SetPage(2);
         }
 
         private void OnConnectClicked(Text textRef)
@@ -149,7 +173,7 @@ namespace H3MP.Scripts
             Mod.OnConnectClicked();
 
             // Switch page
-            SetPage(2);
+            SetPage(3);
         }
 
         private void OnReloadConfigClicked(Text textRef)
@@ -166,7 +190,7 @@ namespace H3MP.Scripts
             Server.Close();
 
             // Switch page
-            SetPage(0);
+            SetPage(1);
         }
 
         private void OnDisconnectClicked(Text textRef)
@@ -176,7 +200,7 @@ namespace H3MP.Scripts
             Client.singleton.Disconnect(true, 0);
 
             // Switch page
-            SetPage(0);
+            SetPage(1);
         }
 
         private void OnOptionsClicked(Text textRef)
@@ -184,7 +208,7 @@ namespace H3MP.Scripts
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
             // Switch page
-            SetPage(3);
+            SetPage(2);
         }
 
         private void OnBackClicked(Text textRef)
@@ -193,11 +217,11 @@ namespace H3MP.Scripts
 
             if (Mod.managerObject == null)
             {
-                SetPage(0);
+                SetPage(1);
             }
             else
             {
-                SetPage(ThreadManager.host ? 1 : 2);
+                SetPage(ThreadManager.host ? 2 : 3);
             }
         }
 

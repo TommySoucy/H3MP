@@ -63,6 +63,11 @@ namespace H3MP.Scripts
                     }
                 }
             }
+
+            if(field.text.text != "")
+            {
+                field.clearButton.SetActive(true);
+            }
         }
     }
 }

@@ -42,6 +42,8 @@
     <Compile Include="src\networking\indexServer\ISClient.cs" />
     <Compile Include="src\networking\indexServer\ISClientHandle.cs" />
     <Compile Include="src\networking\indexServer\ISClientSend.cs" />
+    <Compile Include="src\networking\indexServer\ISEntry.cs" />
+    <Compile Include="src\networking\indexServer\ISThreadManager.cs" />
     <Compile Include="src\scripts\Billboard.cs" />
     <Compile Include="src\networking\Client.cs" />
     <Compile Include="src\networking\ClientHandle.cs" />

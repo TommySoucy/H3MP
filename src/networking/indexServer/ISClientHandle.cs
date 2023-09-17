@@ -18,7 +18,7 @@ namespace H3MP.Networking
 
         public static void Ping(Packet packet)
         {
-            GameManager.ping = Convert.ToInt64((DateTime.Now.ToUniversalTime() - ThreadManager.epoch).TotalMilliseconds) - packet.ReadLong();
+            GameManager.ping = Convert.ToInt64((DateTime.Now.ToUniversalTime() - ISThreadManager.epoch).TotalMilliseconds) - packet.ReadLong();
         }
     }
 }
