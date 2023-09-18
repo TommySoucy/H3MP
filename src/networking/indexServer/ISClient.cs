@@ -2,6 +2,7 @@
 using System;
 using System.Net;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace H3MP.Networking
 {
@@ -35,6 +36,44 @@ namespace H3MP.Networking
 
         public static bool wantListed;
         public static bool listed;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnReceiveHostEntries event
+        /// </summary>
+        /// <param name="entries">Latest entries received from Index Server</param>
+        public delegate void OnReceiveHostEntriesDelegate(List<ISEntry> entries);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we receive host entries from Index Server
+        /// </summary>
+        public static event OnReceiveHostEntriesDelegate OnReceiveHostEntries;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnDisconnect event
+        /// </summary>
+        public delegate void OnDisconnectDelegate();
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we disconnect from Index Server
+        /// </summary>
+        public static event OnDisconnectDelegate OnDisconnect;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnListed event
+        /// </summary>
+        /// <param name="ID">The ID we were listed with on Index Server</param>
+        public delegate void OnListedDelegate(int ID);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we receive signal from Index Server that we have been listed as host
+        /// </summary>
+        public static event OnListedDelegate OnListed;
 
         public static void Connect()
         {
@@ -225,6 +264,8 @@ namespace H3MP.Networking
             {
                 ISClientHandle.Welcome,
                 ISClientHandle.Ping,
+                ISClientHandle.HostEntries,
+                ISClientHandle.Listed,
             };
 
             Mod.LogInfo("Initialized IS client", false);
@@ -289,6 +330,27 @@ namespace H3MP.Networking
                 {
                     // TODO: // Attempt reconnection to IS
                 }
+
+                if(OnDisconnect != null)
+                {
+                    OnDisconnect();
+                }
+            }
+        }
+
+        public static void OnReceiveHostEntriesInvoke(List<ISEntry> entries)
+        {
+            if(OnReceiveHostEntries != null)
+            {
+                OnReceiveHostEntries(entries);
+            }
+        }
+
+        public static void OnListedInvoke(int ID)
+        {
+            if(OnListed != null)
+            {
+                OnListed(ID);
             }
         }
     }

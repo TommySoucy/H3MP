@@ -1,8 +1,5 @@
-﻿using FistVR;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -55,6 +52,28 @@ namespace H3MP.Networking
                 for (int i = 0; i < executeCopiedOnMainThread.Count; i++)
                 {
                     executeCopiedOnMainThread[i]();
+                }
+            }
+
+            pingTimer -= Time.deltaTime;
+            if (pingTimer <= 0)
+            {
+                pingTimer = pingTime;
+                if (ISClient.gotWelcome)
+                {
+                    ISClientSend.Ping(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
+                }
+                else
+                {
+                    ++ISClient.pingAttemptCounter;
+                    if (ISClient.pingAttemptCounter >= 5)
+                    {
+                        Mod.LogWarning("Have not received IS welcome for " + ISClient.pingAttemptCounter + " seconds, timing out at 10");
+                    }
+                    if (ISClient.pingAttemptCounter >= 10)
+                    {
+                        ISClient.Disconnect(false, 4);
+                    }
                 }
             }
         }

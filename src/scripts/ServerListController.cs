@@ -41,6 +41,15 @@ namespace H3MP.Scripts
         public GameObject mainRefreshButton;
         public Text mainInfoText;
 
+        // Host
+        public Text hostServerNameLabel;
+        public Text hostServerName;
+        public Text hostPassword;
+        public Text hostLimitLabel;
+        public Text hostLimit;
+        public Text hostUsernameLabel;
+        public Text hostUsername;
+
         // Hosting
         public GameObject hostingLoadingAnimation;
         public GameObject hostingInfoTextObject;
@@ -77,6 +86,10 @@ namespace H3MP.Scripts
                 instance = this;
             }
             awakened = true;
+
+            ISClient.OnReceiveHostEntries += HostEntriesReceived;
+            ISClient.OnDisconnect += ISClientDisconnected;
+            ISClient.OnListed += Listed;
 
             bool init = false;
             if (!ISClient.isConnected)
@@ -125,6 +138,10 @@ namespace H3MP.Scripts
                 mainRefreshButton.SetActive(false);
                 mainInfoText.gameObject.SetActive(true);
                 mainInfoText.text = "Waiting for index server";
+
+                // Request latest host entries
+                TODO: cont from here//cant make this call until get welcome, need to rewrite this, can probably just check if got welcome and request for list and wait for it and when we doi n handle just call this again with entries
+                ISClientSend.RequestHostEntries();
             }
             else
             {
@@ -179,6 +196,85 @@ namespace H3MP.Scripts
             }
         }
 
+        private void OnHostClicked()
+        {
+            state = State.Host;
+            main.SetActive(false);
+            host.SetActive(true);
+
+            hostServerNameLabel.color = Color.white;
+            hostLimitLabel.color = Color.white;
+            hostUsernameLabel.color = Color.white;
+        }
+
+        private void OnHostConfirmClicked()
+        {
+            bool failed = false;
+            if(hostServerName.text == "")
+            {
+                failed = true;
+                hostServerNameLabel.color = Color.red;
+            }
+            if(hostLimit.text == "")
+            {
+                failed = true;
+                hostLimitLabel.color = Color.red;
+            }
+            if(hostUsername.text == "")
+            {
+                failed = true;
+                hostUsernameLabel.color = Color.red;
+            }
+            if (failed)
+            {
+                return;
+            }
+            SetHostingPage(true);
+            ISClientSend.List(hostServerName.text, int.Parse(hostLimit.text), hostPassword.text);
+            ISClient.wantListed = true;
+            ISClient.listed = false;
+        }
+
+        private void OnHostingCloseClicked()
+        {
+            if (ISClient.listed)
+            {
+                ISClientSend.Unlist();
+            }
+
+            hosting.SetActive(false);
+            main.SetActive(true);
+
+            SetMainPage(null);
+        }
+
+        private void HostEntriesReceived(List<ISEntry> entries)
+        {
+            if(state == State.Main)
+            {
+                SetMainPage(entries);
+            }
+        }
+
+        private void Listed(int ID)
+        {
+            if(state == State.HostingWaiting)
+            {
+                SetHostingPage(false);
+                ISClient.listed = true;
+            }
+            else
+            {
+                ISClient.wantListed = false;
+                ISClient.listed = false;
+            }
+        }
+
+        private void ISClientDisconnected()
+        {
+            // TODO: // Set listwanted and listed to false, set UI accordingly
+        }
+
         private void Join(int entryID)
         {
             // TODO: // Implement with NAT punch-through
@@ -207,7 +303,6 @@ namespace H3MP.Scripts
             if (waiting)
             {
                 state = State.HostingWaiting;
-                TODO: // Subscribe to event to update UI once we get confirm that we are listed
                 hostingLoadingAnimation.SetActive(true);
                 hostingInfoTextObject.SetActive(true);
                 hostingListParent.gameObject.SetActive(false);
@@ -320,6 +415,8 @@ namespace H3MP.Scripts
 
         private void OnDestroy()
         {
+            ISClient.OnReceiveHostEntries -= HostEntriesReceived;
+
             if (!awakened)
             {
                 return;

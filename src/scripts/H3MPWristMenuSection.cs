@@ -139,6 +139,7 @@ namespace H3MP.Scripts
 
         private void OnDirectConnectionClicked(Text textRef)
         {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
             SetPage(1);
         }
 
