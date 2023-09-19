@@ -1,4 +1,5 @@
-﻿using System;
+﻿using H3MP.Scripts;
+using System;
 using System.Collections.Generic;
 
 namespace H3MP.Networking
@@ -15,6 +16,11 @@ namespace H3MP.Networking
             ISClient.gotWelcome = true;
             ISClient.ID = ID;
             ISClientSend.WelcomeReceived();
+
+            if (ServerListController.instance != null && ServerListController.instance.state == ServerListController.State.MainWaiting)
+            {
+                ServerListController.instance.SetMainPage(null);
+            }
         }
 
         public static void Ping(Packet packet)

@@ -10,6 +10,8 @@ namespace H3MP.Networking
             ping = 1,
             requestHostEntries = 2,
             list = 3,
+            unlist = 4,
+            disconnect = 5,
         }
 
         public static void SendTCPData(Packet packet, bool custom = false)
@@ -58,6 +60,22 @@ namespace H3MP.Networking
                     packet.Write(true);
                     packet.Write(password.GetHashCode());
                 }
+                SendTCPData(packet);
+            }
+        }
+
+        public static void Unlist()
+        {
+            using (Packet packet = new Packet((int)Packets.unlist))
+            {
+                SendTCPData(packet);
+            }
+        }
+
+        public static void Disconnect()
+        {
+            using (Packet packet = new Packet((int)Packets.disconnect))
+            {
                 SendTCPData(packet);
             }
         }

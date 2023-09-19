@@ -10,8 +10,9 @@ namespace H3MP.Scripts
         public static ServerListController instance;
         private bool awakened;
 
-        private enum State
+        public enum State
         {
+            MainWaiting, // Waiting for host entires from IS
             Main, // Server list
             Host, // Host settings
             HostingWaiting, // Confirmed settings, waiting for IS to list us
@@ -20,7 +21,7 @@ namespace H3MP.Scripts
             ClientWaiting, // Confirmed settings, waiting for IS to confirm password is correct and that our connection was established
             Client, // Client to a host
         }
-        private State state = State.Main;
+        public State state = State.Main;
 
         // Pages
         public GameObject main;
@@ -61,6 +62,11 @@ namespace H3MP.Scripts
         public GameObject hostingPrevButton;
         public GameObject hostingNextButton;
 
+        // Host
+        public Text joinUsernameLabel;
+        public Text joinUsername;
+        public Text joinPassword;
+
         // Client
         public GameObject clientLoadingAnimation;
         public GameObject clientInfoTextObject;
@@ -90,6 +96,7 @@ namespace H3MP.Scripts
             ISClient.OnReceiveHostEntries += HostEntriesReceived;
             ISClient.OnDisconnect += ISClientDisconnected;
             ISClient.OnListed += Listed;
+            Mod.OnConnection += Connected;
 
             bool init = false;
             if (!ISClient.isConnected)
@@ -123,13 +130,12 @@ namespace H3MP.Scripts
             }
         }
 
-        private void SetMainPage(List<ISEntry> entries)
+        public void SetMainPage(List<ISEntry> entries)
         {
-            state = State.Main;
-
             if (entries == null)
             {
-                TODO: // Subscribe to event to update once connection to IS is complete
+                state = State.MainWaiting;
+
                 mainLoadingAnimation.SetActive(true);
                 mainListParent.gameObject.SetActive(false);
                 mainHostButton.SetActive(false);
@@ -139,12 +145,16 @@ namespace H3MP.Scripts
                 mainInfoText.gameObject.SetActive(true);
                 mainInfoText.text = "Waiting for index server";
 
-                // Request latest host entries
-                TODO: cont from here//cant make this call until get welcome, need to rewrite this, can probably just check if got welcome and request for list and wait for it and when we doi n handle just call this again with entries
-                ISClientSend.RequestHostEntries();
+                // Request latest host entries if possible
+                if (ISClient.gotWelcome)
+                {
+                    ISClientSend.RequestHostEntries();
+                }
+                // else, don't yet have welcome, we're going to call this again when we do
             }
             else
             {
+                state = State.Main;
                 TODO: // Subscribe to event to update is connection to IS drops
                 mainLoadingAnimation.SetActive(false);
                 mainListParent.gameObject.SetActive(true);
@@ -196,7 +206,7 @@ namespace H3MP.Scripts
             }
         }
 
-        private void OnHostClicked()
+        public void OnHostClicked()
         {
             state = State.Host;
             main.SetActive(false);
@@ -207,7 +217,7 @@ namespace H3MP.Scripts
             hostUsernameLabel.color = Color.white;
         }
 
-        private void OnHostConfirmClicked()
+        public void OnHostConfirmClicked()
         {
             bool failed = false;
             if(hostServerName.text == "")
@@ -229,17 +239,25 @@ namespace H3MP.Scripts
             {
                 return;
             }
+            host.SetActive(false);
+            hosting.SetActive(true);
             SetHostingPage(true);
             ISClientSend.List(hostServerName.text, int.Parse(hostLimit.text), hostPassword.text);
             ISClient.wantListed = true;
             ISClient.listed = false;
         }
 
-        private void OnHostingCloseClicked()
+        public void OnHostingCloseClicked()
         {
-            if (ISClient.listed)
+            if (ISClient.listed || ISClient.wantListed)
             {
+                ISClient.wantListed = false;
+                ISClient.listed = false;
                 ISClientSend.Unlist();
+            }
+            else // If were on hosting page but not listed and don't want, means we were hosting directly
+            {
+                Server.Close();
             }
 
             hosting.SetActive(false);
@@ -250,7 +268,7 @@ namespace H3MP.Scripts
 
         private void HostEntriesReceived(List<ISEntry> entries)
         {
-            if(state == State.Main)
+            if (state == State.Main || state == State.MainWaiting)
             {
                 SetMainPage(entries);
             }
@@ -268,11 +286,48 @@ namespace H3MP.Scripts
                 ISClient.wantListed = false;
                 ISClient.listed = false;
             }
+
+            if (!ISClient.wantListed)
+            {
+                ISClientSend.Unlist();
+            }
         }
 
         private void ISClientDisconnected()
         {
-            // TODO: // Set listwanted and listed to false, set UI accordingly
+            // If got disconnected while in other page than Hosting/Client, we for sure just want to go back to main page
+            // because connection to IS dropped unexpectedly, and we will attempt to reconnect
+            // If in hosting, if listed, just make sure we set the corersponding vars
+            // In hosting/client, we want to remain on that page
+
+            if(state == State.Hosting)
+            {
+                if (ISClient.listed)
+                {
+                    ISClient.wantListed = false;
+                    ISClient.listed = false;
+                }
+            }
+            else if(state != State.Client)
+            {
+                main.SetActive(true);
+                host.SetActive(false);
+                hosting.SetActive(false);
+                join.SetActive(false);
+                client.SetActive(false);
+                SetMainPage(null);
+            }
+        }
+
+        private void Connected()
+        {
+            // We, a client, have connected to a host
+            main.SetActive(false);
+            host.SetActive(false);
+            hosting.SetActive(false);
+            join.SetActive(false);
+            client.SetActive(true);
+            SetClientPage(false);
         }
 
         private void Join(int entryID)
@@ -413,9 +468,151 @@ namespace H3MP.Scripts
             // TODO
         }
 
+        public void OnExitClicked()
+        {
+            Destroy(gameObject);
+        }
+
+        public void OnMainPrevClicked()
+        {
+            mainListParent.GetChild(mainListPage + 1).gameObject.SetActive(false);
+
+            --mainListPage;
+
+            mainListParent.GetChild(mainListPage + 1).gameObject.SetActive(true);
+
+            if(mainListPage == 0)
+            {
+                mainPrevButton.SetActive(false);
+            }
+            mainNextButton.SetActive(true);
+        }
+
+        public void OnMainNextClicked()
+        {
+            mainListParent.GetChild(mainListPage + 1).gameObject.SetActive(false);
+
+            ++mainListPage;
+
+            mainListParent.GetChild(mainListPage + 1).gameObject.SetActive(true);
+
+            if (mainListPage == mainListParent.childCount - 2)
+            {
+                mainPrevButton.SetActive(false);
+            }
+            mainPrevButton.SetActive(true);
+        }
+
+        public void OnMainRefreshClicked()
+        {
+            ISClientSend.RequestHostEntries();
+        }
+
+        public void OnHostCancelClicked()
+        {
+            host.SetActive(false);
+            main.SetActive(true);
+            SetMainPage(null);
+        }
+
+        public void OnHostingPrevClicked()
+        {
+            hostingListParent.GetChild(hostingListPage + 1).gameObject.SetActive(false);
+
+            --hostingListPage;
+
+            hostingListParent.GetChild(hostingListPage + 1).gameObject.SetActive(true);
+
+            if (hostingListPage == 0)
+            {
+                hostingPrevButton.SetActive(false);
+            }
+            hostingPrevButton.SetActive(true);
+        }
+
+        public void OnHostingNextClicked()
+        {
+            hostingListParent.GetChild(hostingListPage + 1).gameObject.SetActive(false);
+
+            ++hostingListPage;
+
+            hostingListParent.GetChild(hostingListPage + 1).gameObject.SetActive(true);
+
+            if (hostingListPage == hostingListParent.childCount - 2)
+            {
+                hostingPrevButton.SetActive(false);
+            }
+            hostingPrevButton.SetActive(true);
+        }
+
+        public void OnJoinConfirmClicked()
+        {
+            bool failed = false;
+            if (joinUsername.text == "")
+            {
+                failed = true;
+                joinUsernameLabel.color = Color.red;
+            }
+            if (failed)
+            {
+                return;
+            }
+            join.SetActive(false);
+            client.SetActive(true);
+            SetClientPage(true);
+        }
+
+        public void OnJoinCancelClicked()
+        {
+            join.SetActive(false);
+            main.SetActive(true);
+            SetMainPage(null);
+        }
+
+        public void OnClientDisconnectClicked()
+        {
+            Client.singleton.Disconnect(true, 0);
+            client.SetActive(false);
+            main.SetActive(true);
+            SetMainPage(null);
+        }
+
+        public void OnClientPrevClicked()
+        {
+            clientListParent.GetChild(clientListPage + 1).gameObject.SetActive(false);
+
+            --clientListPage;
+
+            clientListParent.GetChild(clientListPage + 1).gameObject.SetActive(true);
+
+            if (clientListPage == 0)
+            {
+                clientPrevButton.SetActive(false);
+            }
+            clientPrevButton.SetActive(true);
+        }
+
+        public void OnClientNextClicked()
+        {
+            clientListParent.GetChild(clientListPage + 1).gameObject.SetActive(false);
+
+            ++clientListPage;
+
+            clientListParent.GetChild(clientListPage + 1).gameObject.SetActive(true);
+
+            if (clientListPage == clientListParent.childCount - 2)
+            {
+                clientPrevButton.SetActive(false);
+            }
+            clientPrevButton.SetActive(true);
+        }
+
         private void OnDestroy()
         {
             ISClient.OnReceiveHostEntries -= HostEntriesReceived;
+            ISClient.OnDisconnect -= ISClientDisconnected;
+            ISClient.OnListed -= Listed;
+            Mod.OnConnection -= Connected;
 
             if (!awakened)
             {

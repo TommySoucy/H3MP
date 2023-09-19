@@ -77,7 +77,6 @@ namespace H3MP.Networking
 
         public static void Connect()
         {
-
             if (managerObject == null)
             {
                 managerObject = new GameObject("ISManagerObject");
@@ -133,7 +132,7 @@ namespace H3MP.Networking
 
         public static void SendData(Packet packet, bool overrideWelcome = false)
         {
-            if (Client.singleton.gotWelcome || overrideWelcome)
+            if (ISClient.gotWelcome || overrideWelcome)
             {
                 try
                 {
@@ -278,7 +277,6 @@ namespace H3MP.Networking
                 isConnected = false;
 
                 bool reconnect = false;
-                GameManager.reconnectionInstance = -1;
                 switch (code)
                 {
                     case -1:
@@ -289,12 +287,10 @@ namespace H3MP.Networking
                         break;
                     case 1:
                         Mod.LogWarning("Connection to IS lost, end of stream. Attempting to reconnect...");
-                        GameManager.reconnectionInstance = GameManager.instance;
                         reconnect = true;
                         break;
                     case 2:
                         Mod.LogWarning("Connection to IS lost, TCP forced. Attempting to reconnect...");
-                        GameManager.reconnectionInstance = GameManager.instance;
                         reconnect = true;
                         break;
                     case 4:
@@ -304,11 +300,8 @@ namespace H3MP.Networking
 
                 if (sendToServer)
                 {
-                    ClientSend.ClientDisconnect();
+                    ISClientSend.Disconnect();
                 }
-
-                // On our side take physical control of everything
-                GameManager.TakeAllPhysicalControl(true);
 
                 if (socket != null)
                 {
@@ -340,7 +333,7 @@ namespace H3MP.Networking
 
         public static void OnReceiveHostEntriesInvoke(List<ISEntry> entries)
         {
-            if(OnReceiveHostEntries != null)
+            if (OnReceiveHostEntries != null)
             {
                 OnReceiveHostEntries(entries);
             }
