@@ -242,6 +242,19 @@ namespace H3MP
         /// </summary>
         public static event OnPlayerBodyInitDelegate OnPlayerBodyInit;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnPlayerAdded event
+        /// </summary>
+        /// <param name="player">The PlayerManager of the player that just got added</param>
+        public delegate void OnPlayerAddedDelegate(PlayerManager player);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when a new player gets added to Players dictionary
+        /// </summary>
+        public static event OnPlayerAddedDelegate OnPlayerAdded;
+
         private void Awake()
         {
             singleton = this;
@@ -385,6 +398,11 @@ namespace H3MP
                     // This is a spawn player order from the server since we just joined it, we are not first in the scene
                     GameManager.firstPlayerInSceneInstance = false;
                 }
+            }
+
+            if(OnPlayerAdded != null)
+            {
+                OnPlayerAdded(playerManager);
             }
         }
 

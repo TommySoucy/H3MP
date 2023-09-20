@@ -254,6 +254,19 @@ namespace H3MP
         /// </summary>
         public static event OnConnectionDelegate OnConnection;
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnPlayerRemoved event
+        /// </summary>
+        /// <param name="player">The PlayerManager of the player that was removed</param>
+        public delegate void OnPlayerRemovedDelegate(PlayerManager player);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when a player is removed from GameManager.Players dictionary
+        /// </summary>
+        public static event OnPlayerRemovedDelegate OnPlayerRemoved;
+
         // Debug
         public static bool waitingForDebugCode;
         public static string debugCode;
@@ -2627,6 +2640,11 @@ namespace H3MP
 
             GameObject.Destroy(GameManager.players[playerID].gameObject);
             GameManager.players.Remove(playerID);
+
+            if(OnPlayerRemoved != null)
+            {
+                OnPlayerRemoved(player);
+            }
         }
 
         public static void RemovePlayerFromSpecificLists(PlayerManager player)

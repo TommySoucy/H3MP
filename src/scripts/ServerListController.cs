@@ -81,7 +81,6 @@ namespace H3MP.Scripts
 
         private void Awake()
         {
-            TODO: // Subscribe to event to know when we host/join so we can set it to corresponding page
             if(instance != null)
             {
                 Destroy(gameObject);
@@ -97,6 +96,8 @@ namespace H3MP.Scripts
             ISClient.OnDisconnect += ISClientDisconnected;
             ISClient.OnListed += Listed;
             Mod.OnConnection += Connected;
+            GameManager.OnPlayerAdded += PlayerAdded;
+            Mod.OnPlayerRemoved += PlayerRemoved;
 
             bool init = false;
             if (!ISClient.isConnected)
@@ -155,7 +156,7 @@ namespace H3MP.Scripts
             else
             {
                 state = State.Main;
-                TODO: // Subscribe to event to update is connection to IS drops
+
                 mainLoadingAnimation.SetActive(false);
                 mainListParent.gameObject.SetActive(true);
                 mainHostButton.SetActive(true);
@@ -180,7 +181,6 @@ namespace H3MP.Scripts
                     Destroy(otherChild.gameObject);
                 }
 
-                TODO1: // Add entry, and page if necessary, when new server is listed
                 // Build new pages
                 Transform currentListPage = Instantiate(mainPagePrefab, mainListParent).transform;
                 mainListPage = 0;
@@ -321,13 +321,21 @@ namespace H3MP.Scripts
 
         private void Connected()
         {
-            // We, a client, have connected to a host
             main.SetActive(false);
             host.SetActive(false);
-            hosting.SetActive(false);
             join.SetActive(false);
-            client.SetActive(true);
-            SetClientPage(false);
+            if (ThreadManager.host)
+            {
+                hosting.SetActive(true);
+                client.SetActive(false);
+                SetHostingPage(false);
+            }
+            else // Client
+            {
+                hosting.SetActive(false);
+                client.SetActive(true);
+                SetClientPage(false);
+            }
         }
 
         private void Join(int entryID)
@@ -370,8 +378,6 @@ namespace H3MP.Scripts
                 hostingInfoTextObject.SetActive(false);
                 hostingListParent.gameObject.SetActive(true);
 
-                hostingListParent.GetChild(0).GetComponent<Text>().text = Mod.config["username"].ToString() + " (Host)";
-
                 // Destroy any existent pages
                 while (hostingListParent.childCount > 1)
                 {
@@ -380,7 +386,6 @@ namespace H3MP.Scripts
                     Destroy(otherChild.gameObject);
                 }
 
-                TODO: // Add entry, and page if necessary, when new player connects
                 // Build new pages
                 Transform currentListPage = Instantiate(hostingPagePrefab, hostingListParent).transform;
                 GameObject playerEntry = Instantiate(hostingEntryPrefab, currentListPage);
@@ -409,6 +414,80 @@ namespace H3MP.Scripts
             }
         }
 
+        private void PlayerAdded(PlayerManager player)
+        {
+            if(state == State.Client)
+            {
+                Transform currentListPage = clientListParent.GetChild(clientListParent.childCount - 1);
+                if(currentListPage.childCount == 8)
+                {
+                    currentListPage = Instantiate(clientPagePrefab, clientListParent).transform;
+                    currentListPage.gameObject.SetActive(true);
+                    if (clientListPage == clientListParent.childCount - 2)
+                    {
+                        clientNextButton.SetActive(true);
+                    }
+                }
+                GameObject playerEntry = Instantiate(clientEntryPrefab, currentListPage);
+                playerEntry.SetActive(true);
+                playerEntry.transform.GetChild(0).GetComponent<Text>().text = player.username;
+            }
+            else if(state == State.Hosting)
+            {
+                Transform currentListPage = hostingListParent.GetChild(hostingListParent.childCount - 1);
+                if (currentListPage.childCount == 8)
+                {
+                    currentListPage = Instantiate(hostingPagePrefab, hostingListParent).transform;
+                    currentListPage.gameObject.SetActive(true);
+                    if (hostingListPage == hostingListParent.childCount - 2)
+                    {
+                        hostingNextButton.SetActive(true);
+                    }
+                }
+                GameObject playerEntry = Instantiate(hostingEntryPrefab, currentListPage);
+                playerEntry.SetActive(true);
+                playerEntry.transform.GetChild(0).GetComponent<Text>().text = player.username;
+                GameObject kickButtonObject = playerEntry.transform.GetChild(1).gameObject;
+                kickButtonObject.SetActive(true);
+                int playerID = player.ID;
+                kickButtonObject.GetComponent<Button>().onClick.AddListener(() => { KickPlayer(playerID); });
+            }
+        }
+
+        private void PlayerRemoved(PlayerManager player)
+        {
+            if(state == State.Client)
+            {
+                int page = clientListPage;
+                SetClientPage(false);
+                if(clientListParent.childCount - 1 <= page)
+                {
+                    page = clientListParent.childCount - 2;
+                }
+
+                clientListPage = page;
+                clientListParent.GetChild(1).gameObject.SetActive(false);
+                clientListParent.GetChild(clientListPage + 1).gameObject.SetActive(true);
+                clientPrevButton.SetActive(clientListPage > 0);
+                clientNextButton.SetActive(clientListPage < clientListParent.childCount - 2);
+            }
+            else if(state == State.Hosting)
+            {
+                int page = hostingListPage;
+                SetHostingPage(false);
+                if (hostingListParent.childCount - 1 <= page)
+                {
+                    page = hostingListParent.childCount - 2;
+                }
+
+                hostingListPage = page;
+                hostingListParent.GetChild(1).gameObject.SetActive(false);
+                hostingListParent.GetChild(hostingListPage + 1).gameObject.SetActive(true);
+                hostingPrevButton.SetActive(hostingListPage > 0);
+                hostingNextButton.SetActive(hostingListPage < hostingListParent.childCount - 2);
+            }
+        }
+
         private void SetClientPage(bool waiting)
         {
             if (waiting)
@@ -426,8 +505,6 @@ namespace H3MP.Scripts
                 clientInfoTextObject.SetActive(false);
                 clientListParent.gameObject.SetActive(true);
 
-                clientListParent.GetChild(0).GetComponent<Text>().text = Mod.config["username"].ToString() + " (Host)";
-
                 // Destroy any existent pages
                 while (clientListParent.childCount > 1)
                 {
@@ -436,7 +513,6 @@ namespace H3MP.Scripts
                     Destroy(otherChild.gameObject);
                 }
 
-                TODO: // Add entry, and page if necessary, when new player connects
                 // Build new pages
                 Transform currentListPage = Instantiate(clientPagePrefab, clientListParent).transform;
                 clientListPage = 0;
@@ -465,7 +541,10 @@ namespace H3MP.Scripts
 
         private void KickPlayer(int ID)
         {
-            // TODO
+            if (ThreadManager.host)
+            {
+                Server.clients[ID].Disconnect(2);
+            }
         }
 
         public void OnExitClicked()
@@ -613,6 +692,8 @@ namespace H3MP.Scripts
             ISClient.OnDisconnect -= ISClientDisconnected;
             ISClient.OnListed -= Listed;
             Mod.OnConnection -= Connected;
+            GameManager.OnPlayerAdded -= PlayerAdded;
+            Mod.OnPlayerRemoved -= PlayerRemoved;
 
             if (!awakened)
             {
