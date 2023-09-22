@@ -12,6 +12,7 @@ namespace H3MP.Networking
             list = 3,
             unlist = 4,
             disconnect = 5,
+            join = 6,
         }
 
         public static void SendTCPData(Packet packet, bool custom = false)
@@ -58,7 +59,7 @@ namespace H3MP.Networking
                 else
                 {
                     packet.Write(true);
-                    packet.Write(password.GetHashCode());
+                    packet.Write(password.GetDeterministicHashCode());
                 }
                 SendTCPData(packet);
             }
@@ -76,6 +77,16 @@ namespace H3MP.Networking
         {
             using (Packet packet = new Packet((int)Packets.disconnect))
             {
+                SendTCPData(packet);
+            }
+        }
+
+        public static void Join(int ID, int passwordHash)
+        {
+            using (Packet packet = new Packet((int)Packets.join))
+            {
+                packet.Write(ID);
+                packet.Write(passwordHash);
                 SendTCPData(packet);
             }
         }

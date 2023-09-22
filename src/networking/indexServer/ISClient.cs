@@ -265,6 +265,7 @@ namespace H3MP.Networking
                 ISClientHandle.Ping,
                 ISClientHandle.HostEntries,
                 ISClientHandle.Listed,
+                ISClientHandle.Connect,
             };
 
             Mod.LogInfo("Initialized IS client", false);

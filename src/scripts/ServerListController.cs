@@ -62,10 +62,12 @@ namespace H3MP.Scripts
         public GameObject hostingPrevButton;
         public GameObject hostingNextButton;
 
-        // Host
+        // Join
         public Text joinUsernameLabel;
         public Text joinUsername;
         public Text joinPassword;
+        public int joiningEntry;
+        public bool gotEndPoint;
 
         // Client
         public GameObject clientLoadingAnimation;
@@ -340,7 +342,10 @@ namespace H3MP.Scripts
 
         private void Join(int entryID)
         {
-            // TODO: // Implement with NAT punch-through
+            joiningEntry = entryID;
+            gotEndPoint = false;
+            main.SetActive(false);
+            join.SetActive(true);
         }
 
         private void ConnectedInit()
@@ -488,7 +493,7 @@ namespace H3MP.Scripts
             }
         }
 
-        private void SetClientPage(bool waiting)
+        public void SetClientPage(bool waiting)
         {
             if (waiting)
             {
@@ -497,6 +502,23 @@ namespace H3MP.Scripts
                 clientLoadingAnimation.SetActive(true);
                 clientInfoTextObject.SetActive(true);
                 clientListParent.gameObject.SetActive(false);
+
+                if(joiningEntry == -1)
+                {
+                    clientInfoText.color = Color.red;
+                    clientInfoText.text = "Error joining server";
+                }
+                else if (gotEndPoint)
+                {
+                    clientInfoText.color = Color.white;
+                    clientInfoText.text = "Attempting to join server";
+                }
+                else
+                {
+                    clientInfoText.color = Color.white;
+                    clientInfoText.text = "Awaiting server confirm";
+                    ISClientSend.Join(joiningEntry, joinPassword.text.GetDeterministicHashCode());
+                }
             }
             else
             {

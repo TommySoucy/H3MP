@@ -170,7 +170,7 @@ namespace H3MP.Patches
                     s += (oc == OpCodes.Call || oc == OpCodes.Callvirt ? "c" : oc.ToString()) + (instruction.operand == null ? "null operand" : instruction.operand.ToString());
                 }
             }
-            int hash = s.GetHashCode();
+            int hash = s.GetDeterministicHashCode();
 
             // Verify hash
             if (hashes.TryGetValue(identifier, out int originalHash))
@@ -212,7 +212,7 @@ namespace H3MP.Patches
             int hash = 0;
             foreach (ParameterInfo t in paramArr)
             {
-                hash += t.ParameterType.Name.GetHashCode();
+                hash += t.ParameterType.Name.GetDeterministicHashCode();
             }
             return hash;
         }

@@ -1,6 +1,10 @@
 ﻿using FistVR;
+using H3MP.Scripts;
+using RootMotion;
 using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Threading;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -15,8 +19,8 @@ namespace H3MP.Networking
 
 
         public static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        private static readonly float pingTime = 1;
-        private static float pingTimer = pingTime;
+        public static readonly float pingTime = 1;
+        public static float pingTimer = pingTime;
 
         private void Update()
         {
@@ -78,24 +82,73 @@ namespace H3MP.Networking
 
             if (!host)
             {
-                pingTimer -= Time.deltaTime;
-                if (pingTimer <= 0)
+                if (Client.punchThrough)
                 {
-                    pingTimer = pingTime;
-                    if (Client.singleton.gotWelcome)
+                    pingTimer -= Time.deltaTime;
+                    if (pingTimer <= 0)
                     {
-                        ClientSend.Ping(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
-                    }
-                    else
-                    {
-                        ++Client.singleton.pingAttemptCounter;
-                        if(Client.singleton.pingAttemptCounter >= 10)
+                        pingTimer = pingTime;
+
+                        // Waiting means we didn't get a call to the callback, meaning no connection. Try again
+                        if (Client.punchThroughWaiting)
                         {
-                            Mod.LogWarning("Have not received server welcome for " + Client.singleton.pingAttemptCounter + " seconds, timing out at 30");
+                            if (Client.punchThroughAttemptCounter < 10)
+                            {
+                                Mod.LogInfo("Client punchthrough connection attempt " + Client.punchThroughAttemptCounter + ", timing out at 10", false);
+                                ++Client.punchThroughAttemptCounter;
+                                Client.singleton.tcp.socket.EndConnect(Client.connectResult);
+                                Client.connectResult = Client.singleton.tcp.socket.BeginConnect(Client.singleton.IP, Client.singleton.port, Client.singleton.tcp.ConnectCallback, Client.singleton.tcp.socket);
+                            }
+                            else
+                            {
+                                Client.singleton.Disconnect(false, 4);
+                                if(ServerListController.instance != null)
+                                {
+                                    ServerListController.instance.gotEndPoint = false;
+                                    ServerListController.instance.joiningEntry = -1;
+                                    ServerListController.instance.SetClientPage(true);
+                                }
+                            }
                         }
-                        if(Client.singleton.pingAttemptCounter >= 30)
+                        else // Not waiting for punchthrough connection anymore
                         {
-                            Client.singleton.Disconnect(false, 4);
+                            Client.punchThrough = false;
+                            if (!Client.singleton.tcp.socket.Connected)
+                            {
+                                // Connection unsuccessful
+                                Client.singleton.Disconnect(false, 4);
+                                if (ServerListController.instance != null)
+                                {
+                                    ServerListController.instance.gotEndPoint = false;
+                                    ServerListController.instance.joiningEntry = -1;
+                                    ServerListController.instance.SetClientPage(true);
+                                }
+                            }
+                            // else, connection successful, updating serverlist will be handled by connection event
+                        }
+                    }
+                }
+                else
+                {
+                    pingTimer -= Time.deltaTime;
+                    if (pingTimer <= 0)
+                    {
+                        pingTimer = pingTime;
+                        if (Client.singleton.gotWelcome)
+                        {
+                            ClientSend.Ping(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
+                        }
+                        else
+                        {
+                            ++Client.singleton.pingAttemptCounter;
+                            if (Client.singleton.pingAttemptCounter >= 10)
+                            {
+                                Mod.LogWarning("Have not received server welcome for " + Client.singleton.pingAttemptCounter + " seconds, timing out at 30");
+                            }
+                            if (Client.singleton.pingAttemptCounter >= 30)
+                            {
+                                Client.singleton.Disconnect(false, 4);
+                            }
                         }
                     }
                 }

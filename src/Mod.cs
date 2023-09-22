@@ -388,7 +388,7 @@ namespace H3MP
                                 break;
                             case 1: // Connect
                                 Mod.LogInfo("\tDebug: Connect");
-                                OnConnectClicked();
+                                OnConnectClicked(null);
                                 break;
                             case 2: // Load config
                                 Mod.LogInfo("\tDebug: Load config");
@@ -1423,7 +1423,7 @@ namespace H3MP
             //mainStatusText.color = Color.white;
         }
 
-        public static void OnConnectClicked()
+        public static void OnConnectClicked(IPEndPoint endPointOverride)
         {
             if (managerObject != null)
             {
@@ -1439,8 +1439,16 @@ namespace H3MP
             CreateManagerObject();
 
             Client client = managerObject.AddComponent<Client>();
-            client.IP = config["IP"].ToString();
-            client.port = (ushort)config["Port"];
+            if(endPointOverride == null)
+            {
+                client.IP = config["IP"].ToString();
+                client.port = (ushort)config["Port"];
+            }
+            else
+            {
+                client.IP = endPointOverride.Address.ToString();
+                client.port = (ushort)endPointOverride.Port;
+            }
 
             client.ConnectToServer();
 
