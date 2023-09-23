@@ -5,6 +5,7 @@ using System.Net;
 using System.Collections.Generic;
 using H3MP.Tracking;
 using FistVR;
+using System.IO;
 
 namespace H3MP.Networking
 {
@@ -32,6 +33,8 @@ namespace H3MP.Networking
 
         public static TcpListener tcpListener;
         public static UdpClient udpListener;
+
+        public static List<ServerClient> PTClients = new List<ServerClient>();
 
         /// <summary>
         /// CUSTOMIZATION
@@ -128,7 +131,7 @@ namespace H3MP.Networking
 
             for (int i = 1; i <= maxClientCount; ++i)
             {
-                if (clients[i].tcp.socket == null)
+                if (clients[i].tcp.socket == null && !clients[i].attemptingPunchThrough)
                 {
                     clients[i].tcp.Connect(client);
                     clients[i].connected = true;

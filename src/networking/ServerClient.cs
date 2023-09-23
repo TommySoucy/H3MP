@@ -6,6 +6,7 @@ using FistVR;
 using System.Collections.Generic;
 using H3MP.Patches;
 using H3MP.Tracking;
+using System.Security.Policy;
 
 namespace H3MP.Networking
 {
@@ -18,7 +19,16 @@ namespace H3MP.Networking
         public TCP tcp;
         public UDP udp;
         public bool connected;
+        public bool attemptingPunchThrough;
         public long ping;
+
+        public IPEndPoint PTEndPoint;
+        public bool punchThrough;
+        public bool punchThroughWaiting;
+        public TcpClient PTTCP;
+        public byte[] PTReceiveBuffer;
+        public IAsyncResult PTConnectionResult;
+        public int punchThroughAttemptCounter;
 
         /// <summary>
         /// CUSTOMIZATION
@@ -50,6 +60,18 @@ namespace H3MP.Networking
             this.ID = ID;
             tcp = new TCP(ID);
             udp = new UDP(ID);
+        }
+
+        public void PTConnectCallback(IAsyncResult result)
+        {
+            punchThroughWaiting = false;
+            PTTCP.EndConnect(result);
+
+            if (!PTTCP.Connected)
+            {
+                return;
+            }
+            // else, this is impossible, the client will not listen for a connection
         }
 
         public class TCP

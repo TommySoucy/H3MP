@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 
 namespace H3MP.Networking
 {
@@ -33,7 +34,7 @@ namespace H3MP.Networking
         {
             List<ISEntry> entries = new List<ISEntry>();
             int count = packet.ReadInt();
-            for(int i =0; i < count; ++i)
+            for (int i = 0; i < count; ++i) 
             {
                 ISEntry newEntry = new ISEntry();
                 newEntry.ID = packet.ReadInt();
@@ -60,13 +61,13 @@ namespace H3MP.Networking
                 bool gotEndPoint = packet.ReadBool();
                 if (gotEndPoint)
                 {
-                    if(ServerListController.instance.state == ServerListController.State.ClientWaiting)
-                    {
-                        ServerListController.instance.gotEndPoint = true;
-                        int byteCount = packet.ReadInt();
-                        IPAddress address = new IPAddress(packet.ReadBytes(byteCount));
-                        IPEndPoint endPoint = new IPEndPoint(address, packet.ReadInt());
+                    ServerListController.instance.gotEndPoint = true;
+                    int byteCount = packet.ReadInt();
+                    IPAddress address = new IPAddress(packet.ReadBytes(byteCount));
+                    IPEndPoint endPoint = new IPEndPoint(address, packet.ReadInt());
 
+                    if (ServerListController.instance.state == ServerListController.State.ClientWaiting)
+                    {
                         ServerListController.instance.SetClientPage(true);
                         Client.punchThrough = true;
                         Mod.OnConnectClicked(endPoint);
@@ -74,7 +75,39 @@ namespace H3MP.Networking
                     }
                     else if (Mod.managerObject != null && ThreadManager.host)
                     {
-                        TODO: // Initiate punchthrough attempt
+                        int clientID = -1;
+                        for (int i = 1; i <= Server.maxClientCount; ++i)
+                        {
+                            if (Server.clients[i].tcp.socket == null && !Server.clients[i].attemptingPunchThrough)
+                            {
+                                Server.clients[i].attemptingPunchThrough = true;
+                                break;
+                            }
+                        }
+
+                        if(clientID == -1)
+                        {
+                            Mod.LogError("Received PT connect order from IS but we are at player limit");
+                            return;
+                        }
+                        ServerClient currentClient = Server.clients[clientID];
+                        currentClient.PTEndPoint = endPoint;
+
+                        currentClient.punchThrough = true;
+
+                        currentClient.PTTCP = new TcpClient
+                        {
+                            ReceiveBufferSize = 4096,
+                            SendBufferSize = 4096
+                        };
+
+                        currentClient.PTReceiveBuffer = new byte[4096];
+                        Mod.LogInfo("Attempting connection to " + address + ":" + endPoint.Port, false);
+                        currentClient.PTConnectionResult = currentClient.PTTCP.BeginConnect(address.ToString(), endPoint.Port, currentClient.PTConnectCallback, currentClient.PTTCP);
+                        currentClient.punchThroughWaiting = true;
+                        currentClient.punchThroughAttemptCounter = 0;
+
+                        Server.PTClients.Add(currentClient);
                     }
                 }
                 else
@@ -91,11 +124,54 @@ namespace H3MP.Networking
                 {
                     if (Mod.managerObject != null && ThreadManager.host)
                     {
-                        TODO: // Initiate punchthrough attempt
+                        ServerListController.instance.gotEndPoint = true;
+                        int byteCount = packet.ReadInt();
+                        IPAddress address = new IPAddress(packet.ReadBytes(byteCount));
+                        IPEndPoint endPoint = new IPEndPoint(address, packet.ReadInt());
+
+                        int clientID = -1;
+                        for (int i = 1; i <= Server.maxClientCount; ++i)
+                        {
+                            if (Server.clients[i].tcp.socket == null && !Server.clients[i].attemptingPunchThrough)
+                            {
+                                Server.clients[i].attemptingPunchThrough = true;
+                                break;
+                            }
+                        }
+
+                        if (clientID == -1)
+                        {
+                            Mod.LogError("Received PT connect order from IS but we are at player limit");
+                            return;
+                        }
+                        ServerClient currentClient = Server.clients[clientID];
+                        currentClient.PTEndPoint = endPoint;
+
+                        currentClient.punchThrough = true;
+
+                        currentClient.PTTCP = new TcpClient
+                        {
+                            ReceiveBufferSize = 4096,
+                            SendBufferSize = 4096
+                        };
+
+                        currentClient.PTReceiveBuffer = new byte[4096];
+                        Mod.LogInfo("Attempting connection to " + address + ":" + endPoint.Port, false);
+                        currentClient.PTConnectionResult = currentClient.PTTCP.BeginConnect(address.ToString(), endPoint.Port, currentClient.PTConnectCallback, currentClient.PTTCP);
+                        currentClient.punchThroughWaiting = true;
+                        currentClient.punchThroughAttemptCounter = 0;
+
+                        Server.PTClients.Add(currentClient);
                     }
                 }
             }
+        }
 
+        public static void ConfirmConnection(Packet packet)
+        {
+            int forClient = packet.ReadInt();
+
+            ISClientSend.ConfirmConnection(Mod.managerObject != null && ThreadManager.host && ISClient.isConnected && ISClient.listed && GameManager.players.Count < Server.maxClientCount, forClient);
         }
     }
 }

@@ -5,9 +5,7 @@ namespace H3MP.Scripts
 {
     public class Keyboard : MonoBehaviour
     {
-        #pragma warning disable 0169
         private bool shifted;
-        #pragma warning restore 0169
         public Text[] letterTexts;
 
         public TextField field;
@@ -61,6 +59,13 @@ namespace H3MP.Scripts
                             letterTexts[i].text = letterTexts[i].text.ToLower();
                         }
                     }
+                }
+            }
+            else if(key.Equals("<"))
+            {
+                if (field.text.text != "")
+                {
+                    field.text.text = field.text.text.Substring(0, field.text.text.Length - 1);
                 }
             }
 

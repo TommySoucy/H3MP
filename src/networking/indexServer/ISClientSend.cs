@@ -13,6 +13,8 @@ namespace H3MP.Networking
             unlist = 4,
             disconnect = 5,
             join = 6,
+            playerCount = 7,
+            confirmConnection = 8,
         }
 
         public static void SendTCPData(Packet packet, bool custom = false)
@@ -87,6 +89,25 @@ namespace H3MP.Networking
             {
                 packet.Write(ID);
                 packet.Write(passwordHash);
+                SendTCPData(packet);
+            }
+        }
+
+        public static void PlayerCount(int count)
+        {
+            using (Packet packet = new Packet((int)Packets.playerCount))
+            {
+                packet.Write(count);
+                SendTCPData(packet);
+            }
+        }
+
+        public static void ConfirmConnection(bool valid, int forClient)
+        {
+            using (Packet packet = new Packet((int)Packets.confirmConnection))
+            {
+                packet.Write(valid);
+                packet.Write(forClient);
                 SendTCPData(packet);
             }
         }

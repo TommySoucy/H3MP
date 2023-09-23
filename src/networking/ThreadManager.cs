@@ -3,6 +3,7 @@ using H3MP.Scripts;
 using RootMotion;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
@@ -104,6 +105,7 @@ namespace H3MP.Networking
                                 Client.singleton.Disconnect(false, 4);
                                 if(ServerListController.instance != null)
                                 {
+                                    Mod.LogInfo("Client punchthrough connection timed out", false);
                                     ServerListController.instance.gotEndPoint = false;
                                     ServerListController.instance.joiningEntry = -1;
                                     ServerListController.instance.SetClientPage(true);
@@ -148,6 +150,65 @@ namespace H3MP.Networking
                             if (Client.singleton.pingAttemptCounter >= 30)
                             {
                                 Client.singleton.Disconnect(false, 4);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (Server.PTClients.Count > 0)
+                {
+                    pingTimer -= Time.deltaTime;
+                    if (pingTimer <= 0)
+                    {
+                        pingTimer = pingTime;
+
+                        for (int i = Server.PTClients.Count - 1; i >= 0; --i)
+                        {
+                            // Client TCP connected, meaning client was able to connect through punch through, stop attempts
+                            if(Server.PTClients[i].tcp.socket != null)
+                            {
+                                Mod.LogInfo("Client " + Server.PTClients[i].ID + " connected through punch-through", false);
+                                if (Server.PTClients[i].punchThroughWaiting)
+                                {
+                                    Server.PTClients[i].PTTCP.EndConnect(Server.PTClients[i].PTConnectionResult);
+                                }
+                                Server.PTClients[i].punchThrough = false;
+                                Server.PTClients[i].punchThroughWaiting = false;
+                                Server.PTClients[i].attemptingPunchThrough = false;
+
+                                Server.PTClients.RemoveAt(i);
+
+                                continue;
+                            }
+
+                            if (Server.PTClients[i].punchThroughAttemptCounter < 10)
+                            {
+                                Mod.LogInfo("Client "+ Server.PTClients[i].ID + " punch-through connection attempt " + Server.PTClients[i].punchThroughAttemptCounter + ", timing out at 10", false);
+                                ++Server.PTClients[i].punchThroughAttemptCounter;
+                                if (Server.PTClients[i].punchThroughWaiting)
+                                {
+                                    Server.PTClients[i].PTTCP.EndConnect(Server.PTClients[i].PTConnectionResult);
+                                }
+                                else
+                                {
+                                    Server.PTClients[i].punchThroughWaiting = true;
+                                }
+                                Server.PTClients[i].PTConnectionResult = Server.PTClients[i].PTTCP.BeginConnect(Server.PTClients[i].PTEndPoint.Address.ToString(), Server.PTClients[i].PTEndPoint.Port, Server.PTClients[i].PTConnectCallback, Server.PTClients[i].PTTCP);
+                            }
+                            else
+                            {
+                                Mod.LogInfo("Client " + Server.PTClients[i].ID + " punch-through connection timed out", false);
+                                if (Server.PTClients[i].punchThroughWaiting)
+                                {
+                                    Server.PTClients[i].PTTCP.EndConnect(Server.PTClients[i].PTConnectionResult);
+                                }
+                                Server.PTClients[i].punchThrough = false;
+                                Server.PTClients[i].punchThroughWaiting = false;
+                                Server.PTClients[i].attemptingPunchThrough = false;
+
+                                Server.PTClients.RemoveAt(i);
                             }
                         }
                     }

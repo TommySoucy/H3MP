@@ -185,8 +185,6 @@ namespace H3MP.Scripts
 
                 // Build new pages
                 Transform currentListPage = Instantiate(mainPagePrefab, mainListParent).transform;
-                mainListPage = 0;
-                currentListPage.gameObject.SetActive(true);
                 for (int i = 0; i < entries.Count; ++i)
                 {
                     GameObject hostEntry = Instantiate(mainEntryPrefab, currentListPage);
@@ -205,6 +203,8 @@ namespace H3MP.Scripts
                         mainNextButton.SetActive(true);
                     }
                 }
+                mainListPage = Mathf.Min(mainListPage, mainListParent.childCount - 2);
+                mainListParent.GetChild(mainListPage + 1).gameObject.SetActive(true);
             }
         }
 
@@ -497,7 +497,6 @@ namespace H3MP.Scripts
         {
             if (waiting)
             {
-                TODO: // Subscribe to event to update UI once we get confirm that password is correct and that we completely established connection to host
                 state = State.ClientWaiting;
                 clientLoadingAnimation.SetActive(true);
                 clientInfoTextObject.SetActive(true);

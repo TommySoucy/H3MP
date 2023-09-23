@@ -33,6 +33,11 @@ namespace H3MP.Networking
 
             // Tell the client connection is complete
             ServerSend.ConnectionComplete(clientID);
+
+            if (ISClient.isConnected && ISClient.listed)
+            {
+                ISClientSend.PlayerCount(GameManager.players.Count);
+            }
         }
 
         public static void Ping(int clientID, Packet packet)
