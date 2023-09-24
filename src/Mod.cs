@@ -384,7 +384,7 @@ namespace H3MP
                         {
                             case 0: // Start hosting
                                 Mod.LogInfo("\tDebug: Start hosting");
-                                OnHostClicked();
+                                OnHostClicked(false);
                                 break;
                             case 1: // Connect
                                 Mod.LogInfo("\tDebug: Connect");
@@ -544,7 +544,7 @@ namespace H3MP
                                 }
                                 break;
                             case 18: // Resolve sub domain
-                                Mod.LogInfo("\tDebug: Sub domain h3mp.tommysoucy.vip resolved to: "+ Dns.GetHostAddresses(config["IP"].ToString())[0].ToString());
+                                Mod.LogInfo("\tDebug: Sub domain h3mp.tommysoucy.vip resolved to: "+ Dns.GetHostAddresses("h3mp.tommysoucy.vip")[0].ToString());
                                 break;
                             case 19: // Load to grillhouse
                                 Mod.LogInfo("\tDebug: Load to grillhouse");
@@ -627,6 +627,40 @@ namespace H3MP
                                     }
                                 }
                                 break;
+                            case 30: // Toggle server list
+                                Mod.LogInfo("\tDebug: Toggle server list");
+                                if (ServerListController.instance == null)
+                                {
+                                    Instantiate(Mod.serverListPrefab);
+                                    Vector3 forwardFlat = Vector3.ProjectOnPlane(GM.CurrentPlayerBody.Head.forward, Vector3.up);
+                                    ServerListController.instance.transform.position = GM.CurrentPlayerBody.Head.position + 2 * forwardFlat;
+                                    ServerListController.instance.transform.rotation = Quaternion.LookRotation(forwardFlat);
+                                }
+                                else
+                                {
+                                    Destroy(ServerListController.instance.gameObject);
+                                }
+                                break;
+                            case 31: // Server list, host
+                                Mod.LogInfo("\tDebug: Server list, host");
+                                if (ServerListController.instance != null)
+                                {
+                                    ServerListController.instance.OnHostClicked();
+                                    ServerListController.instance.hostServerName.text = "Debug server";
+                                    ServerListController.instance.hostLimit.text = "5";
+                                    ServerListController.instance.hostUsername.text = "Debug host";
+                                    ServerListController.instance.OnHostConfirmClicked();
+                                }
+                                break;
+                            case 32: // Server list, join first host
+                                Mod.LogInfo("\tDebug: Server list, join first host");
+                                if (ServerListController.instance != null)
+                                {
+                                    ServerListController.instance.main.transform.GetChild(2).GetChild(1).GetChild(1).GetComponent<Button>().onClick.Invoke();
+                                    ServerListController.instance.joinUsername.text = "Debug client";
+                                    ServerListController.instance.OnJoinConfirmClicked();
+                                }
+                                break;
                         }
                     }
                 }
@@ -668,7 +702,7 @@ namespace H3MP
                     nullDriverRotationMultiplier = 2;
                 }
 
-                if (Input.GetKey(KeyCode.Keypad8))
+                if (Input.GetKey(KeyCode.UpArrow))
                 {
                     nullDriverVerticalRot -= 90 * Time.deltaTime * nullDriverRotationMultiplier;
                     if(nullDriverVerticalRot < -90)
@@ -676,7 +710,7 @@ namespace H3MP
                         nullDriverVerticalRot = -90;
                     }
                 }
-                else if (Input.GetKey(KeyCode.Keypad2))
+                else if (Input.GetKey(KeyCode.DownArrow))
                 {
                     nullDriverVerticalRot += 90 * Time.deltaTime * nullDriverRotationMultiplier;
                     if (nullDriverVerticalRot > 90)
@@ -684,11 +718,11 @@ namespace H3MP
                         nullDriverVerticalRot = 90;
                     }
                 }
-                if (Input.GetKey(KeyCode.Keypad6))
+                if (Input.GetKey(KeyCode.RightArrow))
                 {
                     nullDriverHorzontalRot += 90 * Time.deltaTime * nullDriverRotationMultiplier;
                 }
-                if (Input.GetKey(KeyCode.Keypad4))
+                if (Input.GetKey(KeyCode.LeftArrow))
                 {
                     nullDriverHorzontalRot -= 90 * Time.deltaTime * nullDriverRotationMultiplier;
                 }
@@ -858,6 +892,14 @@ namespace H3MP
             Logger.LogInfo("Loading config...");
             config = JObject.Parse(File.ReadAllText(H3MPPath + "/Config.json"));
             Logger.LogInfo("Config loaded");
+        }
+
+        public static void WriteConfig()
+        {
+            TODO0: // Fix endinteract with keyboard causing it to get teleported(?) (Try next to put the canvas and UI stuff below a normal gameobject so that the parent transform is a transform and not a rectTransform)
+            TODO1: // Make Direct connection use a similar UI to server list where player can enter username, IP (if client), and port
+            TODO2: // Add periodic UDP ping as well as UDP punchthrough
+            File.WriteAllText(H3MPPath + "/Config.json", JObject.FromObject(config).ToString());
         }
 
         public static void InitTNHMenu()
@@ -1391,7 +1433,7 @@ namespace H3MP
             }
         }
 
-        public static void OnHostClicked()
+        public static void OnHostClicked(bool portOverridden, ushort portOverride = 7861)
         {
             if(managerObject != null)
             {
@@ -1401,9 +1443,8 @@ namespace H3MP
             //Server.IP = config["IP"].ToString();
             CreateManagerObject(true);
 
-            Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]);
+            Server.Start((ushort)config["MaxClientCount"], portOverridden ? portOverride : (ushort)config["Port"]);
 
-            // TODO: Customization: Should probably have an event for connection so other mods can do things like we do below
             if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
                 LogInfo("Just connected in TNH lobby, initializing H3MP menu");

@@ -154,7 +154,7 @@ namespace H3MP.Scripts
 
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
-            Mod.OnHostClicked();
+            Mod.OnHostClicked(false);
 
             // Switch page
             SetPage(2);

@@ -13,11 +13,11 @@ namespace H3MP.Scripts
         public Text text;
         public GameObject clearButton;
 
-        private Keyboard keyboard;
+        public Keyboard keyboard;
 
         public void Activate()
         {
-            if(selected != null && selected != this)
+            if(selected != null && selected.keyboard != null)
             {
                 Destroy(selected.keyboard.gameObject);
                 selected.keyboard = null;
@@ -41,8 +41,11 @@ namespace H3MP.Scripts
 
         private void OnDisable()
         {
-            Destroy(keyboard.gameObject);
-            keyboard = null;
+            if(keyboard != null)
+            {
+                Destroy(keyboard.gameObject);
+                keyboard = null;
+            }
         }
     }
 }

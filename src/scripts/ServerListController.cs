@@ -1,5 +1,6 @@
 ﻿using H3MP.Networking;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -68,6 +69,8 @@ namespace H3MP.Scripts
         public Text joinPassword;
         public int joiningEntry;
         public bool gotEndPoint;
+        public GameObject joinPasswordField;
+        public Text joinServerName;
 
         // Client
         public GameObject clientLoadingAnimation;
@@ -146,6 +149,7 @@ namespace H3MP.Scripts
                 mainNextButton.SetActive(false);
                 mainRefreshButton.SetActive(false);
                 mainInfoText.gameObject.SetActive(true);
+                mainInfoText.color = Color.white;
                 mainInfoText.text = "Waiting for index server";
 
                 // Request latest host entries if possible
@@ -194,7 +198,9 @@ namespace H3MP.Scripts
                     hostEntry.transform.GetChild(1).GetComponent<Text>().text = entries[i].playerCount + "/" + entries[i].limit;
                     hostEntry.transform.GetChild(2).gameObject.SetActive(entries[i].locked);
                     int entryID = entries[i].ID;
-                    hostEntry.GetComponent<Button>().onClick.AddListener(() => { Join(entryID); });
+                    bool hasPassword = entries[i].locked;
+                    string serverName = entries[i].name;
+                    hostEntry.GetComponent<Button>().onClick.AddListener(() => { Join(entryID, hasPassword, serverName); });
 
                     // Start a new page every 7 elements
                     if (i + 1 % 7 == 0 && i != entries.Count - 1)
@@ -241,6 +247,10 @@ namespace H3MP.Scripts
             {
                 return;
             }
+            Mod.config["ServerName"] = hostServerName.text;
+            Mod.config["MaxClientCount"] = int.Parse(hostLimit.text);
+            Mod.config["Username"] = hostUsername.text;
+            Mod.WriteConfig();
             host.SetActive(false);
             hosting.SetActive(true);
             SetHostingPage(true);
@@ -318,6 +328,10 @@ namespace H3MP.Scripts
                 join.SetActive(false);
                 client.SetActive(false);
                 SetMainPage(null);
+
+                mainLoadingAnimation.SetActive(false);
+                mainInfoText.color = Color.red;
+                mainInfoText.text = "Connection to index server failed";
             }
         }
 
@@ -340,12 +354,14 @@ namespace H3MP.Scripts
             }
         }
 
-        private void Join(int entryID)
+        private void Join(int entryID, bool hasPassword, string name)
         {
             joiningEntry = entryID;
             gotEndPoint = false;
             main.SetActive(false);
             join.SetActive(true);
+            joinPasswordField.SetActive(hasPassword);
+            joinServerName.text = "Server:\n" + name;
         }
 
         private void ConnectedInit()
@@ -416,6 +432,9 @@ namespace H3MP.Scripts
                         hostingNextButton.SetActive(true);
                     }
                 }
+
+                // Actually start hosting if not already are
+                Mod.OnHostClicked(true, (ushort)((IPEndPoint)ISClient.socket.Client.LocalEndPoint).Port);
             }
         }
 
@@ -657,6 +676,8 @@ namespace H3MP.Scripts
             {
                 return;
             }
+            Mod.config["Username"] = joinUsername.text;
+            Mod.WriteConfig();
             join.SetActive(false);
             client.SetActive(true);
             SetClientPage(true);
