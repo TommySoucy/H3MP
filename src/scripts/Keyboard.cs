@@ -70,8 +70,9 @@ namespace H3MP.Scripts
             }
             else if(key.Equals("exit"))
             {
+                Destroy(field.keyboardObject);
                 field.keyboard = null;
-                Destroy(gameObject);
+                field.keyboardObject = null;
             }
 
             if(field.text.text != "")

@@ -896,7 +896,6 @@ namespace H3MP
 
         public static void WriteConfig()
         {
-            TODO0: // Fix endinteract with keyboard causing it to get teleported(?) (Try next to put the canvas and UI stuff below a normal gameobject so that the parent transform is a transform and not a rectTransform)
             TODO1: // Make Direct connection use a similar UI to server list where player can enter username, IP (if client), and port
             TODO2: // Add periodic UDP ping as well as UDP punchthrough
             File.WriteAllText(H3MPPath + "/Config.json", JObject.FromObject(config).ToString());

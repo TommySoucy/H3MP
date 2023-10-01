@@ -50,6 +50,8 @@ namespace H3MP.Networking
 
         public static void Start(ushort _maxClientCount, ushort _port)
         {
+            Mod.LogInfo("Starting server on port: "+_port, false);
+
             maxClientCount = _maxClientCount;
             port = _port;
 
@@ -62,7 +64,7 @@ namespace H3MP.Networking
             udpListener = new UdpClient(port);
             udpListener.BeginReceive(UDPReceiveCallback, null);
 
-            Mod.LogInfo($"Server started, listening on port: {port}", false);
+            Mod.LogInfo("Server started, listening on port: "+port, false);
 
             // Just connected, sync if current scene is syncable
             if (!GameManager.nonSynchronizedScenes.ContainsKey(GameManager.scene))
