@@ -51,6 +51,8 @@ namespace H3MP.Scripts
         public Text hostLimit;
         public Text hostUsernameLabel;
         public Text hostUsername;
+        public Text hostPortLabel;
+        public Text hostPort;
 
         // Hosting
         public GameObject hostingLoadingAnimation;
@@ -223,6 +225,7 @@ namespace H3MP.Scripts
             hostServerNameLabel.color = Color.white;
             hostLimitLabel.color = Color.white;
             hostUsernameLabel.color = Color.white;
+            hostPortLabel.color = Color.white;
         }
 
         public void OnHostConfirmClicked()
@@ -233,10 +236,15 @@ namespace H3MP.Scripts
                 failed = true;
                 hostServerNameLabel.color = Color.red;
             }
-            if(hostLimit.text == "")
+            if(hostLimit.text == "" || !uint.TryParse(hostLimit.text, out uint parsedLimit))
             {
                 failed = true;
                 hostLimitLabel.color = Color.red;
+            }
+            if(hostPort.text == "" || !ushort.TryParse(hostPort.text, out ushort parsedPort))
+            {
+                failed = true;
+                hostPortLabel.color = Color.red;
             }
             if(hostUsername.text == "")
             {
@@ -248,13 +256,14 @@ namespace H3MP.Scripts
                 return;
             }
             Mod.config["ServerName"] = hostServerName.text;
-            Mod.config["MaxClientCount"] = int.Parse(hostLimit.text);
+            Mod.config["MaxClientCount"] = uint.Parse(hostLimit.text);
             Mod.config["Username"] = hostUsername.text;
+            Mod.config["Port"] = ushort.Parse(hostPort.text);
             Mod.WriteConfig();
             host.SetActive(false);
             hosting.SetActive(true);
             SetHostingPage(true);
-            ISClientSend.List(hostServerName.text, int.Parse(hostLimit.text), hostPassword.text);
+            ISClientSend.List(hostServerName.text, int.Parse(hostLimit.text), hostPassword.text, ushort.Parse(hostPort.text));
             ISClient.wantListed = true;
             ISClient.listed = false;
         }
@@ -384,6 +393,7 @@ namespace H3MP.Scripts
 
         private void SetHostingPage(bool waiting)
         {
+            TODO: // Check if local endpoint is the same that the IS sees
             if (waiting)
             {
                 state = State.HostingWaiting;
@@ -434,7 +444,7 @@ namespace H3MP.Scripts
                 }
 
                 // Actually start hosting if not already are
-                Mod.OnHostClicked(true, (ushort)((IPEndPoint)ISClient.socket.Client.LocalEndPoint).Port);
+                Mod.OnHostClicked();
             }
         }
 

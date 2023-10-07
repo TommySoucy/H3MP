@@ -48,7 +48,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void List(string name, int limit, string password)
+        public static void List(string name, int limit, string password, ushort port)
         {
             using (Packet packet = new Packet((int)Packets.list))
             {
@@ -63,6 +63,7 @@ namespace H3MP.Networking
                     packet.Write(true);
                     packet.Write(password.GetDeterministicHashCode());
                 }
+                packet.Write(port);
                 SendTCPData(packet);
             }
         }

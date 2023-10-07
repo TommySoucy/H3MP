@@ -384,7 +384,7 @@ namespace H3MP
                         {
                             case 0: // Start hosting
                                 Mod.LogInfo("\tDebug: Start hosting");
-                                OnHostClicked(false);
+                                OnHostClicked();
                                 break;
                             case 1: // Connect
                                 Mod.LogInfo("\tDebug: Connect");
@@ -1432,7 +1432,7 @@ namespace H3MP
             }
         }
 
-        public static void OnHostClicked(bool portOverridden, ushort portOverride = 7861)
+        public static void OnHostClicked()
         {
             if(managerObject != null)
             {
@@ -1442,7 +1442,7 @@ namespace H3MP
             //Server.IP = config["IP"].ToString();
             CreateManagerObject(true);
 
-            Server.Start((ushort)config["MaxClientCount"], portOverridden ? portOverride : (ushort)config["Port"]);
+            Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]);
 
             if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
