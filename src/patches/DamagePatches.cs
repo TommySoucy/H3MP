@@ -831,6 +831,7 @@ namespace H3MP.Patches
                 {
                     instructionList.InsertRange(i + 2, toInsertFirst);
                     applied = true;
+                    break;
                 }
             }
 

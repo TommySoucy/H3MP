@@ -641,29 +641,33 @@ namespace H3MP.Tracking
 
         private void CollectExternalData()
         {
-            data = new byte[9 + (12 * ((TNH_ManagerPatch.inGenerateSentryPatrol || TNH_ManagerPatch.inGeneratePatrol) ? (TNH_ManagerPatch.patrolPoints == null ? 0 : TNH_ManagerPatch.patrolPoints.Count) : 0))];
+            data = new byte[10 + (12 * ((TNH_ManagerPatch.inGenerateSentryPatrol || TNH_ManagerPatch.inGeneratePatrol) ? (TNH_ManagerPatch.patrolPoints == null ? 0 : TNH_ManagerPatch.patrolPoints.Count) : 0))];
 
             // Write TNH context
             data[0] = TNH_HoldPointPatch.inSpawnEnemyGroup ? (byte)1 : (byte)0;
+            if (TNH_HoldPointPatch.inSpawnEnemyGroup && Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.manager.m_curHoldPoint != null)
+            {
+                data[1] = Mod.currentTNHInstance.manager.m_curHoldPoint.m_holdGroupLeader == physicalSosig.physicalSosig ? (byte)1 : (byte)0;
+            }
             //trackedSosigData.data[1] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)0;
-            data[1] = TNH_SupplyPointPatch.inSpawnTakeEnemyGroup ? (byte)1 : (byte)0;
-            BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(data, 2);
+            data[2] = TNH_SupplyPointPatch.inSpawnTakeEnemyGroup ? (byte)1 : (byte)0;
+            BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(data, 3);
             //trackedSosigData.data[3] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)0;
-            data[4] = TNH_ManagerPatch.inGenerateSentryPatrol ? (byte)1 : (byte)0;
-            data[5] = TNH_ManagerPatch.inGeneratePatrol ? (byte)1 : (byte)0;
+            data[5] = TNH_ManagerPatch.inGenerateSentryPatrol ? (byte)1 : (byte)0;
+            data[6] = TNH_ManagerPatch.inGeneratePatrol ? (byte)1 : (byte)0;
             if (TNH_ManagerPatch.inGenerateSentryPatrol || TNH_ManagerPatch.inGeneratePatrol)
             {
-                BitConverter.GetBytes((short)TNH_ManagerPatch.patrolIndex).CopyTo(data, 6);
+                BitConverter.GetBytes((short)TNH_ManagerPatch.patrolIndex).CopyTo(data, 7);
                 if (TNH_ManagerPatch.patrolPoints == null || TNH_ManagerPatch.patrolPoints.Count == 0)
                 {
-                    data[8] = (byte)0;
+                    data[9] = (byte)0;
                 }
                 else
                 {
-                    data[8] = (byte)TNH_ManagerPatch.patrolPoints.Count;
+                    data[9] = (byte)TNH_ManagerPatch.patrolPoints.Count;
                     for (int i = 0; i < TNH_ManagerPatch.patrolPoints.Count; ++i)
                     {
-                        int index = i * 12 + 9;
+                        int index = i * 12 + 10;
                         BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].x).CopyTo(data, index);
                         BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].y).CopyTo(data, index + 4);
                         BitConverter.GetBytes(TNH_ManagerPatch.patrolPoints[i].z).CopyTo(data, index + 8);
@@ -854,15 +858,20 @@ namespace H3MP.Tracking
                 if (data[0] == 1) // TNH_HoldPoint is in spawn enemy group
                 {
                     GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_activeSosigs.Add(physicalSosig.physicalSosig);
+                    if (data[1] == 1) // This sosig is group leader
+                    {
+                        GM.TNH_Manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_holdGroupLeader = physicalSosig.physicalSosig;
+                    }
                 }
-                else if (data[1] == 1) // TNH_SupplyPoint is in Spawn Take Enemy Group
+                else if (data[2] == 1) // TNH_SupplyPoint is in Spawn Take Enemy Group
                 {
-                    GM.TNH_Manager.SupplyPoints[BitConverter.ToInt16(data, 2)].m_activeSosigs.Add(physicalSosig.physicalSosig);
+                    GM.TNH_Manager.SupplyPoints[BitConverter.ToInt16(data, 3)].m_activeSosigs.Add(physicalSosig.physicalSosig);
+                    GM.TNH_Manager.RegisterGuard(physicalSosig.physicalSosig);
                 }
-                else if (data[4] == 1 || data[5] == 1) // TNH_Manager is in generate patrol
+                else if (data[5] == 1 || data[6] == 1) // TNH_Manager is in generate patrol
                 {
                     physicalSosig.physicalSosig.SetAssaultSpeed(Sosig.SosigMoveSpeed.Walking);
-                    int patrolIndex = BitConverter.ToInt16(data, 6);
+                    int patrolIndex = BitConverter.ToInt16(data, 7);
                     if (latestSosigPatrolSquad.Key == patrolIndex)
                     {
                         latestSosigPatrolSquad.Value.Squad.Add(physicalSosig.physicalSosig);
@@ -871,10 +880,10 @@ namespace H3MP.Tracking
                     {
                         latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(patrolIndex, new TNH_Manager.SosigPatrolSquad());
                         latestSosigPatrolSquad.Value.PatrolPoints = new List<Vector3>();
-                        int pointCount = data[8];
+                        int pointCount = data[9];
                         for (int i = 0; i < pointCount; ++i)
                         {
-                            int firstIndex = i * 12 + 9;
+                            int firstIndex = i * 12 + 10;
                             latestSosigPatrolSquad.Value.PatrolPoints.Add(new Vector3(BitConverter.ToSingle(data, firstIndex),
                                                                                       BitConverter.ToSingle(data, firstIndex + 4),
                                                                                       BitConverter.ToSingle(data, firstIndex + 8)));

@@ -696,9 +696,25 @@ namespace H3MP.Networking
                     Write(f);
                 }
             }
+            if (config.LinkSpawnChance == null || config.LinkSpawnChance.Count == 0)
+            {
+                Write((byte)0);
+            }
+            else
+            {
+                Write((byte)config.LinkSpawnChance.Count);
+                foreach (float f in config.LinkSpawnChance)
+                {
+                    Write(f);
+                }
+            }
             Write(config.TargetCapacity);
             Write(config.TargetTrackingTime);
             Write(config.NoFreshTargetTime);
+            Write(config.DoesAggroOnFriendlyFire);
+            Write(config.UsesLinkSpawns);
+            Write(config.OverrideSpeech);
+            Write(config.TimeInSkirmishToAlert);
         }
         /// <summary>Adds a TNHInstance to the packet.</summary>
         /// <param name="instance">The TNHInstance to add.</param>
@@ -1187,9 +1203,22 @@ namespace H3MP.Networking
                     config.StartingChanceBrokenJoint.Add(ReadFloat());
                 }
             }
+            byte linkSpawnChanceCount = ReadByte();
+            if (linkSpawnChanceCount > 0)
+            {
+                config.LinkSpawnChance = new List<float>();
+                for (int i = 0; i < linkSpawnChanceCount; ++i)
+                {
+                    config.LinkSpawnChance.Add(ReadFloat());
+                }
+            }
             config.TargetCapacity = ReadInt();
             config.TargetTrackingTime = ReadFloat();
             config.NoFreshTargetTime = ReadFloat();
+            config.DoesAggroOnFriendlyFire = ReadBool();
+            config.UsesLinkSpawns = ReadBool();
+            config.OverrideSpeech = ReadBool();
+            config.TimeInSkirmishToAlert = ReadFloat();
 
             return config;
         }

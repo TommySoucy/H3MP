@@ -1156,6 +1156,9 @@ namespace H3MP.Patches
 
         static bool SetPhaseTakePrefix()
         {
+            // TODO: Future: Scoring needs to be properly tracked, when we implement proper support for that
+            //               will need to track alterted this phase, took damage this phase, etc. For now we only
+            //               reset those here according with SetPahe_Take functionality
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 Mod.LogInfo("SetPhaseTakePrefix: In MP TNH", false);
@@ -1194,6 +1197,10 @@ namespace H3MP.Patches
                         Mod.LogInfo("\tWe are not controller, setting take phase with data", false);
                         Mod.currentTNHInstance.phase = TNH_Phase.Take;
                         Mod.currentTNHInstance.manager.Phase = TNH_Phase.Take;
+
+                        Mod.currentTNHInstance.manager.ResetAlertedThisPhase();
+                        Mod.currentTNHInstance.manager.ResetPlayerTookDamageThisPhase();
+                        Mod.currentTNHInstance.manager.ResetHasGuardBeenKilledThatWasAltered();
 
                         object level = null;
                         if (PatchController.TNHTweakerAsmIdx > -1)
@@ -2031,14 +2038,12 @@ namespace H3MP.Patches
                             {
                                 ___m_hasPlayedTimeWarning1 = true;
                                 __instance.M.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Reminder1);
-                                __instance.M.Increment(1, false);
                             }
                             if (!___m_hasPlayedTimeWarning2 && Mod.currentTNHInstance.tickDownToFailure < 30f)
                             {
                                 ___m_hasPlayedTimeWarning2 = true;
                                 __instance.M.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Reminder2);
                                 ___m_numWarnings++;
-                                __instance.M.Increment(1, false);
                             }
                             ___m_systemNode.SetDisplayString("FAILURE IN: " + __instance.FloatToTime(Mod.currentTNHInstance.tickDownToFailure, "0:00.00"));
                             break;
@@ -2165,9 +2170,28 @@ namespace H3MP.Patches
                     else // Told to skip, begin hold was an order from controller, prepare for data
                     {
                         Mod.LogInfo("\t\tSkipped, prepping", false);
+                        // Score
+                        if (!Mod.currentTNHInstance.manager.HasGuardBeenKilledThatWasAltered())
+                        {
+                            Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakeHoldPointTakenClean, 1);
+                        }
+                        if (!Mod.currentTNHInstance.manager.HasPlayerAlertedSecurityThisPhase())
+                        {
+                            Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakeCompleteNoAlert, 1);
+                        }
+                        if (!Mod.currentTNHInstance.manager.HasPlayerTakenDamageThisPhase())
+                        {
+                            Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakeCompleteNoDamage, 1);
+                        }
+
                         // Deletion burst
                         ___m_activeSosigs.Clear();
                         Mod.currentTNHInstance.manager.m_miscEnemies.Clear();
+
+                        Mod.currentTNHInstance.manager.ClearGuards();
+                        Mod.currentTNHInstance.manager.ResetAlertedThisPhase();
+                        Mod.currentTNHInstance.manager.ResetPlayerTookDamageThisPhase();
+                        Mod.currentTNHInstance.manager.ResetHasGuardBeenKilledThatWasAltered();
 
                         // DeleteAllActiveEntities
                         ___m_activeTargets.Clear();
@@ -2370,11 +2394,15 @@ namespace H3MP.Patches
                     SM.PlayCoreSound(FVRPooledAudioType.GenericLongRange, __instance.AUDEvent_HoldWave, __instance.transform.position);
                     UnityEngine.Object.Instantiate<GameObject>(__instance.VFX_HoldWave, ___m_systemNode.NodeCenter.position, ___m_systemNode.NodeCenter.rotation);
                     Mod.currentTNHInstance.manager.EnqueueLine(TNH_VoiceLineID.AI_Encryption_Neutralized);
-                    Mod.currentTNHInstance.manager.Increment(2, (int)Mod.currentTNHInstance.tickDownToFailure, false);
+                    Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.HoldDecisecondsRemaining, (int)(__instance.m_tickDownToFailure * 10f));
                     ++___m_phaseIndex;
                     ___m_state = TNH_HoldPoint.HoldState.Transition;
                     ___m_tickDownTransition = 5f;
                     __instance.LowerAllBarriers();
+                    if (!__instance.m_hasBeenDamagedThisPhase)
+                    {
+                        Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.HoldWaveCompleteNoDamage, 1);
+                    }
                     ___m_systemNode.SetNodeMode(TNH_HoldPointSystemNode.SystemNodeMode.Hacking);
 
                     return false;
