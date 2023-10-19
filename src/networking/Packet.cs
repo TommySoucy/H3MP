@@ -192,7 +192,8 @@ namespace H3MP.Networking
         connectionComplete = 179,
         sightFlipperState = 180,
         sightRaiserState = 181,
-        gatlingGunFire = 182
+        gatlingGunFire = 182,
+        punchThrough = 183
     }
 
     /// <summary>Sent from client to server.</summary>

@@ -19,10 +19,7 @@ namespace H3MP.Networking
             ISClient.ID = ID;
             ISClientSend.WelcomeReceived();
 
-            if (ServerListController.instance != null && ServerListController.instance.state == ServerListController.State.MainWaiting)
-            {
-                ServerListController.instance.SetMainPage(null);
-            }
+            ISClientSend.RequestHostEntries();
         }
 
         public static void Ping(Packet packet)
@@ -81,6 +78,7 @@ namespace H3MP.Networking
                             if (Server.clients[i].tcp.socket == null && !Server.clients[i].attemptingPunchThrough)
                             {
                                 Server.clients[i].attemptingPunchThrough = true;
+                                clientID = i;
                                 break;
                             }
                         }
@@ -95,16 +93,15 @@ namespace H3MP.Networking
 
                         currentClient.punchThrough = true;
 
-                        currentClient.PTTCP = new TcpClient
-                        {
-                            ReceiveBufferSize = 4096,
-                            SendBufferSize = 4096
-                        };
+                        currentClient.PTUDP = new UdpClient((ISClient.socket.Client.LocalEndPoint as IPEndPoint).Port);
 
-                        currentClient.PTReceiveBuffer = new byte[4096];
                         Mod.LogInfo("Attempting connection to " + address + ":" + endPoint.Port, false);
-                        currentClient.PTConnectionResult = currentClient.PTTCP.BeginConnect(address.ToString(), endPoint.Port, currentClient.PTConnectCallback, currentClient.PTTCP);
-                        currentClient.punchThroughWaiting = true;
+
+                        using (Packet initialPacket = new Packet((int)ServerPackets.punchThrough))
+                        {
+                            currentClient.PTUDP.BeginSend(packet.ToArray(), packet.Length(), endPoint, null, null);
+                        }
+                        currentClient.PTUDPEstablished = true;
                         currentClient.punchThroughAttemptCounter = 0;
 
                         Server.PTClients.Add(currentClient);
@@ -124,7 +121,6 @@ namespace H3MP.Networking
                 {
                     if (Mod.managerObject != null && ThreadManager.host)
                     {
-                        ServerListController.instance.gotEndPoint = true;
                         int byteCount = packet.ReadInt();
                         IPAddress address = new IPAddress(packet.ReadBytes(byteCount));
                         IPEndPoint endPoint = new IPEndPoint(address, packet.ReadInt());
@@ -149,16 +145,15 @@ namespace H3MP.Networking
 
                         currentClient.punchThrough = true;
 
-                        currentClient.PTTCP = new TcpClient
-                        {
-                            ReceiveBufferSize = 4096,
-                            SendBufferSize = 4096
-                        };
+                        currentClient.PTUDP = new UdpClient((ISClient.socket.Client.LocalEndPoint as IPEndPoint).Port);
 
-                        currentClient.PTReceiveBuffer = new byte[4096];
                         Mod.LogInfo("Attempting connection to " + address + ":" + endPoint.Port, false);
-                        currentClient.PTConnectionResult = currentClient.PTTCP.BeginConnect(address.ToString(), endPoint.Port, currentClient.PTConnectCallback, currentClient.PTTCP);
-                        currentClient.punchThroughWaiting = true;
+
+                        using (Packet initialPacket = new Packet((int)ServerPackets.punchThrough))
+                        {
+                            currentClient.PTUDP.BeginSend(packet.ToArray(), packet.Length(), endPoint, null, null);
+                        }
+                        currentClient.PTUDPEstablished = true;
                         currentClient.punchThroughAttemptCounter = 0;
 
                         Server.PTClients.Add(currentClient);

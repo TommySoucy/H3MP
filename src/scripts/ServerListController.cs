@@ -1,6 +1,5 @@
 ﻿using H3MP.Networking;
 using System.Collections.Generic;
-using System.Net;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -51,6 +50,7 @@ namespace H3MP.Scripts
         public Text hostLimit;
         public Text hostUsernameLabel;
         public Text hostUsername;
+        public GameObject hostPortField;
         public Text hostPortLabel;
         public Text hostPort;
 
@@ -64,14 +64,22 @@ namespace H3MP.Scripts
         public GameObject hostingEntryPrefab;
         public GameObject hostingPrevButton;
         public GameObject hostingNextButton;
+        public GameObject hostingListButton;
+        public Text hostingListButtonText;
 
         // Join
         public Text joinUsernameLabel;
         public Text joinUsername;
-        public Text joinPassword;
         public int joiningEntry;
         public bool gotEndPoint;
         public GameObject joinPasswordField;
+        public Text joinPassword;
+        public GameObject joinIPField;
+        public Text joinIPLabel;
+        public Text joinIP;
+        public GameObject joinPortField;
+        public Text joinPortLabel;
+        public Text joinPort;
         public Text joinServerName;
 
         // Client
@@ -88,8 +96,11 @@ namespace H3MP.Scripts
 
         private void Awake()
         {
+            // Check if there already is a server list opened
             if(instance != null)
             {
+                instance.transform.position = transform.position;
+                instance.transform.rotation = transform.rotation;
                 Destroy(gameObject);
                 return;
             }
@@ -97,8 +108,11 @@ namespace H3MP.Scripts
             {
                 instance = this;
             }
+
+            // We unload OnDestroy, but only want to do that if we didn't get destroyed above
             awakened = true;
 
+            // Subscribe to relevant events, anything we will need to keep track of to update our UI accordingly
             ISClient.OnReceiveHostEntries += HostEntriesReceived;
             ISClient.OnDisconnect += ISClientDisconnected;
             ISClient.OnListed += Listed;
@@ -106,35 +120,41 @@ namespace H3MP.Scripts
             GameManager.OnPlayerAdded += PlayerAdded;
             Mod.OnPlayerRemoved += PlayerRemoved;
 
-            bool init = false;
-            if (!ISClient.isConnected)
+            // Connect to IS if necessary
+            if (ShouldConnectToIS())
             {
-                // Not connected to index server
-                if(Mod.managerObject != null)
-                {
-                    // But already connected directly
-                    init = true;
-                    ConnectedInit();
-                }
-                else // Not already connected directly
-                {
-                    ISClient.Connect();
-                }
+                ISClient.Connect();
             }
-            else if(ISClient.gotWelcome)
-            {
-                // If connected with welcome, it means that we kept connection alive despite there not being a ServerListController
-                // Meaning we are hosting already
-                // So init UI accordingly
-                init = true;
-                ConnectedInit();
-            }
-            // else, connection attempt to index server already in progress, waiting for welcome already, this case should not be possible
 
-            // If did not connect init then we want to init on main page
-            if (!init)
+            // Initialize UI based on connection state
+            Init();
+        }
+
+        public bool ShouldConnectToIS()
+        {
+            // Should only connect to IS if not already connected to it, and if not connected as client
+            return !ISClient.isConnected && (Mod.managerObject == null || ThreadManager.host);
+        }
+
+        public void Init()
+        {
+            if (Mod.managerObject == null)
             {
                 SetMainPage(null);
+            }
+            else
+            {
+                main.SetActive(false);
+                if (ThreadManager.host)
+                {
+                    hosting.SetActive(true);
+                    SetHostingPage(ISClient.isConnected && ISClient.gotWelcome && ISClient.wantListed && !ISClient.listed);
+                }
+                else
+                {
+                    client.SetActive(true);
+                    SetClientPage(false);
+                }
             }
         }
 
@@ -159,7 +179,7 @@ namespace H3MP.Scripts
                 {
                     ISClientSend.RequestHostEntries();
                 }
-                // else, don't yet have welcome, we're going to call this again when we do
+                // else, don't yet have welcome, we're going to call a request when we do
             }
             else
             {
@@ -202,7 +222,7 @@ namespace H3MP.Scripts
                     int entryID = entries[i].ID;
                     bool hasPassword = entries[i].locked;
                     string serverName = entries[i].name;
-                    hostEntry.GetComponent<Button>().onClick.AddListener(() => { Join(entryID, hasPassword, serverName); });
+                    hostEntry.GetComponent<Button>().onClick.AddListener(() => { Join(false, entryID, hasPassword, serverName); });
 
                     // Start a new page every 7 elements
                     if (i + 1 % 7 == 0 && i != entries.Count - 1)
@@ -223,9 +243,21 @@ namespace H3MP.Scripts
             host.SetActive(true);
 
             hostServerNameLabel.color = Color.white;
+            if(Mod.config["ServerName"] != null)
+            {
+                hostServerName.text = Mod.config["ServerName"].ToString();
+            }
             hostLimitLabel.color = Color.white;
+            if(Mod.config["MaxClientCount"] != null)
+            {
+                hostLimit.text = Mod.config["MaxClientCount"].ToString();
+            }
             hostUsernameLabel.color = Color.white;
-            hostPortLabel.color = Color.white;
+            if(Mod.config["Username"] != null)
+            {
+                hostUsername.text = Mod.config["Username"].ToString();
+            }
+            hostPortField.SetActive(false);
         }
 
         public void OnHostConfirmClicked()
@@ -241,11 +273,14 @@ namespace H3MP.Scripts
                 failed = true;
                 hostLimitLabel.color = Color.red;
             }
-            if(hostPort.text == "" || !ushort.TryParse(hostPort.text, out ushort parsedPort))
+
+            // Here, only if already connected do we want to make sure we specify a port
+            if(Mod.managerObject != null && (hostPort.text == "" || !ushort.TryParse(hostPort.text, out ushort parsedPort)))
             {
                 failed = true;
                 hostPortLabel.color = Color.red;
             }
+
             if(hostUsername.text == "")
             {
                 failed = true;
@@ -258,11 +293,14 @@ namespace H3MP.Scripts
             Mod.config["ServerName"] = hostServerName.text;
             Mod.config["MaxClientCount"] = uint.Parse(hostLimit.text);
             Mod.config["Username"] = hostUsername.text;
-            Mod.config["Port"] = ushort.Parse(hostPort.text);
+            if(Mod.managerObject != null)
+            {
+                Mod.config["Port"] = ushort.Parse(hostPort.text);
+            }
             Mod.WriteConfig();
             host.SetActive(false);
             hosting.SetActive(true);
-            SetHostingPage(true);
+            SetHostingPage(Mod.managerObject == null);
             ISClientSend.List(hostServerName.text, int.Parse(hostLimit.text), hostPassword.text, ushort.Parse(hostPort.text));
             ISClient.wantListed = true;
             ISClient.listed = false;
@@ -285,6 +323,38 @@ namespace H3MP.Scripts
             main.SetActive(true);
 
             SetMainPage(null);
+        }
+
+        public void OnHostingListClicked()
+        {
+            if(!ISClient.listed && !ISClient.wantListed)
+            {
+                state = State.Host;
+                hosting.SetActive(false);
+                host.SetActive(true);
+
+                hostServerNameLabel.color = Color.white;
+                if (Mod.config["ServerName"] != null)
+                {
+                    hostServerName.text = Mod.config["ServerName"].ToString();
+                }
+                hostLimitLabel.color = Color.white;
+                if (Mod.config["MaxClientCount"] != null)
+                {
+                    hostLimit.text = Mod.config["MaxClientCount"].ToString();
+                }
+                hostUsernameLabel.color = Color.white;
+                if (Mod.config["Username"] != null)
+                {
+                    hostUsername.text = Mod.config["Username"].ToString();
+                }
+                hostPortLabel.color = Color.white;
+                hostPortField.SetActive(true);
+                if (Mod.config["Port"] != null)
+                {
+                    hostPort.text = Mod.config["Port"].ToString();
+                }
+            }
         }
 
         private void HostEntriesReceived(List<ISEntry> entries)
@@ -363,7 +433,7 @@ namespace H3MP.Scripts
             }
         }
 
-        private void Join(int entryID, bool hasPassword, string name)
+        private void Join(bool direct, int entryID, bool hasPassword, string name)
         {
             joiningEntry = entryID;
             gotEndPoint = false;
@@ -371,35 +441,30 @@ namespace H3MP.Scripts
             join.SetActive(true);
             joinPasswordField.SetActive(hasPassword);
             joinServerName.text = "Server:\n" + name;
-        }
 
-        private void ConnectedInit()
-        {
-            if(Mod.managerObject != null)
+            if (direct)
             {
-                main.SetActive(false);
-                if (ThreadManager.host)
-                {
-                    hosting.SetActive(true);
-                    SetHostingPage(ISClient.isConnected && ISClient.gotWelcome && ISClient.wantListed && !ISClient.listed);
-                }
-                else
-                {
-                    client.SetActive(true);
-                    SetClientPage(false);
-                }
+                joinIPLabel.color = Color.white;
+                joinIPField.SetActive(true);
+                joinPortLabel.color = Color.white;
+                joinPortField.SetActive(true);
+            }
+            else
+            {
+                joinIPField.SetActive(false);
+                joinPortField.SetActive(false);
             }
         }
 
         private void SetHostingPage(bool waiting)
         {
-            TODO: // Check if local endpoint is the same that the IS sees
             if (waiting)
             {
                 state = State.HostingWaiting;
                 hostingLoadingAnimation.SetActive(true);
                 hostingInfoTextObject.SetActive(true);
                 hostingListParent.gameObject.SetActive(false);
+                hostingListButton.SetActive(false);
                 hostingInfoText.text = "Awaiting server confirm";
             }
             else
@@ -408,6 +473,25 @@ namespace H3MP.Scripts
                 hostingLoadingAnimation.SetActive(false);
                 hostingInfoTextObject.SetActive(false);
                 hostingListParent.gameObject.SetActive(true);
+                hostingListButton.SetActive(true);
+                if (ISClient.listed)
+                {
+                    hostingListButtonText.color = Color.green;
+                    hostingListButtonText.text = "Listed";
+                }
+                else
+                {
+                    if (ISClient.wantListed)
+                    {
+                        hostingListButtonText.color = Color.cyan;
+                        hostingListButtonText.text = "Listing";
+                    }
+                    else
+                    {
+                        hostingListButtonText.color = Color.yellow;
+                        hostingListButtonText.text = "Unlisted";
+                    }
+                }
 
                 // Destroy any existent pages
                 while (hostingListParent.childCount > 1)
@@ -444,6 +528,7 @@ namespace H3MP.Scripts
                 }
 
                 // Actually start hosting if not already are
+                TODO: // Cont from here, want to make sure that if we start hosting now, we want to host with PT, and we need to start listening through the same socket as ISClient
                 Mod.OnHostClicked();
             }
         }
@@ -538,7 +623,7 @@ namespace H3MP.Scripts
                 }
                 else if (gotEndPoint)
                 {
-                    clientInfoText.color = Color.white;
+                    clientInfoText.color = Color.cyan;
                     clientInfoText.text = "Attempting to join server";
                 }
                 else

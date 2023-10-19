@@ -24,9 +24,8 @@ namespace H3MP.Networking
 
         public IPEndPoint PTEndPoint;
         public bool punchThrough;
-        public bool punchThroughWaiting;
-        public TcpClient PTTCP;
-        public byte[] PTReceiveBuffer;
+        public bool PTUDPEstablished;
+        public UdpClient PTUDP;
         public IAsyncResult PTConnectionResult;
         public int punchThroughAttemptCounter;
 
@@ -60,18 +59,6 @@ namespace H3MP.Networking
             this.ID = ID;
             tcp = new TCP(ID);
             udp = new UDP(ID);
-        }
-
-        public void PTConnectCallback(IAsyncResult result)
-        {
-            punchThroughWaiting = false;
-            PTTCP.EndConnect(result);
-
-            if (!PTTCP.Connected)
-            {
-                return;
-            }
-            // else, this is impossible, the client will not listen for a connection
         }
 
         public class TCP
