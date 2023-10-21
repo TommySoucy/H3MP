@@ -2611,5 +2611,74 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void GasCuboidGout(int trackedID, Vector3 pos, Vector3 norm)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.gasCuboidGout))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+                packet.Write(norm);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void GasCuboidDamage(int trackedID, Damage d)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.gasCuboidDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void GasCuboidHandleDamage(int trackedID, Damage d)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.gasCuboidHandleDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void GasCuboidDamageHandle(int trackedID)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.gasCuboidDamageHandle))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void GasCuboidExplode(int trackedID, Vector3 point, Vector3 dir, bool big)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.gasCuboidExplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(point);
+                packet.Write(dir);
+                packet.Write(big);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void GasCuboidShatter(int trackedID, Vector3 point, Vector3 dir)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.gasCuboidShatter))
+            {
+                packet.Write(trackedID);
+                packet.Write(point);
+                packet.Write(dir);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

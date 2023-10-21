@@ -512,6 +512,12 @@ namespace H3MP.Networking
                 ServerHandle.SightFlipperState,
                 ServerHandle.SightRaiserState,
                 ServerHandle.GatlingGunFire,
+                ServerHandle.GasCuboidGout,
+                ServerHandle.GasCuboidDamage,
+                ServerHandle.GasCuboidHandleDamage,
+                ServerHandle.GasCuboidDamageHandle,
+                ServerHandle.GasCuboidExplode,
+                ServerHandle.GasCuboidShatter,
             };
 
             objects = new TrackedObjectData[100];

@@ -3,6 +3,7 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Networking
 {
@@ -4362,6 +4363,127 @@ namespace H3MP.Networking
                 packet.Write(trackedID);
                 packet.Write(pos);
                 packet.Write(rot);
+                packet.Write(dir);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void GasCuboidGout(int trackedID, Vector3 pos, Vector3 norm, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.gasCuboidGout))
+            {
+                packet.Write(trackedID);
+                packet.Write(pos);
+                packet.Write(norm);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void GasCuboidDamage(int trackedID, Damage d, int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.gasCuboidDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(clientID, packet);
+            }
+        }
+
+        public static void GasCuboidDamage(Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.gasCuboidDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(clientID, packet);
+        }
+
+        public static void GasCuboidHandleDamage(int trackedID, Damage d, int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.gasCuboidHandleDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(clientID, packet);
+            }
+        }
+
+        public static void GasCuboidHandleDamage(Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.gasCuboidHandleDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPDataToAll(clientID, packet);
+        }
+
+        public static void GasCuboidDamageHandle(int trackedID, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.gasCuboidDamageHandle))
+            {
+                packet.Write(trackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void GasCuboidExplode(int trackedID, Vector3 point, Vector3 dir, bool big, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.gasCuboidExplode))
+            {
+                packet.Write(trackedID);
+                packet.Write(point);
+                packet.Write(dir);
+                packet.Write(big);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void GasCuboidShatter(int trackedID, Vector3 point, Vector3 dir, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.gasCuboidShatter))
+            {
+                packet.Write(trackedID);
+                packet.Write(point);
                 packet.Write(dir);
 
                 if (clientID == 0)

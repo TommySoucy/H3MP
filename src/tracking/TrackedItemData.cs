@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Tracking
 {
@@ -242,6 +243,49 @@ namespace H3MP.Tracking
                 else
                 {
                     physicalItem.mountObjectID = -1;
+                }
+            }
+            else if(physicalItem.dataObject is Brut_GasCuboid)
+            {
+                Brut_GasCuboid asGC = physicalItem.dataObject as Brut_GasCuboid;
+                additionalData = new byte[2 + asGC.m_gouts.Count * 24];
+                additionalData[0] = asGC.m_isHandleBrokenOff ? (byte)1 : (byte)0;
+                additionalData[1] = (byte)asGC.m_gouts.Count;
+                for (int i = 0; i < asGC.m_gouts.Count; ++i) 
+                {
+                    int firstIndex = i * 24 + 2;
+                    Vector3 pos = asGC.m_gouts[i].transform.localPosition;
+                    byte[] vecBytes = BitConverter.GetBytes(pos.x);
+                    for(int j=0; j < 4; ++j)
+                    {
+                        additionalData[firstIndex + j] = vecBytes[j];
+                    }
+                    vecBytes = BitConverter.GetBytes(pos.y);
+                    for(int j=0; j < 4; ++j)
+                    {
+                        additionalData[firstIndex + j + 4] = vecBytes[j];
+                    }
+                    vecBytes = BitConverter.GetBytes(pos.z);
+                    for(int j=0; j < 4; ++j)
+                    {
+                        additionalData[firstIndex + j + 8] = vecBytes[j];
+                    }
+                    Vector3 rot = asGC.m_gouts[i].transform.localEulerAngles;
+                    vecBytes = BitConverter.GetBytes(rot.x);
+                    for (int j = 0; j < 4; ++j)
+                    {
+                        additionalData[firstIndex + j] = vecBytes[j];
+                    }
+                    vecBytes = BitConverter.GetBytes(rot.y);
+                    for (int j = 0; j < 4; ++j)
+                    {
+                        additionalData[firstIndex + j + 4] = vecBytes[j];
+                    }
+                    vecBytes = BitConverter.GetBytes(rot.z);
+                    for (int j = 0; j < 4; ++j)
+                    {
+                        additionalData[firstIndex + j + 8] = vecBytes[j];
+                    }
                 }
             }
         }
@@ -534,6 +578,21 @@ namespace H3MP.Tracking
                         (physicalItem.dataObject as UberShatterable).Shatter(point, dir, intensity);
                         --UberShatterableShatterPatch.skip;
                     }
+                }
+            }
+            else if(physicalItem.dataObject is Brut_GasCuboid)
+            {
+                Brut_GasCuboid asGC = physicalItem.dataObject as Brut_GasCuboid;
+                asGC.m_isHandleBrokenOff = additionalData[0] == 1;
+                asGC.Handle.SetActive(asGC.m_isHandleBrokenOff);
+                for (int i = 0; i < additionalData[1]; ++i) 
+                {
+                    int startIndex = i * 24 + 2;
+                    Vector3 pos = new Vector3(BitConverter.ToSingle(additionalData, startIndex), BitConverter.ToSingle(additionalData, startIndex + 4), BitConverter.ToSingle(additionalData, startIndex + 8));
+                    Vector3 normal = new Vector3(BitConverter.ToSingle(additionalData, startIndex), BitConverter.ToSingle(additionalData, startIndex + 4), BitConverter.ToSingle(additionalData, startIndex + 8));
+
+                    asGC.hasGeneratedGoutYet = false;
+                    asGC.GenerateGout(pos, normal);
                 }
             }
 
@@ -840,6 +899,21 @@ namespace H3MP.Tracking
                 // else, sosig has been destroyed
 
                 TrackedItem.unknownSosigInventoryItems.Remove(localWaitingIndex);
+            }
+            if (localTrackedID != -1 && TrackedItem.unknownGasCuboidGout.TryGetValue(localWaitingIndex, out List<KeyValuePair<Vector3, Vector3>> goutList))
+            {
+                for(int i=0; i< goutList.Count; ++i)
+                {
+                    ClientSend.GasCuboidGout(trackedID, goutList[i].Key, goutList[i].Value);
+                }
+
+                TrackedItem.unknownGasCuboidGout.Remove(localWaitingIndex);
+            }
+            if (localTrackedID != -1 && TrackedItem.unknownGasCuboidDamageHandle.Contains(localWaitingIndex))
+            {
+                ClientSend.GasCuboidDamageHandle(trackedID);
+
+                TrackedItem.unknownGasCuboidDamageHandle.Remove(localWaitingIndex);
             }
         }
 

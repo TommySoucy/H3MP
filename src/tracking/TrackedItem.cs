@@ -19,12 +19,13 @@ namespace H3MP.Tracking
 
         // Scene/instance change
         int securedCode = -1; // -1 means it was not secured
-        //public static Dictionary<TrackedItem, int> secured = new Dictionary<TrackedItem, int>();
 
         // Unknown tracked ID queues
         public static Dictionary<uint, byte> unknownCrateHolding = new Dictionary<uint, byte>();
         public static Dictionary<SosigWeapon, KeyValuePair<TrackedSosigData, int>> unknownSosigInventoryObjects = new Dictionary<SosigWeapon, KeyValuePair<TrackedSosigData, int>>();
         public static Dictionary<uint, KeyValuePair<TrackedSosigData, int>> unknownSosigInventoryItems = new Dictionary<uint, KeyValuePair<TrackedSosigData, int>>();
+        public static Dictionary<uint, List<KeyValuePair<Vector3, Vector3>>> unknownGasCuboidGout = new Dictionary<uint, List<KeyValuePair<Vector3, Vector3>>>();
+        public static List<uint> unknownGasCuboidDamageHandle = new List<uint>();
 
         // Update
         public delegate bool UpdateData(); // The updateFunc and updateGivenFunc should return a bool indicating whether data has been modified
@@ -833,8 +834,7 @@ namespace H3MP.Tracking
             }
             else // This is just a pure FVRPhysicalObject, we might want to track some other specific script on this item
             {
-                UberShatterable uberShatterable = physObj.GetComponent<UberShatterable>();
-                if (uberShatterable != null)
+                if(TryGetComponent<UberShatterable>(physObj.gameObject, out UberShatterable uberShatterable))
                 {
                     updateFunc = UpdateUberShatterable;
                     updateGivenFunc = UpdateGivenUberShatterable;
@@ -843,12 +843,60 @@ namespace H3MP.Tracking
                     GameManager.trackedObjectByDamageable.Add(uberShatterable, this);
                     removeTrackedDamageables = RemoveTrackedCommonDamageables;
                 }
+                else if(TryGetComponent<Brut_GasCuboid>(physObj.gameObject, out Brut_GasCuboid gasCuboid))
+                {
+                    updateFunc = UpdateGasCuboid;
+                    updateGivenFunc = UpdateGivenGasCuboid;
+                    dataObject = gasCuboid;
+
+                    if (availableTrackedRefIndices.Count == 0)
+                    {
+                        GameObject[] tempRefs = trackedReferenceObjects;
+                        trackedReferenceObjects = new GameObject[tempRefs.Length + 100];
+                        for (int i = 0; i < tempRefs.Length; ++i)
+                        {
+                            trackedReferenceObjects[i] = tempRefs[i];
+                        }
+                        TrackedObject[] tempItems = trackedReferences;
+                        trackedReferences = new TrackedObject[tempItems.Length + 100];
+                        for (int i = 0; i < tempItems.Length; ++i)
+                        {
+                            trackedReferences[i] = tempItems[i];
+                        }
+                        for (int i = tempItems.Length; i < trackedReferences.Length; ++i)
+                        {
+                            availableTrackedRefIndices.Add(i);
+                        }
+                    }
+                    int refIndex = availableTrackedRefIndices[availableTrackedRefIndices.Count - 1];
+                    availableTrackedRefIndices.RemoveAt(availableTrackedRefIndices.Count - 1);
+                    GameObject refObject = new GameObject(refIndex.ToString());
+                    gasCuboid.SpawnOnSplodePoints.Add(refObject.transform);
+                    trackedReferences[refIndex] = this;
+                    trackedReferenceObjects[refIndex] = refObject;
+
+                    GameManager.trackedObjectByDamageable.Add(gasCuboid, this);
+                    GameManager.trackedObjectByDamageable.Add(gasCuboid.Handle.GetComponent<Brut_GasCuboidHandle>(), this);
+                    removeTrackedDamageables = RemoveTrackedGasCuboidDamageables;
+                }
             }
+        }
+
+        public static bool TryGetComponent<T>(GameObject obj, out T component)
+        {
+            component = obj.GetComponent<T>();
+            return component != null;
         }
 
         public void RemoveTrackedCommonDamageables()
         {
             GameManager.trackedObjectByDamageable.Remove(dataObject as IFVRDamageable);
+        }
+
+        public void RemoveTrackedGasCuboidDamageables()
+        {
+            GameManager.trackedObjectByDamageable.Remove(dataObject as IFVRDamageable);
+            GameManager.trackedObjectByDamageable.Remove((dataObject as Brut_GasCuboid).Handle.GetComponent<Brut_GasCuboidHandle>());
         }
 
         public void RemoveTrackedSosigWeaponDamageables()
@@ -8975,6 +9023,16 @@ namespace H3MP.Tracking
         }
 
         private bool UpdateGivenUberShatterable(byte[] newData)
+        {
+            return false;
+        }
+
+        private bool UpdateGasCuboid()
+        {
+            return false;
+        }
+
+        private bool UpdateGivenGasCuboid(byte[] newData)
         {
             return false;
         }

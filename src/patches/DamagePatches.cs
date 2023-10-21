@@ -713,6 +713,20 @@ namespace H3MP.Patches
 
             PatchController.Verify(roundDamageOriginal, harmony, false);
             harmony.Patch(roundDamageOriginal, new HarmonyMethod(roundDamagePrefix));
+
+            // GasCuboidDamagePatch
+            MethodInfo gasCuboidDamageOriginal = typeof(Brut_GasCuboid).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo gasCuboidDamagePrefix = typeof(GasCuboidDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(gasCuboidDamageOriginal, harmony, false);
+            harmony.Patch(gasCuboidDamageOriginal, new HarmonyMethod(gasCuboidDamagePrefix));
+
+            // GasCuboidHandleDamagePatch
+            MethodInfo gasCuboidHandleDamageOriginal = typeof(Brut_GasCuboidHandle).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo gasCuboidHandleDamagePrefix = typeof(GasCuboidHandleDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(gasCuboidHandleDamageOriginal, harmony, false);
+            harmony.Patch(gasCuboidHandleDamageOriginal, new HarmonyMethod(gasCuboidHandleDamagePrefix));
         }
     }
 
@@ -3755,6 +3769,84 @@ namespace H3MP.Patches
                     else
                     {
                         ClientSend.RoundDamage(trackedObject.data.trackedID, d);
+                    }
+
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    // Patches Brut_GasCuboid.Damage to keep track of damage taken by a gas cuboid
+    class GasCuboidDamagePatch
+    {
+        public static int skip = 0;
+
+        static bool Prefix(Brut_GasCuboid __instance, Damage d)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control, apply damage, send to everyone else
+            // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
+            TrackedObject trackedObject = GameManager.trackedObjectByDamageable.TryGetValue(__instance, out trackedObject) ? trackedObject : null;
+            if (trackedObject != null)
+            { 
+                if(trackedObject.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else // Not controller, send damage to controller for processing
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.GasCuboidDamage(trackedObject.data.trackedID, d, trackedObject.data.controller);
+                    }
+                    else
+                    {
+                        ClientSend.GasCuboidDamage(trackedObject.data.trackedID, d);
+                    }
+
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    // Patches Brut_GasCuboidHandle.Damage to keep track of damage taken by a gas cuboid handle
+    class GasCuboidHandleDamagePatch
+    {
+        public static int skip = 0;
+
+        static bool Prefix(Brut_GasCuboidHandle __instance, Damage d)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control, apply damage, send to everyone else
+            // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
+            TrackedObject trackedObject = GameManager.trackedObjectByDamageable.TryGetValue(__instance, out trackedObject) ? trackedObject : null;
+            if (trackedObject != null)
+            { 
+                if(trackedObject.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else // Not controller, send damage to controller for processing
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.GasCuboidHandleDamage(trackedObject.data.trackedID, d, trackedObject.data.controller);
+                    }
+                    else
+                    {
+                        ClientSend.GasCuboidHandleDamage(trackedObject.data.trackedID, d);
                     }
 
                     return false;

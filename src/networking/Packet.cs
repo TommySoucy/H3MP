@@ -193,7 +193,13 @@ namespace H3MP.Networking
         sightFlipperState = 180,
         sightRaiserState = 181,
         gatlingGunFire = 182,
-        punchThrough = 183
+        punchThrough = 183,
+        gasCuboidGout = 184,
+        gasCuboidDamage = 185,
+        gasCuboidHandleDamage = 186,
+        gasCuboidDamageHandle = 187,
+        gasCuboidExplode = 188,
+        gasCuboidShatter = 189
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -373,7 +379,13 @@ namespace H3MP.Networking
         roundSplode = 171,
         sightFlipperState = 172,
         sightRaiserState = 173,
-        gatlingGunFire = 174
+        gatlingGunFire = 174,
+        gasCuboidGout = 175,
+        gasCuboidDamage = 176,
+        gasCuboidHandleDamage = 177,
+        gasCuboidDamageHandle = 178,
+        gasCuboidExplode = 179,
+        gasCuboidShatter = 180
     }
 
     public class Packet : IDisposable

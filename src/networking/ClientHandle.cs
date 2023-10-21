@@ -4590,5 +4590,121 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void GasCuboidGout(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Vector3 pos = packet.ReadVector3();
+            Vector3 norm = packet.ReadVector3();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null && trackedItemData.additionalData[0] < 255)
+            {
+                byte[] temp = trackedItemData.additionalData;
+                trackedItemData.additionalData = new byte[temp.Length + 24];
+                for (int i = 0; i < temp.Length; ++i)
+                {
+                    trackedItemData.additionalData[i] = temp[i];
+                }
+                ++trackedItemData.additionalData[1];
+
+                if (trackedItemData.physical)
+                {
+                    Brut_GasCuboid asGC = trackedItemData.physicalItem.dataObject as Brut_GasCuboid;
+                    asGC.hasGeneratedGoutYet = false;
+                    ++GasCuboidPatch.generateGoutSkip;
+                    asGC.GenerateGout(pos, norm);
+                    --GasCuboidPatch.generateGoutSkip;
+                }
+            }
+        }
+
+        public static void GasCuboidDamage(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                if (trackedItemData.controller == GameManager.ID && trackedItemData.physical != null)
+                {
+                    ++GasCuboidDamagePatch.skip;
+                    (trackedItemData.physicalItem.dataObject as Brut_GasCuboid).Damage(packet.ReadDamage());
+                    --GasCuboidDamagePatch.skip;
+                }
+            }
+        }
+
+        public static void GasCuboidHandleDamage(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null && trackedItemData.controller == GameManager.ID)
+            {
+                if (trackedItemData.physical != null)
+                {
+                    ++GasCuboidHandleDamagePatch.skip;
+                    (trackedItemData.physicalItem.dataObject as Brut_GasCuboid).Handle.GetComponent<Brut_GasCuboidHandle>().Damage(packet.ReadDamage());
+                    --GasCuboidHandleDamagePatch.skip;
+                }
+            }
+        }
+
+        public static void GasCuboidDamageHandle(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                trackedItemData.additionalData[0] = 1;
+                if (trackedItemData.physical != null)
+                {
+                    Brut_GasCuboid asGC = trackedItemData.physicalItem.dataObject as Brut_GasCuboid;
+                    asGC.m_isHandleBrokenOff = true;
+                    asGC.Handle.SetActive(false);
+                }
+            }
+        }
+
+        public static void GasCuboidExplode(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Vector3 point = packet.ReadVector3();
+            Vector3 dir = packet.ReadVector3();
+            bool big = packet.ReadBool();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                if (trackedItemData.physical != null)
+                {
+                    Brut_GasCuboid asGC = trackedItemData.physicalItem.dataObject as Brut_GasCuboid;
+                    ++GasCuboidPatch.explodeSkip;
+                    asGC.Explode(point, dir, big);
+                    --GasCuboidPatch.explodeSkip;
+                }
+            }
+        }
+
+        public static void GasCuboidShatter(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Vector3 point = packet.ReadVector3();
+            Vector3 dir = packet.ReadVector3();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                if (trackedItemData.physical != null)
+                {
+                    Brut_GasCuboid asGC = trackedItemData.physicalItem.dataObject as Brut_GasCuboid;
+                    ++GasCuboidPatch.shatterSkip;
+                    asGC.Shatter(point, dir);
+                    --GasCuboidPatch.shatterSkip;
+                }
+            }
+        }
     }
 }

@@ -501,6 +501,8 @@ namespace H3MP
             TrackedItem.unknownCrateHolding.Clear();
             TrackedItem.unknownSosigInventoryItems.Clear();
             TrackedItem.unknownSosigInventoryObjects.Clear();
+            TrackedItem.unknownGasCuboidGout.Clear();
+            TrackedItem.unknownGasCuboidDamageHandle.Clear();
 
             TrackedSosig.unknownBodyStates.Clear();
             TrackedSosig.unknownIFFChart.Clear();

@@ -627,6 +627,12 @@ namespace H3MP.Networking
                 ClientHandle.SightFlipperState,
                 ClientHandle.SightRaiserState,
                 ClientHandle.GatlingGunFire,
+                ClientHandle.GasCuboidGout,
+                ClientHandle.GasCuboidDamage,
+                ClientHandle.GasCuboidHandleDamage,
+                ClientHandle.GasCuboidDamageHandle,
+                ClientHandle.GasCuboidExplode,
+                ClientHandle.GasCuboidShatter,
             };
 
             // All vanilla scenes can be synced by default

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
+using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Patches
 {
@@ -918,6 +919,29 @@ namespace H3MP.Patches
 
             PatchController.Verify(gatlingGunFireShotOriginal, harmony, false);
             harmony.Patch(gatlingGunFireShotOriginal, null, new HarmonyMethod(gatlingGunFireShotPostfix));
+
+            // GasCuboidPatch
+            MethodInfo gasCuboidGenerateGoutOriginal = typeof(Brut_GasCuboid).GetMethod("GenerateGout", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo gasCuboidGenerateGoutPrefix = typeof(GasCuboidPatch).GetMethod("GenerateGoutPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo gasCuboidDamageHandleOriginal = typeof(Brut_GasCuboid).GetMethod("DamageHandle", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo gasCuboidDamageHandlePrefix = typeof(GasCuboidPatch).GetMethod("DamageHandlePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo gasCuboidUpdateOriginal = typeof(Brut_GasCuboid).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo gasCuboidFixedUpdateOriginal = typeof(Brut_GasCuboid).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo gasCuboidUpdatePrefix = typeof(GasCuboidPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo gasCuboidExplodeOriginal = typeof(Brut_GasCuboid).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo gasCuboidExplodePrefix = typeof(GasCuboidPatch).GetMethod("ExplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo gasCuboidExplodePostfix = typeof(GasCuboidPatch).GetMethod("ExplodePostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(gasCuboidGenerateGoutOriginal, harmony, false);
+            PatchController.Verify(gasCuboidDamageHandleOriginal, harmony, false);
+            PatchController.Verify(gasCuboidUpdateOriginal, harmony, false);
+            PatchController.Verify(gasCuboidFixedUpdateOriginal, harmony, false);
+            PatchController.Verify(gasCuboidExplodeOriginal, harmony, false);
+            harmony.Patch(gasCuboidGenerateGoutOriginal, new HarmonyMethod(gasCuboidGenerateGoutPrefix));
+            harmony.Patch(gasCuboidDamageHandleOriginal, new HarmonyMethod(gasCuboidDamageHandlePrefix));
+            harmony.Patch(gasCuboidUpdateOriginal, new HarmonyMethod(gasCuboidUpdatePrefix));
+            harmony.Patch(gasCuboidFixedUpdateOriginal, new HarmonyMethod(gasCuboidUpdatePrefix));
+            harmony.Patch(gasCuboidExplodeOriginal, new HarmonyMethod(gasCuboidExplodePrefix), new HarmonyMethod(gasCuboidExplodePostfix));
         }
     }
 
@@ -7965,6 +7989,152 @@ namespace H3MP.Patches
                 else
                 {
                     ClientSend.GatlingGunFire(trackedGatlingGun.data.trackedID, __instance.MuzzlePos.position, __instance.MuzzlePos.rotation, __instance.MuzzlePos.forward);
+                }
+            }
+        }
+    }
+
+    // Patches Brut_GasCuboid
+    class GasCuboidPatch
+    {
+        public static int generateGoutSkip = 0;
+        public static int explodeSkip = 0;
+        public static bool inExplode;
+        public static int shatterSkip = 0;
+
+        // Patches GenerateGout to track event
+        static void GenerateGoutPrefix(Brut_GasCuboid __instance, Vector3 point, Vector3 normal)
+        {
+            if(generateGoutSkip > 0 || Mod.managerObject == null || __instance.hasGeneratedGoutYet || __instance.m_isDestroyed || __instance.m_fuel <= 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+            if (trackedGasCuboid != null && trackedGasCuboid.itemData.additionalData[0] < 255)
+            {
+                byte[] temp = trackedGasCuboid.itemData.additionalData;
+                trackedGasCuboid.itemData.additionalData = new byte[temp.Length + 24];
+                for (int i = 0; i < temp.Length; ++i)
+                {
+                    trackedGasCuboid.itemData.additionalData[i] = temp[i];
+                }
+                ++trackedGasCuboid.itemData.additionalData[1];
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
+                }
+                else if(trackedGasCuboid.itemData.trackedID != -1)
+                {
+                    ClientSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
+                }
+                else
+                {
+                    if (TrackedItem.unknownGasCuboidGout.TryGetValue(trackedGasCuboid.data.localWaitingIndex, out List<KeyValuePair<Vector3, Vector3>> current))
+                    {
+                        current.Add(new KeyValuePair<Vector3, Vector3>(point, normal));
+                    }
+                    else
+                    {
+                        TrackedItem.unknownGasCuboidGout.Add(trackedGasCuboid.data.localWaitingIndex, new List<KeyValuePair<Vector3, Vector3>>() { new KeyValuePair<Vector3, Vector3>(point, normal) });
+                    }
+                }
+            }
+        }
+
+        // Patches DamageHandle to track event
+        static void DamageHandlePrefix(Brut_GasCuboid __instance)
+        {
+            if(Mod.managerObject == null || __instance.m_isHandleBrokenOff || __instance.m_fuel <= 0)
+            {
+                return;
+            }
+
+            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+            if (trackedGasCuboid != null)
+            {
+                trackedGasCuboid.itemData.additionalData[0] = 1;
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
+                }
+                else if(trackedGasCuboid.itemData.trackedID != -1)
+                {
+                    ClientSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
+                }
+                else
+                {
+                    TrackedItem.unknownGasCuboidDamageHandle.Add(trackedGasCuboid.data.localWaitingIndex);
+                }
+            }
+        }
+
+        // Patches Update and FixedUpdate to prevent for non controllers
+        static bool UpdatePrefix(Brut_GasCuboid __instance)
+        {
+            if(Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+            if (trackedGasCuboid != null)
+            {
+                return trackedGasCuboid.itemData.controller == GameManager.ID;
+            }
+
+            return true;
+        }
+
+        // Patches Explode to track event
+        static void ExplodePrefix(Brut_GasCuboid __instance, Vector3 point, Vector3 dir, bool isBig)
+        {
+            inExplode = true;
+
+            if (explodeSkip > 0 || Mod.managerObject == null || __instance.m_isDestroyed)
+            {
+                return;
+            }
+
+            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+            if (trackedGasCuboid != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
+                }
+                else
+                {
+                    ClientSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
+                }
+            }
+        }
+
+        static void ExplodePostfix()
+        {
+            inExplode = false;
+        }
+
+        // Patches Explode to track event
+        static void ShatterPrefix(Brut_GasCuboid __instance, Vector3 point, Vector3 dir)
+        {
+            if (shatterSkip > 0 || inExplode || Mod.managerObject == null || __instance.m_isDestroyed)
+            {
+                return;
+            }
+
+            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+            if (trackedGasCuboid != null)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
+                }
+                else
+                {
+                    ClientSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
                 }
             }
         }
