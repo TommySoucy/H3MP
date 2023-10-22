@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
-using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Patches
 {

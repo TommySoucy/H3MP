@@ -727,6 +727,20 @@ namespace H3MP.Patches
 
             PatchController.Verify(gasCuboidHandleDamageOriginal, harmony, false);
             harmony.Patch(gasCuboidHandleDamageOriginal, new HarmonyMethod(gasCuboidHandleDamagePrefix));
+
+            // TransformerPatch
+            MethodInfo transformerArcOriginal = typeof(Brut_TransformerSparks).GetMethod("AttemptToGenerateArc", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo transformerArcTranspiler = typeof(TransformerDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(transformerArcOriginal, harmony, false);
+            try
+            {
+                harmony.Patch(transformerArcOriginal, null, null, new HarmonyMethod(transformerArcTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.TransformerPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
         }
     }
 
@@ -3853,6 +3867,63 @@ namespace H3MP.Patches
                 }
             }
             return true;
+        }
+    }
+
+    // Patches Brut_TransformerSparks.AttemptToGenerateArc to control who causes damage
+    class TransformerDamageablePatch
+    {
+        // This will only let the arc do damage if we control damageable
+        // Note: Unlike the other GetActualFlags (As of this comment) we check for the controller of the damageable, not the damager
+        public static bool GetActualFlag(IFVRDamageable damageable)
+        {
+            // Note: If this got called it is because demageable != null, so flag2 would usually be set to true
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0 || damageable is FVRPlayerHitbox)
+            {
+                return true;
+            }
+
+            // Note: If flag2, damageable != null
+            TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(damageable, out damageableObject) ? damageableObject : null;
+            if (damageableObject == null)
+            {
+                return true; // Damageable object client side (not tracked), apply damage
+            }
+            else // Damageable object tracked, only want to apply damage if we control it
+            {
+                return damageableObject.data.controller == GameManager.ID;
+            }
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+            
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Load IFVRDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(TransformerDamageablePatch), "GetActualFlag"))); // Call GetActualFlag, put return val on stack
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 8)); // Set flag2
+
+            bool applied = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldc_I4_1 &&
+                    instructionList[i + 1].opcode == OpCodes.Stloc_S && instructionList[i + 1].operand.ToString().Equals("System.Boolean (8)"))
+                {
+                    instructionList.InsertRange(i+1, toInsert);
+                    applied = true;
+                    break;
+                }
+            }
+
+            if (!applied)
+            {
+                Mod.LogError("TransformerDamageablePatch Transpiler not applied!");
+            }
+
+            return instructionList;
         }
     }
 }
