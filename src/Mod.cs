@@ -661,6 +661,10 @@ namespace H3MP
                                     ServerListController.instance.OnJoinConfirmClicked();
                                 }
                                 break;
+                            case 33: // Load to Institution Preview
+                                Mod.LogInfo("\tDebug: Load to Institution Preview");
+                                SteamVR_LoadLevel.Begin("Institution_Preview", false, 0.5f, 0f, 0f, 0f, 1f);
+                                break;
                         }
                     }
                 }

@@ -98,7 +98,7 @@ namespace H3MP.Tracking
             data.instance = GameManager.instance;
             data.controller = GameManager.ID;
             data.initTracker = GameManager.ID;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
+            data.sceneInit = GameManager.InSceneInit();
 
             GameManager.trackedEncryptionByEncryption.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);
             GameManager.trackedObjectByObject.Add(data.physicalEncryption.physicalEncryption, trackedEncryption);

@@ -68,7 +68,7 @@ namespace H3MP.Tracking
             data.instance = GameManager.instance;
             data.initTracker = GameManager.ID;
             data.controller = GameManager.ID;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
+            data.sceneInit = GameManager.InSceneInit();
 
             GameManager.currentTrackedPlayerBody = trackedPlayerBody;
             GameManager.trackedObjectByObject.Add(data.physicalPlayerBody.physicalPlayerBody, trackedPlayerBody);

@@ -103,6 +103,17 @@ namespace H3MP.Patches
 
             PatchController.Verify(anvilPrefabSpawnPatchOriginal, harmony, true);
             harmony.Patch(anvilPrefabSpawnPatchOriginal, new HarmonyMethod(anvilPrefabSpawnPatchPrefix), new HarmonyMethod(anvilPrefabSpawnPatchPostfix));
+
+            // BrutPlacerPatch
+            MethodInfo brutPlacerOriginal = typeof(BrutPlacer).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo brutAssemblagePlacerOriginal = typeof(BrutAssemblagePlacer).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo brutPlacerPrefix = typeof(BrutPlacerPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo brutPlacerPostfix = typeof(BrutPlacerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(brutPlacerOriginal, harmony, true);
+            PatchController.Verify(brutAssemblagePlacerOriginal, harmony, true);
+            harmony.Patch(brutPlacerOriginal, new HarmonyMethod(brutPlacerPrefix), new HarmonyMethod(brutPlacerPostfix));
+            harmony.Patch(brutAssemblagePlacerOriginal, new HarmonyMethod(brutPlacerPrefix), new HarmonyMethod(brutPlacerPostfix));
         }
     }
 
@@ -674,7 +685,7 @@ namespace H3MP.Patches
 
         static bool Prefix(AnvilPrefabSpawn __instance, GameObject result)
         {
-            // Skip if not connected or no one else in the scene/instance
+            // Skip if not connected
             if (Mod.managerObject == null)
             {
                 return true;
@@ -691,6 +702,34 @@ namespace H3MP.Patches
         static void Postfix()
         {
             inInitPrefabSpawn = false;
+        }
+    }
+
+    // Patches BrutPlacer.Start and BrutAssemblagePlacer.Start so we know when we spawn items from a Brut(Assemblage)Placer
+    class BrutPlacerPatch
+    {
+        public static bool inInitBrutPlacer;
+
+        static bool Prefix()
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            inInitBrutPlacer = true;
+
+            Mod.LogInfo("Brut(Assemblage)Placer: loading?: " + GameManager.sceneLoading + ", override?: " + GameManager.controlOverride + ", firstPlayerInSceneInstance?: " + GameManager.firstPlayerInSceneInstance);
+
+            // Prevent spawning if loading but we have control override, or we aren't loading but we were first in scene
+            return (GameManager.sceneLoading && GameManager.controlOverride) || (!GameManager.sceneLoading && GameManager.firstPlayerInSceneInstance);
+            // TODO: Improvement: After spawning its stuff, the placer is usually destroyed, so if we return false here, we might want to destroy the placer right away
+        }
+
+        static void Postfix()
+        {
+            inInitBrutPlacer = false;
         }
     }
 }

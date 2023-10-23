@@ -236,7 +236,7 @@ namespace H3MP.Tracking
             data.instance = GameManager.instance;
             data.controller = GameManager.ID;
             data.initTracker = GameManager.ID;
-            data.sceneInit = SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine || AnvilPrefabSpawnPatch.inInitPrefabSpawn || GameManager.inPostSceneLoadTrack;
+            data.sceneInit = GameManager.InSceneInit();
 
             GameManager.trackedSosigBySosig.Add(sosigScript, trackedSosig);
             GameManager.trackedObjectByObject.Add(sosigScript, trackedSosig);
@@ -708,7 +708,6 @@ namespace H3MP.Tracking
             SosigConfigurePatch.skipConfigure = true;
             physicalSosig.physicalSosig.Configure(configTemplate);
 
-            // TODO: We seem to be adding to these list but never removing?
             GameManager.trackedSosigBySosig.Add(physicalSosig.physicalSosig, physicalSosig);
             GameManager.trackedObjectByObject.Add(physicalSosig.physicalSosig, physicalSosig);
             for (int i = 0; i < physicalSosig.physicalSosig.Links.Count; ++i)

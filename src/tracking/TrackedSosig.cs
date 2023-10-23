@@ -192,7 +192,7 @@ namespace H3MP.Tracking
 
         protected virtual void OnInstanceJoined(int instance, int source)
         {
-            // Since AutoMeaters can't go across scenes, we only process an instance change if we are not currently loading into a new scene
+            // Since Sosigs can't go across scenes, we only process an instance change if we are not currently loading into a new scene
             if (!GameManager.sceneLoading)
             {
                 TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;

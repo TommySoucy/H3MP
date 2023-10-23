@@ -46,6 +46,7 @@ namespace H3MP
         public static Dictionary<BreakableGlass, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlass = new Dictionary<BreakableGlass, TrackedBreakableGlass>();
         public static Dictionary<BreakableGlassDamager, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlassDamager = new Dictionary<BreakableGlassDamager, TrackedBreakableGlass>();
         public static Dictionary<wwGatlingGun, TrackedGatlingGun> trackedGatlingGunByGatlingGun = new Dictionary<wwGatlingGun, TrackedGatlingGun>();
+        public static Dictionary<Construct_Blister, TrackedBlister> trackedBlisterByBlister = new Dictionary<Construct_Blister, TrackedBlister>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, TNHInstance> TNHInstances = new Dictionary<int, TNHInstance>();
         public static List<int> playersAtLoadStart;
@@ -2137,6 +2138,14 @@ namespace H3MP
             {
                 OnPlayerBodyInit(playerBody);
             }
+        }
+
+        public static bool InSceneInit()
+        {
+            return SpawnVaultFileRoutinePatch.inInitSpawnVaultFileRoutine
+                || AnvilPrefabSpawnPatch.inInitPrefabSpawn
+                || inPostSceneLoadTrack
+                || BrutPlacerPatch.inInitBrutPlacer;
         }
     }
 }
