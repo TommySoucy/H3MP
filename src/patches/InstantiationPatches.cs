@@ -114,6 +114,20 @@ namespace H3MP.Patches
             PatchController.Verify(brutAssemblagePlacerOriginal, harmony, true);
             harmony.Patch(brutPlacerOriginal, new HarmonyMethod(brutPlacerPrefix), new HarmonyMethod(brutPlacerPostfix));
             harmony.Patch(brutAssemblagePlacerOriginal, new HarmonyMethod(brutPlacerPrefix), new HarmonyMethod(brutPlacerPostfix));
+
+            // ConstructVolumePatch
+            MethodInfo constructBlisterVolumeOriginal = typeof(Construct_Blister_Volume).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo constructFloaterVolumeOriginal = typeof(Construct_Floater_Volume).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo constructNodeVolumeOriginal = typeof(Construct_Node_Volume).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo constructVolumePrefix = typeof(ConstructVolumePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo constructVolumePostfix = typeof(ConstructVolumePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(constructBlisterVolumeOriginal, harmony, true);
+            PatchController.Verify(constructFloaterVolumeOriginal, harmony, true);
+            PatchController.Verify(constructNodeVolumeOriginal, harmony, true);
+            harmony.Patch(constructBlisterVolumeOriginal, new HarmonyMethod(constructVolumePrefix), new HarmonyMethod(constructVolumePostfix));
+            harmony.Patch(constructFloaterVolumeOriginal, new HarmonyMethod(constructVolumePrefix), new HarmonyMethod(constructVolumePostfix));
+            harmony.Patch(constructNodeVolumeOriginal, new HarmonyMethod(constructVolumePrefix), new HarmonyMethod(constructVolumePostfix));
         }
     }
 
@@ -730,6 +744,33 @@ namespace H3MP.Patches
         static void Postfix()
         {
             inInitBrutPlacer = false;
+        }
+    }
+
+    // Patches Construct_*_Volume.Start to track scene init
+    class ConstructVolumePatch
+    {
+        public static bool inInitConstructVolume;
+
+        static bool Prefix()
+        {
+            // Skip if not connected
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            inInitConstructVolume = true;
+
+            Mod.LogInfo("Construct volume: loading?: " + GameManager.sceneLoading + ", override?: " + GameManager.controlOverride + ", firstPlayerInSceneInstance?: " + GameManager.firstPlayerInSceneInstance);
+
+            // Prevent spawning if loading but we have control override, or we aren't loading but we were first in scene
+            return (GameManager.sceneLoading && GameManager.controlOverride) || (!GameManager.sceneLoading && GameManager.firstPlayerInSceneInstance);
+        }
+
+        static void Postfix()
+        {
+            inInitConstructVolume = false;
         }
     }
 }
