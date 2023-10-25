@@ -2,10 +2,10 @@
 
 namespace H3MP.Tracking
 {
-    public class TrackedBlister : TrackedObject
+    public class TrackedFloater : TrackedObject
     {
-        public Construct_Blister physicalBlister;
-        public TrackedBlisterData blisterData;
+        public Construct_Floater physicalFloater;
+        public TrackedFloaterData floaterData;
 
         protected override void OnDestroy()
         {
@@ -16,8 +16,9 @@ namespace H3MP.Tracking
             }
 
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the physical object anymore
-            GameManager.trackedBlisterByBlister.Remove(physicalBlister);
-            GameManager.trackedObjectByDamageable.Remove(physicalBlister.GetComponentInChildren<UberShatterable>());
+            GameManager.trackedFloaterByFloater.Remove(physicalFloater);
+            GameManager.trackedObjectByDamageable.Remove(physicalFloater);
+            GameManager.trackedObjectByDamageable.Remove(physicalFloater.GetComponentInChildren<Construct_Floater_Core>());
 
             base.OnDestroy();
         }

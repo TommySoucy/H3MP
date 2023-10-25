@@ -52,6 +52,10 @@ namespace H3MP.Tracking
             data.initTracker = GameManager.ID;
             data.sceneInit = GameManager.InSceneInit();
 
+            GameManager.trackedBlisterByBlister.Add(trackedBlister.physicalBlister, trackedBlister);
+            GameManager.trackedObjectByObject.Add(trackedBlister.physicalBlister, trackedBlister);
+            GameManager.trackedObjectByDamageable.Add(trackedBlister.GetComponentInChildren<UberShatterable>(), trackedBlister);
+
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
             GameManager.objects.Add(data);
@@ -65,8 +69,11 @@ namespace H3MP.Tracking
         {
             base.WriteToPacket(packet, incrementOrder, full);
 
-            packet.Write(position);
-            packet.Write(rotation);
+            if (full)
+            {
+                packet.Write(position);
+                packet.Write(rotation);
+            }
         }
 
         public override IEnumerator Instantiate()
@@ -98,6 +105,7 @@ namespace H3MP.Tracking
 
             GameManager.trackedBlisterByBlister.Add(physicalBlister.physicalBlister, physicalBlister);
             GameManager.trackedObjectByObject.Add(physicalBlister.physicalBlister, physicalBlister);
+            GameManager.trackedObjectByDamageable.Add(physicalBlister.GetComponentInChildren<UberShatterable>(), physicalBlister);
 
             // Initially set itself
             UpdateFromData(this);
@@ -176,6 +184,7 @@ namespace H3MP.Tracking
                 if (physicalBlister != null && physicalBlister.physicalBlister != null)
                 {
                     GameManager.trackedBlisterByBlister.Remove(physicalBlister.physicalBlister);
+                    GameManager.trackedObjectByDamageable.Remove(physicalBlister.GetComponentInChildren<UberShatterable>());
                 }
             }
         }

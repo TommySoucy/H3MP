@@ -47,6 +47,7 @@ namespace H3MP
         public static Dictionary<BreakableGlassDamager, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlassDamager = new Dictionary<BreakableGlassDamager, TrackedBreakableGlass>();
         public static Dictionary<wwGatlingGun, TrackedGatlingGun> trackedGatlingGunByGatlingGun = new Dictionary<wwGatlingGun, TrackedGatlingGun>();
         public static Dictionary<Construct_Blister, TrackedBlister> trackedBlisterByBlister = new Dictionary<Construct_Blister, TrackedBlister>();
+        public static Dictionary<Construct_Floater, TrackedFloater> trackedFloaterByFloater = new Dictionary<Construct_Floater, TrackedFloater>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, TNHInstance> TNHInstances = new Dictionary<int, TNHInstance>();
         public static List<int> playersAtLoadStart;
