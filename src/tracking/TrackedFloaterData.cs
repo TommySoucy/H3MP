@@ -2,6 +2,7 @@
 using H3MP.Networking;
 using H3MP.Patches;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace H3MP.Tracking
@@ -167,6 +168,24 @@ namespace H3MP.Tracking
             rotation = physicalFloater.physicalFloater.transform.rotation;
 
             return updated || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+        }
+
+        public override void OnTrackedIDReceived(TrackedObjectData newData)
+        {
+            base.OnTrackedIDReceived(newData);
+
+            if (localTrackedID != -1 && TrackedFloater.unknownFloaterBeginExploding.Contains(localWaitingIndex))
+            {
+                ClientSend.FloaterBeginExploding(trackedID, true);
+
+                TrackedFloater.unknownFloaterBeginExploding.Remove(localWaitingIndex);
+            }
+            if (localTrackedID != -1 && TrackedFloater.unknownFloaterExplode.Contains(localWaitingIndex))
+            {
+                ClientSend.FloaterExplode(trackedID);
+
+                TrackedFloater.unknownFloaterExplode.Remove(localWaitingIndex);
+            }
         }
 
         public override void RemoveFromLocal()

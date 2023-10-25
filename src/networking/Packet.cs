@@ -199,7 +199,11 @@ namespace H3MP.Networking
         gasCuboidHandleDamage = 186,
         gasCuboidDamageHandle = 187,
         gasCuboidExplode = 188,
-        gasCuboidShatter = 189
+        gasCuboidShatter = 189,
+        floaterDamage = 190,
+        floaterCoreDamage = 191,
+        floaterBeginExploding = 192,
+        floaterExplode = 193
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -385,7 +389,11 @@ namespace H3MP.Networking
         gasCuboidHandleDamage = 177,
         gasCuboidDamageHandle = 178,
         gasCuboidExplode = 179,
-        gasCuboidShatter = 180
+        gasCuboidShatter = 180,
+        floaterDamage = 181,
+        floaterCoreDamage = 182,
+        floaterBeginExploding = 183,
+        floaterExplode = 184
     }
 
     public class Packet : IDisposable

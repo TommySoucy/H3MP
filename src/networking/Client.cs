@@ -633,6 +633,10 @@ namespace H3MP.Networking
                 ClientHandle.GasCuboidDamageHandle,
                 ClientHandle.GasCuboidExplode,
                 ClientHandle.GasCuboidShatter,
+                ClientHandle.FloaterDamage,
+                ClientHandle.FloaterCoreDamage,
+                ClientHandle.FloaterBeginExploding,
+                ClientHandle.FloaterExplode,
             };
 
             // All vanilla scenes can be synced by default

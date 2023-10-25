@@ -4438,7 +4438,7 @@ namespace H3MP.Networking
             }
             packet.readPos = 0;
 
-            SendTCPDataToAll(clientID, packet);
+            SendTCPData(clientID, packet);
         }
 
         public static void GasCuboidDamageHandle(int trackedID, int clientID = 0)
@@ -4485,6 +4485,87 @@ namespace H3MP.Networking
                 packet.Write(trackedID);
                 packet.Write(point);
                 packet.Write(dir);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void FloaterDamage(int trackedID, Damage d, int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.floaterDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(clientID, packet);
+            }
+        }
+
+        public static void FloaterDamage(Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.floaterDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(clientID, packet);
+        }
+
+        public static void FloaterCoreDamage(int trackedID, Damage d, int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.floaterCoreDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(clientID, packet);
+            }
+        }
+
+        public static void FloaterCoreDamage(Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.floaterCoreDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(clientID, packet);
+        }
+
+        public static void FloaterBeginExploding(int trackedID, bool fromController, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.floaterBeginExploding))
+            {
+                packet.Write(trackedID);
+                packet.Write(fromController);
+
+                if (fromController)
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+                else
+                {
+                    SendTCPData(clientID, packet);
+                }
+            }
+        }
+
+        public static void FloaterExplode(int trackedID, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.floaterExplode))
+            {
+                packet.Write(trackedID);
 
                 if (clientID == 0)
                 {

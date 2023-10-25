@@ -4706,5 +4706,66 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void FloaterDamage(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedFloaterData trackedFloaterData = Client.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null && trackedFloaterData.controller == GameManager.ID && trackedFloaterData.physical != null)
+            {
+                ++FloaterDamagePatch.skip;
+                trackedFloaterData.physicalFloater.physicalFloater.Damage(packet.ReadDamage());
+                --FloaterDamagePatch.skip;
+            }
+        }
+
+        public static void FloaterCoreDamage(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedFloaterData trackedFloaterData = Client.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null && trackedFloaterData.controller == GameManager.ID && trackedFloaterData.physical != null)
+            {
+                ++FloaterCoreDamagePatch.skip;
+                trackedFloaterData.physicalFloater.GetComponentInChildren<Construct_Floater_Core>().Damage(packet.ReadDamage());
+                --FloaterCoreDamagePatch.skip;
+            }
+        }
+
+        public static void FloaterBeginExploding(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool fromController = packet.ReadBool();
+
+            TrackedFloaterData trackedFloaterData = Client.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null)
+            {
+                if (fromController) // From controller, trigger explosion on our side
+                {
+                    FloaterPatch.beginExplodingOverride = true;
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginExploding();
+                    FloaterPatch.beginExplodingOverride = false;
+                }
+                else if (trackedFloaterData.controller == GameManager.ID) // We control, trigger explosion and send order to everyone else
+                {
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginExploding();
+                }
+                // else // Not from controller and we don't control, this should not happen
+            }
+        }
+
+        public static void FloaterExplode(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedFloaterData trackedFloaterData = Client.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null && trackedFloaterData.physicalFloater != null)
+            {
+                ++FloaterPatch.explodeSkip;
+                trackedFloaterData.physicalFloater.physicalFloater.Explode();
+                --FloaterPatch.explodeSkip;
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using System.Collections.Generic;
 
 namespace H3MP.Tracking
 {
@@ -6,6 +7,9 @@ namespace H3MP.Tracking
     {
         public Construct_Floater physicalFloater;
         public TrackedFloaterData floaterData;
+
+        public static List<uint> unknownFloaterBeginExploding = new List<uint>();
+        public static List<uint> unknownFloaterExplode = new List<uint>();
 
         protected override void OnDestroy()
         {

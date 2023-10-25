@@ -2680,5 +2680,48 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void FloaterDamage(int trackedID, Damage d)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.floaterDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void FloaterCoreDamage(int trackedID, Damage d)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.floaterCoreDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void FloaterBeginExploding(int trackedID, bool control)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.floaterBeginExploding))
+            {
+                packet.Write(trackedID);
+                packet.Write(control);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void FloaterExplode(int trackedID)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.floaterExplode))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

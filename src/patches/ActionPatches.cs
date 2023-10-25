@@ -941,6 +941,17 @@ namespace H3MP.Patches
             harmony.Patch(gasCuboidUpdateOriginal, new HarmonyMethod(gasCuboidUpdatePrefix));
             harmony.Patch(gasCuboidFixedUpdateOriginal, new HarmonyMethod(gasCuboidUpdatePrefix));
             harmony.Patch(gasCuboidExplodeOriginal, new HarmonyMethod(gasCuboidExplodePrefix), new HarmonyMethod(gasCuboidExplodePostfix));
+
+            // FloaterPatch
+            MethodInfo floaterBeginExplodingOriginal = typeof(Construct_Floater).GetMethod("BeginExploding", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo floaterBeginExplodingPrefix = typeof(FloaterPatch).GetMethod("BeginExplodingPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo floaterExplodeOriginal = typeof(Construct_Floater).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo floaterExplodePrefix = typeof(FloaterPatch).GetMethod("ExplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(floaterBeginExplodingOriginal, harmony, false);
+            PatchController.Verify(floaterExplodeOriginal, harmony, false);
+            harmony.Patch(floaterBeginExplodingOriginal, new HarmonyMethod(floaterBeginExplodingPrefix));
+            harmony.Patch(floaterExplodeOriginal, new HarmonyMethod(floaterExplodePrefix));
         }
     }
 
@@ -8136,6 +8147,84 @@ namespace H3MP.Patches
                     ClientSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
                 }
             }
+        }
+    }
+
+    // Patches Construct_Floater
+    class FloaterPatch
+    {
+        public static bool beginExplodingOverride;
+        public static int explodeSkip;
+
+        // Patches BeginExploding to track event
+        static bool BeginExplodingPrefix(Construct_Floater __instance)
+        {
+            if (Mod.managerObject == null || __instance.m_isExploding)
+            {
+                return true;
+            }
+
+            TrackedFloater trackedFloater = GameManager.trackedFloaterByFloater.TryGetValue(__instance, out trackedFloater) ? trackedFloater : null;
+            if (trackedFloater != null)
+            {
+                bool control = trackedFloater.data.controller == GameManager.ID;
+
+                if (!beginExplodingOverride)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
+                    }
+                    else if (trackedFloater.data.trackedID != -1)
+                    {
+                        ClientSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
+                    }
+                    else // Note that this is only possible if we are the controller
+                    {
+                        TrackedFloater.unknownFloaterBeginExploding.Add(trackedFloater.data.localWaitingIndex);
+                    }
+                }
+
+                return beginExplodingOverride || control;
+            }
+
+            return true;
+        }
+
+        // Patches Explode to track event
+        static bool ExplodePrefix(Construct_Floater __instance)
+        {
+            if (Mod.managerObject == null || explodeSkip > 0 || __instance.m_isExploded)
+            {
+                return true;
+            }
+
+            TrackedFloater trackedFloater = GameManager.trackedFloaterByFloater.TryGetValue(__instance, out trackedFloater) ? trackedFloater : null;
+            if (trackedFloater != null)
+            {
+                if(trackedFloater.data.controller == GameManager.ID)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.FloaterExplode(trackedFloater.data.trackedID);
+                    }
+                    else if (trackedFloater.data.trackedID != -1)
+                    {
+                        ClientSend.FloaterExplode(trackedFloater.data.trackedID);
+                    }
+                    else // Note that this is only possible if we are the controller
+                    {
+                        TrackedFloater.unknownFloaterBeginExploding.Remove(trackedFloater.data.localWaitingIndex);
+                        TrackedFloater.unknownFloaterExplode.Add(trackedFloater.data.localWaitingIndex);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            return true;
         }
     }
 }

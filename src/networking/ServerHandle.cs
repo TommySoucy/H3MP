@@ -5210,5 +5210,97 @@ namespace H3MP.Networking
                 ServerSend.GasCuboidShatter(trackedID, point, dir, clientID);
             }
         }
+
+        public static void FloaterDamage(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedFloaterData trackedFloaterData = Server.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null)
+            {
+                if (trackedFloaterData.controller == GameManager.ID)
+                {
+                    if (trackedFloaterData.physical != null)
+                    {
+                        ++FloaterDamagePatch.skip;
+                        trackedFloaterData.physicalFloater.physicalFloater.Damage(packet.ReadDamage());
+                        --FloaterDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    ServerSend.FloaterDamage(packet, trackedFloaterData.controller);
+                }
+            }
+        }
+
+        public static void FloaterCoreDamage(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedFloaterData trackedFloaterData = Server.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null)
+            {
+                if (trackedFloaterData.controller == GameManager.ID)
+                {
+                    if (trackedFloaterData.physical != null)
+                    {
+                        ++FloaterCoreDamagePatch.skip;
+                        trackedFloaterData.physicalFloater.GetComponentInChildren<Construct_Floater_Core>().Damage(packet.ReadDamage());
+                        --FloaterCoreDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    ServerSend.FloaterCoreDamage(packet, trackedFloaterData.controller);
+                }
+            }
+        }
+
+        public static void FloaterBeginExploding(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool fromController = packet.ReadBool();
+
+            TrackedFloaterData trackedFloaterData = Server.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null)
+            {
+                if (fromController) // From controller, trigger explosion on our side
+                {
+                    FloaterPatch.beginExplodingOverride = true;
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginExploding();
+                    FloaterPatch.beginExplodingOverride = false;
+
+                    ServerSend.FloaterBeginExploding(trackedID, true, trackedFloaterData.controller);
+                }
+                else if(trackedFloaterData.controller == GameManager.ID) // We control, trigger explosion and send order to everyone else
+                {
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginExploding();
+                }
+                else // Not from controller and we don't control, relay to controller
+                {
+                    ServerSend.FloaterBeginExploding(trackedID, false, trackedFloaterData.controller);
+                }
+
+            }
+        }
+
+        public static void FloaterExplode(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedFloaterData trackedFloaterData = Server.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null)
+            {
+                if (trackedFloaterData.physicalFloater != null)
+                {
+                    ++FloaterPatch.explodeSkip;
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginExploding();
+                    --FloaterPatch.explodeSkip;
+                }
+
+                ServerSend.FloaterExplode(trackedID, clientID);
+            }
+        }
     }
 }

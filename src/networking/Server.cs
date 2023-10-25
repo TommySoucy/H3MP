@@ -518,6 +518,10 @@ namespace H3MP.Networking
                 ServerHandle.GasCuboidDamageHandle,
                 ServerHandle.GasCuboidExplode,
                 ServerHandle.GasCuboidShatter,
+                ServerHandle.FloaterDamage,
+                ServerHandle.FloaterCoreDamage,
+                ServerHandle.FloaterBeginExploding,
+                ServerHandle.FloaterExplode,
             };
 
             objects = new TrackedObjectData[100];

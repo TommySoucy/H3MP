@@ -741,6 +741,20 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.TransformerPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            // FloaterDamagePatch
+            MethodInfo floaterDamageOriginal = typeof(Construct_Floater).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo floaterDamagePrefix = typeof(FloaterDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(floaterDamageOriginal, harmony, false);
+            harmony.Patch(floaterDamageOriginal, new HarmonyMethod(floaterDamagePrefix));
+
+            // FloaterCoreDamagePatch
+            MethodInfo floaterCoreDamageOriginal = typeof(Construct_Floater_Core).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo floaterCoreDamagePrefix = typeof(FloaterCoreDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(floaterCoreDamageOriginal, harmony, false);
+            harmony.Patch(floaterCoreDamageOriginal, new HarmonyMethod(floaterCoreDamagePrefix));
         }
     }
 
@@ -3924,6 +3938,84 @@ namespace H3MP.Patches
             }
 
             return instructionList;
+        }
+    }
+
+    // Patches Construct_Floater.Damage to keep track of damage taken by a floater
+    class FloaterDamagePatch
+    {
+        public static int skip = 0;
+
+        static bool Prefix(Construct_Floater __instance, Damage d)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control, apply damage, send to everyone else
+            // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
+            TrackedObject trackedObject = GameManager.trackedObjectByDamageable.TryGetValue(__instance, out trackedObject) ? trackedObject : null;
+            if (trackedObject != null)
+            {
+                if (trackedObject.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else // Not controller, send damage to controller for processing
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.FloaterDamage(trackedObject.data.trackedID, d, trackedObject.data.controller);
+                    }
+                    else
+                    {
+                        ClientSend.FloaterDamage(trackedObject.data.trackedID, d);
+                    }
+
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    // Patches Construct_Floater_Core.Damage to keep track of damage taken by a floater's core
+    class FloaterCoreDamagePatch
+    {
+        public static int skip = 0;
+
+        static bool Prefix(Construct_Floater_Core __instance, Damage d)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control, apply damage, send to everyone else
+            // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
+            TrackedObject trackedObject = GameManager.trackedObjectByDamageable.TryGetValue(__instance, out trackedObject) ? trackedObject : null;
+            if (trackedObject != null)
+            {
+                if (trackedObject.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else // Not controller, send damage to controller for processing
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.FloaterCoreDamage(trackedObject.data.trackedID, d, trackedObject.data.controller);
+                    }
+                    else
+                    {
+                        ClientSend.FloaterCoreDamage(trackedObject.data.trackedID, d);
+                    }
+
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
