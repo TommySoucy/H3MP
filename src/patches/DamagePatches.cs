@@ -3946,7 +3946,7 @@ namespace H3MP.Patches
     {
         public static int skip = 0;
 
-        static bool Prefix(Construct_Floater __instance, Damage d)
+        static bool Prefix(Construct_Floater __instance, Damage D)
         {
             if (skip > 0 || Mod.managerObject == null)
             {
@@ -3966,11 +3966,11 @@ namespace H3MP.Patches
                 {
                     if (ThreadManager.host)
                     {
-                        ServerSend.FloaterDamage(trackedObject.data.trackedID, d, trackedObject.data.controller);
+                        ServerSend.FloaterDamage(trackedObject.data.trackedID, D, trackedObject.data.controller);
                     }
                     else
                     {
-                        ClientSend.FloaterDamage(trackedObject.data.trackedID, d);
+                        ClientSend.FloaterDamage(trackedObject.data.trackedID, D);
                     }
 
                     return false;
@@ -3985,7 +3985,7 @@ namespace H3MP.Patches
     {
         public static int skip = 0;
 
-        static bool Prefix(Construct_Floater_Core __instance, Damage d)
+        static bool Prefix(Construct_Floater_Core __instance, Damage D)
         {
             if (skip > 0 || Mod.managerObject == null)
             {
@@ -4005,11 +4005,11 @@ namespace H3MP.Patches
                 {
                     if (ThreadManager.host)
                     {
-                        ServerSend.FloaterCoreDamage(trackedObject.data.trackedID, d, trackedObject.data.controller);
+                        ServerSend.FloaterCoreDamage(trackedObject.data.trackedID, D, trackedObject.data.controller);
                     }
                     else
                     {
-                        ClientSend.FloaterCoreDamage(trackedObject.data.trackedID, d);
+                        ClientSend.FloaterCoreDamage(trackedObject.data.trackedID, D);
                     }
 
                     return false;
