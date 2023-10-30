@@ -72,10 +72,14 @@
     <Compile Include="src\scripts\TrackedObjectReference.cs" />
     <Compile Include="src\tracking\TrackedAutoMeater.cs" />
     <Compile Include="src\tracking\TrackedAutoMeaterData.cs" />
+    <Compile Include="src\tracking\TrackedBlister.cs" />
+    <Compile Include="src\tracking\TrackedBlisterData.cs" />
     <Compile Include="src\tracking\TrackedBreakableGlass.cs" />
     <Compile Include="src\tracking\TrackedBreakableGlassData.cs" />
     <Compile Include="src\tracking\TrackedEncryption.cs" />
     <Compile Include="src\tracking\TrackedEncryptionData.cs" />
+    <Compile Include="src\tracking\TrackedFloater.cs" />
+    <Compile Include="src\tracking\TrackedFloaterData.cs" />
     <Compile Include="src\tracking\TrackedGatlingGun.cs" />
     <Compile Include="src\tracking\TrackedGatlingGunData.cs" />
     <Compile Include="src\tracking\TrackedItem.cs" />
@@ -105,11 +109,10 @@
       <HintPath>packages\HarmonyX.2.10.1\lib\net35\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>H:\Software and scripts\AssemblyPublicizer\Publicize.v1.0.0\Release\Assembly-CSharp.dll</HintPath>
+      <HintPath>packages\H3VR.GameLibs.0.111.8\lib\net35\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\H3VR.GameLibs.0.111.5\lib\net35\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>packages\H3VR.GameLibs.0.111.8\lib\net35\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx, Version=5.4.21.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\BepInEx.BaseLib.5.4.21\lib\net35\BepInEx.dll</HintPath>
@@ -137,10 +140,10 @@
       <HintPath>packages\UnityEngine.5.6.1\lib\net35\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\H3VR.GameLibs.0.111.5\lib\net35\UnityEngine.UI.dll</HintPath>
+      <HintPath>packages\H3VR.GameLibs.0.111.8\lib\net35\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Valve.Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\H3VR.GameLibs.0.111.5\lib\net35\Valve.Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\H3VR.GameLibs.0.111.8\lib\net35\Valve.Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
