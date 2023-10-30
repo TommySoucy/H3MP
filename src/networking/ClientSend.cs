@@ -1,4 +1,4 @@
-﻿using FistVR;
+using FistVR;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -8,6 +8,8 @@ namespace H3MP.Networking
 {
     public class ClientSend
     {
+        public static Dictionary<object, byte[]> queuedPackets = new Dictionary<object, byte[]>();
+        
         private static void ConvertToCustomID(Packet packet)
         {
             byte[] convertedID = BitConverter.GetBytes(BitConverter.ToInt32(new byte[] { packet.buffer[0], packet.buffer[1], packet.buffer[2], packet.buffer[3] }, 0) * -1 - 2);
@@ -49,6 +51,60 @@ namespace H3MP.Networking
             Client.singleton.udp.SendData(packet);
         }
 
+        public static void SendUDPDataBatched(Packet packet, object key = null, bool custom = false)
+        {
+            if (custom)
+            {
+                ConvertToCustomID(packet);
+            }
+
+            if (key == null) key = new object();
+            packet.WriteLength();
+
+            lock (queuedPackets)
+            {
+                queuedPackets[key] = packet.ToArray();
+            }
+        }
+
+        public static void SendBatchedPackets()
+        {
+            
+            List<byte[]> packetsToSend = new List<byte[]>();
+            lock (queuedPackets)
+            {
+                packetsToSend.AddRange(queuedPackets.Values);
+                queuedPackets.Clear();
+            }
+
+            const int mtu = 1300;
+            
+            Packet batchedPacket = new Packet((int) ClientPackets.batchedPacket);
+            
+            foreach (var packetData in packetsToSend)
+            {
+
+                // If the data of this packet would put us over the MTU, send what we have now
+                int curLength = batchedPacket.Length();
+                if (curLength > 0 && curLength + packetData.Length > mtu)
+                {
+                    Client.singleton.udp.SendData(batchedPacket);
+                    batchedPacket.Dispose();
+                    batchedPacket = new Packet((int)ClientPackets.batchedPacket);
+                }
+                
+                // Then add the data to the batch
+                batchedPacket.Write(packetData);
+            }
+
+            // Send the remaining data
+            if (batchedPacket.Length() > 0)
+            {
+                Client.singleton.udp.SendData(batchedPacket);
+            }
+            batchedPacket.Dispose();
+        }
+        
         public static void WelcomeReceived()
         {
             using(Packet packet = new Packet((int)ClientPackets.welcomeReceived))
@@ -105,7 +161,7 @@ namespace H3MP.Networking
                     packet.Write((short)0);
                 }
 
-                SendUDPData(packet);
+                SendUDPDataBatched(packet, GM.CurrentPlayerBody);
             }
         }
 
@@ -199,7 +255,7 @@ namespace H3MP.Networking
                             Mod.LogWarning("Update packet size for "+trackedObject.trackedID+" of type: "+trackedObject.typeIdentifier+" is above 1500 bytes");
                         }
 
-                        SendUDPData(packet);
+                        SendUDPDataBatched(packet, trackedObject);
                     }
                 }
                 else if (!trackedObject.latestUpdateSent)

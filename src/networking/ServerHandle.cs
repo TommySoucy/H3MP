@@ -5302,5 +5302,14 @@ namespace H3MP.Networking
                 ServerSend.FloaterExplode(trackedID, clientID);
             }
         }
+
+        public static void BatchedPackets(int clientID, Packet packet)
+        {
+            while (packet.UnreadLength() > 0)
+            {
+                // I think this will work
+                Server.clients[clientID].udp.HandleData(packet);
+            }
+        }
     }
 }

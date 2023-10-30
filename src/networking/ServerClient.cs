@@ -22,6 +22,8 @@ namespace H3MP.Networking
         public bool attemptingPunchThrough;
         public long ping;
 
+        public Dictionary<object, byte[]> queuedPackets = new Dictionary<object, byte[]>();
+        
         public IPEndPoint PTEndPoint;
         public bool punchThrough;
         public bool PTUDPEstablished;

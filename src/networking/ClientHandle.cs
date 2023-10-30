@@ -17,6 +17,7 @@ namespace H3MP.Networking
         {
             string msg = packet.ReadString();
             int ID = packet.ReadInt();
+            Client.singleton.SetTickRate(packet.ReadByte());
             GameManager.colorByIFF = packet.ReadBool();
             GameManager.nameplateMode = packet.ReadInt();
             GameManager.radarMode = packet.ReadInt();
@@ -4765,6 +4766,16 @@ namespace H3MP.Networking
                 ++FloaterPatch.explodeSkip;
                 trackedFloaterData.physicalFloater.physicalFloater.Explode();
                 --FloaterPatch.explodeSkip;
+            }
+        }
+
+        public static void BatchedPackets(Packet packet)
+        {
+            while (packet.UnreadLength() > 0)
+            {
+                int length = packet.ReadInt();
+                byte[] data = packet.ReadBytes(length);
+                Client.singleton.udp.HandleData(data);
             }
         }
     }

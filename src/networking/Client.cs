@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Timers;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -53,6 +54,9 @@ namespace H3MP.Networking
         public static IAsyncResult connectResult;
         public static int punchThroughAttemptCounter;
 
+
+        public Timer tickTimer = new Timer();
+        
         /// <summary>
         /// CUSTOMIZATION
         /// Delegate for the OnDisconnect event
@@ -93,6 +97,19 @@ namespace H3MP.Networking
             tcp.Connect();
         }
 
+        public void SetTickRate(int tickRate)
+        {
+            tickTimer.Elapsed += Tick;
+            tickTimer.Interval = 1000f / tickRate;
+            tickTimer.AutoReset = true;
+            tickTimer.Start();
+        }
+
+        private void Tick(object sender, ElapsedEventArgs e)
+        {
+            ClientSend.SendBatchedPackets();
+        }
+        
         public class TCP
         {
             public TcpClient socket;
@@ -374,7 +391,7 @@ namespace H3MP.Networking
                 }
             }
 
-            private void HandleData(byte[] data)
+            public void HandleData(byte[] data)
             {
                 using(Packet packet = new Packet(data))
                 {
@@ -637,6 +654,7 @@ namespace H3MP.Networking
                 ClientHandle.FloaterCoreDamage,
                 ClientHandle.FloaterBeginExploding,
                 ClientHandle.FloaterExplode,
+                ClientHandle.BatchedPackets
             };
 
             // All vanilla scenes can be synced by default
@@ -942,6 +960,9 @@ namespace H3MP.Networking
                 {
                     Mod.OnConnectClicked(null);
                 }
+
+                tickTimer.Stop();
+                tickTimer.Elapsed -= Tick;
             }
         }
 

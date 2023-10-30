@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using H3MP.Tracking;
 using FistVR;
 using System.IO;
+using System.Timers;
 
 namespace H3MP.Networking
 {
@@ -36,6 +37,8 @@ namespace H3MP.Networking
 
         public static List<ServerClient> PTClients = new List<ServerClient>();
 
+        public static Timer tickTimer = new Timer();
+        
         /// <summary>
         /// CUSTOMIZATION
         /// Delegate for the OnServerClose event
@@ -48,7 +51,7 @@ namespace H3MP.Networking
         /// </summary>
         public static event OnServerCloseDelegate OnServerClose;
 
-        public static void Start(ushort _maxClientCount, ushort _port)
+        public static void Start(ushort _maxClientCount, ushort _port, int tickRate)
         {
             Mod.LogInfo("Starting server on port: "+_port, false);
 
@@ -71,10 +74,23 @@ namespace H3MP.Networking
             {
                 GameManager.SyncTrackedObjects(true, true);
             }
+
+            tickTimer.Elapsed += Tick;
+            tickTimer.Interval = 1000f / tickRate;
+            tickTimer.AutoReset = true;
+            tickTimer.Start();
         }
 
+        private static void Tick(object sender, ElapsedEventArgs e)
+        {
+            ServerSend.SendAllBatchedUDPData();
+        }
+        
         public static void Close()
         {
+            tickTimer.Elapsed -= Tick;
+            tickTimer.Stop();
+            
             if(Mod.managerObject == null)
             {
                 return;
@@ -522,6 +538,7 @@ namespace H3MP.Networking
                 ServerHandle.FloaterCoreDamage,
                 ServerHandle.FloaterBeginExploding,
                 ServerHandle.FloaterExplode,
+                ServerHandle.BatchedPackets
             };
 
             objects = new TrackedObjectData[100];
