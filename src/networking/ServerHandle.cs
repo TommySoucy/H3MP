@@ -5307,8 +5307,14 @@ namespace H3MP.Networking
         {
             while (packet.UnreadLength() > 0)
             {
-                // I think this will work
-                Server.clients[clientID].udp.HandleData(packet);
+                int length = packet.ReadInt();
+                byte[] data = packet.ReadBytes(length);
+
+                using (Packet childPacket = new Packet(data))
+                {
+                    int packetId = childPacket.ReadInt();
+                    Server.packetHandlers[packetId](clientID, childPacket);
+                }
             }
         }
     }

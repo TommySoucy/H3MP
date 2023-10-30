@@ -4775,7 +4775,12 @@ namespace H3MP.Networking
             {
                 int length = packet.ReadInt();
                 byte[] data = packet.ReadBytes(length);
-                Client.singleton.udp.HandleData(data);
+
+                using (Packet childPacket = new Packet(data))
+                {
+                    int packetId = childPacket.ReadInt();
+                    Client.packetHandlers[packetId](childPacket);
+                }
             }
         }
     }

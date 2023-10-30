@@ -104,7 +104,7 @@ namespace H3MP.Networking
 
             const int mtu = 1300;
             
-            Packet batchedPacket = new Packet((int) ClientPackets.batchedPacket);
+            Packet batchedPacket = new Packet((int) ServerPackets.batchedPacket);
             
             foreach (var packetData in packetsToSend)
             {
@@ -113,9 +113,10 @@ namespace H3MP.Networking
                 int curLength = batchedPacket.Length();
                 if (curLength > 0 && curLength + packetData.Length > mtu)
                 {
+                    batchedPacket.WriteLength();
                     client.udp.SendData(batchedPacket);
                     batchedPacket.Dispose();
-                    batchedPacket = new Packet((int)ClientPackets.batchedPacket);
+                    batchedPacket = new Packet((int)ServerPackets.batchedPacket);
                 }
                 
                 // Then add the data to the batch
@@ -125,6 +126,7 @@ namespace H3MP.Networking
             // Send the remaining data
             if (batchedPacket.Length() > 0)
             {
+                batchedPacket.WriteLength();
                 client.udp.SendData(batchedPacket);
             }
             batchedPacket.Dispose();
@@ -481,7 +483,7 @@ namespace H3MP.Networking
                                 Mod.LogWarning("Update packet size for " + trackedObject.trackedID + " of type: " + trackedObject.typeIdentifier + " is above 1500 bytes");
                             }
 
-                            SendUDPDataToClients(packet, GameManager.playersPresent);
+                            SendUDPDataToClients(packet, GameManager.playersPresent, key:trackedObject);
                         }
                     }
                     else if (!trackedObject.latestUpdateSent)

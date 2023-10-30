@@ -42,8 +42,8 @@ namespace H3MP.Networking
         public bool gotWelcome = false;
         public bool gotConnectSync = false;
         public int pingAttemptCounter = 0;
-        private delegate void PacketHandler(Packet packet);
-        private static PacketHandler[] packetHandlers;
+        public delegate void PacketHandler(Packet packet);
+        public static PacketHandler[] packetHandlers;
         public static Dictionary<string, int> synchronizedScenes;
         public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under
 
@@ -644,6 +644,7 @@ namespace H3MP.Networking
                 ClientHandle.SightFlipperState,
                 ClientHandle.SightRaiserState,
                 ClientHandle.GatlingGunFire,
+                null, // punch through
                 ClientHandle.GasCuboidGout,
                 ClientHandle.GasCuboidDamage,
                 ClientHandle.GasCuboidHandleDamage,

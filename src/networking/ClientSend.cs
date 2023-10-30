@@ -88,6 +88,7 @@ namespace H3MP.Networking
                 int curLength = batchedPacket.Length();
                 if (curLength > 0 && curLength + packetData.Length > mtu)
                 {
+                    batchedPacket.WriteLength();
                     Client.singleton.udp.SendData(batchedPacket);
                     batchedPacket.Dispose();
                     batchedPacket = new Packet((int)ClientPackets.batchedPacket);
@@ -100,6 +101,7 @@ namespace H3MP.Networking
             // Send the remaining data
             if (batchedPacket.Length() > 0)
             {
+                batchedPacket.WriteLength();
                 Client.singleton.udp.SendData(batchedPacket);
             }
             batchedPacket.Dispose();
