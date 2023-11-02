@@ -1,4 +1,6 @@
-﻿using FistVR;
+﻿using System;
+using System.Collections.Generic;
+using FistVR;
 using H3MP.Networking;
 using H3MP.Tracking;
 using UnityEngine;
@@ -186,6 +188,85 @@ namespace H3MP.Scripts
         private void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
+        }
+
+        private float t = 0;
+        
+        private void Update()
+        {
+            if (PositionData.Count < 2) return;
+
+            int tickRate = ThreadManager.host ? Server.tickRate : Client.singleton.tickRate;
+            float multiplier = 0.5f + 0.25f * PositionData.Count;
+            t += Time.unscaledDeltaTime * tickRate * multiplier;
+            
+            TemporalPositionData a = PositionData[0];
+            TemporalPositionData b = PositionData[1];
+            TemporalPositionData pos = TemporalPositionData.Lerp(a, b, t);
+            
+            transform.position = pos.BodyPosition;
+            transform.rotation = pos.BodyRotation;
+            head.position = pos.HeadPosition;
+            head.rotation = pos.HeadRotation;
+            leftHand.position = pos.LeftHandPosition;
+            leftHand.rotation = pos.LeftHandRotation;
+            rightHand.position = pos.RightHandPosition;
+            rightHand.rotation = pos.RightHandRotation;
+            
+            if (t > 1f)
+            {
+                t = 0;
+                PositionData.RemoveAt(0);
+            }
+        }
+
+        public void EnqueuePositionData(Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot,
+            Vector3 torsoPos, Quaternion torsoRot, Vector3 leftHandPos, Quaternion leftHandRot, Vector3 rightHandPos,
+            Quaternion rightHandRot)
+        {
+            PositionData.Add(new TemporalPositionData
+            {
+                BodyPosition = position,
+                BodyRotation = rotation,
+                HeadPosition = headPos,
+                HeadRotation = headRot,
+                LeftHandPosition = leftHandPos,
+                LeftHandRotation = leftHandRot,
+                RightHandPosition = rightHandPos,
+                RightHandRotation = rightHandRot
+            });
+        }
+
+        private List<TemporalPositionData> PositionData = new List<TemporalPositionData>();
+        
+        private class TemporalPositionData
+        {
+            public Vector3 BodyPosition;
+            public Quaternion BodyRotation;
+
+            public Vector3 HeadPosition;
+            public Quaternion HeadRotation;
+
+            public Vector3 LeftHandPosition;
+            public Quaternion LeftHandRotation;
+
+            public Vector3 RightHandPosition;
+            public Quaternion RightHandRotation;
+
+            public static TemporalPositionData Lerp(TemporalPositionData a, TemporalPositionData b, float t)
+            {
+                return new TemporalPositionData()
+                {
+                    BodyPosition = Vector3.Lerp(a.BodyPosition, b.BodyPosition, t),
+                    BodyRotation = Quaternion.Lerp(a.BodyRotation, b.BodyRotation, t),
+                    HeadPosition = Vector3.Lerp(a.HeadPosition, b.HeadPosition, t),
+                    HeadRotation = Quaternion.Lerp(a.HeadRotation, b.HeadRotation, t),
+                    LeftHandPosition = Vector3.Lerp(a.LeftHandPosition, b.LeftHandPosition, t),
+                    LeftHandRotation = Quaternion.Lerp(a.LeftHandRotation, b.LeftHandRotation, t),
+                    RightHandPosition = Vector3.Lerp(a.RightHandPosition, b.RightHandPosition, t),
+                    RightHandRotation = Quaternion.Lerp(a.RightHandRotation, b.RightHandRotation, t),
+                };
+            }
         }
     }
 }

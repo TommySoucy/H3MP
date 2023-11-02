@@ -37,6 +37,7 @@ namespace H3MP.Networking
 
         public static List<ServerClient> PTClients = new List<ServerClient>();
 
+        public static int tickRate = 20;
         public static Timer tickTimer = new Timer();
         
         /// <summary>
@@ -75,6 +76,7 @@ namespace H3MP.Networking
                 GameManager.SyncTrackedObjects(true, true);
             }
 
+            Server.tickRate = tickRate;
             tickTimer.Elapsed += Tick;
             tickTimer.Interval = 1000f / tickRate;
             tickTimer.AutoReset = true;

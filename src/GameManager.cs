@@ -541,16 +541,10 @@ namespace H3MP
 
             PlayerManager player = players[ID];
 
-            Transform playerTransform = player.transform;
+            player.EnqueuePositionData(position, rotation, headPos, headRot, torsoPos, torsoRot, leftHandPos,
+                leftHandRot, rightHandPos, rightHandRot);
 
-            playerTransform.position = position;
-            playerTransform.rotation = rotation;
-            player.head.position = headPos;
-            player.head.rotation = headRot;
-            player.leftHand.position = leftHandPos;
-            player.leftHand.rotation = leftHandRot;
-            player.rightHand.position = rightHandPos;
-            player.rightHand.rotation = rightHandRot;
+
             float previousHealth = player.health;
             player.health = health;
             int previousMaxHealth = player.maxHealth;
