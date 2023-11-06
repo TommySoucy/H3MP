@@ -365,5 +365,7 @@ namespace H3MP.Tracking
         public virtual void EndInteraction(FVRViveHand hand) { }
 
         public virtual void EnsureUncontrolled() { }
+
+        public virtual bool HandleShatter(UberShatterable shatterable, Vector3 point, Vector3 dir, float intensity, bool received, int clientID, byte[] data) { return true; }
     }
 }

@@ -637,6 +637,8 @@ namespace H3MP.Networking
                 ClientHandle.FloaterCoreDamage,
                 ClientHandle.FloaterBeginExploding,
                 ClientHandle.FloaterExplode,
+                ClientHandle.IrisShatter,
+                ClientHandle.IrisSetState,
             };
 
             // All vanilla scenes can be synced by default

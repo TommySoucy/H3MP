@@ -84,7 +84,6 @@ namespace H3MP.Tracking
         public override IEnumerator Instantiate()
         {
             Mod.LogInfo("Instantiating floater at " + trackedID, false);
-            yield return IM.OD["SosigBody_Default"].GetGameObjectAsync();
             GameObject prefab = null;
             Construct_Floater_Volume floaterVolume = GameObject.FindObjectOfType<Construct_Floater_Volume>();
             if (floaterVolume == null)

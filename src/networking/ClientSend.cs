@@ -804,7 +804,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void UberShatterableShatter(int trackedID, Vector3 point, Vector3 dir, float intensity)
+        public static void UberShatterableShatter(int trackedID, Vector3 point, Vector3 dir, float intensity, byte[] data)
         {
             using (Packet packet = new Packet((int)ClientPackets.uberShatterableShatter))
             {
@@ -812,6 +812,15 @@ namespace H3MP.Networking
                 packet.Write(point);
                 packet.Write(dir);
                 packet.Write(intensity);
+                if(data == null)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(data.Length);
+                    packet.Write(data);
+                }
 
                 SendTCPData(packet);
             }
@@ -2719,6 +2728,31 @@ namespace H3MP.Networking
             using (Packet packet = new Packet((int)ClientPackets.floaterExplode))
             {
                 packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void IrisShatter(int trackedID, byte index, Vector3 point, Vector3 dir, float intensity)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.irisShatter))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write(point);
+                packet.Write(dir);
+                packet.Write(intensity);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void IrisSetState(int trackedID, Construct_Iris.IrisState s)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.irisSetState))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)s);
 
                 SendTCPData(packet);
             }

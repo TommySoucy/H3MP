@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Tracking
 {
@@ -46,6 +47,7 @@ namespace H3MP.Tracking
         public delegate object GetSecondary(int index);
         public delegate void ParentChanged();
         public delegate void OnDestruction();
+        public delegate bool HandleShatterSpecific(UberShatterable shatterable, Vector3 point, Vector3 dir, float intensity, bool received, int clientID, byte[] data);
         public UpdateData updateFunc; // Update the item's data based on its physical state since we are the controller
         public UpdateDataWithGiven updateGivenFunc; // Update the item's data and state based on data provided by another client
         public FireFirearm fireFunc; // Fires the corresponding firearm type
@@ -64,6 +66,7 @@ namespace H3MP.Tracking
         public GetSecondary getSecondary;
         public ParentChanged parentChanged; // Update item's mount object depending on current state (See updateParentFunc above)
         public OnDestruction onDestruction;
+        public HandleShatterSpecific handleShatterSpecific;
         public object[] secondaries;
         public byte currentMountIndex = 255; // Used by attachment, TODO: This limits number of mounts to 255, if necessary could make index into a short
         public int mountObjectID;
@@ -838,6 +841,7 @@ namespace H3MP.Tracking
                 {
                     updateFunc = UpdateUberShatterable;
                     updateGivenFunc = UpdateGivenUberShatterable;
+                    handleShatterSpecific = HandleShatterableShatter;
                     dataObject = uberShatterable;
 
                     GameManager.trackedObjectByDamageable.Add(uberShatterable, this);
@@ -12445,6 +12449,56 @@ namespace H3MP.Tracking
 
                 --GameManager.giveControlOfDestroyed;
             }
+        }
+
+        public override bool HandleShatter(UberShatterable shatterable, Vector3 point, Vector3 dir, float intensity, bool received, int clientID, byte[] data)
+        {
+            if(handleShatterSpecific != null)
+            {
+                return handleShatterSpecific(shatterable, point, dir, intensity, received, clientID, data);
+            }
+
+            return true;
+        }
+
+        private bool HandleShatterableShatter(UberShatterable shatterable, Vector3 point, Vector3 dir, float intensity, bool received, int clientID, byte[] data)
+        {
+            List<byte> newAdditionalData = new List<byte>();
+            newAdditionalData.Add(1);
+            newAdditionalData.Add(1);
+            newAdditionalData.AddRange(BitConverter.GetBytes(point.x));
+            newAdditionalData.AddRange(BitConverter.GetBytes(point.y));
+            newAdditionalData.AddRange(BitConverter.GetBytes(point.z));
+            newAdditionalData.AddRange(BitConverter.GetBytes(dir.x));
+            newAdditionalData.AddRange(BitConverter.GetBytes(dir.y));
+            newAdditionalData.AddRange(BitConverter.GetBytes(dir.z));
+            newAdditionalData.AddRange(BitConverter.GetBytes(intensity));
+            itemData.additionalData = newAdditionalData.ToArray();
+
+            if (received)
+            {
+                ++UberShatterableShatterPatch.skip;
+                ((UberShatterable)dataObject).Shatter(point, dir, intensity);
+                --UberShatterableShatterPatch.skip;
+
+                if (ThreadManager.host)
+                {
+                    ServerSend.UberShatterableShatter(this.data.trackedID, point, dir, intensity, null, clientID);
+                }
+            }
+            else
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.UberShatterableShatter(this.data.trackedID, point, dir, intensity, null);
+                }
+                else if (itemData.trackedID != -1)
+                {
+                    ClientSend.UberShatterableShatter(this.data.trackedID, point, dir, intensity, null);
+                }
+            }
+
+            return true;
         }
     }
 }

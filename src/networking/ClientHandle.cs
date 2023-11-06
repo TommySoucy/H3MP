@@ -1086,23 +1086,28 @@ namespace H3MP.Networking
         public static void UberShatterableShatter(Packet packet)
         {
             int trackedID = packet.ReadInt();
-            TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
-            if (trackedItem != null)
+            TrackedObjectData trackedObject = Client.objects[trackedID];
+            if (trackedObject != null)
             {
-                trackedItem.additionalData = new byte[30];
-                trackedItem.additionalData[0] = 1;
-                trackedItem.additionalData[1] = 1;
-                for (int i = 2, j = 0; i < 30; ++i, ++j) 
+                if (trackedObject.physical != null)
                 {
-                    trackedItem.additionalData[i] = packet.readableBuffer[packet.readPos + j];
+                    trackedObject.physical.HandleShatter(null, packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat(), true, 0, packet.ReadBytes(packet.ReadInt()));
                 }
 
-                if (trackedItem.physicalItem != null)
-                {
-                    ++UberShatterableShatterPatch.skip;
-                    (trackedItem.physicalItem.dataObject as UberShatterable).Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
-                    --UberShatterableShatterPatch.skip;
-                }
+                //trackedItem.additionalData = new byte[30];
+                //trackedItem.additionalData[0] = 1;
+                //trackedItem.additionalData[1] = 1;
+                //for (int i = 2, j = 0; i < 30; ++i, ++j) 
+                //{
+                //    trackedItem.additionalData[i] = packet.readableBuffer[packet.readPos + j];
+                //}
+
+                //if (trackedItem.physicalItem != null)
+                //{
+                //    ++UberShatterableShatterPatch.skip;
+                //    (trackedItem.physicalItem.dataObject as UberShatterable).Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
+                //    --UberShatterableShatterPatch.skip;
+                //}
             }
         }
 
@@ -4765,6 +4770,43 @@ namespace H3MP.Networking
                 ++FloaterPatch.explodeSkip;
                 trackedFloaterData.physicalFloater.physicalFloater.Explode();
                 --FloaterPatch.explodeSkip;
+            }
+        }
+
+        public static void IrisShatter(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedIrisData trackedIrisData = Client.objects[trackedID] as TrackedIrisData;
+            if (trackedIrisData != null && trackedIrisData.physicalIris != null)
+            {
+                byte index = packet.ReadByte();
+                Vector3 point = packet.ReadVector3();
+                Vector3 dir = packet.ReadVector3();
+                float intensity = packet.ReadFloat();
+
+                ++UberShatterableShatterPatch.skip;
+                trackedIrisData.physicalIris.physicalIris.Rings[index].Shatter(point, dir, intensity);
+                --UberShatterableShatterPatch.skip;
+            }
+        }
+
+        public static void IrisSetState(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Construct_Iris.IrisState state = (Construct_Iris.IrisState)packet.ReadByte();
+
+            TrackedIrisData trackedIrisData = Client.objects[trackedID] as TrackedIrisData;
+            if (trackedIrisData != null)
+            {
+                trackedIrisData.state = state;
+
+                if(trackedIrisData.physicalIris != null)
+                {
+                    ++IrisPatch.stateSkip;
+                    trackedIrisData.physicalIris.physicalIris.SetState(state);
+                    --IrisPatch.stateSkip;
+                }
             }
         }
     }

@@ -11,10 +11,14 @@ namespace H3MP.Tracking
     {
         public TrackedIris physicalIris;
 
-        public Vector3 previousPos;
-        public Vector3 position;
-        public Quaternion previousRot;
-        public Quaternion rotation;
+        public Vector3[] previousPositions;
+        public Vector3[] positions;
+        public Vector3[] previousAngles;
+        public Vector3[] angles;
+        public Vector3[] previousScales;
+        public Vector3[] scales;
+        public bool[] shattered;
+        public Construct_Iris.IrisState state;
 
         public TrackedIrisData()
         {
@@ -23,9 +27,25 @@ namespace H3MP.Tracking
 
         public TrackedIrisData(Packet packet, string typeID, int trackedID) : base(packet, typeID, trackedID)
         {
+            // Full
+            state = (Construct_Iris.IrisState)packet.ReadByte();
+
+            int count = packet.ReadByte();
+            shattered = new bool[count];
+
             // Update
-            position = packet.ReadVector3();
-            rotation = packet.ReadQuaternion();
+            previousPositions = new Vector3[count];
+            previousAngles = new Vector3[count];
+            previousScales = new Vector3[count];
+            positions = new Vector3[count];
+            angles = new Vector3[count];
+            scales = new Vector3[count];
+            for(int i = 0; i < positions.Length; ++i)
+            {
+                positions[i] = packet.ReadVector3();
+                angles[i] = packet.ReadVector3();
+                scales[i] = packet.ReadVector3();
+            }
         }
 
         public static bool IsOfType(Transform t)
@@ -55,8 +75,6 @@ namespace H3MP.Tracking
 
             GameManager.trackedIrisByIris.Add(trackedIris.physicalIris, trackedIris);
             GameManager.trackedObjectByObject.Add(trackedIris.physicalIris, trackedIris);
-            GameManager.trackedObjectByDamageable.Add(trackedIris.physicalIris, trackedIris);
-            GameManager.trackedObjectByDamageable.Add(trackedIris.GetComponentInChildren<Construct_Iris_Core>(), trackedIris);
 
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
@@ -77,28 +95,41 @@ namespace H3MP.Tracking
         {
             base.WriteToPacket(packet, incrementOrder, full);
 
-            packet.Write(position);
-            packet.Write(rotation);
+            if (full)
+            {
+                packet.Write((byte)state);
+            }
+
+            packet.Write((byte)positions.Length);
+            for(int i=0; i < positions.Length; ++i)
+            {
+                if (full)
+                {
+                    packet.Write(shattered[i]);
+                }
+                packet.Write(positions[i]);
+                packet.Write(angles[i]);
+                packet.Write(scales[i]);
+            }
         }
 
         public override IEnumerator Instantiate()
         {
             Mod.LogInfo("Instantiating iris at " + trackedID, false);
-            yield return IM.OD["SosigBody_Default"].GetGameObjectAsync();
             GameObject prefab = null;
-            Construct_Iris_Volume irisVolume = GameObject.FindObjectOfType<Construct_Iris_Volume>();
-            if (irisVolume == null)
+            SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
+            if (sosigSpawner != null)
             {
-                Mod.LogError("Failed to instantiate iris: " + trackedID + ": Could not find suitable iris volume to get prefab from");
-                yield break;
+                prefab = sosigSpawner.SpawnerGroups[19].Furnitures[2];
             }
             else
             {
-                prefab = irisVolume.Iris_Prefab;
+                Mod.LogError("Failed to instantiate iris: " + trackedID + ": Could not find suitable sosig spawner to get prefab from");
+                yield break;
             }
 
             ++Mod.skipAllInstantiates;
-            GameObject irisInstance = GameObject.Instantiate(prefab, position, rotation);
+            GameObject irisInstance = GameObject.Instantiate(prefab, positions[0], Quaternion.Euler(angles[0]));
             --Mod.skipAllInstantiates;
             physicalIris = irisInstance.AddComponent<TrackedIris>();
             physical = physicalIris;
@@ -110,8 +141,6 @@ namespace H3MP.Tracking
 
             GameManager.trackedIrisByIris.Add(physicalIris.physicalIris, physicalIris);
             GameManager.trackedObjectByObject.Add(physicalIris.physicalIris, physicalIris);
-            GameManager.trackedObjectByDamageable.Add(physicalIris.physicalIris, physicalIris);
-            GameManager.trackedObjectByDamageable.Add(physicalIris.GetComponentInChildren<Construct_Iris_Core>(), physicalIris);
 
             // Initially set itself
             UpdateFromData(this);
@@ -123,16 +152,49 @@ namespace H3MP.Tracking
 
             TrackedIrisData updatedIris = updatedObject as TrackedIrisData;
 
-            previousPos = position;
-            position = updatedIris.position;
-            previousRot = rotation;
-            rotation = updatedIris.rotation;
+            if (full)
+            {
+                state = updatedIris.state;
+                for (int i = 0; i < shattered.Length; ++i)
+                {
+                    shattered[i] = updatedIris.shattered[i];
+                }
+            }
+
+            for (int i = 0; i < positions.Length; ++i) 
+            {
+                previousPositions[i] = positions[i];
+                previousAngles[i] = angles[i];
+                previousScales[i] = scales[i];
+                positions[i] = updatedIris.positions[i];
+                angles[i] = updatedIris.angles[i];
+                scales[i] = updatedIris.scales[i];
+            }
 
             // Set physically
             if (physicalIris != null)
             {
-                physicalIris.physicalIris.transform.position = position;
-                physicalIris.physicalIris.transform.rotation = rotation;
+                if (full)
+                {
+                    physicalIris.physicalIris.SetState(state);
+                    for (int i = 0; i < shattered.Length; ++i)
+                    {
+                        if (physicalIris.physicalIris.Rings[i] != null && shattered[i] && !physicalIris.physicalIris.Rings[i].HasShattered())
+                        {
+                            physicalIris.physicalIris.Rings[i].Shatter(positions[i], Vector3.zero, 0);
+                        }
+                    }
+                }
+
+                for (int i = 0; i < positions.Length; ++i)
+                {
+                    if (physicalIris.physicalIris.Rings[i] != null && physicalIris.physicalIris.Rings[i].gameObject.activeSelf)
+                    {
+                        physicalIris.physicalIris.Rings[i].transform.position = positions[i];
+                        physicalIris.physicalIris.Rings[i].transform.rotation = Quaternion.Euler(angles[i]);
+                        physicalIris.physicalIris.Rings[i].transform.localScale = scales[i];
+                    }
+                }
             }
         }
 
@@ -140,16 +202,51 @@ namespace H3MP.Tracking
         {
             base.UpdateFromPacket(packet, full);
 
-            previousPos = position;
-            position = packet.ReadVector3();
-            previousRot = rotation;
-            rotation = packet.ReadQuaternion();
+            if (full)
+            {
+                state = (Construct_Iris.IrisState)packet.ReadByte();
+            }
+
+            packet.ReadByte(); // Size will be written, but should always remain the same, so just ignore
+            for (int i = 0; i < positions.Length; ++i)
+            {
+                previousPositions[i] = positions[i];
+                previousAngles[i] = angles[i];
+                previousScales[i] = scales[i];
+
+                if (full)
+                {
+                    shattered[i] = packet.ReadBool();
+                }
+                positions[i] = packet.ReadVector3();
+                angles[i] = packet.ReadVector3();
+                scales[i] = packet.ReadVector3();
+            }
 
             // Set physically
             if (physicalIris != null)
             {
-                physicalIris.physicalIris.transform.position = position;
-                physicalIris.physicalIris.transform.rotation = rotation;
+                if (full)
+                {
+                    physicalIris.physicalIris.SetState(state);
+                    for (int i = 0; i < shattered.Length; ++i)
+                    {
+                        if (physicalIris.physicalIris.Rings[i] != null && shattered[i] && !physicalIris.physicalIris.Rings[i].HasShattered())
+                        {
+                            physicalIris.physicalIris.Rings[i].Shatter(positions[i], Vector3.zero, 0);
+                        }
+                    }
+                }
+
+                for(int i=0; i < positions.Length; ++i)
+                {
+                    if (physicalIris.physicalIris.Rings[i] != null && physicalIris.physicalIris.Rings[i].gameObject.activeSelf)
+                    {
+                        physicalIris.physicalIris.Rings[i].transform.position = positions[i];
+                        physicalIris.physicalIris.Rings[i].transform.rotation = Quaternion.Euler(angles[i]);
+                        physicalIris.physicalIris.Rings[i].transform.localScale = scales[i];
+                    }
+                }
             }
         }
 
@@ -162,29 +259,50 @@ namespace H3MP.Tracking
                 return false;
             }
 
-            previousPos = position;
-            previousRot = rotation;
-            position = physicalIris.physicalIris.transform.position;
-            rotation = physicalIris.physicalIris.transform.rotation;
+            if (full)
+            {
+                state = physicalIris.physicalIris.IState;
+                for (int i=0; i < shattered.Length; ++i)
+                {
+                    shattered[i] = physicalIris.physicalIris.Rings[i] == null || physicalIris.physicalIris.Rings[i].HasShattered();
+                }
+            }
 
-            return updated || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+            for (int i = 0; i < positions.Length; ++i)
+            {
+                previousPositions[i] = positions[i];
+                previousAngles[i] = angles[i];
+                previousScales[i] = scales[i];
+                if (physicalIris.physicalIris.Rings[i] != null && physicalIris.physicalIris.Rings[i].gameObject.activeSelf)
+                {
+                    positions[i] = physicalIris.physicalIris.Rings[i].transform.position;
+                    angles[i] = physicalIris.physicalIris.Rings[i].transform.rotation.eulerAngles;
+                    scales[i] = physicalIris.physicalIris.Rings[i].transform.localScale;
+                }
+                updated |= (!previousPositions[i].Equals(positions[i]) || !previousAngles[i].Equals(angles[i]) || !previousScales[i].Equals(scales[i]));
+            }
+
+            return updated;
         }
 
         public override void OnTrackedIDReceived(TrackedObjectData newData)
         {
             base.OnTrackedIDReceived(newData);
 
-            if (localTrackedID != -1 && TrackedIris.unknownIrisBeginExploding.Contains(localWaitingIndex))
+            if (localTrackedID != -1 && TrackedIris.unknownIrisShatter.TryGetValue(localWaitingIndex, out List<object[]> shatterList))
             {
-                ClientSend.IrisBeginExploding(trackedID, true);
+                for(int i=0; i< shatterList.Count; ++i)
+                {
+                    ClientSend.IrisShatter(trackedID, (byte)shatterList[i][0], (Vector3)shatterList[i][1], (Vector3)shatterList[i][2], (float)shatterList[i][3]);
+                }
 
-                TrackedIris.unknownIrisBeginExploding.Remove(localWaitingIndex);
+                TrackedIris.unknownIrisShatter.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && TrackedIris.unknownIrisExplode.Contains(localWaitingIndex))
+            if (localTrackedID != -1 && TrackedIris.unknownIrisSetState.TryGetValue(localWaitingIndex, out Construct_Iris.IrisState s))
             {
-                ClientSend.IrisExplode(trackedID);
+                ClientSend.IrisSetState(trackedID, s);
 
-                TrackedIris.unknownIrisExplode.Remove(localWaitingIndex);
+                TrackedIris.unknownIrisSetState.Remove(localWaitingIndex);
             }
         }
 
@@ -198,8 +316,6 @@ namespace H3MP.Tracking
                 if (physicalIris != null && physicalIris.physicalIris != null)
                 {
                     GameManager.trackedIrisByIris.Remove(physicalIris.physicalIris);
-                    GameManager.trackedObjectByDamageable.Remove(physicalIris.physicalIris);
-                    GameManager.trackedObjectByDamageable.Remove(physicalIris.GetComponentInChildren<Construct_Iris_Core>());
                 }
             }
         }

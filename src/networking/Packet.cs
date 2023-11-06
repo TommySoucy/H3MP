@@ -203,7 +203,9 @@ namespace H3MP.Networking
         floaterDamage = 190,
         floaterCoreDamage = 191,
         floaterBeginExploding = 192,
-        floaterExplode = 193
+        floaterExplode = 193,
+        irisShatter = 194,
+        irisSetState = 195
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -393,7 +395,9 @@ namespace H3MP.Networking
         floaterDamage = 181,
         floaterCoreDamage = 182,
         floaterBeginExploding = 183,
-        floaterExplode = 184
+        floaterExplode = 184,
+        irisShatter = 185,
+        irisSetState = 186
     }
 
     public class Packet : IDisposable

@@ -742,6 +742,20 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.TransformerPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            // IrisDamageablePatch
+            MethodInfo irisUpdateLaserOriginal = typeof(Construct_Iris).GetMethod("UpdateLaser", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo irisUpdateLaserTranspiler = typeof(IrisDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(irisUpdateLaserOriginal, harmony, false);
+            try
+            {
+                harmony.Patch(irisUpdateLaserOriginal, null, null, new HarmonyMethod(irisUpdateLaserTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.IrisDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
+
             // FloaterDamagePatch
             MethodInfo floaterDamageOriginal = typeof(Construct_Floater).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo floaterDamagePrefix = typeof(FloaterDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -3220,7 +3234,7 @@ namespace H3MP.Patches
         // This will only let the encryption do damage if we control it
         public static bool GetActualFlag(TNH_EncryptionTarget encryption, IFVRDamageable damageable)
         {
-            // Note: If this got called it is because demageable != null, so flag2 would usually be set to true
+            // Note: If this got called it is because damageable != null, so flag2 would usually be set to true
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
@@ -3438,40 +3452,20 @@ namespace H3MP.Patches
     {
         public static int skip;
 
-        static void Prefix(ref UberShatterable __instance, Vector3 point, Vector3 dir, float intensity)
+        static bool Prefix(UberShatterable __instance, Vector3 point, Vector3 dir, float intensity)
         {
             if (skip > 0 || Mod.managerObject == null)
             {
-                return;
+                return true;
             }
 
-            if (__instance.O != null)
+            TrackedObject trackedObject = GameManager.trackedObjectByShatterable.TryGetValue(__instance, out trackedObject) ? trackedObject : __instance.GetComponent<TrackedObject>();
+            if(trackedObject != null)
             {
-                TrackedItem trackedItem = GameManager.trackedItemByItem.TryGetValue(__instance.O, out TrackedItem item) ? item : __instance.O.GetComponent<TrackedItem>();
-                if (trackedItem != null)
-                {
-                    List<byte> newAdditionalData = new List<byte>();
-                    newAdditionalData.Add(1);
-                    newAdditionalData.Add(1);
-                    newAdditionalData.AddRange(BitConverter.GetBytes(point.x));
-                    newAdditionalData.AddRange(BitConverter.GetBytes(point.y));
-                    newAdditionalData.AddRange(BitConverter.GetBytes(point.z));
-                    newAdditionalData.AddRange(BitConverter.GetBytes(dir.x));
-                    newAdditionalData.AddRange(BitConverter.GetBytes(dir.y));
-                    newAdditionalData.AddRange(BitConverter.GetBytes(dir.z));
-                    newAdditionalData.AddRange(BitConverter.GetBytes(intensity));
-                    trackedItem.itemData.additionalData = newAdditionalData.ToArray();
-
-                    if (ThreadManager.host)
-                    {
-                        ServerSend.UberShatterableShatter(trackedItem.data.trackedID, point, dir, intensity);
-                    }
-                    else
-                    {
-                        ClientSend.UberShatterableShatter(trackedItem.data.trackedID, point, dir, intensity);
-                    }
-                }
+                return trackedObject.HandleShatter(__instance, point, dir, intensity, false, 0, null);
             }
+
+            return true;
         }
     }
 
@@ -3891,7 +3885,7 @@ namespace H3MP.Patches
         // Note: Unlike the other GetActualFlags (As of this comment) we check for the controller of the damageable, not the damager
         public static bool GetActualFlag(IFVRDamageable damageable)
         {
-            // Note: If this got called it is because demageable != null, so flag2 would usually be set to true
+            // Note: If this got called it is because damageable != null, so flag2 would usually be set to true
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || GameManager.playersPresent.Count == 0 || damageable is FVRPlayerHitbox)
             {
@@ -4016,6 +4010,71 @@ namespace H3MP.Patches
                 }
             }
             return true;
+        }
+    }
+
+    // Patches Construct_Iris.UpdateLaser to control who causes damage
+    class IrisDamageablePatch
+    {
+        // This will only let the laser do damage if we control the construct
+        public static bool GetActualFlag(Construct_Iris iris, IFVRDamageable damageable)
+        {
+            // Note: If this got called it is because damageable != null, so flag2 would usually be set to true
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
+            {
+                return true;
+            }
+
+            // Note: If flag2, damageable != null
+            TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(damageable, out damageableObject) ? damageableObject : null;
+            if (!(damageable is FVRPlayerHitbox) && damageableObject == null)
+            {
+                return true; // Damageable object client side (not tracked), apply damage
+            }
+            else // Damageable object tracked, only want to apply damage if iris controller
+            {
+                TrackedIris trackedIris = TrackedObject.trackedReferences[iris.BParams[iris.BParams.Count - 1].Pen] as TrackedIris;
+                if (trackedIris == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    return trackedIris.data.controller == GameManager.ID;
+                }
+            }
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load iris instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load IFVRDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(IrisDamageablePatch), "GetActualFlag"))); // Call GetActualFlag, put return val on stack
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 9)); // Set flag2
+
+            bool applied = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Ldc_I4_1 &&
+                    instructionList[i + 1].opcode == OpCodes.Stloc_S && instructionList[i + 1].operand.ToString().Equals("System.Boolean (9)"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
+                    break;
+                }
+            }
+
+            if (!applied)
+            {
+                Mod.LogError("IrisDamageablePatch Transpiler not applied!");
+            }
+
+            return instructionList;
         }
     }
 }

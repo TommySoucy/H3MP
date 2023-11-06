@@ -1557,7 +1557,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void UberShatterableShatter(int trackedID, Vector3 point, Vector3 dir, float intensity)
+        public static void UberShatterableShatter(int trackedID, Vector3 point, Vector3 dir, float intensity, byte[] data, int clientID = 0)
         {
             using (Packet packet = new Packet((int)ServerPackets.uberShatterableShatter))
             {
@@ -1565,8 +1565,24 @@ namespace H3MP.Networking
                 packet.Write(point);
                 packet.Write(dir);
                 packet.Write(intensity);
+                if (data == null)
+                {
+                    packet.Write(0);
+                }
+                else
+                {
+                    packet.Write(data.Length);
+                    packet.Write(data);
+                }
 
-                SendTCPDataToAll(packet);
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
 
@@ -4566,6 +4582,64 @@ namespace H3MP.Networking
             using (Packet packet = new Packet((int)ServerPackets.floaterExplode))
             {
                 packet.Write(trackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void IrisShatter(int trackedID, byte index, Vector3 point, Vector3 dir, float intensity, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.irisShatter))
+            {
+                packet.Write(trackedID);
+                packet.Write(index);
+                packet.Write(point);
+                packet.Write(dir);
+                packet.Write(intensity);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void IrisShatter(Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.irisShatter);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void IrisSetState(int trackedID, Construct_Iris.IrisState state, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.irisSetState))
+            {
+                packet.Write(trackedID);
+                packet.Write((byte)state);
 
                 if (clientID == 0)
                 {

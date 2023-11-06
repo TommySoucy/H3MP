@@ -38,6 +38,7 @@ namespace H3MP
         public static Dictionary<MonoBehaviour, TrackedObject> trackedObjectByObject = new Dictionary<MonoBehaviour, TrackedObject>();
         public static Dictionary<FVRInteractiveObject, TrackedObject> trackedObjectByInteractive = new Dictionary<FVRInteractiveObject, TrackedObject>();
         public static Dictionary<IFVRDamageable, TrackedObject> trackedObjectByDamageable = new Dictionary<IFVRDamageable, TrackedObject>();
+        public static Dictionary<UberShatterable, TrackedObject> trackedObjectByShatterable = new Dictionary<UberShatterable, TrackedObject>();
         public static Dictionary<FVRPhysicalObject, TrackedItem> trackedItemByItem = new Dictionary<FVRPhysicalObject, TrackedItem>();
         public static Dictionary<SosigWeapon, TrackedItem> trackedItemBySosigWeapon = new Dictionary<SosigWeapon, TrackedItem>();
         public static Dictionary<Sosig, TrackedSosig> trackedSosigBySosig = new Dictionary<Sosig, TrackedSosig>();
@@ -48,6 +49,7 @@ namespace H3MP
         public static Dictionary<wwGatlingGun, TrackedGatlingGun> trackedGatlingGunByGatlingGun = new Dictionary<wwGatlingGun, TrackedGatlingGun>();
         public static Dictionary<Construct_Blister, TrackedBlister> trackedBlisterByBlister = new Dictionary<Construct_Blister, TrackedBlister>();
         public static Dictionary<Construct_Floater, TrackedFloater> trackedFloaterByFloater = new Dictionary<Construct_Floater, TrackedFloater>();
+        public static Dictionary<Construct_Iris, TrackedIris> trackedIrisByIris = new Dictionary<Construct_Iris, TrackedIris>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, TNHInstance> TNHInstances = new Dictionary<int, TNHInstance>();
         public static List<int> playersAtLoadStart;
@@ -444,6 +446,11 @@ namespace H3MP
             trackedEncryptionByEncryption.Clear();
             trackedBreakableGlassByBreakableGlass.Clear();
             trackedBreakableGlassByBreakableGlassDamager.Clear();
+            trackedBlisterByBlister.Clear();
+            trackedFloaterByFloater.Clear();
+            trackedGatlingGunByGatlingGun.Clear();
+            trackedIrisByIris.Clear();
+            trackedObjectByShatterable.Clear();
             if (playersAtLoadStart != null)
             {
                 playersAtLoadStart.Clear();
@@ -526,6 +533,9 @@ namespace H3MP
 
             TrackedFloater.unknownFloaterBeginExploding.Clear();
             TrackedFloater.unknownFloaterExplode.Clear();
+
+            TrackedIris.unknownIrisShatter.Clear();
+            TrackedIris.unknownIrisSetState.Clear();
         }
 
         public static void UpdatePlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,

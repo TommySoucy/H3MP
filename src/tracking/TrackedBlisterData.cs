@@ -54,7 +54,7 @@ namespace H3MP.Tracking
 
             GameManager.trackedBlisterByBlister.Add(trackedBlister.physicalBlister, trackedBlister);
             GameManager.trackedObjectByObject.Add(trackedBlister.physicalBlister, trackedBlister);
-            GameManager.trackedObjectByDamageable.Add(trackedBlister.GetComponentInChildren<UberShatterable>(), trackedBlister);
+            GameManager.trackedObjectByShatterable.Add(trackedBlister.GetComponentInChildren<UberShatterable>(), trackedBlister);
 
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
@@ -79,7 +79,6 @@ namespace H3MP.Tracking
         public override IEnumerator Instantiate()
         {
             Mod.LogInfo("Instantiating blister at " + trackedID, false);
-            yield return IM.OD["SosigBody_Default"].GetGameObjectAsync();
             GameObject prefab = null;
             Construct_Blister_Volume blisterVolume = GameObject.FindObjectOfType<Construct_Blister_Volume>();
             if (blisterVolume == null)
@@ -105,7 +104,7 @@ namespace H3MP.Tracking
 
             GameManager.trackedBlisterByBlister.Add(physicalBlister.physicalBlister, physicalBlister);
             GameManager.trackedObjectByObject.Add(physicalBlister.physicalBlister, physicalBlister);
-            GameManager.trackedObjectByDamageable.Add(physicalBlister.GetComponentInChildren<UberShatterable>(), physicalBlister);
+            GameManager.trackedObjectByShatterable.Add(physicalBlister.GetComponentInChildren<UberShatterable>(), physicalBlister);
 
             // Initially set itself
             UpdateFromData(this);
@@ -184,7 +183,7 @@ namespace H3MP.Tracking
                 if (physicalBlister != null && physicalBlister.physicalBlister != null)
                 {
                     GameManager.trackedBlisterByBlister.Remove(physicalBlister.physicalBlister);
-                    GameManager.trackedObjectByDamageable.Remove(physicalBlister.GetComponentInChildren<UberShatterable>());
+                    GameManager.trackedObjectByShatterable.Remove(physicalBlister.GetComponentInChildren<UberShatterable>());
                 }
             }
         }

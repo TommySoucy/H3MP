@@ -952,6 +952,21 @@ namespace H3MP.Patches
             PatchController.Verify(floaterExplodeOriginal, harmony, false);
             harmony.Patch(floaterBeginExplodingOriginal, new HarmonyMethod(floaterBeginExplodingPrefix));
             harmony.Patch(floaterExplodeOriginal, new HarmonyMethod(floaterExplodePrefix));
+
+            // IrisPatch
+            MethodInfo irisUpdateOriginal = typeof(Construct_Iris).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo irisUpdatePrefix = typeof(IrisPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo irisFixedUpdateOriginal = typeof(Construct_Iris).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo irisFixedUpdatePrefix = typeof(IrisPatch).GetMethod("FixedUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo irisSetStateOriginal = typeof(Construct_Iris).GetMethod("SetState", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo irisSetStatePrefix = typeof(IrisPatch).GetMethod("ExplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(irisUpdateOriginal, harmony, false);
+            PatchController.Verify(irisSetStateOriginal, harmony, false);
+            PatchController.Verify(irisFixedUpdateOriginal, harmony, false);
+            harmony.Patch(irisUpdateOriginal, new HarmonyMethod(irisUpdatePrefix));
+            harmony.Patch(irisFixedUpdateOriginal, new HarmonyMethod(irisFixedUpdatePrefix));
+            harmony.Patch(irisSetStateOriginal, new HarmonyMethod(irisSetStatePrefix));
         }
     }
 
@@ -8216,6 +8231,101 @@ namespace H3MP.Patches
                     {
                         TrackedFloater.unknownFloaterBeginExploding.Remove(trackedFloater.data.localWaitingIndex);
                         TrackedFloater.unknownFloaterExplode.Add(trackedFloater.data.localWaitingIndex);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    // Patches Construct_Iris
+    class IrisPatch
+    {
+        public static int stateSkip;
+
+        // Patches Update to prevent for non controllers
+        static bool UpdatePrefix(Construct_Iris __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedIris trackedIris = TrackedObject.trackedReferences[__instance.BParams[__instance.BParams.Count - 1].Pen] as TrackedIris;
+            if (trackedIris != null)
+            {
+                if (trackedIris.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    if(__instance.IState != Construct_Iris.IrisState.Dead && __instance.m_isShotEngaged)
+                    {
+                        __instance.UpdateLaser();
+                    }
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Patches FixedUpdate to prevent for non controllers
+        static bool FixedUpdatePrefix(Construct_Iris __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedIris trackedIris = TrackedObject.trackedReferences[__instance.BParams[__instance.BParams.Count - 1].Pen] as TrackedIris;
+            if (trackedIris != null)
+            {
+                if (trackedIris.data.controller == GameManager.ID)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Patches SetState to track event
+        static bool SetStatePrefix(Construct_Iris __instance, Construct_Iris.IrisState s)
+        {
+            if (Mod.managerObject == null || stateSkip > 0)
+            {
+                return true;
+            }
+
+            TrackedIris trackedIris = TrackedObject.trackedReferences[__instance.BParams[__instance.BParams.Count - 1].Pen] as TrackedIris;
+            if (trackedIris != null)
+            {
+                if(trackedIris.data.controller == GameManager.ID)
+                {
+                    trackedIris.irisData.state = s;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.IrisSetState(trackedIris.data.trackedID, s);
+                    }
+                    else if (trackedIris.data.trackedID != -1)
+                    {
+                        ClientSend.IrisSetState(trackedIris.data.trackedID, s);
+                    }
+                    else
+                    {
+                        TrackedIris.unknownIrisSetState.Add(trackedIris.data.localWaitingIndex, s);
                     }
 
                     return true;

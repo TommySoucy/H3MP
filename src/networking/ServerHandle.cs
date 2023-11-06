@@ -1417,26 +1417,29 @@ namespace H3MP.Networking
         {
             int trackedID = packet.ReadInt();
 
-            TrackedItemData trackedItem = Server.objects[trackedID] as TrackedItemData;
-            if (trackedItem != null)
+            TrackedObjectData trackedObject = Server.objects[trackedID];
+            if (trackedObject != null)
             {
-                trackedItem.additionalData = new byte[30];
-                trackedItem.additionalData[0] = 1;
-                trackedItem.additionalData[1] = 1;
-                for (int i = 2, j = 0; i < 30; ++i, ++j)
+                if(trackedObject.physical != null)
                 {
-                    trackedItem.additionalData[i] = packet.readableBuffer[packet.readPos + j];
+                    trackedObject.physical.HandleShatter(null, packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat(), true, clientID, packet.ReadBytes(packet.ReadInt()));
                 }
+                //trackedItem.additionalData = new byte[30];
+                //trackedItem.additionalData[0] = 1;
+                //trackedItem.additionalData[1] = 1;
+                //for (int i = 2, j = 0; i < 30; ++i, ++j)
+                //{
+                //    trackedItem.additionalData[i] = packet.readableBuffer[packet.readPos + j];
+                //}
 
-                if (trackedItem.physical != null)
-                {
-                    ++UberShatterableShatterPatch.skip;
-                    (trackedItem.physicalItem.dataObject as UberShatterable).Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
-                    --UberShatterableShatterPatch.skip;
-                }
+                //if (trackedItem.physical != null)
+                //{
+                //    ++UberShatterableShatterPatch.skip;
+                //    (trackedItem.physicalItem.dataObject as UberShatterable).Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
+                //    --UberShatterableShatterPatch.skip;
+                //}
+                ServerSend.UberShatterableShatter(clientID, packet);
             }
-
-            ServerSend.UberShatterableShatter(clientID, packet);
         }
 
         public static void SosigPickUpItem(int clientID, Packet packet)
@@ -5300,6 +5303,50 @@ namespace H3MP.Networking
                 }
 
                 ServerSend.FloaterExplode(trackedID, clientID);
+            }
+        }
+
+        public static void IrisShatter(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedIrisData trackedIrisData = Server.objects[trackedID] as TrackedIrisData;
+            if (trackedIrisData != null)
+            {
+                if (trackedIrisData.physicalIris != null)
+                {
+                    byte index = packet.ReadByte();
+                    Vector3 point = packet.ReadVector3();
+                    Vector3 dir = packet.ReadVector3();
+                    float intensity = packet.ReadFloat();
+
+                    ++UberShatterableShatterPatch.skip;
+                    trackedIrisData.physicalIris.physicalIris.Rings[index].Shatter(point, dir, intensity);
+                    --UberShatterableShatterPatch.skip;
+                }
+
+                ServerSend.IrisShatter(packet, clientID);
+            }
+        }
+
+        public static void IrisSetState(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            Construct_Iris.IrisState state = (Construct_Iris.IrisState)packet.ReadByte();
+
+            TrackedIrisData trackedIrisData = Server.objects[trackedID] as TrackedIrisData;
+            if (trackedIrisData != null)
+            {
+                trackedIrisData.state = state;
+
+                if (trackedIrisData.physicalIris != null)
+                {
+                    ++IrisPatch.stateSkip;
+                    trackedIrisData.physicalIris.physicalIris.SetState(state);
+                    --IrisPatch.stateSkip;
+                }
+
+                ServerSend.IrisSetState(trackedID, state, clientID);
             }
         }
     }

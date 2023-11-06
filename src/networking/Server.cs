@@ -522,6 +522,8 @@ namespace H3MP.Networking
                 ServerHandle.FloaterCoreDamage,
                 ServerHandle.FloaterBeginExploding,
                 ServerHandle.FloaterExplode,
+                ServerHandle.IrisShatter,
+                ServerHandle.IrisSetState,
             };
 
             objects = new TrackedObjectData[100];
