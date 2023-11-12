@@ -390,7 +390,7 @@ namespace H3MP.Networking
                         packet.Write((short)0);
                     }
 
-                    SendUDPData(otherPlayers, packet, ID);
+                    SendUDPData(otherPlayers, packet, ID, false, GM.CurrentPlayerBody);
                 }
             }
         }

@@ -197,7 +197,7 @@ namespace H3MP.Scripts
             if (PositionData.Count < 2) return;
 
             int tickRate = ThreadManager.host ? Server.tickRate : Client.singleton.tickRate;
-            float multiplier = 0.5f + 0.25f * PositionData.Count;
+            float multiplier = Mathf.Clamp(0.5f + 0.25f * (PositionData.Count - 2), 0.5f, 2f);
             t += Time.unscaledDeltaTime * tickRate * multiplier;
             
             TemporalPositionData a = PositionData[0];
