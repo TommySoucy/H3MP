@@ -6,7 +6,7 @@ As the title says, this is a mod that adds multiplayer to the virtual reality ga
 
 - See incompatibilities section below for a list of known incompatible mods and modes.
 - Only report bugs if you don't use any of the mods from the incompatibilities list.
-- Report bugs directly to VIPkiller17#4326 on discord and always send **_full_** output logs.
+- Report bugs on the H3VR homebrew discord server's #h3mp-general channel and always send **_full_** output logs.
 - Will most probably work with the Main version of the game, but currently only guaranteed to work with "alpha - Mod Safe".
 - If you get "PatchVerify" errors on start up it means either your game or H3MP is the wrong version.
 - Port forward or hosting solution must support both TCP and UDP
