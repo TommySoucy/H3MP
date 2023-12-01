@@ -116,18 +116,12 @@ namespace H3MP.Patches
             harmony.Patch(brutAssemblagePlacerOriginal, new HarmonyMethod(brutPlacerPrefix), new HarmonyMethod(brutPlacerPostfix));
 
             // ConstructVolumePatch
-            MethodInfo constructBlisterVolumeOriginal = typeof(Construct_Blister_Volume).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo constructFloaterVolumeOriginal = typeof(Construct_Floater_Volume).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo constructNodeVolumeOriginal = typeof(Construct_Node_Volume).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo constructVolumePrefix = typeof(ConstructVolumePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo constructVolumePostfix = typeof(ConstructVolumePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo constructVolumeSpawnConstructsOriginal = typeof(Construct_Volume).GetMethod("SpawnConstructs", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo constructVolumeSpawnConstructsPrefix = typeof(ConstructVolumePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo constructVolumeSpawnConstructsPostfix = typeof(ConstructVolumePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchController.Verify(constructBlisterVolumeOriginal, harmony, true);
-            PatchController.Verify(constructFloaterVolumeOriginal, harmony, true);
-            PatchController.Verify(constructNodeVolumeOriginal, harmony, true);
-            harmony.Patch(constructBlisterVolumeOriginal, new HarmonyMethod(constructVolumePrefix), new HarmonyMethod(constructVolumePostfix));
-            harmony.Patch(constructFloaterVolumeOriginal, new HarmonyMethod(constructVolumePrefix), new HarmonyMethod(constructVolumePostfix));
-            harmony.Patch(constructNodeVolumeOriginal, new HarmonyMethod(constructVolumePrefix), new HarmonyMethod(constructVolumePostfix));
+            PatchController.Verify(constructVolumeSpawnConstructsOriginal, harmony, true);
+            harmony.Patch(constructVolumeSpawnConstructsOriginal, new HarmonyMethod(constructVolumeSpawnConstructsPrefix), new HarmonyMethod(constructVolumeSpawnConstructsPostfix));
         }
     }
 
@@ -747,7 +741,7 @@ namespace H3MP.Patches
         }
     }
 
-    // Patches Construct_*_Volume.Start to track scene init
+    // Patches Construct_Volume.SpawnConstructs to track scene init
     class ConstructVolumePatch
     {
         public static bool inInitConstructVolume;
