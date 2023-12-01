@@ -967,6 +967,17 @@ namespace H3MP.Patches
             harmony.Patch(irisUpdateOriginal, new HarmonyMethod(irisUpdatePrefix));
             harmony.Patch(irisFixedUpdateOriginal, new HarmonyMethod(irisFixedUpdatePrefix));
             harmony.Patch(irisSetStateOriginal, new HarmonyMethod(irisSetStatePrefix));
+
+            // BrutBlockSystemPatch
+            MethodInfo brutBlockSystemUpdateOriginal = typeof(BrutBlockSystem).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo brutBlockSystemUpdatePrefix = typeof(BrutBlockSystemPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo brutBlockSystemStartOriginal = typeof(BrutBlockSystem).GetMethod("TryToStartBlock", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo brutBlockSystemStartPrefix = typeof(BrutBlockSystemPatch).GetMethod("TryToStartBlockPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(brutBlockSystemUpdateOriginal, harmony, false);
+            PatchController.Verify(brutBlockSystemStartOriginal, harmony, false);
+            harmony.Patch(brutBlockSystemUpdateOriginal, new HarmonyMethod(brutBlockSystemUpdatePrefix));
+            harmony.Patch(brutBlockSystemStartOriginal, new HarmonyMethod(brutBlockSystemStartPrefix));
         }
     }
 
@@ -8326,6 +8337,60 @@ namespace H3MP.Patches
                     else
                     {
                         TrackedIris.unknownIrisSetState.Add(trackedIris.data.localWaitingIndex, s);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    // Patches BrutBlockSystem
+    class BrutBlockSystemPatch
+    {
+        public static int startSkip;
+
+        // Patches Update to prevent for non controllers
+        static bool UpdatePrefix(BrutBlockSystem __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[int.Parse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name)] as TrackedBrutBlockSystem;
+            if (trackedBrutBlockSystem != null)
+            {
+                return trackedBrutBlockSystem.data.controller == GameManager.ID;
+            }
+
+            return true;
+        }
+
+        // Patches TryToStartBlock to track event
+        static bool TryToStartBlockPrefix(BrutBlockSystem __instance)
+        {
+            if (Mod.managerObject == null || startSkip > 0)
+            {
+                return true;
+            }
+
+            TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[int.Parse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name)] as TrackedBrutBlockSystem;
+            if (trackedBrutBlockSystem != null)
+            {
+                if(trackedBrutBlockSystem.data.controller == GameManager.ID)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
+                    }
+                    else if (trackedBrutBlockSystem.data.trackedID != -1)
+                    {
+                        ClientSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
                     }
 
                     return true;

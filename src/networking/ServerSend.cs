@@ -4651,5 +4651,23 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void BrutBlockSystemStart(int trackedID, bool next, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.brutBlockSystemStart))
+            {
+                packet.Write(trackedID);
+                packet.Write(next);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

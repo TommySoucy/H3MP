@@ -5349,5 +5349,26 @@ namespace H3MP.Networking
                 ServerSend.IrisSetState(trackedID, state, clientID);
             }
         }
+
+        public static void BrutBlockSystemStart(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool next = packet.ReadBool();
+
+            TrackedBrutBlockSystemData trackedBrutBlockSystemData = Server.objects[trackedID] as TrackedBrutBlockSystemData;
+            if (trackedBrutBlockSystemData != null)
+            {
+                if (trackedBrutBlockSystemData.physicalBrutBlockSystem != null)
+                {
+                    trackedBrutBlockSystemData.physicalBrutBlockSystem.physicalBrutBlockSystem.isNextBlock0 = next;
+
+                    ++BrutBlockSystemPatch.startSkip;
+                    trackedBrutBlockSystemData.physicalBrutBlockSystem.physicalBrutBlockSystem.TryToStartBlock();
+                    --BrutBlockSystemPatch.startSkip;
+                }
+
+                ServerSend.BrutBlockSystemStart(trackedID, next, clientID);
+            }
+        }
     }
 }

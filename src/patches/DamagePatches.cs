@@ -769,6 +769,20 @@ namespace H3MP.Patches
 
             PatchController.Verify(floaterCoreDamageOriginal, harmony, false);
             harmony.Patch(floaterCoreDamageOriginal, new HarmonyMethod(floaterCoreDamagePrefix));
+
+            // BrutBlockSystemDamageablePatch
+            MethodInfo brutBlockSystemFixedUpdateOriginal = typeof(BrutBlockSystem).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo brutBlockSystemFixedUpdateTranspiler = typeof(BrutBlockSystemDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(brutBlockSystemFixedUpdateOriginal, harmony, false);
+            try
+            {
+                harmony.Patch(brutBlockSystemFixedUpdateOriginal, null, null, new HarmonyMethod(brutBlockSystemFixedUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying DamagePatches.BrutBlockSystemDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
         }
     }
 
@@ -4072,6 +4086,72 @@ namespace H3MP.Patches
             if (!applied)
             {
                 Mod.LogError("IrisDamageablePatch Transpiler not applied!");
+            }
+
+            return instructionList;
+        }
+    }
+
+    // Patches BrutBlockSystem.FixedUpdate to control who causes damage
+    class BrutBlockSystemDamageablePatch
+    {
+        public static IFVRDamageable GetActualDamageable(IFVRDamageable original)
+        {
+            // Skip if not connected or no one to send data to
+            if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
+            {
+                return original;
+            }
+
+            if (original != null)
+            {
+                TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(original, out damageableObject) ? damageableObject : null;
+                if (!(original is FVRPlayerHitbox) && damageableObject == null)
+                {
+                    return original; // Damageable object client side (not tracked), apply damage
+                }
+                else // Damageable object tracked, only want to apply damage if best potential host
+                {
+                    int bestHost = Mod.GetBestPotentialObjectHost(-1);
+                    return (bestHost == GameManager.ID || bestHost == -1) ? original : null;
+                }
+            }
+            return original;
+        }
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load system instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load IFVRDamageable
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BrutBlockSystemDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable, put return val on stack
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set IFVRDamageable
+
+            bool applied = false;
+            bool found = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Equals("FistVR.IFVRDamageable (4)"))
+                {
+                    if (found)
+                    {
+                        instructionList.InsertRange(i + 1, toInsert);
+                        applied = true;
+                        break;
+                    }
+                    else
+                    {
+                        found = true;
+                    }
+                }
+            }
+
+            if (!applied)
+            {
+                Mod.LogError("BrutBlockSystemDamageablePatch Transpiler not applied!");
             }
 
             return instructionList;

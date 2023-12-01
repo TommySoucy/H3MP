@@ -43,7 +43,7 @@ namespace H3MP.Tracking
             Construct_Iris.BParamType newParamType = new Construct_Iris.BParamType();
             newParamType.Mats = new List<MatBallisticType>();
             newParamType.Pen = refIndex;
-            physicalIris.BParams.Add(newParamType);
+            GetComponent<Construct_Iris>().BParams.Add(newParamType);
         }
 
         public override bool HandleShatter(UberShatterable shatterable, Vector3 point, Vector3 dir, float intensity, bool received, int clientID, byte[] data)

@@ -2757,5 +2757,16 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void BrutBlockSystemStart(int trackedID, bool next)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.brutBlockSystemStart))
+            {
+                packet.Write(trackedID);
+                packet.Write(next);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

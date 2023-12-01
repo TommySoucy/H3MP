@@ -76,6 +76,8 @@
     <Compile Include="src\tracking\TrackedBlisterData.cs" />
     <Compile Include="src\tracking\TrackedBreakableGlass.cs" />
     <Compile Include="src\tracking\TrackedBreakableGlassData.cs" />
+    <Compile Include="src\tracking\TrackedBrutBlockSystem.cs" />
+    <Compile Include="src\tracking\TrackedBrutBlockSystemData.cs" />
     <Compile Include="src\tracking\TrackedEncryption.cs" />
     <Compile Include="src\tracking\TrackedEncryptionData.cs" />
     <Compile Include="src\tracking\TrackedFloater.cs" />
@@ -112,7 +114,7 @@
     </Reference>
     <Reference Include="Assembly-CSharp, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>H:\Software and scripts\AssemblyPublicizer\Publicize.v1.0.0\Release\Assembly-CSharp.dll</HintPath>
+      <HintPath>G:\Program Files (x86)\Steam\steamapps\common\H3VR\h3vr_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\H3VR.GameLibs.0.111.5\lib\net35\Assembly-CSharp-firstpass.dll</HintPath>

@@ -4809,5 +4809,24 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void BrutBlockSystemStart(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool next = packet.ReadBool();
+
+            TrackedBrutBlockSystemData trackedBrutBlockSystemData = Client.objects[trackedID] as TrackedBrutBlockSystemData;
+            if (trackedBrutBlockSystemData != null)
+            {
+                if(trackedBrutBlockSystemData.physicalBrutBlockSystem != null)
+                {
+                    trackedBrutBlockSystemData.physicalBrutBlockSystem.physicalBrutBlockSystem.isNextBlock0 = next;
+
+                    ++BrutBlockSystemPatch.startSkip;
+                    trackedBrutBlockSystemData.physicalBrutBlockSystem.physicalBrutBlockSystem.TryToStartBlock();
+                    --BrutBlockSystemPatch.startSkip;
+                }
+            }
+        }
     }
 }

@@ -47,6 +47,7 @@ namespace H3MP
         public static Dictionary<BreakableGlass, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlass = new Dictionary<BreakableGlass, TrackedBreakableGlass>();
         public static Dictionary<BreakableGlassDamager, TrackedBreakableGlass> trackedBreakableGlassByBreakableGlassDamager = new Dictionary<BreakableGlassDamager, TrackedBreakableGlass>();
         public static Dictionary<wwGatlingGun, TrackedGatlingGun> trackedGatlingGunByGatlingGun = new Dictionary<wwGatlingGun, TrackedGatlingGun>();
+        public static Dictionary<BrutBlockSystem, TrackedBrutBlockSystem> trackedBrutBlockSystemByBrutBlockSystem = new Dictionary<BrutBlockSystem, TrackedBrutBlockSystem>();
         public static Dictionary<Construct_Blister, TrackedBlister> trackedBlisterByBlister = new Dictionary<Construct_Blister, TrackedBlister>();
         public static Dictionary<Construct_Floater, TrackedFloater> trackedFloaterByFloater = new Dictionary<Construct_Floater, TrackedFloater>();
         public static Dictionary<Construct_Iris, TrackedIris> trackedIrisByIris = new Dictionary<Construct_Iris, TrackedIris>();
@@ -449,6 +450,7 @@ namespace H3MP
             trackedBlisterByBlister.Clear();
             trackedFloaterByFloater.Clear();
             trackedGatlingGunByGatlingGun.Clear();
+            trackedBrutBlockSystemByBrutBlockSystem.Clear();
             trackedIrisByIris.Clear();
             trackedObjectByShatterable.Clear();
             if (playersAtLoadStart != null)
