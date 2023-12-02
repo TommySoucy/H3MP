@@ -12,7 +12,7 @@ namespace H3MP.Patches
 {
     public class InteractionPatches
     {
-        public static void DoPatching(Harmony harmony)
+        public static void DoPatching(Harmony harmony, ref int patchIndex)
         {
             // HandCurrentInteractableSetPatch
             MethodInfo handCurrentInteractableSetPatchOriginal = typeof(FVRViveHand).GetMethod("set_CurrentInteractable", BindingFlags.Public | BindingFlags.Instance);
@@ -22,6 +22,8 @@ namespace H3MP.Patches
             PatchController.Verify(handCurrentInteractableSetPatchOriginal, harmony, true);
             harmony.Patch(handCurrentInteractableSetPatchOriginal, new HarmonyMethod(handCurrentInteractableSetPatchPrefix), new HarmonyMethod(handCurrentInteractableSetPatchPostfix));
 
+            ++patchIndex; // 1
+
             // SetQuickBeltSlotPatch
             MethodInfo setQuickBeltSlotPatchOriginal = typeof(FVRPhysicalObject).GetMethod("SetQuickBeltSlot", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo setQuickBeltSlotPatchPostfix = typeof(SetQuickBeltSlotPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -29,12 +31,16 @@ namespace H3MP.Patches
             PatchController.Verify(setQuickBeltSlotPatchOriginal, harmony, true);
             harmony.Patch(setQuickBeltSlotPatchOriginal, null, new HarmonyMethod(setQuickBeltSlotPatchPostfix));
 
+            ++patchIndex; // 2
+
             // SosigPickUpPatch
             MethodInfo sosigPickUpPatchOriginal = typeof(SosigHand).GetMethod("PickUp", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigPickUpPatchPostfix = typeof(SosigPickUpPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sosigPickUpPatchOriginal, harmony, true);
             harmony.Patch(sosigPickUpPatchOriginal, null, new HarmonyMethod(sosigPickUpPatchPostfix));
+
+            ++patchIndex; // 3
 
             // SosigHandDropPatch
             MethodInfo sosigHandDropPatchOriginal = typeof(SosigHand).GetMethod("DropHeldObject", BindingFlags.Public | BindingFlags.Instance);
@@ -46,6 +52,8 @@ namespace H3MP.Patches
             harmony.Patch(sosigHandDropPatchOriginal, new HarmonyMethod(sosigHandDropPatchPrefix));
             harmony.Patch(sosigHandThrowPatchOriginal, new HarmonyMethod(sosigHandDropPatchPrefix));
 
+            ++patchIndex; // 4
+
             // SosigPlaceObjectInPatch
             MethodInfo sosigPutObjectInPatchOriginal = typeof(SosigInventory.Slot).GetMethod("PlaceObjectIn", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigPutObjectInPatchPostfix = typeof(SosigPlaceObjectInPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -53,12 +61,16 @@ namespace H3MP.Patches
             PatchController.Verify(sosigPutObjectInPatchOriginal, harmony, true);
             harmony.Patch(sosigPutObjectInPatchOriginal, null, new HarmonyMethod(sosigPutObjectInPatchPostfix));
 
+            ++patchIndex; // 5
+
             // SosigSlotDetachPatch
             MethodInfo sosigSlotDetachPatchOriginal = typeof(SosigInventory.Slot).GetMethod("DetachHeldObject", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigSlotDetachPatchPrefix = typeof(SosigSlotDetachPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sosigSlotDetachPatchOriginal, harmony, true);
             harmony.Patch(sosigSlotDetachPatchOriginal, new HarmonyMethod(sosigSlotDetachPatchPrefix));
+
+            ++patchIndex; // 6
 
             // GrabbityPatch
             MethodInfo grabbityPatchFlickOriginal = typeof(FVRViveHand).GetMethod("BeginFlick", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -70,6 +82,8 @@ namespace H3MP.Patches
             PatchController.Verify(grabbityPatchFindHoverOriginal, harmony, false);
             harmony.Patch(grabbityPatchFlickOriginal, new HarmonyMethod(grabbityPatchFlickPrefix));
             harmony.Patch(grabbityPatchFindHoverOriginal, new HarmonyMethod(grabbityPatchFindHoverPrefix));
+
+            ++patchIndex; // 7
 
             // GBeamerPatch
             MethodInfo GBeamerPatchObjectSearchOriginal = typeof(GBeamer).GetMethod("ObjectSearch", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -89,6 +103,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying InteractionPatches.GBeamerPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 8
         }
     }
 

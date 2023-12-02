@@ -223,12 +223,31 @@ namespace H3MP.Patches
 
             GetCompatibilityData();
 
-            GeneralPatches.DoPatching(harmony);
-            InteractionPatches.DoPatching(harmony);
-            ActionPatches.DoPatching(harmony);
-            InstantiationPatches.DoPatching(harmony);
-            DamagePatches.DoPatching(harmony);
-            TNHPatches.DoPatching(harmony);
+            int patchGroupIndex = 0;
+            int patchIndex = 0;
+            try
+            {
+                GeneralPatches.DoPatching(harmony, ref patchIndex);
+                patchIndex = 0;
+                ++patchGroupIndex;
+                InteractionPatches.DoPatching(harmony, ref patchIndex);
+                patchIndex = 0;
+                ++patchGroupIndex;
+                ActionPatches.DoPatching(harmony, ref patchIndex);
+                patchIndex = 0;
+                ++patchGroupIndex;
+                InstantiationPatches.DoPatching(harmony, ref patchIndex);
+                patchIndex = 0;
+                ++patchGroupIndex;
+                DamagePatches.DoPatching(harmony, ref patchIndex);
+                patchIndex = 0;
+                ++patchGroupIndex;
+                TNHPatches.DoPatching(harmony, ref patchIndex);
+            }
+            catch (Exception)
+            {
+                Mod.LogError("PATCHING EXCEPTION AT "+patchGroupIndex+"-"+patchIndex);
+            }
 
             ProcessPatchResult();
         }

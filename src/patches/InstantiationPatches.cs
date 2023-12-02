@@ -13,7 +13,7 @@ namespace H3MP.Patches
 {
     public class InstantiationPatches
     {
-        public static void DoPatching(Harmony harmony)
+        public static void DoPatching(Harmony harmony, ref int patchIndex)
         {
             // ChamberEjectRoundPatch
             MethodInfo chamberEjectRoundPatchOriginal = typeof(FVRFireArmChamber).GetMethod("EjectRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(bool) }, null);
@@ -26,12 +26,16 @@ namespace H3MP.Patches
             harmony.Patch(chamberEjectRoundPatchOriginal, new HarmonyMethod(chamberEjectRoundPatchPrefix), new HarmonyMethod(chamberEjectRoundPatchPostfix));
             harmony.Patch(chamberEjectRoundPatchAnimationOriginal, new HarmonyMethod(chamberEjectRoundPatchPrefix), new HarmonyMethod(chamberEjectRoundPatchPostfix));
 
+            ++patchIndex; // 1
+
             // Internal_CloneSinglePatch
             MethodInfo internal_CloneSinglePatchOriginal = typeof(UnityEngine.Object).GetMethod("Internal_CloneSingle", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_CloneSinglePatchPostfix = typeof(Internal_CloneSinglePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(internal_CloneSinglePatchOriginal, harmony, true);
             harmony.Patch(internal_CloneSinglePatchOriginal, null, new HarmonyMethod(internal_CloneSinglePatchPostfix));
+
+            ++patchIndex; // 2
 
             // Internal_CloneSingleWithParentPatch
             MethodInfo internal_CloneSingleWithParentPatchOriginal = typeof(UnityEngine.Object).GetMethod("Internal_CloneSingleWithParent", BindingFlags.NonPublic | BindingFlags.Static);
@@ -41,12 +45,16 @@ namespace H3MP.Patches
             PatchController.Verify(internal_CloneSingleWithParentPatchOriginal, harmony, true);
             harmony.Patch(internal_CloneSingleWithParentPatchOriginal, new HarmonyMethod(internal_CloneSingleWithParentPatchPrefix), new HarmonyMethod(internal_CloneSingleWithParentPatchPostfix));
 
+            ++patchIndex; // 3
+
             // Internal_InstantiateSinglePatch
             MethodInfo internal_InstantiateSinglePatchOriginal = typeof(UnityEngine.Object).GetMethod("Internal_InstantiateSingle", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo internal_InstantiateSinglePatchPostfix = typeof(Internal_InstantiateSinglePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(internal_InstantiateSinglePatchOriginal, harmony, true);
             harmony.Patch(internal_InstantiateSinglePatchOriginal, null, new HarmonyMethod(internal_InstantiateSinglePatchPostfix));
+
+            ++patchIndex; // 4
 
             // Internal_InstantiateSingleWithParentPatch
             MethodInfo internal_InstantiateSingleWithParentPatchOriginal = typeof(UnityEngine.Object).GetMethod("Internal_InstantiateSingleWithParent", BindingFlags.NonPublic | BindingFlags.Static);
@@ -56,6 +64,8 @@ namespace H3MP.Patches
             PatchController.Verify(internal_InstantiateSingleWithParentPatchOriginal, harmony, true);
             harmony.Patch(internal_InstantiateSingleWithParentPatchOriginal, new HarmonyMethod(internal_InstantiateSingleWithParentPatchPrefix), new HarmonyMethod(internal_InstantiateSingleWithParentPatchPostfix));
 
+            ++patchIndex; // 5
+
             // LoadDefaultSceneRoutinePatch
             MethodInfo loadDefaultSceneRoutinePatchOriginal = typeof(FVRSceneSettings).GetMethod("LoadDefaultSceneRoutine", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo loadDefaultSceneRoutinePatchPrefix = typeof(LoadDefaultSceneRoutinePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -64,12 +74,16 @@ namespace H3MP.Patches
             PatchController.Verify(loadDefaultSceneRoutinePatchOriginal, harmony, false);
             harmony.Patch(loadDefaultSceneRoutinePatchOriginal, new HarmonyMethod(loadDefaultSceneRoutinePatchPrefix), new HarmonyMethod(loadDefaultSceneRoutinePatchPostfix));
 
+            ++patchIndex; // 6
+
             // SpawnObjectsPatch
             MethodInfo spawnObjectsPatchOriginal = typeof(VaultSystem).GetMethod("SpawnObjects", BindingFlags.Public | BindingFlags.Static);
             MethodInfo spawnObjectsPatchPrefix = typeof(SpawnObjectsPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(spawnObjectsPatchOriginal, harmony, false);
             harmony.Patch(spawnObjectsPatchOriginal, new HarmonyMethod(spawnObjectsPatchPrefix));
+
+            ++patchIndex; // 7
 
             // SpawnVaultFileRoutinePatch
             MethodInfo spawnVaultFileRoutinePatchOriginal = typeof(VaultSystem).GetMethod("SpawnVaultFileRoutine", BindingFlags.NonPublic | BindingFlags.Static);
@@ -89,12 +103,16 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying InstantiationPatches.SpawnVaultFileRoutinePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 8
+
             // IDSpawnedFromPatch
             MethodInfo IDSpawnedFromPatchOriginal = typeof(FVRPhysicalObject).GetMethod("set_IDSpawnedFrom", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo IDSpawnedFromPatchPostfix = typeof(IDSpawnedFromPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(IDSpawnedFromPatchOriginal, harmony, true);
             harmony.Patch(IDSpawnedFromPatchOriginal, null, new HarmonyMethod(IDSpawnedFromPatchPostfix));
+
+            ++patchIndex; // 9
 
             // AnvilPrefabSpawnPatch
             MethodInfo anvilPrefabSpawnPatchOriginal = typeof(AnvilPrefabSpawn).GetMethod("InstantiateAndZero", BindingFlags.Public | BindingFlags.Instance);
@@ -103,6 +121,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(anvilPrefabSpawnPatchOriginal, harmony, true);
             harmony.Patch(anvilPrefabSpawnPatchOriginal, new HarmonyMethod(anvilPrefabSpawnPatchPrefix), new HarmonyMethod(anvilPrefabSpawnPatchPostfix));
+
+            ++patchIndex; // 10
 
             // BrutPlacerPatch
             MethodInfo brutPlacerOriginal = typeof(BrutPlacer).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -114,6 +134,8 @@ namespace H3MP.Patches
             PatchController.Verify(brutAssemblagePlacerOriginal, harmony, true);
             harmony.Patch(brutPlacerOriginal, new HarmonyMethod(brutPlacerPrefix), new HarmonyMethod(brutPlacerPostfix));
             harmony.Patch(brutAssemblagePlacerOriginal, new HarmonyMethod(brutPlacerPrefix), new HarmonyMethod(brutPlacerPostfix));
+
+            ++patchIndex; // 11
 
             // ConstructVolumePatch
             MethodInfo constructVolumeSpawnConstructsOriginal = typeof(Construct_Volume).GetMethod("SpawnConstructs", BindingFlags.Public | BindingFlags.Instance);
