@@ -14,7 +14,7 @@ namespace H3MP.Patches
 {
     public class TNHPatches
     {
-        public static void DoPatching(Harmony harmony)
+        public static void DoPatching(Harmony harmony, ref int patchIndex)
         {
             // SetTNHManagerPatch
             MethodInfo setTNHManagerPatchOriginal = typeof(GM).GetMethod("set_TNH_Manager", BindingFlags.Public | BindingFlags.Static);
@@ -23,6 +23,8 @@ namespace H3MP.Patches
             PatchController.Verify(setTNHManagerPatchOriginal, harmony, true);
             harmony.Patch(setTNHManagerPatchOriginal, null, new HarmonyMethod(setTNHManagerPatchPostfix));
 
+            ++patchIndex; // 1
+
             // TNH_TokenPatch
             MethodInfo TNH_TokenPatchPatchCollectOriginal = typeof(TNH_Token).GetMethod("Collect", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_TokenPatchPatchCollectPrefix = typeof(TNH_TokenPatch).GetMethod("CollectPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -30,6 +32,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(TNH_TokenPatchPatchCollectOriginal, harmony, true);
             harmony.Patch(TNH_TokenPatchPatchCollectOriginal, new HarmonyMethod(TNH_TokenPatchPatchCollectPrefix), new HarmonyMethod(TNH_TokenPatchPatchCollectPostfix));
+
+            ++patchIndex; // 2
 
             // TNH_UIManagerPatch
             MethodInfo TNH_UIManagerPatchProgressionOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_Progression", BindingFlags.Public | BindingFlags.Instance);
@@ -85,6 +89,8 @@ namespace H3MP.Patches
             harmony.Patch(TNH_UIManagerPatchSeedOriginal, new HarmonyMethod(TNH_UIManagerPatchSeedPrefix));
             harmony.Patch(TNH_UIManagerPatchNextLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchNextLevelPrefix));
             harmony.Patch(TNH_UIManagerPatchPrevLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchPrevLevelPrefix));
+
+            ++patchIndex; // 3
 
             // TNH_ManagerPatch
             MethodInfo TNH_ManagerPatchSetPhaseTakeOriginal = null;
@@ -174,6 +180,8 @@ namespace H3MP.Patches
             harmony.Patch(TNH_ManagerDelayedInitOriginal, new HarmonyMethod(TNH_ManagerDelayedInitPrefix), new HarmonyMethod(TNH_ManagerDelayedInitPostfix));
             harmony.Patch(TNH_ManagerObjectCleanupInHoldOriginal, new HarmonyMethod(TNH_ManagerObjectCleanupInHoldPrefix));
 
+            ++patchIndex; // 4
+
             // TNHSupplyPointPatch
             if (PatchController.TNHTweakerAsmIdx > -1)
             {
@@ -212,6 +220,8 @@ namespace H3MP.Patches
                 harmony.Patch(TNHSupplyPointPatchSpawnBoxesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPostfix));
             }
 
+            ++patchIndex; // 5
+
             // TAHReticleContactPatch
             MethodInfo TAHReticleContactPatchTickOriginal = typeof(TAH_ReticleContact).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TAHReticleContactPatchTickTranspiler = typeof(TAHReticleContactPatch).GetMethod("TickTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -228,6 +238,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying TNHPatches.TAHReticleContactPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
             harmony.Patch(TAHReticleContactPatchSetContactTypeOriginal, new HarmonyMethod(TAHReticleContactPatchSetContactTypePrefix));
+
+            ++patchIndex; // 6
 
             // TNH_HoldPointPatch
             MethodInfo TNH_HoldPointPatchSpawnTargetGroupOriginal = null;
@@ -345,12 +357,16 @@ namespace H3MP.Patches
             //harmony.Patch(TNH_HoldPointPatchDeleteTurretsOriginal, new HarmonyMethod(TNH_HoldPointPatchDeleteTurretsPrefix));
             ////harmony.Patch(TNH_HoldPointPatchSpawnSystemNodeOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnSystemNodePrefix));
 
+            ++patchIndex; // 7
+
             // TNHWeaponCrateSpawnObjectsPatch
             MethodInfo TNH_WeaponCrateSpawnObjectsPatchOriginal = typeof(TNH_WeaponCrate).GetMethod("SpawnObjectsRaw", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_WeaponCrateSpawnObjectsPatchPrefix = typeof(TNHWeaponCrateSpawnObjectsPatch).GetMethod("SpawnObjectsRawPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(TNH_WeaponCrateSpawnObjectsPatchOriginal, harmony, false);
             harmony.Patch(TNH_WeaponCrateSpawnObjectsPatchOriginal, new HarmonyMethod(TNH_WeaponCrateSpawnObjectsPatchPrefix));
+
+            ++patchIndex; // 8
 
             // SceneLoaderPatch
             MethodInfo SceneLoaderPatchLoadMGOriginal = typeof(SceneLoader).GetMethod("LoadMG", BindingFlags.NonPublic | BindingFlags.Instance);

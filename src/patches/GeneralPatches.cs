@@ -12,7 +12,7 @@ namespace H3MP.Patches
 {
     public class GeneralPatches
     {
-        public static void DoPatching(Harmony harmony)
+        public static void DoPatching(Harmony harmony, ref int patchIndex)
         {
             // LoadLevelBeginPatch
             MethodInfo loadLevelBeginPatchOriginal = typeof(SteamVR_LoadLevel).GetMethod("Begin", BindingFlags.Public | BindingFlags.Static);
@@ -21,12 +21,16 @@ namespace H3MP.Patches
             PatchController.Verify(loadLevelBeginPatchOriginal, harmony, true);
             harmony.Patch(loadLevelBeginPatchOriginal, new HarmonyMethod(loadLevelBeginPatchPrefix));
 
+            ++patchIndex; // 1
+
             // KinematicPatch
             MethodInfo kinematicPatchOriginal = typeof(Rigidbody).GetMethod("set_isKinematic", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo kinematicPatchPrefix = typeof(KinematicPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(kinematicPatchOriginal, harmony, true);
             harmony.Patch(kinematicPatchOriginal, new HarmonyMethod(kinematicPatchPrefix));
+
+            ++patchIndex; // 2
 
             // PhysicalObjectRBPatch
             MethodInfo physicalObjectRBOriginal = typeof(FVRPhysicalObject).GetMethod("RecoverRigidbody", BindingFlags.Public | BindingFlags.Instance);
@@ -35,12 +39,16 @@ namespace H3MP.Patches
             PatchController.Verify(physicalObjectRBOriginal, harmony, true);
             harmony.Patch(physicalObjectRBOriginal, null, new HarmonyMethod(physicalObjectRBPostfix));
 
+            ++patchIndex; // 3
+
             // SetPlayerIFFPatch
             MethodInfo setPlayerIFFPatchOriginal = typeof(FVRPlayerBody).GetMethod("SetPlayerIFF", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo setPlayerIFFPatchPrefix = typeof(SetPlayerIFFPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(setPlayerIFFPatchOriginal, harmony, false);
             harmony.Patch(setPlayerIFFPatchOriginal, new HarmonyMethod(setPlayerIFFPatchPrefix));
+
+            ++patchIndex; // 4
 
             // WristMenuPatch
             MethodInfo wristMenuPatchUpdateOriginal = typeof(FVRWristMenu2).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -53,12 +61,16 @@ namespace H3MP.Patches
             harmony.Patch(wristMenuPatchUpdateOriginal, new HarmonyMethod(wristMenuPatchUpdatePrefix));
             harmony.Patch(wristMenuPatchAwakeOriginal, new HarmonyMethod(wristMenuPatchAwakePrefix));
 
+            ++patchIndex; // 5
+
             // GMInitScenePatch
             MethodInfo GMInitScenePatchOriginal = typeof(GM).GetMethod("InitScene", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo GMInitScenePatchPostfix = typeof(GMInitScenePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(GMInitScenePatchOriginal, harmony, true);
             harmony.Patch(GMInitScenePatchOriginal, null, new HarmonyMethod(GMInitScenePatchPostfix));
+
+            ++patchIndex; // 6
 
             // TNH_ScoreDisplayReloadPatch
             MethodInfo TNH_ScoreDisplayReloadPatchOriginal = typeof(TNH_ScoreDisplay).GetMethod("ReloadLevel", BindingFlags.Public | BindingFlags.Instance);
@@ -67,12 +79,16 @@ namespace H3MP.Patches
             PatchController.Verify(TNH_ScoreDisplayReloadPatchOriginal, harmony, true);
             harmony.Patch(TNH_ScoreDisplayReloadPatchOriginal, new HarmonyMethod(TNH_ScoreDisplayReloadPatchPrefix));
 
+            ++patchIndex; // 7
+
             // SetCurrentAIManagerPatch
             MethodInfo SetCurrentAIManagerPatchOriginal = typeof(GM).GetMethod("set_CurrentAIManager", BindingFlags.Public | BindingFlags.Static);
             MethodInfo SetCurrentAIManagerPatchPostfix = typeof(SetCurrentAIManagerPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(SetCurrentAIManagerPatchOriginal, harmony, true);
             harmony.Patch(SetCurrentAIManagerPatchOriginal, null, new HarmonyMethod(SetCurrentAIManagerPatchPostfix));
+
+            ++patchIndex; // 8
 
             // CleanUpPatch
             MethodInfo ClearExistingSaveableObjectsOriginal = typeof(VaultSystem).GetMethod("ClearExistingSaveableObjects", BindingFlags.Public | BindingFlags.Static);
@@ -93,6 +109,8 @@ namespace H3MP.Patches
             harmony.Patch(CleanUpScene_AllMagsOriginal, new HarmonyMethod(CleanUpScene_AllMagsPrefix));
             harmony.Patch(CleanUpScene_GunsOriginal, new HarmonyMethod(CleanUpScene_GunsPrefix));
 
+            ++patchIndex; // 9
+
             // SetHealthThresholdPatch
             MethodInfo SetHealthThresholdOriginal = typeof(FVRPlayerBody).GetMethod("SetHealthThreshold", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo SetHealthThresholdPrefix = typeof(SetHealthThresholdPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -100,12 +118,16 @@ namespace H3MP.Patches
             PatchController.Verify(SetHealthThresholdOriginal, harmony, false);
             harmony.Patch(SetHealthThresholdOriginal, new HarmonyMethod(SetHealthThresholdPrefix));
 
+            ++patchIndex; // 10
+
             // PlayerBodyInitPatch
             MethodInfo playerBodyInitOriginal = typeof(FVRPlayerBody).GetMethod("Init", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo playerBodyInitPostfix = typeof(PlayerBodyInitPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(playerBodyInitOriginal, harmony, true);
             harmony.Patch(playerBodyInitOriginal, null, new HarmonyMethod(playerBodyInitPostfix));
+
+            ++patchIndex; // 11
 
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);

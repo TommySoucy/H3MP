@@ -13,7 +13,7 @@ namespace H3MP.Patches
 {
     public class DamagePatches
     {
-        public static void DoPatching(Harmony harmony)
+        public static void DoPatching(Harmony harmony, ref int patchIndex)
         {
             // EncryptionSubDamagePatch
             MethodInfo encryptionSubDamagePatchOriginal = typeof(TNH_EncryptionTarget_SubTarget).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -21,6 +21,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(encryptionSubDamagePatchOriginal, harmony, true);
             harmony.Patch(encryptionSubDamagePatchOriginal, new HarmonyMethod(encryptionSubDamagePatchPrefix));
+
+            ++patchIndex; // 1
 
             // EncryptionDamageablePatch
             MethodInfo encryptionDamageablePatchFixedUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -36,12 +38,16 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.EncryptionDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 2
+
             // UberShatterableShatterPatch
             MethodInfo uberShatterableShatterPatchOriginal = typeof(UberShatterable).GetMethod("Shatter", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo uberShatterableShatterPatchPatchPrefix = typeof(UberShatterableShatterPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(uberShatterableShatterPatchOriginal, harmony, false);
             harmony.Patch(uberShatterableShatterPatchOriginal, new HarmonyMethod(uberShatterableShatterPatchPatchPrefix));
+
+            ++patchIndex; // 3
 
             // EncryptionDamagePatch
             MethodInfo encryptionDamagePatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -51,12 +57,16 @@ namespace H3MP.Patches
             PatchController.Verify(encryptionDamagePatchOriginal, harmony, true);
             harmony.Patch(encryptionDamagePatchOriginal, new HarmonyMethod(encryptionDamagePatchPrefix), new HarmonyMethod(encryptionDamagePatchPostfix));
 
+            ++patchIndex; // 4
+
             // SosigWeaponDamagePatch
             MethodInfo sosigWeaponDamagePatchOriginal = typeof(SosigWeapon).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigWeaponDamagePatchPrefix = typeof(SosigWeaponDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sosigWeaponDamagePatchOriginal, harmony, false);
             harmony.Patch(sosigWeaponDamagePatchOriginal, new HarmonyMethod(sosigWeaponDamagePatchPrefix));
+
+            ++patchIndex; // 5
 
             // RemoteMissileDamagePatch
             MethodInfo remoteMissileDamagePatchOriginal = typeof(RemoteMissile).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -65,12 +75,16 @@ namespace H3MP.Patches
             PatchController.Verify(remoteMissileDamagePatchOriginal, harmony, false);
             harmony.Patch(remoteMissileDamagePatchOriginal, new HarmonyMethod(remoteMissileDamagePatchPrefix));
 
+            ++patchIndex; // 6
+
             // StingerMissileDamagePatch
             MethodInfo stingerMissileDamagePatchOriginal = typeof(StingerMissile).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo stingerMissileDamagePatchPrefix = typeof(StingerMissileDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(stingerMissileDamagePatchOriginal, harmony, false);
             harmony.Patch(stingerMissileDamagePatchOriginal, new HarmonyMethod(stingerMissileDamagePatchPrefix));
+
+            ++patchIndex; // 7
 
             // ProjectileFirePatch
             MethodInfo projectileFirePatchOriginal = typeof(BallisticProjectile).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(float), typeof(Vector3), typeof(FVRFireArm), typeof(bool) }, null);
@@ -87,6 +101,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.ProjectileFirePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 8
+
             // ProjectileDamageablePatch
             MethodInfo ballisticProjectileDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo ballisticProjectileDamageablePatchTranspiler = typeof(BallisticProjectileDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -100,6 +116,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.BallisticProjectileDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 9
 
             // SubMunitionsDamageablePatch
             MethodInfo subMunitionsDamageablePatchOriginal = typeof(BallisticProjectile).GetMethod("FireSubmunitions", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -115,6 +133,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.SubMunitionsDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 10
+
             // ExplosionDamageablePatch
             MethodInfo explosionDamageablePatchOriginal = typeof(Explosion).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo explosionDamageablePatchTranspiler = typeof(ExplosionDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -128,6 +148,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.ExplosionDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 11
 
             // GrenadeExplosionDamageablePatch
             MethodInfo grenadeExplosionDamageablePatchOriginal = typeof(GrenadeExplosion).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -143,6 +165,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.GrenadeExplosionDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 12
+
             // FlameThrowerDamageablePatch
             MethodInfo flameThrowerDamageablePatchOriginal = typeof(FlameThrower).GetMethod("AirBlast", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo flameThrowerDamageablePatchTranspiler = typeof(FlameThrowerDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -156,6 +180,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.FlameThrowerDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 13
 
             // GrenadeDamageablePatch
             MethodInfo grenadeDamageablePatchOriginal = typeof(FVRGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -171,6 +197,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.GrenadeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 14
+
             // DemonadeDamageablePatch
             MethodInfo demonadeDamageablePatchOriginal = typeof(MF2_Demonade).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo demonadeDamageablePatchTranspiler = typeof(DemonadeDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -184,6 +212,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.DemonadeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 15
 
             // SosigWeaponDamageablePatch
             MethodInfo sosigWeaponDamageablePatchOriginal = typeof(SosigWeapon).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -220,6 +250,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.SosigWeaponDamageablePatch on sosigWeaponDamageablePatchUpdateOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 16
 
             // MeleeParamsDamageablePatch
             MethodInfo meleeParamsDamageablePatchStabOriginal = typeof(FVRPhysicalObject.MeleeParams).GetMethod("DoStabDamage", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -269,6 +301,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.MeleeParamsDamageablePatch on meleeParamsDamageablePatchCollisionOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 17
+
             // AIMeleeDamageablePatch
             MethodInfo meleeParamsDamageablePatchFireOriginal = typeof(AIMeleeWeapon).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo meleeParamsDamageablePatchFireTranspiler = typeof(AIMeleeDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -282,6 +316,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.AIMeleeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 18
 
             // AutoMeaterBladeDamageablePatch
             MethodInfo autoMeaterBladeDamageablePatchCollisionOriginal = typeof(AutoMeaterBlade).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -297,6 +333,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.AutoMeaterBladeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 19
+
             // BangSnapDamageablePatch
             MethodInfo bangSnapDamageablePatchCollisionOriginal = typeof(BangSnap).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo bangSnapDamageablePatchCollisionTranspiler = typeof(BangSnapDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -310,6 +348,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.BangSnapDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 20
 
             // BearTrapDamageablePatch
             MethodInfo bearTrapDamageablePatchSnapOriginal = typeof(BearTrapInteractiblePiece).GetMethod("SnapShut", BindingFlags.Public | BindingFlags.Instance);
@@ -325,6 +365,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.BearTrapDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 21
+
             // ChainsawDamageablePatch
             MethodInfo chainsawDamageablePatchCollisionOriginal = typeof(Chainsaw).GetMethod("OnCollisionStay", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo chainsawDamageablePatchCollisionTranspiler = typeof(ChainsawDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -338,6 +380,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.ChainsawDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 22
 
             // DrillDamageablePatch
             MethodInfo drillDamageablePatchCollisionOriginal = typeof(Drill).GetMethod("OnCollisionStay", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -353,6 +397,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.DrillDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 23
+
             // DropTrapDamageablePatch
             MethodInfo dropTrapDamageablePatchCollisionOriginal = typeof(DropTrapLogs).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo dropTrapDamageablePatchCollisionTranspiler = typeof(DropTrapDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -366,6 +412,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.DropTrapDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 24
 
             // FlipzoDamageablePatch
             MethodInfo flipzoDamageablePatchUpdateOriginal = typeof(Flipzo).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -381,6 +429,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.FlipzoDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 25
+
             // IgnitableDamageablePatch
             MethodInfo ignitableDamageablePatchStartOriginal = typeof(FVRIgnitable).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo ignitableDamageablePatchStartTranspiler = typeof(IgnitableDamageablePatch).GetMethod("StartTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -394,6 +444,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.IgnitableDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 26
 
             // SparklerDamageablePatch
             MethodInfo sparklerDamageablePatchCollisionOriginal = typeof(FVRSparkler).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -409,6 +461,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.SparklerDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 27
+
             // MatchDamageablePatch
             MethodInfo matchDamageablePatchCollisionOriginal = typeof(FVRStrikeAnyWhereMatch).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo matchDamageablePatchCollisionTranspiler = typeof(MatchDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -422,6 +476,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.MatchDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 28
 
             // HCBBoltDamageablePatch
             MethodInfo HCBBoltDamageablePatchDamageOriginal = typeof(HCBBolt).GetMethod("DamageOtherThing", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -437,6 +493,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.HCBBoltDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 29
+
             // KabotDamageablePatch
             MethodInfo kabotDamageablePatchTickOriginal = typeof(Kabot.KSpike).GetMethod("Tick", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo kabotDamageablePatchTickTranspiler = typeof(KabotDamageablePatch).GetMethod("TickTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -450,6 +508,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.KabotDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 30
 
             // MeatCrabDamageablePatch
             MethodInfo meatCrabDamageablePatchLungingOriginal = typeof(MeatCrab).GetMethod("Crabdate_Lunging", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -476,6 +536,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.MeatCrabDamageablePatch on meatCrabDamageablePatchAttachedOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 31
+
             // MF2_BearTrapDamageablePatch
             MethodInfo MF2_BearTrapDamageablePatchSnapOriginal = typeof(MF2_BearTrapInteractionZone).GetMethod("SnapShut", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo MF2_BearTrapDamageablePatchSnapTranspiler = typeof(MF2_BearTrapDamageablePatch).GetMethod("SnapTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -489,6 +551,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.MF2_BearTrapDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 32
 
             // MG_SwarmDamageablePatch
             MethodInfo MG_SwarmDamageablePatchFireOriginal = typeof(MG_FlyingHotDogSwarm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -504,6 +568,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.MG_SwarmDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 33
+
             // MG_JerryDamageablePatch
             MethodInfo MG_JerryDamageablePatchFireOriginal = typeof(MG_JerryTheLemon).GetMethod("FireBolt", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo MG_JerryDamageablePatchFireTranspiler = typeof(MG_JerryDamageablePatch).GetMethod("FireTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -517,6 +583,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.MG_JerryDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 34
 
             // MicrotorchDamageablePatch
             MethodInfo microtorchDamageablePatchUpdateOriginal = typeof(Microtorch).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -532,6 +600,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.MicrotorchDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 35
+
             // CyclopsDamageablePatch
             MethodInfo cyclopsDamageablePatchUpdateOriginal = typeof(PowerUp_Cyclops).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo cyclopsDamageablePatchUpdateTranspiler = typeof(CyclopsDamageablePatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -545,6 +615,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.CyclopsDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 36
 
             // LaserSwordDamageablePatch
             MethodInfo laserSwordDamageablePatchUpdateOriginal = typeof(RealisticLaserSword).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -560,6 +632,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.LaserSwordDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 37
+
             // CharcoalDamageablePatch
             MethodInfo charcoalDamageablePatchCharcoalOriginal = typeof(RotrwCharcoal).GetMethod("DamageBubble", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo charcoalDamageablePatchCharcoalTranspiler = typeof(CharcoalDamageablePatch).GetMethod("BubbleTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -573,6 +647,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.CharcoalDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 38
 
             // SlicerDamageablePatch
             MethodInfo slicerDamageablePatchUpdateOriginal = typeof(SlicerBladeMaster).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -588,6 +664,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.SlicerDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 39
+
             // SpinningBladeDamageablePatch
             MethodInfo spinningBladeDamageablePatchCollisionOriginal = typeof(SpinningBladeTrapBase).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo spinningBladeDamageablePatchCollisionTranspiler = typeof(SpinningBladeDamageablePatch).GetMethod("CollisionTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -601,6 +679,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.SpinningBladeDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 40
 
             // ProjectileDamageablePatch
             MethodInfo projectileDamageablePatchOriginal = typeof(FVRProjectile).GetMethod("MoveBullet", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -616,6 +696,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.ProjectileDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 41
+
             // SosigLinkDamagePatch
             MethodInfo sosigLinkDamagePatchOriginal = typeof(SosigLink).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigLinkDamagePatchPrefix = typeof(SosigLinkDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -623,6 +705,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(sosigLinkDamagePatchOriginal, harmony, true);
             harmony.Patch(sosigLinkDamagePatchOriginal, new HarmonyMethod(sosigLinkDamagePatchPrefix), new HarmonyMethod(sosigLinkDamagePatchPostfix));
+
+            ++patchIndex; // 42
 
             // SosigWearableDamagePatch
             MethodInfo sosigWearableDamagePatchOriginal = typeof(SosigWearable).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -632,12 +716,16 @@ namespace H3MP.Patches
             PatchController.Verify(sosigWearableDamagePatchOriginal, harmony, true);
             harmony.Patch(sosigWearableDamagePatchOriginal, new HarmonyMethod(sosigWearableDamagePatchPrefix), new HarmonyMethod(sosigWearableDamagePatchPostfix));
 
+            ++patchIndex; // 43
+
             // AutoMeaterDamagePatch
             MethodInfo autoMeaterDamagePatchOriginal = typeof(AutoMeater).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo autoMeaterDamagePatchPrefix = typeof(AutoMeaterDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(autoMeaterDamagePatchOriginal, harmony, false);
             harmony.Patch(autoMeaterDamagePatchOriginal, new HarmonyMethod(autoMeaterDamagePatchPrefix));
+
+            ++patchIndex; // 44
 
             // AutoMeaterHitZoneDamagePatch
             MethodInfo autoMeaterHitZoneDamagePatchOriginal = typeof(AutoMeaterHitZone).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -647,12 +735,16 @@ namespace H3MP.Patches
             PatchController.Verify(autoMeaterHitZoneDamagePatchOriginal, harmony, false);
             harmony.Patch(autoMeaterHitZoneDamagePatchOriginal, new HarmonyMethod(autoMeaterHitZoneDamagePatchPrefix), new HarmonyMethod(autoMeaterHitZoneDamagePatchPostfix));
 
+            ++patchIndex; // 45
+
             // TNH_ShatterableCrateSetHoldingTokenPatch
             MethodInfo TNH_ShatterableCrateSetHoldingTokenPatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("SetHoldingToken", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ShatterableCrateSetHoldingTokenPatchPrefix = typeof(TNH_ShatterableCrateSetHoldingTokenPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(TNH_ShatterableCrateSetHoldingTokenPatchOriginal, harmony, false);
             harmony.Patch(TNH_ShatterableCrateSetHoldingTokenPatchOriginal, new HarmonyMethod(TNH_ShatterableCrateSetHoldingTokenPatchPrefix));
+
+            ++patchIndex; // 46
 
             // TNH_ShatterableCrateSetHoldingHealthPatch
             MethodInfo TNH_ShatterableCrateSetHoldingHealthPatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("SetHoldingHealth", BindingFlags.Public | BindingFlags.Instance);
@@ -661,6 +753,8 @@ namespace H3MP.Patches
             PatchController.Verify(TNH_ShatterableCrateSetHoldingHealthPatchOriginal, harmony, false);
             harmony.Patch(TNH_ShatterableCrateSetHoldingHealthPatchOriginal, new HarmonyMethod(TNH_ShatterableCrateSetHoldingHealthPatchPrefix));
 
+            ++patchIndex; // 47
+
             // TNH_ShatterableCrateDestroyPatch
             MethodInfo TNH_ShatterableCrateDestroyPatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("Destroy", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_ShatterableCrateDestroyPatchPrefix = typeof(TNH_ShatterableCrateDestroyPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -668,12 +762,16 @@ namespace H3MP.Patches
             PatchController.Verify(TNH_ShatterableCrateDestroyPatchOriginal, harmony, false);
             harmony.Patch(TNH_ShatterableCrateDestroyPatchOriginal, new HarmonyMethod(TNH_ShatterableCrateDestroyPatchPrefix));
 
+            ++patchIndex; // 48
+
             // TNH_ShatterableCrateDamagePatch
             MethodInfo TNH_ShatterableCrateDamagePatchOriginal = typeof(TNH_ShatterableCrate).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ShatterableCrateDamagePatchPrefix = typeof(TNH_ShatterableCrateDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(TNH_ShatterableCrateDamagePatchOriginal, harmony, false);
             harmony.Patch(TNH_ShatterableCrateDamagePatchOriginal, new HarmonyMethod(TNH_ShatterableCrateDamagePatchPrefix));
+
+            ++patchIndex; // 49
 
             // BreakableGlassDamagerDamagePatch
             MethodInfo BreakableGlassDamagerDamageOriginal = typeof(BreakableGlassDamager).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -699,6 +797,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.BreakableGlassDamagerPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 50
+
             // ReactiveSteelTargetDamagePatch
             MethodInfo ReactiveSteelTargetDamageOriginal = typeof(ReactiveSteelTarget).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo ReactiveSteelTargetDamagePrefix = typeof(ReactiveSteelTargetDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -707,12 +807,16 @@ namespace H3MP.Patches
             PatchController.Verify(ReactiveSteelTargetDamageOriginal, harmony, false);
             harmony.Patch(ReactiveSteelTargetDamageOriginal, new HarmonyMethod(ReactiveSteelTargetDamagePrefix), new HarmonyMethod(ReactiveSteelTargetDamagePostfix));
 
+            ++patchIndex; // 51
+
             // RoundDamagePatch
             MethodInfo roundDamageOriginal = typeof(FVRFireArmRound).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo roundDamagePrefix = typeof(RoundDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(roundDamageOriginal, harmony, false);
             harmony.Patch(roundDamageOriginal, new HarmonyMethod(roundDamagePrefix));
+
+            ++patchIndex; // 52
 
             // GasCuboidDamagePatch
             MethodInfo gasCuboidDamageOriginal = typeof(Brut_GasCuboid).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
@@ -721,12 +825,16 @@ namespace H3MP.Patches
             PatchController.Verify(gasCuboidDamageOriginal, harmony, false);
             harmony.Patch(gasCuboidDamageOriginal, new HarmonyMethod(gasCuboidDamagePrefix));
 
+            ++patchIndex; // 53
+
             // GasCuboidHandleDamagePatch
             MethodInfo gasCuboidHandleDamageOriginal = typeof(Brut_GasCuboidHandle).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo gasCuboidHandleDamagePrefix = typeof(GasCuboidHandleDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(gasCuboidHandleDamageOriginal, harmony, false);
             harmony.Patch(gasCuboidHandleDamageOriginal, new HarmonyMethod(gasCuboidHandleDamagePrefix));
+
+            ++patchIndex; // 54
 
             // TransformerPatch
             MethodInfo transformerArcOriginal = typeof(Brut_TransformerSparks).GetMethod("AttemptToGenerateArc", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -742,6 +850,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.TransformerPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 55
+
             // IrisDamageablePatch
             MethodInfo irisUpdateLaserOriginal = typeof(Construct_Iris).GetMethod("UpdateLaser", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo irisUpdateLaserTranspiler = typeof(IrisDamageablePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -756,6 +866,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying DamagePatches.IrisDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 56
+
             // FloaterDamagePatch
             MethodInfo floaterDamageOriginal = typeof(Construct_Floater).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo floaterDamagePrefix = typeof(FloaterDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -763,12 +875,16 @@ namespace H3MP.Patches
             PatchController.Verify(floaterDamageOriginal, harmony, false);
             harmony.Patch(floaterDamageOriginal, new HarmonyMethod(floaterDamagePrefix));
 
+            ++patchIndex; // 57
+
             // FloaterCoreDamagePatch
             MethodInfo floaterCoreDamageOriginal = typeof(Construct_Floater_Core).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo floaterCoreDamagePrefix = typeof(FloaterCoreDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(floaterCoreDamageOriginal, harmony, false);
             harmony.Patch(floaterCoreDamageOriginal, new HarmonyMethod(floaterCoreDamagePrefix));
+
+            ++patchIndex; // 58
 
             // BrutBlockSystemDamageablePatch
             MethodInfo brutBlockSystemFixedUpdateOriginal = typeof(BrutBlockSystem).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -783,6 +899,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.BrutBlockSystemDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 59
 
             // BrutTurbineDamageablePatch
             MethodInfo brutTurbineCollisionOriginal = typeof(BrutTurbine).GetMethod("OnCollisionEnter", BindingFlags.NonPublic | BindingFlags.Instance);

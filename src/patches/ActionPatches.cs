@@ -13,7 +13,7 @@ namespace H3MP.Patches
 {
     public class ActionPatches
     {
-        public static void DoPatching(Harmony harmony)
+        public static void DoPatching(Harmony harmony, ref int patchIndex)
         {
             // FirePatch
             MethodInfo firePatchOriginal = typeof(FVRFireArm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
@@ -31,6 +31,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.FirePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 1
+
             // FireSosigWeaponPatch
             MethodInfo fireSosigWeaponPatchOriginal = typeof(SosigWeapon).GetMethod("FireGun", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo fireSosigWeaponPatchPrefix = typeof(FireSosigWeaponPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -39,6 +41,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(fireSosigWeaponPatchOriginal, harmony, true);
             harmony.Patch(fireSosigWeaponPatchOriginal, new HarmonyMethod(fireSosigWeaponPatchPrefix), new HarmonyMethod(fireSosigWeaponPatchPostfix), new HarmonyMethod(fireSosigWeaponPatchTranspiler));
+
+            ++patchIndex; // 2
 
             // FireLAPD2019Patch
             MethodInfo fireLAPD2019PatchOriginal = typeof(LAPD2019).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -55,6 +59,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying ActionPatches.FireLAPD2019Patch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 3
 
             // FireAttachableFirearmPatch
             MethodInfo fireAttachableFirearmPatchOriginal = typeof(AttachableFirearm).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance);
@@ -95,6 +101,8 @@ namespace H3MP.Patches
             harmony.Patch(fireGP25PatchOriginal, new HarmonyMethod(fireGP25PatchPrefix), new HarmonyMethod(fireGP25PatchPostfix));
             harmony.Patch(fireM203PatchOriginal, new HarmonyMethod(fireM203PatchPrefix), new HarmonyMethod(fireM203PatchPostfix));
 
+            ++patchIndex; // 4
+
             // FireRevolvingShotgunPatch
             MethodInfo fireRevolvingShotgunPatchOriginal = typeof(RevolvingShotgun).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo fireRevolvingShotgunPatchPrefix = typeof(FireRevolvingShotgunPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -102,6 +110,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(fireRevolvingShotgunPatchOriginal, harmony, false);
             harmony.Patch(fireRevolvingShotgunPatchOriginal, new HarmonyMethod(fireRevolvingShotgunPatchPrefix), new HarmonyMethod(fireRevolvingShotgunPatchPostfix));
+
+            ++patchIndex; // 5
 
             // FireRevolverPatch
             MethodInfo fireRevolverPatchOriginal = typeof(Revolver).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -111,6 +121,8 @@ namespace H3MP.Patches
             PatchController.Verify(fireRevolverPatchOriginal, harmony, false);
             harmony.Patch(fireRevolverPatchOriginal, new HarmonyMethod(fireRevolverPatchPrefix), new HarmonyMethod(fireRevolverPatchPostfix));
 
+            ++patchIndex; // 6
+
             // FireSingleActionRevolverPatch
             MethodInfo fireSingleActionRevolverPatchOriginal = typeof(SingleActionRevolver).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo fireSingleActionRevolverPatchPrefix = typeof(FireSingleActionRevolverPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -118,6 +130,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(fireSingleActionRevolverPatchOriginal, harmony, false);
             harmony.Patch(fireSingleActionRevolverPatchOriginal, new HarmonyMethod(fireSingleActionRevolverPatchPrefix), new HarmonyMethod(fireSingleActionRevolverPatchPostfix));
+
+            ++patchIndex; // 7
 
             // FireGrappleGunPatch
             MethodInfo fireGrappleGunPatchOriginal = typeof(GrappleGun).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[0], null);
@@ -127,6 +141,8 @@ namespace H3MP.Patches
             PatchController.Verify(fireGrappleGunPatchOriginal, harmony, false);
             harmony.Patch(fireGrappleGunPatchOriginal, new HarmonyMethod(fireGrappleGunPatchPrefix), new HarmonyMethod(fireGrappleGunPatchPostfix));
 
+            ++patchIndex; // 8
+
             // FireDerringerPatch
             MethodInfo fireDerringerPatchOriginal = typeof(Derringer).GetMethod("FireBarrel", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo fireDerringerPatchPrefix = typeof(FireDerringerPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -134,6 +150,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(fireDerringerPatchOriginal, harmony, false);
             harmony.Patch(fireDerringerPatchOriginal, new HarmonyMethod(fireDerringerPatchPrefix), new HarmonyMethod(fireDerringerPatchPostfix));
+
+            ++patchIndex; // 9
 
             // FireBreakActionWeaponPatch
             MethodInfo fireBreakActionWeaponPatchOriginal = typeof(BreakActionWeapon).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(int), typeof(bool), typeof(int) }, null);
@@ -143,6 +161,8 @@ namespace H3MP.Patches
             PatchController.Verify(fireBreakActionWeaponPatchOriginal, harmony, false);
             harmony.Patch(fireBreakActionWeaponPatchOriginal, new HarmonyMethod(fireBreakActionWeaponPatchPrefix), new HarmonyMethod(fireBreakActionWeaponPatchPostfix));
 
+            ++patchIndex; // 10
+
             // FireLeverActionFirearmPatch
             MethodInfo fireLeverActionFirearmPatchOriginal = typeof(LeverActionFirearm).GetMethod("Fire", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo fireLeverActionFirearmPatchPrefix = typeof(FireLeverActionFirearmPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -150,6 +170,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(fireLeverActionFirearmPatchOriginal, harmony, false);
             harmony.Patch(fireLeverActionFirearmPatchOriginal, new HarmonyMethod(fireLeverActionFirearmPatchPrefix), new HarmonyMethod(fireLeverActionFirearmPatchPostfix));
+
+            ++patchIndex; // 11
 
             // FireFlintlockWeaponPatch
             MethodInfo fireFlintlockWeaponPatchBurnOffOuterOriginal = typeof(FlintlockBarrel).GetMethod("BurnOffOuter", BindingFlags.Public | BindingFlags.Instance);
@@ -180,6 +202,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.FireFlintlockWeaponPatch to fireFlintlockWeaponFireOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 12
+
             // FireHCBPatch
             MethodInfo fireHCBPatchOriginal = typeof(HCB).GetMethod("ReleaseSled", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo fireHCBPatchPrefix = typeof(FireHCBPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -187,6 +211,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(fireHCBPatchOriginal, harmony, false);
             harmony.Patch(fireHCBPatchOriginal, new HarmonyMethod(fireHCBPatchPrefix), new HarmonyMethod(fireHCBPatchPostfix));
+
+            ++patchIndex; // 13
 
             // SimpleLauncherPatch
             MethodInfo simpleLauncherCollisionOriginal = typeof(SimpleLauncher).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
@@ -205,6 +231,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.SimpleLauncherPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
             harmony.Patch(simpleLauncherDamageOriginal, new HarmonyMethod(simpleLauncherDamagePrefix));
+
+            ++patchIndex; // 14
 
             // FireStingerLauncherPatch
             MethodInfo fireStingerLauncherOriginal = typeof(StingerLauncher).GetMethod("Fire", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { }, null);
@@ -226,12 +254,16 @@ namespace H3MP.Patches
             }
             harmony.Patch(fireStingerMissileOriginal, new HarmonyMethod(fireStingerMissilePrefix));
 
+            ++patchIndex; // 15
+
             // RemoteMissileDetonatePatch
             MethodInfo remoteMissileDetonatePatchOriginal = typeof(RemoteMissile).GetMethod("Detonante", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo remoteMissileDetonatePatchPrefix = typeof(RemoteMissileDetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(remoteMissileDetonatePatchOriginal, harmony, false);
             harmony.Patch(remoteMissileDetonatePatchOriginal, new HarmonyMethod(remoteMissileDetonatePatchPrefix));
+
+            ++patchIndex; // 16
 
             // StingerMissileExplodePatch
             MethodInfo stingerMissileExplodePatchOriginal = typeof(StingerMissile).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -240,6 +272,8 @@ namespace H3MP.Patches
             PatchController.Verify(stingerMissileExplodePatchOriginal, harmony, false);
             harmony.Patch(stingerMissileExplodePatchOriginal, new HarmonyMethod(stingerMissileExplodePatchPrefix));
 
+            ++patchIndex; // 17
+
             // SosigWeaponShatterPatch
             MethodInfo sosigWeaponShatterPatchOriginal = typeof(SosigWeapon).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo sosigWeaponShatterPatchPrefix = typeof(SosigWeaponShatterPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -247,12 +281,16 @@ namespace H3MP.Patches
             PatchController.Verify(sosigWeaponShatterPatchOriginal, harmony, false);
             harmony.Patch(sosigWeaponShatterPatchOriginal, new HarmonyMethod(sosigWeaponShatterPatchPrefix));
 
+            ++patchIndex; // 18
+
             // SosigConfigurePatch
             MethodInfo sosigConfigurePatchOriginal = typeof(Sosig).GetMethod("Configure", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigConfigurePatchPrefix = typeof(SosigConfigurePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sosigConfigurePatchOriginal, harmony, false);
             harmony.Patch(sosigConfigurePatchOriginal, new HarmonyMethod(sosigConfigurePatchPrefix));
+
+            ++patchIndex; // 19
 
             // SosigUpdatePatch
             MethodInfo sosigUpdatePatchOriginal = typeof(Sosig).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -264,12 +302,16 @@ namespace H3MP.Patches
             harmony.Patch(sosigUpdatePatchOriginal, new HarmonyMethod(sosigUpdatePatchPrefix));
             harmony.Patch(sosigHandPhysUpdatePatchOriginal, new HarmonyMethod(sosigHandPhysUpdatePatchPrefix));
 
+            ++patchIndex; // 20
+
             // InventoryUpdatePatch
             MethodInfo sosigInvUpdatePatchOriginal = typeof(SosigInventory).GetMethod("PhysHold", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigInvUpdatePatchPrefix = typeof(SosigInvUpdatePatch).GetMethod("PhysHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sosigInvUpdatePatchOriginal, harmony, false);
             harmony.Patch(sosigInvUpdatePatchOriginal, new HarmonyMethod(sosigInvUpdatePatchPrefix));
+
+            ++patchIndex; // 21
 
             // SosigPatch
             MethodInfo sosigDiesPatchOriginal = typeof(Sosig).GetMethod("SosigDies", BindingFlags.Public | BindingFlags.Instance);
@@ -345,6 +387,8 @@ namespace H3MP.Patches
             harmony.Patch(sosigCommandPathToPatchOriginalVector, null, new HarmonyMethod(sosigCommandPathToPatchPostfix));
             harmony.Patch(sosigProcessColOriginal, new HarmonyMethod(sosigProcessColPrefix));
 
+            ++patchIndex; // 22
+
             // SosigLinkActionPatch
             MethodInfo sosigLinkRegisterWearablePatchOriginal = typeof(SosigLink).GetMethod("RegisterWearable", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigLinkRegisterWearablePatchPrefix = typeof(SosigLinkActionPatch).GetMethod("RegisterWearablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -376,6 +420,8 @@ namespace H3MP.Patches
             //harmony.Patch(sosigLinkSeverPatchOriginal, new HarmonyMethod(sosigLinkSeverPatchPrefix), new HarmonyMethod(sosigLinkSeverPatchPosfix));
             //harmony.Patch(sosigLinkVaporizePatchOriginal, new HarmonyMethod(sosigLinkVaporizePatchPrefix), new HarmonyMethod(sosigLinkVaporizePatchPosfix));
 
+            ++patchIndex; // 23
+
             // SosigIFFPatch
             MethodInfo sosigSetIFFPatchOriginal = typeof(Sosig).GetMethod("SetIFF", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigSetIFFPatchPrefix = typeof(SosigIFFPatch).GetMethod("SetIFFPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -387,12 +433,16 @@ namespace H3MP.Patches
             harmony.Patch(sosigSetIFFPatchOriginal, new HarmonyMethod(sosigSetIFFPatchPrefix));
             harmony.Patch(sosigSetOriginalIFFPatchOriginal, new HarmonyMethod(sosigSetOriginalIFFPatchPrefix));
 
+            ++patchIndex; // 24
+
             // SosigEventReceivePatch
             MethodInfo sosigEventReceivePatchOriginal = typeof(Sosig).GetMethod("EventReceive", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sosigEventReceivePatchPrefix = typeof(SosigEventReceivePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sosigEventReceivePatchOriginal, harmony, false);
             harmony.Patch(sosigEventReceivePatchOriginal, new HarmonyMethod(sosigEventReceivePatchPrefix));
+
+            ++patchIndex; // 25
 
             // AutoMeaterUpdatePatch
             MethodInfo autoMeaterUpdatePatchOriginal = typeof(AutoMeater).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -403,12 +453,16 @@ namespace H3MP.Patches
             harmony.Patch(autoMeaterUpdatePatchOriginal, new HarmonyMethod(autoMeaterUpdatePatchPrefix));
             harmony.Patch(autoMeaterFixedUpdatePatchOriginal, new HarmonyMethod(autoMeaterUpdatePatchPrefix));
 
+            ++patchIndex; // 26
+
             // AutoMeaterEventPatch
             MethodInfo autoMeaterEventReceivePatchOriginal = typeof(AutoMeater).GetMethod("EventReceive", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo autoMeaterEventReceivePatchPrefix = typeof(AutoMeaterEventPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(autoMeaterEventReceivePatchOriginal, harmony, false);
             harmony.Patch(autoMeaterEventReceivePatchOriginal, new HarmonyMethod(autoMeaterEventReceivePatchPrefix));
+
+            ++patchIndex; // 27
 
             // LAPD2019ActionPatch
             MethodInfo LAPD2019PatchLoadOriginal = typeof(LAPD2019).GetMethod("LoadBattery", BindingFlags.Public | BindingFlags.Instance);
@@ -421,12 +475,16 @@ namespace H3MP.Patches
             harmony.Patch(LAPD2019PatchLoadOriginal, new HarmonyMethod(LAPD2019PatchLoadPrefix));
             harmony.Patch(LAPD2019PatchExtractOriginal, new HarmonyMethod(LAPD2019PatchExtractPrefix));
 
+            ++patchIndex; // 28
+
             // AutoMeaterSetStatePatch
             MethodInfo autoMeaterSetStatePatchOriginal = typeof(AutoMeater).GetMethod("SetState", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo autoMeaterSetStatePatchPostfix = typeof(AutoMeaterSetStatePatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(autoMeaterSetStatePatchOriginal, harmony, false);
             harmony.Patch(autoMeaterSetStatePatchOriginal, null, new HarmonyMethod(autoMeaterSetStatePatchPostfix));
+
+            ++patchIndex; // 29
 
             // AutoMeaterUpdateFlightPatch
             MethodInfo autoMeaterUpdateFlightPatchOriginal = typeof(AutoMeater).GetMethod("UpdateFlight", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -442,6 +500,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying ActionPatches.AutoMeaterUpdateFlightPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 30
 
             // AutoMeaterFirearmFireShotPatch
             MethodInfo autoMeaterFirearmFireShotPatchOriginal = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -459,12 +519,16 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.AutoMeaterFirearmFireShotPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 31
+
             // AutoMeaterFirearmFireAtWillPatch
             MethodInfo autoMeaterFirearmFireAtWillPatchOriginal = typeof(AutoMeater.AutoMeaterFirearm).GetMethod("SetFireAtWill", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo autoMeaterFirearmFireAtWillPatchPrefix = typeof(AutoMeaterFirearmFireAtWillPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(autoMeaterFirearmFireAtWillPatchOriginal, harmony, false);
             harmony.Patch(autoMeaterFirearmFireAtWillPatchOriginal, new HarmonyMethod(autoMeaterFirearmFireAtWillPatchPrefix));
+
+            ++patchIndex; // 32
 
             // EncryptionRespawnRandSubPatch
             MethodInfo encryptionRespawnRandSubPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("RespawnRandomSubTarg", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -480,12 +544,16 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.EncryptionRespawnRandSubPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 33
+
             // EncryptionResetGrowthPatch
             MethodInfo encryptionResetGrowthPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("ResetGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo encryptionResetGrowthPatchPrefix = typeof(EncryptionResetGrowthPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(encryptionResetGrowthPatchOriginal, harmony, false);
             harmony.Patch(encryptionResetGrowthPatchOriginal, new HarmonyMethod(encryptionResetGrowthPatchPrefix));
+
+            ++patchIndex; // 34
 
             // EncryptionDisableSubtargPatch
             MethodInfo encryptionDisableSubtargPatchOriginal = typeof(TNH_EncryptionTarget).GetMethod("DisableSubtarg", BindingFlags.Public | BindingFlags.Instance);
@@ -494,6 +562,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(encryptionDisableSubtargPatchOriginal, harmony, false);
             harmony.Patch(encryptionDisableSubtargPatchOriginal, new HarmonyMethod(encryptionDisableSubtargPatchPrefix), new HarmonyMethod(encryptionDisableSubtargPatchPostfix));
+
+            ++patchIndex; // 35
 
             // SosigTargetPrioritySystemPatch
             MethodInfo sosigTargetPrioritySystemPatchDefaultOriginal = typeof(SosigTargetPrioritySystem).GetMethod("SetDefaultIFFChart", BindingFlags.Public | BindingFlags.Instance);
@@ -517,12 +587,16 @@ namespace H3MP.Patches
             harmony.Patch(sosigTargetPrioritySystemPatchSetAllFriendlyOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
             harmony.Patch(sosigTargetPrioritySystemPatchSetAllyMatrixOriginal, null, new HarmonyMethod(sosigTargetPrioritySystemPatchPostfix));
 
+            ++patchIndex; // 36
+
             // SimpleLauncher2CycleModePatch
             MethodInfo simpleLauncher2CycleModePatchOriginal = typeof(SimpleLauncher2).GetMethod("CycleMode", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo simpleLauncher2CycleModePatchPrefix = typeof(SimpleLauncher2CycleModePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(simpleLauncher2CycleModePatchOriginal, harmony, false);
             harmony.Patch(simpleLauncher2CycleModePatchOriginal, new HarmonyMethod(simpleLauncher2CycleModePatchPrefix));
+
+            ++patchIndex; // 37
 
             // PinnedGrenadePatch
             MethodInfo pinnedGrenadePatchUpdateOriginal = typeof(PinnedGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -554,6 +628,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.PinnedGrenadePatch on pinnedGrenadePatchCollisionOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 38
+
             // FVRGrenadePatch
             MethodInfo FVRGrenadePatchUpdateOriginal = typeof(FVRGrenade).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo FVRGrenadePatchUpdatePrefix = typeof(FVRGrenadePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -561,6 +637,8 @@ namespace H3MP.Patches
 
             PatchController.Verify(FVRGrenadePatchUpdateOriginal, harmony, false);
             harmony.Patch(FVRGrenadePatchUpdateOriginal, new HarmonyMethod(FVRGrenadePatchUpdatePrefix), new HarmonyMethod(FVRGrenadePatchUpdatePostfix));
+
+            ++patchIndex; // 39
 
             // FusePatch
             MethodInfo FVRFusePatchIgniteOriginal = typeof(FVRFuse).GetMethod("Ignite", BindingFlags.Public | BindingFlags.Instance);
@@ -573,6 +651,8 @@ namespace H3MP.Patches
             harmony.Patch(FVRFusePatchIgniteOriginal, null, new HarmonyMethod(FVRFusePatchIgnitePostfix));
             harmony.Patch(FVRFusePatchBoomOriginal, new HarmonyMethod(FVRFusePatchBoomPrefix));
 
+            ++patchIndex; // 40
+
             // MolotovPatch
             MethodInfo MolotovPatchShatterOriginal = typeof(Molotov).GetMethod("Shatter", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo MolotovPatchShatterPrefix = typeof(MolotovPatch).GetMethod("ShatterPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -583,6 +663,8 @@ namespace H3MP.Patches
             PatchController.Verify(MolotovPatchDamageOriginal, harmony, false);
             harmony.Patch(MolotovPatchShatterOriginal, new HarmonyMethod(MolotovPatchShatterPrefix));
             harmony.Patch(MolotovPatchDamageOriginal, new HarmonyMethod(MolotovPatchDamagePrefix));
+
+            ++patchIndex; // 41
 
             // EncryptionPatch
             MethodInfo EncryptionPatchUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
@@ -623,6 +705,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.EncryptionPatch on EncryptionPatchDestroyOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 42
+
             // BangSnapPatch
             MethodInfo bangSnapPatchSplodeOriginal = typeof(BangSnap).GetMethod("Splode", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo bangSnapPatchSplodePrefix = typeof(BangSnapPatch).GetMethod("SplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -641,12 +725,16 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.BangSnapPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 43
+
             // C4DetonatePatch
             MethodInfo C4DetonatePatchOriginal = typeof(C4).GetMethod("Detonate", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo C4DetonatePatchPrefix = typeof(C4DetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(C4DetonatePatchOriginal, harmony, false);
             harmony.Patch(C4DetonatePatchOriginal, new HarmonyMethod(C4DetonatePatchPrefix));
+
+            ++patchIndex; // 44
 
             // ClaymoreMineDetonatePatch
             MethodInfo claymoreMineDetonatePatchOriginal = typeof(ClaymoreMine).GetMethod("Detonate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -655,12 +743,16 @@ namespace H3MP.Patches
             PatchController.Verify(claymoreMineDetonatePatchOriginal, harmony, false);
             harmony.Patch(claymoreMineDetonatePatchOriginal, new HarmonyMethod(claymoreMineDetonatePatchPrefix));
 
+            ++patchIndex; // 45
+
             // SLAMDetonatePatch
             MethodInfo SLAMDetonatePatchOriginal = typeof(SLAM).GetMethod("Detonate", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo SLAMDetonatePatchPrefix = typeof(SLAMDetonatePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(SLAMDetonatePatchOriginal, harmony, false);
             harmony.Patch(SLAMDetonatePatchOriginal, new HarmonyMethod(SLAMDetonatePatchPrefix));
+
+            ++patchIndex; // 46
 
             // RoundPatch
             MethodInfo roundPatchFixedUpdateOriginal = typeof(FVRFireArmRound).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -679,6 +771,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.RoundPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
             harmony.Patch(roundPatchSplodeOriginal, new HarmonyMethod(roundPatchSplodePrefix));
+
+            ++patchIndex; // 47
 
             // MagazinePatch
             MethodInfo magAddRoundClassOriginal = typeof(FVRFireArmMagazine).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
@@ -717,6 +811,8 @@ namespace H3MP.Patches
             harmony.Patch(magLoadIntoSecondaryOriginal, new HarmonyMethod(magLoadIntoSecondaryPrefix));
             harmony.Patch(magLoadAttachableOriginal, new HarmonyMethod(magLoadAttachablePrefix));
 
+            ++patchIndex; // 48
+
             // ClipPatch
             MethodInfo clipAddRoundClassOriginal = typeof(FVRFireArmClip).GetMethod("AddRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(bool), typeof(bool) }, null);
             MethodInfo clipAddRoundClassTranspiler = typeof(ClipPatch).GetMethod("AddRoundClassTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -746,6 +842,8 @@ namespace H3MP.Patches
             }
             harmony.Patch(clipLoadOriginal, new HarmonyMethod(clipLoadPrefix));
 
+            ++patchIndex; // 49
+
             // SpeedloaderChamberPatch
             MethodInfo SLChamberLoadOriginal = typeof(SpeedloaderChamber).GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo SLChamberLoadPrefix = typeof(SpeedloaderChamberPatch).GetMethod("AddRoundPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -753,12 +851,16 @@ namespace H3MP.Patches
             PatchController.Verify(SLChamberLoadOriginal, harmony, false);
             harmony.Patch(SLChamberLoadOriginal, new HarmonyMethod(SLChamberLoadPrefix));
 
+            ++patchIndex; // 50
+
             // RemoteGunPatch
             MethodInfo remoteGunChamberOriginal = typeof(RemoteGun).GetMethod("ChamberCartridge", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo remoteGunChamberPrefix = typeof(RemoteGunPatch).GetMethod("ChamberCartridgePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(remoteGunChamberOriginal, harmony, false);
             harmony.Patch(remoteGunChamberOriginal, new HarmonyMethod(remoteGunChamberPrefix));
+
+            ++patchIndex; // 51
 
             // ChamberPatch
             MethodInfo chamberSetRoundClassOriginal = typeof(FVRFireArmChamber).GetMethod("SetRound", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(FireArmRoundClass), typeof(Vector3), typeof(Quaternion) }, null);
@@ -773,6 +875,8 @@ namespace H3MP.Patches
             harmony.Patch(chamberSetRoundClassOriginal, new HarmonyMethod(chamberSetRoundClassPrefix));
             harmony.Patch(chamberSetRoundRoundVectorOriginal, new HarmonyMethod(chamberSetRoundRoundPrefix));
             harmony.Patch(chamberSetRoundRoundBoolOriginal, new HarmonyMethod(chamberSetRoundRoundPrefix));
+
+            ++patchIndex; // 52
 
             // SpeedloaderPatch
             MethodInfo speedLoaderFixedUpdateOriginal = typeof(Speedloader).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -799,12 +903,16 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.SpeedloaderPatch on speedLoaderUpdateOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 53
+
             // RevolverCylinderPatch
             MethodInfo revolverCylinderLoadOriginal = typeof(RevolverCylinder).GetMethod("LoadFromSpeedLoader", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo revolverCylinderLoadPrefix = typeof(RevolverCylinderPatch).GetMethod("LoadFromSpeedLoaderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(revolverCylinderLoadOriginal, harmony, false);
             harmony.Patch(revolverCylinderLoadOriginal, new HarmonyMethod(revolverCylinderLoadPrefix));
+
+            ++patchIndex; // 54
 
             // RevolvingShotgunPatch
             MethodInfo revolvingShotgunLoadOriginal = typeof(RevolvingShotgun).GetMethod("LoadCylinder", BindingFlags.Public | BindingFlags.Instance);
@@ -813,12 +921,16 @@ namespace H3MP.Patches
             PatchController.Verify(revolvingShotgunLoadOriginal, harmony, false);
             harmony.Patch(revolvingShotgunLoadOriginal, new HarmonyMethod(revolvingShotgunLoadPrefix));
 
+            ++patchIndex; // 55
+
             // GrappleGunPatch
             MethodInfo grappleGunLoadOriginal = typeof(GrappleGun).GetMethod("LoadCylinder", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo grappleGunLoadPrefix = typeof(GrappleGunPatch).GetMethod("LoadCylinderPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(grappleGunLoadOriginal, harmony, false);
             harmony.Patch(grappleGunLoadOriginal, new HarmonyMethod(grappleGunLoadPrefix));
+
+            ++patchIndex; // 56
 
             // CarlGustafLatchPatch
             MethodInfo carlGustafLatchUpdateOriginal = typeof(CarlGustafLatch).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -834,6 +946,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.CarlGustafLatchPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 57
+
             // CarlGustafShellInsertEjectPatch
             MethodInfo carlGustafShellSlideUpdateOriginal = typeof(CarlGustafShellInsertEject).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo carlGustafShellSlideUpdateTranspiler = typeof(CarlGustafShellInsertEjectPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
@@ -847,6 +961,8 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying ActionPatches.CarlGustafShellInsertEjectPatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 58
 
             // GrappleThrowablePatch
             MethodInfo grappleThrowableCollisionOriginal = typeof(GrappleThrowable).GetMethod("OnCollisionEnter", BindingFlags.Public | BindingFlags.Instance);
@@ -862,12 +978,16 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.GrappleThrowablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
 
+            ++patchIndex; // 59
+
             // EncryptionSpawnGrowthPatch
             MethodInfo encryptionSpawnGrowthOriginal = typeof(TNH_EncryptionTarget).GetMethod("SpawnGrowth", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo encryptionSpawnGrowthPrefix = typeof(EncryptionSpawnGrowthPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(encryptionSpawnGrowthOriginal, harmony, false);
             harmony.Patch(encryptionSpawnGrowthOriginal, new HarmonyMethod(encryptionSpawnGrowthPrefix));
+
+            ++patchIndex; // 60
 
             // FireArmPatch
             MethodInfo fireArmAwakeOriginal = typeof(FVRFireArm).GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -884,12 +1004,16 @@ namespace H3MP.Patches
             harmony.Patch(fireArmPlayAudioGunShotOriginalRound, new HarmonyMethod(fireArmPlayAudioGunShotRoundPrefix));
             harmony.Patch(fireArmPlayAudioGunShotOriginalBool, new HarmonyMethod(fireArmPlayAudioGunShotBoolPrefix));
 
+            ++patchIndex; // 61
+
             // SteelPopTargetPatch
             MethodInfo steelPopTargetStartOriginal = typeof(SteelPopTarget).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo steelPopTargetStartPostfix = typeof(SteelPopTargetPatch).GetMethod("StartPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(steelPopTargetStartOriginal, harmony, false);
             harmony.Patch(steelPopTargetStartOriginal, null, new HarmonyMethod(steelPopTargetStartPostfix));
+
+            ++patchIndex; // 62
 
             // FlameThrowerPatch
             MethodInfo flameThrowerUpdateControlsOriginal = typeof(FlameThrower).GetMethod("UpdateControls", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -898,12 +1022,16 @@ namespace H3MP.Patches
             PatchController.Verify(flameThrowerUpdateControlsOriginal, harmony, false);
             harmony.Patch(flameThrowerUpdateControlsOriginal, new HarmonyMethod(flameThrowerUpdateControlsPrefix));
 
+            ++patchIndex; // 63
+
             // AR15SightFlipperPatch
             MethodInfo AR15SightFlipperInteractOriginal = typeof(AR15HandleSightFlipper).GetMethod("SimpleInteraction", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo AR15SightFlipperInteractPostfix = typeof(AR15SightFlipperPatch).GetMethod("InteractPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(AR15SightFlipperInteractOriginal, harmony, false);
             harmony.Patch(AR15SightFlipperInteractOriginal, null, new HarmonyMethod(AR15SightFlipperInteractPostfix));
+
+            ++patchIndex; // 64
 
             // AR15SightRaiserPatch
             MethodInfo AR15SightRaiserInteractOriginal = typeof(AR15HandleSightRaiser).GetMethod("SimpleInteraction", BindingFlags.Public | BindingFlags.Instance);
@@ -912,12 +1040,16 @@ namespace H3MP.Patches
             PatchController.Verify(AR15SightRaiserInteractOriginal, harmony, false);
             harmony.Patch(AR15SightRaiserInteractOriginal, null, new HarmonyMethod(AR15SightRaiserInteractPostfix));
 
+            ++patchIndex; // 65
+
             // GatlingGunPatch
             MethodInfo gatlingGunFireShotOriginal = typeof(wwGatlingGun).GetMethod("FireShot", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo gatlingGunFireShotPostfix = typeof(GatlingGunPatch).GetMethod("FireShotPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(gatlingGunFireShotOriginal, harmony, false);
             harmony.Patch(gatlingGunFireShotOriginal, null, new HarmonyMethod(gatlingGunFireShotPostfix));
+
+            ++patchIndex; // 66
 
             // GasCuboidPatch
             MethodInfo gasCuboidGenerateGoutOriginal = typeof(Brut_GasCuboid).GetMethod("GenerateGout", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -942,6 +1074,8 @@ namespace H3MP.Patches
             harmony.Patch(gasCuboidFixedUpdateOriginal, new HarmonyMethod(gasCuboidUpdatePrefix));
             harmony.Patch(gasCuboidExplodeOriginal, new HarmonyMethod(gasCuboidExplodePrefix), new HarmonyMethod(gasCuboidExplodePostfix));
 
+            ++patchIndex; // 67
+
             // FloaterPatch
             MethodInfo floaterBeginExplodingOriginal = typeof(Construct_Floater).GetMethod("BeginExploding", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo floaterBeginExplodingPrefix = typeof(FloaterPatch).GetMethod("BeginExplodingPrefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -965,13 +1099,15 @@ namespace H3MP.Patches
             harmony.Patch(floaterUpdateOriginal, new HarmonyMethod(floaterUpdatePrefix));
             harmony.Patch(floaterFixedUpdateOriginal, new HarmonyMethod(floaterFixedUpdatePrefix));
 
+            ++patchIndex; // 68
+
             // IrisPatch
             MethodInfo irisUpdateOriginal = typeof(Construct_Iris).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo irisUpdatePrefix = typeof(IrisPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo irisFixedUpdateOriginal = typeof(Construct_Iris).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo irisFixedUpdatePrefix = typeof(IrisPatch).GetMethod("FixedUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo irisSetStateOriginal = typeof(Construct_Iris).GetMethod("SetState", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo irisSetStatePrefix = typeof(IrisPatch).GetMethod("ExplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo irisSetStatePrefix = typeof(IrisPatch).GetMethod("SetStatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(irisUpdateOriginal, harmony, false);
             PatchController.Verify(irisSetStateOriginal, harmony, false);
@@ -979,6 +1115,8 @@ namespace H3MP.Patches
             harmony.Patch(irisUpdateOriginal, new HarmonyMethod(irisUpdatePrefix));
             harmony.Patch(irisFixedUpdateOriginal, new HarmonyMethod(irisFixedUpdatePrefix));
             harmony.Patch(irisSetStateOriginal, new HarmonyMethod(irisSetStatePrefix));
+
+            ++patchIndex; // 69
 
             // BrutBlockSystemPatch
             MethodInfo brutBlockSystemUpdateOriginal = typeof(BrutBlockSystem).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
