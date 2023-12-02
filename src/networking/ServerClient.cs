@@ -6,7 +6,7 @@ using FistVR;
 using System.Collections.Generic;
 using H3MP.Patches;
 using H3MP.Tracking;
-using System.Security.Policy;
+using H3MP.Scripts;
 
 namespace H3MP.Networking
 {
@@ -283,14 +283,22 @@ namespace H3MP.Networking
                 int packetLength = packetData.ReadInt();
                 byte[] packetBytes = packetData.ReadBytes(packetLength);
 
-                ThreadManager.ExecuteOnMainThread(() =>
+                Packet packet = new Packet(packetBytes);
+                int packetID = packet.ReadInt();
+                if(packetID == 9 /*ClientPackets.trackedObjects*/)
                 {
-                    if (Server.tcpListener != null)
+                    HandleTrackedObjectUpdate(packet, false);
+                }
+                else if(packetID == 2 /*ClientPackets.playerState*/)
+                {
+                    HandlePlayerStateUpdate(packet);
+                }
+                else // Not a specifically handled UDP packet type
+                {
+                    ThreadManager.ExecuteOnMainThread(() =>
                     {
-                        using (Packet packet = new Packet(packetBytes))
+                        if (Server.tcpListener != null)
                         {
-                            int packetID = packet.ReadInt();
-
                             if (packetID < 0)
                             {
                                 if (packetID == -1)
@@ -323,19 +331,79 @@ namespace H3MP.Networking
 #if DEBUG
                                 if (Input.GetKey(KeyCode.PageDown))
                                 {
-                                    Mod.LogInfo("\tHandling UDP packet: " + packetID + " ("+(ClientPackets)packetID+"), length: " + packet.buffer.Count+", from client "+ID);
+                                    Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ClientPackets)packetID + "), length: " + packet.buffer.Count + ", from client " + ID);
                                 }
 #endif
                                 Server.packetHandlers[packetID](ID, packet);
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
 
             public void Disconnect()
             {
                 endPoint = null;
+            }
+
+            public void HandleTrackedObjectUpdate(Packet packet, bool full)
+            {
+                byte order = packet.ReadByte();
+                int trackedID = packet.ReadInt();
+
+                if (trackedID < 0)
+                {
+                    if (trackedID == -2)
+                    {
+                        Mod.LogWarning("Got update packet for object with trackedID -2");
+                    }
+                    return;
+                }
+
+                if (Server.objects.Length < trackedID)
+                {
+                    Mod.LogError("Server got update for object at " + trackedID + " which is out of range of objects array");
+                    return;
+                }
+
+                TrackedObjectData trackedObjectData = Server.objects[trackedID];
+                if(trackedObjectData != null)
+                {
+                    if (trackedObjectData.controller != GameManager.ID)
+                    {
+                        if(trackedObjectData.latestUpdate == null)
+                        {
+                            ThreadManager.objectsToUpdate.Enqueue(new KeyValuePair<int, int>(trackedID, ID));
+                            trackedObjectData.latestOrder = order;
+                            trackedObjectData.latestFull = full;
+                            trackedObjectData.latestUpdate = packet;
+                        }
+                        else if(full || (order > trackedObjectData.latestOrder || trackedObjectData.latestOrder - order > 128))
+                        {
+                            trackedObjectData.latestOrder = order;
+                            trackedObjectData.latestFull = full;
+                            trackedObjectData.latestUpdate = packet;
+                        }
+                    }
+                }
+            }
+
+            public void HandlePlayerStateUpdate(Packet packet)
+            {
+                byte order = packet.ReadByte();
+
+                PlayerManager playerManager = GameManager.players[ID];
+                if (playerManager.latestUpdate == null)
+                {
+                    ThreadManager.playersToUpdate.Enqueue(ID);
+                    playerManager.latestOrder = order;
+                    playerManager.latestUpdate = packet;
+                }
+                else if (order > playerManager.latestOrder || playerManager.latestOrder - order > 128)
+                {
+                    playerManager.latestOrder = order;
+                    playerManager.latestUpdate = packet;
+                }
             }
         }
 

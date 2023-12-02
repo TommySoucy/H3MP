@@ -5,7 +5,6 @@ using System.Net;
 using System.Collections.Generic;
 using H3MP.Tracking;
 using FistVR;
-using System.IO;
 
 namespace H3MP.Networking
 {

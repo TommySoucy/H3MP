@@ -37,10 +37,5 @@ namespace H3MP.Networking
             this.IFF = IFF;
             this.colorIndex = colorIndex;
         }
-
-        public void UpdateState()
-        {
-            ServerSend.PlayerState(this, scene, instance);
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using H3MP.Scripts;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -208,6 +209,7 @@ namespace H3MP.Networking
                 // If so, it means we have enough data to build a packet we can process
                 while(packetLength > 0 && packetLength <= receivedData.UnreadLength())
                 {
+                    // TODO: // When player state handler dont forget int ID = packet.ReadInt();
                     readLength = false;
                     // So here we take all the data for that new packet
                     byte[] packetBytes = receivedData.ReadBytes(packetLength);
@@ -376,19 +378,28 @@ namespace H3MP.Networking
 
             private void HandleData(byte[] data)
             {
-                using(Packet packet = new Packet(data))
+                using(Packet prePacket = new Packet(data))
                 {
-                    int packetLength = packet.ReadInt();
-                    data = packet.ReadBytes(packetLength);
+                    int packetLength = prePacket.ReadInt();
+                    data = prePacket.ReadBytes(packetLength);
                 }
 
-                ThreadManager.ExecuteOnMainThread(() =>
+                Packet packet = new Packet(data);
+                int packetID = packet.ReadInt();
+                if (packetID == 9 /*ClientPackets.trackedObjects*/)
                 {
-                    if (singleton.isConnected)
+                    HandleTrackedObjectUpdate(packet, false);
+                }
+                else if (packetID == 2 /*ClientPackets.playerState*/)
+                {
+                    HandlePlayerStateUpdate(packet);
+                }
+                else // Not a specifically handled UDP packet type
+                {
+                    ThreadManager.ExecuteOnMainThread(() =>
                     {
-                        using (Packet packet = new Packet(data))
+                        if (singleton.isConnected)
                         {
-                            int packetID = packet.ReadInt();
                             if (packetID < 0)
                             {
                                 if (packetID == -1)
@@ -421,14 +432,75 @@ namespace H3MP.Networking
 #if DEBUG
                                 if (Input.GetKey(KeyCode.PageDown))
                                 {
-                                    Mod.LogInfo("\tHandling UDP packet: " + packetID+" ("+(ServerPackets)packetID+"), length: "+packet.buffer.Count);
+                                    Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ServerPackets)packetID + "), length: " + packet.buffer.Count);
                                 }
 #endif
                                 packetHandlers[packetID](packet);
                             }
                         }
+                    });
+                }
+            }
+
+            public void HandleTrackedObjectUpdate(Packet packet, bool full)
+            {
+                byte order = packet.ReadByte();
+                int trackedID = packet.ReadInt();
+
+                if (trackedID < 0)
+                {
+                    if (trackedID == -2)
+                    {
+                        Mod.LogWarning("Got update packet for object with trackedID -2");
                     }
-                });
+                    return;
+                }
+
+                if (Server.objects.Length < trackedID)
+                {
+                    Mod.LogError("Server got update for object at " + trackedID + " which is out of range of objects array");
+                    return;
+                }
+
+                TrackedObjectData trackedObjectData = Client.objects[trackedID];
+                if (trackedObjectData != null)
+                {
+                    if (trackedObjectData.controller != GameManager.ID)
+                    {
+                        if (trackedObjectData.latestUpdate == null)
+                        {
+                            ThreadManager.objectsToUpdate.Enqueue(new KeyValuePair<int, int>(trackedID, 0));
+                            trackedObjectData.latestOrder = order;
+                            trackedObjectData.latestFull = full;
+                            trackedObjectData.latestUpdate = packet;
+                        }
+                        else if (full || (order > trackedObjectData.latestOrder || trackedObjectData.latestOrder - order > 128))
+                        {
+                            trackedObjectData.latestOrder = order;
+                            trackedObjectData.latestFull = full;
+                            trackedObjectData.latestUpdate = packet;
+                        }
+                    }
+                }
+            }
+
+            public void HandlePlayerStateUpdate(Packet packet)
+            {
+                byte order = packet.ReadByte();
+                int playerID = packet.ReadInt();
+
+                PlayerManager playerManager = GameManager.players[playerID];
+                if (playerManager.latestUpdate == null)
+                {
+                    ThreadManager.playersToUpdate.Enqueue(playerID);
+                    playerManager.latestOrder = order;
+                    playerManager.latestUpdate = packet;
+                }
+                else if (order > playerManager.latestOrder || playerManager.latestOrder - order > 128)
+                {
+                    playerManager.latestOrder = order;
+                    playerManager.latestUpdate = packet;
+                }
             }
 
             private void Disconnect(int code)

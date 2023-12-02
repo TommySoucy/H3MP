@@ -133,9 +133,9 @@ namespace H3MP.Networking
             }
 
             GameManager.UpdatePlayerState(ID, position, rotation, headPos, headRot, torsoPos, torsoRot,
-                                               leftHandPos, leftHandRot,
-                                               rightHandPos, rightHandRot,
-                                               health, maxHealth, additionalData);
+                                          leftHandPos, leftHandRot,
+                                          rightHandPos, rightHandRot,
+                                          health, maxHealth, additionalData);
         }
 
         public static void PlayerIFF(Packet packet)

@@ -17,6 +17,10 @@ namespace H3MP.Tracking
         public bool latestUpdateSent = false; // Whether the latest update of this data was sent
         public byte order; // The index of this object's data packet used to ensure we process this data in the correct order
 
+        public Packet latestUpdate; // The latest update we have received for this object
+        public byte latestOrder; // The order of the latest received update
+        public bool latestFull; // Whether the latest update is a full update
+
         public int trackedID = -1; // This object's unique ID to identify it across systems (index in global objects arrays)
         public int localTrackedID = -1; // This object's index in local objects list
         public uint localWaitingIndex = uint.MaxValue; // The unique index this object had while waiting for its tracked ID
@@ -231,8 +235,15 @@ namespace H3MP.Tracking
         }
 
         // Updates the object using given update packet
-        public virtual void UpdateFromPacket(Packet packet, bool full = false)
+        public virtual void UpdateFromPacket(Packet packet = null, bool full = false)
         {
+            if(packet == null)
+            {
+                packet = latestUpdate;
+                full = latestFull;
+                order = latestOrder;
+            }
+
             if (full)
             {
                 // NOTE: Some of these are commented out because we don't want to replace these values

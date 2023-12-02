@@ -1,11 +1,9 @@
 ﻿using FistVR;
 using H3MP.Scripts;
-using RootMotion;
+using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -17,7 +15,18 @@ namespace H3MP.Networking
         private static readonly List<Action> executeOnMainThread = new List<Action>();
         private static readonly List<Action> executeCopiedOnMainThread = new List<Action>();
         private static bool actionToExecuteOnMainThread = false;
+        public static Queue<KeyValuePair<int, int>> objectsToUpdate = new Queue<KeyValuePair<int, int>>();
+        public static Queue<int> playersToUpdate = new Queue<int>();
+        public static byte playerOrder = 0;
 
+        public static float tickRate = 20; // How many times a second we will send updates
+        public static float time = 1 / tickRate; // Period between sending updates
+        public static float timer = 0; // Amount of time left until next tick
+
+        public static int updateLimit = 10; // Time limit (ms) we have to apply received updates before leaving it to the next frame
+        public static int updateState = 0; // The packet ID we are currently at in updates. 0: Main queue, 1: TrackedObjects, 2: Player state
+        public static int updateStateIndex = 0; // A generic index that can be used if updates have a sub state (Like in trackedObjects packet ID, we will have the index of the object we are at)
+        public static int updateStateLimit = 0; // Limit of how may elements we can process this iteration, in case number of elements grew in between frames
 
         public static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public static readonly float pingTime = 1;
@@ -30,7 +39,13 @@ namespace H3MP.Networking
 
         private void FixedUpdate()
         {
-            UpdateMainFixed();
+            // Limit sending updates to tickrate
+            timer -= Time.fixedDeltaTime;
+            if (timer <= 0)
+            {
+                UpdateMainFixed();
+                timer = time;
+            }
         }
 
         /// <summary>Sets an action to be executed on the main thread.</summary>
@@ -53,33 +68,230 @@ namespace H3MP.Networking
         /// <summary>Executes all code meant to run on the main thread. NOTE: Call this ONLY from the main thread.</summary>
         public static void UpdateMain()
         {
-#if DEBUG
-            if (Input.GetKey(KeyCode.PageDown))
+            Stopwatch start = Stopwatch.StartNew();
+
+            if(updateState == 0)
             {
-                Mod.LogInfo("DEBUG UPDATE MAIN");
-            }
-#endif
-            if (actionToExecuteOnMainThread)
-            {
-                executeCopiedOnMainThread.Clear();
-                lock (executeOnMainThread)
-                {
-                    executeCopiedOnMainThread.AddRange(executeOnMainThread);
-                    executeOnMainThread.Clear();
-                    actionToExecuteOnMainThread = false;
-                }
 #if DEBUG
                 if (Input.GetKey(KeyCode.PageDown))
                 {
-                    Mod.LogInfo("Actions to execute: "+ executeCopiedOnMainThread.Count);
+                    Mod.LogInfo("DEBUG UPDATE MAIN");
                 }
 #endif
-
-                for (int i = 0; i < executeCopiedOnMainThread.Count; i++)
+                if(updateStateIndex > 0)
                 {
-                    executeCopiedOnMainThread[i]();
+                    for (int i = updateStateIndex; i < executeCopiedOnMainThread.Count; i++)
+                    {
+                        executeCopiedOnMainThread[i]();
+                        updateStateIndex = i;
+                    }
+                }
+                else
+                {
+                    if (actionToExecuteOnMainThread)
+                    {
+                        executeCopiedOnMainThread.Clear();
+                        lock (executeOnMainThread)
+                        {
+                            executeCopiedOnMainThread.AddRange(executeOnMainThread);
+                            executeOnMainThread.Clear();
+                            actionToExecuteOnMainThread = false;
+                        }
+#if DEBUG
+                        if (Input.GetKey(KeyCode.PageDown))
+                        {
+                            Mod.LogInfo("Actions to execute: " + executeCopiedOnMainThread.Count);
+                        }
+#endif
+
+                        for (int i = 0; i < executeCopiedOnMainThread.Count; i++)
+                        {
+                            executeCopiedOnMainThread[i]();
+                            updateStateIndex = i;
+
+                            if(start.ElapsedMilliseconds >= updateLimit)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                updateState = 1;
+                updateStateIndex = 0;
+            }
+
+            // Update objects
+            if (host)
+            {
+                if (updateState == 1)
+                {
+                    if(updateStateIndex == 0)
+                    {
+                        updateStateLimit = objectsToUpdate.Count;
+                    }
+
+                    while (objectsToUpdate.Count > 0 && updateStateIndex < updateStateLimit)
+                    {
+                        KeyValuePair<int, int> pair = objectsToUpdate.Dequeue();
+                        TrackedObjectData trackedObjectData = Server.objects[pair.Key];
+                        trackedObjectData.UpdateFromPacket();
+
+                        // Relay to other clients in the same scene/instance
+                        if (GameManager.playersByInstanceByScene.TryGetValue(Server.clients[pair.Value].player.scene, out Dictionary<int, List<int>> instances) &&
+                            instances.TryGetValue(Server.clients[pair.Value].player.instance, out List<int> players))
+                        {
+                            ServerSend.TrackedObjects(trackedObjectData.latestUpdate, players, pair.Value);
+                        }
+
+                        trackedObjectData.latestUpdate.Dispose();
+
+                        updateStateIndex++;
+
+                        if (start.ElapsedMilliseconds >= updateLimit)
+                        {
+                            return;
+                        }
+                    }
+
+                    updateState = 2;
+                    updateStateIndex = 0;
+                }
+
+                if(updateState == 2)
+                {
+                    if (updateStateIndex == 0)
+                    {
+                        updateStateLimit = objectsToUpdate.Count;
+                    }
+
+                    while (playersToUpdate.Count > 0 && updateStateIndex < updateStateLimit)
+                    {
+                        int playerID = playersToUpdate.Dequeue();
+                        Player player = Server.clients[playerID].player;
+                        PlayerManager playerManager = GameManager.players[playerID];
+                        playerManager.order = playerManager.latestOrder;
+
+                        player.position = playerManager.latestUpdate.ReadVector3();
+                        player.rotation = playerManager.latestUpdate.ReadQuaternion();
+                        player.headPos = playerManager.latestUpdate.ReadVector3();
+                        player.headRot = playerManager.latestUpdate.ReadQuaternion();
+                        player.torsoPos = playerManager.latestUpdate.ReadVector3();
+                        player.torsoRot = playerManager.latestUpdate.ReadQuaternion();
+                        player.leftHandPos = playerManager.latestUpdate.ReadVector3();
+                        player.leftHandRot = playerManager.latestUpdate.ReadQuaternion();
+                        player.rightHandPos = playerManager.latestUpdate.ReadVector3();
+                        player.rightHandRot = playerManager.latestUpdate.ReadQuaternion();
+                        player.health = playerManager.latestUpdate.ReadFloat();
+                        player.maxHealth = playerManager.latestUpdate.ReadInt();
+                        short additionalDataLength = playerManager.latestUpdate.ReadShort();
+                        byte[] additionalData = null;
+                        if (additionalDataLength > 0)
+                        {
+                            additionalData = playerManager.latestUpdate.ReadBytes(additionalDataLength);
+                        }
+
+                        GameManager.UpdatePlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
+                                                      player.leftHandPos, player.leftHandRot,
+                                                      player.rightHandPos, player.rightHandRot,
+                                                      player.health, player.maxHealth, additionalData);
+
+                        // Relay
+                        ServerSend.PlayerState(playerManager.latestUpdate, player);
+
+                        playerManager.latestUpdate.Dispose();
+
+                        updateStateIndex++;
+
+                        if (start.ElapsedMilliseconds >= updateLimit)
+                        {
+                            return;
+                        }
+                    }
+
+                    updateState = 0;
+                    updateStateIndex = 0;
                 }
             }
+            else
+            {
+                if (updateState == 1)
+                {
+                    if (updateStateIndex == 0)
+                    {
+                        updateStateLimit = objectsToUpdate.Count;
+                    }
+
+                    while (objectsToUpdate.Count > 0)
+                    {
+                        TrackedObjectData trackedObjectData = Client.objects[objectsToUpdate.Dequeue().Key];
+                        trackedObjectData.UpdateFromPacket();
+                        trackedObjectData.latestUpdate.Dispose();
+
+                        updateStateIndex++;
+
+                        if (start.ElapsedMilliseconds >= updateLimit)
+                        {
+                            return;
+                        }
+                    }
+
+                    updateState = 2;
+                    updateStateIndex = 0;
+                }
+
+                if (updateState == 2)
+                {
+                    if (updateStateIndex == 0)
+                    {
+                        updateStateLimit = objectsToUpdate.Count;
+                    }
+
+                    while (playersToUpdate.Count > 0)
+                    {
+                        PlayerManager playerManager = GameManager.players[playersToUpdate.Dequeue()];
+                        playerManager.order = playerManager.latestOrder;
+
+                        Vector3 position = playerManager.latestUpdate.ReadVector3();
+                        Quaternion rotation = playerManager.latestUpdate.ReadQuaternion();
+                        Vector3 headPos = playerManager.latestUpdate.ReadVector3();
+                        Quaternion headRot = playerManager.latestUpdate.ReadQuaternion();
+                        Vector3 torsoPos = playerManager.latestUpdate.ReadVector3();
+                        Quaternion torsoRot = playerManager.latestUpdate.ReadQuaternion();
+                        Vector3 leftHandPos = playerManager.latestUpdate.ReadVector3();
+                        Quaternion leftHandRot = playerManager.latestUpdate.ReadQuaternion();
+                        Vector3 rightHandPos = playerManager.latestUpdate.ReadVector3();
+                        Quaternion rightHandRot = playerManager.latestUpdate.ReadQuaternion();
+                        float health = playerManager.latestUpdate.ReadFloat();
+                        int maxHealth = playerManager.latestUpdate.ReadInt();
+                        short additionalDataLength = playerManager.latestUpdate.ReadShort();
+                        byte[] additionalData = null;
+                        if (additionalDataLength > 0)
+                        {
+                            additionalData = playerManager.latestUpdate.ReadBytes(additionalDataLength);
+                        }
+
+                        GameManager.UpdatePlayerState(playerManager.ID, position, rotation, headPos, headRot, torsoPos, torsoRot,
+                                                      leftHandPos, leftHandRot,
+                                                      rightHandPos, rightHandRot,
+                                                      health, maxHealth, additionalData);
+
+                        playerManager.latestUpdate.Dispose();
+
+                        updateStateIndex++;
+
+                        if (start.ElapsedMilliseconds >= updateLimit)
+                        {
+                            return;
+                        }
+                    }
+
+                    updateState = 0;
+                    updateStateIndex = 0;
+                }
+            }
+            objectsToUpdate.Clear();
+            playersToUpdate.Clear();
 
             if (!host)
             {
@@ -229,7 +441,8 @@ namespace H3MP.Networking
                     // Also send the host's player state to all clients
                     if (GM.CurrentPlayerBody != null)
                     {
-                        ServerSend.PlayerState(0,
+                        ServerSend.PlayerState(playerOrder++,
+                                               0,
                                                GM.CurrentPlayerBody.transform.position,
                                                GM.CurrentPlayerBody.transform.rotation,
                                                GM.CurrentPlayerBody.headPositionFiltered,
@@ -281,7 +494,8 @@ namespace H3MP.Networking
                     // Also send the player state to all clients
                     if (GM.CurrentPlayerBody != null)
                     {
-                        ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,
+                        ClientSend.PlayerState(playerOrder++,
+                                               GM.CurrentPlayerBody.transform.position,
                                                GM.CurrentPlayerBody.transform.rotation,
                                                GM.CurrentPlayerBody.headPositionFiltered,
                                                GM.CurrentPlayerBody.headRotationFiltered,

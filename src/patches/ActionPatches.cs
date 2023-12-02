@@ -587,9 +587,9 @@ namespace H3MP.Patches
             // EncryptionPatch
             MethodInfo EncryptionPatchUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo EncryptionPatchUpdatePrefix = typeof(EncryptionPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchUpdateTranspiler = typeof(EncryptionPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo EncryptionPatchFixedUpdateOriginal = typeof(TNH_EncryptionTarget).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo EncryptionPatchFixedUpdatePrefix = typeof(EncryptionPatch).GetMethod("FixedUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo EncryptionPatchUpdateTranspiler = typeof(EncryptionPatch).GetMethod("UpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo EncryptionPatchStartOriginal = typeof(TNH_EncryptionTarget).GetMethod("Start", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo EncryptionPatchStartPrefix = typeof(EncryptionPatch).GetMethod("StartPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo EncryptionPatchStartPostfix = typeof(EncryptionPatch).GetMethod("StartPostfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -5718,7 +5718,7 @@ namespace H3MP.Patches
             return true;
         }
 
-        // To track subtargGeo and subtarg activation for new regenerative 
+        // To track subtargGeo and subtarg activation for regenerative 
         static IEnumerable<CodeInstruction> UpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
@@ -5882,6 +5882,7 @@ namespace H3MP.Patches
             {
                 if (trackedEncryption.data.controller != GameManager.ID)
                 {
+                    __instance.PrimeDics();
                     ___m_numHitsLeft = __instance.NumHitsTilDestroyed;
                     ___m_maxHits = __instance.NumHitsTilDestroyed;
                     ___m_damLeftForAHit = __instance.DamagePerHit;
@@ -5901,6 +5902,11 @@ namespace H3MP.Patches
                             __instance.SubTargs[i].transform.SetParent(null);
                         }
                         ___m_numSubTargsLeft = __instance.StartingRegenSubTarg;
+                    }
+                    if (__instance.UsesRefractiveTeleportation && __instance.RefractivePreview != null)
+                    {
+                        __instance.RefractivePreview.SetParent(null);
+                        __instance.SetNextPos();
                     }
                     if (___UsesRegeneratingSubtargs)
                     {
