@@ -640,6 +640,7 @@ namespace H3MP.Networking
                 ClientHandle.IrisShatter,
                 ClientHandle.IrisSetState,
                 ClientHandle.BrutBlockSystemStart,
+                ClientHandle.FloaterBeginDefusing,
             };
 
             // All vanilla scenes can be synced by default

@@ -4577,11 +4577,30 @@ namespace H3MP.Networking
             }
         }
 
-        public static void FloaterExplode(int trackedID, int clientID = 0)
+        public static void FloaterBeginDefusing(int trackedID, bool fromController, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.floaterBeginDefusing))
+            {
+                packet.Write(trackedID);
+                packet.Write(fromController);
+
+                if (fromController)
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+                else
+                {
+                    SendTCPData(clientID, packet);
+                }
+            }
+        }
+
+        public static void FloaterExplode(int trackedID, bool defusing, int clientID = 0)
         {
             using (Packet packet = new Packet((int)ServerPackets.floaterExplode))
             {
                 packet.Write(trackedID);
+                packet.Write(defusing);
 
                 if (clientID == 0)
                 {

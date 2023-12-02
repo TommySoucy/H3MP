@@ -534,6 +534,7 @@ namespace H3MP
             TrackedEncryption.unknownUpdateDisplay.Clear();
 
             TrackedFloater.unknownFloaterBeginExploding.Clear();
+            TrackedFloater.unknownFloaterBeginDefusing.Clear();
             TrackedFloater.unknownFloaterExplode.Clear();
 
             TrackedIris.unknownIrisShatter.Clear();

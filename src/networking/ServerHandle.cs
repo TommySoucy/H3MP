@@ -5288,21 +5288,52 @@ namespace H3MP.Networking
             }
         }
 
+        public static void FloaterBeginDefusing(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool fromController = packet.ReadBool();
+
+            TrackedFloaterData trackedFloaterData = Server.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null)
+            {
+                if (fromController) // From controller, trigger explosion on our side
+                {
+                    FloaterPatch.beginExplodingOverride = true;
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginDefusing();
+                    FloaterPatch.beginExplodingOverride = false;
+
+                    ServerSend.FloaterBeginDefusing(trackedID, true, trackedFloaterData.controller);
+                }
+                else if(trackedFloaterData.controller == GameManager.ID) // We control, trigger explosion and send order to everyone else
+                {
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginDefusing();
+                }
+                else // Not from controller and we don't control, relay to controller
+                {
+                    ServerSend.FloaterBeginDefusing(trackedID, false, trackedFloaterData.controller);
+                }
+
+            }
+        }
+
         public static void FloaterExplode(int clientID, Packet packet)
         {
             int trackedID = packet.ReadInt();
+            bool defusing = packet.ReadBool();
 
             TrackedFloaterData trackedFloaterData = Server.objects[trackedID] as TrackedFloaterData;
             if (trackedFloaterData != null)
             {
                 if (trackedFloaterData.physicalFloater != null)
                 {
+                    trackedFloaterData.physicalFloater.physicalFloater.isExplosionDefuse = defusing;
+
                     ++FloaterPatch.explodeSkip;
                     trackedFloaterData.physicalFloater.physicalFloater.BeginExploding();
                     --FloaterPatch.explodeSkip;
                 }
 
-                ServerSend.FloaterExplode(trackedID, clientID);
+                ServerSend.FloaterExplode(trackedID, defusing, clientID);
             }
         }
 

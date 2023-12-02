@@ -2,7 +2,6 @@
 using H3MP.Networking;
 using H3MP.Patches;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace H3MP.Tracking
@@ -179,9 +178,15 @@ namespace H3MP.Tracking
 
                 TrackedFloater.unknownFloaterBeginExploding.Remove(localWaitingIndex);
             }
-            if (localTrackedID != -1 && TrackedFloater.unknownFloaterExplode.Contains(localWaitingIndex))
+            if (localTrackedID != -1 && TrackedFloater.unknownFloaterBeginDefusing.Contains(localWaitingIndex))
             {
-                ClientSend.FloaterExplode(trackedID);
+                ClientSend.FloaterBeginDefusing(trackedID, true);
+
+                TrackedFloater.unknownFloaterBeginDefusing.Remove(localWaitingIndex);
+            }
+            if (localTrackedID != -1 && TrackedFloater.unknownFloaterExplode.TryGetValue(localWaitingIndex, out bool defusing))
+            {
+                ClientSend.FloaterExplode(trackedID, defusing);
 
                 TrackedFloater.unknownFloaterExplode.Remove(localWaitingIndex);
             }

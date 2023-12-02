@@ -945,13 +945,25 @@ namespace H3MP.Patches
             // FloaterPatch
             MethodInfo floaterBeginExplodingOriginal = typeof(Construct_Floater).GetMethod("BeginExploding", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo floaterBeginExplodingPrefix = typeof(FloaterPatch).GetMethod("BeginExplodingPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo floaterBeginDefusingOriginal = typeof(Construct_Floater).GetMethod("BeginDefusing", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo floaterBeginDefusingPrefix = typeof(FloaterPatch).GetMethod("BeginDefusingPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo floaterExplodeOriginal = typeof(Construct_Floater).GetMethod("Explode", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo floaterExplodePrefix = typeof(FloaterPatch).GetMethod("ExplodePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo floaterUpdateOriginal = typeof(Construct_Floater).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo floaterUpdatePrefix = typeof(FloaterPatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo floaterFixedUpdateOriginal = typeof(Construct_Floater).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo floaterFixedUpdatePrefix = typeof(FloaterPatch).GetMethod("FixedUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(floaterBeginExplodingOriginal, harmony, false);
+            PatchController.Verify(floaterBeginDefusingOriginal, harmony, false);
             PatchController.Verify(floaterExplodeOriginal, harmony, false);
+            PatchController.Verify(floaterUpdateOriginal, harmony, false);
+            PatchController.Verify(floaterFixedUpdateOriginal, harmony, false);
             harmony.Patch(floaterBeginExplodingOriginal, new HarmonyMethod(floaterBeginExplodingPrefix));
+            harmony.Patch(floaterBeginDefusingOriginal, new HarmonyMethod(floaterBeginDefusingPrefix));
             harmony.Patch(floaterExplodeOriginal, new HarmonyMethod(floaterExplodePrefix));
+            harmony.Patch(floaterUpdateOriginal, new HarmonyMethod(floaterUpdatePrefix));
+            harmony.Patch(floaterFixedUpdateOriginal, new HarmonyMethod(floaterFixedUpdatePrefix));
 
             // IrisPatch
             MethodInfo irisUpdateOriginal = typeof(Construct_Iris).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -8182,6 +8194,41 @@ namespace H3MP.Patches
         public static bool beginExplodingOverride;
         public static int explodeSkip;
 
+        // Patches Update to prevent unless exploding
+        static bool UpdatePrefix(Construct_Floater __instance)
+        {
+            if (Mod.managerObject == null || __instance.m_isExploding)
+            {
+                return true;
+            }
+
+            if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
+            {
+                // Note: If we got here it is because we are not exploding, meaning that we don't want to continue no matter what if we are not controller
+                TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
+                return trackedFloater == null || trackedFloater.data.controller == GameManager.ID;
+            }
+
+            return true;
+        }
+
+        // Patches FixedUpdate to prevent unless exploding
+        static bool FixedUpdatePrefix(Construct_Floater __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
+            {
+                TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
+                return trackedFloater == null || trackedFloater.data.controller == GameManager.ID;
+            }
+
+            return true;
+        }
+
         // Patches BeginExploding to track event
         static bool BeginExplodingPrefix(Construct_Floater __instance)
         {
@@ -8190,67 +8237,152 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TrackedFloater trackedFloater = GameManager.trackedFloaterByFloater.TryGetValue(__instance, out trackedFloater) ? trackedFloater : null;
-            if (trackedFloater != null)
+            if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
             {
-                bool control = trackedFloater.data.controller == GameManager.ID;
-
-                if (!beginExplodingOverride)
+                TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
+                if (trackedFloater != null)
                 {
-                    if (ThreadManager.host)
-                    {
-                        ServerSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
-                    }
-                    else if (trackedFloater.data.trackedID != -1)
-                    {
-                        ClientSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
-                    }
-                    else // Note that this is only possible if we are the controller
-                    {
-                        TrackedFloater.unknownFloaterBeginExploding.Add(trackedFloater.data.localWaitingIndex);
-                    }
-                }
+                    bool control = trackedFloater.data.controller == GameManager.ID;
 
-                return beginExplodingOverride || control;
+                    if (!beginExplodingOverride)
+                    {
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
+                        }
+                        else if (trackedFloater.data.trackedID != -1)
+                        {
+                            ClientSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
+                        }
+                        else // Note that this is only possible if we are the controller
+                        {
+                            TrackedFloater.unknownFloaterBeginExploding.Add(trackedFloater.data.localWaitingIndex);
+                        }
+                    }
+
+                    return beginExplodingOverride || control;
+                }
             }
 
             return true;
         }
 
-        // Patches Explode to track event
-        static bool ExplodePrefix(Construct_Floater __instance)
+        // Patches BeginDefusing to track event
+        static bool BeginDefusingPrefix(Construct_Floater __instance)
         {
-            if (Mod.managerObject == null || explodeSkip > 0 || __instance.m_isExploded)
+            if (Mod.managerObject == null || __instance.m_isExploding)
             {
                 return true;
             }
 
-            TrackedFloater trackedFloater = GameManager.trackedFloaterByFloater.TryGetValue(__instance, out trackedFloater) ? trackedFloater : null;
-            if (trackedFloater != null)
+            if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
             {
-                if(trackedFloater.data.controller == GameManager.ID)
+                TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
+                if (trackedFloater != null)
                 {
-                    if (ThreadManager.host)
+                    bool control = trackedFloater.data.controller == GameManager.ID;
+
+                    if (!beginExplodingOverride)
                     {
-                        ServerSend.FloaterExplode(trackedFloater.data.trackedID);
-                    }
-                    else if (trackedFloater.data.trackedID != -1)
-                    {
-                        ClientSend.FloaterExplode(trackedFloater.data.trackedID);
-                    }
-                    else // Note that this is only possible if we are the controller
-                    {
-                        TrackedFloater.unknownFloaterBeginExploding.Remove(trackedFloater.data.localWaitingIndex);
-                        TrackedFloater.unknownFloaterExplode.Add(trackedFloater.data.localWaitingIndex);
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.FloaterBeginDefusing(trackedFloater.data.trackedID, control);
+                        }
+                        else if (trackedFloater.data.trackedID != -1)
+                        {
+                            ClientSend.FloaterBeginDefusing(trackedFloater.data.trackedID, control);
+                        }
+                        else // Note that this is only possible if we are the controller
+                        {
+                            TrackedFloater.unknownFloaterBeginDefusing.Add(trackedFloater.data.localWaitingIndex);
+                        }
                     }
 
-                    return true;
+                    return beginExplodingOverride || control;
                 }
-
-                return false;
             }
 
             return true;
+        }
+
+        // Patches Explode to track event and prevent instantiation of ref object
+        static bool ExplodePrefix(Construct_Floater __instance)
+        {
+            TrackedFloater trackedFloater = GameManager.trackedFloaterByFloater.TryGetValue(__instance, out trackedFloater) ? trackedFloater : null;
+            if (trackedFloater != null && trackedFloater.data.controller == GameManager.ID)
+            {
+                if (ThreadManager.host)
+                {
+                    ServerSend.FloaterExplode(trackedFloater.data.trackedID, __instance.isExplosionDefuse);
+                }
+                else if (trackedFloater.data.trackedID != -1)
+                {
+                    ClientSend.FloaterExplode(trackedFloater.data.trackedID, __instance.isExplosionDefuse);
+                }
+                else // Note that this is only possible if we are the controller
+                {
+                    TrackedFloater.unknownFloaterBeginExploding.Remove(trackedFloater.data.localWaitingIndex);
+                    TrackedFloater.unknownFloaterBeginDefusing.Remove(trackedFloater.data.localWaitingIndex);
+                    TrackedFloater.unknownFloaterExplode.Add(trackedFloater.data.localWaitingIndex, __instance.isExplosionDefuse);
+                }
+            }
+
+            if (__instance.m_isExploded)
+            {
+                return false;
+            }
+            __instance.m_isExploded = true;
+            if (__instance.E != null)
+            {
+                __instance.E.AIEventReceiveEvent -= __instance.EventReceive;
+            }
+            if (__instance.E != null)
+            {
+                UnityEngine.Object.Destroy(__instance.E.gameObject);
+            }
+            ParticleSystem.EmissionModule tempEM = __instance.PSystem.emission;
+            tempEM.rateOverTime = 0;
+            if (__instance.isExplosionDefuse)
+            {
+                for (int i = 0; i < __instance.SpawnOnDefuse.Count; i++)
+                {
+                    UnityEngine.Object.Instantiate<GameObject>(__instance.SpawnOnDefuse[i], __instance.transform.position, __instance.transform.rotation);
+                }
+                for (int j = 0; j < __instance.Shards.Count; j++)
+                {
+                    __instance.Shards[j].gameObject.SetActive(true);
+                    __instance.Shards[j].velocity = __instance.RB.velocity;
+                    __instance.Shards[j].angularVelocity = __instance.RB.angularVelocity;
+                    __instance.Shards[j].AddExplosionForce(UnityEngine.Random.Range(__instance.ShardDefuseMag.x, __instance.ShardDefuseMag.y) * UnityEngine.Random.Range(0.1f, 0.5f), __instance.transform.position, 1f, 0.1f, ForceMode.VelocityChange);
+                    __instance.Shards[j].AddTorque(UnityEngine.Random.onUnitSphere * 90f, ForceMode.VelocityChange);
+                }
+            }
+            else
+            {
+                if (GM.TNH_Manager != null)
+                {
+                    GM.TNH_Manager.TakingBotKill();
+                }
+                // Here we don't iterate over the last element, which is our ref object
+                for (int k = 0; k < __instance.SpawnOnSplode.Count - 1; k++)
+                {
+                    UnityEngine.Object.Instantiate<GameObject>(__instance.SpawnOnSplode[k], __instance.transform.position, __instance.transform.rotation);
+                }
+                for (int l = 0; l < __instance.Shards.Count; l++)
+                {
+                    __instance.Shards[l].gameObject.SetActive(true);
+                    __instance.Shards[l].velocity = __instance.RB.velocity;
+                    __instance.Shards[l].angularVelocity = __instance.RB.angularVelocity;
+                    __instance.Shards[l].AddExplosionForce(UnityEngine.Random.Range(__instance.ShardExplodeMag.x, __instance.ShardExplodeMag.y) * UnityEngine.Random.Range(0.1f, 0.5f), __instance.transform.position, 1f, 0.1f, ForceMode.VelocityChange);
+                    __instance.Shards[l].AddTorque(UnityEngine.Random.onUnitSphere * 90f, ForceMode.VelocityChange);
+                }
+            }
+            __instance.C.enabled = false;
+            __instance.m_isExploding = false;
+            __instance.MainGO.SetActive(false);
+            UnityEngine.Object.Destroy(__instance.RB);
+
+            return false;
         }
     }
 
@@ -8362,10 +8494,13 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[int.Parse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name)] as TrackedBrutBlockSystem;
-            if (trackedBrutBlockSystem != null)
+            if (int.TryParse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name, out int refIndex))
             {
-                return trackedBrutBlockSystem.data.controller == GameManager.ID;
+                TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[refIndex] as TrackedBrutBlockSystem;
+                if (trackedBrutBlockSystem != null)
+                {
+                    return trackedBrutBlockSystem.data.controller == GameManager.ID;
+                }
             }
 
             return true;
@@ -8379,24 +8514,27 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[int.Parse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name)] as TrackedBrutBlockSystem;
-            if (trackedBrutBlockSystem != null)
+            if(int.TryParse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name, out int refIndex))
             {
-                if(trackedBrutBlockSystem.data.controller == GameManager.ID)
+                TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[refIndex] as TrackedBrutBlockSystem;
+                if (trackedBrutBlockSystem != null)
                 {
-                    if (ThreadManager.host)
+                    if (trackedBrutBlockSystem.data.controller == GameManager.ID)
                     {
-                        ServerSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
-                    }
-                    else if (trackedBrutBlockSystem.data.trackedID != -1)
-                    {
-                        ClientSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
+                        }
+                        else if (trackedBrutBlockSystem.data.trackedID != -1)
+                        {
+                            ClientSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
+                        }
+
+                        return true;
                     }
 
-                    return true;
+                    return false;
                 }
-
-                return false;
             }
 
             return true;

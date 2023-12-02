@@ -2723,11 +2723,23 @@ namespace H3MP.Networking
             }
         }
 
-        public static void FloaterExplode(int trackedID)
+        public static void FloaterBeginDefusing(int trackedID, bool control)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.floaterBeginDefusing))
+            {
+                packet.Write(trackedID);
+                packet.Write(control);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void FloaterExplode(int trackedID, bool defusing)
         {
             using (Packet packet = new Packet((int)ClientPackets.floaterExplode))
             {
                 packet.Write(trackedID);
+                packet.Write(defusing);
 
                 SendTCPData(packet);
             }

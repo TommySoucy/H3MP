@@ -4760,13 +4760,38 @@ namespace H3MP.Networking
             }
         }
 
+        public static void FloaterBeginDefusing(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+            bool fromController = packet.ReadBool();
+
+            TrackedFloaterData trackedFloaterData = Client.objects[trackedID] as TrackedFloaterData;
+            if (trackedFloaterData != null)
+            {
+                if (fromController) // From controller, trigger explosion on our side
+                {
+                    FloaterPatch.beginExplodingOverride = true;
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginDefusing();
+                    FloaterPatch.beginExplodingOverride = false;
+                }
+                else if (trackedFloaterData.controller == GameManager.ID) // We control, trigger explosion and send order to everyone else
+                {
+                    trackedFloaterData.physicalFloater.physicalFloater.BeginDefusing();
+                }
+                // else // Not from controller and we don't control, this should not happen
+            }
+        }
+
         public static void FloaterExplode(Packet packet)
         {
             int trackedID = packet.ReadInt();
+            bool defusing = packet.ReadBool();
 
             TrackedFloaterData trackedFloaterData = Client.objects[trackedID] as TrackedFloaterData;
             if (trackedFloaterData != null && trackedFloaterData.physicalFloater != null)
             {
+                trackedFloaterData.physicalFloater.physicalFloater.isExplosionDefuse = defusing;
+
                 ++FloaterPatch.explodeSkip;
                 trackedFloaterData.physicalFloater.physicalFloater.Explode();
                 --FloaterPatch.explodeSkip;
